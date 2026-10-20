@@ -1,0 +1,2 @@
+import type {DemoState,Qualification} from './model.ts';
+export function calculateMetrics(state:DemoState){const funnel:Record<Qualification,number>={qualified:0,pending:0,warning:0,disqualified:0};state.leads.forEach(l=>funnel[l.qualification]++);return {total:state.leads.length,qualified:funnel.qualified,pending:funnel.pending,funnel,sent:0,replies:0,optouts:0,activeCadences:state.cadences.filter(c=>c.status==='active').length};}

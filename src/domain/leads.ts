@@ -1,0 +1,3 @@
+import type {Lead,Qualification} from './model.ts';
+export interface LeadQuery{search?:string;listId?:string;qualification?:Qualification|'';onlyFavorites?:boolean;sort?:'name'|'city'|'newest'}
+export function filterLeads(leads:Lead[],q:LeadQuery){const text=(q.search??'').trim().toLocaleLowerCase('pt-BR');return leads.filter(l=>(!q.listId||l.listId===q.listId)&&(!q.qualification||l.qualification===q.qualification)&&(!q.onlyFavorites||l.favorite)&&(!text||[l.name,l.companyName,l.email,l.phone,l.city,l.state,l.site].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR').includes(text))).toSorted((a,b)=>q.sort==='name'?a.name.localeCompare(b.name,'pt-BR'):q.sort==='city'?(a.city??'').localeCompare(b.city??'','pt-BR'):b.createdAt.localeCompare(a.createdAt));}

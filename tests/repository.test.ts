@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createDemoRepository} from '../src/demo/repository.ts';
+import {createSeed} from '../src/demo/seed.ts';
+import {decodeDemoState} from '../src/demo/storage.ts';
+import type {AudiencePlan} from '../src/domain/model.ts';
+const plan:AudiencePlan={id:'test',title:'Clínicas',description:'Clínicas em SP',listName:'Clínicas SP',source:'MAPS',filters:{term:'clínicas',location:'São Paulo'},channel:'whatsapp',marketSize:null,dailyLimit:150};
+test('decode roundtrip preserves IDs and draft state',()=>{const state=createSeed();const result=decodeDemoState(JSON.stringify(state));assert.equal(result.ok,true);if(result.ok){assert.deepEqual(result.value,JSON.parse(JSON.stringify(state)));assert.deepEqual(result.value.cadences.map(c=>[c.id,c.status]),state.cadences.map(c=>[c.id,c.status]));}});
+test('malformed storage and unsupported schema are recoverable',()=>{assert.equal(decodeDemoState('{').ok,false);assert.equal(decodeDemoState('{"schemaVersion":99}').ok,false);assert.equal(decodeDemoState('{"schemaVersion":1,"leads":[]}').ok,false);});
+test('confirming twice creates exactly one list and two paused automations',()=>{const r=createDemoRepository();const base=r.getSnapshot();const first=r.confirmAutomationPlan(plan,'request-1');const second=r.confirmAutomationPlan(plan,'request-1');assert.deepEqual(first,second);assert.equal(r.getSnapshot().lists.length,base.lists.length+1);assert.equal(r.getSnapshot().automations.length,base.automations.length+2);assert.ok(r.getSnapshot().automations.filter(a=>a.listId===first.listId).every(a=>a.status==='paused'));assert.equal(r.getSnapshot().automations.find(a=>a.id===first.automationIds[0])?.schedule.time,'07:00');});
+test('snapshots cannot be mutated outside the repository',()=>{const r=createDemoRepository();assert.throws(()=>{r.getSnapshot().leads[0].name='changed';});assert.notEqual(r.getSnapshot().leads[0].name,'changed');});
+test('saving a cadence always creates a draft and survives serialize/reload',()=>{const r=createDemoRepository();const c={...r.getSnapshot().cadences[0],id:'new',status:'active' as const};r.saveCadenceDraft(c);assert.equal(r.getSnapshot().cadences.find(x=>x.id==='new')?.status,'draft');const restored=createDemoRepository(r.getSnapshot());assert.equal(restored.getSnapshot().cadences.find(x=>x.id==='new')?.status,'draft');});
+test('failed persistence never reports a successful mutation',()=>{const r=createDemoRepository(undefined,()=>{throw Error('quota');});const before=r.getSnapshot();assert.throws(()=>r.confirmAutomationPlan(plan,'x'),/quota/);assert.equal(r.getSnapshot(),before);});

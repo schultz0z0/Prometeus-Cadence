@@ -1,1 +1,2 @@
-export default function Page(){return <><h1>Dashboard</h1><p className="subtitle">Visão geral da sua prospecção</p></>;}
+import {Dashboard} from '@/modules/dashboard/dashboard';
+export default function Page(){return <Dashboard/>;}
