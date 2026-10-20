@@ -3,6 +3,11 @@ import type { WorkspaceSnapshot } from "../domain/workspace.ts";
 import type { WorkspaceCommand } from "../domain/commands.ts";
 import type { ConfirmationResult } from "../domain/model.ts";
 import { decodeDemoState } from "../demo/storage.ts";
+import { emptyWorkspace } from "../domain/empty-workspace.ts";
+export interface WorkspaceAccess {
+  kind: "ready" | "conflict" | "blocked";
+  message: string;
+}
 export type AsyncRepository = {
   [K in keyof DemoRepository]: DemoRepository[K] extends (
     ...args: infer A
@@ -50,14 +55,39 @@ export function createWorkspaceRepository(
 ) {
   let snapshot = validate(initial, initial.workspaceId),
     disposed = false,
+    generation = 0,
     queue = Promise.resolve();
+  let access: WorkspaceAccess = { kind: "ready", message: "" };
   const listeners = new Set<() => void>(),
-    pending = new Map<string, string>();
-  function publish(next: WorkspaceSnapshot) {
+    pending = new Map<
+      string,
+      { requestId: string; expectedRevision?: number }
+    >();
+  const emit = () => listeners.forEach((f) => f());
+  function invalidate(message: string) {
+    generation++;
+    access = { kind: "blocked", message };
+    snapshot = {
+      workspaceId: snapshot.workspaceId,
+      revision: snapshot.revision,
+      data: emptyWorkspace(),
+      capabilities: [],
+    };
+    pending.clear();
+    emit();
+  }
+  function publish(next: WorkspaceSnapshot, external = false) {
     if (disposed) throw Error("O workspace foi alterado.");
-    if(next.revision<snapshot.revision)return;
+    if (access.kind === "blocked") throw Error(access.message);
+    if (next.revision < snapshot.revision) return;
+    if (external && next.revision > snapshot.revision)
+      access = {
+        kind: "conflict",
+        message:
+          "Há alterações de outra aba. Preserve seu texto e recarregue os dados antes de revisar e salvar.",
+      };
     snapshot = next;
-    listeners.forEach((f) => f());
+    emit();
   }
   async function refresh() {
     const r = await transport("/api/workspace/snapshot", {
@@ -65,43 +95,80 @@ export function createWorkspaceRepository(
       headers: { "x-cadence-workspace": snapshot.workspaceId },
     });
     const body = await r.json();
-    if (!r.ok) throw Error(body.message ?? "Não foi possível carregar.");
-    publish(validate(body, snapshot.workspaceId));
+    if (!r.ok) {
+      if (
+        r.status === 401 ||
+        r.status === 403 ||
+        body.code === "WORKSPACE_CHANGED"
+      )
+        invalidate(body.message ?? "O acesso ao workspace mudou.");
+      throw Error(body.message ?? "Não foi possível carregar.");
+    }
+    publish(validate(body, snapshot.workspaceId), true);
   }
   function send(
     command: WorkspaceCommand,
     explicitId?: string,
   ): Promise<ConfirmationResult | undefined> {
     const key = JSON.stringify(command);
-    const requestId = explicitId ?? pending.get(key) ?? crypto.randomUUID();
-    pending.set(key, requestId);
+    const retry = pending.has(key);
+    if (access.kind === "blocked" || (access.kind === "conflict" && !retry))
+      return Promise.reject(Error(access.message));
+    const ticket = generation;
+    const entry = pending.get(key) ?? {
+      requestId: explicitId ?? crypto.randomUUID(),
+      expectedRevision: undefined as number | undefined,
+    };
+    const requestId = entry.requestId;
+    pending.set(key, entry);
+    let dispatched = false;
     const operation = queue.then(async () => {
-      if (disposed) throw Error("O workspace foi alterado.");
-      const response = await transport("/api/workspace/commands", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-cadence-workspace": snapshot.workspaceId,
-        },
-        body: JSON.stringify({
-          requestId,
-          expectedRevision: snapshot.revision,
-          command,
-        }),
-      });
-      const body = await response.json();
-      if (!response.ok) {
-        if (response.status < 500) pending.delete(key);
-        if (response.status === 409) await refresh();
-        throw Error(
-          response.status === 401
-            ? "Sua sessão venceu. Entre novamente em outra aba e salve sua edição."
-            : (body.message ?? "Não foi possível salvar."),
-        );
+      try {
+        if (disposed) throw Error("O workspace foi alterado.");
+        if (ticket !== generation)
+          throw Error(
+            "Operação cancelada após uma falha anterior. Revise e tente novamente.",
+          );
+        if (access.kind === "blocked" || (access.kind === "conflict" && !retry))
+          throw Error(access.message);
+        dispatched = true;
+        entry.expectedRevision ??= snapshot.revision;
+        const response = await transport("/api/workspace/commands", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-cadence-workspace": snapshot.workspaceId,
+          },
+          body: JSON.stringify({
+            requestId,
+            expectedRevision: entry.expectedRevision,
+            command,
+          }),
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          if (response.status < 500) pending.delete(key);
+          if (
+            response.status === 401 ||
+            response.status === 403 ||
+            body.code === "WORKSPACE_CHANGED"
+          )
+            invalidate(body.message ?? "O acesso ao workspace mudou.");
+          else if (response.status === 409) await refresh();
+          throw Error(
+            response.status === 401
+              ? "Sua sessão venceu. Entre novamente em outra aba e salve sua edição."
+              : (body.message ?? "Não foi possível salvar."),
+          );
+        }
+        publish(validate(body.snapshot, snapshot.workspaceId));
+        pending.delete(key);
+        return body.result as ConfirmationResult | undefined;
+      } catch (e) {
+        if (!dispatched && !retry) pending.delete(key);
+        if (ticket === generation) generation++;
+        throw e;
       }
-      publish(validate(body.snapshot, snapshot.workspaceId));
-      pending.delete(key);
-      return body.result as ConfirmationResult | undefined;
     });
     queue = operation.then(
       () => {},
@@ -122,6 +189,9 @@ export function createWorkspaceRepository(
     },
     importLeads: async (leads, list) => {
       await send({ type: "leads.import", leads, ...(list ? { list } : {}) });
+    },
+    saveLeadBatch: async (leads, options) => {
+      await send({ type: "leads.batch", leads, ...options });
     },
     deleteLeads: async (ids) => {
       await send({ type: "leads.delete", ids });
@@ -163,6 +233,7 @@ export function createWorkspaceRepository(
   return {
     ...repo,
     snapshot: () => snapshot,
+    access: () => access,
     refresh,
     dispose() {
       disposed = true;

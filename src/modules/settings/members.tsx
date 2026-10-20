@@ -30,8 +30,11 @@ export function Members() {
     if (busy) return false;
     setBusy(true);
     const ok = await run(async () => {
-      await identityPost(body);
-      const response = await fetch("/api/identity", { cache: "no-store" });
+      await identityPost(body, data?.activeWorkspaceId ?? undefined);
+      const response = await fetch("/api/identity", {
+        cache: "no-store",
+        headers: { "x-cadence-workspace": data!.activeWorkspaceId! },
+      });
       if (!response.ok) throw Error("Não foi possível atualizar os membros.");
       setData(await response.json());
     }, "Workspace atualizado.");

@@ -1,7 +1,15 @@
 "use client";
-import { createContext, useContext, useEffect, useState, useRef,useSyncExternalStore } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import type { WorkspaceSnapshot } from "@/domain/workspace";
 import { createWorkspaceRepository } from "./workspace-repository";
+import { createDraftRecovery } from "./draft-recovery";
 import { RepositoryContext, ToastContext } from "@/demo/provider";
 export interface IdentityView {
   user: { id: string; name: string; email: string };
@@ -40,7 +48,13 @@ export function WorkspaceProvider({
   children: React.ReactNode;
 }) {
   const [repo] = useState(() => createWorkspaceRepository(initial));
-  const current=useSyncExternalStore(repo.subscribe,repo.snapshot,repo.snapshot);
+  const current = useSyncExternalStore(
+    repo.subscribe,
+    repo.snapshot,
+    repo.snapshot,
+  );
+  const access = useSyncExternalStore(repo.subscribe, repo.access, repo.access);
+  const [edited] = useState(createDraftRecovery);
   const [toast, setToast] = useState("");
   const mounted = useRef(false);
   useEffect(() => {
@@ -69,7 +83,50 @@ export function WorkspaceProvider({
       <CapabilitiesContext value={current.capabilities}>
         <RepositoryContext value={repo}>
           <ToastContext value={setToast}>
-            {children}
+            {access.kind === "blocked" ? (
+              <main className="auth-content" style={{ minHeight: "100svh" }}>
+                <section className="auth-box">
+                  <h1>O acesso ao workspace mudou</h1>
+                  <p role="alert">{access.message}</p>
+                  <p>Os dados anteriores foram retirados desta tela.</p>
+                  {edited.size() > 0 && (
+                    <details>
+                      <summary>
+                        Recuperar texto que você estava editando
+                      </summary>
+                      <textarea
+                        aria-label="Texto em edição recuperável"
+                        readOnly
+                        rows={8}
+                        value={edited.text()}
+                      />
+                    </details>
+                  )}
+                  <a className="btn primary" href="/dashboard">
+                    Abrir o workspace atual
+                  </a>
+                  <a className="btn" href="/login">
+                    Entrar novamente
+                  </a>
+                </section>
+              </main>
+            ) : (
+              <div
+                onChangeCapture={(e) => {
+                  edited.capture(e.target as HTMLInputElement);
+                }}
+              >
+                {access.kind === "conflict" && (
+                  <div className="error-bar" role="alert">
+                    {access.message}{" "}
+                    <button className="btn" onClick={() => location.reload()}>
+                      Recarregar dados e revisar
+                    </button>
+                  </div>
+                )}
+                {children}
+              </div>
+            )}
             {toast && (
               <div className="toast" role="status">
                 {toast}

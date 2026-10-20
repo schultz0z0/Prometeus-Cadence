@@ -37,6 +37,13 @@ export async function identitySnapshot(headers: Headers) {
     )
   ).rows as { id: string; name: string; role: string }[];
   const active = workspaces.find((w) => w.id === session.activeOrganizationId);
+  const expected = headers.get("x-cadence-workspace");
+  if (expected && expected !== active?.id)
+    throw new AppError(
+      409,
+      "O workspace mudou. Recarregue antes de continuar.",
+      "WORKSPACE_CHANGED",
+    );
   const members = active
     ? ((
         await pool.query(
@@ -129,6 +136,16 @@ export async function identityAction(
       return { workspaceId: action.workspaceId };
     }
     if (action.type === "accept") {
+      const destination = (
+        await client.query(
+          'SELECT "organizationId" FROM invitation WHERE id=$1',
+          [action.invitationId],
+        )
+      ).rows[0]?.organizationId;
+      if (!destination) throw new AppError(403, "Convite inválido ou vencido.");
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+        "members:" + destination,
+      ]);
       const invite = (
         await client.query("SELECT * FROM invitation WHERE id=$1 FOR UPDATE", [
           action.invitationId,
@@ -151,13 +168,37 @@ export async function identityAction(
         [invite.id],
       );
       await client.query(
+        "UPDATE invitation SET status='canceled' WHERE \"organizationId\"=$1 AND lower(email)=lower($2) AND status='pending'",
+        [invite.organizationId, user.email],
+      );
+      await client.query(
         'UPDATE session SET "activeOrganizationId"=$1 WHERE id=$2',
         [invite.organizationId, session.id],
       );
       await client.query("COMMIT");
       return { workspaceId: invite.organizationId };
     }
-    const p = await requirePrincipal(headers);
+    const current = (
+      await client.query(
+        'SELECT "activeOrganizationId" FROM session WHERE id=$1 AND "userId"=$2 AND "expiresAt">now() FOR UPDATE',
+        [session.id, user.id],
+      )
+    ).rows[0];
+    if (!current)
+      throw new AppError(401, "Sua sessão venceu. Entre novamente.");
+    const expected = headers.get("x-cadence-workspace");
+    if (expected && expected !== current.activeOrganizationId)
+      throw new AppError(
+        409,
+        "O workspace mudou. Recarregue antes de continuar.",
+        "WORKSPACE_CHANGED",
+      );
+    if (!current.activeOrganizationId)
+      throw new AppError(403, "Escolha um workspace.");
+    const p = { workspaceId: current.activeOrganizationId as string };
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+      "members:" + p.workspaceId,
+    ]);
     const actor = (
       await client.query(
         'SELECT role FROM member WHERE "organizationId"=$1 AND "userId"=$2 FOR UPDATE',
@@ -179,17 +220,33 @@ export async function identityAction(
         )
       ).rows[0];
       if (existing) throw new AppError(409, "Este e-mail já é membro.");
-      const inviteId = randomUUID();
       await client.query(
-        'INSERT INTO invitation(id,"organizationId",email,role,status,"expiresAt","createdAt","inviterId") VALUES($1,$2,$3,$4,\'pending\',now()+interval \'48 hours\',now(),$5)',
-        [
-          inviteId,
-          p.workspaceId,
-          action.email.toLowerCase(),
-          action.role,
-          user.id,
-        ],
+        "UPDATE invitation SET status='expired' WHERE \"organizationId\"=$1 AND lower(email)=lower($2) AND status='pending' AND \"expiresAt\"<=now()",
+        [p.workspaceId, action.email],
       );
+      const pending = (
+        await client.query(
+          "SELECT id,role FROM invitation WHERE \"organizationId\"=$1 AND lower(email)=lower($2) AND status='pending' FOR UPDATE",
+          [p.workspaceId, action.email],
+        )
+      ).rows[0];
+      if (pending && pending.role !== action.role)
+        throw new AppError(
+          409,
+          "Já existe um convite pendente com outro papel.",
+        );
+      const inviteId = pending?.id ?? randomUUID();
+      if (!pending)
+        await client.query(
+          'INSERT INTO invitation(id,"organizationId",email,role,status,"expiresAt","createdAt","inviterId") VALUES($1,$2,$3,$4,\'pending\',now()+interval \'48 hours\',now(),$5)',
+          [
+            inviteId,
+            p.workspaceId,
+            action.email.toLowerCase(),
+            action.role,
+            user.id,
+          ],
+        );
       const org = (
         await client.query("SELECT name FROM organization WHERE id=$1", [
           p.workspaceId,
@@ -219,6 +276,17 @@ export async function identityAction(
           403,
           "Somente o proprietário pode alterar administradores; a titularidade é preservada.",
         );
+      if (action.type === "remove" || action.type === "role") {
+        const targetEmail = (
+          await client.query('SELECT email FROM "user" WHERE id=$1', [
+            target.userId,
+          ])
+        ).rows[0]?.email;
+        await client.query(
+          "UPDATE invitation SET status='canceled' WHERE \"organizationId\"=$1 AND status='pending' AND (lower(email)=lower($2) OR \"inviterId\"=$3)",
+          [p.workspaceId, targetEmail, target.userId],
+        );
+      }
       if (action.type === "remove")
         await client.query("DELETE FROM member WHERE id=$1", [target.id]);
       else

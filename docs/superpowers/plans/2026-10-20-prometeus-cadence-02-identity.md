@@ -1,6 +1,6 @@
 # Prometeus Cadence — Identity and Persistence Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Substituir o armazenamento demonstrativo como modo principal por contas reais, sessão, workspaces, papéis e dados persistentes no PostgreSQL local, demonstrando isolamento entre dois clientes.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node 24, Next 16.4.2 e React 19.3.1 existentes; PostgreSQL 18 em imagem oficial com tag/digest fixados na execução; Better Auth 1.7.12, `pg` 8.23.1, Zod 4.6.7 e Nodemailer 10.1.7, versões consultadas em 20/10/2026 e a fixar no lockfile. MailHog local reutiliza a imagem já instalada, em container próprio. Não adicionar Redis neste marco.
 
-**Spec:** `docs/superpowers/specs/2026-10-20-prometeus-cadence-design.md`, aprovada; entrega 02 em `2026-10-20-prometeus-cadence-roadmap.md`. O usuário escolheu infraestrutura local/Docker em 20/10/2026: “postgresql ou redis algo assim”. Este plano concretiza essa escolha e aguarda revisão antes do código. Método nativo preservado da autorização anterior.
+**Spec:** `docs/superpowers/specs/2026-10-20-prometeus-cadence-design.md`, aprovada; entrega 02 em `2026-10-20-prometeus-cadence-roadmap.md`. O usuário escolheu infraestrutura local/Docker em 20/10/2026: “postgresql ou redis algo assim”. Este plano foi aprovado pelo usuário e executado nativamente nesta conversa.
 
 ## Global Constraints
 
@@ -74,73 +74,73 @@
 **Files:** criar compose/config/runner acima; alterar `.gitignore`, `package.json`, `package-lock.json`.
 **Interfaces:** `createPools(config):{authPool:Pool,appPool:Pool,close():Promise<void>}`; `withWorkspaceTransaction<T>(principal:Principal,fn:(client:PoolClient)=>Promise<T>):Promise<T>`. Banco principal `prometeus_cadence`, teste `prometeus_cadence_test`. Roles separadas: migrador/owner, autenticação e aplicação; runtime sem superuser/BYPASSRLS.
 
-- [ ] RED: teste de migração duas vezes mantém versões/checksums e não apaga dados; divergência de checksum falha; rollback não deixa tabela parcialmente migrada. `rtk npm run test:integration -- migrations` deve falhar antes do runner.
-- [ ] Criar Compose exclusivo `prometeus-cadence`, volume persistente e healthcheck `pg_isready`. Fixar imagem PostgreSQL 18 em patch/digest existentes no registry antes de subir; montar `/var/lib/postgresql`, conforme imagem oficial 18+. MailHog usa digest da imagem existente e rede/portas próprios. Não adicionar Redis.
-- [ ] Gerar `.env.local` somente se ausente, sem imprimir valores; URLs para roles distintas e SMTP local. Instalar dependências fixadas; não executar CLI com `@latest`.
-- [ ] Criar runner de migração, roles/base e harness de integração com whitelist de suítes e validação das URLs de teste. Auth é migrado em T2, depois da configuração da biblioteca; domínio em T4. Healthcheck expõe somente disponibilidade.
-- [ ] GREEN: testes de migração passam; reiniciar container preserva registro de teste; `rtk docker compose config --quiet` passa. Commit `feat: add isolated local postgres infrastructure`.
+- [x] RED: teste de migração duas vezes mantém versões/checksums e não apaga dados; divergência de checksum falha; rollback não deixa tabela parcialmente migrada. `rtk npm run test:integration -- migrations` deve falhar antes do runner.
+- [x] Criar Compose exclusivo `prometeus-cadence`, volume persistente e healthcheck `pg_isready`. Fixar imagem PostgreSQL 18 em patch/digest existentes no registry antes de subir; montar `/var/lib/postgresql`, conforme imagem oficial 18+. MailHog usa digest da imagem existente e rede/portas próprios. Não adicionar Redis.
+- [x] Gerar `.env.local` somente se ausente, sem imprimir valores; URLs para roles distintas e SMTP local. Instalar dependências fixadas; não executar CLI com `@latest`.
+- [x] Criar runner de migração, roles/base e harness de integração com whitelist de suítes e validação das URLs de teste. Auth é migrado em T2, depois da configuração da biblioteca; domínio em T4. Healthcheck expõe somente disponibilidade.
+- [x] GREEN: testes de migração passam; reiniciar container preserva registro de teste; `rtk docker compose config --quiet` passa. Commit `feat: add isolated local postgres infrastructure`.
 
 ## T2 — Cadastro, sessão e recuperação reais
 
 **Files:** criar `src/server/auth/*`, `src/lib/auth-client.ts`, `src/app/api/auth/[...all]/route.ts`, páginas `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, estilos de auth.
 **Interfaces:** Better Auth com PostgreSQL e plugin de organizações; sessão de 7 dias, atualização após 24h, cache de cookie de sessão desativado para revalidação. Cookie HttpOnly, SameSite=Lax, Secure em HTTPS; origem confiável exata e callback apenas interno. Senha 12–128 caracteres; verificação de e-mail obrigatória antes do workspace.
 
-- [ ] RED: cadastro/e-mail duplicado normalizado, login inválido, sessão expirada/revogada, logout, origem indevida, callback externo, recuperação consumida/expirada. Limite de login de 5 tentativas/60s por chave controlada pelo servidor; testar 429 e expiração do limite.
-- [ ] Implementar fluxos com biblioteca fixada e erro uniforme para solicitar recuperação de conta existente/inexistente; nunca expor hash ou token no DTO. Verificar sessão no servidor em cada endpoint protegido, não apenas no layout.
-- [ ] Gerar/revisar o SQL de auth e organizações usando o schema da biblioteca fixada; salvar em `db/migrations/` e aplicar pelo runner de T1. Não depender de geração ou migração automática em cada inicialização do app.
-- [ ] E-mails de verificação/recuperação vão para MailHog local. Testes acessam o capturador local e abrem links de uso único. Google só é habilitado com client ID/secret próprios; sem configuração mostrar requisito, sem falso sucesso.
-- [ ] GREEN: `rtk npm run test:integration -- auth`; navegador cadastra usuário, verifica e-mail local, entra, sai e recupera senha. Commit `feat: add self hosted account authentication`.
+- [x] RED: cadastro/e-mail duplicado normalizado, login inválido, sessão expirada/revogada, logout, origem indevida, callback externo, recuperação consumida/expirada. Limite de login de 5 tentativas/60s por chave controlada pelo servidor; testar 429 e expiração do limite.
+- [x] Implementar fluxos com biblioteca fixada e erro uniforme para solicitar recuperação de conta existente/inexistente; nunca expor hash ou token no DTO. Verificar sessão no servidor em cada endpoint protegido, não apenas no layout.
+- [x] Gerar/revisar o SQL de auth e organizações usando o schema da biblioteca fixada; salvar em `db/migrations/` e aplicar pelo runner de T1. Não depender de geração ou migração automática em cada inicialização do app.
+- [x] E-mails de verificação/recuperação vão para MailHog local. Testes acessam o capturador local e abrem links de uso único. Google só é habilitado com client ID/secret próprios; sem configuração mostrar requisito, sem falso sucesso.
+- [x] GREEN: `rtk npm run test:integration -- auth`; navegador cadastra usuário, verifica e-mail local, entra, sai e recupera senha. Commit `feat: add self hosted account authentication`.
 
 ## T3 — Organizações, papéis e convites
 
 **Files:** criar principal/permissions e workspace service; `/onboarding/workspace`, seletor na shell, `/settings/seats`, aceitação de convite; migrações de perfil/preferências.
 **Interfaces:** `requirePrincipal`, `requirePermission` e matriz declarada. `ensureWorkspaceForOwner(userId,requestId,name):Promise<workspaceId>` provisiona organização + associação + configurações vazias de forma recuperável/idempotente; se autenticação já criou o usuário, falha no provisionamento retorna onboarding retomável.
 
-- [ ] RED: criação concorrente/retry, operador tentando elevar papel, admin tentando alterar proprietário/admin, usuário removido usando sessão anterior, convite para outro e-mail, convite expirado/reutilizado, troca para organização alheia. `test:integration -- memberships` deve falhar antes do serviço.
-- [ ] Implementar organizações com plugin da biblioteca e matriz explícita, auditando ações administrativas. Revalidar associação em cada leitura/escrita; novas contas começam vazias, sem leads fictícios.
-- [ ] Convites no SMTP local, vinculados a e-mail verificado e aceitos após login. Troca de workspace invalida snapshot/cache anterior e cancela/ignora respostas da organização antiga.
-- [ ] GREEN: testes e navegador com owner/admin/operator. Commit `feat: add workspaces roles and membership management`.
+- [x] RED: criação concorrente/retry, operador tentando elevar papel, admin tentando alterar proprietário/admin, usuário removido usando sessão anterior, convite para outro e-mail, convite expirado/reutilizado, troca para organização alheia. `test:integration -- memberships` deve falhar antes do serviço.
+- [x] Implementar organizações com plugin da biblioteca e matriz explícita, auditando ações administrativas. Revalidar associação em cada leitura/escrita; novas contas começam vazias, sem leads fictícios.
+- [x] Convites no SMTP local, vinculados a e-mail verificado e aceitos após login. Troca de workspace invalida snapshot/cache anterior e cancela/ignora respostas da organização antiga.
+- [x] GREEN: testes e navegador com owner/admin/operator. Commit `feat: add workspaces roles and membership management`.
 
 ## T4 — Persistência de domínio e isolamento PostgreSQL
 
 **Files:** criar migrações de domínio, server repository/commands/schemas e transições puras reutilizadas.
 **Interfaces:** `readWorkspaceSnapshot(principal):Promise<WorkspaceSnapshot>` e `executeWorkspaceCommand`. Tabelas de listas, leads, templates, contexto/versionamento, cadências, automações, preferências, jobs demonstrativos, idempotência e auditoria. IDs existentes são text; chave de registro e FK incluem workspace. Settings/steps/filtros podem ser JSONB validados, sem snapshot único substituível.
 
-- [ ] RED: A/B com IDs iguais; leitura/escrita cruzada e FK para lista alheia falham; papel runtime sem contexto vê zero dados; contexto não vaza pelo pool. Testar rollback da confirmação e importação, revisão obsoleta, retry após resultado persistido e chave repetida com corpo diferente.
-- [ ] Implementar `ENABLE/FORCE ROW LEVEL SECURITY`, índices iniciados por workspace e policies `USING/WITH CHECK`; contexto por `set_config(...,true)` dentro da mesma transação/conexão, nunca em `pool.query` separado. Verificar membership/role antes de abrir a operação.
-- [ ] Reutilizar regras puras do marco 01; servidor impõe status de rascunho/pausado, limite de importação de 500 registros por comando e limite de corpo de 2 MB, preserva edição humana e confirma público em uma transação. Não aceitar ativação/envio por troca de campo.
-- [ ] Idempotência salva hash canônico da operação e resultado no mesmo commit. Incrementar revisão por mutação; auditoria sem corpos sensíveis. Preferências de usuário não ficam compartilhadas com outros membros.
-- [ ] GREEN: `rtk npm run test:integration -- tenancy commands`; reiniciar app/banco e reabrir em sessão diferente mantém os dados. Commit `feat: persist workspace data with transactional isolation`.
+- [x] RED: A/B com IDs iguais; leitura/escrita cruzada e FK para lista alheia falham; papel runtime sem contexto vê zero dados; contexto não vaza pelo pool. Testar rollback da confirmação e importação, revisão obsoleta, retry após resultado persistido e chave repetida com corpo diferente.
+- [x] Implementar `ENABLE/FORCE ROW LEVEL SECURITY`, índices iniciados por workspace e policies `USING/WITH CHECK`; contexto por `set_config(...,true)` dentro da mesma transação/conexão, nunca em `pool.query` separado. Verificar membership/role antes de abrir a operação.
+- [x] Reutilizar regras puras do marco 01; servidor impõe status de rascunho/pausado, limite de importação de 500 registros por comando e limite de corpo de 2 MB, preserva edição humana e confirma público em uma transação. Não aceitar ativação/envio por troca de campo.
+- [x] Idempotência salva hash canônico da operação e resultado no mesmo commit. Incrementar revisão por mutação; auditoria sem corpos sensíveis. Preferências de usuário não ficam compartilhadas com outros membros.
+- [x] GREEN: `rtk npm run test:integration -- tenancy commands`; reiniciar app/banco e reabrir em sessão diferente mantém os dados. Commit `feat: persist workspace data with transactional isolation`.
 
 ## T5 — Transporte autenticado e migração da interface
 
 **Files:** criar `/api/workspace/snapshot`, `/api/workspace/commands`, client repository/provider; alterar layout e consumidores de `useDemo/useRepository/useAction` em todos os módulos.
 **Interfaces:** envelopes e client repository acima. Cache privado por workspace, `no-store` nas leituras autenticadas; fila local ordena gravações da mesma aba. 409 mantém formulário, atualiza base e pede reaplicar; 401 mantém edição temporária e oferece reautenticação.
 
-- [ ] RED: Promise rejeitada não exibe sucesso/navega; dois cliques em confirmação manual/IA, resposta de workspace antigo chega depois da troca, falha em importação não altera snapshot, 409 não faz retry cego com overwrite.
-- [ ] Migrar todos os callbacks para `await`; operação manual usa requestId estável e compartilha Promise em curso, liberando retry após falha. Publicar snapshot somente após resposta validada do servidor.
-- [ ] Layout verifica identidade e carrega snapshot autorizado. `/login` redireciona autenticado com workspace; sem workspace vai ao onboarding. Demonstrativo continua disponível apenas por modo explícito `APP_DATA_MODE=demo`, com banner claro e sem chamadas ao banco; modo principal é `server` e não faz fallback silencioso para demo.
-- [ ] GREEN: suíte atual + client/integration. Navegador grava contato, automação e cadência em conta A, recarrega e abre outra sessão; conta B permanece vazia. Commit `feat: connect application workflows to authenticated persistence`.
+- [x] RED: Promise rejeitada não exibe sucesso/navega; dois cliques em confirmação manual/IA, resposta de workspace antigo chega depois da troca, falha em importação não altera snapshot, 409 não faz retry cego com overwrite.
+- [x] Migrar todos os callbacks para `await`; operação manual usa requestId estável e compartilha Promise em curso, liberando retry após falha. Publicar snapshot somente após resposta validada do servidor.
+- [x] Layout verifica identidade e carrega snapshot autorizado. `/login` redireciona autenticado com workspace; sem workspace vai ao onboarding. Demonstrativo continua disponível apenas por modo explícito `APP_DATA_MODE=demo`, com banner claro e sem chamadas ao banco; modo principal é `server` e não faz fallback silencioso para demo.
+- [x] GREEN: suíte atual + client/integration. Navegador grava contato, automação e cadência em conta A, recarrega e abre outra sessão; conta B permanece vazia. Commit `feat: connect application workflows to authenticated persistence`.
 
 ## T6 — Conta, membros e segurança na UX existente
 
 **Files:** alterar shell, account/settings, criar members/security e componentes de estados de sessão/permissão.
 **Interfaces:** DTO pessoal separado de configuração do workspace; capability server-driven só orienta UI, nunca substitui autorização. Sessões listadas com metadados mínimos; revogação própria/outras exige identidade atual.
 
-- [ ] RED: operador tenta salvar configuração administrativa via HTTP direto; atualização de perfil pessoal não altera membro diferente; última associação de owner não pode ser removida; dados de sessão não incluem tokens.
-- [ ] Implementar perfil, e-mail autenticado, fuso, nome da organização, membros, convites locais, mudança de papel permitida, logout, sessões e troca de senha. Preencher estados vazios de contas novas sem alegar que já criaram cadência/lista.
-- [ ] Ajustar textos “salvo neste navegador” somente para dados demonstrativos/simulações. Preservar avisos de provedores desconectados, assinatura pendente e nenhum envio real. Não migrar automaticamente localStorage da demonstração.
-- [ ] GREEN: testes e fluxo owner/admin/operator no navegador; comparação de login com print U01 e formulários do marco 01. Commit `feat: add account and security management workflows`.
+- [x] RED: operador tenta salvar configuração administrativa via HTTP direto; atualização de perfil pessoal não altera membro diferente; última associação de owner não pode ser removida; dados de sessão não incluem tokens.
+- [x] Implementar perfil, e-mail autenticado, fuso, nome da organização, membros, convites locais, mudança de papel permitida, logout, sessões e troca de senha. Preencher estados vazios de contas novas sem alegar que já criaram cadência/lista.
+- [x] Ajustar textos “salvo neste navegador” somente para dados demonstrativos/simulações. Preservar avisos de provedores desconectados, assinatura pendente e nenhum envio real. Não migrar automaticamente localStorage da demonstração.
+- [x] GREEN: testes e fluxo owner/admin/operator no navegador; comparação de login com print U01 e formulários do marco 01. Commit `feat: add account and security management workflows`.
 
 ## T7 — Aceite e documentação do marco
 
 **Files:** criar `docs/validation/02-identity.md`, capturas próprias, atualizar README e roteiro.
 
-- [ ] Rodar `rtk npm test`, `rtk npm run test:integration`, `rtk npm run typecheck`, `rtk npm run build`: todos exit 0. Integração usa banco de teste nomeado e rejeita URL do banco principal; nenhuma limpeza destrói volume alheio.
-- [ ] Testar duas sessões reais: cadastro/verificação/login; criar workspace; persistir lead/template/automação/cadência; recarregar/reiniciar; convidar operador e negar ação administrativa; remover membro; confirmar isolamento de B e reutilização de conexão sem contexto antigo.
-- [ ] Smoke adapta-se às rotas protegidas: 401/redirect esperado sem sessão, 200 com sessão; não reutilizar o aceite antigo de “todas públicas”. Conferir payload/HTML sem hash, segredo ou dados do outro cliente.
-- [ ] Revisão independente única do conjunto conforme execução nativa, correções com RED→GREEN; declarar limites de infraestrutura local e OAuth sem credenciais. Registrar tag/digest real das imagens, versões, migrações e comando de retomada.
-- [ ] Commit `test: verify authenticated workspace isolation and persistence`.
+- [x] Rodar `rtk npm test`, `rtk npm run test:integration`, `rtk npm run typecheck`, `rtk npm run build`: todos exit 0. Integração usa banco de teste nomeado e rejeita URL do banco principal; nenhuma limpeza destrói volume alheio.
+- [x] Testar duas sessões reais: cadastro/verificação/login; criar workspace; persistir lead/template/automação/cadência; recarregar/reiniciar; convidar operador e negar ação administrativa; remover membro; confirmar isolamento de B e reutilização de conexão sem contexto antigo.
+- [x] Smoke adapta-se às rotas protegidas: 401/redirect esperado sem sessão, 200 com sessão; não reutilizar o aceite antigo de “todas públicas”. Conferir payload/HTML sem hash, segredo ou dados do outro cliente.
+- [x] Revisão independente única do conjunto conforme execução nativa, correções com RED→GREEN; declarar limites de infraestrutura local e OAuth sem credenciais. Registrar tag/digest real das imagens, versões, migrações e comando de retomada.
+- [x] Commit `test: verify authenticated workspace isolation and persistence`.
 
 ## Auto-revisão e limites
 
@@ -160,4 +160,4 @@
 
 ## Handoff
 
-Plano escrito e revisado internamente; implementação 02 ainda não iniciada. O usuário já escolheu execução nativa e PostgreSQL/Docker. A revisão deste plano é a próxima etapa requerida por `superpowers:writing-plans`; preservar o método escolhido e não pedir essa escolha novamente.
+Plano aprovado e implementação executada. Evidências em `docs/validation/02-identity.md`; revisão final e respectivo aceite registrados em `docs/validation/review-02.md`.

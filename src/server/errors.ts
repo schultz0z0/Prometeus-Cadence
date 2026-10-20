@@ -1,13 +1,16 @@
 export class AppError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
 }
 export function errorResponse(e: unknown) {
   return Response.json(
     {
+      ...(e instanceof AppError && e.code ? { code: e.code } : {}),
       message:
         e instanceof AppError
           ? e.message

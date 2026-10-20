@@ -93,6 +93,24 @@ export function createDemoRepository(
         }
       });
     },
+    saveLeadBatch(leads, options) {
+      commit((s) => {
+        if (options.list && !s.lists.some((l) => l.id === options.list!.id))
+          s.lists.push(options.list);
+        for (const lead of leads) {
+          const i = s.leads.findIndex((l) => l.id === lead.id);
+          if (options.mode === "update") {
+            if (i < 0) throw Error("Contato não encontrado.");
+            s.leads[i] = lead;
+          } else if (i < 0) s.leads.push(lead);
+        }
+        if (options.job) {
+          const i = s.jobs.findIndex((j) => j.id === options.job!.id);
+          if (i < 0) s.jobs.unshift(options.job);
+          else s.jobs[i] = options.job;
+        }
+      });
+    },
     saveCadenceDraft(cadence) {
       commit((s) => {
         const draft = { ...cadence, status: "draft" as const };

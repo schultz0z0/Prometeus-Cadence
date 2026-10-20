@@ -83,7 +83,11 @@ export function Account() {
             setBusy(true);
             if (
               await run(
-                () => identityPost({ type: "rename", name: workspaceName }),
+                () =>
+                  identityPost(
+                    { type: "rename", name: workspaceName },
+                    identity.activeWorkspaceId ?? undefined,
+                  ),
                 "Nome do workspace salvo.",
               )
             )

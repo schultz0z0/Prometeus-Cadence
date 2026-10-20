@@ -65,6 +65,10 @@ export function Qualifier() {
   const [confirm, setConfirm] = useState(false);
   const [limit, setLimit] = useState(500);
   const [lng, setLng] = useState("Português");
+  const [operation, setOperation] = useState(() => ({
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+  }));
   const leads = s.leads.filter(
     (l) =>
       l.listId === list &&
@@ -76,40 +80,44 @@ export function Qualifier() {
   async function simulate() {
     if (
       await run(async () => {
-        await Promise.all(
-          eligible.map(
-            async (l) =>
-              await repo.upsertLead({
-                ...l,
-                qualification: checked.includes("qualify")
-                  ? l.site
-                    ? "qualified"
-                    : "warning"
-                  : l.qualification,
-                summary: checked.includes("summary")
-                  ? "Resumo de demonstração: empresa fictícia. Nenhum site foi lido ou modelo de IA consultado."
-                  : l.summary,
-                reason: checked.includes("qualify")
-                  ? "Veredito demonstrativo baseado apenas na presença de site."
-                  : l.reason,
-              }),
-          ),
+        await repo.saveLeadBatch(
+          eligible.map((l) => ({
+            ...l,
+            qualification: checked.includes("qualify")
+              ? l.site
+                ? "qualified"
+                : "warning"
+              : l.qualification,
+            summary: checked.includes("summary")
+              ? "Resumo de demonstração: empresa fictícia. Nenhum site foi lido ou modelo de IA consultado."
+              : l.summary,
+            reason: checked.includes("qualify")
+              ? "Veredito demonstrativo baseado apenas na presença de site."
+              : l.reason,
+          })),
+          {
+            mode: "update",
+            job: {
+              id: operation.id,
+              name: "Qualificação local",
+              type: "qualification",
+              status: "completed",
+              count: eligible.length,
+              demo: true,
+              billableUsage: 0,
+              createdAt: operation.createdAt,
+              details: checked.join(", "),
+            },
+          },
         );
-        await repo.addJob({
-          id: crypto.randomUUID(),
-          name: "Qualificação local",
-          type: "qualification",
-          status: "completed",
-          count: eligible.length,
-          demo: true,
-          billableUsage: 0,
-          createdAt: new Date().toISOString(),
-          details: checked.join(", "),
-        });
       }, "Simulação de qualificação concluída.")
     ) {
       setSelected([]);
       setConfirm(false);
+      setOperation({
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+      });
     }
   }
   return (

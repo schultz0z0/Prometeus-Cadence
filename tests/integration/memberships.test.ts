@@ -9,6 +9,72 @@ import { requirePrincipal } from "../../src/server/auth/principal.ts";
 import { verifiedUser, resetRateLimits, mailLink } from "./helpers.ts";
 const headers = (cookie: string) => new Headers({ cookie });
 after(async () => getPools().close());
+test("stale administrative workspace expectation cannot rename or invite into another workspace", async () => {
+  await resetRateLimits();
+  const u = await verifiedUser();
+  const h = headers(u.cookie);
+  const a = await identityAction(h, {
+    type: "create",
+    requestId: crypto.randomUUID(),
+    name: "Admin A",
+  });
+  const b = await identityAction(h, {
+    type: "create",
+    requestId: crypto.randomUUID(),
+    name: "Admin B",
+  });
+  h.set("x-cadence-workspace", a.workspaceId!);
+  await assert.rejects(
+    identityAction(h, { type: "rename", name: "Wrong workspace" }),
+    { status: 409 },
+  );
+  await assert.rejects(
+    identityAction(h, {
+      type: "invite",
+      email: "wrong@cadence.example",
+      role: "operator",
+    }),
+    { status: 409 },
+  );
+  h.delete("x-cadence-workspace");
+  assert.equal(
+    (await identitySnapshot(h)).workspaces.find((w) => w.id === b.workspaceId)!
+      .name,
+    "Admin B",
+  );
+});
+test("duplicate pending invitations cannot restore membership after removal", async () => {
+  await resetRateLimits();
+  const owner = await verifiedUser(),
+    guest = await verifiedUser();
+  const h = headers(owner.cookie),
+    g = headers(guest.cookie);
+  await identityAction(h, {
+    type: "create",
+    requestId: crypto.randomUUID(),
+    name: "Invitation revocation",
+  });
+  const first = await identityAction(h, {
+    type: "invite",
+    email: guest.email,
+    role: "admin",
+  });
+  const second = await identityAction(h, {
+    type: "invite",
+    email: guest.email.toUpperCase(),
+    role: "admin",
+  });
+  assert.equal(first.id, second.id);
+  await identityAction(g, { type: "accept", invitationId: first.id });
+  const member = (await identitySnapshot(h)).members.find(
+    (m) => m.userId === guest.user.id,
+  )!;
+  await identityAction(h, { type: "remove", memberId: member.id });
+  await assert.rejects(
+    identityAction(g, { type: "accept", invitationId: second.id }),
+  );
+  await assert.rejects(requirePrincipal(g));
+});
 test("workspace provisioning is concurrent-safe and session cannot switch to a foreign workspace", async () => {
   await resetRateLimits();
   const a = await verifiedUser(),

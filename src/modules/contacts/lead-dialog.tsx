@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { Button, Field, Modal } from "@/components/ui/primitives";
 import type { Lead } from "@/domain/model";
+import { createContactOperation } from "@/domain/contact-operation";
 export function LeadDialog({
   lead,
   onClose,
@@ -13,18 +14,11 @@ export function LeadDialog({
   const s = useDemo();
   const repo = useRepository();
   const run = useAction();
-  const [newListId] = useState(() => crypto.randomUUID());
-  const [newListName, setNewListName] = useState("Meus primeiros contatos");
-  const [d, setD] = useState<Lead>(
-    lead ?? {
-      id: crypto.randomUUID(),
-      name: "",
-      listId: s.lists[0]?.id ?? "",
-      source: "MANUAL",
-      qualification: "pending",
-      createdAt: new Date().toISOString(),
-    },
+  const [operation] = useState(() =>
+    createContactOperation(repo, s.lists, lead),
   );
+  const [newListName, setNewListName] = useState("Meus primeiros contatos");
+  const [d, setD] = useState<Lead>(operation.initialLead);
   function field(k: keyof Lead, v: string) {
     setD({ ...d, [k]: v });
   }
@@ -38,12 +32,7 @@ export function LeadDialog({
           e.preventDefault();
           if (
             await run(async () => {
-              if (!s.lists.length)
-                await repo.importLeads(
-                  [{ ...d, name: d.name.trim(), listId: newListId }],
-                  { id: newListId, name: newListName },
-                );
-              else await repo.upsertLead({ ...d, name: d.name.trim() });
+              await operation.save(d, newListName);
             }, "Contato salvo.")
           )
             onClose();
@@ -59,7 +48,7 @@ export function LeadDialog({
               maxLength={180}
             />
           </Field>
-          {!s.lists.length ? (
+          {operation.creatingList ? (
             <Field label="Nome da nova lista">
               <input
                 required

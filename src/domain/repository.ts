@@ -16,6 +16,10 @@ export interface DemoRepository {
   subscribe(listener: () => void): () => void;
   upsertLead(lead: Lead): void;
   importLeads(leads: Lead[], list?: LeadList): void;
+  saveLeadBatch(
+    leads: Lead[],
+    options: { mode: "import" | "update"; list?: LeadList; job?: DemoJob },
+  ): void;
   confirmAutomationPlan(
     plan: AudiencePlan,
     requestId: string,

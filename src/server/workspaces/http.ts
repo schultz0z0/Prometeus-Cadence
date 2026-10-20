@@ -5,7 +5,7 @@ async function principalFor(request: Request) {
   const p = await requirePrincipal(request.headers);
   const expected = request.headers.get("x-cadence-workspace");
   if (expected && expected !== p.workspaceId)
-    throw new AppError(409, "O workspace mudou. Recarregue antes de salvar.");
+    throw new AppError(409, "O workspace mudou. Recarregue antes de salvar.",'WORKSPACE_CHANGED');
   return p;
 }
 async function personalize(

@@ -153,7 +153,25 @@ const preferences = z.strictObject({
   notifyWhatsapp: z.boolean().optional(),
   onboardingHidden: z.boolean().optional(),
 });
+const job = z.strictObject({
+  id,
+  name,
+  type: z.enum(["generation", "qualification", "enrichment"]),
+  status: z.enum(["completed", "cancelled"]),
+  count: z.int().min(0).max(10000),
+  demo: z.literal(true),
+  billableUsage: z.literal(0),
+  createdAt: date,
+  details: text,
+});
 export const commandSchema = z.discriminatedUnion("type", [
+  z.strictObject({
+    type: z.literal("leads.batch"),
+    leads: z.array(lead).max(500),
+    mode: z.enum(["import", "update"]),
+    list: list.optional(),
+    job: job.optional(),
+  }),
   z.strictObject({ type: z.literal("lead.upsert"), lead }),
   z.strictObject({
     type: z.literal("leads.import"),

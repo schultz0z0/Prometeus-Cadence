@@ -15,10 +15,18 @@ export async function POST(request: Request) {
     checkOrigin(request);
     const text = await request.text();
     if (text.length > 8192) throw new AppError(422, "Requisição muito grande.");
-    return Response.json(
-      await identityAction(request.headers, JSON.parse(text)),
-      { headers: { "cache-control": "no-store" } },
-    );
+    const input = JSON.parse(text);
+    if (
+      ["rename", "invite", "remove", "role"].includes(input?.type) &&
+      !request.headers.get("x-cadence-workspace")
+    )
+      throw new AppError(
+        422,
+        "Informe o workspace exibido antes de administrar.",
+      );
+    return Response.json(await identityAction(request.headers, input), {
+      headers: { "cache-control": "no-store" },
+    });
   } catch (e) {
     return errorResponse(e);
   }

@@ -2,10 +2,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button, Field } from "@/components/ui/primitives";
-export async function identityPost(body: unknown) {
+export async function identityPost(
+  body: unknown,
+  expectedWorkspaceId?: string,
+) {
   const response = await fetch("/api/identity", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      ...(expectedWorkspaceId
+        ? { "x-cadence-workspace": expectedWorkspaceId }
+        : {}),
+    },
     body: JSON.stringify(body),
   });
   const result = await response.json();

@@ -2,7 +2,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useDemo, useRepository, useAction, useNotify } from "@/demo/provider";
-import { simulateProspecting } from "@/demo/prospecting";
+import {
+  createGenerationIdentity,
+  prepareSimulatedGeneration,
+} from "@/demo/prospecting";
 import type { Source, Lead } from "@/domain/model";
 import { SourcePicker } from "./source-picker";
 import { CnpjFilters } from "./cnpj-filters";
@@ -43,36 +46,31 @@ export function Generator({
   } | null>(null);
   const [saved, setSaved] = useState<Record<string, string>[]>([]);
   const [cnpjMode, setCnpjMode] = useState("term");
+  const [operation, setOperation] = useState(createGenerationIdentity);
   async function generate() {
-    const id = mode === "new" ? crypto.randomUUID() : listId;
-    const r = simulateProspecting({
-      source: source as "MAPS" | "WEB" | "CNPJ" | "APOLLO",
-      destination: id,
-      filters,
-      limit,
-    });
+    const id = mode === "new" ? operation.listId : listId;
+    const r = prepareSimulatedGeneration(
+      {
+        source: source as "MAPS" | "WEB" | "CNPJ" | "APOLLO",
+        destination: id,
+        filters,
+        limit,
+      },
+      mode === "new" ? name.trim() : undefined,
+      operation,
+    );
     if (
       await run(async () => {
-        await repo.importLeads(
-          r.leads,
-          mode === "new" ? { id, name: name.trim() } : undefined,
-        );
-        await repo.addJob({
-          id: crypto.randomUUID(),
-          name: `Geração · ${name || filters.term}`,
-          type: "generation",
-          status: "completed",
-          count: r.leads.length,
-          demo: true,
-          billableUsage: 0,
-          createdAt: new Date().toISOString(),
-          details:
-            "Dados fictícios de demonstração. Nenhum provedor foi consultado.",
+        await repo.saveLeadBatch(r.leads, {
+          mode: "import",
+          ...(r.list ? { list: r.list } : {}),
+          job: r.job,
         });
       }, "Simulação local concluída.")
     ) {
       setResult({ listId: id, count: r.leads.length });
       setConfirm(false);
+      setOperation(createGenerationIdentity());
     }
   }
   return (

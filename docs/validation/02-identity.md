@@ -8,14 +8,14 @@ Execução nativa do plano aprovado de 20/10/2026. A identidade e a arquitetura 
 - PostgreSQL 18.6, imagem `postgres:18@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b`.
 - MailHog `mailhog/mailhog@sha256:8d76a3d4ffa32a3661311944007a415332c4bb855657f4f6c57996405c009bea` já instalado, reaproveitado em container próprio.
 - Projeto Compose `prometeus-cadence`, banco 55432, SMTP 1125, caixa local 8125; nenhuma infraestrutura de outro projeto foi reutilizada.
-- Migrações 001–004: fundação, esquema Better Auth, memberships e domínio normalizado. Roles de autenticação/aplicação separadas do migrador; runtime sem superuser/BYPASSRLS.
+- Migrações 001–005: fundação, esquema Better Auth, memberships, domínio normalizado e unicidade de convites pendentes. Roles de autenticação/aplicação separadas do migrador; runtime sem superuser/BYPASSRLS.
 
 ## Evidência de aceite
 
 | Verificação | Resultado |
 | --- | --- |
-| Testes de domínio/cliente | 36 passaram |
-| Integração real em banco `_test` | 16 passaram |
+| Testes de domínio/cliente | 43 passaram |
+| Integração real em banco `_test` | 19 passaram |
 | TypeScript e build de produção | exit 0 |
 | Smoke HTTP anônimo | 45/45; redirect esperado no app, 401 nas APIs privadas |
 | Cadastro → e-mail local → workspace vazio | Exercitado em duas sessões Chrome isoladas |
@@ -27,6 +27,8 @@ Execução nativa do plano aprovado de 20/10/2026. A identidade e a arquitetura 
 | Convite para operador | E-mail local, aceite e tentativa administrativa retornou 403 |
 | Troca de workspace | Sessão B voltou ao seu workspace vazio |
 | Reinício do banco | Contato, automações e cadência preservados; reconexão verificada |
+| Edição concorrente em outra aba | Salvamento antigo bloqueado; rascunho preservado e texto mais recente do servidor mantido |
+| Troca de workspace com formulário aberto | Superfície anterior removida; recuperação temporária contém somente a última edição de cada campo |
 | Console e layout | Sem erros relevantes no fluxo de produção; sem overflow horizontal no login móvel e contatos |
 
 Os testes verificam: e-mail normalizado único sem revelar existência da conta, verificação obrigatória, cookie HttpOnly, origem/callback permitidos, limitação de tentativas, expiração, recuperação de uso único, revogação, propriedade do perfil/sessões; convites com e-mail errado/vencidos/usados; matriz de papéis e remoção; IDs iguais em dois workspaces, FKs compostas, RLS, pool sem contexto, rollback de importação, confirmação concorrente/idempotente, conflitos e limite de 500 registros. Preferências pessoais não atravessam membros.
@@ -42,6 +44,7 @@ Desktop 1440×900; login móvel solicitado a 390×844, com viewport efetivo de 5
 - [Login desktop](screenshots/02/login-desktop.png)
 - [Login móvel](screenshots/02/login-mobile.png)
 - [Confirmação persistida](screenshots/02/automation-saved.png)
+- [Contato persistido após novo login](screenshots/02/contacts-persisted.png)
 
 A composição de login mantém o painel escuro, formulário claro e ação laranja do print U01, com marca própria. O formulário de conta foi separado em perfil pessoal, nome do workspace e preferências. Google fica indisponível sem credenciais próprias; não há CAPTCHA inventado.
 
@@ -61,3 +64,7 @@ Dados do workspace são lidos em snapshot inteiro nesta fase; tabelas são separ
 Retomada: `rtk npm run db:up`, `rtk npm run db:migrate`, `rtk npm run dev`. Para validar: `rtk npm test`, `rtk npm run test:integration`, `rtk npm run typecheck`, `rtk npm run build`; com o app ativo, `rtk proxy node scripts/smoke-routes.mjs`. A integração seleciona URLs do banco `_test` e recusa outro sufixo. Não apagar o volume de dados.
 
 Revisão independente e decisões finais: `review-02.md`.
+
+Após a revisão, alterações externas bloqueiam novos salvamentos até recarregar/revisar explicitamente, preservando a edição para cópia. Mudança de workspace ou perda de acesso retira o snapshot antigo da tela. Retries incertos mantêm a revisão original e a chave de idempotência; lotes e seus jobs são uma única operação transacional. Os seis achados foram tratados no passe único de correção.
+
+Último aceite na versão recompilada: após digitar no template e trocar de workspace em outra aba, o DOM retornou `blocked: true`, `oldShell: false` e recuperação exatamente `Corpo *: Rascunho final recuperável.`. Os 45 smoke checks também passaram nessa versão. O workspace A foi selecionado novamente ao encerrar a validação.

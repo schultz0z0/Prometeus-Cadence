@@ -38,5 +38,5 @@ Node local `v24.16.0`, npm `11.13.0`, RTK e REA já disponíveis. Next.js/React 
 - [x] Implementação e validação do primeiro marco: `docs/validation/01-interface.md`.
 - [x] Infraestrutura do marco 02 escolhida pelo usuário: PostgreSQL local em Docker.
 - [x] Revisão do plano 02 aprovada pelo usuário: `2026-10-20-prometeus-cadence-02-identity.md`.
-- [ ] Implementação do marco 02.
+- [x] Implementação do marco 02: `docs/validation/02-identity.md`.
 - [ ] Demais marcos, incluindo SaaS operacional completo.

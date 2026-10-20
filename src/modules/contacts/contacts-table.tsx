@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
-import {useIdentity} from '@/client/workspace-provider';
+import { useIdentity } from "@/client/workspace-provider";
 import { filterLeads } from "@/domain/leads";
 import {
   qualificationLabels,
@@ -24,7 +24,7 @@ import { LeadDialog } from "./lead-dialog";
 import { ImportPreview } from "./import-preview";
 export function ContactsTable({ initialList = "" }: { initialList?: string }) {
   const s = useDemo();
-  const identity=useIdentity();
+  const identity = useIdentity();
   const repo = useRepository();
   const run = useAction();
   const [query, setQuery] = useState("");
@@ -244,7 +244,11 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
             {selection.length} selecionados · Ações
           </Button>
         ) : (
-          <small>{identity?'Contatos do workspace':'Dados fictícios de demonstração'}</small>
+          <small>
+            {identity
+              ? "Contatos do workspace"
+              : "Dados fictícios de demonstração"}
+          </small>
         )}
       </div>
       <div className="panel table-scroll">
@@ -455,16 +459,14 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
                   e.target.value &&
                   (await run(
                     async () =>
-                      await Promise.all(
+                      await repo.saveLeadBatch(
                         s.leads
                           .filter((l) => selection.includes(l.id))
-                          .map(
-                            async (l) =>
-                              await repo.upsertLead({
-                                ...l,
-                                listId: e.target.value,
-                              }),
-                          ),
+                          .map((l) => ({
+                            ...l,
+                            listId: e.target.value,
+                          })),
+                        { mode: "update" },
                       ),
                     "Contatos movidos.",
                   ))
@@ -491,16 +493,14 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
                   e.target.value &&
                   (await run(
                     async () =>
-                      await Promise.all(
+                      await repo.saveLeadBatch(
                         s.leads
                           .filter((l) => selection.includes(l.id))
-                          .map(
-                            async (l) =>
-                              await repo.upsertLead({
-                                ...l,
-                                qualification: e.target.value as Qualification,
-                              }),
-                          ),
+                          .map((l) => ({
+                            ...l,
+                            qualification: e.target.value as Qualification,
+                          })),
+                        { mode: "update" },
                       ),
                     "Qualificação alterada.",
                   ))

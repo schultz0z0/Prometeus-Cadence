@@ -9,6 +9,52 @@ import {
 } from "../../src/server/workspaces/commands.ts";
 import { verifiedUser, resetRateLimits } from "./helpers.ts";
 after(async () => getPools().close());
+test("one bulk action and its job roll back together and retry once after a committed response is lost", async () => {
+  await resetRateLimits();
+  const p = await workspace();
+  const job = {
+    id: "job-batch",
+    name: "Batch",
+    type: "generation",
+    status: "completed",
+    count: 1,
+    demo: true,
+    billableUsage: 0,
+    createdAt: new Date().toISOString(),
+    details: "Local simulation",
+  };
+  const body = {
+    requestId: crypto.randomUUID(),
+    expectedRevision: 0,
+    command: {
+      type: "leads.batch",
+      mode: "import",
+      list: { id: "batch-list", name: "Batch" },
+      leads: [lead("batch-lead", "batch-list")],
+      job,
+    },
+  };
+  await executeWorkspaceCommand(p, body);
+  const retry = await executeWorkspaceCommand(p, body);
+  assert.equal(retry.snapshot.revision, 1);
+  assert.equal(retry.snapshot.data.jobs.length, 1);
+  assert.equal(retry.snapshot.data.leads.length, 1);
+  const invalid = {
+    requestId: crypto.randomUUID(),
+    expectedRevision: 1,
+    command: {
+      ...body.command,
+      mode: "update",
+      leads: [{ ...lead("batch-lead", "absent") }],
+      job: { ...job, id: "rollback-job" },
+    },
+  };
+  await assert.rejects(executeWorkspaceCommand(p, invalid));
+  const s = await readWorkspaceSnapshot(p);
+  assert.equal(s.revision, 1);
+  assert.equal(s.data.jobs.length, 1);
+  assert.equal(s.data.leads[0].listId, "batch-list");
+});
 async function workspace() {
   const u = await verifiedUser();
   const h = new Headers({ cookie: u.cookie });

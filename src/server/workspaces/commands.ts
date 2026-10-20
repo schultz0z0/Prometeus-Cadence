@@ -83,6 +83,15 @@ export async function executeWorkspaceCommand(
       case "leads.import":
         repo.importLeads(command.leads, command.list);
         break;
+      case "leads.batch":
+        if (command.mode === "update")
+          command.leads.forEach((l) => existing(before.data.leads, l.id));
+        repo.saveLeadBatch(command.leads, {
+          mode: command.mode,
+          list: command.list,
+          job: command.job,
+        });
+        break;
       case "leads.delete":
         command.ids.forEach((id) => existing(before.data.leads, id));
         repo.deleteLeads(command.ids);

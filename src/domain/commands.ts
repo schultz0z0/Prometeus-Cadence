@@ -12,6 +12,13 @@ import type {
 export type WorkspaceCommand =
   | { type: "lead.upsert"; lead: Lead }
   | { type: "leads.import"; leads: Lead[]; list?: LeadList }
+  | {
+      type: "leads.batch";
+      leads: Lead[];
+      mode: "import" | "update";
+      list?: LeadList;
+      job?: DemoJob;
+    }
   | { type: "leads.delete"; ids: string[] }
   | { type: "cadence.saveDraft"; cadence: Cadence }
   | { type: "context.saveDraft" | "context.approve"; profile: CompanyProfile }
