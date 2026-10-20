@@ -16,6 +16,7 @@ const known = [
   "tenancy",
   "commands",
   "client",
+  "prospecting",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length
