@@ -8,18 +8,29 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 3210",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "env:init": "node scripts/local-env.mjs",
+    "db:up": "docker compose --env-file .env.local up -d --wait",
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "test:integration": "node scripts/test-integration.mjs"
   },
   "dependencies": {
+    "better-auth": "1.7.12",
+    "lucide-react": "1.60.0",
     "next": "16.4.2",
+    "nodemailer": "10.1.7",
+    "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "lucide-react": "1.60.0"
+    "server-only": "0.0.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "typescript": "~5.9.3",
     "@types/node": "^24.0.0",
+    "@types/nodemailer": "7.0.11",
+    "@types/pg": "8.15.6",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "@types/react-dom": "^19.0.0",
+    "typescript": "~5.9.3"
   }
 }

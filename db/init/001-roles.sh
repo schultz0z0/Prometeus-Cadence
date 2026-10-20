@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --set=auth_password="$CADENCE_AUTH_PASSWORD" --set=app_password="$CADENCE_APP_PASSWORD" <<'SQL'
+CREATE ROLE cadence_auth LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD :'auth_password';
+CREATE ROLE cadence_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD :'app_password';
+CREATE DATABASE prometeus_cadence_test OWNER cadence_owner;
+SQL
+for database in prometeus_cadence prometeus_cadence_test; do
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$database" <<'SQL'
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+CREATE SCHEMA auth AUTHORIZATION cadence_owner;
+CREATE SCHEMA app AUTHORIZATION cadence_owner;
+GRANT USAGE ON SCHEMA auth TO cadence_auth;
+GRANT USAGE ON SCHEMA app TO cadence_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA auth GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO cadence_auth;
+ALTER DEFAULT PRIVILEGES IN SCHEMA auth GRANT USAGE,SELECT ON SEQUENCES TO cadence_auth;
+ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO cadence_app;
+SQL
+done
