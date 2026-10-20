@@ -1,5 +1,172 @@
-'use client';
-import {useState} from 'react';
-import {Icon} from '@/components/ui/icon';
-import {PageHeader,Button,LinkButton,Modal,Notice,Field,Badge} from '@/components/ui/primitives';
-export function LinkedinSdr({sdr=false,section='dashboard'}:{sdr?:boolean;section?:string}){const[form,setForm]=useState(false);const[preview,setPreview]=useState(false);const[name,setName]=useState('');return <><PageHeader title={sdr?'Agente SDR':'Prospecção no LinkedIn'} description={sdr?'Um agente para responder, qualificar e encaminhar conversas, com controle humano.':'Você fala com a pessoa certa pelo cargo, não com o e-mail genérico da empresa.'}/><section className="panel panel-pad linkedin-intro"><div className="feature-symbol"><Icon name={sdr?'Bot':'Linkedin'} size={34}/></div><h2>{sdr?'Prepare seu atendimento':'Monte sua primeira campanha'}</h2><p>{sdr?'Revise o contexto da empresa e defina limites antes de permitir respostas automáticas.':'Escolha cargo, cidade e setor. Revise o público e a nota de convite antes de qualquer ativação.'}</p><Button variant="primary" icon={sdr?'Settings':'Plus'} onClick={()=>setForm(true)}>{sdr?'Configurar agente':'Montar minha primeira campanha'}</Button><Badge>Integração pendente</Badge></section><section className="panel panel-pad section-gap"><h3>Para começar, nesta ordem</h3><div className="feature-steps">{(sdr?[['Revisar o contexto','Defina oferta, público e limites de atuação.'],['Conectar o canal','Escolha onde o agente pode atuar.'],['Confirmar o escopo','Ative somente depois de revisar.']]:[['Definir o público','Cargo, cidade e setor da empresa.'],['Conectar seu LinkedIn','Requer uma integração própria.'],['Revisar e ligar','Convites só saem após confirmação.']]).map(([t,d],i)=><div className="row" key={t}><span className="number-circle">{i+1}</span><div><h3>{t}</h3><small>{d}</small></div></div>)}</div><div className="row section-gap"><LinkButton href="/settings/context">Contexto de IA</LinkButton><LinkButton href="/settings/apps">Ver integrações</LinkButton></div></section>{form&&<Modal title={sdr?'Escopo do agente SDR':'Público da campanha LinkedIn'} onClose={()=>{setForm(false);setPreview(false);}}>{!preview?<form onSubmit={e=>{e.preventDefault();setPreview(true);}}><div className="stack"><Field label={sdr?'Objetivo do agente':'Cargo ou perfil que deseja alcançar'}><input autoFocus required value={name} onChange={e=>setName(e.target.value)} placeholder={sdr?'Ex.: qualificar quem pedir uma demonstração':'Ex.: diretores comerciais'}/></Field><Field label={sdr?'Limites e assuntos que exigem aprovação':'Localização e setor'}><textarea placeholder={sdr?'Ex.: não oferecer desconto, não confirmar preços':'Ex.: São Paulo · tecnologia'}/></Field></div><div className="form-actions"><Button variant="primary" type="submit">Revisar configuração</Button></div></form>:<><h3>{name}</h3><div className="section-gap"><Notice>A configuração é uma prévia local. {sdr?'O agente não será ativado e não responderá mensagens.':'Nenhum convite será enviado e nenhum perfil será consultado.'} A integração real está pendente.</Notice></div><div className="form-actions"><Button onClick={()=>setPreview(false)}>Ajustar</Button><Button onClick={()=>{setForm(false);setPreview(false);}}>Fechar prévia</Button></div></>}</Modal>}</>;}
+"use client";
+import { useState } from "react";
+import { Icon } from "@/components/ui/icon";
+import {
+  PageHeader,
+  Button,
+  LinkButton,
+  Modal,
+  Notice,
+  Field,
+  Badge,
+} from "@/components/ui/primitives";
+export function LinkedinSdr({
+  sdr = false,
+  section = "dashboard",
+}: {
+  sdr?: boolean;
+  section?: string;
+}) {
+  const [form, setForm] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const [name, setName] = useState("");
+  return (
+    <>
+      <PageHeader
+        title={sdr ? "Agente SDR" : "Prospecção no LinkedIn"}
+        description={
+          sdr
+            ? "Um agente para responder, qualificar e encaminhar conversas, com controle humano."
+            : "Você fala com a pessoa certa pelo cargo, não com o e-mail genérico da empresa."
+        }
+      />
+      <section className="panel panel-pad linkedin-intro">
+        <div className="feature-symbol">
+          <Icon name={sdr ? "Bot" : "Linkedin"} size={34} />
+        </div>
+        <h2>
+          {sdr ? "Prepare seu atendimento" : "Monte sua primeira campanha"}
+        </h2>
+        <p>
+          {sdr
+            ? "Revise o contexto da empresa e defina limites antes de permitir respostas automáticas."
+            : "Escolha cargo, cidade e setor. Revise o público e a nota de convite antes de qualquer ativação."}
+        </p>
+        <Button
+          variant="primary"
+          icon={sdr ? "Settings" : "Plus"}
+          onClick={() => setForm(true)}
+        >
+          {sdr ? "Configurar agente" : "Montar minha primeira campanha"}
+        </Button>
+        <Badge>Integração pendente</Badge>
+      </section>
+      <section className="panel panel-pad section-gap">
+        <h3>Para começar, nesta ordem</h3>
+        <div className="feature-steps">
+          {(sdr
+            ? [
+                [
+                  "Revisar o contexto",
+                  "Defina oferta, público e limites de atuação.",
+                ],
+                ["Conectar o canal", "Escolha onde o agente pode atuar."],
+                ["Confirmar o escopo", "Ative somente depois de revisar."],
+              ]
+            : [
+                ["Definir o público", "Cargo, cidade e setor da empresa."],
+                ["Conectar seu LinkedIn", "Requer uma integração própria."],
+                ["Revisar e ligar", "Convites só saem após confirmação."],
+              ]
+          ).map(([t, d], i) => (
+            <div className="row" key={t}>
+              <span className="number-circle">{i + 1}</span>
+              <div>
+                <h3>{t}</h3>
+                <small>{d}</small>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="row section-gap">
+          <LinkButton href="/settings/context">Contexto de IA</LinkButton>
+          <LinkButton href="/settings/apps">Ver integrações</LinkButton>
+        </div>
+      </section>
+      {form && (
+        <Modal
+          title={sdr ? "Escopo do agente SDR" : "Público da campanha LinkedIn"}
+          onClose={() => {
+            setForm(false);
+            setPreview(false);
+          }}
+        >
+          {!preview ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setPreview(true);
+              }}
+            >
+              <div className="stack">
+                <Field
+                  label={
+                    sdr
+                      ? "Objetivo do agente"
+                      : "Cargo ou perfil que deseja alcançar"
+                  }
+                >
+                  <input
+                    autoFocus
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={
+                      sdr
+                        ? "Ex.: qualificar quem pedir uma demonstração"
+                        : "Ex.: diretores comerciais"
+                    }
+                  />
+                </Field>
+                <Field
+                  label={
+                    sdr
+                      ? "Limites e assuntos que exigem aprovação"
+                      : "Localização e setor"
+                  }
+                >
+                  <textarea
+                    placeholder={
+                      sdr
+                        ? "Ex.: não oferecer desconto, não confirmar preços"
+                        : "Ex.: São Paulo · tecnologia"
+                    }
+                  />
+                </Field>
+              </div>
+              <div className="form-actions">
+                <Button variant="primary" type="submit">
+                  Revisar configuração
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <h3>{name}</h3>
+              <div className="section-gap">
+                <Notice>
+                  A configuração é uma prévia local.{" "}
+                  {sdr
+                    ? "O agente não será ativado e não responderá mensagens."
+                    : "Nenhum convite será enviado e nenhum perfil será consultado."}{" "}
+                  A integração real está pendente.
+                </Notice>
+              </div>
+              <div className="form-actions">
+                <Button onClick={() => setPreview(false)}>Ajustar</Button>
+                <Button
+                  onClick={() => {
+                    setForm(false);
+                    setPreview(false);
+                  }}
+                >
+                  Fechar prévia
+                </Button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
+    </>
+  );
+}

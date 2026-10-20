@@ -4,7 +4,7 @@ Data: 20/10/2026. Projeto: Prometeus Cadence.
 
 ## Estado real do trabalho
 
-A pasta estava vazia no início. Foram produzidos um levantamento do produto, referências visuais, análise estática do cliente com REA e uma especificação proposta. **A aplicação ainda não foi implementada.** A reprodução integral permanece pendente; este levantamento não comprova equivalência do backend.
+A pasta estava vazia no início. O levantamento, as referências e a análise do cliente com REA deram origem à especificação e ao plano aprovados. **O marco 01 da interface local está implementado**; veja o [relatório de validação](../validation/01-interface.md). A reprodução integral permanece pendente; este levantamento não comprova equivalência do backend.
 
 - [Levantamento e evidências](FINDINGS.md)
 - [Rotas e cobertura](SURFACE-MAP.md)
@@ -29,4 +29,4 @@ Foi reaproveitado o REA já instalado e explicitamente solicitado pelo usuário.
 
 ## Continuidade
 
-Revisar a especificação proposta antes de iniciar o código. A skill `superpowers:brainstorming` exige revisão da especificação escrita antes da implementação; o plano detalhado será o próximo artefato depois dessa revisão. Não é necessário repetir a investigação inicial para continuar.
+A especificação e o plano foram aprovados pelo usuário em 20/10/2026, com execução nativa nesta conversa. A continuidade dos serviços reais está no [roteiro](../superpowers/plans/2026-10-20-prometeus-cadence-roadmap.md). Não é necessário repetir a investigação inicial.

@@ -1,7 +1,180 @@
-'use client';
-import {useState} from 'react';
-import {useDemo,useRepository,useAction} from '@/demo/provider';
-import {sourceLabels,qualificationLabels,qualificationTones} from '@/domain/model';
-import {Badge,Button,LinkButton,PageHeader,EmptyState} from '@/components/ui/primitives';
-import {LeadDialog} from './lead-dialog';
-export function LeadDetail({id}:{id:string}){const s=useDemo();const repo=useRepository();const run=useAction();const[tab,setTab]=useState('Informações');const[edit,setEdit]=useState(false);const l=s.leads.find(l=>l.id===id);if(!l)return <EmptyState title="Contato não encontrado" description="O contato pode ter sido removido ou pertencer a outra base local."><LinkButton href="/contacts">Voltar para contatos</LinkButton></EmptyState>;const list=s.lists.find(x=>x.id===l.listId);return <><PageHeader title={l.name} back="/contacts" description={`Lista: ${list?.name??'—'} · Fonte: ${sourceLabels[l.source]}`} actions={<><Badge tone={qualificationTones[l.qualification]}>{qualificationLabels[l.qualification]}</Badge><Button icon="Pencil" onClick={()=>setEdit(true)}>Editar contato</Button></>}/><div className="tabs">{['Informações','Execuções (0)','Mensagens (0)'].map(x=><button key={x} className={tab===x?'active':''} onClick={()=>setTab(x)}>{x}</button>)}</div>{tab==='Informações'?<div className="detail-grid"><div className="stack"><section className="panel panel-pad"><h3>Contato</h3><dl className="detail-list">{[['E-mail',l.email],['Telefone',l.phone],['Site',l.site],['Cidade',l.city],['Estado',l.state]].map(([name,value])=><div key={name}><dt>{name}</dt><dd>{value||'Não informado'}</dd></div>)}</dl></section><section className="panel panel-pad"><h3>Enriquecimento</h3><p className="secondary-text section-gap">Ainda sem decisor. O enriquecimento encontra o contato responsável a partir do CNPJ.</p><div className="section-gap"><LinkButton href="/leads/enrich" icon="UserRoundSearch">Enriquecer a lista</LinkButton></div></section><section className="panel panel-pad"><h3>Dados empresariais</h3><dl className="detail-list">{[['CNPJ',l.cnpj],['Razão social',l.companyName],['Origem',sourceLabels[l.source]]].map(([name,value])=><div key={name}><dt>{name}</dt><dd>{value||'Não informado'}</dd></div>)}</dl></section></div><div className="stack"><section className="panel panel-pad"><h3>Resumo & Status</h3><p className="section-gap secondary-text">{l.summary||'Este lead ainda não tem resumo. Rode o qualificador para analisar o perfil.'}</p><h3 className="section-gap">Observação IA</h3><p className="section-gap secondary-text">{l.reason||'Sem análise registrada.'}</p><dl className="detail-list"><div><dt>Situação na cadência</dt><dd>Aguardando</dd></div><div><dt>Criado em</dt><dd>{new Date(l.createdAt).toLocaleDateString('pt-BR')}</dd></div></dl><div className="row wrap"><Button variant="soft" icon="CheckCircle2" onClick={()=>run(()=>repo.upsertLead({...l,qualification:'qualified'}),'Contato aprovado.')}>Aprovar</Button><Button icon="XCircle" onClick={()=>run(()=>repo.upsertLead({...l,qualification:'disqualified'}),'Contato reprovado.')}>Reprovar</Button></div></section><section className="panel panel-pad"><h3>Conexão</h3><p className="muted section-gap">Sem conexão registrada. Nenhuma mensagem foi enviada.</p></section></div></div>:<EmptyState icon={tab.startsWith('Mensagens')?'MessageSquare':'Clock'} title="Nenhum registro ainda" description="As execuções e mensagens deste contato aparecerão aqui quando um canal estiver integrado."/>}{edit&&<LeadDialog lead={l} onClose={()=>setEdit(false)}/>}</>;}
+"use client";
+import { useState } from "react";
+import { useDemo, useRepository, useAction } from "@/demo/provider";
+import {
+  sourceLabels,
+  qualificationLabels,
+  qualificationTones,
+} from "@/domain/model";
+import {
+  Badge,
+  Button,
+  LinkButton,
+  PageHeader,
+  EmptyState,
+} from "@/components/ui/primitives";
+import { LeadDialog } from "./lead-dialog";
+export function LeadDetail({ id }: { id: string }) {
+  const s = useDemo();
+  const repo = useRepository();
+  const run = useAction();
+  const [tab, setTab] = useState("Informações");
+  const [edit, setEdit] = useState(false);
+  const l = s.leads.find((l) => l.id === id);
+  if (!l)
+    return (
+      <EmptyState
+        title="Contato não encontrado"
+        description="O contato pode ter sido removido ou pertencer a outra base local."
+      >
+        <LinkButton href="/contacts">Voltar para contatos</LinkButton>
+      </EmptyState>
+    );
+  const list = s.lists.find((x) => x.id === l.listId);
+  return (
+    <>
+      <PageHeader
+        title={l.name}
+        back="/contacts"
+        description={`Lista: ${list?.name ?? "—"} · Fonte: ${sourceLabels[l.source]}`}
+        actions={
+          <>
+            <Badge tone={qualificationTones[l.qualification]}>
+              {qualificationLabels[l.qualification]}
+            </Badge>
+            <Button icon="Pencil" onClick={() => setEdit(true)}>
+              Editar contato
+            </Button>
+          </>
+        }
+      />
+      <div className="tabs">
+        {["Informações", "Execuções (0)", "Mensagens (0)"].map((x) => (
+          <button
+            key={x}
+            className={tab === x ? "active" : ""}
+            onClick={() => setTab(x)}
+          >
+            {x}
+          </button>
+        ))}
+      </div>
+      {tab === "Informações" ? (
+        <div className="detail-grid">
+          <div className="stack">
+            <section className="panel panel-pad">
+              <h3>Contato</h3>
+              <dl className="detail-list">
+                {[
+                  ["E-mail", l.email],
+                  ["Telefone", l.phone],
+                  ["Site", l.site],
+                  ["Cidade", l.city],
+                  ["Estado", l.state],
+                ].map(([name, value]) => (
+                  <div key={name}>
+                    <dt>{name}</dt>
+                    <dd>{value || "Não informado"}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+            <section className="panel panel-pad">
+              <h3>Enriquecimento</h3>
+              <p className="secondary-text section-gap">
+                Ainda sem decisor. O enriquecimento encontra o contato
+                responsável a partir do CNPJ.
+              </p>
+              <div className="section-gap">
+                <LinkButton href="/leads/enrich" icon="UserRoundSearch">
+                  Enriquecer a lista
+                </LinkButton>
+              </div>
+            </section>
+            <section className="panel panel-pad">
+              <h3>Dados empresariais</h3>
+              <dl className="detail-list">
+                {[
+                  ["CNPJ", l.cnpj],
+                  ["Razão social", l.companyName],
+                  ["Origem", sourceLabels[l.source]],
+                ].map(([name, value]) => (
+                  <div key={name}>
+                    <dt>{name}</dt>
+                    <dd>{value || "Não informado"}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          </div>
+          <div className="stack">
+            <section className="panel panel-pad">
+              <h3>Resumo & Status</h3>
+              <p className="section-gap secondary-text">
+                {l.summary ||
+                  "Este lead ainda não tem resumo. Rode o qualificador para analisar o perfil."}
+              </p>
+              <h3 className="section-gap">Observação IA</h3>
+              <p className="section-gap secondary-text">
+                {l.reason || "Sem análise registrada."}
+              </p>
+              <dl className="detail-list">
+                <div>
+                  <dt>Situação na cadência</dt>
+                  <dd>Aguardando</dd>
+                </div>
+                <div>
+                  <dt>Criado em</dt>
+                  <dd>{new Date(l.createdAt).toLocaleDateString("pt-BR")}</dd>
+                </div>
+              </dl>
+              <div className="row wrap">
+                <Button
+                  variant="soft"
+                  icon="CheckCircle2"
+                  onClick={() =>
+                    run(
+                      () =>
+                        repo.upsertLead({ ...l, qualification: "qualified" }),
+                      "Contato aprovado.",
+                    )
+                  }
+                >
+                  Aprovar
+                </Button>
+                <Button
+                  icon="XCircle"
+                  onClick={() =>
+                    run(
+                      () =>
+                        repo.upsertLead({
+                          ...l,
+                          qualification: "disqualified",
+                        }),
+                      "Contato reprovado.",
+                    )
+                  }
+                >
+                  Reprovar
+                </Button>
+              </div>
+            </section>
+            <section className="panel panel-pad">
+              <h3>Conexão</h3>
+              <p className="muted section-gap">
+                Sem conexão registrada. Nenhuma mensagem foi enviada.
+              </p>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <EmptyState
+          icon={tab.startsWith("Mensagens") ? "MessageSquare" : "Clock"}
+          title="Nenhum registro ainda"
+          description="As execuções e mensagens deste contato aparecerão aqui quando um canal estiver integrado."
+        />
+      )}
+      {edit && <LeadDialog lead={l} onClose={() => setEdit(false)} />}
+    </>
+  );
+}

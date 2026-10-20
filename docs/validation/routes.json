@@ -1,0 +1,217 @@
+{
+  "date": "2026-10-20T13:06:51.864Z",
+  "base": "http://127.0.0.1:3210",
+  "note": "HTTP navigation smoke only; does not verify real connectors or authentication.",
+  "results": [
+    {
+      "route": "/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/dashboard",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/contacts",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/leads/lead-1",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/leads/generator",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/leads/enrich",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/leads/qualifier",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/automations",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/automations/new",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/automations/new/ai",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/cadences",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/cadences/new",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/cadences/new/ai",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/cadences/cadence-initial",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/cadences/pipeline",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/templates",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/inbox",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/messages/whatsapp",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/reports",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/reports/funnel",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/reports/crm",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/executions",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/first-steps",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/sdr",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/dashboard",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/campaigns",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/people",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/approvals",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/account",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/context",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/notifications",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/seats",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/security",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/mcp",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/plan",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/email",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/whatsapp",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/dispatch-limits",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/dados",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/privacy",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/apps",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/settings/webhooks",
+      "status": 200,
+      "ok": true
+    }
+  ]
+}

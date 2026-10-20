@@ -1,2 +1,19 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {approveProfile,mergeProfileSuggestion} from '../src/domain/context.ts';import {createSeed} from '../src/demo/seed.ts';
-test('approving preserves human corrections and versions context',()=>{const p=createSeed().companyProfile;p.offer='Minha oferta corrigida';const a=approveProfile(p,'2026-10-20');assert.equal(a.offer,p.offer);assert.equal(a.version,p.version+1);assert.equal(a.approvedAt,'2026-10-20');assert.equal(mergeProfileSuggestion(a,{offer:'Texto novo',name:'Novo nome'}).offer,p.offer);});
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  approveProfile,
+  mergeProfileSuggestion,
+} from "../src/domain/context.ts";
+import { createSeed } from "../src/demo/seed.ts";
+test("approving preserves human corrections and versions context", () => {
+  const p = createSeed().companyProfile;
+  p.offer = "Minha oferta corrigida";
+  const a = approveProfile(p, "2026-10-20");
+  assert.equal(a.offer, p.offer);
+  assert.equal(a.version, p.version + 1);
+  assert.equal(a.approvedAt, "2026-10-20");
+  assert.equal(
+    mergeProfileSuggestion(a, { offer: "Texto novo", name: "Novo nome" }).offer,
+    p.offer,
+  );
+});

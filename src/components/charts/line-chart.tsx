@@ -1,2 +1,77 @@
-import {useId} from 'react';
-export function LineChart({values,color='var(--primary)',empty=false}:{values:number[];color?:string;empty?:boolean}){const id=useId().replace(/:/g,'');const max=Math.max(...values,1);const pts=values.map((v,i)=>[25+i*650/Math.max(values.length-1,1),150-v/max*110]);const line=pts.map(p=>p.join(',')).join(' ');return <div className="line-chart"><svg viewBox="0 0 700 205" role="img" aria-label={empty?'Nenhum envio registrado':'Leads da base demonstrativa por dia'}><defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity=".15"/><stop offset="100%" stopColor={color} stopOpacity="0"/></linearGradient></defs>{[40,78,116,154].map(y=><line key={y} x1="25" x2="680" y1={y} y2={y} stroke="var(--border)" strokeDasharray="3 4"/>)}<polygon points={`25,155 ${line} 675,155`} fill={`url(#${id})`}/><polyline points={line} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round"/>{!empty&&pts.filter((_,i)=>i===pts.length-1).map(([x,y])=><circle key={x} cx={x} cy={y} r="4" fill={color} stroke="var(--surface)" strokeWidth="2"/>)}<text x="25" y="185" fill="var(--muted)" fontSize="11">21/09</text><text x="645" y="185" fill="var(--muted)" fontSize="11">20/10</text></svg></div>;}
+import { useId } from "react";
+export function LineChart({
+  values,
+  color = "var(--primary)",
+  empty = false,
+}: {
+  values: number[];
+  color?: string;
+  empty?: boolean;
+}) {
+  const id = useId().replace(/:/g, "");
+  const max = Math.max(...values, 1);
+  const pts = values.map((v, i) => [
+    25 + (i * 650) / Math.max(values.length - 1, 1),
+    150 - (v / max) * 110,
+  ]);
+  const line = pts.map((p) => p.join(",")).join(" ");
+  return (
+    <div className="line-chart">
+      <svg
+        viewBox="0 0 700 205"
+        role="img"
+        aria-label={
+          empty
+            ? "Nenhum envio registrado"
+            : "Leads da base demonstrativa por dia"
+        }
+      >
+        <defs>
+          <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity=".15" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {[40, 78, 116, 154].map((y) => (
+          <line
+            key={y}
+            x1="25"
+            x2="680"
+            y1={y}
+            y2={y}
+            stroke="var(--border)"
+            strokeDasharray="3 4"
+          />
+        ))}
+        <polygon points={`25,155 ${line} 675,155`} fill={`url(#${id})`} />
+        <polyline
+          points={line}
+          fill="none"
+          stroke={color}
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+        {!empty &&
+          pts
+            .filter((_, i) => i === pts.length - 1)
+            .map(([x, y]) => (
+              <circle
+                key={x}
+                cx={x}
+                cy={y}
+                r="4"
+                fill={color}
+                stroke="var(--surface)"
+                strokeWidth="2"
+              />
+            ))}
+        <text x="25" y="185" fill="var(--muted)" fontSize="11">
+          21/09
+        </text>
+        <text x="645" y="185" fill="var(--muted)" fontSize="11">
+          20/10
+        </text>
+      </svg>
+    </div>
+  );
+}

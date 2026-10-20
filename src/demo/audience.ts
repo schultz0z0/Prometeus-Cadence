@@ -1,6 +1,45 @@
-import type {CompanyProfile,AudiencePlan} from '../domain/model.ts';
-export function suggestDemoAudiences(input:{description:string;channel:'email'|'whatsapp'|'both';profile:CompanyProfile}):AudiencePlan[]{const audience=input.description.trim()||input.profile.idealCustomer||'Empresas com processos repetitivos';return [
- {id:'focused',title:audience,listName:audience,description:'Um público focado no perfil que você descreveu. Prioriza empresas locais com informações de contato disponíveis.',source:'MAPS' as const,filters:{term:audience,location:'Definir região'}},
- {id:'local',title:`Prestadores de serviço · ${audience}`,listName:`Serviços · ${audience}`,description:'Uma alternativa para encontrar prestadores de serviço e explorar processos de atendimento e operação.',source:'WEB' as const,filters:{term:audience,location:'Definir região'}},
- {id:'registry',title:`Empresas por atividade · ${audience}`,listName:`Base CNPJ · ${audience}`,description:'Busca por atividade econômica na base CNPJ, com critérios de porte e localização editáveis.',source:'CNPJ' as const,filters:{term:audience,location:'Definir região'}}
- ].map(p=>({...p,channel:input.channel,marketSize:null,dailyLimit:150}));}
+import type { CompanyProfile, AudiencePlan } from "../domain/model.ts";
+export function suggestDemoAudiences(input: {
+  description: string;
+  channel: "email" | "whatsapp" | "both";
+  profile: CompanyProfile;
+}): AudiencePlan[] {
+  const audience =
+    input.description.trim() ||
+    input.profile.idealCustomer ||
+    "Empresas com processos repetitivos";
+  return [
+    {
+      id: "focused",
+      title: audience,
+      listName: audience,
+      description:
+        "Um público focado no perfil que você descreveu. Prioriza empresas locais com informações de contato disponíveis.",
+      source: "MAPS" as const,
+      filters: { term: audience, location: "Definir região" },
+    },
+    {
+      id: "local",
+      title: `Prestadores de serviço · ${audience}`,
+      listName: `Serviços · ${audience}`,
+      description:
+        "Uma alternativa para encontrar prestadores de serviço e explorar processos de atendimento e operação.",
+      source: "WEB" as const,
+      filters: { term: audience, location: "Definir região" },
+    },
+    {
+      id: "registry",
+      title: `Empresas por atividade · ${audience}`,
+      listName: `Base CNPJ · ${audience}`,
+      description:
+        "Busca por atividade econômica na base CNPJ, com critérios de porte e localização editáveis.",
+      source: "CNPJ" as const,
+      filters: { term: audience, location: "Definir região" },
+    },
+  ].map((p) => ({
+    ...p,
+    channel: input.channel,
+    marketSize: null,
+    dailyLimit: 150,
+  }));
+}

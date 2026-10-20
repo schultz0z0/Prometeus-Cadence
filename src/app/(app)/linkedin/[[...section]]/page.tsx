@@ -1,1 +1,8 @@
-import {LinkedinSdr} from '@/modules/settings/linkedin-sdr';export default async function Page({params}:{params:Promise<{section?:string[]}>}){return <LinkedinSdr section={(await params).section?.[0]}/>;}
+import { LinkedinSdr } from "@/modules/settings/linkedin-sdr";
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ section?: string[] }>;
+}) {
+  return <LinkedinSdr section={(await params).section?.[0]} />;
+}

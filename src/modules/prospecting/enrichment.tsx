@@ -1,5 +1,118 @@
-'use client';
-import {useState} from 'react';
-import {useDemo} from '@/demo/provider';
-import {Badge,Button,PageHeader,Modal,Field,Notice,LinkButton} from '@/components/ui/primitives';
-export function Enrichment(){const s=useDemo();const[selected,setSelected]=useState('');const[cap,setCap]=useState(5);const eligible=s.leads.filter(l=>l.cnpj&&l.qualification==='qualified');return <><PageHeader title="Enriquecer decisores" description="Do CNPJ da empresa até o contato do sócio administrador, numa lista de pessoas pronta para cadência." actions={<Badge>Demonstração · nenhum crédito disponível</Badge>}/><div className="enrichment-stats"><section className="panel panel-pad"><strong>{eligible.length} empresas elegíveis</strong><p className="muted">qualificadas, com CNPJ</p></section><section className="panel panel-pad"><strong>0 já enriquecidas</strong><p className="muted">nenhuma integração executada</p></section></div><section className="panel section-gap"><div className="panel-heading"><div><h3>Escolha a lista</h3><small>O preview é gratuito. Nenhum dado é consultado nesta versão local.</small></div></div><div className="table-scroll"><table className="data-table"><thead><tr><th>LISTA</th><th>ELEGÍVEIS</th><th>AÇÕES</th></tr></thead><tbody>{s.lists.map(l=><tr key={l.id}><td>{l.name}<small>{s.leads.filter(x=>x.listId===l.id).length} leads</small></td><td>{eligible.filter(x=>x.listId===l.id).length}</td><td><Button onClick={()=>setSelected(l.id)}>Ver preview</Button></td></tr>)}</tbody></table></div></section><section className="panel panel-pad section-gap"><h3>Como funciona</h3><ol className="explainer-list"><li>Preview: conte os elegíveis e confira os dados em cache.</li><li>Defina o teto de créditos antes de confirmar.</li><li>Receba os decisores em uma nova lista.</li></ol></section>{selected&&<Modal title="Preview de enriquecimento" onClose={()=>setSelected('')}><p>{eligible.filter(l=>l.listId===selected).length} empresas elegíveis nesta lista.</p><div className="section-gap"><Field label="Teto de créditos"><input type="number" min="1" max="500" value={cap} onChange={e=>setCap(Number(e.target.value))}/></Field></div><div className="section-gap"><Notice>O enriquecimento real está pendente de integração. Nenhum crédito será comprado ou consumido, e nenhum contato será inventado.</Notice></div><div className="form-actions"><LinkButton href="/settings/apps">Ver integrações</LinkButton><Button onClick={()=>setSelected('')}>Fechar preview</Button></div></Modal>}</>;}
+"use client";
+import { useState } from "react";
+import { useDemo } from "@/demo/provider";
+import {
+  Badge,
+  Button,
+  PageHeader,
+  Modal,
+  Field,
+  Notice,
+  LinkButton,
+} from "@/components/ui/primitives";
+export function Enrichment() {
+  const s = useDemo();
+  const [selected, setSelected] = useState("");
+  const [cap, setCap] = useState(5);
+  const eligible = s.leads.filter(
+    (l) => l.cnpj && l.qualification === "qualified",
+  );
+  return (
+    <>
+      <PageHeader
+        title="Enriquecer decisores"
+        description="Do CNPJ da empresa até o contato do sócio administrador, numa lista de pessoas pronta para cadência."
+        actions={<Badge>Demonstração · nenhum crédito disponível</Badge>}
+      />
+      <div className="enrichment-stats">
+        <section className="panel panel-pad">
+          <strong>{eligible.length} empresas elegíveis</strong>
+          <p className="muted">qualificadas, com CNPJ</p>
+        </section>
+        <section className="panel panel-pad">
+          <strong>0 já enriquecidas</strong>
+          <p className="muted">nenhuma integração executada</p>
+        </section>
+      </div>
+      <section className="panel section-gap">
+        <div className="panel-heading">
+          <div>
+            <h3>Escolha a lista</h3>
+            <small>
+              O preview é gratuito. Nenhum dado é consultado nesta versão local.
+            </small>
+          </div>
+        </div>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>LISTA</th>
+                <th>ELEGÍVEIS</th>
+                <th>AÇÕES</th>
+              </tr>
+            </thead>
+            <tbody>
+              {s.lists.map((l) => (
+                <tr key={l.id}>
+                  <td>
+                    {l.name}
+                    <small>
+                      {s.leads.filter((x) => x.listId === l.id).length} leads
+                    </small>
+                  </td>
+                  <td>{eligible.filter((x) => x.listId === l.id).length}</td>
+                  <td>
+                    <Button onClick={() => setSelected(l.id)}>
+                      Ver preview
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section className="panel panel-pad section-gap">
+        <h3>Como funciona</h3>
+        <ol className="explainer-list">
+          <li>Preview: conte os elegíveis e confira os dados em cache.</li>
+          <li>Defina o teto de créditos antes de confirmar.</li>
+          <li>Receba os decisores em uma nova lista.</li>
+        </ol>
+      </section>
+      {selected && (
+        <Modal
+          title="Preview de enriquecimento"
+          onClose={() => setSelected("")}
+        >
+          <p>
+            {eligible.filter((l) => l.listId === selected).length} empresas
+            elegíveis nesta lista.
+          </p>
+          <div className="section-gap">
+            <Field label="Teto de créditos">
+              <input
+                type="number"
+                min="1"
+                max="500"
+                value={cap}
+                onChange={(e) => setCap(Number(e.target.value))}
+              />
+            </Field>
+          </div>
+          <div className="section-gap">
+            <Notice>
+              O enriquecimento real está pendente de integração. Nenhum crédito
+              será comprado ou consumido, e nenhum contato será inventado.
+            </Notice>
+          </div>
+          <div className="form-actions">
+            <LinkButton href="/settings/apps">Ver integrações</LinkButton>
+            <Button onClick={() => setSelected("")}>Fechar preview</Button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}

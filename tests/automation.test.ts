@@ -1,2 +1,17 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {suggestDemoAudiences} from '../src/demo/audience.ts';import {createSeed} from '../src/demo/seed.ts';
-test('three audience proposals have unknown market size and no side effects',()=>{const s=createSeed();const before=JSON.stringify(s);const p=suggestDemoAudiences({description:'Clínicas no Sul',channel:'whatsapp',profile:s.companyProfile});assert.equal(p.length,3);assert.ok(p.every(x=>x.marketSize===null));assert.equal(p[0].dailyLimit,150);assert.equal(JSON.stringify(s),before);});
+import test from "node:test";
+import assert from "node:assert/strict";
+import { suggestDemoAudiences } from "../src/demo/audience.ts";
+import { createSeed } from "../src/demo/seed.ts";
+test("three audience proposals have unknown market size and no side effects", () => {
+  const s = createSeed();
+  const before = JSON.stringify(s);
+  const p = suggestDemoAudiences({
+    description: "Clínicas no Sul",
+    channel: "whatsapp",
+    profile: s.companyProfile,
+  });
+  assert.equal(p.length, 3);
+  assert.ok(p.every((x) => x.marketSize === null));
+  assert.equal(p[0].dailyLimit, 150);
+  assert.equal(JSON.stringify(s), before);
+});

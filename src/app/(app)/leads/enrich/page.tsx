@@ -1,1 +1,4 @@
-import {Enrichment} from '@/modules/prospecting/enrichment';export default function Page(){return <Enrichment/>;}
+import { Enrichment } from "@/modules/prospecting/enrichment";
+export default function Page() {
+  return <Enrichment />;
+}

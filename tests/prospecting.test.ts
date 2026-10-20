@@ -1,3 +1,34 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {simulateProspecting} from '../src/demo/prospecting.ts';import {createDemoRepository} from '../src/demo/repository.ts';
-test('local generation is explicit non-billable and respects its finite demo limit',()=>{const r=simulateProspecting({source:'MAPS',destination:'test',filters:{term:'Clínicas',location:'Curitiba, PR'},limit:3});assert.equal(r.demo,true);assert.equal(r.billableUsage,0);assert.equal(r.leads.length,3);assert.ok(r.leads.every(l=>l.name.includes('Clínicas')&&l.site?.endsWith('.example')));});
-test('bulk insertion creates list and contacts atomically without duplicate IDs',()=>{const repo=createDemoRepository();const before=repo.getSnapshot();const r=simulateProspecting({source:'MAPS',destination:'list-new',filters:{term:'Clinicas',location:'Sul'},limit:2});repo.importLeads(r.leads,{id:'list-new',name:'Nova'});repo.importLeads(r.leads);assert.equal(repo.getSnapshot().leads.length,before.leads.length+2);assert.equal(repo.getSnapshot().lists.length,before.lists.length+1);});
+import test from "node:test";
+import assert from "node:assert/strict";
+import { simulateProspecting } from "../src/demo/prospecting.ts";
+import { createDemoRepository } from "../src/demo/repository.ts";
+test("local generation is explicit non-billable and respects its finite demo limit", () => {
+  const r = simulateProspecting({
+    source: "MAPS",
+    destination: "test",
+    filters: { term: "Clínicas", location: "Curitiba, PR" },
+    limit: 3,
+  });
+  assert.equal(r.demo, true);
+  assert.equal(r.billableUsage, 0);
+  assert.equal(r.leads.length, 3);
+  assert.ok(
+    r.leads.every(
+      (l) => l.name.includes("Clínicas") && l.site?.endsWith(".example"),
+    ),
+  );
+});
+test("bulk insertion creates list and contacts atomically without duplicate IDs", () => {
+  const repo = createDemoRepository();
+  const before = repo.getSnapshot();
+  const r = simulateProspecting({
+    source: "MAPS",
+    destination: "list-new",
+    filters: { term: "Clinicas", location: "Sul" },
+    limit: 2,
+  });
+  repo.importLeads(r.leads, { id: "list-new", name: "Nova" });
+  repo.importLeads(r.leads);
+  assert.equal(repo.getSnapshot().leads.length, before.leads.length + 2);
+  assert.equal(repo.getSnapshot().lists.length, before.lists.length + 1);
+});

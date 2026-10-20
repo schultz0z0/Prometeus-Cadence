@@ -1,3 +1,44 @@
-import type {CadenceBrief,Cadence} from '../domain/model.ts';
-import {defaultCadenceSettings} from './seed.ts';
-export function buildDemoCadenceOptions(input:CadenceBrief):Cadence[]{const channels=input.channels.length?input.channels:['WHATSAPP' as const];return ['Conversa pessoal','Direto ao ponto','Consultivo'].map((name,i)=>({id:crypto.randomUUID(),name:`${name} · ${input.objective}`,listId:input.listId,status:'draft',createdAt:new Date().toISOString(),settings:defaultCadenceSettings(),steps:[0,1,2].map((n)=>({id:crypto.randomUUID(),channel:channels[n%channels.length],delayDays:n===0?1:input.rhythm==='Curta'?2:n===1?3:5,subject:n===0?'Uma ideia para a {{nome}}':'Retomando nossa conversa',body:n===0?(i===1?`Olá! Sou da ${input.profile.name}. Ajudamos empresas com ${input.highlight||'automação de tarefas repetitivas'}. Quem cuida dos processos na {{nome}}?`:`Oi, tudo bem? Sou da ${input.profile.name}. Queria entender como a {{nome}} organiza os processos do dia a dia. ${input.highlight||'Trabalhamos com automações e integrações para reduzir o trabalho manual.'} Faz sentido conversar?`):n===1?'Oi! Passando para saber se você viu minha mensagem. Como vocês lidam com essas tarefas hoje na {{nome}}?':'Vou encerrar meu contato por aqui para não ocupar seu tempo. Se fizer sentido conversar no futuro, fico à disposição. Obrigado!',aiInstructions:[`Tom: ${input.tone}`,input.avoid?`Evitar: ${input.avoid}`:'',input.decisionMaker?`Decisor: ${input.decisionMaker}`:''].filter(Boolean).join('. '),stopOnReply:true}))}));}
+import type { CadenceBrief, Cadence } from "../domain/model.ts";
+import { defaultCadenceSettings } from "./seed.ts";
+export function buildDemoCadenceOptions(input: CadenceBrief): Cadence[] {
+  const channels = input.channels.length
+    ? input.channels
+    : ["WHATSAPP" as const];
+  return ["Conversa pessoal", "Direto ao ponto", "Consultivo"].map(
+    (name, i) => ({
+      id: crypto.randomUUID(),
+      name: `${name} · ${input.objective}`,
+      listId: input.listId,
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      settings: defaultCadenceSettings(),
+      steps: [0, 1, 2].map((n) => ({
+        id: crypto.randomUUID(),
+        channel: channels[n % channels.length],
+        delayDays: (input.rhythm === "Curta"
+          ? [1, 2, 2]
+          : input.rhythm === "Longa"
+            ? [1, 7, 13]
+            : [1, 4, 7])[n],
+        subject:
+          n === 0 ? "Uma ideia para a {{nome}}" : "Retomando nossa conversa",
+        body:
+          n === 0
+            ? i === 1
+              ? `Olá! Sou da ${input.profile.name}. Ajudamos empresas com ${input.highlight || "automação de tarefas repetitivas"}. Quem cuida dos processos na {{nome}}?`
+              : `Oi, tudo bem? Sou da ${input.profile.name}. Queria entender como a {{nome}} organiza os processos do dia a dia. ${input.highlight || "Trabalhamos com automações e integrações para reduzir o trabalho manual."} Faz sentido conversar?`
+            : n === 1
+              ? "Oi! Passando para saber se você viu minha mensagem. Como vocês lidam com essas tarefas hoje na {{nome}}?"
+              : "Vou encerrar meu contato por aqui para não ocupar seu tempo. Se fizer sentido conversar no futuro, fico à disposição. Obrigado!",
+        aiInstructions: [
+          `Tom: ${input.tone}`,
+          input.avoid ? `Evitar: ${input.avoid}` : "",
+          input.decisionMaker ? `Decisor: ${input.decisionMaker}` : "",
+        ]
+          .filter(Boolean)
+          .join(". "),
+        stopOnReply: true,
+      })),
+    }),
+  );
+}

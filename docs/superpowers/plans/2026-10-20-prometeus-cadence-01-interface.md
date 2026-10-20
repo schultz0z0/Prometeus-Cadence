@@ -1,6 +1,6 @@
 # Prometeus Cadence — Interface Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Entregar a primeira versão local navegável, visualmente fiel, com estado demonstrativo persistente e fluxos de público → proposta → confirmação → cadência → revisão → rascunho.
 
@@ -74,11 +74,11 @@ Páginas contêm composição; estado e regras ficam nos módulos/domínio. Não
 
 **Interfaces:** `AppShell({children}: {children: React.ReactNode})`; `Sidebar` usa catálogo único `NavigationItem {label,href?,children?,requires?}` em `src/components/shell/navigation.ts`; sem acesso externo.
 
-- [ ] Criar configuração mínima no diretório existente, sem executar scaffold que sobrescreva os documentos. Configurar scripts `dev`, `build`, `start`, `typecheck`, `test`.
-- [ ] Implementar tokens, fontes, sidebar na ordem observada, header e faixa de demonstração explicativa. Texto da marca: Prometeus Cadence.
-- [ ] Implementar expandir/recolher, grupos, breadcrumbs, tema, três tamanhos de texto e busca por páginas, com atalhos de teclado e foco visível.
-- [ ] Rodar `rtk npm run build` e `rtk npm run typecheck`; abrir shell em 1920/1440/1280/390px. Conferir ausência de rolagem horizontal acidental e navegação por teclado.
-- [ ] Commit somente dos arquivos desta tarefa: `feat: add cadence application shell`.
+- [x] Criar configuração mínima no diretório existente, sem executar scaffold que sobrescreva os documentos. Configurar scripts `dev`, `build`, `start`, `typecheck`, `test`.
+- [x] Implementar tokens, fontes, sidebar na ordem observada, header e faixa de demonstração explicativa. Texto da marca: Prometeus Cadence.
+- [x] Implementar expandir/recolher, grupos, breadcrumbs, tema, três tamanhos de texto e busca por páginas, com atalhos de teclado e foco visível.
+- [x] Rodar `rtk npm run build` e `rtk npm run typecheck`; abrir shell em 1920/1440/1280/390px. Conferir ausência de rolagem horizontal acidental e navegação por teclado.
+- [x] Commit somente dos arquivos desta tarefa: `feat: add cadence application shell`.
 
 ### T2 — Domínio e repositório de demonstração
 
@@ -88,11 +88,11 @@ Páginas contêm composição; estado e regras ficam nos módulos/domínio. Não
 
 Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>void):()=>void`; `upsertLead(lead:Lead):void`; `confirmAutomationPlan(plan:AudiencePlan,requestId:string):{listId:string,automationIds:[string,string]}`; `saveCadenceDraft(cadence:Cadence):void`; `saveContext(profile:CompanyProfile):void`; `reset():void`. `DemoState {schemaVersion:1,lists,leads,automations,cadences,templates,companyProfile,preferences,confirmationResults}`. `decodeDemoState(raw:string|null):{ok:true,value:DemoState}|{ok:false,reason:string}`.
 
-- [ ] Escrever testes: state roundtrip mantém IDs e drafts; JSON inválido retorna `ok:false`; versão 99 é rejeitada; duas confirmações com mesmo requestId retornam os mesmos IDs e total de 1 lista/2 automações; salvar rascunho mantém `status:'draft'`.
-- [ ] Rodar `rtk npm test` antes da implementação e confirmar falha pelo módulo ausente; registrar o resultado.
-- [ ] Implementar seed com empresas fictícias, listas e cadência inicial; snapshot imutável, persistência local versionada, recuperação visível e idempotência. Chave local `prometeus-cadence-demo-v1`; acesso a storage somente no cliente. Não armazenar contatos da conta original.
-- [ ] Rodar `rtk npm test` e `rtk npm run typecheck`; confirmar que SSR/hidratação não lê localStorage no servidor.
-- [ ] Commit: `feat: add persistent demo domain and approval transactions`.
+- [x] Escrever testes: state roundtrip mantém IDs e drafts; JSON inválido retorna `ok:false`; versão 99 é rejeitada; duas confirmações com mesmo requestId retornam os mesmos IDs e total de 1 lista/2 automações; salvar rascunho mantém `status:'draft'`.
+- [x] Rodar `rtk npm test` antes da implementação e confirmar falha pelo módulo ausente; registrar o resultado.
+- [x] Implementar seed com empresas fictícias, listas e cadência inicial; snapshot imutável, persistência local versionada, recuperação visível e idempotência. Chave local `prometeus-cadence-demo-v1`; acesso a storage somente no cliente. Não armazenar contatos da conta original.
+- [x] Rodar `rtk npm test` e `rtk npm run typecheck`; confirmar que SSR/hidratação não lê localStorage no servidor.
+- [x] Commit: `feat: add persistent demo domain and approval transactions`.
 
 ### T3 — Dashboard, métricas e onboarding
 
@@ -100,11 +100,11 @@ Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>voi
 
 **Interfaces:** consome `DemoRepository.getSnapshot`; produz `calculateMetrics(state:DemoState):DashboardMetrics`, sempre derivando contagens do mesmo conjunto. `TourStep {id,title,body,target?,route?}` com abrir/fechar/voltar/próximo; sem mutações de leads.
 
-- [ ] Escrever teste com 3 leads (2 qualified/1 pending): cartão e funil retornam os mesmos 2 qualificados; e-mail ausente não lança erro. Rodar teste e confirmar falha antes da função.
-- [ ] Implementar seis cartões, resumo Hoje, períodos, gráficos SVG, funil e listas de atividade conforme referência; distinguir não medido de zero.
-- [ ] Implementar onboarding de seis etapas e passeio contextual; estado demonstrativo de conexão explica o requisito sem alterar dados operacionais.
-- [ ] Rodar testes e build; verificar capturas do dashboard sem overlay e do passeio. Corrigir textos longos/ausentes e contraste.
-- [ ] Commit: `feat: add dashboard and guided onboarding`.
+- [x] Escrever teste com 3 leads (2 qualified/1 pending): cartão e funil retornam os mesmos 2 qualificados; e-mail ausente não lança erro. Rodar teste e confirmar falha antes da função.
+- [x] Implementar seis cartões, resumo Hoje, períodos, gráficos SVG, funil e listas de atividade conforme referência; distinguir não medido de zero.
+- [x] Implementar onboarding de seis etapas e passeio contextual; estado demonstrativo de conexão explica o requisito sem alterar dados operacionais.
+- [x] Rodar testes e build; verificar capturas do dashboard sem overlay e do passeio. Corrigir textos longos/ausentes e contraste.
+- [x] Commit: `feat: add dashboard and guided onboarding`.
 
 ### T4 — Contatos, perfil e templates
 
@@ -112,11 +112,11 @@ Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>voi
 
 **Interfaces:** consome `Lead`, `LeadList`, repositório e snapshot. `Template {id,name,channel:'EMAIL'|'WHATSAPP',tags:string[],subject?,body}` em `model.ts`; `filterLeads(leads:Lead[],query:LeadQuery):Lead[]` em `src/domain/leads.ts`; `parseContactImport(text:string):ImportPreview` em `src/domain/import.ts`.
 
-- [ ] Escrever testes de importação: cabeçalhos mapeados, linha com campo entre aspas/vírgula, contato sem telefone e erro com número da linha em CSV malformado; escrever teste de filtro por status e texto longo. Rodar RED.
-- [ ] Implementar filtros, listas, colunas, seleção, ordenação, ficha, cadastro local e preview CSV/TXT com mapeamento. Nenhuma importação grava antes do botão final.
-- [ ] Implementar biblioteca de templates, tags, variáveis e prévia; CRUD local com confirmação de exclusão recuperável no demonstrativo.
-- [ ] Rodar testes específicos e conferir fluxo no Chrome: incluir fictício → filtrar → abrir → editar → refresh → persistência; importar/cancelar não altera contatos.
-- [ ] Commit: `feat: add lead management and template library`.
+- [x] Escrever testes de importação: cabeçalhos mapeados, linha com campo entre aspas/vírgula, contato sem telefone e erro com número da linha em CSV malformado; escrever teste de filtro por status e texto longo. Rodar RED.
+- [x] Implementar filtros, listas, colunas, seleção, ordenação, ficha, cadastro local e preview CSV/TXT com mapeamento. Nenhuma importação grava antes do botão final.
+- [x] Implementar biblioteca de templates, tags, variáveis e prévia; CRUD local com confirmação de exclusão recuperável no demonstrativo.
+- [x] Rodar testes específicos e conferir fluxo no Chrome: incluir fictício → filtrar → abrir → editar → refresh → persistência; importar/cancelar não altera contatos.
+- [x] Commit: `feat: add lead management and template library`.
 
 ### T5 — Gerador, qualificador e enriquecimento
 
@@ -124,11 +124,11 @@ Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>voi
 
 **Interfaces:** `ProspectingRequest {source:'MAPS'|'WEB'|'CNPJ'|'APOLLO',destination,filters,limit}` e `QualificationConfig {extractEmails,extractPhones,discoverSite,summary,deepExtraction,validateEmail,validateWhatsapp,registry,qualifyAi,language,limit}` definidos em `model.ts`. `simulateProspecting(request:ProspectingRequest):DemoJobResult` só retorna exemplos identificados, com `demo:true` e `billableUsage:0`.
 
-- [ ] Implementar escolha de fonte e filtros observados, com campo habilitado e validação por fonte; preservar distinção avulso/recorrente.
-- [ ] Implementar seleção de lista/leads e módulos de qualificação; enriquecimento mostra preview e teto, sem simular cobrança real.
-- [ ] Ações de execução oferecem explicitamente demonstração local; nunca apresentar dados fictícios como extração em tempo real. Estado com provedor ausente mostra configuração exigida.
-- [ ] Verificar troca de fontes sem perder campos comuns, validação do formulário, cancelamento sem gravação e resumo/contagem coerentes. Rodar build/typecheck.
-- [ ] Commit: `feat: add prospecting and qualification workflows`.
+- [x] Implementar escolha de fonte e filtros observados, com campo habilitado e validação por fonte; preservar distinção avulso/recorrente.
+- [x] Implementar seleção de lista/leads e módulos de qualificação; enriquecimento mostra preview e teto, sem simular cobrança real.
+- [x] Ações de execução oferecem explicitamente demonstração local; nunca apresentar dados fictícios como extração em tempo real. Estado com provedor ausente mostra configuração exigida.
+- [x] Verificar troca de fontes sem perder campos comuns, validação do formulário, cancelamento sem gravação e resumo/contagem coerentes. Rodar build/typecheck.
+- [x] Commit: `feat: add prospecting and qualification workflows`.
 
 ### T6 — Automações por IA e formulário manual
 
@@ -136,11 +136,11 @@ Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>voi
 
 **Interfaces:** consome `confirmAutomationPlan` de T2. `suggestDemoAudiences(input:{description:string,channel:'email'|'whatsapp'|'both',profile:CompanyProfile}):AudiencePlan[]` retorna 3 propostas demonstrativas, com `marketSize:null`, fonte, filtros, lista e agenda. `AudiencePlan {id,title,description,listName,source,filters,channel,marketSize:number|null,dailyLimit:number}`. Criar sempre pausada; busca 07:00 e qualificação 08:00 no fuso do workspace; limite demonstrativo 150/dia.
 
-- [ ] Escrever teste: gerar 3 propostas não altera snapshot; marketSize ausente é null; confirmar mantém todas pausadas e agrega em uma transação; segunda confirmação mesmo requestId não duplica. Rodar RED para funções novas.
-- [ ] Implementar lista agrupada, busca/filtros, quatro modos, wizard manual de cinco passos e wizard IA de duas etapas. Até a confirmação, alterações ficam no estado do formulário.
-- [ ] Implementar resultado com links para lista, busca e criação de cadência. Editar proposta ou voltar não consome quota nem cria entidades.
-- [ ] Rodar testes; verificar no navegador público → 3 opções → revisar → criar → refresh → mesma lista/2 automações. Repetir clique rápido e cancelar etapa anterior.
-- [ ] Commit: `feat: add approval based automation creation`.
+- [x] Escrever teste: gerar 3 propostas não altera snapshot; marketSize ausente é null; confirmar mantém todas pausadas e agrega em uma transação; segunda confirmação mesmo requestId não duplica. Rodar RED para funções novas.
+- [x] Implementar lista agrupada, busca/filtros, quatro modos, wizard manual de cinco passos e wizard IA de duas etapas. Até a confirmação, alterações ficam no estado do formulário.
+- [x] Implementar resultado com links para lista, busca e criação de cadência. Editar proposta ou voltar não consome quota nem cria entidades.
+- [x] Rodar testes; verificar no navegador público → 3 opções → revisar → criar → refresh → mesma lista/2 automações. Repetir clique rápido e cancelar etapa anterior.
+- [x] Commit: `feat: add approval based automation creation`.
 
 ### T7 — Cadência por IA e canvas editável
 
@@ -148,12 +148,12 @@ Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>voi
 
 **Interfaces:** `CadenceStep {id,channel:'EMAIL'|'WHATSAPP'|'LINKEDIN',delayDays:number,subject?,body:string,aiInstructions?:string,stopOnReply:boolean}`; `CadenceSettings {timezone,weekdays:number[],sendTime:string,skipHolidays,intervalSeconds:[number,number],whatsappIntervalSeconds:[number,number],budgetPercent:number|null,stopOnReply,stopKeywords:string[],bounceLimit:number}`. `validateCadence(cadence:Cadence):ValidationIssue[]`; `renderMessage(template:string,lead:Lead):{text:string,unresolved:string[]}`; `buildDemoCadenceOptions(input:CadenceBrief):Cadence[]` retorna 3 drafts.
 
-- [ ] Escrever testes: `{nome}`/`{{nome}}` segundo sintaxe suportada explicitamente (usar `{{nome}}` no produto); variável `{{cidade}}` sem valor retorna unresolved; intervalo min maior que max inválido; delay negativo inválido; bounce menor que 3 inválido; todas as opções são drafts. Rodar RED.
-- [ ] Implementar wizard de 3 etapas com objetivos, contexto, lista/canal/tom/ritmo/destacar/evitar; seleção não salva antes da revisão final.
-- [ ] Implementar canvas pontilhado com entrada, waits, etapas, saída, adicionar/editar/reordenar/remover, zoom e minimapa. Prévia não pode sumir com erro de variável; salvar rascunho mantém draft.
-- [ ] Implementar abas, configurações observadas e pipeline derivado da mesma cadência. Saúde/Relatório demonstrativos mostram ausência de execução real. Ativar exibe requisito de integração, sem disparar.
-- [ ] Rodar testes e build; verificar criação, edição, zoom, refresh, listas relacionadas, teclado e layout 1280px.
-- [ ] Commit: `feat: add cadence builder and review flow`.
+- [x] Escrever testes: `{nome}`/`{{nome}}` segundo sintaxe suportada explicitamente (usar `{{nome}}` no produto); variável `{{cidade}}` sem valor retorna unresolved; intervalo min maior que max inválido; delay negativo inválido; bounce menor que 3 inválido; todas as opções são drafts. Rodar RED.
+- [x] Implementar wizard de 3 etapas com objetivos, contexto, lista/canal/tom/ritmo/destacar/evitar; seleção não salva antes da revisão final.
+- [x] Implementar canvas pontilhado com entrada, waits, etapas, saída, adicionar/editar/reordenar/remover, zoom e minimapa. Prévia não pode sumir com erro de variável; salvar rascunho mantém draft.
+- [x] Implementar abas, configurações observadas e pipeline derivado da mesma cadência. Saúde/Relatório demonstrativos mostram ausência de execução real. Ativar exibe requisito de integração, sem disparar.
+- [x] Rodar testes e build; verificar criação, edição, zoom, refresh, listas relacionadas, teclado e layout 1280px.
+- [x] Commit: `feat: add cadence builder and review flow`.
 
 ### T8 — Mensagens, configurações e superfícies restantes
 
@@ -161,11 +161,11 @@ Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>voi
 
 **Interfaces:** consome dados/preferências existentes; `CompanyProfile {id,version,domain,name,offer,products,idealCustomer,pains,differentiators,competitors,socialProof,sources,approvedAt:null|string}`; `approveProfile(profile:CompanyProfile,now:string):CompanyProfile` em `src/domain/context.ts` preserva correções humanas. Não acrescentar clients externos neste marco.
 
-- [ ] Implementar menus secundários e formulários de conta/contexto, salvar rascunho/aprovar, canais desconectados, limites, plano/uso, membros/segurança como fluxos locais claramente identificados ou requisitos de serviço.
-- [ ] Implementar e-mail recebidos/enviados, filtros e detalhe de conversa demonstrativa; WhatsApp sem número direciona para configurações. Executions e relatórios não inventam entregas.
-- [ ] LinkedIn/SDR exibem workflow e requisitos de conexão/ativação; controlar CTAs para não apontar para URL vazia. Informar que o recurso real está pendente de integração.
-- [ ] Testar perfil aprovado não sofre substituição de campos corrigidos ao propor releitura demonstrativa. Validar todos os links de navegação e estados vazios; rodar testes/build/typecheck.
-- [ ] Commit: `feat: add account channels inbox and reporting surfaces`.
+- [x] Implementar menus secundários e formulários de conta/contexto, salvar rascunho/aprovar, canais desconectados, limites, plano/uso, membros/segurança como fluxos locais claramente identificados ou requisitos de serviço.
+- [x] Implementar e-mail recebidos/enviados, filtros e detalhe de conversa demonstrativa; WhatsApp sem número direciona para configurações. Executions e relatórios não inventam entregas.
+- [x] LinkedIn/SDR exibem workflow e requisitos de conexão/ativação; controlar CTAs para não apontar para URL vazia. Informar que o recurso real está pendente de integração.
+- [x] Testar perfil aprovado não sofre substituição de campos corrigidos ao propor releitura demonstrativa. Validar todos os links de navegação e estados vazios; rodar testes/build/typecheck.
+- [x] Commit: `feat: add account channels inbox and reporting surfaces`.
 
 ### T9 — Comparação visual e entrega do marco
 
@@ -173,12 +173,12 @@ Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>voi
 
 **Interfaces:** nenhuma nova; esta tarefa verifica os contratos e superfícies anteriores.
 
-- [ ] Rodar `rtk npm test`, `rtk npm run typecheck`, `rtk npm run build`; registrar comandos, códigos de saída e resultado, sem alegar teste de integração real.
-- [ ] Pelo navegador existente, executar roteiro dashboard → lista → proposta de automação → confirmação → cadência IA → revisão → salvar → refresh. Verificar não duplicação, contexto, vinculação e persistência.
-- [ ] Capturar dashboard, contatos, automações, wizard, canvas e canais em desktop; conferir fontes, cor, espaços, densidade e estados contra os prints. Capturar 390px para validar navegação responsiva. Não aceitar baselines novas como prova de igualdade com a referência.
-- [ ] Testar armazenamento inválido, ausência de dados, nomes longos, clique duplo e variáveis faltantes. Corrigir divergências materiais e repetir somente os checks afetados.
-- [ ] Fazer revisão do conjunto conforme o método escolhido pelo usuário. Relatar o marco 01 e os pendentes 02–08; nunca chamar o demonstrativo de clone funcional integral.
-- [ ] Commit: `test: verify interface workflows and visual fidelity`.
+- [x] Rodar `rtk npm test`, `rtk npm run typecheck`, `rtk npm run build`; registrar comandos, códigos de saída e resultado, sem alegar teste de integração real.
+- [x] Pelo navegador existente, executar roteiro dashboard → lista → proposta de automação → confirmação → cadência IA → revisão → salvar → refresh. Verificar não duplicação, contexto, vinculação e persistência.
+- [x] Capturar dashboard, contatos, automações, wizard, canvas e canais em desktop; conferir fontes, cor, espaços, densidade e estados contra os prints. Capturar 390px para validar navegação responsiva. Não aceitar baselines novas como prova de igualdade com a referência.
+- [x] Testar armazenamento inválido, ausência de dados, nomes longos, clique duplo e variáveis faltantes. Corrigir divergências materiais e repetir somente os checks afetados.
+- [x] Fazer revisão do conjunto conforme o método escolhido pelo usuário. Relatar o marco 01 e os pendentes 02–08; nunca chamar o demonstrativo de clone funcional integral.
+- [x] Commit: `test: verify interface workflows and visual fidelity`.
 
 ## Auto-revisão do plano
 
@@ -190,4 +190,4 @@ Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>voi
 
 ## Handoff
 
-Plano escrito; implementação ainda não iniciada. Recomenda-se **execução nativa**, mantendo uma única implementação dos contratos compartilhados e revisão do conjunto ao final. Alternativa: subagentes por tarefa, com revisão por tarefa e maior custo de contexto. O usuário precisa revisar este plano e escolher o método antes do código, conforme a skill `superpowers:writing-plans`.
+Plano aprovado e implementado no marco 01; ver docs/validation/01-interface.md. A revisão final independente está sendo concluída. Recomenda-se **execução nativa**, mantendo uma única implementação dos contratos compartilhados e revisão do conjunto ao final. Alternativa: subagentes por tarefa, com revisão por tarefa e maior custo de contexto. O usuário precisa revisar este plano e escolher o método antes do código, conforme a skill `superpowers:writing-plans`.
