@@ -38,7 +38,7 @@ async function reviewState(c:PoolClient,p:Principal,input:JobInput){
   const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);
   const profileVersion=hashValue({config:config.version,policy:policy??null,contextVersion:context?.version??0});
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};
-  return {config,blockers,proof,profileVersion,checkpoint:{context,bases}};
+  return {config,blockers,proof,profileVersion,checkpoint:{context,bases,execution:{version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:Number(process.env.APOLLO_MAX_PAGES??0)}}};
 }
 function parseInput(input:unknown):JobInput{const parsed=jobInputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise fonte, filtros, destino e quantidade.');return parsed.data;}
 export async function prepareJob(p:Principal,input:unknown):Promise<Review>{

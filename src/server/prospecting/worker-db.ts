@@ -12,6 +12,6 @@ export function workerPool(){
 }
 export function withLeasedTransaction<T>(lease:JobLease,fn:(c:PoolClient)=>Promise<T>){
   return withContextTransaction(workerPool(),{workspaceId:lease.workspaceId,userId:lease.actorId,role:'operator',sessionId:'worker-job-authority'},async c=>{
-    await lockWorkspace(c);await assertJobLease(c,lease);const result=await fn(c);await assertJobLease(c,lease);return result;
+    await lockWorkspace(c);await assertJobLease(c,lease,true);const result=await fn(c);await assertJobLease(c,lease,true,true);return result;
   });
 }

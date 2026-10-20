@@ -7,7 +7,6 @@ export function chooseNextModule(input:Extract<JobInput,{kind:'qualification'}>,
   const done=new Set(results.map(r=>r.module));
   for(const module of ['registry','website','deep','email','phone','validateEmail','qualify','summary'] as ModuleId[]){
     if(!input.modules.includes(module)||done.has(module))continue;
-    if(module==='summary'&&input.summaryPolicy==='fits'&&!results.some(r=>r.module==='qualify'&&r.decision?.verdict==='fits'))continue;
     return module;
   }return null;
 }

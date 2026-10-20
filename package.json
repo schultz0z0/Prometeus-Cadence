@@ -12,7 +12,8 @@
     "env:init": "node scripts/local-env.mjs",
     "db:up": "docker compose --env-file .env.local up -d --wait",
     "db:migrate": "node scripts/db-migrate.mjs",
-    "test:integration": "node scripts/test-integration.mjs"
+    "test:integration": "node scripts/test-integration.mjs",
+    "worker": "node --conditions=react-server --experimental-strip-types scripts/prospecting-worker.ts"
   },
   "dependencies": {
     "better-auth": "1.7.12",
