@@ -39,4 +39,6 @@ Node local `v24.16.0`, npm `11.13.0`, RTK e REA já disponíveis. Next.js/React 
 - [x] Infraestrutura do marco 02 escolhida pelo usuário: PostgreSQL local em Docker.
 - [x] Revisão do plano 02 aprovada pelo usuário: `2026-10-20-prometeus-cadence-02-identity.md`.
 - [x] Implementação do marco 02: `docs/validation/02-identity.md`.
+- [x] Estudo de JEV híbrido e desenho do marco 03 aprovados pelo usuário: `../specs/2026-10-20-prometeus-cadence-03-prospecting-design.md`.
+- [ ] Revisão do plano 03 antes da execução nativa: `2026-10-20-prometeus-cadence-03-prospecting.md`.
 - [ ] Demais marcos, incluindo SaaS operacional completo.

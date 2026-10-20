@@ -1,6 +1,6 @@
 # Marco 03 — prospecção e qualificação com IA híbrida
 
-Estado: desenho proposto para revisão do usuário, ainda sem implementação. Complementa a [especificação geral aprovada](2026-10-20-prometeus-cadence-design.md) e o [roteiro](../plans/2026-10-20-prometeus-cadence-roadmap.md). Base: `178cbf9`, marcos 01–02 publicados na main. Execução nativa preservada como preferência do usuário; o plano executável será escrito após a revisão deste documento.
+Estado: desenho aprovado pelo usuário em 20/10/2026, ainda sem implementação. Complementa a [especificação geral aprovada](2026-10-20-prometeus-cadence-design.md) e o [roteiro](../plans/2026-10-20-prometeus-cadence-roadmap.md). Base: `178cbf9`, marcos 01–02 publicados na main. Execução nativa preservada como preferência do usuário; plano executável em `../plans/2026-10-20-prometeus-cadence-03-prospecting.md`, aguardando sua própria revisão.
 
 ## 1. Resultado esperado e contexto
 
