@@ -65,11 +65,16 @@ export function createDemoRepository(
               weekdays: [1, 2, 3, 4, 5],
             },
             dailyLimit: plan.dailyLimit,
-            filters: plan.filters,
+            filters: { ...plan.filters, channel: plan.channel },
             modules:
               i === 0
                 ? []
-                : ["Qualificação por IA", "Resumo com IA", "Extrair telefones"],
+                : [
+                    "Qualificação por IA",
+                    "Resumo com IA",
+                    ...(plan.channel !== "whatsapp" ? ["Extrair e-mails"] : []),
+                    ...(plan.channel !== "email" ? ["Extrair telefones"] : []),
+                  ],
             createdAt: new Date().toISOString(),
           });
         s.confirmationResults[requestId] = result;

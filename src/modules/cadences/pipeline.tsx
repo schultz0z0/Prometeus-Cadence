@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useDemo } from "@/demo/provider";
+import { eligibleCadenceLeads } from "@/domain/cadence";
 import { Badge, PageHeader, EmptyState } from "@/components/ui/primitives";
 export function Pipeline() {
   const s = useDemo();
@@ -9,10 +10,8 @@ export function Pipeline() {
   const [status, setStatus] = useState("");
   const [qualification, setQualification] = useState("");
   const c = s.cadences.find((c) => c.id === id);
-  const leads = s.leads.filter(
-    (l) =>
-      l.listId === c?.listId &&
-      (!qualification || l.qualification === qualification),
+  const leads = (c ? eligibleCadenceLeads(c, s.leads) : []).filter(
+    (l) => !qualification || l.qualification === qualification,
   );
   return (
     <>

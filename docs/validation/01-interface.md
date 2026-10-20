@@ -4,7 +4,7 @@ Escopo: primeira aplicação local navegável, conforme o plano aprovado. A equi
 
 ## Verificação automatizada
 
-- `rtk npm test`: 24/24 testes passam, exit 0. Cobrem repositório imutável, roundtrip, falha de persistência, transações, clique repetido, importação, filtros, métricas, contexto, cadências e simuladores.
+- `rtk npm test`: 31/31 testes passam após a revisão, exit 0. Cobrem repositório imutável, roundtrip, falha de persistência, transações, clique repetido, importação, filtros, métricas, contexto, cadências e simuladores.
 - `rtk npm run typecheck`: exit 0.
 - `rtk npm run build`: exit 0, produção Next.js compilada, 26 rotas estáticas/dinâmicas e 22 páginas geradas.
 - `rtk proxy node scripts/smoke-routes.mjs`: 42/42 rotas retornaram sucesso, exit 0; detalhes em [routes.json](routes.json). Esse teste não executa ações nem integrações reais.
@@ -43,7 +43,7 @@ Capturas próprias, inspecionadas visualmente:
 
 - [Dashboard desktop](screenshots/dashboard-desktop.png) e [390px](screenshots/dashboard-mobile.png).
 - [Contatos desktop](screenshots/contacts-desktop.png) e [menu em 390px](screenshots/contacts-mobile.png).
-- [Automações](screenshots/automations-desktop.png), [wizard](screenshots/audience-wizard-desktop.png), [canvas](screenshots/canvas-desktop.png), [canais](screenshots/channels-desktop.png).
+- [Automações](screenshots/automations-desktop.png), [wizard](screenshots/audience-wizard-desktop.png), [canvas](screenshots/canvas-desktop.png), [canais 1440px](screenshots/channels-desktop.png) e [1920px](screenshots/channels-wide.png).
 
 O MCP de teste recusou escrita direta na pasta por sua configuração de roots; as mesmas imagens retornadas inline foram salvas como PNG, sem edição. Não foi alterada a configuração do navegador do usuário.
 
@@ -53,6 +53,7 @@ O MCP de teste recusou escrita direta na pasta por sua configuração de roots; 
 - Helpers POSIX da skill substituídos por ledger equivalente no Windows. Custo: registro manual do progresso.
 - Porta 3210 porque 3000 já estava ocupada. Custo: URL local diferente.
 - Regras puras compartilhadas implementadas em lote depois de observar RED, evitando contratos incompatíveis entre tarefas. Custo: testes por contrato, em vez de duplicados por tela.
+- Captura de imagens via conteúdo inline do MCP porque sua configuração recusou o caminho direto. Bytes PNG preservados; custo: serialização local adicional.
 - REA e skill existentes reaproveitados. Consulta O Setup pendente por HTTP 401; nenhum novo MCP/skill foi criado ou instalado.
 
 ## Limitações conhecidas
@@ -63,4 +64,4 @@ O MCP de teste recusou escrita direta na pasta por sua configuração de roots; 
 - Não há guarda de navegação interna para formulários não confirmados; recarregar/abandonar descarta propostas temporárias. O editor de cadência avisa no refresh se houve mudança não salva.
 - O tema escuro e acessibilidade ampla ainda precisam de auditoria específica; esta entrega verificou foco de modais/menu, nomes de controles e navegação básica.
 
-Revisão independente final: pendente antes do encerramento deste marco.
+Revisão independente concluída; cinco importantes corrigidos, e a divergência de contagem do pipeline reclassificada e corrigida. Evidência, decisões e verificações posteriores no [registro da revisão](review-01.md). O revisor foi retomado após uma interrupção de limite de uso e concluiu seu parecer; não houve segunda revisão após as correções.

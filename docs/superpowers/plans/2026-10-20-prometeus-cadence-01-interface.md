@@ -190,4 +190,4 @@ Produz `DemoRepository`: `getSnapshot(): DemoState`; `subscribe(listener:()=>voi
 
 ## Handoff
 
-Plano aprovado e implementado no marco 01; ver docs/validation/01-interface.md. A revisão final independente está sendo concluída. Recomenda-se **execução nativa**, mantendo uma única implementação dos contratos compartilhados e revisão do conjunto ao final. Alternativa: subagentes por tarefa, com revisão por tarefa e maior custo de contexto. O usuário precisa revisar este plano e escolher o método antes do código, conforme a skill `superpowers:writing-plans`.
+Especificação e plano aprovados em 20/10/2026. Execução nativa concluída para o marco 01; testes, capturas e revisão registrados em docs/validation/01-interface.md. Serviços reais e os próximos marcos permanecem no roteiro aprovado.

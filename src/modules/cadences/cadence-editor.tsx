@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { defaultCadenceSettings } from "@/demo/seed";
-import { validateCadence } from "@/domain/cadence";
+import { validateCadence, eligibleCadenceLeads } from "@/domain/cadence";
 import type { Cadence } from "@/domain/model";
 import { qualificationLabels, qualificationTones } from "@/domain/model";
 import { Icon } from "@/components/ui/icon";
@@ -42,11 +42,7 @@ export function CadenceEditor({ id }: { id: string }) {
   const [dirty, setDirty] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
   const [optimize, setOptimize] = useState(false);
-  const leads = s.leads.filter(
-    (l) =>
-      l.listId === c.listId &&
-      c.settings.acceptedQualifications.includes(l.qualification),
-  );
+  const leads = eligibleCadenceLeads(c, s.leads);
   useEffect(() => {
     if (!dirty) return;
     const handler = (e: BeforeUnloadEvent) => {

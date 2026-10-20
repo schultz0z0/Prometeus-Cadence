@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
+import { createManualAutomationOperation } from "@/domain/automation";
 import { sourceLabels, type Source, type Schedule } from "@/domain/model";
 import { SourcePicker } from "@/modules/prospecting/source-picker";
 import { CnpjFilters } from "@/modules/prospecting/cnpj-filters";
@@ -16,6 +17,8 @@ export function ManualWizard({
   const repo = useRepository();
   const run = useAction();
   const router = useRouter();
+  const [operation] = useState(() => createManualAutomationOperation(repo));
+  const [submitted, setSubmitted] = useState(false);
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -50,15 +53,12 @@ export function ManualWizard({
             (filters.location.trim() || source === "CNPJ"))
         : true;
   function save() {
-    const listId = destination === "new" ? crypto.randomUUID() : list;
     if (
       run(() => {
-        repo.saveAutomation(
+        operation.confirm(
           {
-            id: crypto.randomUUID(),
             name,
             description,
-            listId,
             source,
             status: "paused",
             schedule,
@@ -70,11 +70,13 @@ export function ManualWizard({
                 : [],
             createdAt: new Date().toISOString(),
           },
-          destination === "new" ? { id: listId, name } : undefined,
+          destination === "new" ? { name } : list,
         );
       }, "Automação criada pausada.")
-    )
+    ) {
+      setSubmitted(true);
       router.push("/automations");
+    }
   }
   return (
     <>
@@ -358,7 +360,11 @@ export function ManualWizard({
             >
               {step === 0 ? "Cancelar" : "Voltar"}
             </Button>
-            <Button type="submit" variant="primary" disabled={!canAdvance}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={submitted || !canAdvance}
+            >
               {step === 4 ? "Criar automação pausada" : "Próximo"}
               <Icon name="ArrowRight" size={16} />
             </Button>

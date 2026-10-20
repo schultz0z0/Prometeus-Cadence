@@ -1,4 +1,43 @@
-import type { Cadence, Lead, ValidationIssue } from "./model.ts";
+import type { Cadence, CadenceStep, Lead, ValidationIssue } from "./model.ts";
+
+export function eligibleCadenceLeads(
+  cadence: Cadence,
+  leads: readonly Lead[],
+): Lead[] {
+  return leads.filter(
+    (lead) =>
+      lead.listId === cadence.listId &&
+      cadence.settings.acceptedQualifications.includes(lead.qualification),
+  );
+}
+
+export function renderStepPreview(
+  step: Pick<CadenceStep, "subject" | "body">,
+  lead: Lead,
+) {
+  const subject = renderMessage(step.subject ?? "", lead);
+  const body = renderMessage(step.body, lead);
+  return {
+    subject: subject.text,
+    text: body.text,
+    unresolved: [...new Set([...subject.unresolved, ...body.unresolved])],
+  };
+}
+
+export function moveCadenceStep(
+  cadence: Cadence,
+  edited: CadenceStep,
+  direction: -1 | 1,
+): Cadence {
+  const index = cadence.steps.findIndex((step) => step.id === edited.id);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= cadence.steps.length) return cadence;
+  const steps = cadence.steps.map((step) =>
+    step.id === edited.id ? { ...edited } : step,
+  );
+  [steps[index], steps[target]] = [steps[target], steps[index]];
+  return { ...cadence, steps };
+}
 export function renderMessage(template: string, lead: Lead) {
   const map: Record<string, string | undefined> = {
     nome: lead.name,
@@ -13,7 +52,7 @@ export function renderMessage(template: string, lead: Lead) {
   const text = template.replace(
     /\{\{\s*([^{}]+?)\s*\}\}/g,
     (match, key: string) => {
-      if (map[key]) return map[key]!;
+      if (Object.hasOwn(map, key) && map[key]) return map[key]!;
       if (!unresolved.includes(key)) unresolved.push(key);
       return match;
     },

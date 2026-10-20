@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import type { Template } from "@/domain/model";
-import { renderMessage } from "@/domain/cadence";
+import { renderStepPreview } from "@/domain/cadence";
 import {
   Button,
   IconButton,
@@ -42,8 +42,7 @@ export function TemplateLibrary() {
       t.name.toLowerCase().includes(query.toLowerCase()),
   );
   const sample = s.leads.find((l) => !previewList || l.listId === previewList);
-  const preview =
-    editing && sample ? renderMessage(editing.body, sample) : null;
+  const preview = editing && sample ? renderStepPreview(editing, sample) : null;
   return (
     <>
       <PageHeader
@@ -285,6 +284,9 @@ export function TemplateLibrary() {
                     </option>
                   ))}
                 </select>
+                {editing.channel === "EMAIL" && preview?.subject && (
+                  <h4>{preview.subject}</h4>
+                )}
                 <p className="message-preview">
                   {preview?.text || "Nenhum contato disponível para a prévia."}
                 </p>

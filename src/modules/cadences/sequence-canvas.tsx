@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import { useDemo } from "@/demo/provider";
 import type { Cadence, CadenceStep, Channel } from "@/domain/model";
-import { renderMessage } from "@/domain/cadence";
+import { renderStepPreview, moveCadenceStep } from "@/domain/cadence";
 import { Icon } from "@/components/ui/icon";
 import {
   Button,
@@ -69,12 +69,8 @@ export function SequenceCanvas({
     setAdd(null);
     setEditing(id);
   }
-  function move(direction: -1 | 1) {
-    const steps = [...cadence.steps];
-    const target = index + direction;
-    if (index < 0 || target < 0 || target >= steps.length) return;
-    [steps[index], steps[target]] = [steps[target], steps[index]];
-    onChange({ ...cadence, steps });
+  function move(direction: -1 | 1, edited: CadenceStep) {
+    onChange(moveCadenceStep(cadence, edited, direction));
     setEditing(null);
   }
   return (
@@ -318,18 +314,14 @@ export function SequenceCanvas({
           )}
           {cadence.steps.map((st, i) => {
             const r = lead
-              ? renderMessage(st.body, lead)
-              : { text: st.body, unresolved: [] };
+              ? renderStepPreview(st, lead)
+              : { text: st.body, subject: st.subject, unresolved: [] };
             return (
               <section key={st.id} className="preview-message">
                 <small>
                   {i + 1} · {st.channel} · após {st.delayDays} dias
                 </small>
-                {st.subject && (
-                  <h3>
-                    {lead ? renderMessage(st.subject, lead).text : st.subject}
-                  </h3>
-                )}
+                {st.subject && <h3>{r.subject}</h3>}
                 <p>{r.text}</p>
                 {r.unresolved.length > 0 && (
                   <Notice>Sem valor: {r.unresolved.join(", ")}</Notice>

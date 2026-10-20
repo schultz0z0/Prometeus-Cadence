@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-20T13:06:51.864Z",
+  "date": "2026-10-20T18:29:14.909Z",
   "base": "http://127.0.0.1:3210",
   "note": "HTTP navigation smoke only; does not verify real connectors or authentication.",
   "results": [

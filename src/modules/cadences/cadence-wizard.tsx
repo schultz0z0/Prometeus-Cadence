@@ -41,7 +41,13 @@ const objectives = [
     "Alguém indicou, ou você quer propor parceria. Começa pelo nome em comum.",
   ],
 ];
-export function CadenceWizard({ initialList = "" }: { initialList?: string }) {
+export function CadenceWizard({
+  initialList = "",
+  initialChannel = "whatsapp",
+}: {
+  initialList?: string;
+  initialChannel?: string;
+}) {
   const s = useDemo();
   const repo = useRepository();
   const run = useAction();
@@ -50,7 +56,12 @@ export function CadenceWizard({ initialList = "" }: { initialList?: string }) {
   const [brief, setBrief] = useState<CadenceBrief>({
     listId: initialList || s.lists[0]?.id || "",
     objective: "Primeiro contato",
-    channels: ["WHATSAPP"],
+    channels:
+      initialChannel === "email"
+        ? ["EMAIL"]
+        : initialChannel === "both"
+          ? ["WHATSAPP", "EMAIL"]
+          : ["WHATSAPP"],
     tone: "Pessoal",
     rhythm: "Padrão",
     highlight: "",

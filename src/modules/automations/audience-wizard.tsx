@@ -39,6 +39,8 @@ export function AudienceWizard() {
   const [result, setResult] = useState<ConfirmationResult | null>(null);
   const [createdName, setCreatedName] = useState("");
   const [createdLimit, setCreatedLimit] = useState(150);
+  const [createdChannel, setCreatedChannel] =
+    useState<AudiencePlan["channel"]>("whatsapp");
   const request = useRef(crypto.randomUUID());
   function suggest() {
     setPlans(
@@ -57,6 +59,7 @@ export function AudienceWizard() {
     ) {
       setCreatedName(chosen.title);
       setCreatedLimit(chosen.dailyLimit);
+      setCreatedChannel(chosen.channel);
       setChosen(null);
       setResult(r!);
       setStep(2);
@@ -225,7 +228,7 @@ export function AudienceWizard() {
             </section>
             <div className="row wrap section-gap">
               <LinkButton
-                href={`/cadences/new/ai?list=${result.listId}`}
+                href={`/cadences/new/ai?list=${result.listId}&channel=${createdChannel}`}
                 variant="primary"
               >
                 Criar a cadência dessa lista{" "}
@@ -286,7 +289,10 @@ export function AudienceWizard() {
                   }
                 />
               </Field>
-              <Field label="Público">
+              <Field
+                label="Nome da automação"
+                help="Este nome identifica a automação. Os critérios da busca são revisados abaixo."
+              >
                 <textarea
                   required
                   value={chosen.title}
@@ -294,6 +300,48 @@ export function AudienceWizard() {
                     setChosen({ ...chosen, title: e.target.value })
                   }
                 />
+              </Field>
+              <Field label="Termos da busca">
+                <textarea
+                  required
+                  value={chosen.filters.term ?? ""}
+                  onChange={(e) =>
+                    setChosen({
+                      ...chosen,
+                      filters: { ...chosen.filters, term: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field
+                label="Região da busca"
+                help="Confira a região sugerida antes de confirmar."
+              >
+                <input
+                  required
+                  value={chosen.filters.location ?? ""}
+                  onChange={(e) =>
+                    setChosen({
+                      ...chosen,
+                      filters: { ...chosen.filters, location: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Canal de contato">
+                <select
+                  value={chosen.channel}
+                  onChange={(e) =>
+                    setChosen({
+                      ...chosen,
+                      channel: e.target.value as AudiencePlan["channel"],
+                    })
+                  }
+                >
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="email">E-mail</option>
+                  <option value="both">Os dois</option>
+                </select>
               </Field>
               <Field label="Fonte de busca">
                 <select
