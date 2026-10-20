@@ -6,7 +6,7 @@ Data: 20/10/2026. Base publicada dos marcos 01–02: `178cbf9`. Preparação em 
 
 Avançar para prospecção, extração e qualificação reais preservando os fluxos observados do CadenceFlow: fontes separadas, formulários, preview e confirmação, progresso de execução e ausência de chat como fluxo principal. O usuário possui contas Apify e Apollo, sem saldo/créditos adicionados, e escolheu construir pensando no Apify. A existência de plano gratuito não autoriza supor saldo ou elegibilidade dessas contas.
 
-O provedor de IA para resumo e veredito ainda não foi informado. A pergunta foi enviada ao usuário; isso não será preenchido por uma escolha silenciosa.
+O usuário escolheu prioritariamente JEV 1.13 pelo OpenRouter (`typesafe/jev-1.13`) e Codex CLI autenticado via ChatGPT para testes locais, e pediu um estudo prévio da composição híbrida. OpenAI API/Gemini foram mencionados como alternativas permitidas, sem escolha de modelo ou contratação. Estudo e recomendação em `JEV-HYBRID-STUDY.md`.
 
 ## Evidência reaproveitada
 
