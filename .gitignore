@@ -1,0 +1,18 @@
+# Evidências volumosas e artefatos de terceiros ficam locais.
+docs/reverse-engineering/evidence/rea-evidence-bundle.json
+docs/reverse-engineering/artifacts/client/
+docs/reverse-engineering/screenshots/*.png
+
+# Segredos e arquivos locais da futura implementação.
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+dist/
+coverage/
+*.log
+.superpowers/
+*.tsbuildinfo
+test-results/
+playwright-report/

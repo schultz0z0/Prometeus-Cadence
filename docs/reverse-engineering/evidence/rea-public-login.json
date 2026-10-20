@@ -1,0 +1,4348 @@
+{
+  "evidence_id": "ev_375152f7e7a2ab77f64049448930373ec1aeeac1ff51ff9390048aed75977b78",
+  "subject": null,
+  "provider": {
+    "id": "rea-playwright-browser-scenario",
+    "name": "REA Playwright browser scenario capture provider",
+    "version": "1"
+  },
+  "analysis_profile": null,
+  "predicate_type": "rea.browser-scenario-capture",
+  "operation": "capture_browser_scenario",
+  "parameters": {
+    "browser": {
+      "mode": "launch",
+      "executable_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "headless": true
+    },
+    "start_url": {
+      "url": "https://app.cadenceflow.pro/dashboard",
+      "query": []
+    },
+    "environment": {
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "locale": "en-US",
+      "timezone": "UTC",
+      "color_scheme": "light",
+      "reduced_motion": "reduce",
+      "service_workers": "block"
+    },
+    "actions": [
+      {
+        "step_id": "login-ready",
+        "action": "wait_for_timeout",
+        "duration_ms": 3000
+      }
+    ],
+    "storage": {
+      "cookies": [],
+      "local_storage": [],
+      "session_storage": []
+    },
+    "secrets": [],
+    "capture": {
+      "after_each_step": [],
+      "at_end": [
+        "dom",
+        "accessibility",
+        "url"
+      ],
+      "events": [
+        "network"
+      ],
+      "network": {
+        "request_body": false,
+        "response_body": false,
+        "header_values": false
+      },
+      "limits": {
+        "max_events": 120,
+        "max_event_allocation_bytes": 4194304,
+        "max_total_event_allocation_bytes": 16777216,
+        "max_network_transactions": 60,
+        "max_network_body_bytes": 65536,
+        "max_network_body_allocation_bytes": 1048576,
+        "max_network_header_allocation_bytes": 1048576,
+        "max_network_metadata_allocation_bytes": 1048576
+      }
+    },
+    "scenario_sha256": "3944b01a14e1c8616572cee8da028f073aca424ec1b534782f5d3b824c9f5fa1"
+  },
+  "raw_result": null,
+  "normalized_result": {
+    "browser": {
+      "mode": "launch",
+      "process_ownership": "provider-owned",
+      "cleanup": "terminated-owned-process",
+      "product": "Chromium",
+      "version": "155.0.8059.85"
+    },
+    "scenario": {
+      "start_origin": "https://app.cadenceflow.pro",
+      "action_count": 1,
+      "secret_references": [],
+      "network_content": {
+        "request_body": false,
+        "response_body": false,
+        "header_values": false
+      },
+      "event_families": [
+        "network"
+      ],
+      "limits": {
+        "max_events": 120,
+        "max_event_allocation_bytes": 4194304,
+        "max_total_event_allocation_bytes": 16777216,
+        "max_network_transactions": 60,
+        "max_network_body_bytes": 65536,
+        "max_network_body_allocation_bytes": 1048576,
+        "max_network_header_allocation_bytes": 1048576,
+        "max_network_metadata_allocation_bytes": 1048576
+      }
+    },
+    "duration_ms": 10592,
+    "steps": [
+      {
+        "step_index": 0,
+        "step_id": "scenario_start",
+        "action": "goto_start",
+        "elapsed_ms": 7217,
+        "before_url": {
+          "url": "about:blank",
+          "origin": null,
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "https://app.cadenceflow.pro/login",
+          "origin": "https://app.cadenceflow.pro",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 57,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "not_requested"
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 1,
+        "step_id": "login-ready",
+        "action": "wait_for_timeout",
+        "elapsed_ms": 3043,
+        "before_url": {
+          "url": "https://app.cadenceflow.pro/login",
+          "origin": "https://app.cadenceflow.pro",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "https://app.cadenceflow.pro/login",
+          "origin": "https://app.cadenceflow.pro",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 58,
+        "event_sequence_end": 178,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "captured",
+            "value": {
+              "sha256": "d28399fedf9eb5a0807a88a97a09868f3226e52520a089be3969a264adb0287c",
+              "bytes": 35253,
+              "text": "<!DOCTYPE html><html lang=\"pt-BR\" class=\"light\" style=\"color-scheme: light;\"><head><meta charset=\"utf-8\"><link rel=\"preconnect\" href=\"https://app.cadenceflow.pro\" crossorigin=\"\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"stylesheet\" href=\"https://app.cadenceflow.pro/_next/static/chunks/3iqbl78q8rwnv.css\" data-precedence=\"next\"><link rel=\"stylesheet\" href=\"https://app.cadenceflow.pro/_next/static/chunks/0do619kbccuyt.css\" data-precedence=\"next\"><link rel=\"preload\" as=\"script\" fetchpriority=\"low\" href=\"https://app.cadenceflow.pro/_next/static/chunks/431bw722fec3m.js\"><script async=\"\" src=\"https://scripts.clarity.ms/0.8.72/clarity.js\"></script><script src=\"https://connect.facebook.net/signals/config/2969391329917887?v=2.9.425&amp;r=stable&amp;domain=app.cadenceflow.pro&amp;hme=766752a074f0cb0756dd3275a46fdecbcfe3de1ab8f573546734b619e44d384f&amp;ex_m=118%2C241%2C171%2C27%2C82%2C83%2C162%2C78%2C77%2C11%2C181%2C102%2C20%2C153%2C141%2C46%2C85%2C90%2C149%2C176%2C183%2C8%2C4%2C5%2C7%2C6%2C3%2C103%2C115%2C32%2C17%2C31%2C18%2C33%2C34%2C35%2C37%2C55%2C163%2C87%2C126%2C22%2C24%2C51%2C47%2C49%2C48%2C95%2C104%2C108%2C124%2C160%2C164%2C53%2C125%2C29%2C26%2C133%2C79%2C43%2C166%2C165%2C167%2C157%2C155%2C30%2C42%2C66%2C123%2C178%2C80%2C21%2C128%2C93%2C76%2C23%2C97%2C98%2C130%2C96%2C151%2C150%2C154%2C109%2C177%2C180%2C41%2C56%2C127%2C54%2C161%2C72%2C185%2C110%2C184%2C210%2C255%2C84%2C274%2C273%2C272%2C14%2C25%2C28%2C40%2C62%2C117%2C68%2C10%2C73%2C111%2C112%2C113%2C119%2C144%2C38%2C36%2C146%2C147%2C148%2C143%2C142%2C172%2C86%2C175%2C173%2C174%2C57%2C69%2C67%2C137%2C19%2C179%2C52%2C324%2C325%2C326%2C323%2C340%2C362%2C248%2C237%2C70%2C238%2C236%2C365%2C356%2C59%2C249%2C121%2C145%2C92%2C135%2C61%2C134%2C140%2C139%2C65%2C74%2C168%2C88%2C89%2C129%2C44%2C39%2C60%2C63%2C114%2C182%2C1%2C138%2C16%2C136%2C12%2C2%2C64%2C105%2C15%2C75%2C71%2C132%2C101%2C100%2C187%2C188%2C106%2C107%2C9%2C116%2C186%2C58%2C158%2C99%2C91%2C81%2C131%2C120%2C169%2C50%2C159%2C0%2C94%2C152%2C156%2C170%2C45%2C122%2C13%2C189\" async=\"\"></script><script type=\"text/javascript\" async=\"\" src=\"https://connect.facebook.net/en_US/fbevents.js\"></script><script type=\"text/javascript\" async=\"\" src=\"https://www.clarity.ms/tag/vkinuhw97l?ref=gtm\"></script><script type=\"text/javascript\" async=\"\" src=\"https://www.googletagmanager.com/gtag/js?id=G-XKNPZBPQV4&amp;cx=c&amp;gtm=4e6ag1\"></script><script type=\"text/javascript\" async=\"\" src=\"https://www.googletagmanager.com/gtag/js?id=G-B8VXT6Y4K8&amp;cx=c&amp;gtm=4e6ag1\"></script><script async=\"\" src=\"https://www.googletagmanager.com/gtm.js?id=GTM-5JBK4P67\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/2o6wtbn0-fkn3.js\" async=\"\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/0-4srap-ffvu1.js\" async=\"\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/2lfhpbqzwgurk.js\" async=\"\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/26g4tn5b226u5.js\" async=\"\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/turbopack-2_jgh21i2faci.js\" async=\"\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\" async=\"\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\" async=\"\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\" async=\"\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/393umujbo5zzr.js\" async=\"\"></script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/0706-f1m3jhdy.js\" async=\"\"></script><title>CadenceFlow: Prospecção Inteligente</title><meta name=\"description\" content=\"Plataforma de automação de prospecção multi-canal com IA\"><link rel=\"icon\" href=\"/favicon.webp\"><meta name=\"next-size-adjust\" content=\"\"><script>try{var d=document.documentElement,s=localStorage.getItem(\"app-font-size\");if(s)d.style.fontSize=s+\"px\";if(localStorage.getItem(\"nav-collapsed\")===\"1\")d.classList.add(\"nav-collapsed\")}catch(e){}</script><script src=\"https://app.cadenceflow.pro/_next/static/chunks/0cz1d0mv5g_q7.js\" nomodule=\"\"></script><link rel=\"preload\" href=\"/images/logo-horizontal-white.webp\" as=\"image\"><script id=\"cf-turnstile-script\" src=\"https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit\" async=\"\" defer=\"\"></script><script async=\"\" src=\"https://app.funnelsflow.pro/track.js?wid=ffp_1a9ff600ec9b3f0a00487939\" data-ff-site=\"cadenceflow\" data-ff-forward=\"n8n.srv981504.hstgr.cloud/webhook\"></script><script type=\"text/javascript\" async=\"\" src=\"https://googleads.g.doubleclick.net/pagead/viewthroughconversion/16447592951/?random=1792497163095&amp;cv=11&amp;fst=1792497163095&amp;bg=ffffff&amp;guid=ON&amp;async=1&amp;en=gtag.config&amp;gtm=45je6ag1v9171354899za20ozb9244211739zd9244211739xecxf1&amp;gcd=13l3l3l3l1l1&amp;dma=0&amp;tag_exp=115938466~115938469~117776795~118897920~118897930~120213116~120385422~120469145~120469153~121246026~121246034~123322202&amp;u_w=1280&amp;u_h=720&amp;url=https%3A%2F%2Fapp.cadenceflow.pro%2Flogin&amp;rcb=4&amp;frm=0&amp;tiba=CadenceFlow%3A%20Prospec%C3%A7%C3%A3o%20Inteligente&amp;hn=www.googleadservices.com&amp;npa=0&amp;pscdl=noapi&amp;auid=1785927493.1792497163&amp;uaa=x86&amp;uab=64&amp;uafvl=Google%2520Chrome%3B155.0.8059.85%7CChromium%3B155.0.8059.85%7CNot(A%253ABrand%3B24.0.0.0&amp;uamb=0&amp;uam=&amp;uap=Windows&amp;uapv=19.0.0&amp;uaw=0&amp;data=event%3Dgtag.config&amp;ept=9&amp;rfmt=3&amp;fmt=4\"></script><script type=\"text/javascript\" async=\"\" src=\"https://googleads.g.doubleclick.net/pagead/viewthroughconversion/16740867426/?random=1792497163108&amp;cv=11&amp;fst=1792497163108&amp;bg=ffffff&amp;guid=ON&amp;async=1&amp;en=gtag.config&amp;gtm=45je6ag1v9171354899za20ozb9244211739zd9244211739xecxf1&amp;gcd=13l3l3l3l1l1&amp;dma=0&amp;tag_exp=115938466~115938469~117776795~118897920~118897930~120213116~120385422~120469145~120469153~121246026~121246034~123322202&amp;u_w=1280&amp;u_h=720&amp;url=https%3A%2F%2Fapp.cadenceflow.pro%2Flogin&amp;rcb=4&amp;frm=0&amp;tiba=CadenceFlow%3A%20Prospec%C3%A7%C3%A3o%20Inteligente&amp;hn=www.googleadservices.com&amp;npa=0&amp;pscdl=noapi&amp;auid=1785927493.1792497163&amp;uaa=x86&amp;uab=64&amp;uafvl=Google%2520Chrome%3B155.0.8059.85%7CChromium%3B155.0.8059.85%7CNot(A%253ABrand%3B24.0.0.0&amp;uamb=0&amp;uam=&amp;uap=Windows&amp;uapv=19.0.0&amp;uaw=0&amp;data=event%3Dgtag.config&amp;ept=9&amp;rfmt=3&amp;fmt=4\"></script><script type=\"text/javascript\" async=\"\" src=\"https://googleads.g.doubleclick.net/pagead/viewthroughconversion/16740867426/?random=1792497163115&amp;cv=11&amp;fst=1792497163115&amp;bg=ffffff&amp;guid=ON&amp;async=1&amp;gtm=45je6ag1v9171354899z89244211739za20gzb9244211739zd9244211739xeaxf1&amp;gcd=13l3l3l3l1l1&amp;dma=0&amp;tag_exp=115938466~115938469~117776795~118897920~118897930~120213116~120385422~120469145~120469153~121246026~121246034~123322202&amp;u_w=1280&amp;u_h=720&amp;url=https%3A%2F%2Fapp.cadenceflow.pro%2Flogin&amp;rcb=4&amp;frm=0&amp;tiba=CadenceFlow%3A%20Prospec%C3%A7%C3%A3o%20Inteligente&amp;hn=www.googleadservices.com&amp;npa=0&amp;pscdl=noapi&amp;auid=1785927493.1792497163&amp;uaa=x86&amp;uab=64&amp;uafvl=Google%2520Chrome%3B155.0.8059.85%7CChromium%3B155.0.8059.85%7CNot(A%253ABrand%3B24.0.0.0&amp;uamb=0&amp;uam=&amp;uap=Windows&amp;uapv=19.0.0&amp;uaw=0&amp;_tu=CA&amp;ept=9&amp;rfmt=3&amp;fmt=4\"></script></head><body class=\"sora_c1cfad3d-module__CC8AgW__variable manrope_8828bf7-module__7G3MTa__variable jetbrains_mono_4f2addf2-module__vCF3HW__variable antialiased\"><div hidden=\"\"><!--$--><!--/$--></div><noscript><iframe src=\"https://www.googletagmanager.com/ns.html?id=GTM-5JBK4P67\" height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></noscript><script>((a,b,c,d,e,f,g,h)=>{let i=document.documentElement,j=[\"light\",\"dark\"];function k(b){var c;(Array.isArray(a)?a:[a]).forEach(a=>{let c=\"class\"===a,d=c&&f?e.map(a=>f[a]||a):e;c?(i.classList.remove(...d),i.classList.add(f&&f[b]?f[b]:b)):i.setAttribute(a,b)}),c=b,h&&j.includes(c)&&(i.style.colorScheme=c)}if(d)k(d);else try{let a=localStorage.getItem(b)||c,d=g&&\"system\"===a?window.matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\":a;k(d)}catch(a){}})(\"class\",\"theme\",\"light\",null,[\"light\",\"dark\"],null,false,true)</script><div class=\"flex min-h-screen bg-background text-foreground\"><aside class=\"relative hidden overflow-hidden bg-[#0D0A08] lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-1/2\"><div class=\"pointer-events-none absolute inset-0 bg-[radial-gradient(38rem_28rem_at_0%_0%,rgba(255,107,0,0.22),transparent_65%),radial-gradient(30rem_24rem_at_100%_100%,rgba(255,107,0,0.12),transparent_65%)]\"></div><div class=\"pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]\"></div><div class=\"relative z-10 flex w-full flex-col p-10 xl:p-12 [@media(max-height:820px)]:p-8\"><div class=\"flex items-center\"><img alt=\"CadenceFlow\" width=\"200\" height=\"40\" decoding=\"async\" data-nimg=\"1\" class=\"h-9 w-auto\" src=\"/images/logo-horizontal-white.webp\" style=\"color: transparent;\"></div><div class=\"my-auto py-10 [@media(max-height:680px)]:py-6\"><div class=\"max-w-md space-y-5\"><h2 class=\"font-heading text-3xl font-semibold leading-tight tracking-tight text-white xl:text-4xl [@media(max-height:820px)]:text-2xl\">Prospecção ativa<br>que chega em<br><span class=\"text-[#FF8A3D]\">quem decide</span></h2><p class=\"text-base leading-relaxed text-white/60 [@media(max-height:680px)]:hidden\">Leads certos, cadência no e-mail, WhatsApp e LinkedIn, e um agente que responde por você, tudo num lugar só.</p><div class=\"pt-3 [@media(max-height:680px)]:hidden\"><div class=\"space-y-3\"><div class=\"flex items-center gap-3 text-white/75\"><div class=\"flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-[#FF8A3D]\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-users w-4 h-4\" aria-hidden=\"true\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"></path><path d=\"M16 3.128a4 4 0 0 1 0 7.744\"></path><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"></path><circle cx=\"9\" cy=\"7\" r=\"4\"></circle></svg></div><span class=\"text-sm\">Leads qualificados por IA, com decisor e contato</span></div><div class=\"flex items-center gap-3 text-white/75\"><div class=\"flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-[#FF8A3D]\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-column w-4 h-4\" aria-hidden=\"true\"><path d=\"M3 3v16a2 2 0 0 0 2 2h16\"></path><path d=\"M18 17V9\"></path><path d=\"M13 17V5\"></path><path d=\"M8 17v-3\"></path></svg></div><span class=\"text-sm\">Cadências multicanal com resposta rastreada</span></div><div class=\"flex items-center gap-3 text-white/75\"><div class=\"flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-[#FF8A3D]\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-sparkles w-4 h-4\" aria-hidden=\"true\"><path d=\"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z\"></path><path d=\"M20 2v4\"></path><path d=\"M22 4h-4\"></path><circle cx=\"4\" cy=\"20\" r=\"2\"></circle></svg></div><span class=\"text-sm\">Agente SDR que responde e marca a reunião</span></div></div></div></div></div><div class=\"flex flex-wrap items-center justify-between gap-2 text-xs text-white/40\"><p>© 2026 CadenceFlow</p><div class=\"flex gap-5\"><a href=\"https://cadenceflow.pro/termos\" target=\"_blank\" rel=\"noopener\" class=\"transition-colors hover:text-white/80\">Termos</a><a href=\"https://cadenceflow.pro/privacidade\" target=\"_blank\" rel=\"noopener\" class=\"transition-colors hover:text-white/80\">Privacidade</a></div></div></div></aside><main class=\"auth-fundo relative flex flex-1 items-center justify-center overflow-hidden\"><div class=\"absolute right-4 top-4 z-20\"><button aria-label=\"Ativar tema escuro\" class=\"p-2 rounded-[var(--radius-md)] text-[var(--text-muted)] hover:text-foreground hover:bg-muted transition-colors\" title=\"Tema escuro\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-moon w-4 h-4\" aria-hidden=\"true\"><path d=\"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401\"></path></svg></button></div><div class=\"mx-auto w-full px-4 py-10 sm:px-8 [@media(max-height:820px)]:py-6 max-w-md\"><div class=\"mb-8 flex justify-center lg:hidden [@media(max-height:820px)]:mb-5\"><img alt=\"CadenceFlow\" loading=\"lazy\" width=\"200\" height=\"40\" decoding=\"async\" data-nimg=\"1\" class=\"h-10 w-auto dark:hidden\" src=\"/images/logo-horizontal.webp\" style=\"color: transparent;\"><img alt=\"CadenceFlow\" loading=\"lazy\" width=\"200\" height=\"40\" decoding=\"async\" data-nimg=\"1\" class=\"hidden h-10 w-auto dark:block\" src=\"/images/logo-horizontal-white.webp\" style=\"color: transparent;\"></div><div class=\"auth-cartao\"><div class=\"mb-8\"><h1 class=\"font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl\">Bem-vindo de volta</h1><p class=\"mt-1.5 text-foreground-secondary\">Entre na sua conta para continuar</p></div><div class=\"mb-6\"><div class=\"space-y-5\"><div class=\"grid gap-2\"><a href=\"/api/auth/oauth/google/start\" class=\"relative flex h-12 items-center justify-center gap-3 whitespace-nowrap rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-[15px] font-semibold text-[var(--foreground)] shadow-sm transition-colors hover:border-[var(--border-hover)] hover:bg-[var(--surface-hover)]\"><span class=\"grid h-5 w-5 place-items-center [&amp;_svg]:h-5 [&amp;_svg]:w-5\"><svg class=\"h-4 w-4\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"#4285F4\" d=\"M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z\"></path><path fill=\"#34A853\" d=\"M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z\"></path><path fill=\"#FBBC05\" d=\"M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.43.34-2.1V7.06H2.18A11 11 0 0 0 1 12c0 1.77.42 3.45 1.18 4.94l3.66-2.84z\"></path><path fill=\"#EA4335\" d=\"M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z\"></path></svg></span><span>Continuar com Google</span></a></div><div class=\"flex items-center gap-3 text-xs text-[var(--text-muted)]\"><span class=\"h-px flex-1 bg-[var(--border)]\"></span>ou<span class=\"h-px flex-1 bg-[var(--border)]\"></span></div></div></div><form class=\"space-y-5\" data-ff-injected=\"1\"><div><label for=\"email\" class=\"block text-sm font-medium text-foreground mb-1.5\">E-mail</label><div class=\"relative\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-mail absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]\" aria-hidden=\"true\"><path d=\"m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7\"></path><rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"2\"></rect></svg><input id=\"email\" required=\"\" placeholder=\"seu@email.com\" class=\"w-full pl-10 pr-4 py-3 rounded-[var(--radius-md)] border border-[var(--input-border)] bg-[var(--input-bg)] text-foreground placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:border-primary transition-colors\" type=\"email\" value=\"\"></div></div><div><div class=\"mb-1.5 flex items-center justify-between\"><label for=\"password\" class=\"block text-sm font-medium text-foreground\">Senha</label><a href=\"/forgot-password\" class=\"text-xs font-medium text-primary transition-colors hover:text-[var(--primary-hover)]\">Esqueci minha senha</a></div><div class=\"relative\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-lock absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]\" aria-hidden=\"true\"><rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\" ry=\"2\"></rect><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"></path></svg><input id=\"password\" required=\"\" placeholder=\"••••••••\" class=\"w-full pl-10 pr-10 py-3 rounded-[var(--radius-md)] border border-[var(--input-border)] bg-[var(--input-bg)] text-foreground placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)] focus:border-primary transition-colors\" type=\"password\" value=\"\"><button type=\"button\" class=\"absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-foreground transition-colors\"><svg class=\"w-4 h-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\"></path><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z\"></path></svg></button></div></div><div class=\"flex justify-center\"><div><div><div></div><input type=\"hidden\" name=\"cf-turnstile-response\" id=\"cf-chl-widget-l8h73_response\"></div></div></div><button type=\"submit\" disabled=\"\" class=\"w-full py-3 px-4 bg-primary hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)] text-white font-semibold rounded-[var(--radius-md)] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm\">Entrar<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-arrow-right w-4 h-4\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path><path d=\"m12 5 7 7-7 7\"></path></svg></button><input type=\"hidden\" name=\"ff_visitor_id\" value=\"77724981-214e-49db-b677-b2d96983a30d\"><input type=\"hidden\" name=\"ff_session_id\" value=\"e22d0a4e-436c-4f03-a480-c6e0656b705f\"><input type=\"hidden\" name=\"ff_site\" value=\"cadenceflow\"><input type=\"hidden\" name=\"ff_origin_type\" value=\"direto\"><input type=\"hidden\" name=\"ff_first_source\" value=\"(direct)\"><input type=\"hidden\" name=\"ff_first_medium\" value=\"(none)\"><input type=\"hidden\" name=\"ff_first_type\" value=\"direto\"><input type=\"hidden\" name=\"ff_first_campaign\" value=\"\"><input type=\"hidden\" name=\"ff_first_landing\" value=\"/login\"><input type=\"hidden\" name=\"ff_first_ts\" value=\"1792497162914\"><input type=\"hidden\" name=\"ff_last_source\" value=\"(direct)\"><input type=\"hidden\" name=\"ff_last_medium\" value=\"(none)\"><input type=\"hidden\" name=\"ff_last_type\" value=\"direto\"><input type=\"hidden\" name=\"ff_last_campaign\" value=\"\"><input type=\"hidden\" name=\"ff_last_referrer\" value=\"\"><input type=\"hidden\" name=\"ff_gclid\" value=\"\"><input type=\"hidden\" name=\"ff_fbclid\" value=\"\"><input type=\"hidden\" name=\"ff_msclkid\" value=\"\"><input type=\"hidden\" name=\"ff_ttclid\" value=\"\"><input type=\"hidden\" name=\"ff_li_fat_id\" value=\"\"><input type=\"hidden\" name=\"ff_gbraid\" value=\"\"><input type=\"hidden\" name=\"ff_wbraid\" value=\"\"><input type=\"hidden\" name=\"ff_fbc\" value=\"\"><input type=\"hidden\" name=\"ff_fbp\" value=\"\"><input type=\"hidden\" name=\"ff_journey\" value=\"[{&quot;ts&quot;:1792497162914,&quot;type&quot;:&quot;direto&quot;,&quot;source&quot;:&quot;(direct)&quot;,&quot;medium&quot;:&quot;(none)&quot;,&quot;campaign&quot;:&quot;&quot;,&quot;landing&quot;:&quot;/login&quot;}]\"><input type=\"hidden\" name=\"ff_journey_count\" value=\"1\"><input type=\"hidden\" name=\"ff_landing_session\" value=\"/login\"><input type=\"hidden\" name=\"ff_device\" value=\"desktop\"><input type=\"hidden\" name=\"ff_page_url\" value=\"https://app.cadenceflow.pro/login\"><input type=\"hidden\" name=\"ff_consent_status\" value=\"pending\"><input type=\"hidden\" name=\"ff_campaign_id\" value=\"\"><input type=\"hidden\" name=\"ff_campaign_name\" value=\"\"><input type=\"hidden\" name=\"ff_adset_id\" value=\"\"><input type=\"hidden\" name=\"ff_adset_name\" value=\"\"><input type=\"hidden\" name=\"ff_ad_id\" value=\"\"><input type=\"hidden\" name=\"ff_ad_name\" value=\"\"><input type=\"hidden\" name=\"ff_placement\" value=\"\"><input type=\"hidden\" name=\"ff_keyword\" value=\"\"><input type=\"hidden\" name=\"ff_first_content\" value=\"\"><input type=\"hidden\" name=\"ff_first_term\" value=\"\"><input type=\"hidden\" name=\"ff_last_content\" value=\"\"><input type=\"hidden\" name=\"ff_last_term\" value=\"\"></form><p class=\"text-center text-sm text-[var(--text-muted)] mt-8\">Não tem conta? <a href=\"/register\" class=\"text-primary hover:text-[var(--primary-hover)] font-medium transition-colors\">Criar conta</a></p></div></div></main></div><!--$--><!--/$--><div aria-live=\"polite\" class=\"pointer-events-none fixed bottom-4 right-4 z-[100] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2\"></div><script src=\"https://app.cadenceflow.pro/_next/static/chunks/431bw722fec3m.js\" id=\"_R_\" async=\"\"></script><script>(self.__next_f=self.__next_f||[]).push([0])</script><script>self.__next_f.push([1,\"1:\\\"$Sreact.fragment\\\"\\n2:I[479520,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"\\\"]\\n4:I[427423,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"ThemeProvider\\\"]\\n5:I[673635,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"ToastProvider\\\"]\\n6:I[347101,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"ConfirmProvider\\\"]\\n7:I[339756,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"default\\\"]\\n8:I[837457,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"default\\\"]\\n9:I[314215,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"ConversaoPendente\\\"]\\na:I[347257,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"ClientPageRoot\\\"]\\nb:I[594542,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/393umujbo5zzr.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/0706-f1m3jhdy.js\\\"],\\\"default\\\"]\\ne:I[897367,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"OutletBoundary\\\"]\\nf:\\\"$Sreact.suspense\\\"\\n12:I[897367,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"ViewportBoundary\\\"]\\n14:I[897367,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"MetadataBoundary\\\"]\\n17:I[168027,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"default\\\",1]\\n:HL[\\\"https://app.cadenceflow.pro/_next/static/chunks/3iqbl78q8rwnv.css\\\",\\\"style\\\"]\\n:HL[\\\"https://app.cadenceflow.pro/_next/static/chunks/0do619kbccuyt.css\\\",\\\"style\\\"]\\n:HC[\\\"https://app.cadenceflow.pro\\\",\\\"\\\"]\\n3:[\\\"$\\\",\\\"iframe\\\",null,{\\\"src\\\":\\\"https://www.googletagmanager.com/ns.html?id=GTM-5JBK4P67\\\",\\\"height\\\":\\\"0\\\",\\\"width\\\":\\\"0\\\",\\\"style\\\":{\\\"display\\\":\\\"none\\\",\\\"visibility\\\":\\\"hidden\\\"}}]\\n11:X\\n0:{\\\"P\\\":null,\\\"c\\\":[\\\"\\\",\\\"login\\\"],\\\"q\\\":\\\"\\\",\\\"i\\\":false,\\\"f\\\":[[[\\\"\\\",{\\\"children\\\":[\\\"login\\\",{\\\"children\\\":[\\\"__PAGE__\\\",{},\\\"$undefined\\\",\\\"$undefined\\\",4608]},\\\"$undefined\\\",\\\"$undefined\\\",4608]},\\\"$undefined\\\",\\\"$undefined\\\",4624],[[\\\"$\\\",\\\"$1\\\",\\\"c\\\",{\\\"children\\\":[[[\\\"$\\\",\\\"link\\\",\\\"0\\\",{\\\"rel\\\":\\\"stylesheet\\\",\\\"href\\\":\\\"https://app.cadenceflow.pro/_next/static/chunks/3iqbl78q8rwnv.css\\\",\\\"precedence\\\":\\\"next\\\",\\\"crossOrigin\\\":\\\"$undefined\\\",\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"link\\\",\\\"1\\\",{\\\"rel\\\":\\\"stylesheet\\\",\\\"href\\\":\\\"https://app.cadenceflow.pro/_next/static/chunks/0do619kbccuyt.css\\\",\\\"precedence\\\":\\\"next\\\",\\\"crossOrigin\\\":\\\"$undefined\\\",\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"script\\\",\\\"script-0\\\",{\\\"src\\\":\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"script\\\",\\\"script-1\\\",{\\\"src\\\":\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"script\\\",\\\"script-2\\\",{\\\"src\\\":\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}]],[\\\"$\\\",\\\"html\\\",null,{\\\"lang\\\":\\\"pt-BR\\\",\\\"suppressHydrationWarning\\\":true,\\\"children\\\":[[\\\"$\\\",\\\"head\\\",null,{\\\"children\\\":[[\\\"$\\\",\\\"script\\\",null,{\\\"dangerouslySetInnerHTML\\\":{\\\"__html\\\":\\\"try{var d=document.documentElement,s=localStorage.getItem(\\\\\\\"app-font-size\\\\\\\");if(s)d.style.fontSize=s+\\\\\\\"px\\\\\\\";if(localStorage.getItem(\\\\\\\"nav-collapsed\\\\\\\")===\\\\\\\"1\\\\\\\")d.classList.add(\\\\\\\"nav-collapsed\\\\\\\")}catch(e){}\\\"}}],[\\\"$\\\",\\\"$L2\\\",null,{\\\"id\\\":\\\"gtm\\\",\\\"strategy\\\":\\\"afterInteractive\\\",\\\"children\\\":\\\"if(/(^|\\\\\\\\.)cadenceflow\\\\\\\\.pro$/.test(location.hostname)\\u0026\\u0026!/^(dev|staging)\\\\\\\\./.test(location.hostname))(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':\\\\nnew Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],\\\\nj=d.createElement(s),dl=l!='dataLayer'?'\\u0026l='+l:'';j.async=true;j.src=\\\\n'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);\\\\n})(window,document,'script','dataLayer','GTM-5JBK4P67');\\\"}]]}],[\\\"$\\\",\\\"body\\\",null,{\\\"className\\\":\\\"sora_c1cfad3d-module__CC8AgW__variable manrope_8828bf7-module__7G3MTa__variable jetbrains_mono_4f2addf2-module__vCF3HW__variable antialiased\\\",\\\"suppressHydrationWarning\\\":true,\\\"children\\\":[[\\\"$\\\",\\\"noscript\\\",null,{\\\"children\\\":\\\"$3\\\"}],[\\\"$\\\",\\\"$L4\\\",null,{\\\"attribute\\\":\\\"class\\\",\\\"defaultTheme\\\":\\\"light\\\",\\\"enableSystem\\\":false,\\\"disableTransitionOnChange\\\":false,\\\"children\\\":[[\\\"$\\\",\\\"$L5\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$L6\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$L7\\\",null,{\\\"parallelRouterKey\\\":\\\"children\\\",\\\"error\\\":\\\"$undefined\\\",\\\"errorStyles\\\":\\\"$undefined\\\",\\\"errorScripts\\\":\\\"$undefined\\\",\\\"template\\\":[\\\"$\\\",\\\"$L8\\\",null,{}],\\\"templateStyles\\\":\\\"$undefined\\\",\\\"templateScripts\\\":\\\"$undefined\\\",\\\"notFound\\\":[[[\\\"$\\\",\\\"title\\\",null,{\\\"children\\\":\\\"404: This page could not be found.\\\"}],[\\\"$\\\",\\\"div\\\",null,{\\\"style\\\":{\\\"fontFamily\\\":\\\"system-ui,\\\\\\\"Segoe UI\\\\\\\",Roboto,Helvetica,Arial,sans-serif,\\\\\\\"Apple Color Emoji\\\\\\\",\\\\\\\"Segoe UI Emoji\\\\\\\"\\\",\\\"height\\\":\\\"100vh\\\",\\\"textAlign\\\":\\\"center\\\",\\\"display\\\":\\\"flex\\\",\\\"flexDirection\\\":\\\"column\\\",\\\"alignItems\\\":\\\"center\\\",\\\"justifyContent\\\":\\\"center\\\"},\\\"children\\\":[\\\"$\\\",\\\"div\\\",null,{\\\"children\\\":[[\\\"$\\\",\\\"style\\\",null,{\\\"dangerouslySetInnerHTML\\\":{\\\"__html\\\":\\\"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}\\\"}}],[\\\"$\\\",\\\"h1\\\",null,{\\\"className\\\":\\\"next-error-h1\\\",\\\"style\\\":{\\\"display\\\":\\\"inline-block\\\",\\\"margin\\\":\\\"0 20px 0 0\\\",\\\"padding\\\":\\\"0 23px 0 0\\\",\\\"fontSize\\\":24,\\\"fontWeight\\\":500,\\\"verticalAlign\\\":\\\"top\\\",\\\"lineHeight\\\":\\\"49px\\\"},\\\"children\\\":404}],[\\\"$\\\",\\\"div\\\",null,{\\\"style\\\":{\\\"display\\\":\\\"inline-block\\\"},\\\"children\\\":[\\\"$\\\",\\\"h2\\\",null,{\\\"style\\\":{\\\"fontSize\\\":14,\\\"fontWeight\\\":400,\\\"lineHeight\\\":\\\"49px\\\",\\\"margin\\\":0},\\\"children\\\":\\\"This page could not be found.\\\"}]}]]}]}]],[]],\\\"forbidden\\\":\\\"$undefined\\\",\\\"unauthorized\\\":\\\"$undefined\\\"}]}]}],[\\\"$\\\",\\\"$L9\\\",null,{}]]}]]}]]}]]}],{\\\"children\\\":[[\\\"$\\\",\\\"$1\\\",\\\"c\\\",{\\\"children\\\":[null,[\\\"$\\\",\\\"$L7\\\",null,{\\\"parallelRouterKey\\\":\\\"children\\\",\\\"error\\\":\\\"$undefined\\\",\\\"errorStyles\\\":\\\"$undefined\\\",\\\"errorScripts\\\":\\\"$undefined\\\",\\\"template\\\":[\\\"$\\\",\\\"$L8\\\",null,{}],\\\"templateStyles\\\":\\\"$undefined\\\",\\\"templateScripts\\\":\\\"$undefined\\\",\\\"notFound\\\":\\\"$undefined\\\",\\\"forbidden\\\":\\\"$undefined\\\",\\\"unauthorized\\\":\\\"$undefined\\\"}]]}],{\\\"children\\\":[[\\\"$\\\",\\\"$1\\\",\\\"c\\\",{\\\"children\\\":[[\\\"$\\\",\\\"$La\\\",null,{\\\"Component\\\":\\\"$b\\\",\\\"serverProvidedParams\\\":{\\\"searchParams\\\":{},\\\"params\\\":{},\\\"promises\\\":[\\\"$@c\\\",\\\"$@d\\\"]}}],[[\\\"$\\\",\\\"script\\\",\\\"script-0\\\",{\\\"src\\\":\\\"https://app.cadenceflow.pro/_next/static/chunks/393umujbo5zzr.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}],[\\\"$\\\",\\\"script\\\",\\\"script-1\\\",{\\\"src\\\":\\\"https://app.cadenceflow.pro/_next/static/chunks/0706-f1m3jhdy.js\\\",\\\"async\\\":true,\\\"nonce\\\":\\\"$undefined\\\"}]],[\\\"$\\\",\\\"$Le\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$f\\\",null,{\\\"name\\\":\\\"Next.MetadataOutlet\\\",\\\"children\\\":\\\"$@10\\\"}]}]]}],{},null,false,null]},null,false,\\\"$11\\\"]},null,false,null],[\\\"$\\\",\\\"$1\\\",\\\"h\\\",{\\\"children\\\":[null,[\\\"$\\\",\\\"$L12\\\",null,{\\\"children\\\":\\\"$L13\\\"}],[\\\"$\\\",\\\"div\\\",null,{\\\"hidden\\\":true,\\\"children\\\":[\\\"$\\\",\\\"$L14\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$f\\\",null,{\\\"name\\\":\\\"Next.Metadata\\\",\\\"children\\\":\\\"$L15\\\"}]}]}],\\\"$L16\\\"]}],false]],\\\"m\\\":\\\"$undefined\\\",\\\"G\\\":[\\\"$17\\\",[\\\"$L18\\\",\\\"$L19\\\"]],\\\"S\\\":true,\\\"h\\\":null,\\\"r\\\":\\\"$undefined\\\",\\\"s\\\":\\\"$undefined\\\",\\\"a\\\":\\\"$undefined\\\",\\\"l\\\":\\\"$undefined\\\",\\\"p\\\":\\\"$undefined\\\",\\\"d\\\":\\\"$undefined\\\",\\\"b\\\":\\\"4JS_6IQQ81pC-udvTrbNy\\\"}\\n11:C\\n16:[\\\"$\\\",\\\"meta\\\",null,{\\\"name\\\":\\\"next-size-adjust\\\",\\\"content\\\":\\\"\\\"}]\\n18:[\\\"$\\\",\\\"link\\\",\\\"0\\\",{\\\"rel\\\":\\\"stylesheet\\\",\\\"href\\\":\\\"https://app.cadenceflow.pro/_next/static/chunks/3iqbl78q8rwnv.css\\\",\\\"precedence\\\":\\\"next\\\",\\\"crossOrigin\\\":\\\"$undefined\\\",\\\"nonce\\\":\\\"$undefined\\\"}]\\n19:[\\\"$\\\",\\\"link\\\",\\\"1\\\",{\\\"rel\\\":\\\"stylesheet\\\",\\\"href\\\":\\\"https://app.cadenceflow.pro/_next/static/chunks/0do619kbccuyt.css\\\",\\\"precedence\\\":\\\"next\\\",\\\"crossOrigin\\\":\\\"$undefined\\\",\\\"nonce\\\":\\\"$undefined\\\"}]\\nc:{}\\nd:\\\"$0:f:0:1:1:children:1:children:0:props:children:0:props:serverProvidedParams:params\\\"\\n13:[[\\\"$\\\",\\\"meta\\\",\\\"0\\\",{\\\"charSet\\\":\\\"utf-8\\\"}],[\\\"$\\\",\\\"meta\\\",\\\"1\\\",{\\\"name\\\":\\\"viewport\\\",\\\"content\\\":\\\"width=device-width, initial-scale=1\\\"}]]\\n1a:I[27201,[\\\"https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js\\\",\\\"https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js\\\"],\\\"IconMark\\\"]\\n10:null\\n15:[[\\\"$\\\",\\\"title\\\",\\\"0\\\",{\\\"children\\\":\\\"CadenceFlow: Prospecção Inteligente\\\"}],[\\\"$\\\",\\\"meta\\\",\\\"1\\\",{\\\"name\\\":\\\"description\\\",\\\"content\\\":\\\"Plataforma de automação de prospecção multi-canal com IA\\\"}],[\\\"$\\\",\\\"link\\\",\\\"2\\\",{\\\"rel\\\":\\\"icon\\\",\\\"href\\\":\\\"/favicon.webp\\\"}],[\\\"$\\\",\\\"$L1a\\\",\\\"3\\\",{}]]\\n\"])</script><script type=\"module\" src=\"https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092\" integrity=\"sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==\" data-cf-beacon=\"{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;d3eb88d8e1a546d1893229ccac448450&quot;,&quot;r&quot;:1,&quot;spa&quot;:2}\" crossorigin=\"anonymous\"></script>\n<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML=\"window.__CF$cv$params={r:'a4d7d1621cd664c7',t:'MTc5MjQ5NzE2Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);\";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><iframe height=\"1\" width=\"1\" style=\"position: absolute; top: 0px; left: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; visibility: hidden;\"></iframe><script id=\"gtm\" data-nscript=\"afterInteractive\">if(/(^|\\.)cadenceflow\\.pro$/.test(location.hostname)&&!/^(dev|staging)\\./.test(location.hostname))(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':\nnew Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],\nj=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=\n'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);\n})(window,document,'script','dataLayer','GTM-5JBK4P67');</script><next-route-announcer style=\"position: absolute;\"></next-route-announcer><script type=\"text/javascript\" id=\"\" charset=\"\">(function(){if(!window.FF||!window.FF.__loaded){var a=document.createElement(\"script\");a.async=!0;a.src=\"https://app.funnelsflow.pro/track.js?wid\\x3dffp_1a9ff600ec9b3f0a00487939\";a.setAttribute(\"data-ff-site\",\"cadenceflow\");a.setAttribute(\"data-ff-forward\",\"n8n.srv981504.hstgr.cloud/webhook\");(document.head||document.documentElement).appendChild(a)}})();</script></body></html>"
+            }
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "9f897076a4c49eb1b3d12cdadc114bcf7c0f19b4524fbd3b3a019988126e8d40",
+              "bytes": 1204,
+              "text": "- document:\n  - complementary:\n    - img \"CadenceFlow\"\n    - heading \"Prospecção ativa que chega em quem decide\" [level=2]\n    - paragraph: Leads certos, cadência no e-mail, WhatsApp e LinkedIn, e um agente que responde por você, tudo num lugar só.\n    - text: Leads qualificados por IA, com decisor e contato Cadências multicanal com resposta rastreada Agente SDR que responde e marca a reunião\n    - paragraph: © 2026 CadenceFlow\n    - link \"Termos\":\n      - /url: https://cadenceflow.pro/termos\n    - link \"Privacidade\":\n      - /url: https://cadenceflow.pro/privacidade\n  - main:\n    - button \"Ativar tema escuro\"\n    - heading \"Bem-vindo de volta\" [level=1]\n    - paragraph: Entre na sua conta para continuar\n    - link \"Continuar com Google\":\n      - /url: /api/auth/oauth/google/start\n    - text: ou E-mail\n    - textbox \"E-mail\":\n      - /placeholder: seu@email.com\n    - text: Senha\n    - link \"Esqueci minha senha\":\n      - /url: /forgot-password\n    - textbox \"Senha\":\n      - /placeholder: ••••••••\n    - button:\n      - img\n    - button \"Entrar\" [disabled]\n    - paragraph:\n      - text: Não tem conta?\n      - link \"Criar conta\":\n        - /url: /register\n  - alert"
+            }
+          },
+          "url": {
+            "state": "captured",
+            "value": {
+              "url": "https://app.cadenceflow.pro/login",
+              "origin": "https://app.cadenceflow.pro",
+              "query_parameter_names": [],
+              "redacted": false
+            }
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "events": {
+      "retained": 120,
+      "dropped": 105,
+      "items": [
+        {
+          "sequence": 1,
+          "step_index": 0,
+          "transaction_id": "request-1",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/dashboard",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "document",
+          "header_names": [
+            "accept-language",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "upgrade-insecure-requests",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 2,
+          "step_index": 0,
+          "transaction_id": "request-1",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/dashboard",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "document",
+          "header_names": [
+            "alt-svc",
+            "cf-cache-status",
+            "cf-ray",
+            "content-security-policy",
+            "date",
+            "location",
+            "nel",
+            "permissions-policy",
+            "referrer-policy",
+            "report-to",
+            "server",
+            "server-timing",
+            "strict-transport-security",
+            "x-content-type-options",
+            "x-dns-prefetch-control",
+            "x-frame-options"
+          ],
+          "kind": "response",
+          "status": 307,
+          "failure": null
+        },
+        {
+          "sequence": 3,
+          "step_index": 0,
+          "transaction_id": "request-1",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/dashboard",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "document",
+          "header_names": [
+            "accept-language",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "upgrade-insecure-requests",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 4,
+          "step_index": 0,
+          "transaction_id": "request-2",
+          "redirected_from_transaction_id": "request-1",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/login",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "document",
+          "header_names": [
+            "accept-language",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "upgrade-insecure-requests",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 5,
+          "step_index": 0,
+          "transaction_id": "request-2",
+          "redirected_from_transaction_id": "request-1",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/login",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "document",
+          "header_names": [
+            "alt-svc",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-security-policy",
+            "content-type",
+            "date",
+            "nel",
+            "permissions-policy",
+            "priority",
+            "referrer-policy",
+            "report-to",
+            "server",
+            "server-timing",
+            "strict-transport-security",
+            "vary",
+            "x-content-type-options",
+            "x-dns-prefetch-control",
+            "x-frame-options"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 6,
+          "step_index": 0,
+          "transaction_id": "request-3",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/3iqbl78q8rwnv.css",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "stylesheet",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 7,
+          "step_index": 0,
+          "transaction_id": "request-4",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/0do619kbccuyt.css",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "stylesheet",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 8,
+          "step_index": 0,
+          "transaction_id": "request-5",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/431bw722fec3m.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 9,
+          "step_index": 0,
+          "transaction_id": "request-6",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2o6wtbn0-fkn3.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 10,
+          "step_index": 0,
+          "transaction_id": "request-7",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/0-4srap-ffvu1.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 11,
+          "step_index": 0,
+          "transaction_id": "request-8",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2lfhpbqzwgurk.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 12,
+          "step_index": 0,
+          "transaction_id": "request-9",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/26g4tn5b226u5.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 13,
+          "step_index": 0,
+          "transaction_id": "request-10",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/turbopack-2_jgh21i2faci.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 14,
+          "step_index": 0,
+          "transaction_id": "request-11",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 15,
+          "step_index": 0,
+          "transaction_id": "request-12",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 16,
+          "step_index": 0,
+          "transaction_id": "request-13",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 17,
+          "step_index": 0,
+          "transaction_id": "request-14",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/393umujbo5zzr.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 18,
+          "step_index": 0,
+          "transaction_id": "request-15",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/0706-f1m3jhdy.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 19,
+          "step_index": 0,
+          "transaction_id": "request-16",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+            "origin": "https://static.cloudflareinsights.com",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "origin",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 20,
+          "step_index": 0,
+          "transaction_id": "request-2",
+          "redirected_from_transaction_id": "request-1",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/login",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "document",
+          "header_names": [
+            "accept-language",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "upgrade-insecure-requests",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 21,
+          "step_index": 0,
+          "transaction_id": "request-3",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/3iqbl78q8rwnv.css",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "stylesheet",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 22,
+          "step_index": 0,
+          "transaction_id": "request-3",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/3iqbl78q8rwnv.css",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "stylesheet",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 23,
+          "step_index": 0,
+          "transaction_id": "request-4",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/0do619kbccuyt.css",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "stylesheet",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 24,
+          "step_index": 0,
+          "transaction_id": "request-4",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/0do619kbccuyt.css",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "stylesheet",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 25,
+          "step_index": 0,
+          "transaction_id": "request-16",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+            "origin": "https://static.cloudflareinsights.com",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-origin",
+            "cache-control",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "cross-origin-resource-policy",
+            "date",
+            "etag",
+            "last-modified",
+            "server"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 26,
+          "step_index": 0,
+          "transaction_id": "request-16",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+            "origin": "https://static.cloudflareinsights.com",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "origin",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 27,
+          "step_index": 0,
+          "transaction_id": "request-17",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 28,
+          "step_index": 0,
+          "transaction_id": "request-11",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 29,
+          "step_index": 0,
+          "transaction_id": "request-11",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 30,
+          "step_index": 0,
+          "transaction_id": "request-10",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/turbopack-2_jgh21i2faci.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 31,
+          "step_index": 0,
+          "transaction_id": "request-10",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/turbopack-2_jgh21i2faci.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 32,
+          "step_index": 0,
+          "transaction_id": "request-8",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2lfhpbqzwgurk.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 33,
+          "step_index": 0,
+          "transaction_id": "request-8",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2lfhpbqzwgurk.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 34,
+          "step_index": 0,
+          "transaction_id": "request-6",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2o6wtbn0-fkn3.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 35,
+          "step_index": 0,
+          "transaction_id": "request-6",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2o6wtbn0-fkn3.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 36,
+          "step_index": 0,
+          "transaction_id": "request-17",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-origin",
+            "alt-svc",
+            "cache-control",
+            "cf-ray",
+            "content-length",
+            "date",
+            "location",
+            "priority",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 302,
+          "failure": null
+        },
+        {
+          "sequence": 37,
+          "step_index": 0,
+          "transaction_id": "request-17",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 38,
+          "step_index": 0,
+          "transaction_id": "request-18",
+          "redirected_from_transaction_id": "request-17",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/challenge-platform/h/b/scripts/jsd/d2d3316b729e/main.js?",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 39,
+          "step_index": 0,
+          "transaction_id": "request-5",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/431bw722fec3m.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 40,
+          "step_index": 0,
+          "transaction_id": "request-5",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/431bw722fec3m.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 41,
+          "step_index": 0,
+          "transaction_id": "request-9",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/26g4tn5b226u5.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 42,
+          "step_index": 0,
+          "transaction_id": "request-9",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/26g4tn5b226u5.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 43,
+          "step_index": 0,
+          "transaction_id": "request-12",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 44,
+          "step_index": 0,
+          "transaction_id": "request-12",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 45,
+          "step_index": 0,
+          "transaction_id": "request-18",
+          "redirected_from_transaction_id": "request-17",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/challenge-platform/h/b/scripts/jsd/d2d3316b729e/main.js?",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "alt-svc",
+            "cache-control",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "priority",
+            "server",
+            "server-timing",
+            "x-content-type-options"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 46,
+          "step_index": 0,
+          "transaction_id": "request-18",
+          "redirected_from_transaction_id": "request-17",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/challenge-platform/h/b/scripts/jsd/d2d3316b729e/main.js?",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 47,
+          "step_index": 0,
+          "transaction_id": "request-19",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/challenge-platform/h/b/jsd/oneshot/d2d3316b729e/0.7908746627086914:1792494023:jkmvh1SHWFQnjY6bsNaKMe9OQEsdbdy3FKw5uFhZmaQ/a4d7d1621cd664c7",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "xhr",
+          "header_names": [
+            "accept-language",
+            "content-type",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 48,
+          "step_index": 0,
+          "transaction_id": "request-14",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/393umujbo5zzr.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 49,
+          "step_index": 0,
+          "transaction_id": "request-14",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/393umujbo5zzr.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 50,
+          "step_index": 0,
+          "transaction_id": "request-15",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/0706-f1m3jhdy.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 51,
+          "step_index": 0,
+          "transaction_id": "request-15",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/0706-f1m3jhdy.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 52,
+          "step_index": 0,
+          "transaction_id": "request-13",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 53,
+          "step_index": 0,
+          "transaction_id": "request-13",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/2f48arnc6fcij.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 54,
+          "step_index": 0,
+          "transaction_id": "request-7",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/0-4srap-ffvu1.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 55,
+          "step_index": 0,
+          "transaction_id": "request-7",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/chunks/0-4srap-ffvu1.js",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 56,
+          "step_index": 0,
+          "transaction_id": "request-19",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/challenge-platform/h/b/jsd/oneshot/d2d3316b729e/0.7908746627086914:1792494023:jkmvh1SHWFQnjY6bsNaKMe9OQEsdbdy3FKw5uFhZmaQ/a4d7d1621cd664c7",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "xhr",
+          "header_names": [
+            "alt-svc",
+            "cf-chl-out-s",
+            "cf-ray",
+            "content-length",
+            "content-type",
+            "date",
+            "priority",
+            "server",
+            "server-timing",
+            "timing-allow-origin"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 57,
+          "step_index": 0,
+          "transaction_id": "request-19",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/challenge-platform/h/b/jsd/oneshot/d2d3316b729e/0.7908746627086914:1792494023:jkmvh1SHWFQnjY6bsNaKMe9OQEsdbdy3FKw5uFhZmaQ/a4d7d1621cd664c7",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "xhr",
+          "header_names": [
+            "accept-language",
+            "content-type",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 58,
+          "step_index": 1,
+          "transaction_id": "request-20",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/rum?",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "xhr",
+          "header_names": [
+            "accept-language",
+            "content-type",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 59,
+          "step_index": 1,
+          "transaction_id": "request-21",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.googletagmanager.com/gtm.js?id=GTM-5JBK4P67",
+            "origin": "https://www.googletagmanager.com",
+            "query_parameter_names": [
+              "id"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 60,
+          "step_index": 1,
+          "transaction_id": "request-22",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/images/logo-horizontal-white.webp",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "image",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 61,
+          "step_index": 1,
+          "transaction_id": "request-23",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/favicon.webp",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "other",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 62,
+          "step_index": 1,
+          "transaction_id": "request-20",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/rum?",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "xhr",
+          "header_names": [
+            "access-control-allow-credentials",
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "access-control-max-age",
+            "alt-svc",
+            "cf-ray",
+            "content-type",
+            "date",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing",
+            "vary"
+          ],
+          "kind": "response",
+          "status": 204,
+          "failure": null
+        },
+        {
+          "sequence": 63,
+          "step_index": 1,
+          "transaction_id": "request-20",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://app.cadenceflow.pro/cdn-cgi/rum?",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "xhr",
+          "header_names": [
+            "accept-language",
+            "content-type",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 64,
+          "step_index": 1,
+          "transaction_id": "request-24",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/media/c41ca59f1c34ba31-s.2y2uoi4t910qy.woff2",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "font",
+          "header_names": [
+            "accept-language",
+            "origin",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 65,
+          "step_index": 1,
+          "transaction_id": "request-25",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/media/a343f882a40d2cc9-s.1sj6eobyi31rd.woff2",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "font",
+          "header_names": [
+            "accept-language",
+            "origin",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 66,
+          "step_index": 1,
+          "transaction_id": "request-22",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/images/logo-horizontal-white.webp",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "image",
+          "header_names": [
+            "accept-ranges",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-length",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 67,
+          "step_index": 1,
+          "transaction_id": "request-22",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/images/logo-horizontal-white.webp",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "image",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 68,
+          "step_index": 1,
+          "transaction_id": "request-26",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/api/auth/oauth/providers",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 69,
+          "step_index": 1,
+          "transaction_id": "request-27",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [
+              "render"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 70,
+          "step_index": 1,
+          "transaction_id": "request-23",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/favicon.webp",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "other",
+          "header_names": [
+            "accept-ranges",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-length",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 71,
+          "step_index": 1,
+          "transaction_id": "request-23",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/favicon.webp",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "other",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 72,
+          "step_index": 1,
+          "transaction_id": "request-25",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/media/a343f882a40d2cc9-s.1sj6eobyi31rd.woff2",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "font",
+          "header_names": [
+            "accept-ranges",
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-length",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 73,
+          "step_index": 1,
+          "transaction_id": "request-25",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/media/a343f882a40d2cc9-s.1sj6eobyi31rd.woff2",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "font",
+          "header_names": [
+            "accept-language",
+            "origin",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 74,
+          "step_index": 1,
+          "transaction_id": "request-24",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/media/c41ca59f1c34ba31-s.2y2uoi4t910qy.woff2",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "font",
+          "header_names": [
+            "accept-ranges",
+            "access-control-allow-methods",
+            "access-control-allow-origin",
+            "age",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-length",
+            "content-type",
+            "date",
+            "etag",
+            "expires",
+            "last-modified",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 75,
+          "step_index": 1,
+          "transaction_id": "request-24",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/_next/static/media/c41ca59f1c34ba31-s.2y2uoi4t910qy.woff2",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "font",
+          "header_names": [
+            "accept-language",
+            "origin",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 76,
+          "step_index": 1,
+          "transaction_id": "request-27",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [
+              "render"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-origin",
+            "alt-svc",
+            "cache-control",
+            "cf-ray",
+            "content-length",
+            "cross-origin-resource-policy",
+            "date",
+            "location",
+            "priority",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 302,
+          "failure": null
+        },
+        {
+          "sequence": 77,
+          "step_index": 1,
+          "transaction_id": "request-27",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [
+              "render"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 78,
+          "step_index": 1,
+          "transaction_id": "request-28",
+          "redirected_from_transaction_id": "request-27",
+          "method": "GET",
+          "url": {
+            "url": "https://challenges.cloudflare.com/turnstile/v0/b/d2d3316b729e/api.js",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 79,
+          "step_index": 1,
+          "transaction_id": "request-28",
+          "redirected_from_transaction_id": "request-27",
+          "method": "GET",
+          "url": {
+            "url": "https://challenges.cloudflare.com/turnstile/v0/b/d2d3316b729e/api.js",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-origin",
+            "alt-svc",
+            "cache-control",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "cross-origin-resource-policy",
+            "date",
+            "etag",
+            "priority",
+            "server",
+            "server-timing",
+            "x-content-type-options"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 80,
+          "step_index": 1,
+          "transaction_id": "request-28",
+          "redirected_from_transaction_id": "request-27",
+          "method": "GET",
+          "url": {
+            "url": "https://challenges.cloudflare.com/turnstile/v0/b/d2d3316b729e/api.js",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 81,
+          "step_index": 1,
+          "transaction_id": "request-29",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/turnstile/f/av0/rch/l8h73/0x4AAAAAADFTiJ2sXLHVt3fr/auto/fbE/new/normal?lang=auto",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [
+              "lang"
+            ],
+            "redacted": false
+          },
+          "resource_type": "document",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "upgrade-insecure-requests",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 82,
+          "step_index": 1,
+          "transaction_id": "request-29",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/turnstile/f/av0/rch/l8h73/0x4AAAAAADFTiJ2sXLHVt3fr/auto/fbE/new/normal?lang=auto",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [
+              "lang"
+            ],
+            "redacted": false
+          },
+          "resource_type": "document",
+          "header_names": [
+            "accept-ch",
+            "alt-svc",
+            "cache-control",
+            "cf-ray",
+            "content-encoding",
+            "content-security-policy",
+            "content-type",
+            "critical-ch",
+            "cross-origin-embedder-policy",
+            "cross-origin-opener-policy",
+            "cross-origin-resource-policy",
+            "date",
+            "document-policy",
+            "origin-agent-cluster",
+            "permissions-policy",
+            "priority",
+            "referrer-policy",
+            "server",
+            "server-timing"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 83,
+          "step_index": 1,
+          "transaction_id": "request-26",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/api/auth/oauth/providers",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [
+            "alt-svc",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-security-policy",
+            "content-type",
+            "date",
+            "nel",
+            "permissions-policy",
+            "priority",
+            "referrer-policy",
+            "report-to",
+            "server",
+            "server-timing",
+            "strict-transport-security",
+            "vary",
+            "x-content-type-options",
+            "x-dns-prefetch-control",
+            "x-frame-options"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 84,
+          "step_index": 1,
+          "transaction_id": "request-26",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.cadenceflow.pro/api/auth/oauth/providers",
+            "origin": "https://app.cadenceflow.pro",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 85,
+          "step_index": 1,
+          "transaction_id": "request-29",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/turnstile/f/av0/rch/l8h73/0x4AAAAAADFTiJ2sXLHVt3fr/auto/fbE/new/normal?lang=auto",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [
+              "lang"
+            ],
+            "redacted": false
+          },
+          "resource_type": "document",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "upgrade-insecure-requests",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 86,
+          "step_index": 1,
+          "transaction_id": "request-30",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "blob:https://challenges.cloudflare.com/d603e465-0a83-4eed-a160-600dd84ea7ed",
+            "origin": "https://challenges.cloudflare.com",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept",
+            "accept-language"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 87,
+          "step_index": 1,
+          "transaction_id": "request-21",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.googletagmanager.com/gtm.js?id=GTM-5JBK4P67",
+            "origin": "https://www.googletagmanager.com",
+            "query_parameter_names": [
+              "id"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-credentials",
+            "access-control-allow-headers",
+            "access-control-allow-origin",
+            "alt-svc",
+            "cache-control",
+            "content-encoding",
+            "content-length",
+            "content-type",
+            "cross-origin-resource-policy",
+            "date",
+            "expires",
+            "last-modified",
+            "server",
+            "strict-transport-security",
+            "vary",
+            "x-xss-protection"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 88,
+          "step_index": 1,
+          "transaction_id": "request-21",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.googletagmanager.com/gtm.js?id=GTM-5JBK4P67",
+            "origin": "https://www.googletagmanager.com",
+            "query_parameter_names": [
+              "id"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 89,
+          "step_index": 1,
+          "transaction_id": "request-31",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.googletagmanager.com/gtag/js?id=G-B8VXT6Y4K8&cx=c&gtm=4e6ag1",
+            "origin": "https://www.googletagmanager.com",
+            "query_parameter_names": [
+              "id",
+              "cx",
+              "gtm"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 90,
+          "step_index": 1,
+          "transaction_id": "request-32",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.googletagmanager.com/gtag/js?id=G-XKNPZBPQV4&cx=c&gtm=4e6ag1",
+            "origin": "https://www.googletagmanager.com",
+            "query_parameter_names": [
+              "id",
+              "cx",
+              "gtm"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 91,
+          "step_index": 1,
+          "transaction_id": "request-33",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.clarity.ms/tag/vkinuhw97l?ref=gtm",
+            "origin": "https://www.clarity.ms",
+            "query_parameter_names": [
+              "ref"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 92,
+          "step_index": 1,
+          "transaction_id": "request-34",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://connect.facebook.net/en_US/fbevents.js",
+            "origin": "https://connect.facebook.net",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 93,
+          "step_index": 1,
+          "transaction_id": "request-35",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.funnelsflow.pro/track.js?wid=ffp_1a9ff600ec9b3f0a00487939",
+            "origin": "https://app.funnelsflow.pro",
+            "query_parameter_names": [
+              "wid"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 94,
+          "step_index": 1,
+          "transaction_id": "request-36",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://www.google.com/ccm/collect?rcb=17&frm=0&apvc=1&ae=g&auid=1785927493.1792497163&dt=CadenceFlow%3A%20Prospec%C3%A7%C3%A3o%20Inteligente&en=page_view&dl=https%3A%2F%2Fapp.cadenceflow.pro%2Flogin&scrsrc=www.googletagmanager.com&rnd=402713173.1792497163&navt=n&npa=0&ep.ads_data_redaction=0&gtm=45He6ag1v9244211739za200zd9244211739xeaxf1&gcd=13l3l3l3l1l1&dma=0&tag_exp=115938466~115938469~117776795~118897920~118897930~120385422~120469145~120469153~121049589~121246026~121246034~123322202&tft=1792497162825&tfd=1190&_gsid=X83iTByBvM5k-OnmrZa3sriK11Daj7fEYA&fmt=8",
+            "origin": "https://www.google.com",
+            "query_parameter_names": [
+              "rcb",
+              "frm",
+              "apvc",
+              "ae",
+              "auid",
+              "dt",
+              "en",
+              "dl",
+              "scrsrc",
+              "rnd",
+              "navt",
+              "npa",
+              "ep.ads_data_redaction",
+              "gtm",
+              "gcd",
+              "dma",
+              "tag_exp",
+              "tft",
+              "tfd",
+              "_gsid",
+              "fmt"
+            ],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 95,
+          "step_index": 1,
+          "transaction_id": "request-37",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://ad.doubleclick.net/ccm/s/collect?_gsid=X83iTByBvM5k-OnmrZa3sriK11Daj7fEYA&auid=1785927493.1792497163&gtm=45He6ag1v9244211739za200zd9244211739xeaxf1&fmt=8",
+            "origin": "https://ad.doubleclick.net",
+            "query_parameter_names": [
+              "_gsid",
+              "auid",
+              "gtm",
+              "fmt"
+            ],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 96,
+          "step_index": 1,
+          "transaction_id": "request-34",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://connect.facebook.net/en_US/fbevents.js",
+            "origin": "https://connect.facebook.net",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "alt-svc",
+            "cache-control",
+            "content-encoding",
+            "content-length",
+            "content-security-policy",
+            "content-type",
+            "cross-origin-embedder-policy-report-only",
+            "cross-origin-opener-policy",
+            "cross-origin-resource-policy",
+            "date",
+            "document-policy",
+            "expires",
+            "origin-agent-cluster",
+            "permissions-policy",
+            "pragma",
+            "priority",
+            "report-to",
+            "reporting-endpoints",
+            "strict-transport-security",
+            "timing-allow-origin",
+            "vary",
+            "x-content-type-options",
+            "x-fb-connection-quality",
+            "x-fb-debug",
+            "x-frame-options",
+            "x-xss-protection"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 97,
+          "step_index": 1,
+          "transaction_id": "request-34",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://connect.facebook.net/en_US/fbevents.js",
+            "origin": "https://connect.facebook.net",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 98,
+          "step_index": 1,
+          "transaction_id": "request-38",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://connect.facebook.net/signals/config/2969391329917887?v=2.9.425&r=stable&domain=app.cadenceflow.pro&hme=766752a074f0cb0756dd3275a46fdecbcfe3de1ab8f573546734b619e44d384f&ex_m=118%2C241%2C171%2C27%2C82%2C83%2C162%2C78%2C77%2C11%2C181%2C102%2C20%2C153%2C141%2C46%2C85%2C90%2C149%2C176%2C183%2C8%2C4%2C5%2C7%2C6%2C3%2C103%2C115%2C32%2C17%2C31%2C18%2C33%2C34%2C35%2C37%2C55%2C163%2C87%2C126%2C22%2C24%2C51%2C47%2C49%2C48%2C95%2C104%2C108%2C124%2C160%2C164%2C53%2C125%2C29%2C26%2C133%2C79%2C43%2C166%2C165%2C167%2C157%2C155%2C30%2C42%2C66%2C123%2C178%2C80%2C21%2C128%2C93%2C76%2C23%2C97%2C98%2C130%2C96%2C151%2C150%2C154%2C109%2C177%2C180%2C41%2C56%2C127%2C54%2C161%2C72%2C185%2C110%2C184%2C210%2C255%2C84%2C274%2C273%2C272%2C14%2C25%2C28%2C40%2C62%2C117%2C68%2C10%2C73%2C111%2C112%2C113%2C119%2C144%2C38%2C36%2C146%2C147%2C148%2C143%2C142%2C172%2C86%2C175%2C173%2C174%2C57%2C69%2C67%2C137%2C19%2C179%2C52%2C324%2C325%2C326%2C323%2C340%2C362%2C248%2C237%2C70%2C238%2C236%2C365%2C356%2C59%2C249%2C121%2C145%2C92%2C135%2C61%2C134%2C140%2C139%2C65%2C74%2C168%2C88%2C89%2C129%2C44%2C39%2C60%2C63%2C114%2C182%2C1%2C138%2C16%2C136%2C12%2C2%2C64%2C105%2C15%2C75%2C71%2C132%2C101%2C100%2C187%2C188%2C106%2C107%2C9%2C116%2C186%2C58%2C158%2C99%2C91%2C81%2C131%2C120%2C169%2C50%2C159%2C0%2C94%2C152%2C156%2C170%2C45%2C122%2C13%2C189",
+            "origin": "https://connect.facebook.net",
+            "query_parameter_names": [
+              "v",
+              "r",
+              "domain",
+              "hme",
+              "ex_m"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 99,
+          "step_index": 1,
+          "transaction_id": "request-33",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.clarity.ms/tag/vkinuhw97l?ref=gtm",
+            "origin": "https://www.clarity.ms",
+            "query_parameter_names": [
+              "ref"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "cache-control",
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "expires",
+            "request-context",
+            "server"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 100,
+          "step_index": 1,
+          "transaction_id": "request-33",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.clarity.ms/tag/vkinuhw97l?ref=gtm",
+            "origin": "https://www.clarity.ms",
+            "query_parameter_names": [
+              "ref"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 101,
+          "step_index": 1,
+          "transaction_id": "request-39",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://scripts.clarity.ms/0.8.72/clarity.js",
+            "origin": "https://scripts.clarity.ms",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 102,
+          "step_index": 1,
+          "transaction_id": "request-40",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://c.clarity.ms/c.gif",
+            "origin": "https://c.clarity.ms",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "image",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 103,
+          "step_index": 1,
+          "transaction_id": "request-35",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.funnelsflow.pro/track.js?wid=ffp_1a9ff600ec9b3f0a00487939",
+            "origin": "https://app.funnelsflow.pro",
+            "query_parameter_names": [
+              "wid"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-credentials",
+            "access-control-allow-origin",
+            "alt-svc",
+            "cache-control",
+            "cf-cache-status",
+            "cf-ray",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "nel",
+            "priority",
+            "report-to",
+            "server",
+            "server-timing",
+            "vary",
+            "x-content-type-options",
+            "x-powered-by"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 104,
+          "step_index": 1,
+          "transaction_id": "request-35",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://app.funnelsflow.pro/track.js?wid=ffp_1a9ff600ec9b3f0a00487939",
+            "origin": "https://app.funnelsflow.pro",
+            "query_parameter_names": [
+              "wid"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 105,
+          "step_index": 1,
+          "transaction_id": "request-41",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://app.funnelsflow.pro/api/track/event?wid=ffp_1a9ff600ec9b3f0a00487939",
+            "origin": "https://app.funnelsflow.pro",
+            "query_parameter_names": [
+              "wid"
+            ],
+            "redacted": false
+          },
+          "resource_type": "ping",
+          "header_names": [
+            "accept-language",
+            "content-type",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 106,
+          "step_index": 1,
+          "transaction_id": "request-39",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://scripts.clarity.ms/0.8.72/clarity.js",
+            "origin": "https://scripts.clarity.ms",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-origin",
+            "cache-control",
+            "content-encoding",
+            "content-type",
+            "date",
+            "etag",
+            "last-modified",
+            "vary",
+            "x-azure-ref",
+            "x-cache",
+            "x-fd-int-roxy-purgeid",
+            "x-ms-request-id",
+            "x-ms-version"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 107,
+          "step_index": 1,
+          "transaction_id": "request-39",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://scripts.clarity.ms/0.8.72/clarity.js",
+            "origin": "https://scripts.clarity.ms",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 108,
+          "step_index": 1,
+          "transaction_id": "request-37",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://ad.doubleclick.net/ccm/s/collect?_gsid=X83iTByBvM5k-OnmrZa3sriK11Daj7fEYA&auid=1785927493.1792497163&gtm=45He6ag1v9244211739za200zd9244211739xeaxf1&fmt=8",
+            "origin": "https://ad.doubleclick.net",
+            "query_parameter_names": [
+              "_gsid",
+              "auid",
+              "gtm",
+              "fmt"
+            ],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [],
+          "kind": "response",
+          "status": 204,
+          "failure": null
+        },
+        {
+          "sequence": 109,
+          "step_index": 1,
+          "transaction_id": "request-37",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://ad.doubleclick.net/ccm/s/collect?_gsid=X83iTByBvM5k-OnmrZa3sriK11Daj7fEYA&auid=1785927493.1792497163&gtm=45He6ag1v9244211739za200zd9244211739xeaxf1&fmt=8",
+            "origin": "https://ad.doubleclick.net",
+            "query_parameter_names": [
+              "_gsid",
+              "auid",
+              "gtm",
+              "fmt"
+            ],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-failed",
+          "status": null,
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "sequence": 110,
+          "step_index": 1,
+          "transaction_id": "request-36",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://www.google.com/ccm/collect?rcb=17&frm=0&apvc=1&ae=g&auid=1785927493.1792497163&dt=CadenceFlow%3A%20Prospec%C3%A7%C3%A3o%20Inteligente&en=page_view&dl=https%3A%2F%2Fapp.cadenceflow.pro%2Flogin&scrsrc=www.googletagmanager.com&rnd=402713173.1792497163&navt=n&npa=0&ep.ads_data_redaction=0&gtm=45He6ag1v9244211739za200zd9244211739xeaxf1&gcd=13l3l3l3l1l1&dma=0&tag_exp=115938466~115938469~117776795~118897920~118897930~120385422~120469145~120469153~121049589~121246026~121246034~123322202&tft=1792497162825&tfd=1190&_gsid=X83iTByBvM5k-OnmrZa3sriK11Daj7fEYA&fmt=8",
+            "origin": "https://www.google.com",
+            "query_parameter_names": [
+              "rcb",
+              "frm",
+              "apvc",
+              "ae",
+              "auid",
+              "dt",
+              "en",
+              "dl",
+              "scrsrc",
+              "rnd",
+              "navt",
+              "npa",
+              "ep.ads_data_redaction",
+              "gtm",
+              "gcd",
+              "dma",
+              "tag_exp",
+              "tft",
+              "tfd",
+              "_gsid",
+              "fmt"
+            ],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 111,
+          "step_index": 1,
+          "transaction_id": "request-36",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://www.google.com/ccm/collect?rcb=17&frm=0&apvc=1&ae=g&auid=1785927493.1792497163&dt=CadenceFlow%3A%20Prospec%C3%A7%C3%A3o%20Inteligente&en=page_view&dl=https%3A%2F%2Fapp.cadenceflow.pro%2Flogin&scrsrc=www.googletagmanager.com&rnd=402713173.1792497163&navt=n&npa=0&ep.ads_data_redaction=0&gtm=45He6ag1v9244211739za200zd9244211739xeaxf1&gcd=13l3l3l3l1l1&dma=0&tag_exp=115938466~115938469~117776795~118897920~118897930~120385422~120469145~120469153~121049589~121246026~121246034~123322202&tft=1792497162825&tfd=1190&_gsid=X83iTByBvM5k-OnmrZa3sriK11Daj7fEYA&fmt=8",
+            "origin": "https://www.google.com",
+            "query_parameter_names": [
+              "rcb",
+              "frm",
+              "apvc",
+              "ae",
+              "auid",
+              "dt",
+              "en",
+              "dl",
+              "scrsrc",
+              "rnd",
+              "navt",
+              "npa",
+              "ep.ads_data_redaction",
+              "gtm",
+              "gcd",
+              "dma",
+              "tag_exp",
+              "tft",
+              "tfd",
+              "_gsid",
+              "fmt"
+            ],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-failed",
+          "status": null,
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "sequence": 112,
+          "step_index": 1,
+          "transaction_id": "request-41",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://app.funnelsflow.pro/api/track/event?wid=ffp_1a9ff600ec9b3f0a00487939",
+            "origin": "https://app.funnelsflow.pro",
+            "query_parameter_names": [
+              "wid"
+            ],
+            "redacted": false
+          },
+          "resource_type": "ping",
+          "header_names": [],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 113,
+          "step_index": 1,
+          "transaction_id": "request-41",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://app.funnelsflow.pro/api/track/event?wid=ffp_1a9ff600ec9b3f0a00487939",
+            "origin": "https://app.funnelsflow.pro",
+            "query_parameter_names": [
+              "wid"
+            ],
+            "redacted": false
+          },
+          "resource_type": "ping",
+          "header_names": [
+            "accept-language",
+            "content-type",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 114,
+          "step_index": 1,
+          "transaction_id": "request-40",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://c.clarity.ms/c.gif",
+            "origin": "https://c.clarity.ms",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "image",
+          "header_names": [
+            "cache-control",
+            "content-length",
+            "date",
+            "location",
+            "p3p",
+            "pragma",
+            "x-azure-ref",
+            "x-cache",
+            "x-powered-by"
+          ],
+          "kind": "response",
+          "status": 302,
+          "failure": null
+        },
+        {
+          "sequence": 115,
+          "step_index": 1,
+          "transaction_id": "request-40",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://c.clarity.ms/c.gif",
+            "origin": "https://c.clarity.ms",
+            "query_parameter_names": [],
+            "redacted": false
+          },
+          "resource_type": "image",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 116,
+          "step_index": 1,
+          "transaction_id": "request-42",
+          "redirected_from_transaction_id": "request-40",
+          "method": "GET",
+          "url": {
+            "url": "https://c.bing.com/c.gif?ctsa=mr&CtsSyncId=36BE9BFA4DB448CAB2433F982F80BA41&RedC=c.clarity.ms&MXFR=0E7BFA8115C76A423642ED7911C7645C",
+            "origin": "https://c.bing.com",
+            "query_parameter_names": [
+              "ctsa",
+              "CtsSyncId",
+              "RedC",
+              "MXFR"
+            ],
+            "redacted": false
+          },
+          "resource_type": "image",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 117,
+          "step_index": 1,
+          "transaction_id": "request-31",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.googletagmanager.com/gtag/js?id=G-B8VXT6Y4K8&cx=c&gtm=4e6ag1",
+            "origin": "https://www.googletagmanager.com",
+            "query_parameter_names": [
+              "id",
+              "cx",
+              "gtm"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "access-control-allow-credentials",
+            "access-control-allow-headers",
+            "access-control-allow-origin",
+            "alt-svc",
+            "cache-control",
+            "content-encoding",
+            "content-length",
+            "content-type",
+            "cross-origin-resource-policy",
+            "date",
+            "expires",
+            "server",
+            "strict-transport-security",
+            "vary",
+            "x-xss-protection"
+          ],
+          "kind": "response",
+          "status": 200,
+          "failure": null
+        },
+        {
+          "sequence": 118,
+          "step_index": 1,
+          "transaction_id": "request-31",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "GET",
+          "url": {
+            "url": "https://www.googletagmanager.com/gtag/js?id=G-B8VXT6Y4K8&cx=c&gtm=4e6ag1",
+            "origin": "https://www.googletagmanager.com",
+            "query_parameter_names": [
+              "id",
+              "cx",
+              "gtm"
+            ],
+            "redacted": false
+          },
+          "resource_type": "script",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request-finished",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 119,
+          "step_index": 1,
+          "transaction_id": "request-43",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://analytics.google.com/g/collect?v=2&tid=G-B8VXT6Y4K8&gtm=45je6ag1v9171354899za20ozb9244211739zd9244211739xf1&_p=1792497162454&_gaz=1&gcd=13l3l3l3l1l1&npa=0&dma=0&_eu=AAAAACAC&cid=1687087696.1792497163&frm=0&ibt=1&ngs=1&pscdl=noapi&rcb=4&sr=1280x720&uaa=x86&uab=64&uafvl=Google%2520Chrome%3B155.0.8059.85%7CChromium%3B155.0.8059.85%7CNot(A%253ABrand%3B24.0.0.0&uam=&uamb=0&uap=Windows&uapv=19.0.0&uaw=0&ul=en-us&_s=1&tag_exp=115938466~115938469~118897920~118897930~120213116~120385422~120469145~120469153~121246026~121246034&sid=1792497163&sct=1&seg=0&dl=https%3A%2F%2Fapp.cadenceflow.pro%2Flogin&dt=CadenceFlow%3A%20Prospec%C3%A7%C3%A3o%20Inteligente&en=page_view&_fv=1&_nsi=1&_ss=1&tfd=1459",
+            "origin": "https://analytics.google.com",
+            "query_parameter_names": [
+              "v",
+              "tid",
+              "gtm",
+              "_p",
+              "_gaz",
+              "gcd",
+              "npa",
+              "dma",
+              "_eu",
+              "cid",
+              "frm",
+              "ibt",
+              "ngs",
+              "pscdl",
+              "rcb",
+              "sr",
+              "uaa",
+              "uab",
+              "uafvl",
+              "uam",
+              "uamb",
+              "uap",
+              "uapv",
+              "uaw",
+              "ul",
+              "_s",
+              "tag_exp",
+              "sid",
+              "sct",
+              "seg",
+              "dl",
+              "dt",
+              "en",
+              "_fv",
+              "_nsi",
+              "_ss",
+              "tfd"
+            ],
+            "redacted": false
+          },
+          "resource_type": "fetch",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        },
+        {
+          "sequence": 120,
+          "step_index": 1,
+          "transaction_id": "request-44",
+          "redirected_from_transaction_id": null,
+          "redirected_from_transaction_state": "root",
+          "method": "POST",
+          "url": {
+            "url": "https://stats.g.doubleclick.net/g/collect?v=2&ngs=1&ibt=1&tid=G-B8VXT6Y4K8&cid=1687087696.1792497163&gtm=45je6ag1v9171354899za20ozb9244211739zd9244211739xf1&rcb=4&aip=1&dma=0&gcd=13l3l3l3l1l1&npa=0&frm=0&tag_exp=115938466~115938469~118897920~118897930~120213116~120385422~120469145~120469153~121246026~121246034",
+            "origin": "https://stats.g.doubleclick.net",
+            "query_parameter_names": [
+              "v",
+              "ngs",
+              "ibt",
+              "tid",
+              "cid",
+              "gtm",
+              "rcb",
+              "aip",
+              "dma",
+              "gcd",
+              "npa",
+              "frm",
+              "tag_exp"
+            ],
+            "redacted": false
+          },
+          "resource_type": "ping",
+          "header_names": [
+            "accept-language",
+            "referer",
+            "sec-ch-ua",
+            "sec-ch-ua-mobile",
+            "sec-ch-ua-platform",
+            "user-agent"
+          ],
+          "kind": "request",
+          "status": null,
+          "failure": null
+        }
+      ],
+      "omissions": {
+        "by_kind": [
+          {
+            "kind": "request",
+            "count": 27,
+            "reasons": [
+              "max-events",
+              "max-network-transactions"
+            ]
+          },
+          {
+            "kind": "request-failed",
+            "count": 8,
+            "reasons": [
+              "max-events",
+              "max-network-transactions"
+            ]
+          },
+          {
+            "kind": "request-finished",
+            "count": 24,
+            "reasons": [
+              "max-events",
+              "max-network-transactions"
+            ]
+          },
+          {
+            "kind": "request-unfinished",
+            "count": 15,
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "kind": "response",
+            "count": 31,
+            "reasons": [
+              "max-events",
+              "max-network-transactions"
+            ]
+          }
+        ],
+        "network_transactions": [
+          {
+            "transaction_id": "request-30",
+            "omitted_kinds": [
+              "request-unfinished"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-32",
+            "omitted_kinds": [
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-38",
+            "omitted_kinds": [
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-42",
+            "omitted_kinds": [
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-43",
+            "omitted_kinds": [
+              "request-failed",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-44",
+            "omitted_kinds": [
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-45",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-46",
+            "omitted_kinds": [
+              "request",
+              "request-failed",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-47",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-48",
+            "omitted_kinds": [
+              "request",
+              "request-failed",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-49",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-50",
+            "omitted_kinds": [
+              "request",
+              "request-failed",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-51",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-52",
+            "omitted_kinds": [
+              "request",
+              "request-failed",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-53",
+            "omitted_kinds": [
+              "request",
+              "request-failed",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-54",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-55",
+            "omitted_kinds": [
+              "request",
+              "request-failed",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-56",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-57",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-58",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-59",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          },
+          {
+            "transaction_id": "request-60",
+            "omitted_kinds": [
+              "request",
+              "request-finished",
+              "request-unfinished",
+              "response"
+            ],
+            "reasons": [
+              "max-events"
+            ]
+          }
+        ],
+        "network_transaction_range": {
+          "first_transaction_id": "request-61",
+          "last_transaction_id": "request-71",
+          "count": 11,
+          "reason": "max-network-transactions"
+        }
+      }
+    },
+    "completeness": {
+      "status": "incomplete",
+      "equality_eligible": false,
+      "missing_sections": [
+        "events"
+      ],
+      "truncated_sections": []
+    },
+    "limitations": [
+      "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+      "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+      "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+      "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+      "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+      "Storage values are hashed only after declared-secret redaction.",
+      "Network request metadata was omitted for request-45 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-46 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-47 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-48 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-49 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-50 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-51 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-52 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-53 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-32 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-32 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-54 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-55 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-42 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-42 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-56 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-46 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-38 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-38 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-48 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-50 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-52 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-53 because max-events was reached; network coverage is incomplete.",
+      "Network request-failed metadata was omitted for request-46 because max-events was reached; network coverage is incomplete.",
+      "Network request-failed metadata was omitted for request-48 because max-events was reached; network coverage is incomplete.",
+      "Network request-failed metadata was omitted for request-50 because max-events was reached; network coverage is incomplete.",
+      "Network request-failed metadata was omitted for request-52 because max-events was reached; network coverage is incomplete.",
+      "Network request-failed metadata was omitted for request-53 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-57 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-43 because max-events was reached; network coverage is incomplete.",
+      "Network request-failed metadata was omitted for request-43 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-49 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-49 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-58 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-59 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-47 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-47 because max-events was reached; network coverage is incomplete.",
+      "Network request metadata was omitted for request-60 because max-events was reached; network coverage is incomplete.",
+      "Network collection reached its 60-transaction resource budget; omitted transaction IDs are listed in events.omissions.network_transaction_range.",
+      "Network response metadata was omitted for request-45 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-45 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-57 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-51 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-51 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-44 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-44 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-56 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-56 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-59 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-60 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-60 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-59 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-58 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-58 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-55 because max-events was reached; network coverage is incomplete.",
+      "Network request-failed metadata was omitted for request-55 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-57 because max-events was reached; network coverage is incomplete.",
+      "Network response metadata was omitted for request-54 because max-events was reached; network coverage is incomplete.",
+      "Network request-finished metadata was omitted for request-54 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-30 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-32 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-38 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-42 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-44 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-45 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-47 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-49 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-51 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-54 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-56 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-57 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-58 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-59 because max-events was reached; network coverage is incomplete.",
+      "Network request-unfinished metadata was omitted for request-60 because max-events was reached; network coverage is incomplete.",
+      "Browser event collection reached a selected resource budget; per-kind omissions and affected network transaction IDs are listed in events.omissions, and event coverage is incomplete."
+    ]
+  },
+  "confidence": "observed",
+  "authority": "controlled-replay",
+  "environment": {
+    "id": "Chromium@155.0.8059.85",
+    "platform": "unknown",
+    "architecture": "unknown",
+    "isolation": "process"
+  },
+  "limitations": [
+    "Artifact identity is unavailable for this observation.",
+    "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+    "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+    "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+    "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+    "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+    "Storage values are hashed only after declared-secret redaction.",
+    "Network request metadata was omitted for request-45 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-46 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-47 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-48 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-49 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-50 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-51 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-52 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-53 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-32 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-32 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-54 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-55 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-42 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-42 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-56 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-46 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-38 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-38 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-48 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-50 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-52 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-53 because max-events was reached; network coverage is incomplete.",
+    "Network request-failed metadata was omitted for request-46 because max-events was reached; network coverage is incomplete.",
+    "Network request-failed metadata was omitted for request-48 because max-events was reached; network coverage is incomplete.",
+    "Network request-failed metadata was omitted for request-50 because max-events was reached; network coverage is incomplete.",
+    "Network request-failed metadata was omitted for request-52 because max-events was reached; network coverage is incomplete.",
+    "Network request-failed metadata was omitted for request-53 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-57 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-43 because max-events was reached; network coverage is incomplete.",
+    "Network request-failed metadata was omitted for request-43 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-49 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-49 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-58 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-59 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-47 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-47 because max-events was reached; network coverage is incomplete.",
+    "Network request metadata was omitted for request-60 because max-events was reached; network coverage is incomplete.",
+    "Network collection reached its 60-transaction resource budget; omitted transaction IDs are listed in events.omissions.network_transaction_range.",
+    "Network response metadata was omitted for request-45 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-45 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-57 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-51 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-51 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-44 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-44 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-56 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-56 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-59 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-60 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-60 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-59 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-58 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-58 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-55 because max-events was reached; network coverage is incomplete.",
+    "Network request-failed metadata was omitted for request-55 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-57 because max-events was reached; network coverage is incomplete.",
+    "Network response metadata was omitted for request-54 because max-events was reached; network coverage is incomplete.",
+    "Network request-finished metadata was omitted for request-54 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-30 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-32 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-38 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-42 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-44 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-45 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-47 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-49 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-51 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-54 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-56 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-57 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-58 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-59 because max-events was reached; network coverage is incomplete.",
+    "Network request-unfinished metadata was omitted for request-60 because max-events was reached; network coverage is incomplete.",
+    "Browser event collection reached a selected resource budget; per-kind omissions and affected network transaction IDs are listed in events.omissions, and event coverage is incomplete.",
+    "Browser host platform and architecture were not observed."
+  ],
+  "relationship_coverage": null,
+  "locations": [],
+  "evidence_links": []
+}

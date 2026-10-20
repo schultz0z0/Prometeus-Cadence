@@ -1,0 +1,92 @@
+[
+  {
+    "id": "U01",
+    "file": "01-login.png",
+    "sha256": "ef33a376ed2d67d0dbe5d4f5dfcf95ebfd04c80aca12bdef661744206e502aca"
+  },
+  {
+    "id": "U02",
+    "file": "02-tour-intro.png",
+    "sha256": "8d71ffed13b68a1f77d93fe4a9f06a9252572446f27a782a201a5f8f419ec959"
+  },
+  {
+    "id": "U03",
+    "file": "03-dashboard-tour.png",
+    "sha256": "831dff0494b93ceeb96d0cb2c402954b41a96551f1848a1d32c55ec562858ef3"
+  },
+  {
+    "id": "U04",
+    "file": "04-navigation-tour.png",
+    "sha256": "5dc6a10d5987856966fa5237a9a24d9db46b0221d045a95c935f5a7911792167"
+  },
+  {
+    "id": "U05",
+    "file": "05-contacts-tour.png",
+    "sha256": "8d091e10274249d942048635808fbda5a7534565c850cd47426084c96230bc15"
+  },
+  {
+    "id": "U06",
+    "file": "06-cadence-canvas.png",
+    "sha256": "38fa52f514eb1cfa3cf426ce8cd2b3f0dccce5a8a7998d1255d44247339bd6fa"
+  },
+  {
+    "id": "U07",
+    "file": "07-whatsapp-settings.png",
+    "sha256": "15ed228e9091d35b46271c7c695c91b95de08aec12d8faf4498a8b3ccaed7dce"
+  },
+  {
+    "id": "U08",
+    "file": "08-whatsapp-inbox.png",
+    "sha256": "87c42498c2f41dc2d642c2e6fbab205c9f61b5969e30c8d63309d7e14479be44"
+  },
+  {
+    "id": "U09",
+    "file": "09-automations-tour.png",
+    "sha256": "d1a3a078c5a464b5a5166cfb589e7148bf8b9d909ebcd9673a1cc36d3f1596a1"
+  },
+  {
+    "id": "U10",
+    "file": "10-first-steps-tour.png",
+    "sha256": "091144e7e48883e1088507e5ecd0f74bfaa771547f37d31d8ba2867e8e7faac9"
+  },
+  {
+    "id": "U11",
+    "file": "11-help-tour.png",
+    "sha256": "70dae2d81f680ef0e9fb01487fea18189b72d739e36b0b25608a22206be17ffc"
+  },
+  {
+    "id": "U12",
+    "file": "12-add-contacts-menu.png",
+    "sha256": "244c792585ae1911498525d4e9992560e3c32b4fe5c4a3954cb5b6c84e0916e3"
+  },
+  {
+    "id": "U13",
+    "file": "13-automations-list.png",
+    "sha256": "3b066c879233fc56c849e88c7c0ff9be9b27cd0afe8409f65ce4ddf288505d10"
+  },
+  {
+    "id": "U14",
+    "file": "14-automation-modes.png",
+    "sha256": "980e9769023ddb82ae20c3a0d44cd538e42e59212b38c7aa112da3f6949da107"
+  },
+  {
+    "id": "U15",
+    "file": "15-automation-ai-form.png",
+    "sha256": "e3a18abfb1b66444179d4f6f5d813fcfe9fa91d87f83eba6adeead8a978baf14"
+  },
+  {
+    "id": "U16",
+    "file": "16-automation-ai-input.png",
+    "sha256": "795a5b60633e3f99434b3eb7af8981ebacef6c3f56f89a180a0e7c8bf29132c7"
+  },
+  {
+    "id": "U17",
+    "file": "17-automation-ai-proposals.png",
+    "sha256": "61389d65c18b6898ca6a5c38420e1a183e53c497e9de51d5bdb948c8a8d4fb0e"
+  },
+  {
+    "id": "U18",
+    "file": "18-automation-ai-result.png",
+    "sha256": "22eb10376005509ad4df5be84872523b7d4f1a5a41a0d171c6eadcfbcfc172bc"
+  }
+]
