@@ -21,7 +21,7 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
     const old=(await c.query('SELECT * FROM app.prospecting_attempt WHERE id=$1',[operationId])).rows[0];
     if(old)return old;
     await assertReserved(c,lease.jobId,units);
-    await c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state) VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4,'prepared')",[lease.jobId,operationId,provider,step]);
+    await c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4,'prepared',$5)",[lease.jobId,operationId,provider,step,{reservedUnits:units}]);
     return null;
   });
   if(prior?.state==='completed')return prior.payload.result as T;
@@ -34,7 +34,7 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
   }
   await withLeasedTransaction(lease,async c=>{
     if(usage){const measured=usage(result);if(Object.keys(measured.units).length)await settleUsage(c,lease.jobId,{...measured,operationId});}
-    await c.query("UPDATE app.prospecting_attempt SET state='completed',payload=$2 WHERE id=$1",[operationId,{result}]);
+    await c.query("UPDATE app.prospecting_attempt SET state='completed',payload=$2 WHERE id=$1",[operationId,{result,reservedUnits:units}]);
   });return result;
 }
 export async function handleStepFailure(lease:JobLease,error:unknown){

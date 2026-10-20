@@ -24,6 +24,7 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
       else if((await withLeasedTransaction(lease,c=>c.query('SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1',[lease.jobId]))).rowCount){await finishJob(lease,'needs_reconciliation','CANCEL_UNCERTAIN');return;}
       await finishJob(lease,'cancelled');return;
     }
+    if(job.checkpoint.exhausted===true||job.counts.found>=input.limit){await finishJob(lease,'completed');return;}
     if(input.source==='APOLLO'){
       const pageNo=Number(job.checkpoint.cursor??1),apollo=adapters.apollo??new ApolloAdapter();
       const page=await performStep(lease,'apollo-page:'+pageNo,'apollo',{apolloPages:1},()=>apollo.search(ctx,input,pageNo));

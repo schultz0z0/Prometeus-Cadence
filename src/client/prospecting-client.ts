@@ -28,7 +28,7 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
       const key=id+JSON.stringify([...itemIds].sort()),prior=applications.get(key);if(prior)return prior;
       const promise=request<{applied:number;revision:number}>('/jobs/'+encodeURIComponent(id)+'/apply',{requestId:stableId('apply:'+key),itemIds}).catch(error=>{applications.delete(key);throw error;});applications.set(key,promise);return promise;
     },
-    reconcile:(id:string,body:{runId?:string;confirmNotStarted?:true})=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/reconcile',body),
+    reconcile:(id:string,body:{operationId?:string;runId?:string;confirmNotStarted?:true;resultUnavailable?:true})=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/reconcile',body),
     dispose(){disposed=true;controller.abort();confirmations.clear();requestIds.clear();applications.clear();},
   };
 }

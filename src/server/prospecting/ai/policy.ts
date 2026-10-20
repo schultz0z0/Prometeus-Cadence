@@ -1,6 +1,6 @@
 import type {JobInput,ModuleId,ModuleResult,Decision} from '../../../domain/prospecting.ts';
 export function suggestedQualification(decision:Decision){
-  if(!decision.evidenceIds.length||decision.verdict==='insufficient_evidence'||decision.confidence===null)return'pending' as const;
+  if(!decision.evidenceIds.length||decision.verdict==='insufficient_evidence'||decision.confidence===null||!(decision.criteria.quality>=0.5)||!(decision.criteria.coverage>=1))return'pending' as const;
   return decision.verdict==='fits'?'qualified' as const:'disqualified' as const;
 }
 export function chooseNextModule(input:Extract<JobInput,{kind:'qualification'}>,results:ModuleResult[],_policy:unknown=null):ModuleId|null{

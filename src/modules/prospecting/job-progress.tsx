@@ -2,7 +2,8 @@
 import {useEffect,useState} from 'react';
 import {useIdentity,useProspecting} from '@/client/workspace-provider';
 import type {JobView} from '@/domain/prospecting';
-import {Button,PageHeader,Badge,Modal,Field,Notice} from '@/components/ui/primitives';
+import {Button,PageHeader,Badge,Notice} from '@/components/ui/primitives';
+import {ReconciliationReview} from './reconciliation-review';
 import {JobResults} from './job-results';
 import {jobStateLabels} from './job-history';
 const activeStates=['queued','running','waiting_provider','cancelling'];
@@ -15,7 +16,7 @@ export function useProspectingJob(id:string){
   },[client,id,revision]);return{job,error,refresh:()=>setRevision(r=>r+1)};
 }
 export function JobProgress({id}:{id:string}){
-  const client=useProspecting(),identity=useIdentity(),{job,error,refresh}=useProspectingJob(id),[actionError,setActionError]=useState(''),[busy,setBusy]=useState(false),[reconcile,setReconcile]=useState(false),[runId,setRunId]=useState(''),[notStarted,setNotStarted]=useState(false);
+  const client=useProspecting(),identity=useIdentity(),{job,error,refresh}=useProspectingJob(id),[actionError,setActionError]=useState(''),[busy,setBusy]=useState(false),[reconcile,setReconcile]=useState(false);
   const role=identity?.workspaces.find(w=>w.id===identity.activeWorkspaceId)?.role;
   async function cancel(){if(!client||busy)return;setBusy(true);setActionError('');try{await client.cancel(id);refresh();}catch(e){setActionError(e instanceof Error?e.message:'Falha ao cancelar.');}finally{setBusy(false);}}
   if(!job)return <><PageHeader title="Execução" back="/executions"/><p role={error?'alert':'status'}>{error||'Carregando execução…'}</p></>;
@@ -33,6 +34,6 @@ export function JobProgress({id}:{id:string}){
     </section>
     <section className="panel panel-pad section-gap"><h3>Uso registrado</h3>{job.usage?.length?job.usage.map(u=><p className="secondary-text section-gap" key={u.operationId}>{u.provider} · {Object.entries(u.units).map(([unit,count])=>`${count} ${unit}`).join(', ')} · {u.costUsd===null?'custo monetário desconhecido':`US$ ${u.costUsd} (${u.costKind})`}</p>):<p className="muted section-gap">Ainda não há consumo registrado. Operações incertas podem continuar com reserva retida.</p>}</section>
     <JobResults job={job}/>
-    {reconcile&&<Modal title="Reconciliar chamada externa" onClose={()=>{if(!busy)setReconcile(false);}}><div className="stack"><Notice>Confira a operação diretamente no provedor. Vincule um run Apify compatível ou confirme explicitamente que a chamada não foi iniciada. O sistema não verifica a ausência por você.</Notice><Field label="ID do run Apify existente"><input value={runId} disabled={notStarted} onChange={e=>setRunId(e.target.value)} placeholder="ID fornecido pelo Apify"/></Field><label className="row"><input type="checkbox" checked={notStarted} onChange={e=>{setNotStarted(e.target.checked);if(e.target.checked)setRunId('');}}/>Conferi no provedor: a chamada não foi iniciada.</label>{actionError&&<p role="alert" className="error-bar">{actionError}</p>}<div className="form-actions"><Button disabled={busy} onClick={()=>setReconcile(false)}>Voltar</Button><Button variant="primary" disabled={busy||(!notStarted&&!runId.trim())} onClick={async()=>{setBusy(true);setActionError('');try{await client!.reconcile(id,notStarted?{confirmNotStarted:true}:{runId:runId.trim()});setReconcile(false);refresh();}catch(e){setActionError(e instanceof Error?e.message:'Falha ao reconciliar.');}finally{setBusy(false);}}}>Confirmar reconciliação</Button></div></div></Modal>}
+    {reconcile&&<ReconciliationReview job={job} onClose={()=>setReconcile(false)} onDone={()=>{setReconcile(false);refresh();}}/>}
   </>;
 }

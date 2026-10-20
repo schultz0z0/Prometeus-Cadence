@@ -86,7 +86,8 @@ export async function getJob(p:Principal,id:string):Promise<JobView>{return with
   const row=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[id])).rows[0];
   if(!row)throw new AppError(404,'Execução não encontrada.');
   const usage=(await c.query("SELECT * FROM app.usage_ledger WHERE job_id=$1 AND event='consume' ORDER BY created_at",[id])).rows.map(r=>({provider:r.provider,operationId:r.operation_id,units:r.units,costUsd:r.cost_usd===null?null:Number(r.cost_usd),costKind:r.cost_kind,...r.metadata}));
-  return {...jobView(row),usage};
+  const unresolvedAttempts=(await c.query("SELECT id,provider,step FROM app.prospecting_attempt WHERE job_id=$1 AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') ORDER BY created_at,id",[id])).rows.map(a=>({...a,canAttachRun:a.provider==='apify'&&(row.kind==='generation'||a.step.startsWith('registry:')||a.step.startsWith('website:'))}));
+  return {...jobView(row),usage,unresolvedAttempts};
 });}
 export async function listJobItems(p:Principal,id:string,input:unknown={}):Promise<Page<JobItemView>>{
   const parsed=pageSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Página inválida.');

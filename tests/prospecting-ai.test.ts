@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {decide} from '../src/server/prospecting/ai/jev.ts';
 import {generate,buildCodexInvocation} from '../src/server/prospecting/ai/codex.ts';
 import {writeFile} from 'node:fs/promises';
+import {suggestedQualification} from '../src/server/prospecting/ai/policy.ts';
 const evidence=[{id:'e1',url:'https://example.com',text:'Somos uma clínica odontológica em São Paulo.',hash:'h',fetchedAt:new Date().toISOString(),truncated:false}];
 const ctx={operationId:'op',signal:new AbortController().signal,credential:'fixture-secret'};
 test('JEV uses decisions contract and missing confidence stays unknown',async()=>{
@@ -16,6 +17,13 @@ test('JEV uses decisions contract and missing confidence stays unknown',async()=
 });
 test('invalid decision labels and probability distributions are rejected',async()=>{
   for(const fit of[{type:'choice',choice:'yes'},{type:'choice',choice:'fits',confidence:1.5},{type:'choice',choice:'fits',probabilities:{fits:2}}])await assert.rejects(()=>decide({...ctx,fetcher:async()=>Response.json({answers:{fit}})},{criteria:'x',evidence,facts:{}}));
+});
+test('high choice confidence cannot qualify zero-quality or uncovered company evidence',async()=>{
+  const decision=await decide({...ctx,fetcher:async()=>Response.json({answers:{fit:{type:'choice',choice:'fits',confidence:0.99},quality:{type:'noul',noul:0},coverage:{type:'score',score:0}}})},{criteria:'Clínicas',evidence,facts:{}});
+  assert.equal(suggestedQualification(decision),'pending');assert.equal(decision.verdict,'insufficient_evidence');
+});
+test('an invalid successful JEV response remains billable-uncertain',async()=>{
+  await assert.rejects(()=>decide({...ctx,fetcher:async()=>Response.json({answers:{fit:{choice:'unrecognized'}}})},{criteria:'x',evidence,facts:{}}),(error:any)=>error.uncertain===true);
 });
 test('Codex rejects hosted or unapproved workspaces before starting and uses secret-free argv',async()=>{
   let calls=0;

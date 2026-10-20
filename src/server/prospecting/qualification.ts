@@ -47,6 +47,8 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
   let current:{leadId:string;module:ModuleResult['module']}|undefined;
   try{
     if(job.state==='cancelling'){
+      const unknown=await withLeasedTransaction(lease,async c=>(await c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') LIMIT 1",[lease.jobId])).rowCount);
+      if(unknown){await finishJob(lease,'needs_reconciliation','CANCEL_UNCERTAIN');return;}
       const starts=await withLeasedTransaction(lease,async c=>(await c.query("SELECT payload FROM app.prospecting_attempt WHERE job_id=$1 AND provider='apify' AND state='completed'",[lease.jobId])).rows);
       let pending=false;
       for(const row of starts){const run=row.payload.result?.run;if(run){const source=row.payload.result.run.profileId===job.checkpoint.execution.profiles.WEB.actor?'WEB':'CNPJ';const state=await(deps.apify??new ApifyAdapter()).abort(providerContext(job,source,run.operationId,deps.signal??new AbortController().signal),run);if(!['cancelled','failed','succeeded'].includes(state.status))pending=true;}}
@@ -59,11 +61,13 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       const base=job.checkpoint.bases[leadId] as Lead;
       const lead={...base,...Object.assign({},...prior.map(r=>r.proposed))} as Lead;
       const result:ModuleResult={module,status:'pending_review',proposed:{},base:{},reasons:[],evidenceIds:[],usage:null,contextVersion:job.checkpoint.context?.version??0};
-      if(module==='summary'&&input.summaryPolicy==='fits'&&!prior.some(r=>r.module==='qualify'&&r.decision?.verdict==='fits')){result.status='skipped';result.reasons=['SUMMARY_REQUIRES_FIT'];}
+      if(module==='summary'&&input.summaryPolicy==='fits'&&!prior.some(r=>r.module==='qualify'&&r.proposed.qualification==='qualified')){result.status='skipped';result.reasons=['SUMMARY_REQUIRES_FIT'];}
       else if(module==='registry'||module==='website'){
         if(module==='registry'&&!lead.cnpj){result.status='skipped';result.reasons=['NO_CNPJ'];}
         else if(module==='website'&&lead.site){result.status='skipped';result.reasons=['ALREADY_HAS_SITE'];}
-        else{const source=await sourceResult(lease,job,lead,module,deps);if(source===null)return;for(const key of (module==='website'?['site']:['cnpj','companyName','city','state']) as (keyof Lead)[])if(source[key as keyof typeof source])Object.assign(result.proposed,{[key]:source[key as keyof typeof source]});if(!Object.keys(result.proposed).length){result.status='skipped';result.reasons=['NO_RESULT'];}}
+        else{const source=await sourceResult(lease,job,lead,module,deps);if(source===null)return;
+          result.evidenceIds=await withLeasedTransaction(lease,c=>saveEvidence(c,lease.jobId,lead.id,'evidence' in source?source.evidence??[]:[]));
+          for(const key of (module==='website'?['site']:['cnpj','companyName','city','state']) as (keyof Lead)[])if(source[key as keyof typeof source])Object.assign(result.proposed,{[key]:source[key as keyof typeof source]});if(!Object.keys(result.proposed).length){result.status='skipped';result.reasons=['NO_RESULT'];}}
       }else if(module==='validateEmail'){
         const validation=lead.email?await checkEmailDns(lead.email):null;result.status='succeeded';result.reasons=[!validation?'NO_EMAIL':validation.format?'FORMAT_VALID':'FORMAT_INVALID',validation?.dns===true?'MAIL_DOMAIN_FOUND':'MAIL_DOMAIN_UNKNOWN','MAILBOX_NOT_VERIFIED'];
       }else{
@@ -81,7 +85,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
             const decision=cached?{...cached,evidenceIds:evidence.map(e=>e.id),usage:{...cached.usage,operationId:hashValue({job:lease.jobId,leadId,module}),units:{},costUsd:null,costKind:'unknown' as const}}:await performStep(lease,module+':'+leadId,'openrouter',{jevCalls:1},()=> (deps.decide??decide)({operationId:hashValue({job:lease.jobId,leadId,module}),signal:deps.signal??new AbortController().signal,credential:process.env.OPENROUTER_API_KEY??''},{criteria,evidence,facts:{name:lead.name,cnpj:lead.cnpj}}),r=>r.usage);
             if(!cached)await withLeasedTransaction(lease,c=>c.query("INSERT INTO app.prospecting_cache VALUES(current_setting('app.workspace_id'),$1,$2,now()) ON CONFLICT(workspace_id,key) DO UPDATE SET payload=EXCLUDED.payload,created_at=now()",[cacheKey,decision]));
             result.decision=decision;result.proposed={qualification:suggestedQualification(decision)};result.reasons=['UNCALIBRATED_SUGGESTION','CONFIDENCE_IS_NOT_ACCURACY'];
-            if(input.escalation==='ambiguous'&&decision.verdict!=='insufficient_evidence'&&decision.confidence!==null&&decision.confidence<0.7){
+            if(input.escalation==='ambiguous'&&suggestedQualification(decision)!=='pending'&&decision.confidence!==null&&decision.confidence<0.7){
               const opinion=await generateStep(lease,leadId,'second_opinion',criteria,evidence,deps);result.proposed.reason=opinion.summary;result.reasons.push('SECOND_OPINION_REVIEW_REQUIRED');
             }
           }else if(module==='summary'){

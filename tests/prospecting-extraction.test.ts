@@ -26,3 +26,7 @@ test('deep collection caps pages and aggregate evidence; cancellation bounds an 
   assert.equal(calls,3);assert.equal(pages.reduce((n,p)=>n+p.text.length,0),12000);assert.equal(pages.at(-1)?.truncated,true);
   const controller=new AbortController();const pending=fetchPublicPage('https://example.com',{signal:controller.signal,resolve:()=>new Promise(()=>{})});controller.abort();await assert.rejects(()=>pending);
 });
+test('apex to www canonical redirects retain company evidence',async()=>{
+  const pages=await fetchEvidencePack('https://example.com',{signal:new AbortController().signal,resolve,request:async approved=>approved.url.hostname==='example.com'?{status:301,headers:{location:'https://www.example.com/'},body:Buffer.alloc(0)}:{status:200,headers:{'content-type':'text/html'},body:Buffer.from('<p>Dental clinic providing orthodontics and general dentistry.</p>')}});
+  assert.equal(pages.length,1);assert.ok(pages[0].url.includes('www.example.com'));
+});

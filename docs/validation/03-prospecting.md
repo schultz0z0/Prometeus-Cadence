@@ -35,6 +35,10 @@ Codex: `CADENCE_RUNTIME_MODE=local`, origem loopback, `CODEX_LOCAL_ENABLED=true`
 
 `rtk npm run worker -- --once` processa um passo. Reiniciar não apaga checkpoints/recibos. Resposta incerta requer revisão administrativa em `/executions/[id]` antes de outro POST. Cancelar solicita abort e não promete estorno. Gerador/qualificador/histórico/status: `/leads/generator`, `/leads/qualifier`, `/executions`, `/settings/apps`.
 
+Reconciliação seleciona uma chamada específica, inclusive extração ou IA da qualificação. Após conferir no provedor, o administrador pode vincular o run Apify do Actor/build aprovado, confirmar que não houve início ou reconhecer consumo com resultado indisponível. Esta última opção registra custo monetário desconhecido, não repete a chamada e marca o módulo sem resultado (ou encerra a geração como falha/parcial). Cancelar uma chamada ainda incerta conserva sua reserva. Runs remotos sem resultado devem ser conferidos e encerrados no provedor quando necessário.
+
+Qualificação exige qualidade de evidência JEV de pelo menos 0,5 e cobertura 1, além de confiança presente e fonte utilizável. São barreiras conservadoras para abstenção; **não são limiares de acurácia empiricamente calibrados**. Toda classificação continua sendo proposta para revisão. Resultados Apify retêm fonte, fatos/snippets limitados, data e hash; website/registry vinculam essas evidências às propostas. Apollo mantém tamanho de página estável e registra separadamente resultados buscados e aceitos no limite final.
+
 ## Avaliação e smokes
 
 Gold JSON: `[{"id":"caso-1","companyId":"empresa-1","domain":"empresa.example","split":"adjust","label":"fits"}]`.
@@ -51,4 +55,4 @@ Rotule 100 empresas com evidência arquivada, 50 para ajuste e 50 para teste, ag
 
 Scheduler recorrente, IA de audiências/cadências, envio de e-mail/WhatsApp/LinkedIn, inbox real, assinatura/billing e operação pública. Automações pausadas, cadências rascunhos. Não se declara paridade integral.
 
-Verificação antes da revisão independente: unit64/64, integração36/36, typecheck0, build webpack0, smoke48/48. Banco exclusivo reiniciado saudável; worker --once0 e dados QA preservados. Smoke de provedores sem flags: SKIPPED. Integração exclusivamente `_test`; smoke anônimo testa redirects/401. Matriz em `03-provider-matrix.json`.
+Verificação após a revisão independente e correções: unit71/71, integração39/39, typecheck0, build webpack0, smoke48/48. Novo modal de reconciliação conferido em desktop1440/mobile390: seleção da operação, confirmação inicialmente desabilitada, exigência do run ID e explicação de resultado indisponível; revisão cancelada sem chamada ao provedor, console sem erro/aviso. Banco exclusivo reiniciado saudável; worker --once0 e dados QA preservados. Smoke de provedores sem flags: SKIPPED. Integração exclusivamente `_test`; smoke anônimo testa redirects/401. Matriz em `03-provider-matrix.json`; achados e correções em `03-review.md`; decisões e registro por tarefa em `03-execution-record.md`.

@@ -5,6 +5,7 @@ import {ApolloAdapter} from '../src/server/prospecting/providers/apollo.ts';
 import {providerProfile} from '../src/server/prospecting/providers/profiles.ts';
 import {actorInput} from '../src/server/prospecting/providers/profiles.ts';
 import {ProviderError} from '../src/server/prospecting/providers/transport.ts';
+import {providerJson} from '../src/server/prospecting/providers/transport.ts';
 const input={kind:'generation' as const,source:'MAPS' as const,destination:{mode:'new' as const,name:'QA'},filters:{term:'dentistas',location:'São Paulo'},limit:5,dedupScope:'workspace' as const};
 const context=()=>({operationId:'operation',signal:new AbortController().signal,profile:providerProfile('MAPS',{actor:'compass/crawler-google-places',build:'pinned-build'}),credential:'secret-fixture',maxChargeUsd:0.1,maxPages:2});
 test('Apify start is bounded and a lost POST response is uncertain without retry',async()=>{
@@ -48,4 +49,28 @@ test('CNPJ only accepts supported filters and abort remains pending until confir
   assert.equal((await adapter.abort(context(),{provider:'apify',runId:'r',datasetId:null,profileId:'a',build:'b',operationId:'c'})).status,'cancelling');
   const bad=new ApifyAdapter(async()=>new Response('{bad'));
   assert.equal((await bad.start(context(),input)).kind,'uncertain');
+});
+test('Apollo keeps a stable page size for a non-multiple limit and slices only the final result',async()=>{
+  const sizes:number[]=[],adapter=new ApolloAdapter(async(_url,init)=>{
+    const body=JSON.parse(init!.body as string);sizes.push(body.per_page);
+    return Response.json({organizations:Array.from({length:body.per_page},(_,i)=>({id:String((body.page-1)*body.per_page+i+1),name:'Empresa '+((body.page-1)*body.per_page+i+1)})),pagination:{total_pages:10}});
+  });
+  const query={...input,source:'APOLLO' as const,limit:150},ctx={...context(),profile:providerProfile('APOLLO')};
+  const first=await adapter.search(ctx,query,1),second=await adapter.search(ctx,query,2);
+  assert.deepEqual(sizes,[100,100]);assert.equal(second.usage.fetchedCount,100);assert.equal(second.usage.acceptedCount,50);assert.equal(second.candidates.length,50);assert.equal(second.candidates[0].sourceRef,'101');assert.equal(second.candidates.at(-1)?.sourceRef,'150');assert.equal(new Set([...first.candidates,...second.candidates].map(c=>c.sourceRef)).size,150);
+});
+test('a successful start with an incomplete run response remains uncertain',async()=>{
+  const adapter=new ApifyAdapter(async()=>Response.json({data:{}}));
+  assert.equal((await adapter.start(context(),input)).kind,'uncertain');
+});
+test('unusable successful POST bodies retain uncertainty including byte limits',async()=>{
+  for(const response of[new Response(null),new Response('x'.repeat(2_000_001))]){
+    await assert.rejects(()=>providerJson(async()=>response,'https://api.apify.com/v2/acts/a/runs',{method:'POST'},new AbortController().signal),(error:unknown)=>error instanceof ProviderError&&error.uncertain);
+  }
+});
+test('actual source mapping retains bounded public provenance for web and registry rows',async()=>{
+  const ctx={...context(),profile:providerProfile('WEB',{actor:'apify/google-search-scraper',build:'pinned'})};
+  const adapter=new ApifyAdapter(async()=>Response.json([{organicResults:[{title:'Company A',url:'https://example.com/',description:'Dental company providing orthodontics.'}]}]));
+  const page=await adapter.readPage(ctx,{provider:'apify',runId:'r',datasetId:'d',profileId:ctx.profile.actor,build:'pinned',operationId:'op'},null,1);
+  assert.equal(page.candidates[0].evidence?.length,1);assert.ok(page.candidates[0].evidence?.[0].text.includes('orthodontics'));assert.equal(page.candidates[0].evidence?.[0].url,'https://example.com/');
 });

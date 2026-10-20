@@ -11,9 +11,9 @@ export async function providerJson(fetcher:Fetch,url:string,init:RequestInit,sig
       throw new ProviderError('HTTP_'+response.status,response.status,method==='POST'&&response.status>=500);
     }
     // Bound even a lying Content-Length; provider response bodies never enter errors/logs.
-    const reader=response.body?.getReader();if(!reader)throw new ProviderError('EMPTY_RESPONSE');
+    const reader=response.body?.getReader();if(!reader)throw new ProviderError('EMPTY_RESPONSE',0,method==='POST');
     const chunks:Uint8Array[]=[];let size=0;
-    try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>2_000_000){await reader.cancel();throw new ProviderError('RESPONSE_TOO_LARGE');}chunks.push(value);}}
+    try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>2_000_000){await reader.cancel();throw new ProviderError('RESPONSE_TOO_LARGE',0,method==='POST');}chunks.push(value);}}
     catch(error){if(error instanceof ProviderError)throw error;throw new ProviderError('RESPONSE_LOST',0,method==='POST');}
     try{return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;}catch{throw new ProviderError('INVALID_JSON',0,method==='POST');}
   }throw new ProviderError('NETWORK');

@@ -13,7 +13,7 @@ export class ApifyAdapter implements SourceAdapter{
     const body=actorInput(ctx.profile,input),query=new URLSearchParams({build:ctx.profile.build,timeout:'300',maxItems:String(input.limit)});
     if(ctx.profile.ppe)query.set('maxTotalChargeUsd',String(ctx.maxChargeUsd));
     try{const response=await this.request(ctx,`/acts/${ctx.profile.actor.replace('/','~')}/runs?${query}`,'POST',body);return{kind:'remote',run:{provider:'apify',runId:id(response.data?.id),datasetId:response.data?.defaultDatasetId?id(response.data.defaultDatasetId):null,profileId:ctx.profile.actor,build:ctx.profile.build,operationId:ctx.operationId}};}
-    catch(error){if(error instanceof ProviderError&&error.uncertain)return{kind:'uncertain',operationId:ctx.operationId};throw error;}
+    catch(error){if(error instanceof ProviderError&&(error.uncertain||error.code==='INVALID_REMOTE_ID'))return{kind:'uncertain',operationId:ctx.operationId};throw error;}
   }
   async poll(ctx:ProviderContext,run:RemoteRun):Promise<RemoteState>{
     const response=await this.request(ctx,`/actor-runs/${id(run.runId)}`),data=response.data;
@@ -30,7 +30,14 @@ export class ApifyAdapter implements SourceAdapter{
     const all=web?raw.flatMap(r=>Array.isArray(r?.organicResults)?r.organicResults:[]):raw;
     const rows=web?all.slice(offset,offset+limit):all;
     const candidates=[],rejected=[];
-    for(const r of rows.slice(0,limit))try{candidates.push(normalizeCandidate(ctx.profile.source==='WEB'?{...r,id:r.url,site:r.url}:r,ctx.profile.source));}catch{rejected.push({reason:'MISSING_IDENTITY'});}
+    for(const r of rows.slice(0,limit))try{
+      const candidate=normalizeCandidate(ctx.profile.source==='WEB'?{...r,id:r.url,site:r.url}:r,ctx.profile.source);
+      const text=JSON.stringify({source:ctx.profile.source,sourceRef:candidate.sourceRef,name:candidate.name,cnpj:candidate.cnpj,city:candidate.city,state:candidate.state,site:candidate.site,phone:candidate.phone,email:candidate.email,description:typeof r.description==='string'?r.description.slice(0,4000):undefined}).slice(0,6000);
+      let url=`https://api.apify.com/v2/datasets/${id(run.datasetId)}/items?offset=${offset}`;
+      if(ctx.profile.source==='WEB')try{const pageUrl=new URL(r.url);if(['http:','https:'].includes(pageUrl.protocol)&&!pageUrl.username&&!pageUrl.password)url=pageUrl.toString();}catch{}
+      candidate.evidence=[{id:hashValue({receipt:run.runId,ref:candidate.sourceRef}),url,text,hash:hashValue(text),fetchedAt:new Date().toISOString(),truncated:typeof r.description==='string'&&r.description.length>4000}];
+      candidates.push(candidate);
+    }catch{rejected.push({reason:'MISSING_IDENTITY'});}
     const rawCount=Math.min(rows.length,limit),receiptId=hashValue({run:run.runId,offset,limit});
     const exhausted=web?offset+limit>=all.length:raw.length<limit;
     return{receiptId,candidates,rejected,nextCursor:exhausted?null:String(offset+limit),exhausted,rawCount,usage:{provider:'apify',operationId:receiptId,units:{candidates:rawCount},costUsd:null,costKind:'unknown'}};

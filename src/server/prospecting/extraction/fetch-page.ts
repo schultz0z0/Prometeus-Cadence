@@ -50,7 +50,7 @@ export async function fetchEvidencePack(url:string,options:{signal:AbortSignal;r
   const pages:Evidence[]=[];const base=new URL(url);base.hash='';
   const urls=deep?[base.toString(),new URL('/sobre',base).toString(),new URL('/contato',base).toString()]:[base.toString()];
   for(const next of [...new Set(urls)]){
-    options.signal.throwIfAborted();try{const evidence=await fetchPublicPage(next,options);if(new URL(evidence.url).hostname!==base.hostname)continue;pages.push(evidence);}catch(error){if(options.signal.aborted)throw error;}
+    options.signal.throwIfAborted();try{const evidence=await fetchPublicPage(next,options);if(new URL(evidence.url).hostname.replace(/^www\./,'')!==base.hostname.replace(/^www\./,''))continue;pages.push(evidence);}catch(error){if(options.signal.aborted)throw error;}
   }
   let remaining=12000;return pages.map(page=>{const text=page.text.slice(0,remaining);remaining-=text.length;return{...page,text,hash:createHash('sha256').update(text).digest('hex'),truncated:page.truncated||text.length<page.text.length};}).filter(page=>page.text);
 }

@@ -12,7 +12,7 @@ export async function settleUsage(c:PoolClient,jobId:string,usage:ProviderUsage)
   const prior=(await c.query("SELECT units,metadata FROM app.usage_ledger WHERE operation_id=$1 AND event='consume'",[usage.operationId])).rows[0];
   if(prior){if(hashValue(prior.units)!==hashValue(usage.units))throw new AppError(409,'Uso já registrado com outro resultado.');return;}
   await assertReserved(c,jobId,usage.units);
-  await c.query("INSERT INTO app.usage_ledger(workspace_id,job_id,operation_id,event,units,cost_usd,cost_kind,provider,metadata) VALUES(current_setting('app.workspace_id'),$1,$2,'consume',$3,$4,$5,$6,$7)",[jobId,usage.operationId,usage.units,usage.costUsd,usage.costKind,usage.provider,{inputTokens:usage.inputTokens,outputTokens:usage.outputTokens}]);
+  await c.query("INSERT INTO app.usage_ledger(workspace_id,job_id,operation_id,event,units,cost_usd,cost_kind,provider,metadata) VALUES(current_setting('app.workspace_id'),$1,$2,'consume',$3,$4,$5,$6,$7)",[jobId,usage.operationId,usage.units,usage.costUsd,usage.costKind,usage.provider,{inputTokens:usage.inputTokens,outputTokens:usage.outputTokens,fetchedCount:usage.fetchedCount,acceptedCount:usage.acceptedCount}]);
   await c.query("INSERT INTO app.usage_ledger(workspace_id,job_id,operation_id,event,units) VALUES(current_setting('app.workspace_id'),$1,$2,'release',$3)",[jobId,usage.operationId,usage.units]);
 }
 export async function assertReserved(c:PoolClient,jobId:string,units:Units){
