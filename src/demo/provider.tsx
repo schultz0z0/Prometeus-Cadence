@@ -10,9 +10,11 @@ import {
 import { createDemoRepository } from "./repository";
 import { decodeDemoState, STORAGE_KEY } from "./storage";
 import type { DemoRepository } from "../domain/repository";
+import type {AsyncRepository} from '../client/workspace-repository';
+import {runAction} from '../client/workspace-repository';
 import { Button } from "@/components/ui/primitives";
-const RepositoryContext = createContext<DemoRepository | null>(null);
-const ToastContext = createContext<(message: string) => void>(() => {});
+export const RepositoryContext = createContext<DemoRepository | AsyncRepository | null>(null);
+export const ToastContext = createContext<(message: string) => void>(() => {});
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [repo, setRepo] = useState(() => createDemoRepository());
   const [ready, setReady] = useState(false);
@@ -102,18 +104,5 @@ export function useNotify() {
 }
 export function useAction() {
   const notify = useNotify();
-  return (fn: () => void, success?: string) => {
-    try {
-      fn();
-      if (success) notify(success);
-      return true;
-    } catch (e) {
-      notify(
-        e instanceof Error
-          ? `Não foi possível salvar: ${e.message}`
-          : "Não foi possível salvar os dados locais.",
-      );
-      return false;
-    }
-  };
+  return (fn:()=>unknown|Promise<unknown>,success?:string)=>runAction(fn,notify,success);
 }

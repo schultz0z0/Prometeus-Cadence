@@ -8,110 +8,84 @@ import { SourcePicker } from "@/modules/prospecting/source-picker";
 import { CnpjFilters } from "@/modules/prospecting/cnpj-filters";
 import { Button, Field, PageHeader, Notice } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/icon";
-export function ManualWizard({
-  initialSource = "MAPS",
-}: {
-  initialSource?: string;
+export function ManualWizard({ initialSource = "MAPS", }: {
+    initialSource?: string;
 }) {
-  const s = useDemo();
-  const repo = useRepository();
-  const run = useAction();
-  const router = useRouter();
-  const [operation] = useState(() => createManualAutomationOperation(repo));
-  const [submitted, setSubmitted] = useState(false);
-  const [step, setStep] = useState(0);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [source, setSource] = useState<Source>(
-    ["MAPS", "WEB", "CNPJ", "QUALIFY", "REENGAGE", "APOLLO"].includes(
-      initialSource,
-    )
-      ? (initialSource as Source)
-      : "MAPS",
-  );
-  const [filters, setFilters] = useState<Record<string, string>>({
-    term: "",
-    location: "",
-  });
-  const [limit, setLimit] = useState(150);
-  const [destination, setDestination] = useState("new");
-  const [list, setList] = useState(s.lists[0]?.id ?? "");
-  const [schedule, setSchedule] = useState<Schedule>({
-    frequency: "daily",
-    time: "07:00",
-    timezone: s.preferences.timezone,
-    weekdays: [1, 2, 3, 4, 5],
-  });
-  const [dedup, setDedup] = useState(["email", "cnpj"]);
-  const names = ["Fonte", "Termos", "Filtros", "Destino", "Agendamento"];
-  const canAdvance =
-    step === 0
-      ? name.trim() && source !== "APOLLO"
-      : step === 1
-        ? ["QUALIFY", "REENGAGE"].includes(source) ||
-          (filters.term.trim() &&
-            (filters.location.trim() || source === "CNPJ"))
-        : true;
-  function save() {
-    if (
-      run(() => {
-        operation.confirm(
-          {
-            name,
-            description,
-            source,
-            status: "paused",
-            schedule,
-            dailyLimit: limit,
-            filters: { ...filters, dedup: dedup.join(",") },
-            modules:
-              source === "QUALIFY"
-                ? ["Qualificação por IA", "Resumo com IA"]
-                : [],
-            createdAt: new Date().toISOString(),
-          },
-          destination === "new" ? { name } : list,
-        );
-      }, "Automação criada pausada.")
-    ) {
-      setSubmitted(true);
-      router.push("/automations");
+    const s = useDemo();
+    const repo = useRepository();
+    const run = useAction();
+    const router = useRouter();
+    const [operation] = useState(() => createManualAutomationOperation(repo));
+    const [submitted, setSubmitted] = useState(false);
+    const [step, setStep] = useState(0);
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
+    const [source, setSource] = useState<Source>(["MAPS", "WEB", "CNPJ", "QUALIFY", "REENGAGE", "APOLLO"].includes(initialSource)
+        ? (initialSource as Source)
+        : "MAPS");
+    const [filters, setFilters] = useState<Record<string, string>>({
+        term: "",
+        location: "",
+    });
+    const [limit, setLimit] = useState(150);
+    const [destination, setDestination] = useState("new");
+    const [list, setList] = useState(s.lists[0]?.id ?? "");
+    const [schedule, setSchedule] = useState<Schedule>({
+        frequency: "daily",
+        time: "07:00",
+        timezone: s.preferences.timezone,
+        weekdays: [1, 2, 3, 4, 5],
+    });
+    const [dedup, setDedup] = useState(["email", "cnpj"]);
+    const names = ["Fonte", "Termos", "Filtros", "Destino", "Agendamento"];
+    const canAdvance = step === 0
+        ? name.trim() && source !== "APOLLO"
+        : step === 1
+            ? ["QUALIFY", "REENGAGE"].includes(source) ||
+                (filters.term.trim() &&
+                    (filters.location.trim() || source === "CNPJ"))
+            : true;
+    async function save() {
+        if (await run(async () => {
+            await operation.confirm({
+                name,
+                description,
+                source,
+                status: "paused",
+                schedule,
+                dailyLimit: limit,
+                filters: { ...filters, dedup: dedup.join(",") },
+                modules: source === "QUALIFY"
+                    ? ["Qualificação por IA", "Resumo com IA"]
+                    : [],
+                createdAt: new Date().toISOString(),
+            }, destination === "new" ? { name } : list);
+        }, "Automação criada pausada.")) {
+            setSubmitted(true);
+            router.push("/automations");
+        }
     }
-  }
-  return (
-    <>
-      <PageHeader
-        title="Nova Automação"
-        description="Configure sua automação de prospecção"
-        back="/automations"
-      />
+    return (<>
+      <PageHeader title="Nova Automação" description="Configure sua automação de prospecção" back="/automations"/>
       <div className="manual-tabs" role="tablist">
-        {names.map((x, i) => (
-          <button
-            role="tab"
-            aria-selected={step === i}
-            key={x}
-            className={step === i ? "active" : ""}
-            onClick={() => {
-              if (i < step) setStep(i);
-            }}
-          >
+        {names.map((x, i) => (<button role="tab" aria-selected={step === i} key={x} className={step === i ? "active" : ""} onClick={() => {
+                if (i < step)
+                    setStep(i);
+            }}>
             {i < step ? "✓ " : ""}
             {x}
-          </button>
-        ))}
+          </button>))}
       </div>
       <div className="workspace-form">
-        <form
-          onSubmit={(e) => {
+        <form onSubmit={(e) => {
             e.preventDefault();
-            if (step === 4) save();
-            else setStep(step + 1);
-          }}
-        >
+            if (step === 4)
+                save();
+            else
+                setStep(step + 1);
+        }}>
           <div className="panel panel-pad stack">
-            {step === 0 ? (
-              <>
+            {step === 0 ? (<>
                 <div>
                   <h2>Escolha a fonte de dados</h2>
                   <p className="subtitle">
@@ -119,254 +93,131 @@ export function ManualWizard({
                   </p>
                 </div>
                 <Field label="Nome da automação *">
-                  <input
-                    autoFocus
-                    required
-                    placeholder="Ex.: Prospecção Restaurantes SP"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
+                  <input autoFocus required placeholder="Ex.: Prospecção Restaurantes SP" value={name} onChange={(e) => setName(e.target.value)}/>
                 </Field>
                 <Field label="Descrição (opcional)">
-                  <textarea
-                    placeholder="Breve descrição do objetivo"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
+                  <textarea placeholder="Breve descrição do objetivo" value={description} onChange={(e) => setDescription(e.target.value)}/>
                 </Field>
                 <div className="wizard-source">
-                  <SourcePicker extra value={source} onChange={setSource} />
+                  <SourcePicker extra value={source} onChange={setSource}/>
                 </div>
-                {source === "APOLLO" && (
-                  <Notice>
+                {source === "APOLLO" && (<Notice>
                     Apollo exige uma integração. Escolha outra fonte para montar
                     uma automação local.
-                  </Notice>
-                )}
-              </>
-            ) : step === 1 ? (
-              <>
+                  </Notice>)}
+              </>) : step === 1 ? (<>
                 <h2>Termos e Localizações</h2>
                 <p className="secondary-text">
                   Defina o que buscar e onde buscar.
                 </p>
-                {["QUALIFY", "REENGAGE"].includes(source) ? (
-                  <Notice>
+                {["QUALIFY", "REENGAGE"].includes(source) ? (<Notice>
                     A lista de origem será escolhida na etapa Destino.
-                  </Notice>
-                ) : (
-                  <>
-                    <Field
-                      label="Termos de busca *"
-                      help="Um termo por linha. Também pode colar uma lista."
-                    >
-                      <textarea
-                        required
-                        value={filters.term}
-                        placeholder="Ex.: restaurante japonês"
-                        onChange={(e) =>
-                          setFilters({ ...filters, term: e.target.value })
-                        }
-                      />
+                  </Notice>) : (<>
+                    <Field label="Termos de busca *" help="Um termo por linha. Também pode colar uma lista.">
+                      <textarea required value={filters.term} placeholder="Ex.: restaurante japonês" onChange={(e) => setFilters({ ...filters, term: e.target.value })}/>
                     </Field>
-                    <Field
-                      label="Localizações *"
-                      help="Uma cidade ou região por linha."
-                    >
-                      <textarea
-                        required={source !== "CNPJ"}
-                        value={filters.location}
-                        placeholder="Ex.: São Paulo, SP"
-                        onChange={(e) =>
-                          setFilters({ ...filters, location: e.target.value })
-                        }
-                      />
+                    <Field label="Localizações *" help="Uma cidade ou região por linha.">
+                      <textarea required={source !== "CNPJ"} value={filters.location} placeholder="Ex.: São Paulo, SP" onChange={(e) => setFilters({ ...filters, location: e.target.value })}/>
                     </Field>
-                  </>
-                )}
-              </>
-            ) : step === 2 ? (
-              <>
+                  </>)}
+              </>) : step === 2 ? (<>
                 <h2>Filtros e Deduplicação</h2>
                 <Field label="Máximo de leads por execução">
-                  <input
-                    type="number"
-                    min="1"
-                    max="500"
-                    required
-                    value={limit}
-                    onChange={(e) => setLimit(Number(e.target.value))}
-                  />
+                  <input type="number" min="1" max="500" required value={limit} onChange={(e) => setLimit(Number(e.target.value))}/>
                 </Field>
                 <div>
                   <p className="field-label">Deduplicação</p>
                   <div className="row wrap">
                     {[
-                      ["email", "Por e-mail"],
-                      ["cnpj", "Por CNPJ"],
-                      ["phone", "Por telefone"],
-                    ].map(([key, label]) => (
-                      <label className="row" key={key}>
-                        <input
-                          type="checkbox"
-                          checked={dedup.includes(key)}
-                          onChange={(e) =>
-                            setDedup(
-                              e.target.checked
-                                ? [...dedup, key]
-                                : dedup.filter((x) => x !== key),
-                            )
-                          }
-                        />
+                ["email", "Por e-mail"],
+                ["cnpj", "Por CNPJ"],
+                ["phone", "Por telefone"],
+            ].map(([key, label]) => (<label className="row" key={key}>
+                        <input type="checkbox" checked={dedup.includes(key)} onChange={(e) => setDedup(e.target.checked
+                    ? [...dedup, key]
+                    : dedup.filter((x) => x !== key))}/>
                         {label}
-                      </label>
-                    ))}
+                      </label>))}
                   </div>
                 </div>
                 <Field label="Escopo">
-                  <select
-                    value={filters.scope ?? "list"}
-                    onChange={(e) =>
-                      setFilters({ ...filters, scope: e.target.value })
-                    }
-                  >
+                  <select value={filters.scope ?? "list"} onChange={(e) => setFilters({ ...filters, scope: e.target.value })}>
                     <option value="list">Dentro da lista destino</option>
                     <option value="workspace">
                       Todas as listas do workspace
                     </option>
                   </select>
                 </Field>
-                {source === "CNPJ" && (
-                  <CnpjFilters value={filters} onChange={setFilters} />
-                )}
-              </>
-            ) : step === 3 ? (
-              <>
+                {source === "CNPJ" && (<CnpjFilters value={filters} onChange={setFilters}/>)}
+              </>) : step === 3 ? (<>
                 <h2>Listas de Destino</h2>
                 <p className="secondary-text">Onde salvar os leads gerados?</p>
                 <div className="row">
-                  <Button
-                    type="button"
-                    variant={destination === "new" ? "soft" : ""}
-                    onClick={() => setDestination("new")}
-                  >
+                  <Button type="button" variant={destination === "new" ? "soft" : ""} onClick={() => setDestination("new")}>
                     Criar automaticamente
                   </Button>
-                  <Button
-                    type="button"
-                    variant={destination === "existing" ? "soft" : ""}
-                    onClick={() => setDestination("existing")}
-                  >
+                  <Button type="button" variant={destination === "existing" ? "soft" : ""} onClick={() => setDestination("existing")}>
                     Usar lista existente
                   </Button>
                 </div>
-                {destination === "new" ? (
-                  <Notice>
+                {destination === "new" ? (<Notice>
                     Uma lista com o nome “{name}” será criada na confirmação.
-                  </Notice>
-                ) : (
-                  <Field label="Lista existente">
-                    <select
-                      value={list}
-                      onChange={(e) => setList(e.target.value)}
-                    >
-                      {s.lists.map((l) => (
-                        <option value={l.id} key={l.id}>
+                  </Notice>) : (<Field label="Lista existente">
+                    <select value={list} onChange={(e) => setList(e.target.value)}>
+                      {s.lists.map((l) => (<option value={l.id} key={l.id}>
                           {l.name}
-                        </option>
-                      ))}
+                        </option>))}
                     </select>
-                  </Field>
-                )}
-              </>
-            ) : (
-              <>
+                  </Field>)}
+              </>) : (<>
                 <h2>Agendamento</h2>
                 <p className="secondary-text">Quando executar a automação?</p>
                 <Field label="Frequência">
-                  <select
-                    value={schedule.frequency}
-                    onChange={(e) =>
-                      setSchedule({
-                        ...schedule,
-                        frequency: e.target.value as Schedule["frequency"],
-                      })
-                    }
-                  >
+                  <select value={schedule.frequency} onChange={(e) => setSchedule({
+                ...schedule,
+                frequency: e.target.value as Schedule["frequency"],
+            })}>
                     {[
-                      ["once", "Execução Única"],
-                      ["daily", "Diária"],
-                      ["weekly", "Semanal"],
-                      ["biweekly", "Quinzenal"],
-                      ["monthly", "Mensal"],
-                      ["custom", "Personalizada"],
-                    ].map(([v, label]) => (
-                      <option value={v} key={v}>
+                ["once", "Execução Única"],
+                ["daily", "Diária"],
+                ["weekly", "Semanal"],
+                ["biweekly", "Quinzenal"],
+                ["monthly", "Mensal"],
+                ["custom", "Personalizada"],
+            ].map(([v, label]) => (<option value={v} key={v}>
                         {label}
-                      </option>
-                    ))}
+                      </option>))}
                   </select>
                 </Field>
-                {schedule.frequency !== "once" && (
-                  <>
+                {schedule.frequency !== "once" && (<>
                     <Field label="Horário">
-                      <input
-                        required
-                        type="time"
-                        value={schedule.time}
-                        onChange={(e) =>
-                          setSchedule({ ...schedule, time: e.target.value })
-                        }
-                      />
+                      <input required type="time" value={schedule.time} onChange={(e) => setSchedule({ ...schedule, time: e.target.value })}/>
                     </Field>
                     <div className="row wrap">
-                      {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map(
-                        (d, i) => (
-                          <button
-                            type="button"
-                            className={`chip ${schedule.weekdays.includes(i) ? "selected" : ""}`}
-                            key={d}
-                            onClick={() =>
-                              setSchedule({
-                                ...schedule,
-                                weekdays: schedule.weekdays.includes(i)
-                                  ? schedule.weekdays.filter((x) => x !== i)
-                                  : [...schedule.weekdays, i],
-                              })
-                            }
-                          >
+                      {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d, i) => (<button type="button" className={`chip ${schedule.weekdays.includes(i) ? "selected" : ""}`} key={d} onClick={() => setSchedule({
+                        ...schedule,
+                        weekdays: schedule.weekdays.includes(i)
+                            ? schedule.weekdays.filter((x) => x !== i)
+                            : [...schedule.weekdays, i],
+                    })}>
                             {d}
-                          </button>
-                        ),
-                      )}
+                          </button>))}
                     </div>
                     <small>{schedule.timezone}</small>
-                  </>
-                )}
+                  </>)}
                 <Notice>
                   Esta automação será criada pausada. A recorrência real depende
                   do serviço de execução.
                 </Notice>
-              </>
-            )}
+              </>)}
           </div>
           <div className="form-actions">
-            <Button
-              type="button"
-              onClick={() =>
-                step === 0 ? router.push("/automations") : setStep(step - 1)
-              }
-              icon="ArrowLeft"
-            >
+            <Button type="button" onClick={() => step === 0 ? router.push("/automations") : setStep(step - 1)} icon="ArrowLeft">
               {step === 0 ? "Cancelar" : "Voltar"}
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={submitted || !canAdvance}
-            >
+            <Button type="submit" variant="primary" disabled={submitted || !canAdvance}>
               {step === 4 ? "Criar automação pausada" : "Próximo"}
-              <Icon name="ArrowRight" size={16} />
+              <Icon name="ArrowRight" size={16}/>
             </Button>
           </div>
         </form>
@@ -377,27 +228,24 @@ export function ManualWizard({
             ["Termos", filters.term || "a definir"],
             ["Filtros", `até ${limit} leads por execução`],
             [
-              "Destino",
-              destination === "new"
-                ? "Nova lista criada pela automação"
-                : (s.lists.find((l) => l.id === list)?.name ?? ""),
+                "Destino",
+                destination === "new"
+                    ? "Nova lista criada pela automação"
+                    : (s.lists.find((l) => l.id === list)?.name ?? ""),
             ],
             ["Agendamento", `${schedule.frequency} · ${schedule.time}`],
-          ].map(([title, body], i) => (
-            <div className="summary-step" key={i}>
+        ].map(([title, body], i) => (<div className="summary-step" key={i}>
               <span>{i + 1}</span>
               <div>
                 <strong>{title}</strong>
                 <small>{body}</small>
               </div>
-            </div>
-          ))}
+            </div>))}
           <p className="summary-foot">
             Diária de manhã dá tempo de a qualificação terminar antes do horário
             de envio das cadências.
           </p>
         </aside>
       </div>
-    </>
-  );
+    </>);
 }

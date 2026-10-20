@@ -1,6 +1,7 @@
 import 'server-only';import type {PoolClient} from 'pg';import type {Principal,WorkspaceSnapshot} from '../../domain/workspace.ts';import type {DemoState} from '../../domain/model.ts';import {emptyWorkspace} from '../../domain/empty-workspace.ts';import {capabilities} from '../auth/permissions.ts';
 export async function readInTransaction(c:PoolClient,p:Principal):Promise<WorkspaceSnapshot>{
  const data=emptyWorkspace();await c.query('INSERT INTO app.workspace_meta(workspace_id) VALUES($1) ON CONFLICT DO NOTHING',[p.workspaceId]);
+ await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1 FOR SHARE',[p.workspaceId]);
  data.lists=(await c.query('SELECT id,name FROM app.list ORDER BY id')).rows;
  for(const [key,table] of [['leads','lead'],['automations','automation'],['cadences','cadence'],['templates','template'],['jobs','job']] as const){data[key]=(await c.query(`SELECT payload FROM app.${table} ORDER BY id`)).rows.map(r=>r.payload) as never;}
  const context=(await c.query('SELECT payload FROM app.context_version ORDER BY version DESC LIMIT 1')).rows[0];if(context)data.companyProfile=context.payload;

@@ -1,82 +1,52 @@
 "use client";
 import { useState } from "react";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
-import {
-  sourceLabels,
-  qualificationLabels,
-  qualificationTones,
-} from "@/domain/model";
-import {
-  Badge,
-  Button,
-  LinkButton,
-  PageHeader,
-  EmptyState,
-} from "@/components/ui/primitives";
+import { sourceLabels, qualificationLabels, qualificationTones, } from "@/domain/model";
+import { Badge, Button, LinkButton, PageHeader, EmptyState, } from "@/components/ui/primitives";
 import { LeadDialog } from "./lead-dialog";
-export function LeadDetail({ id }: { id: string }) {
-  const s = useDemo();
-  const repo = useRepository();
-  const run = useAction();
-  const [tab, setTab] = useState("Informações");
-  const [edit, setEdit] = useState(false);
-  const l = s.leads.find((l) => l.id === id);
-  if (!l)
-    return (
-      <EmptyState
-        title="Contato não encontrado"
-        description="O contato pode ter sido removido ou pertencer a outra base local."
-      >
+export function LeadDetail({ id }: {
+    id: string;
+}) {
+    const s = useDemo();
+    const repo = useRepository();
+    const run = useAction();
+    const [tab, setTab] = useState("Informações");
+    const [edit, setEdit] = useState(false);
+    const l = s.leads.find((l) => l.id === id);
+    if (!l)
+        return (<EmptyState title="Contato não encontrado" description="O contato pode ter sido removido ou pertencer a outra base local.">
         <LinkButton href="/contacts">Voltar para contatos</LinkButton>
-      </EmptyState>
-    );
-  const list = s.lists.find((x) => x.id === l.listId);
-  return (
-    <>
-      <PageHeader
-        title={l.name}
-        back="/contacts"
-        description={`Lista: ${list?.name ?? "—"} · Fonte: ${sourceLabels[l.source]}`}
-        actions={
-          <>
+      </EmptyState>);
+    const list = s.lists.find((x) => x.id === l.listId);
+    return (<>
+      <PageHeader title={l.name} back="/contacts" description={`Lista: ${list?.name ?? "—"} · Fonte: ${sourceLabels[l.source]}`} actions={<>
             <Badge tone={qualificationTones[l.qualification]}>
               {qualificationLabels[l.qualification]}
             </Badge>
             <Button icon="Pencil" onClick={() => setEdit(true)}>
               Editar contato
             </Button>
-          </>
-        }
-      />
+          </>}/>
       <div className="tabs">
-        {["Informações", "Execuções (0)", "Mensagens (0)"].map((x) => (
-          <button
-            key={x}
-            className={tab === x ? "active" : ""}
-            onClick={() => setTab(x)}
-          >
+        {["Informações", "Execuções (0)", "Mensagens (0)"].map((x) => (<button key={x} className={tab === x ? "active" : ""} onClick={() => setTab(x)}>
             {x}
-          </button>
-        ))}
+          </button>))}
       </div>
-      {tab === "Informações" ? (
-        <div className="detail-grid">
+      {tab === "Informações" ? (<div className="detail-grid">
           <div className="stack">
             <section className="panel panel-pad">
               <h3>Contato</h3>
               <dl className="detail-list">
                 {[
-                  ["E-mail", l.email],
-                  ["Telefone", l.phone],
-                  ["Site", l.site],
-                  ["Cidade", l.city],
-                  ["Estado", l.state],
-                ].map(([name, value]) => (
-                  <div key={name}>
+                ["E-mail", l.email],
+                ["Telefone", l.phone],
+                ["Site", l.site],
+                ["Cidade", l.city],
+                ["Estado", l.state],
+            ].map(([name, value]) => (<div key={name}>
                     <dt>{name}</dt>
                     <dd>{value || "Não informado"}</dd>
-                  </div>
-                ))}
+                  </div>))}
               </dl>
             </section>
             <section className="panel panel-pad">
@@ -95,15 +65,13 @@ export function LeadDetail({ id }: { id: string }) {
               <h3>Dados empresariais</h3>
               <dl className="detail-list">
                 {[
-                  ["CNPJ", l.cnpj],
-                  ["Razão social", l.companyName],
-                  ["Origem", sourceLabels[l.source]],
-                ].map(([name, value]) => (
-                  <div key={name}>
+                ["CNPJ", l.cnpj],
+                ["Razão social", l.companyName],
+                ["Origem", sourceLabels[l.source]],
+            ].map(([name, value]) => (<div key={name}>
                     <dt>{name}</dt>
                     <dd>{value || "Não informado"}</dd>
-                  </div>
-                ))}
+                  </div>))}
               </dl>
             </section>
           </div>
@@ -112,7 +80,7 @@ export function LeadDetail({ id }: { id: string }) {
               <h3>Resumo & Status</h3>
               <p className="section-gap secondary-text">
                 {l.summary ||
-                  "Este lead ainda não tem resumo. Rode o qualificador para analisar o perfil."}
+                "Este lead ainda não tem resumo. Rode o qualificador para analisar o perfil."}
               </p>
               <h3 className="section-gap">Observação IA</h3>
               <p className="section-gap secondary-text">
@@ -129,32 +97,13 @@ export function LeadDetail({ id }: { id: string }) {
                 </div>
               </dl>
               <div className="row wrap">
-                <Button
-                  variant="soft"
-                  icon="CheckCircle2"
-                  onClick={() =>
-                    run(
-                      () =>
-                        repo.upsertLead({ ...l, qualification: "qualified" }),
-                      "Contato aprovado.",
-                    )
-                  }
-                >
+                <Button variant="soft" icon="CheckCircle2" onClick={async () => await run(async () => await repo.upsertLead({ ...l, qualification: "qualified" }), "Contato aprovado.")}>
                   Aprovar
                 </Button>
-                <Button
-                  icon="XCircle"
-                  onClick={() =>
-                    run(
-                      () =>
-                        repo.upsertLead({
-                          ...l,
-                          qualification: "disqualified",
-                        }),
-                      "Contato reprovado.",
-                    )
-                  }
-                >
+                <Button icon="XCircle" onClick={async () => await run(async () => await repo.upsertLead({
+                ...l,
+                qualification: "disqualified",
+            }), "Contato reprovado.")}>
                   Reprovar
                 </Button>
               </div>
@@ -166,15 +115,7 @@ export function LeadDetail({ id }: { id: string }) {
               </p>
             </section>
           </div>
-        </div>
-      ) : (
-        <EmptyState
-          icon={tab.startsWith("Mensagens") ? "MessageSquare" : "Clock"}
-          title="Nenhum registro ainda"
-          description="As execuções e mensagens deste contato aparecerão aqui quando um canal estiver integrado."
-        />
-      )}
-      {edit && <LeadDialog lead={l} onClose={() => setEdit(false)} />}
-    </>
-  );
+        </div>) : (<EmptyState icon={tab.startsWith("Mensagens") ? "MessageSquare" : "Clock"} title="Nenhum registro ainda" description="As execuções e mensagens deste contato aparecerão aqui quando um canal estiver integrado."/>)}
+      {edit && <LeadDialog lead={l} onClose={() => setEdit(false)}/>}
+    </>);
 }

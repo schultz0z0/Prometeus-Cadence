@@ -3,98 +3,64 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { suggestDemoAudiences } from "@/demo/audience";
-import {
-  sourceLabels,
-  type AudiencePlan,
-  type ConfirmationResult,
-} from "@/domain/model";
+import { sourceLabels, type AudiencePlan, type ConfirmationResult, } from "@/domain/model";
 import { Icon } from "@/components/ui/icon";
-import {
-  Button,
-  Field,
-  PageHeader,
-  Steps,
-  ChannelPills,
-  Notice,
-  LinkButton,
-  Modal,
-} from "@/components/ui/primitives";
+import { Button, Field, PageHeader, Steps, ChannelPills, Notice, LinkButton, Modal, } from "@/components/ui/primitives";
 const examples = [
-  "clínicas de estética em São Paulo",
-  "indústrias de embalagem no Sul",
-  "escritórios de contabilidade com mais de 10 funcionários",
-  "lojas de material de construção do interior",
+    "clínicas de estética em São Paulo",
+    "indústrias de embalagem no Sul",
+    "escritórios de contabilidade com mais de 10 funcionários",
+    "lojas de material de construção do interior",
 ];
 export function AudienceWizard() {
-  const s = useDemo();
-  const repo = useRepository();
-  const run = useAction();
-  const [description, setDescription] = useState("");
-  const [channel, setChannel] = useState<"whatsapp" | "email" | "both">(
-    "whatsapp",
-  );
-  const [step, setStep] = useState(0);
-  const [plans, setPlans] = useState<AudiencePlan[]>([]);
-  const [chosen, setChosen] = useState<AudiencePlan | null>(null);
-  const [result, setResult] = useState<ConfirmationResult | null>(null);
-  const [createdName, setCreatedName] = useState("");
-  const [createdLimit, setCreatedLimit] = useState(150);
-  const [createdChannel, setCreatedChannel] =
-    useState<AudiencePlan["channel"]>("whatsapp");
-  const request = useRef(crypto.randomUUID());
-  function suggest() {
-    setPlans(
-      suggestDemoAudiences({ description, channel, profile: s.companyProfile }),
-    );
-    request.current = crypto.randomUUID();
-    setStep(1);
-  }
-  function confirm() {
-    if (!chosen) return;
-    let r: ConfirmationResult | undefined;
-    if (
-      run(() => {
-        r = repo.confirmAutomationPlan(chosen, request.current);
-      }, "Lista e automações criadas, ainda pausadas.")
-    ) {
-      setCreatedName(chosen.title);
-      setCreatedLimit(chosen.dailyLimit);
-      setCreatedChannel(chosen.channel);
-      setChosen(null);
-      setResult(r!);
-      setStep(2);
+    const s = useDemo();
+    const repo = useRepository();
+    const run = useAction();
+    const [description, setDescription] = useState("");
+    const [channel, setChannel] = useState<"whatsapp" | "email" | "both">("whatsapp");
+    const [step, setStep] = useState(0);
+    const [plans, setPlans] = useState<AudiencePlan[]>([]);
+    const [chosen, setChosen] = useState<AudiencePlan | null>(null);
+    const [result, setResult] = useState<ConfirmationResult | null>(null);
+    const [createdName, setCreatedName] = useState("");
+    const [createdLimit, setCreatedLimit] = useState(150);
+    const [createdChannel, setCreatedChannel] = useState<AudiencePlan["channel"]>("whatsapp");
+    const request = useRef(crypto.randomUUID());
+    function suggest() {
+        setPlans(suggestDemoAudiences({ description, channel, profile: s.companyProfile }));
+        request.current = crypto.randomUUID();
+        setStep(1);
     }
-  }
-  return (
-    <>
-      <PageHeader
-        title={result ? "Pronto" : "Nova automação com IA"}
-        description={
-          result
-            ? "A lista e as duas automações já existem no seu workspace."
-            : "Diga quem você quer alcançar. A IA monta a busca e a qualificação."
+    async function confirm() {
+        if (!chosen)
+            return;
+        let r: ConfirmationResult | undefined;
+        if (await run(async () => {
+            r = await repo.confirmAutomationPlan(chosen, request.current);
+        }, "Lista e automações criadas, ainda pausadas.")) {
+            setCreatedName(chosen.title);
+            setCreatedLimit(chosen.dailyLimit);
+            setCreatedChannel(chosen.channel);
+            setChosen(null);
+            setResult(r!);
+            setStep(2);
         }
-        back="/automations"
-      />
-      {!result && (
-        <Steps items={["Quem alcançar", "Escolher o plano"]} current={step} />
-      )}
-      {step === 0 ? (
-        <div className="workspace-form">
+    }
+    return (<>
+      <PageHeader title={result ? "Pronto" : "Nova automação com IA"} description={result
+            ? "A lista e as duas automações já existem no seu workspace."
+            : "Diga quem você quer alcançar. A IA monta a busca e a qualificação."} back="/automations"/>
+      {!result && (<Steps items={["Quem alcançar", "Escolher o plano"]} current={step}/>)}
+      {step === 0 ? (<div className="workspace-form">
           <div>
             <section className="panel panel-pad">
               <h3 className="panel-title">
-                <Icon name="Building2" size={17} />
+                <Icon name="Building2" size={17}/>
                 Quem você quer alcançar
               </h3>
               <div className="audience-entry">
                 <div>
-                  <textarea
-                    aria-label="Quem você quer alcançar"
-                    placeholder="Ex.: clínicas de estética em São Paulo que já têm mais de um consultório"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
+                  <textarea aria-label="Quem você quer alcançar" placeholder="Ex.: clínicas de estética em São Paulo que já têm mais de um consultório" value={description} onChange={(e) => setDescription(e.target.value)}/>
                   <small>
                     Em branco, usamos o seu Contexto de IA para sugerir três
                     públicos.
@@ -102,23 +68,18 @@ export function AudienceWizard() {
                 </div>
                 <div className="audience-examples">
                   <small>EXEMPLOS QUE FUNCIONAM</small>
-                  {examples.map((e) => (
-                    <button key={e} onClick={() => setDescription(e)}>
+                  {examples.map((e) => (<button key={e} onClick={() => setDescription(e)}>
                       {e}
-                    </button>
-                  ))}
+                    </button>))}
                 </div>
               </div>
             </section>
             <section className="panel panel-pad section-gap">
               <h3 className="panel-title">
-                <Icon name="WandSparkles" size={17} />
+                <Icon name="WandSparkles" size={17}/>
                 Por onde você vai falar
               </h3>
-              <ChannelPills
-                value={channel}
-                onChange={(v) => setChannel(v as typeof channel)}
-              />
+              <ChannelPills value={channel} onChange={(v) => setChannel(v as typeof channel)}/>
               <small className="section-note">
                 A busca prioriza empresas com o contato necessário para o canal
                 escolhido.
@@ -153,12 +114,9 @@ export function AudienceWizard() {
               criado até você confirmar uma delas.
             </footer>
           </aside>
-        </div>
-      ) : step === 1 ? (
-        <>
+        </div>) : step === 1 ? (<>
           <div className="proposal-grid">
-            {plans.map((p) => (
-              <section className="panel proposal-card" key={p.id}>
+            {plans.map((p) => (<section className="panel proposal-card" key={p.id}>
                 <h2>{p.title}</h2>
                 <p>{p.description}</p>
                 <div className="market-size">
@@ -177,27 +135,19 @@ export function AudienceWizard() {
                     estiver ativa.
                   </p>
                 </div>
-                <Button
-                  variant="primary"
-                  onClick={() => setChosen(structuredClone(p))}
-                >
-                  Criar assim <Icon name="ArrowRight" size={16} />
+                <Button variant="primary" onClick={() => setChosen(structuredClone(p))}>
+                  Criar assim <Icon name="ArrowRight" size={16}/>
                 </Button>
-              </section>
-            ))}
+              </section>))}
           </div>
           <div className="proposal-actions">
             <Button variant="ghost" onClick={() => setStep(0)}>
               Mudar o público
             </Button>
-            <Button
-              variant="ghost"
-              icon="RefreshCw"
-              onClick={() => {
+            <Button variant="ghost" icon="RefreshCw" onClick={() => {
                 setPlans([...plans.slice(1), plans[0]]);
                 request.current = crypto.randomUUID();
-              }}
-            >
+            }}>
               Reordenar propostas
             </Button>
           </div>
@@ -205,21 +155,19 @@ export function AudienceWizard() {
             Propostas demonstrativas. Fontes e contagens reais dependem da
             conexão dos provedores.
           </p>
-        </>
-      ) : result ? (
-        <div className="workspace-form">
+        </>) : result ? (<div className="workspace-form">
           <div>
             <section className="success-panel">
               <h3>
-                <Icon name="CheckCircle2" size={21} className="green-text" />
+                <Icon name="CheckCircle2" size={21} className="green-text"/>
                 {createdName}
               </h3>
               <p className="row">
-                <Icon name="Database" size={16} className="orange" />
+                <Icon name="Database" size={16} className="orange"/>
                 Busca todo dia às 7h, até {createdLimit} empresas novas por dia.
               </p>
               <p className="row">
-                <Icon name="Sparkles" size={16} className="orange" />
+                <Icon name="Sparkles" size={16} className="orange"/>
                 Qualificação às 8h: avalia cada empresa e marca quem combina.
               </p>
               <div className="notice">
@@ -227,17 +175,11 @@ export function AudienceWizard() {
               </div>
             </section>
             <div className="row wrap section-gap">
-              <LinkButton
-                href={`/cadences/new/ai?list=${result.listId}&channel=${createdChannel}`}
-                variant="primary"
-              >
+              <LinkButton href={`/cadences/new/ai?list=${result.listId}&channel=${createdChannel}`} variant="primary">
                 Criar a cadência dessa lista{" "}
-                <Icon name="ArrowRight" size={16} />
+                <Icon name="ArrowRight" size={16}/>
               </LinkButton>
-              <LinkButton
-                href={`/contacts?list=${result.listId}`}
-                variant="ghost"
-              >
+              <LinkButton href={`/contacts?list=${result.listId}`} variant="ghost">
                 Ver a lista
               </LinkButton>
               <LinkButton href="/automations" variant="ghost">
@@ -265,110 +207,53 @@ export function AudienceWizard() {
               salvas somente neste navegador.
             </footer>
           </aside>
-        </div>
-      ) : null}
-      {chosen && (
-        <Modal
-          title="Revisar e criar"
-          description="Confira o público e os efeitos desta confirmação."
-          onClose={() => setChosen(null)}
-        >
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              confirm();
-            }}
-          >
+        </div>) : null}
+      {chosen && (<Modal title="Revisar e criar" description="Confira o público e os efeitos desta confirmação." onClose={() => setChosen(null)}>
+          <form onSubmit={(e) => {
+                e.preventDefault();
+                confirm();
+            }}>
             <div className="stack">
               <Field label="Nome da lista">
-                <input
-                  required
-                  value={chosen.listName}
-                  onChange={(e) =>
-                    setChosen({ ...chosen, listName: e.target.value })
-                  }
-                />
+                <input required value={chosen.listName} onChange={(e) => setChosen({ ...chosen, listName: e.target.value })}/>
               </Field>
-              <Field
-                label="Nome da automação"
-                help="Este nome identifica a automação. Os critérios da busca são revisados abaixo."
-              >
-                <textarea
-                  required
-                  value={chosen.title}
-                  onChange={(e) =>
-                    setChosen({ ...chosen, title: e.target.value })
-                  }
-                />
+              <Field label="Nome da automação" help="Este nome identifica a automação. Os critérios da busca são revisados abaixo.">
+                <textarea required value={chosen.title} onChange={(e) => setChosen({ ...chosen, title: e.target.value })}/>
               </Field>
               <Field label="Termos da busca">
-                <textarea
-                  required
-                  value={chosen.filters.term ?? ""}
-                  onChange={(e) =>
-                    setChosen({
-                      ...chosen,
-                      filters: { ...chosen.filters, term: e.target.value },
-                    })
-                  }
-                />
+                <textarea required value={chosen.filters.term ?? ""} onChange={(e) => setChosen({
+                ...chosen,
+                filters: { ...chosen.filters, term: e.target.value },
+            })}/>
               </Field>
-              <Field
-                label="Região da busca"
-                help="Confira a região sugerida antes de confirmar."
-              >
-                <input
-                  required
-                  value={chosen.filters.location ?? ""}
-                  onChange={(e) =>
-                    setChosen({
-                      ...chosen,
-                      filters: { ...chosen.filters, location: e.target.value },
-                    })
-                  }
-                />
+              <Field label="Região da busca" help="Confira a região sugerida antes de confirmar.">
+                <input required value={chosen.filters.location ?? ""} onChange={(e) => setChosen({
+                ...chosen,
+                filters: { ...chosen.filters, location: e.target.value },
+            })}/>
               </Field>
               <Field label="Canal de contato">
-                <select
-                  value={chosen.channel}
-                  onChange={(e) =>
-                    setChosen({
-                      ...chosen,
-                      channel: e.target.value as AudiencePlan["channel"],
-                    })
-                  }
-                >
+                <select value={chosen.channel} onChange={(e) => setChosen({
+                ...chosen,
+                channel: e.target.value as AudiencePlan["channel"],
+            })}>
                   <option value="whatsapp">WhatsApp</option>
                   <option value="email">E-mail</option>
                   <option value="both">Os dois</option>
                 </select>
               </Field>
               <Field label="Fonte de busca">
-                <select
-                  value={chosen.source}
-                  onChange={(e) =>
-                    setChosen({
-                      ...chosen,
-                      source: e.target.value as AudiencePlan["source"],
-                    })
-                  }
-                >
+                <select value={chosen.source} onChange={(e) => setChosen({
+                ...chosen,
+                source: e.target.value as AudiencePlan["source"],
+            })}>
                   <option value="MAPS">Google Maps</option>
                   <option value="WEB">Busca na web</option>
                   <option value="CNPJ">Base CNPJ</option>
                 </select>
               </Field>
               <Field label="Limite diário">
-                <input
-                  type="number"
-                  min="1"
-                  max="500"
-                  required
-                  value={chosen.dailyLimit}
-                  onChange={(e) =>
-                    setChosen({ ...chosen, dailyLimit: Number(e.target.value) })
-                  }
-                />
+                <input type="number" min="1" max="500" required value={chosen.dailyLimit} onChange={(e) => setChosen({ ...chosen, dailyLimit: Number(e.target.value) })}/>
               </Field>
               <Notice>
                 Esta confirmação cria uma lista e duas automações pausadas. Não
@@ -384,8 +269,6 @@ export function AudienceWizard() {
               </Button>
             </div>
           </form>
-        </Modal>
-      )}
-    </>
-  );
+        </Modal>)}
+    </>);
 }

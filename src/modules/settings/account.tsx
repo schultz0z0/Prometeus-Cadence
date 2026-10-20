@@ -3,26 +3,19 @@ import { useState } from "react";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { Button, Field, Toggle, Notice } from "@/components/ui/primitives";
 export function Account() {
-  const s = useDemo();
-  const repo = useRepository();
-  const run = useAction();
-  const [p, setP] = useState({ ...s.preferences });
-  return (
-    <>
+    const s = useDemo();
+    const repo = useRepository();
+    const run = useAction();
+    const [p, setP] = useState({ ...s.preferences });
+    return (<>
       <h1>Conta</h1>
       <p className="subtitle">
         Quem você é no app e pra onde vão cobranças, avisos e relatórios
       </p>
-      <form
-        className="settings-section"
-        onSubmit={(e) => {
-          e.preventDefault();
-          run(
-            () => repo.updatePreferences(p),
-            "Preferências salvas neste navegador.",
-          );
-        }}
-      >
+      <form className="settings-section" onSubmit={async (e) => {
+            e.preventDefault();
+            await run(async () => await repo.updatePreferences(p), "Preferências salvas neste navegador.");
+        }}>
         <h2>Perfil</h2>
         <p className="settings-desc">
           Como você aparece no app e o fuso que agenda seus envios.
@@ -36,24 +29,13 @@ export function Account() {
         </div>
         <div className="field-grid">
           <Field label="Nome">
-            <input
-              required
-              value={p.accountName}
-              onChange={(e) => setP({ ...p, accountName: e.target.value })}
-            />
+            <input required value={p.accountName} onChange={(e) => setP({ ...p, accountName: e.target.value })}/>
           </Field>
           <Field label="Empresa">
-            <input
-              value={p.company}
-              onChange={(e) => setP({ ...p, company: e.target.value })}
-              placeholder="Opcional"
-            />
+            <input value={p.company} onChange={(e) => setP({ ...p, company: e.target.value })} placeholder="Opcional"/>
           </Field>
           <Field label="Fuso horário">
-            <select
-              value={p.timezone}
-              onChange={(e) => setP({ ...p, timezone: e.target.value })}
-            >
+            <select value={p.timezone} onChange={(e) => setP({ ...p, timezone: e.target.value })}>
               <option value="America/Sao_Paulo">Brasília (UTC−3)</option>
               <option value="America/Manaus">Manaus (UTC−4)</option>
               <option value="America/Rio_Branco">Rio Branco (UTC−5)</option>
@@ -62,10 +44,7 @@ export function Account() {
             </select>
           </Field>
           <Field label="E-mail de login">
-            <input
-              disabled
-              value="Conta local · autenticação ainda não integrada"
-            />
+            <input disabled value="Conta local · autenticação ainda não integrada"/>
           </Field>
         </div>
         <div className="form-actions">
@@ -73,48 +52,27 @@ export function Account() {
             Salvar perfil
           </Button>
         </div>
-        <div className="settings-divider" />
+        <div className="settings-divider"/>
         <h2>Contatos da conta</h2>
         <p className="settings-desc">
           Dados de exemplo, salvos apenas no seu navegador.
         </p>
         <Field label="E-mail de cobrança">
-          <input
-            type="email"
-            value={p.billingEmail}
-            onChange={(e) => setP({ ...p, billingEmail: e.target.value })}
-            placeholder="financeiro@suaempresa.com.br"
-          />
+          <input type="email" value={p.billingEmail} onChange={(e) => setP({ ...p, billingEmail: e.target.value })} placeholder="financeiro@suaempresa.com.br"/>
         </Field>
-        <div className="settings-divider" />
+        <div className="settings-divider"/>
         <h2>Relatórios por e-mail</h2>
         <p className="settings-desc">
           Prepare as preferências. O envio real depende da integração de e-mail.
         </p>
-        <Toggle
-          label="Resumo diário"
-          description="Todo dia às 8h, com os números do dia anterior."
-          checked={p.dailyReport}
-          onChange={(v) => setP({ ...p, dailyReport: v })}
-        />
-        <Toggle
-          label="Resumo semanal"
-          description="Toda segunda-feira, com os últimos 7 dias."
-          checked={p.weeklyReport}
-          onChange={(v) => setP({ ...p, weeklyReport: v })}
-        />
-        <Toggle
-          label="Resumo mensal"
-          description="Todo dia 1º, com o mês fechado."
-          checked={p.monthlyReport}
-          onChange={(v) => setP({ ...p, monthlyReport: v })}
-        />
+        <Toggle label="Resumo diário" description="Todo dia às 8h, com os números do dia anterior." checked={p.dailyReport} onChange={(v) => setP({ ...p, dailyReport: v })}/>
+        <Toggle label="Resumo semanal" description="Toda segunda-feira, com os últimos 7 dias." checked={p.weeklyReport} onChange={(v) => setP({ ...p, weeklyReport: v })}/>
+        <Toggle label="Resumo mensal" description="Todo dia 1º, com o mês fechado." checked={p.monthlyReport} onChange={(v) => setP({ ...p, monthlyReport: v })}/>
         <div className="form-actions">
           <Button type="submit" variant="primary">
             Salvar preferências
           </Button>
         </div>
       </form>
-    </>
-  );
+    </>);
 }
