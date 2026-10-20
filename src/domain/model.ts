@@ -14,6 +14,8 @@ export interface Template{id:string;name:string;channel:'EMAIL'|'WHATSAPP';tags:
 export interface CompanyProfile{id:string;version:number;domain:string;name:string;offer:string;products:string;idealCustomer:string;pains:string;differentiators:string;competitors:string;socialProof:string;sources:string;approvedAt:string|null}
 export interface DemoPreferences{accountName:string;company:string;timezone:string;dailyReport:boolean;weeklyReport:boolean;monthlyReport:boolean;billingEmail:string;notifyEmail:boolean;notifyWhatsapp:boolean;onboardingHidden:boolean}
 export interface DemoJob{id:string;name:string;type:'generation'|'qualification'|'enrichment';status:'completed'|'cancelled';count:number;demo:true;billableUsage:0;createdAt:string;details:string}
+export interface ProspectingRequest{source:'MAPS'|'WEB'|'CNPJ'|'APOLLO';destination:string;filters:Record<string,string>;limit:number}
+export interface QualificationConfig{extractEmails:boolean;extractPhones:boolean;discoverSite:boolean;summary:boolean;deepExtraction:boolean;validateEmail:boolean;validateWhatsapp:boolean;registry:boolean;qualifyAi:boolean;language:string;limit:number}
 export interface ConfirmationResult{listId:string;automationIds:[string,string]}
 export interface DemoState{schemaVersion:1;lists:LeadList[];leads:Lead[];automations:Automation[];cadences:Cadence[];templates:Template[];companyProfile:CompanyProfile;preferences:DemoPreferences;confirmationResults:Record<string,ConfirmationResult>;jobs:DemoJob[]}
 export interface ValidationIssue{field:string;message:string}
