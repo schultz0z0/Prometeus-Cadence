@@ -3,11 +3,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDemo } from "@/demo/provider";
+import { useIdentity } from "@/client/workspace-provider";
+import { AccountControls } from "./account-controls";
 import { navigation, allPages, pageTitle } from "./navigation";
 import { Icon } from "../ui/icon";
 import { Button, IconButton, Modal, LinkButton } from "../ui/primitives";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { preferences } = useDemo();
+  const identity = useIdentity();
   const sidebar = useRef<HTMLElement>(null);
   const menu = useRef<HTMLButtonElement>(null);
   const [smallScreen, setSmallScreen] = useState(false);
@@ -202,8 +205,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="progress-track">
               <i style={{ width: "50%" }} />
             </div>
-            <small>3 de 6 · próximo: conecte um canal</small>
-            <b>Me mostra o que eu criei</b>
+            <small>Prepare sua prospecção</small>
+            <b>Ver meus próximos passos</b>
           </Link>
           <Link href="/settings/plan" className="btn primary trial">
             <Icon name="Sparkles" size={17} />
@@ -217,10 +220,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="avatar">{preferences.accountName[0] || "P"}</span>
             <span>
               {preferences.accountName}
-              <small>Workspace de demonstração</small>
+              <small>
+                {identity?.user.email ?? "Workspace de demonstração"}
+              </small>
             </span>
-            <Icon name="LogOut" size={16} />
+            <Icon name="User" size={16} />
           </Link>
+          <AccountControls />
         </div>
         <button
           className="collapse-handle"
@@ -236,7 +242,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             Você está <strong>montando</strong> a sua prospecção. Pra ligar,
             conecte seus canais.
           </span>
-          <Link href="/settings/plan">Demonstração local</Link>
+          <Link href="/settings/plan">
+            {identity ? "Integrações pendentes" : "Demonstração local"}
+          </Link>
         </div>
         <header className="topbar">
           <div className="row">

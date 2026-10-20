@@ -30,7 +30,25 @@ test("manual confirmation can retry after a storage error without orphaned entit
   await operation.confirm(s.automations[0], { name: "Retry list" });
   assert.equal(repo.getSnapshot().lists.length, s.lists.length + 1);
 });
-test('asynchronous manual confirmation shares one in-flight promise and remains retryable',async()=>{
- const s=createSeed();let calls=0;let release!:()=>void;const repo={saveAutomation:()=>{calls++;return new Promise<void>(r=>{release=r;});}};
- const op=createManualAutomationOperation(repo);const a=op.confirm(s.automations[0],{name:'Async'}),b=op.confirm(s.automations[0],{name:'Async'});assert.ok(a instanceof Promise);assert.equal(a,b);assert.equal(calls,1);release();assert.equal(await a,await b);assert.equal(calls,1);
+test("asynchronous manual confirmation shares one in-flight promise and remains retryable", async () => {
+  const s = createSeed();
+  let calls = 0;
+  let release!: () => void;
+  const repo = {
+    saveAutomation: () => {
+      calls++;
+      return new Promise<void>((r) => {
+        release = r;
+      });
+    },
+  };
+  const op = createManualAutomationOperation(repo);
+  const a = op.confirm(s.automations[0], { name: "Async" }),
+    b = op.confirm(s.automations[0], { name: "Async" });
+  assert.ok(a instanceof Promise);
+  assert.equal(a, b);
+  assert.equal(calls, 1);
+  release();
+  assert.equal(await a, await b);
+  assert.equal(calls, 1);
 });

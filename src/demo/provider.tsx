@@ -10,10 +10,12 @@ import {
 import { createDemoRepository } from "./repository";
 import { decodeDemoState, STORAGE_KEY } from "./storage";
 import type { DemoRepository } from "../domain/repository";
-import type {AsyncRepository} from '../client/workspace-repository';
-import {runAction} from '../client/workspace-repository';
+import type { AsyncRepository } from "../client/workspace-repository";
+import { runAction } from "../client/workspace-repository";
 import { Button } from "@/components/ui/primitives";
-export const RepositoryContext = createContext<DemoRepository | AsyncRepository | null>(null);
+export const RepositoryContext = createContext<
+  DemoRepository | AsyncRepository | null
+>(null);
 export const ToastContext = createContext<(message: string) => void>(() => {});
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [repo, setRepo] = useState(() => createDemoRepository());
@@ -104,5 +106,6 @@ export function useNotify() {
 }
 export function useAction() {
   const notify = useNotify();
-  return (fn:()=>unknown|Promise<unknown>,success?:string)=>runAction(fn,notify,success);
+  return (fn: () => unknown | Promise<unknown>, success?: string) =>
+    runAction(fn, notify, success);
 }

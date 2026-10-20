@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button, Modal, LinkButton } from "../ui/primitives";
 import { Icon } from "../ui/icon";
+import { useDemo } from "@/demo/provider";
 const tour = [
   {
     title: "Como tudo se liga",
@@ -10,7 +11,7 @@ const tour = [
   },
   {
     title: "O painel: seus resultados",
-    body: "Aqui você acompanha leads, qualificados, mensagens e respostas. Os números desta versão vêm da base local de demonstração.",
+    body: "Aqui você acompanha leads, qualificados, mensagens e respostas do seu workspace.",
     icon: "LayoutDashboard",
   },
   {
@@ -50,7 +51,7 @@ const tour = [
   },
   {
     title: "Tudo pronto para explorar",
-    body: "Explore os formulários, crie listas e edite cadências. Os dados ficam salvos apenas neste navegador.",
+    body: "Explore os formulários, crie listas e edite cadências. Cada etapa de preparação fica salva no seu workspace.",
     icon: "CheckCircle2",
   },
 ];
@@ -96,6 +97,15 @@ export function Tour({ onClose }: { onClose: () => void }) {
   );
 }
 export function FirstSteps() {
+  const s = useDemo();
+  const done = [
+    !!s.companyProfile.approvedAt,
+    !!s.lists.length,
+    !!s.cadences.length,
+    false,
+    false,
+    false,
+  ];
   return (
     <>
       <h1>Primeiros passos</h1>
@@ -136,15 +146,15 @@ export function FirstSteps() {
           ],
         ].map(([title, body, href], i) => (
           <div key={title}>
-            <span className={`number-circle ${i < 3 ? "done" : ""}`}>
-              {i < 3 ? <Icon name="Check" size={16} /> : i + 1}
+            <span className={`number-circle ${done[i] ? "done" : ""}`}>
+              {done[i] ? <Icon name="Check" size={16} /> : i + 1}
             </span>
             <div className="grow">
               <h3>{title}</h3>
               <p className="secondary-text">{body}</p>
             </div>
             <LinkButton href={href} icon="ArrowRight">
-              {i < 3 ? "Revisar" : "Abrir"}
+              {done[i] ? "Revisar" : "Abrir"}
             </LinkButton>
           </div>
         ))}
