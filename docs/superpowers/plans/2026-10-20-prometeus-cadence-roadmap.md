@@ -40,5 +40,6 @@ Node local `v24.16.0`, npm `11.13.0`, RTK e REA já disponíveis. Next.js/React 
 - [x] Revisão do plano 02 aprovada pelo usuário: `2026-10-20-prometeus-cadence-02-identity.md`.
 - [x] Implementação do marco 02: `docs/validation/02-identity.md`.
 - [x] Estudo de JEV híbrido e desenho do marco 03 aprovados pelo usuário: `../specs/2026-10-20-prometeus-cadence-03-prospecting-design.md`.
-- [ ] Revisão do plano 03 antes da execução nativa: `2026-10-20-prometeus-cadence-03-prospecting.md`.
+- [x] Revisão do plano 03 aprovada; execução nativa: `2026-10-20-prometeus-cadence-03-prospecting.md`.
+- [x] Infraestrutura03 implementada; aceite contratual/local em `docs/validation/03-prospecting.md`. Chamadas reais e avaliação empírica pendentes de credenciais/saldo/dataset humano.
 - [ ] Demais marcos, incluindo SaaS operacional completo.

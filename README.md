@@ -1,6 +1,6 @@
 # Prometeus Cadence
 
-Reconstrução independente da interface e dos fluxos observados no CadenceFlow. **Marcos 01 e 02: interface, contas reais, workspaces isolados e PostgreSQL local.** Integrações externas e envios reais pertencem aos próximos marcos.
+Reconstrução independente da interface e dos fluxos observados no CadenceFlow. **Marcos 01–03: interface, identidade, PostgreSQL local e infraestrutura de prospecção/qualificação.** Adaptadores externos foram testados por contrato; chamadas reais dependem de credenciais/saldo. Envios pertencem aos próximos marcos.
 
 ## Executar
 
@@ -28,18 +28,20 @@ O Compose `prometeus-cadence` tem PostgreSQL em `127.0.0.1:55432`, SMTP em `127.
 - Persistência no servidor, controle de revisão, confirmação idempotente, transações e isolamento por RLS.
 - Contatos, listas, filtros, ficha, cadastro, edição e importação CSV/TXT com revisão antes de salvar.
 - Templates, variáveis e prévia com avisos quando faltam valores.
-- Prospecção e qualificação com simulação local explicitamente identificada.
+- Prospecção e qualificação com revisão, jobs PostgreSQL, worker separado, deduplicação, evidências e uso. Adaptadores Apify/Apollo, JEV1.13 e Codex CLI local; configuração e chamadas reais pendentes.
 - Automações por formulário ou propostas demonstrativas: confirmação cria lista e automações pausadas em uma transação.
 - Cadência por etapas, revisão de mensagens, canvas editável, esperas, ordenação, zoom, configurações e rascunhos.
 - Contexto da empresa editável e versionado, canais desconectados, inbox de exemplo, relatórios e demais superfícies.
 
-Contas novas começam vazias. Contatos, templates, contexto versionado, cadências e automações confirmadas ficam no PostgreSQL; preferências pessoais são separadas das configurações do workspace. Propostas não confirmadas continuam temporárias. Nenhuma criação ativa busca ou envio.
+Contas novas começam vazias. Contatos, templates, contexto versionado, cadências e automações confirmadas ficam no PostgreSQL; preferências pessoais são separadas das configurações do workspace. Propostas não confirmadas continuam temporárias. Nenhuma criação ativa envio. Busca pontual exige confirmação, configuração e worker ativo.
 
 O modo demonstrativo anterior permanece disponível ao definir explicitamente `APP_DATA_MODE=demo` no ambiente e reiniciar o app. Ele usa dados fictícios na chave `prometeus-cadence-demo-v1` do localStorage, com banner próprio. Esses dados não são importados automaticamente para contas reais; falhas no banco nunca ativam a demonstração como fallback.
 
 ## Limites e próximas entregas
 
-IA, pesquisa externa, WhatsApp, e-mail, LinkedIn, SDR, billing e agendamentos **não estão conectados**. Não se enviam mensagens, consomem créditos nem executam buscas reais. Os horários das automações são configurações locais, não jobs ativos. O botão de conectar explica o serviço pendente. Valores de mercado e preços desconhecidos não são inventados.
+WhatsApp, e-mail, LinkedIn, SDR, billing e agendamentos **não estão conectados**. Execuções externas começam desabilitadas; não houve busca/inferência real no aceite03. Horários das automações ainda não executam jobs recorrentes. Valores desconhecidos não são inventados.
+
+Configure e opere prospecção conforme a [validação03](docs/validation/03-prospecting.md). Worker: `rtk npm run worker`. Chaves somente no ambiente local, nunca chat/Git. Codex CLI via ChatGPT é restrito aos testes locais autorizados; JEV usa OpenRouter Decisions API.
 
 O [roteiro aprovado](docs/superpowers/plans/2026-10-20-prometeus-cadence-roadmap.md) divide as próximas entregas em identidade/organizações, assinatura, prospecção, IA, execução de cadências, canais e operação. Os conectores devem usar serviços próprios e credenciais do produto. A tecnologia interna do concorrente permanece desconhecida onde não houve evidência.
 
@@ -58,6 +60,7 @@ O último comando requer o servidor local ativo. Os testes de domínio verificam
 
 - [Validação e capturas](docs/validation/01-interface.md)
 - [Validação de identidade e isolamento](docs/validation/02-identity.md)
+- [Validação de prospecção e IA híbrida](docs/validation/03-prospecting.md)
 - [Especificação aprovada](docs/superpowers/specs/2026-10-20-prometeus-cadence-design.md)
 - [Investigação e evidências REA](docs/reverse-engineering/README.md)
 

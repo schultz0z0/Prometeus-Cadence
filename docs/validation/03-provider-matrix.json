@@ -1,0 +1,14 @@
+{
+  "date":"2026-10-20",
+  "empiricalAccuracy":"pending-human-labelled-pilot",
+  "realProviderCalls":false,
+  "providers":[
+    {"source":"Apify Maps","offline":"passed","postgresql":"passed","ui":"review/status/fixtures","live":"not-run","requirement":"token, pinned build, actor contract, budget and balance"},
+    {"source":"Apify Web","offline":"passed-organic-pagination","postgresql":"passed-generic-pipeline","ui":"source/review","live":"not-run","requirement":"token, pinned build, budget and balance"},
+    {"source":"Apify CNPJ","offline":"passed-supported-filters","postgresql":"passed-generic-pipeline","ui":"CNAE/city/UF review","live":"not-run","requirement":"community actor contract, pinned build, supported filters and balance"},
+    {"source":"Apollo Organizations","offline":"passed","postgresql":"passed-generic-usage","ui":"source/status","live":"not-run","requirement":"eligible API key, organization-search access and credits"},
+    {"source":"Public extraction","offline":"passed-DNS-SSRF-redirect-size-parse","postgresql":"passed-proposals","ui":"sources/review","live":"not-run","requirement":"reachable public company page"},
+    {"source":"JEV 1.13 Decisions","offline":"passed-choice-noul-score","postgresql":"passed-proposal-cache-conflict","ui":"uncalibrated-review","live":"not-run","requirement":"OpenRouter key, budget, human-labelled PT-BR pilot"},
+    {"source":"Codex local ChatGPT CLI","offline":"passed-argv-env-output-policy","postgresql":"passed-global-slot","ui":"local-scope-status","live":"not-run","requirement":"verified CLI, local QA allowlist/model/opt-in; version/auth status inspected only"}
+  ]
+}

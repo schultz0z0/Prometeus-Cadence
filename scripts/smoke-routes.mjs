@@ -27,6 +27,7 @@ const routes = new Set([
   "/reports/funnel",
   "/reports/crm",
   "/executions",
+  "/executions/qa-missing",
   "/first-steps",
   "/sdr",
 ]);
@@ -68,10 +69,12 @@ for (const route of [
   "/api/workspace/snapshot",
   "/api/identity",
   "/api/security",
+  "/api/prospecting/capabilities",
+  "/api/prospecting/jobs",
 ]) {
   const response = await fetch(base + route, {
     headers: process.env.SMOKE_COOKIE
-      ? { cookie: process.env.SMOKE_COOKIE }
+      ? { cookie: process.env.SMOKE_COOKIE,...(process.env.SMOKE_WORKSPACE_ID?{'x-cadence-workspace':process.env.SMOKE_WORKSPACE_ID}:{}) }
       : {},
     signal: AbortSignal.timeout(60000),
   });
@@ -89,7 +92,7 @@ const report = {
 };
 fs.mkdirSync("docs/validation", { recursive: true });
 fs.writeFileSync(
-  "docs/validation/routes-02.json",
+  "docs/validation/routes-03.json",
   JSON.stringify(report, null, 2) + "\n",
 );
 console.log(
