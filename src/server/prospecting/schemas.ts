@@ -3,7 +3,7 @@ export const idSchema=z.string().min(1).max(120).refine(v=>!/[\x00-\x1f]/.test(v
 const filters=z.record(z.string().max(40),z.string().max(1000));
 const allowedFilters:Record<string,Set<string>>={
   MAPS:new Set(['term','location']),WEB:new Set(['term','location']),
-  CNPJ:new Set(['term','location','active','email','phone','noAccountant','openedAfter','openedBefore','includeCnae','excludeCnae','excludeEmail','excludeDomains','includeName','excludeName','states','size','legal','mei','minCapital','maxCapital','headOffice','neighborhood','zip']),
+  CNPJ:new Set(['term','location','active','email','phone','noAccountant','openedAfter','openedBefore','includeCnae','excludeCnae','excludeEmail','excludeDomains','includeName','excludeName','states','size','legal','mei','minCapital','maxCapital','headOffice','neighborhood','zip','cnae','state','city','cnpj']),
   APOLLO:new Set(['term','location','industry','minEmployees','maxEmployees','domains']),
 };
 const generation=z.strictObject({kind:z.literal('generation'),source:z.enum(['MAPS','WEB','CNPJ','APOLLO']),destination:z.discriminatedUnion('mode',[z.strictObject({mode:z.literal('new'),name:z.string().trim().min(2).max(100)}),z.strictObject({mode:z.literal('existing'),listId:idSchema})]),filters,limit:z.number().int().min(1).max(500),dedupScope:z.enum(['list','workspace'])}).superRefine((v,c)=>{

@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import { randomBytes } from "node:crypto";
+import {ensureWorkerEnvironment} from './provision-worker.mjs';
 const path = ".env.local";
 if (fs.existsSync(path)) {
+  ensureWorkerEnvironment();
   console.log("Local environment already exists; preserved.");
   process.exit(0);
 }
@@ -40,3 +42,4 @@ fs.writeFileSync(
   { flag: "wx" },
 );
 console.log("Local environment generated. Secret values were not printed.");
+ensureWorkerEnvironment();

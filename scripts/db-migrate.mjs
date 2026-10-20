@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import {ensureWorkerEnvironment,provisionWorker} from './provision-worker.mjs';
 
 export async function runMigrations(
   pool,
@@ -61,6 +62,7 @@ if (
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
   process.loadEnvFile(".env.local");
+  ensureWorkerEnvironment();
   const useTest = process.argv.includes("--test");
   const connectionString =
     process.env[
@@ -72,6 +74,7 @@ if (
     throw Error("Refusing non-test database.");
   const pool = new pg.Pool({ connectionString });
   try {
+    await provisionWorker(pool);
     await runMigrations(pool, "db/migrations");
     console.log(`Migrations applied (${useTest ? "test" : "local"} database).`);
   } finally {

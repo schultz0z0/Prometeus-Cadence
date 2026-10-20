@@ -1,5 +1,5 @@
 import "server-only";
-import type { PoolClient } from "pg";
+import type { PoolClient,Pool } from "pg";
 import type { Principal } from "../../domain/workspace.ts";
 import { getPools } from "./pool.ts";
 import { AppError } from "../errors.ts";
@@ -7,7 +7,10 @@ export async function withWorkspaceTransaction<T>(
   principal: Principal,
   fn: (client: PoolClient) => Promise<T>,
 ): Promise<T> {
-  const client = await getPools().appPool.connect();
+  return withContextTransaction(getPools().appPool,principal,fn);
+}
+export async function withContextTransaction<T>(pool:Pool,principal:Principal,fn:(client:PoolClient)=>Promise<T>):Promise<T>{
+  const client = await pool.connect();
   try {
     await client.query("BEGIN");
     await client.query(

@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 process.loadEnvFile(".env.local");
-for (const prefix of ["MIGRATOR", "AUTH", "APP"]) {
+for (const prefix of ["MIGRATOR", "AUTH", "APP", "WORKER"]) {
   const value = process.env[`TEST_${prefix}_DATABASE_URL`];
   if (!value || !new URL(value).pathname.endsWith("_test"))
     throw Error("Refusing integration tests against a non-test database.");
@@ -18,6 +18,7 @@ const known = [
   "client",
   "prospecting",
   "prospecting-results",
+  "prospecting-worker",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length

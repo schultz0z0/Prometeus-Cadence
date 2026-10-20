@@ -3,6 +3,7 @@ import {isAbsolute} from 'node:path';
 import {existsSync} from 'node:fs';
 import type {GenerationSource,JobInput,Units,UsageEstimate} from '../../domain/prospecting.ts';
 import {hashValue} from './review.ts';
+import {providerProfile,actorInput} from './providers/profiles.ts';
 const unitCaps=z.strictObject({candidates:z.number().int().min(0).max(1e9).default(0),apifyRuns:z.number().int().min(0).max(1e9).default(0),apolloPages:z.number().int().min(0).max(1e9).default(0),jevCalls:z.number().int().min(0).max(1e9).default(0),codexCalls:z.number().int().min(0).max(1e9).default(0)});
 export function parseCaps(value:string|undefined){try{return unitCaps.parse(JSON.parse(value??'{}'));}catch{return unitCaps.parse({});}}
 export function prospectingConfig(){
@@ -40,6 +41,10 @@ export function requirements(config:ProspectingConfig,input:JobInput,workspaceId
   const blockers:string[]=[];
   if(!config.enabled)blockers.push('As execuções externas ainda não foram habilitadas neste ambiente.');
   if(input.kind==='generation'&&!config.ready[input.source])blockers.push('Configure a credencial e o perfil da fonte antes de executar.');
+  if(input.kind==='generation'){
+    if(input.source==='APOLLO'&&Object.entries(input.filters).some(([k,v])=>v&&!['term','location'].includes(k)))blockers.push('Este perfil Apollo aceita público e localização; os demais filtros ainda não têm contrato habilitado.');
+    if(input.source!=='APOLLO')try{actorInput(providerProfile(input.source,config.profiles[input.source]),input);}catch{blockers.push('O perfil ou os filtros não estão disponíveis. Na base CNPJ, informe CNAE e filtros cadastrais suportados.');}
+  }
   if(input.kind==='qualification'){
     if(input.modules.includes('qualify')&&!config.jevReady)blockers.push('Configure o JEV 1.13 no OpenRouter.');
     if((input.modules.includes('summary')||input.escalation==='ambiguous')&&(!config.codexEnabled||!config.codexWorkspaces.includes(workspaceId)))blockers.push('O gerador Codex local não está habilitado para este workspace de testes.');
