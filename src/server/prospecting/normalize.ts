@@ -1,0 +1,24 @@
+import type {Candidate,GenerationSource} from '../../domain/prospecting.ts';
+const string=(v:unknown,max=1000)=>typeof v==='string'?v.trim().slice(0,max):undefined;
+export function normalizeCnpj(value:unknown){
+  const text=string(value)?.replace(/[.\/\s-]/g,'').toUpperCase();
+  return text&&/^[A-Z0-9]{12}[0-9]{2}$/.test(text)?text:undefined;
+}
+export function normalizeSite(value:unknown){
+  const text=string(value);if(!text)return undefined;
+  try{const u=new URL(text.includes('://')?text:'https://'+text);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)return undefined;return `${u.protocol}//${u.hostname.toLowerCase().replace(/^www\./,'')}${u.port?':'+u.port:''}/`;}catch{return undefined;}
+}
+export function normalizeCandidate(raw:unknown,profile:GenerationSource):Candidate{
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('INVALID_CANDIDATE');
+  const r=raw as Record<string,unknown>,name=string(r.name??r.title??r.razao_social,300),sourceRef=string(r.sourceRef??r.placeId??r.id??r.cnpj,500);
+  if(!name||!sourceRef)throw Error('MISSING_IDENTITY');
+  const email=string(r.email)?.toLowerCase(),phone=string(r.phone??r.phoneNumber)?.replace(/[^0-9+]/g,'');
+  const candidate:Candidate={name,sourceRef,source:profile};
+  const fields={companyName:string(r.companyName,300),email:email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?email:undefined,phone:phone&&/^\+?\d{7,15}$/.test(phone)?phone:undefined,site:normalizeSite(r.site??r.website??r.primary_domain),city:string(r.city,200),state:string(r.state,100),cnpj:normalizeCnpj(r.cnpj)};
+  for(const [k,v]of Object.entries(fields))if(v)(candidate as unknown as Record<string,unknown>)[k]=v;
+  // Arbitrary provider fields and instructions never become editable lead fields.
+  return candidate;
+}
+export function strongIdentities(candidate:Candidate){
+  return [...(candidate.cnpj?['cnpj:'+candidate.cnpj]:[]),`source:${candidate.source}:${candidate.sourceRef}`];
+}

@@ -1,10 +1,11 @@
-import test,{after} from 'node:test';
+import test,{after,beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {prepareJob,confirmJob,getJob,cancelJob} from '../../src/server/prospecting/service.ts';
 import {prospectingRequest} from '../../src/server/prospecting/http.ts';
 import {configureProspectingTest,prospectingUser,generationInput,countRows,closeProspectingPools} from './prospecting-helpers.ts';
-import {base} from './helpers.ts';
+import {base,resetRateLimits} from './helpers.ts';
+beforeEach(resetRateLimits);
 configureProspectingTest(); after(closeProspectingPools);
 test('prepare is pure and concurrent confirmation creates one job list and reservation',async()=>{
   const {p}=await prospectingUser(), input=generationInput();

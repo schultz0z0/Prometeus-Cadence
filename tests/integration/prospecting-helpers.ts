@@ -28,3 +28,16 @@ export async function countRows(table:string,workspaceId:string){
   try{return Number((await pool.query(`SELECT count(*) FROM app.${table} WHERE workspace_id=$1`,[workspaceId])).rows[0].count);}finally{await pool.end();}
 }
 export async function closeProspectingPools(){await getPools().close();}
+export async function testAdmin<T>(fn:(c:import('pg').PoolClient)=>Promise<T>):Promise<T>{
+  const url=process.env.MIGRATOR_DATABASE_URL!;
+  if(!new URL(url).pathname.endsWith('_test'))throw Error('Test database required');
+  const {default:pg}=await import('pg'),pool=new pg.Pool({connectionString:url}),c=await pool.connect();
+  try{return await fn(c);}finally{c.release();await pool.end();}
+}
+export async function grantTestLease(p:import('../../src/domain/workspace.ts').Principal,jobId:string){
+  const token=randomUUID();
+  return testAdmin(async c=>{
+    const r=(await c.query("UPDATE app.prospecting_job SET state='running',lease_owner='test',lease_token=$3,lease_until=now()+interval '5 minutes',fence=fence+1 WHERE workspace_id=$1 AND id=$2 RETURNING fence,lease_until",[p.workspaceId,jobId,token])).rows[0];
+    return {workspaceId:p.workspaceId,jobId,actorId:p.userId,token,fence:Number(r.fence),expiresAt:r.lease_until.toISOString()};
+  });
+}
