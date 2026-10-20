@@ -17,6 +17,11 @@ export function createPools(config: ReturnType<typeof databaseConfig>) {
     connectionString: config.appUrl,
     options: "-c search_path=app,public -c statement_timeout=15000",
   });
+  // pg removes broken idle clients before emitting this event. Handle it here
+  // so a database restart neither crashes the process nor logs a Client object.
+  // Errors on checked-out queries still reject and roll back normally.
+  authPool.on("error", () => {});
+  appPool.on("error", () => {});
   return {
     authPool,
     appPool,

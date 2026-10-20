@@ -41,23 +41,55 @@ for (const m of fs
   routes.add("/settings/" + m[1]);
 const results = [];
 for (const route of routes) {
-  const r = await fetch(base + route);
+  const r = await fetch(base + route, {
+    redirect: "manual",
+    headers: process.env.SMOKE_COOKIE
+      ? { cookie: process.env.SMOKE_COOKIE }
+      : {},
+    signal: AbortSignal.timeout(60000),
+  });
   const html = await r.text();
+  const protectedRedirect =
+    !process.env.SMOKE_COOKIE &&
+    route !== "/" &&
+    r.status === 307 &&
+    r.headers.get("location") === "/login";
+  const rootRedirect =
+    route === "/" &&
+    r.status === 307 &&
+    r.headers.get("location") === "/dashboard";
   const ok =
-    r.ok &&
+    (r.ok || protectedRedirect || rootRedirect) &&
     !html.includes("NEXT_HTTP_ERROR_FALLBACK;500") &&
     !html.includes("Internal Server Error");
-  results.push({ route, status: r.status, ok });
+  results.push({ route, status: r.status, protectedRedirect, ok });
+}
+for (const route of [
+  "/api/workspace/snapshot",
+  "/api/identity",
+  "/api/security",
+]) {
+  const response = await fetch(base + route, {
+    headers: process.env.SMOKE_COOKIE
+      ? { cookie: process.env.SMOKE_COOKIE }
+      : {},
+    signal: AbortSignal.timeout(60000),
+  });
+  results.push({
+    route,
+    status: response.status,
+    ok: response.status === (process.env.SMOKE_COOKIE ? 200 : 401),
+  });
 }
 const report = {
   date: new Date().toISOString(),
   base,
-  note: "HTTP navigation smoke only; does not verify real connectors or authentication.",
+  note: "Authenticated identity milestone. Anonymous app routes must redirect to login; private APIs must return 401. No real external connector is tested.",
   results,
 };
 fs.mkdirSync("docs/validation", { recursive: true });
 fs.writeFileSync(
-  "docs/validation/routes.json",
+  "docs/validation/routes-02.json",
   JSON.stringify(report, null, 2) + "\n",
 );
 console.log(

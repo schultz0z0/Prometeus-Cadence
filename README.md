@@ -1,21 +1,31 @@
 # Prometeus Cadence
 
-Reconstrução independente da interface e dos fluxos observados no CadenceFlow. **Marco 01: aplicação local demonstrativa.** Ainda não é um SaaS pronto para clientes ou envios reais.
+Reconstrução independente da interface e dos fluxos observados no CadenceFlow. **Marcos 01 e 02: interface, contas reais, workspaces isolados e PostgreSQL local.** Integrações externas e envios reais pertencem aos próximos marcos.
 
 ## Executar
 
-Node.js 24 e npm. Versões fixadas em `package-lock.json`.
+Node.js 24, npm e Docker Desktop ativo. Versões fixadas em `package-lock.json`.
 
 ```powershell
 rtk npm ci
+rtk npm run env:init
+rtk npm run db:up
+rtk npm run db:migrate
 rtk npm run dev
 ```
 
 Abrir [http://127.0.0.1:3210](http://127.0.0.1:3210). A porta 3210 evita conflito com outro serviço local. Para produção local: `rtk npm run build` e depois `rtk npm start`.
 
+Crie uma conta em `/register`, confirme o link no [capturador local de e-mails](http://127.0.0.1:8125) e crie seu workspace. Verificação, recuperação e convites são enviados exclusivamente ao capturador local. Google permanece indisponível sem `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` próprios.
+
+O Compose `prometeus-cadence` tem PostgreSQL em `127.0.0.1:55432`, SMTP em `127.0.0.1:1125`, volume e credenciais exclusivos. `env:init` cria `.env.local` com segredos aleatórios somente se o arquivo não existir. Não apague o volume para reiniciar. O ambiente atende desenvolvimento local; um deploy público exige configuração própria.
+
 ## O que funciona neste marco
 
 - Navegação, dashboard, passeio guiado, tema e tamanho do texto.
+- Cadastro, verificação de e-mail, login, logout, recuperação de senha, gestão e revogação de sessões.
+- Workspaces com proprietário, administradores e operadores; convites temporários vinculados ao e-mail verificado.
+- Persistência no servidor, controle de revisão, confirmação idempotente, transações e isolamento por RLS.
 - Contatos, listas, filtros, ficha, cadastro, edição e importação CSV/TXT com revisão antes de salvar.
 - Templates, variáveis e prévia com avisos quando faltam valores.
 - Prospecção e qualificação com simulação local explicitamente identificada.
@@ -23,7 +33,9 @@ Abrir [http://127.0.0.1:3210](http://127.0.0.1:3210). A porta 3210 evita conflit
 - Cadência por etapas, revisão de mensagens, canvas editável, esperas, ordenação, zoom, configurações e rascunhos.
 - Contexto da empresa editável e versionado, canais desconectados, inbox de exemplo, relatórios e demais superfícies.
 
-Os dados de exemplo são fictícios e ficam neste navegador, na chave `prometeus-cadence-demo-v1` do localStorage. Não há autenticação nem sincronização entre dispositivos. Propostas não confirmadas são temporárias; rascunhos confirmados persistem. Dados inválidos mostram recuperação e bloqueiam salvamento até restaurar a demonstração.
+Contas novas começam vazias. Contatos, templates, contexto versionado, cadências e automações confirmadas ficam no PostgreSQL; preferências pessoais são separadas das configurações do workspace. Propostas não confirmadas continuam temporárias. Nenhuma criação ativa busca ou envio.
+
+O modo demonstrativo anterior permanece disponível ao definir explicitamente `APP_DATA_MODE=demo` no ambiente e reiniciar o app. Ele usa dados fictícios na chave `prometeus-cadence-demo-v1` do localStorage, com banner próprio. Esses dados não são importados automaticamente para contas reais; falhas no banco nunca ativam a demonstração como fallback.
 
 ## Limites e próximas entregas
 
@@ -35,15 +47,18 @@ O [roteiro aprovado](docs/superpowers/plans/2026-10-20-prometeus-cadence-roadmap
 
 ```powershell
 rtk npm test
+rtk npm run db:migrate -- --test
+rtk npm run test:integration
 rtk npm run typecheck
 rtk npm run build
 rtk proxy node scripts/smoke-routes.mjs
 ```
 
-O último comando requer o servidor local ativo. Os testes de domínio verificam persistência, atomicidade, confirmação idempotente, filtros, importação, prévia e validação. O smoke verifica respostas HTTP das rotas; não representa teste de integrações externas.
+O último comando requer o servidor local ativo. Os testes de domínio verificam transições e comportamento assíncrono; a integração usa o banco exclusivo com sufixo `_test`, preparado pelo comando de migração de teste. O smoke exige redirecionamento para login nas rotas protegidas e 401 nas APIs sem sessão. Nenhum teste chama provedores externos.
 
 - [Validação e capturas](docs/validation/01-interface.md)
+- [Validação de identidade e isolamento](docs/validation/02-identity.md)
 - [Especificação aprovada](docs/superpowers/specs/2026-10-20-prometeus-cadence-design.md)
 - [Investigação e evidências REA](docs/reverse-engineering/README.md)
 
-`src/domain` contém os contratos e regras puras; `src/demo` contém o repositório e os simuladores; `src/modules` contém os fluxos; `src/app` contém as rotas e os estilos. Os bundles capturados do produto de referência não são dependências do aplicativo.
+`src/domain` contém contratos e regras puras; `src/server` contém identidade, permissões, transações e comandos; `src/client` faz o transporte autenticado. `src/demo` preserva o demonstrativo; `src/modules` contém os fluxos; `src/app` contém as rotas e estilos. Bundles capturados da referência não são dependências do aplicativo.

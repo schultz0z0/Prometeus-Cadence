@@ -85,6 +85,24 @@ test("conflict refreshes base without blind retry; disposed workspace ignores la
   await assert.rejects(pending);
   assert.equal(other.snapshot().revision, 0);
 });
-test('a delayed refresh cannot replace a newer committed snapshot',async()=>{
- let release!:(r:Response)=>void;const repo=createWorkspaceRepository(initial(),async(_url,init)=>{if(init?.method==='POST')return Response.json({snapshot:{...initial(),revision:2}});return new Promise(r=>{release=r;});});const refresh=repo.refresh();await repo.saveTemplate({id:'t',name:'Draft',body:'Text',channel:'EMAIL',tags:[]});release(Response.json({...initial(),revision:1}));await refresh;assert.equal(repo.snapshot().revision,2);
+test("a delayed refresh cannot replace a newer committed snapshot", async () => {
+  let release!: (r: Response) => void;
+  const repo = createWorkspaceRepository(initial(), async (_url, init) => {
+    if (init?.method === "POST")
+      return Response.json({ snapshot: { ...initial(), revision: 2 } });
+    return new Promise((r) => {
+      release = r;
+    });
+  });
+  const refresh = repo.refresh();
+  await repo.saveTemplate({
+    id: "t",
+    name: "Draft",
+    body: "Text",
+    channel: "EMAIL",
+    tags: [],
+  });
+  release(Response.json({ ...initial(), revision: 1 }));
+  await refresh;
+  assert.equal(repo.snapshot().revision, 2);
 });

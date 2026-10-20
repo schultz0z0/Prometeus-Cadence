@@ -5,6 +5,21 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
 import { runMigrations } from "../../scripts/db-migrate.mjs";
+import { createPools } from "../../src/server/db/pool.ts";
+import { databaseConfig } from "../../src/server/db/config.ts";
+test("idle disconnects are handled without throwing or exposing connection objects", async () => {
+  const pools = createPools(databaseConfig());
+  try {
+    assert.doesNotThrow(() =>
+      pools.authPool.emit("error", new Error("idle disconnect")),
+    );
+    assert.doesNotThrow(() =>
+      pools.appPool.emit("error", new Error("idle disconnect")),
+    );
+  } finally {
+    await pools.close();
+  }
+});
 
 test("migrations are repeatable, checksum protected and transactional", async () => {
   const pool = new pg.Pool({
