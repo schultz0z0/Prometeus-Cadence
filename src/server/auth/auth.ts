@@ -29,6 +29,9 @@ let instance:ReturnType<typeof createAuth>|undefined;
 export function getAuth(){return instance??=createAuth(getPools().authPool);}
 export async function handleAuthRequest(request:Request){
  const base=process.env.BETTER_AUTH_URL??'http://127.0.0.1:3210';
+ // Organization tables/ACL are provided by the plugin. Product mutations go
+ // through the stricter business service, including owner invariants and audit.
+ if(new URL(request.url).pathname.startsWith('/api/auth/organization/'))return Response.json({message:'Use a administração do workspace.'},{status:403});
  if(request.method!=='GET'&&request.method!=='HEAD'&&request.headers.get('origin')!==new URL(base).origin){
   return Response.json({message:'Origem não permitida.'},{status:403});
  }
