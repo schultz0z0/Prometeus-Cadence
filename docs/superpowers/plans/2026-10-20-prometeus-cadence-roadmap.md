@@ -34,6 +34,9 @@ Node local `v24.16.0`, npm `11.13.0`, RTK e REA já disponíveis. Next.js/React 
 
 - [x] Especificação aprovada pelo usuário.
 - [x] Roteiro geral e plano da primeira entrega escritos.
-- [ ] Usuário revisa o plano e escolhe execução nativa ou por subagentes.
-- [ ] Implementação do primeiro marco.
+- [x] Usuário revisou o plano 01 e escolheu execução nativa.
+- [x] Implementação e validação do primeiro marco: `docs/validation/01-interface.md`.
+- [x] Infraestrutura do marco 02 escolhida pelo usuário: PostgreSQL local em Docker.
+- [ ] Revisão do plano 02: `2026-10-20-prometeus-cadence-02-identity.md`.
+- [ ] Implementação do marco 02.
 - [ ] Demais marcos, incluindo SaaS operacional completo.

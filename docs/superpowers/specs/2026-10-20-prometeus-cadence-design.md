@@ -1,8 +1,8 @@
 # Prometeus Cadence — especificação proposta
 
-Data: 20/10/2026. Estado: **especificação aprovada pelo usuário em 20/10/2026; implementação não iniciada**.
+Data: 20/10/2026. Estado: **especificação aprovada; marco 01 implementado e validado; marco 02 em planejamento com PostgreSQL/Docker escolhido pelo usuário**.
 
-Aprovação recebida: “Aprovar a especificação e seguir ao plano”. A autorização desta etapa é escrever o plano; sua revisão e o método de execução ainda serão apresentados.
+Aprovação recebida: “Aprovar a especificação e seguir ao plano”, seguida de aprovação do plano 01 e execução nativa. O método é preservado para continuidade; cada novo plano detalhado tem revisão própria antes do código.
 
 ## 1. Resultado esperado
 
