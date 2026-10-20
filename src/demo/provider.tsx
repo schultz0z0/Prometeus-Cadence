@@ -15,3 +15,4 @@ export function DemoProvider({children}:{children:React.ReactNode}){const[repo,s
 export function useRepository(){const r=useContext(RepositoryContext);if(!r)throw Error('DemoProvider ausente');return r;}
 export function useDemo(){const r=useRepository();return useSyncExternalStore(r.subscribe,r.getSnapshot,r.getSnapshot);}
 export function useNotify(){return useContext(ToastContext);}
+export function useAction(){const notify=useNotify();return (fn:()=>void,success?:string)=>{try{fn();if(success)notify(success);return true;}catch(e){notify(e instanceof Error?`Não foi possível salvar: ${e.message}`:'Não foi possível salvar os dados locais.');return false;}};}
