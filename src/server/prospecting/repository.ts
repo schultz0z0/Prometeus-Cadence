@@ -2,7 +2,7 @@ import type {PoolClient} from 'pg';
 import type {JobLease,JobView,JobItemView} from '../../domain/prospecting.ts';
 import {AppError} from '../errors.ts';
 type Row=Record<string,any>;
-export function jobView(r:Row):JobView{return{id:r.id,kind:r.kind,source:r.source,state:r.state,listId:r.list_id,createdBy:r.actor_id,createdAt:new Date(r.created_at).toISOString(),updatedAt:new Date(r.updated_at).toISOString(),revision:Number(r.revision),counts:r.counts,error:r.error_code?{code:r.error_code,message:r.error_message??'A execução precisa de atenção.'}:null};}
+export function jobView(r:Row):JobView{return{id:r.id,kind:r.kind,source:r.source,state:r.state,listId:r.list_id,createdBy:r.actor_id,createdAt:new Date(r.created_at).toISOString(),updatedAt:new Date(r.updated_at).toISOString(),revision:Number(r.revision),counts:r.counts,testFixture:r.checkpoint?.fixture===true,error:r.error_code?{code:r.error_code,message:r.error_message??'A execução precisa de atenção.'}:null};}
 export function itemView(r:Row):JobItemView{return{id:r.id,leadId:r.lead_id,sourceRef:r.source_ref,name:r.name,status:r.status,results:r.payload?.results??[],applied:r.applied};}
 export async function assertJobLease(c:PoolClient,lease:JobLease,control=false,finishing=false){
   const states=finishing?['running','waiting_provider','cancelling','cancelled','completed','partial','failed','needs_reconciliation']:control?['running','waiting_provider','cancelling']:['running','waiting_provider'];

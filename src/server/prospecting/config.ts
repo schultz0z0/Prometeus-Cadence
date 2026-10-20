@@ -43,7 +43,7 @@ export function requirements(config:ProspectingConfig,input:JobInput,workspaceId
   if(input.kind==='generation'&&!config.ready[input.source])blockers.push('Configure a credencial e o perfil da fonte antes de executar.');
   if(input.kind==='generation'){
     if(input.source==='APOLLO'&&Object.entries(input.filters).some(([k,v])=>v&&!['term','location'].includes(k)))blockers.push('Este perfil Apollo aceita público e localização; os demais filtros ainda não têm contrato habilitado.');
-    if(input.source!=='APOLLO')try{actorInput(providerProfile(input.source,config.profiles[input.source]),input);}catch{blockers.push('O perfil ou os filtros não estão disponíveis. Na base CNPJ, informe CNAE e filtros cadastrais suportados.');}
+    if(input.source!=='APOLLO')try{actorInput(providerProfile(input.source,config.profiles[input.source]),input);}catch{blockers.push(input.source==='CNPJ'?'O perfil ou os filtros cadastrais não estão disponíveis. Informe um CNAE ou CNPJ suportado.':'O perfil de busca ainda não está disponível. Configure um Actor/build verificado.');}
   }
   if(input.kind==='qualification'){
     if(input.modules.includes('qualify')&&!config.jevReady)blockers.push('Configure o JEV 1.13 no OpenRouter.');

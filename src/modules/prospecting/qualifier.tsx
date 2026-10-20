@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import {useIdentity} from '@/client/workspace-provider';
+import {ServerQualifier} from './server-qualifier';
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import {
   Button,
@@ -52,7 +54,8 @@ const modules = [
     "Avalia se o lead combina com o seu negócio.",
   ],
 ];
-export function Qualifier() {
+export function Qualifier(){return useIdentity()?<ServerQualifier/>:<DemoQualifier/>;}
+function DemoQualifier() {
   const s = useDemo();
   const repo = useRepository();
   const run = useAction();

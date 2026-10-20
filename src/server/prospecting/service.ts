@@ -84,7 +84,9 @@ export async function listJobs(p:Principal,input:unknown={}):Promise<Page<JobVie
 }
 export async function getJob(p:Principal,id:string):Promise<JobView>{return withWorkspaceTransaction(p,async c=>{
   const row=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[id])).rows[0];
-  if(!row)throw new AppError(404,'Execução não encontrada.');return jobView(row);
+  if(!row)throw new AppError(404,'Execução não encontrada.');
+  const usage=(await c.query("SELECT * FROM app.usage_ledger WHERE job_id=$1 AND event='consume' ORDER BY created_at",[id])).rows.map(r=>({provider:r.provider,operationId:r.operation_id,units:r.units,costUsd:r.cost_usd===null?null:Number(r.cost_usd),costKind:r.cost_kind,...r.metadata}));
+  return {...jobView(row),usage};
 });}
 export async function listJobItems(p:Principal,id:string,input:unknown={}):Promise<Page<JobItemView>>{
   const parsed=pageSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Página inválida.');
@@ -92,7 +94,8 @@ export async function listJobItems(p:Principal,id:string,input:unknown={}):Promi
   return withWorkspaceTransaction(p,async c=>{
     if(!(await c.query('SELECT 1 FROM app.prospecting_job WHERE id=$1',[id])).rowCount)throw new AppError(404,'Execução não encontrada.');
     const rows=(await c.query('SELECT * FROM app.prospecting_item WHERE job_id=$1 AND ($2::text IS NULL OR id>$2) ORDER BY id LIMIT $3',[id,after?.id??null,limit+1])).rows;
-    const items=rows.slice(0,limit),last=items.at(-1);return {items:items.map(itemView),nextCursor:rows.length>limit&&last?encodeCursor({id:last.id}):null};
+    const items=rows.slice(0,limit),last=items.at(-1),evidence=(await c.query('SELECT id,lead_id,url,truncated,fetched_at FROM app.lead_evidence WHERE job_id=$1 AND lead_id=ANY($2::text[])',[id,items.map(i=>i.lead_id)])).rows;
+    return {items:items.map(item=>({...itemView(item),evidence:evidence.filter(e=>e.lead_id===item.lead_id).map(e=>({id:e.id,url:e.url,truncated:e.truncated,fetchedAt:new Date(e.fetched_at).toISOString()}))})),nextCursor:rows.length>limit&&last?encodeCursor({id:last.id}):null};
   });
 }
 export async function cancelJob(p:Principal,id:string):Promise<JobView>{return withWorkspaceTransaction(p,async c=>{

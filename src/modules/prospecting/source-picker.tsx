@@ -20,14 +20,14 @@ export const sources: {
     value: "WEB",
     label: "Busca na web",
     description:
-      "Qualquer nicho que você descreva; a IA monta a busca e filtra o que não é empresa.",
+      "Busca pública por nicho e localização, com resultados para revisar e qualificar.",
     fields: "Traz: nome, site, cidade; contato via qualificação",
     icon: "Globe",
   },
   {
     value: "CNPJ",
     label: "Base CNPJ",
-    description: "Receita Federal: empresas por CNAE, porte, estado e mais.",
+    description: "Consulta empresarial por CNAE, cidade e estado, conforme o provedor conectado.",
     fields: "Traz: razão social, CNPJ, sócios, endereço, telefone",
     icon: "Database",
   },
@@ -35,7 +35,7 @@ export const sources: {
     value: "APOLLO",
     label: "Apollo",
     description:
-      "Pessoas por cargo, setor, tamanho e local no banco do Apollo.",
+      "Empresas por palavra-chave e localização no banco do Apollo.",
     fields: "Conecte a sua conta em Configurações › CRM e apps",
     icon: "Target",
   },

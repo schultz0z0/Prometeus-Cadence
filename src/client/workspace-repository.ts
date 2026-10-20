@@ -235,6 +235,7 @@ export function createWorkspaceRepository(
     snapshot: () => snapshot,
     access: () => access,
     refresh,
+    invalidateAccess: invalidate,
     dispose() {
       disposed = true;
       listeners.clear();

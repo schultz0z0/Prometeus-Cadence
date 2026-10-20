@@ -10,6 +10,7 @@
   gap: 15px;
   flex-wrap: wrap;
 }
+.proposal-value { white-space: pre-wrap; max-width: 38rem; overflow-wrap: anywhere; }
 .one-time-note a {
   color: var(--primary);
 }

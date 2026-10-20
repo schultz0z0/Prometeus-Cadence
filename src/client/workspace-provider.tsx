@@ -11,6 +11,7 @@ import type { WorkspaceSnapshot } from "@/domain/workspace";
 import { createWorkspaceRepository } from "./workspace-repository";
 import { createDraftRecovery } from "./draft-recovery";
 import { RepositoryContext, ToastContext } from "@/demo/provider";
+import {createProspectingClient,type ProspectingClient} from './prospecting-client';
 export interface IdentityView {
   user: { id: string; name: string; email: string };
   activeWorkspaceId: string | null;
@@ -32,6 +33,8 @@ export interface IdentityView {
 }
 const IdentityContext = createContext<IdentityView | null>(null);
 const CapabilitiesContext = createContext<string[] | null>(null);
+const ProspectingContext=createContext<ProspectingClient|null>(null);
+export function useProspecting(){return useContext(ProspectingContext);}
 export function useIdentity() {
   return useContext(IdentityContext);
 }
@@ -48,6 +51,7 @@ export function WorkspaceProvider({
   children: React.ReactNode;
 }) {
   const [repo] = useState(() => createWorkspaceRepository(initial));
+  const [prospecting]=useState(()=>createProspectingClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const current = useSyncExternalStore(
     repo.subscribe,
     repo.snapshot,
@@ -62,7 +66,7 @@ export function WorkspaceProvider({
     return () => {
       mounted.current = false;
       queueMicrotask(() => {
-        if (!mounted.current) repo.dispose();
+        if (!mounted.current) {repo.dispose();prospecting.dispose();}
       });
     };
   }, [repo]);
@@ -79,7 +83,7 @@ export function WorkspaceProvider({
     return () => window.removeEventListener("focus", focus);
   }, [repo]);
   return (
-    <IdentityContext value={identity}>
+    <IdentityContext value={identity}><ProspectingContext value={prospecting}>
       <CapabilitiesContext value={current.capabilities}>
         <RepositoryContext value={repo}>
           <ToastContext value={setToast}>
@@ -141,6 +145,6 @@ export function WorkspaceProvider({
           </ToastContext>
         </RepositoryContext>
       </CapabilitiesContext>
-    </IdentityContext>
+    </ProspectingContext></IdentityContext>
   );
 }

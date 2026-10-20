@@ -9,6 +9,8 @@ import {
 import type { Source, Lead } from "@/domain/model";
 import { SourcePicker } from "./source-picker";
 import { CnpjFilters } from "./cnpj-filters";
+import {useIdentity} from '@/client/workspace-provider';
+import {ServerGenerator} from './server-generator';
 import {
   Button,
   Field,
@@ -17,7 +19,8 @@ import {
   Modal,
   LinkButton,
 } from "@/components/ui/primitives";
-export function Generator({
+export function Generator(props:{initialSource?:string}){return useIdentity()?<ServerGenerator {...props}/>:<DemoGenerator {...props}/>;}
+function DemoGenerator({
   initialSource = "MAPS",
 }: {
   initialSource?: string;

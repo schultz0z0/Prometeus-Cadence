@@ -1,4 +1,6 @@
 "use client";
+import {useIdentity} from '@/client/workspace-provider';
+import {JobHistory} from '@/modules/prospecting/job-history';
 import Link from "next/link";
 import { useState } from "react";
 import { useDemo } from "@/demo/provider";
@@ -136,7 +138,8 @@ export function Reports({ tab = "overview" }: { tab?: string }) {
     </>
   );
 }
-export function Executions() {
+export function Executions(){return useIdentity()?<JobHistory/>:<DemoExecutions/>;}
+function DemoExecutions() {
   const s = useDemo();
   const [filter, setFilter] = useState("");
   const jobs = s.jobs.filter((j) => !filter || j.type === filter);
