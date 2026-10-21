@@ -7,6 +7,7 @@ import {AppError} from '../errors.ts';
 import {requirePermission} from '../auth/permissions.ts';
 import {hashValue} from './review.ts';
 import {lockWorkspace} from './ingestion.ts';
+import {readApprovedContext} from '../context/repository.ts';
 const schema=z.strictObject({requestId:z.uuid(),itemIds:z.array(z.string().min(1).max(120)).min(1).max(100).refine(ids=>new Set(ids).size===ids.length)});
 const editable=new Set(['email','phone','site','city','state','cnpj','companyName','summary','qualification','reason']);
 export async function applyJobResults(p:Principal,jobId:string,body:unknown):Promise<{applied:number;revision:number}>{
@@ -22,7 +23,7 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
     if(job.kind!=='qualification'||!['completed','partial'].includes(job.state))throw new AppError(409,'Aguarde o término da qualificação.');
     const items=(await c.query('SELECT * FROM app.prospecting_item WHERE job_id=$1 AND id=ANY($2::text[]) FOR UPDATE',[jobId,itemIds])).rows;
     if(items.length!==itemIds.length||items.some(i=>i.applied))throw new AppError(409,'A seleção contém resultado indisponível.');
-    const context=(await c.query('SELECT payload FROM app.context_version ORDER BY version DESC LIMIT 1')).rows[0]?.payload;
+    const context=await readApprovedContext(c);
     if(Number(context?.version??0)!==Number(job.checkpoint.context?.version??0))throw new AppError(409,'O contexto mudou. Prepare uma nova qualificação.','RESULT_CONFLICT');
     const changes=[];
     for(const item of items){

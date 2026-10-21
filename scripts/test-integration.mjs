@@ -24,6 +24,7 @@ const known = [
   "ai-routing-pipeline",
   "ai-probe",
   "planning-storage",
+  "context-products",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length

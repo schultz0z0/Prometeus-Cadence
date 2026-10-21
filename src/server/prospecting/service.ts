@@ -17,6 +17,7 @@ import {conventionalConfig} from './ai/config.ts';
 import {readAiPolicy} from './ai/settings.ts';
 import {readConnectionCheck} from './ai/connection.ts';
 import {resolveAiRoute,aiRouteView,type AiRoute} from '../../domain/ai-routing.ts';
+import {readApprovedContext} from '../context/repository.ts';
 const secret=()=>{const s=process.env.BETTER_AUTH_SECRET;if(!s)throw Error('Review signing is not configured');return s;};
 async function authorized(c:PoolClient,p:Principal){
   const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;
@@ -41,7 +42,7 @@ async function reviewState(c:PoolClient,p:Principal,input:ProspectingInput){
     const rows=(await c.query('SELECT id,payload FROM app.lead WHERE list_id=$1 AND id=ANY($2::text[])',[listId,input.leadIds])).rows;
     if(rows.length!==input.leadIds.length)throw new AppError(404,'Um contato selecionado não pertence à lista.');
     bases=Object.fromEntries(rows.map(r=>[r.id,r.payload]));
-    context=(await c.query('SELECT payload FROM app.context_version ORDER BY version DESC LIMIT 1')).rows[0]?.payload??null;
+    context=await readApprovedContext(c) as unknown as Record<string,unknown>|null;
     if(input.modules.includes('qualify')&&!context?.approvedAt)blockers.push('Revise e aprove o contexto da empresa antes de qualificar com IA.');
   }
   const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);
