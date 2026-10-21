@@ -32,6 +32,12 @@ test('Codex rejects hosted or unapproved workspaces before starting and uses sec
   assert.equal(invocation.shell,false);assert.ok(invocation.args.includes('--ignore-user-config'));assert.equal(Object.hasOwn(invocation.env,'OPENROUTER_API_KEY'),false);assert.equal(Object.hasOwn(invocation.env,'MIGRATOR_DATABASE_URL'),false);
 });
 
+test('Codex invocation uses only feature switches supported by the pinned runtime',()=>{
+  const invocation=buildCodexInvocation({binary:'codex.exe',model:'model',cwd:'qa',schemaPath:'schema.json',outputPath:'output.json'});
+  const known=new Set(['shell_tool','unified_exec','apps','hooks','plugins','remote_plugin','browser_use','browser_use_external','computer_use','multi_agent','code_mode_host','view_image','goals','skill_search','tool_suggest','sleep_tool','skip_host_skill_discovery']);
+  for(let i=0;i<invocation.args.length;i++)if(['--disable','--enable'].includes(invocation.args[i]))assert.ok(known.has(invocation.args[i+1]),'Unsupported runtime feature: '+invocation.args[i+1]);
+});
+
 test('Codex validates cited JSON output and releases its cross-process slot after failure',async()=>{
   const keys=['PROSPECTING_ENABLED','CADENCE_RUNTIME_MODE','BETTER_AUTH_URL','CODEX_LOCAL_ENABLED','CODEX_BINARY','CODEX_MODEL','CODEX_TEST_WORKSPACE_IDS'];
   const saved=Object.fromEntries(keys.map(k=>[k,process.env[k]]));

@@ -1,0 +1,153 @@
+{
+  "job": {
+    "id": "69846188-a654-4088-b698-365dac797c9e",
+    "kind": "qualification",
+    "source": "QUALIFY",
+    "state": "completed",
+    "listId": "d3e865a4-0689-4204-a24b-1f74ab0ad300",
+    "createdBy": "pjJDHD9BbVtZYJeL6ASb3DQFmd0MNM2V",
+    "createdAt": "2026-10-21T01:32:38.229Z",
+    "updatedAt": "2026-10-21T01:32:49.385Z",
+    "revision": 1,
+    "counts": {
+      "found": 1,
+      "pending": 1,
+      "inserted": 0,
+      "rejected": 0,
+      "duplicates": 0
+    },
+    "aiRoute": {
+      "mode": "conventional-only",
+      "conventional": {
+        "model": "gpt-6.1-sol",
+        "provider": "codex-local",
+        "contractVersion": "conventional-v1"
+      },
+      "effectiveMode": "conventional",
+      "policyRevision": 3,
+      "decisionProvider": "codex-local"
+    },
+    "testFixture": false,
+    "error": null,
+    "usage": [
+      {
+        "provider": "codex",
+        "operationId": "d25e839d66ad50a0a43a65aa2d90a7962bf8b0ab15832fb8f5b3988195ab04cb",
+        "units": {
+          "codexCalls": 1
+        },
+        "costUsd": null,
+        "costKind": "unknown"
+      },
+      {
+        "provider": "codex",
+        "operationId": "dbcb402d5e915cc59923498b47c7fe5c62217bc40971702990b9218f38721bc4",
+        "units": {
+          "codexCalls": 1
+        },
+        "costUsd": null,
+        "costKind": "unknown"
+      }
+    ],
+    "unresolvedAttempts": []
+  },
+  "items": {
+    "items": [
+      {
+        "id": "6bf4f5cb-792f-4b6b-b360-7e1e3efc212f",
+        "leadId": "bee6ed00-27e7-4372-a1b9-6d7ce33009a2",
+        "sourceRef": null,
+        "name": "Clínica sintética 03B",
+        "status": "pending_review",
+        "results": [
+          {
+            "base": {
+              "reason": null,
+              "qualification": "pending"
+            },
+            "usage": {
+              "units": {
+                "codexCalls": 1
+              },
+              "costUsd": null,
+              "costKind": "unknown",
+              "provider": "codex",
+              "operationId": "d25e839d66ad50a0a43a65aa2d90a7962bf8b0ab15832fb8f5b3988195ab04cb"
+            },
+            "module": "qualify",
+            "status": "pending_review",
+            "reasons": [
+              "UNCALIBRATED_SUGGESTION",
+              "CONVENTIONAL_EVIDENCE_REVIEW"
+            ],
+            "decision": {
+              "model": "gpt-6.1-sol",
+              "usage": {
+                "units": {
+                  "codexCalls": 1
+                },
+                "costUsd": null,
+                "costKind": "unknown",
+                "provider": "codex",
+                "operationId": "d25e839d66ad50a0a43a65aa2d90a7962bf8b0ab15832fb8f5b3988195ab04cb"
+              },
+              "verdict": "fits",
+              "criteria": {},
+              "provider": "codex-local",
+              "confidence": null,
+              "evidenceIds": [
+                "a552d68a-edf3-436d-a862-73fcf94ce02f"
+              ],
+              "probabilities": {}
+            },
+            "proposed": {
+              "reason": "A evidência descreve uma clínica odontológica fictícia que oferece consultas e ortodontia, com dados inteiramente sintéticos para QA, atendendo ao perfil informado.",
+              "qualification": "qualified"
+            },
+            "evidenceIds": [
+              "a552d68a-edf3-436d-a862-73fcf94ce02f"
+            ],
+            "contextVersion": 1
+          },
+          {
+            "base": {
+              "summary": null
+            },
+            "usage": null,
+            "module": "summary",
+            "status": "pending_review",
+            "reasons": [],
+            "proposed": {
+              "summary": "A Clínica sintética 03B é uma clínica odontológica fictícia que oferece consultas e ortodontia, compatível com o perfil de cliente ideal informado. Os dados são inteiramente sintéticos para QA e não representam uma empresa real. Oferta, produtos e dores específicos: insufficient_evidence."
+            },
+            "evidenceIds": [
+              "a552d68a-edf3-436d-a862-73fcf94ce02f"
+            ],
+            "contextVersion": 1
+          }
+        ],
+        "applied": false,
+        "evidence": [
+          {
+            "id": "a552d68a-edf3-436d-a862-73fcf94ce02f",
+            "url": "https://example.com/",
+            "truncated": false,
+            "fetchedAt": "2026-10-21T01:32:38.309Z"
+          }
+        ]
+      }
+    ],
+    "nextCursor": null
+  },
+  "leadUnchanged": true,
+  "lastCheck": {
+    "provider": "codex-local",
+    "model": "gpt-6.1-sol",
+    "contractVersion": "conventional-v1",
+    "checkedAt": "2026-10-21T01:32:09.228Z",
+    "outcome": "success",
+    "jobId": "44c5f4fe-efcc-4f73-ae6e-ec454ed64995",
+    "operationId": "44c5f4fe-efcc-4f73-ae6e-ec454ed64995:probe",
+    "code": null
+  }
+}

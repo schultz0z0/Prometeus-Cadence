@@ -1,8 +1,9 @@
 // Direct synthetic provider smoke; never triggered by the UI or the default suite.
 export {};
 process.loadEnvFile('.env.local');
-const args=process.argv.slice(2),value=(key:string)=>args[args.indexOf(key)+1];
-const source=value('--source'),workspaceId=value('--workspace');
+const args=process.argv.slice(2),value=(key:string)=>args.includes(key)?args[args.indexOf(key)+1]:undefined;
+const {parseSmokeOptions}=await import('./prospecting-smoke-options.ts');const options=parseSmokeOptions(args);if(!options.live)throw Error('Explicit live mode required.');
+const {source,workspaceId}=options;
 const allowed=(process.env.PROSPECTING_SMOKE_WORKSPACE_IDS??'').split(',').includes(workspaceId);
 if(!allowed)throw Error('QA workspace must be explicitly allowlisted on the server.');
 const {getPools}=await import('../src/server/db/pool.ts');
@@ -22,24 +23,16 @@ try{
     const job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});
     console.log(JSON.stringify({status:'QUEUED',jobId:job.id,note:'Start worker; queued is not a successful provider smoke. Inspect completed results and usage.'}));
   }else{
-    const {prospectingConfig}=await import('../src/server/prospecting/config.ts');const config=prospectingConfig();
-    if(source==='JEV'&&!args.includes('--confirm-provider-cost'))throw Error('Explicit provider cost acknowledgement required.');
-    if(source==='JEV'&&!config.jevReady)throw Error('JEV key/model missing.');
-    const {executeWorkspaceCommand,readWorkspaceSnapshot}=await import('../src/server/workspaces/commands.ts');
-    const snapshot=await readWorkspaceSnapshot(p),listId=randomUUID(),leadId=randomUUID();
-    const lead={id:leadId,listId,name:'QA synthetic dental clinic',site:'https://example.com/',source:'MANUAL',qualification:'pending',createdAt:new Date().toISOString()};
-    await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'leads.import',leads:[lead],list:{id:listId,name:'QA synthetic AI smoke'}}});
-    if(source==='JEV'){
-      const current=await readWorkspaceSnapshot(p);await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:current.revision,command:{type:'context.approve',profile:{...current.data.companyProfile,idealCustomer:'Dental clinics'}}});
-    }
-    const input={kind:'qualification' as const,listId,leadIds:[leadId],modules:[source==='JEV'?'qualify' as const:'summary' as const],summaryPolicy:'all' as const,escalation:'off' as const};
-    const review=await prepareJob(p,input);if(review.blockers.length)throw Error(review.blockers.join(' '));const job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});
-    const {claimJob}=await import('../src/server/prospecting/lease.ts'),lease=await claimJob('explicit-live-smoke',workspaceId);if(!lease||lease.jobId!==job.id)throw Error('QA queue is not empty; start no calls.');
-    const {runQualification}=await import('../src/server/prospecting/qualification.ts');
-    const signal=AbortSignal.timeout(120000),evidence=[{id:randomUUID(),url:'https://example.com/',fetchedAt:new Date().toISOString(),text:'Synthetic QA company: a dental clinic offering orthodontics, appointments and general dentistry.',hash:'synthetic-smoke-v1',truncated:false}];
-    const {heartbeat}=await import('../src/server/prospecting/lease.ts');const timer=setInterval(()=>void heartbeat(lease).catch(()=>{}),10000);
-    try{await runQualification(lease,{signal,collect:async()=>evidence});await runQualification(lease,{signal,collect:async()=>evidence});}finally{clearInterval(timer);}
+    const {getAiSettings,prepareAiTest,confirmAiTest}=await import('../src/server/prospecting/ai/probe.ts');
+    const {runWorkerOnce}=await import('../src/server/prospecting/worker.ts');
+    const settings=await getAiSettings(p),expected=source==='CODEX'?'codex-local':source.toLowerCase();
+    if(settings.policy.conventionalProvider!==expected)throw Error('Select the requested conventional provider in AI settings first.');
+    const existing=await withWorkspaceTransaction(p,c=>c.query("SELECT 1 FROM app.prospecting_job WHERE state IN('queued','running','waiting_provider','cancelling','needs_reconciliation') LIMIT 1"));
+    if(existing.rowCount)throw Error('QA queue must be empty before the live smoke.');
+    const review=await prepareAiTest(p);if(review.blockers.length)throw Error(review.blockers.join(' '));
+    const job=await confirmAiTest(p,{requestId:randomUUID(),draft:review.draft,reviewToken:review.token});
+    for(let step=0;step<3;step++){const state=await getJob(p,job.id);if(['completed','failed','partial','needs_reconciliation'].includes(state.state))break;await runWorkerOnce({},{workspaceId,signal:AbortSignal.timeout(130000)});}
     const result=await getJob(p,job.id);if(result.state!=='completed')throw Error('Smoke did not complete: '+result.state);
-    console.log(JSON.stringify({status:'COMPLETED',source,synthetic:true,jobId:job.id,usage:result.usage,note:'Transport smoke only, not an accuracy evaluation. Proposals not applied.'}));
+    console.log(JSON.stringify({status:'COMPLETED',source,synthetic:true,jobId:job.id,usage:result.usage,note:'Connection transport test only, not empirical accuracy. No proposals applied.'}));
   }
 }finally{await Promise.all([getPools().close(),workerPool().end()]);}

@@ -1,4 +1,6 @@
 import {setTimeout as delay} from 'node:timers/promises';
+import {parseWorkerOptions} from './prospecting-smoke-options.ts';
+const options=parseWorkerOptions(process.argv.slice(2));
 process.loadEnvFile('.env.local');
 const {runWorkerOnce}=await import('../src/server/prospecting/worker.ts');
 const {workerPool}=await import('../src/server/prospecting/worker-db.ts');
@@ -9,8 +11,8 @@ for(const signal of ['SIGINT','SIGTERM'] as const)process.on(signal,()=>controll
 try{
   console.log('Prospecting worker ready; external execution follows server configuration.');
   do{
-    await runWorkerOnce({},{workerId,signal:controller.signal});
-    if(process.argv.includes('--once')||controller.signal.aborted)break;
+    await runWorkerOnce({},{workerId,signal:controller.signal,workspaceId:options.workspaceId});
+    if(options.once||controller.signal.aborted)break;
     await delay(2000,undefined,{signal:controller.signal}).catch(()=>{});
   }while(!controller.signal.aborted);
 }finally{await Promise.all([workerPool().end(),getPools().close()]);}
