@@ -13,6 +13,7 @@ const known = [
   "whatsapp-storage",
   "whatsapp-connections",
   "whatsapp-ingress",
+  "cadence-publication",
   "migrations",
   "auth",
   "memberships",
