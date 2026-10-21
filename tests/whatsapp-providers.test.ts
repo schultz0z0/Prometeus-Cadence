@@ -9,6 +9,11 @@ const meta:ProviderConfig={provider:'meta',connectionId:'c',revision:1,identifie
 const twilio:ProviderConfig={provider:'twilio',connectionId:'c',revision:1,identifiers:{accountSid:account,sender:'+5541999999999',authMode:'api-key'},credentials:{apiKeySid:key,apiKeySecret:'api-secret',authToken:'callback-token'},sender:{...meta.sender!,provider:'twilio',externalId:'XE'+'d'.repeat(32),identityScope:'twilio:'+account},templates:[]};
 const send:PreparedSend={connectionId:'c',connectionRevision:1,senderId:'s',identity:{scope:'meta:222',externalId:'5541988888888',phone:'+5541988888888'},content:{kind:'text',text:'Olá'},purpose:'service'};
 const json=(v:unknown,status=200,headers:HeadersInit={})=>new Response(JSON.stringify(v),{status,headers:{'content-type':'application/json',...headers}});
+
+test('Twilio repeated placeholders bind one value per named parameter',async()=>{
+ const adapter=createTwilioAdapter(async(url)=>String(url).includes('ApprovalRequests')?json({account_sid:account,whatsapp:{status:'approved'}}):json({contents:[{account_sid:account,sid:contentSid,friendly_name:'Repeat',language:'pt_BR',types:{'twilio/text':{body:'Olá {{1}}, confirme {{1}}'}}}],meta:{next_page_url:null}}));
+ const templates=await adapter.listTemplates(twilio);assert.equal(templates[0].parameters.length,1);assert.equal(templates[0].parameters[0].key,'body.1');
+});
 test('Meta verifies token scopes app WABA and sender before any sending; builds JSON Cloud API request',async()=>{
  const calls:string[]=[];
  const adapter=createMetaAdapter(async(url,init)=>{

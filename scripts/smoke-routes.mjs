@@ -1,5 +1,6 @@
 import fs from "node:fs";
 const base = process.env.SMOKE_URL || "http://127.0.0.1:3210";
+const whatsappMilestone=process.argv.includes('--whatsapp');
 const files = [
   "src/components/shell/navigation.ts",
   "src/modules/settings/navigation.ts",
@@ -76,6 +77,7 @@ for (const route of [
   "/api/planning/jobs/qa-missing",
   "/api/automations",
   "/api/automations/qa-missing/occurrences",
+  ...(whatsappMilestone?['/api/channels','/api/messaging/conversations','/api/messaging/publications','/api/messaging/limits','/api/messaging/usage']:[]),
 ]) {
   const response = await fetch(base + route, {
     headers: process.env.SMOKE_COOKIE
@@ -86,18 +88,18 @@ for (const route of [
   results.push({
     route,
     status: response.status,
-    ok: response.status === (process.env.SMOKE_COOKIE ? 200 : 401),
+    ok: response.status === (process.env.SMOKE_COOKIE ? (route.includes('/qa-missing')?404:200) : 401),
   });
 }
 const report = {
   date: new Date().toISOString(),
   base,
-  note: "Authenticated identity milestone. Anonymous app routes must redirect to login; private APIs must return 401. No real external connector is tested.",
+  note: "Local HTTP smoke. Anonymous protected pages redirect to login; private APIs return 401. Authenticated API probes return 200, intentionally missing resources 404. No real external connector is tested.",
   results,
 };
 fs.mkdirSync("docs/validation", { recursive: true });
 fs.writeFileSync(
-  "docs/validation/routes-04.json",
+  whatsappMilestone?'docs/validation/routes-05a.json':"docs/validation/routes-04.json",
   JSON.stringify(report, null, 2) + "\n",
 );
 console.log(

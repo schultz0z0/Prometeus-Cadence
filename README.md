@@ -1,6 +1,6 @@
 # Prometeus Cadence
 
-Reconstrução independente da interface e dos fluxos observados no CadenceFlow. **Marcos 01–03B: interface, identidade, PostgreSQL local, prospecção/qualificação e roteamento de IA.** Adaptadores externos foram testados por contrato; chamadas reais dependem de credenciais/saldo. Envios pertencem aos próximos marcos.
+Reconstrução independente da interface e dos fluxos observados no CadenceFlow. **Marcos01–04 e implementação local05A: interface, identidade, PostgreSQL, prospecção, IA, automações e execução WhatsApp Meta/Twilio.** O aceite real dos canais depende das credenciais e do callback HTTPS de cada empresa. E-mail pertence ao marco05B.
 
 ## Executar
 
@@ -32,7 +32,8 @@ O Compose `prometeus-cadence` tem PostgreSQL em `127.0.0.1:55432`, SMTP em `127.
 - Planejamento por IA: leitura de site com fontes, três propostas de público e cadência, edição humana e criação confirmada de lista/automações pausadas ou cadência em rascunho.
 - Agendador PostgreSQL separado, desligado por padrão: autorizações por revisão, próxima ocorrência, execução avulsa, histórico, dependência busca→qualificação e backlog sem requalificação automática dos resultados pendentes.
 - Cadência por etapas, revisão de mensagens, canvas editável, esperas, ordenação, zoom, configurações e rascunhos.
-- Contexto da empresa editável e versionado, canais desconectados, inbox de exemplo, relatórios e demais superfícies.
+- Contexto da empresa editável e versionado, conexão Meta/Twilio por workspace com segredos cifrados, catálogo remoto, teste confirmado e limites compartilhados.
+- Publicação imutável de cadência WhatsApp, outbox PostgreSQL, tentativas com recuperação/resultado incerto, inbox real, resposta revisada e cancelamento por resposta/opt-out. Worker independente, desligado por padrão; validação externa Meta/Twilio pendente.
 
 Contas novas começam vazias. Contatos, templates, contexto versionado, produtos aprovados, cadências, automações e propostas de IA ficam no PostgreSQL; preferências pessoais são separadas das configurações do workspace. Uma análise cria somente job e proposta. Nenhuma criação ativa envio. Busca pontual exige confirmação, configuração e worker ativo.
 
@@ -40,7 +41,9 @@ O modo demonstrativo anterior permanece disponível ao definir explicitamente `A
 
 ## Limites e próximas entregas
 
-WhatsApp, e-mail, LinkedIn, SDR e billing **não estão conectados**. Execuções externas e o agendador começam desabilitados. O marco04 foi validado com fixtures privadas: nenhuma nova inferência paga ou busca real foi feita. Valores desconhecidos não são inventados.
+E-mail, LinkedIn, SDR e billing ainda não estão integrados. Meta/Twilio têm implementação e contratos locais, mas não foram ativados com contas reais nesta entrega. Execuções externas, scheduler e worker de mensagens começam desabilitados. Valores desconhecidos não são inventados.
+
+Para configurar e operar05A, consulte [WhatsApp: configuração, recuperação e piloto](docs/operations/WHATSAPP-SETUP.md) e a [validação05A](docs/validation/2026-10-21-whatsapp-05a.md). Acesse `/settings/whatsapp`, `/cadences` e `/inbox`. Salvar/verificar/sincronizar não envia; teste, resposta e publicação exigem revisão e confirmação. Credenciais de cada empresa são preenchidas no app. O piloto real fica para a configuração manual final do usuário; nenhum domínio/túnel foi exposto automaticamente.
 
 Para operar o marco04, consulte a [validação e operação04](docs/validation/04-automation-ai.md). Os processos são independentes: aplicativo3210, `rtk npm run scheduler` e `rtk npm run worker`. O scheduler exige `AUTOMATIONS_SCHEDULER_ENABLED=true`, revisão de ativação e configuração/cotas válidas; não é iniciado pelo aplicativo. `rtk npm run scheduler -- --once --workspace ID` processa no máximo uma ocorrência elegível. Desligá-lo não cancela jobs já criados; pause a automação para impedir novos despachos recorrentes e trate jobs enviados no histórico. Não aumentar budgets para executar um teste.
 
@@ -66,6 +69,7 @@ O último comando requer o servidor local ativo. Os testes de domínio verificam
 - [Validação de prospecção e IA híbrida](docs/validation/03-prospecting.md)
 - [Validação do roteamento e Codex ChatGPT](docs/validation/03b-ai-routing.md)
 - [Validação do planejamento e agendador04](docs/validation/04-automation-ai.md)
+- [Validação local de WhatsApp05A](docs/validation/2026-10-21-whatsapp-05a.md)
 - [Especificação aprovada](docs/superpowers/specs/2026-10-20-prometeus-cadence-design.md)
 - [Investigação e evidências REA](docs/reverse-engineering/README.md)
 

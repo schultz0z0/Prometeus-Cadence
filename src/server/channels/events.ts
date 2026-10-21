@@ -21,3 +21,7 @@ export async function applyReceivedEvents(limit:number):Promise<number>{
  }
  return processed;
 }
+export async function pruneIngestMetadata(now:string):Promise<number>{
+ if(!Number.isFinite(Date.parse(now)))throw Error('Invalid retention clock');
+ return Number((await ingressPool().query('SELECT app.prune_channel_ingest_metadata($1) AS count',[now])).rows[0].count);
+}

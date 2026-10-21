@@ -14,7 +14,10 @@
     "db:migrate": "node scripts/db-migrate.mjs",
     "test:integration": "node scripts/test-integration.mjs",
     "worker": "node --conditions=react-server --experimental-strip-types scripts/prospecting-worker.ts",
-    "scheduler": "node --conditions=react-server --experimental-strip-types scripts/automation-scheduler.ts"
+    "scheduler": "node --conditions=react-server --experimental-strip-types scripts/automation-scheduler.ts",
+    "messaging:worker": "node --conditions=react-server --experimental-strip-types scripts/messaging-worker.ts",
+    "messaging:maintenance": "node --conditions=react-server --experimental-strip-types scripts/messaging-maintenance.ts",
+    "messaging:smoke": "node --conditions=react-server --experimental-strip-types scripts/smoke-whatsapp.ts"
   },
   "dependencies": {
     "better-auth": "1.7.12",
