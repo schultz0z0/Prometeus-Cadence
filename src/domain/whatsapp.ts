@@ -5,6 +5,7 @@ export interface ConnectionView {
  externalAccountId:string|null;hasSecrets:boolean;
  verification:{credentials:boolean;challenge:boolean;inbound:boolean};senders:SenderView[];
  callbackUrl?:string|null;lastError?:string|null;tokenExpiresAt?:string|null;
+ identifiers?:Record<string,string>;callbackStatusUrl?:string|null;callbackPath?:string;
 }
 export interface SenderView {id:string;connectionId:string;provider:Provider;address:string|null;externalId:string;identityScope:string;revision:number;ready:boolean;dailyLimit:number|null}
 export interface Identity {scope:string;externalId:string;phone:string|null}

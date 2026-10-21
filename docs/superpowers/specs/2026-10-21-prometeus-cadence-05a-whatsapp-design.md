@@ -1,6 +1,6 @@
 # Marco 05A — WhatsApp Meta/Twilio, execução e inbox
 
-Data: 21/10/2026. Estado: **desenho aprovado pelo usuário; plano em preparação, implementação não iniciada**. Base: `0a2b5a7`, com correções dos contratos de prospecção e piloto real do marco 04. Execução futura nativa nesta conversa, conforme preferência já estabelecida.
+Data: 21/10/2026. Estado: **desenho e plano aprovados; implementação nativa em andamento**. Base: `0a2b5a7`, com correções dos contratos de prospecção e piloto real do marco 04. O usuário reservou a configuração manual dos provedores e o piloto externo para o final.
 
 Pesquisa: [Meta/Twilio](../../research/2026-10-21-meta-twilio-whatsapp-study.md). Referência de UX: `docs/reverse-engineering/FINDINGS.md`, `SURFACE-MAP.md` e prints preservados. Não houve nova inspeção autenticada do concorrente; Twilio decorre da escolha do usuário.
 

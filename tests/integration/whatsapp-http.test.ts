@@ -1,0 +1,38 @@
+import test,{after} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {channelRequestHandler} from '../../src/server/channels/http.ts';
+import {messagingRequestHandler} from '../../src/server/messaging/http.ts';
+import {webhookRequest} from '../../src/server/channels/webhooks.ts';
+import {getPools} from '../../src/server/db/pool.ts';
+import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';
+import {verifiedMetaFixture,testAdmin} from './whatsapp-helpers.ts';
+import {base} from './helpers.ts';
+after(async()=>{await getPools().close();await closeIngressPool();});
+const request=(f:Awaited<ReturnType<typeof verifiedMetaFixture>>,path:string,body?:unknown)=>new Request(base+path,{method:body?'POST':'GET',headers:f.u.headers,body:body?JSON.stringify(body):undefined});
+test('HTTP origin session and workspace guards precede channel writes; connection readbacks contain no secrets',async()=>{
+ const f=await verifiedMetaFixture(),path='/api/channels';
+ const invalid=request(f,path,{name:'bad'});invalid.headers.set('origin','https://evil.example');assert.equal((await channelRequestHandler(invalid,{})).status,403);
+ const stale=request(f,path);stale.headers.set('x-cadence-workspace',randomUUID());assert.equal((await channelRequestHandler(stale,{})).status,409);
+ assert.equal((await channelRequestHandler(new Request(base+path),{})).status,401);
+ const valid=await channelRequestHandler(request(f,path),{});assert.equal(valid.status,200);const text=await valid.text();assert.equal(text.includes('fixture-access-token'),false);assert.equal(text.includes('fixture-app-secret'),false);
+});
+test('manual reply prepare never sends; confirmed replay enqueues once and reading cannot hide a concurrent inbound',async()=>{
+ const f=await verifiedMetaFixture();process.env.CHANNEL_PUBLIC_BASE_URL='https://hooks.example';
+ const limit=await channelRequestHandler(request(f,'/api/channels/'+f.connection.id+'/limits',{requestId:randomUUID(),expectedRevision:0,workspaceDailyLimit:5,senderId:f.sender.id,senderDailyLimit:5}),{id:f.connection.id,action:'limits'});assert.equal(limit.status,200);
+ await webhookRequest(f.request({messages:[{id:'wamid.http.'+randomUUID(),from:'5541988888888',timestamp:String(Math.floor(Date.now()/1000)),type:'text',text:{body:'Oi'}}]}),f.publicId,'meta');
+ const list=await (await messagingRequestHandler(request(f,'/api/messaging/conversations'),{resource:'conversations'})).json();const id=list.items[0].id;
+ const path='/api/messaging/conversations/'+id,params={resource:'conversations',id};
+ const prepared=await messagingRequestHandler(request(f,path+'/reply-prepare',{content:{kind:'text',text:'Olá, posso ajudar?'}}),{...params,action:'reply-prepare'});assert.equal(prepared.status,200);const review=await prepared.json();assert.deepEqual(review.blockers,[]);
+ const count=()=>testAdmin(async c=>Number((await c.query('SELECT count(*) FROM app.message_outbox WHERE workspace_id=$1',[f.u.p.workspaceId])).rows[0].count));assert.equal(await count(),0);
+ const command={content:{kind:'text',text:'Olá, posso ajudar?'},requestId:randomUUID(),reviewToken:review.token};
+ const first=await (await messagingRequestHandler(request(f,path+'/reply-confirm',command),{...params,action:'reply-confirm'})).json(),again=await (await messagingRequestHandler(request(f,path+'/reply-confirm',command),{...params,action:'reply-confirm'})).json();assert.equal(first.id,again.id);assert.equal(await count(),1);
+ const changed=await messagingRequestHandler(request(f,path+'/reply-confirm',{...command,content:{kind:'text',text:'Não revisado'}}),{...params,action:'reply-confirm'});assert.equal(changed.status,409);
+ const thread=await (await messagingRequestHandler(request(f,path+'/messages'),{...params,action:'messages'})).json();const lastSeen=thread.messages.at(-1).id;
+ await webhookRequest(f.request({messages:[{id:'wamid.new.'+randomUUID(),from:'5541988888888',timestamp:String(Math.floor(Date.now()/1000)),type:'text',text:{body:'Mais uma pergunta'}}]}),f.publicId,'meta');
+ assert.equal((await messagingRequestHandler(request(f,path+'/read',{requestId:randomUUID(),messageId:lastSeen}),{...params,action:'read'})).status,200);
+ const unread=await (await messagingRequestHandler(request(f,'/api/messaging/conversations'),{resource:'conversations'})).json();assert.equal(unread.items[0].unread,1);assert.equal(await count(),1);
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=$3 WHERE "organizationId"=$1 AND "userId"=$2',[f.u.p.workspaceId,f.u.p.userId,'operator']));
+ assert.equal((await channelRequestHandler(request(f,'/api/channels/'+f.connection.id+'/verify-token',{requestId:randomUUID(),expectedRevision:1}),{id:f.connection.id,action:'verify-token'})).status,403);
+ assert.equal((await messagingRequestHandler(request(f,path+'/reply-prepare',{content:{kind:'text',text:'Resposta do operador'}}),{...params,action:'reply-prepare'})).status,200);
+});
