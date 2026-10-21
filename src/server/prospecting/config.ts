@@ -4,7 +4,7 @@ import {existsSync} from 'node:fs';
 import type {GenerationSource,JobInput,Units,UsageEstimate} from '../../domain/prospecting.ts';
 import {hashValue} from './review.ts';
 import {providerProfile,actorInput} from './providers/profiles.ts';
-const unitCaps=z.strictObject({candidates:z.number().int().min(0).max(1e9).default(0),apifyRuns:z.number().int().min(0).max(1e9).default(0),apolloPages:z.number().int().min(0).max(1e9).default(0),jevCalls:z.number().int().min(0).max(1e9).default(0),codexCalls:z.number().int().min(0).max(1e9).default(0)});
+const unitCaps=z.strictObject({candidates:z.number().int().min(0).max(1e9).default(0),apifyRuns:z.number().int().min(0).max(1e9).default(0),apolloPages:z.number().int().min(0).max(1e9).default(0),jevCalls:z.number().int().min(0).max(1e9).default(0),codexCalls:z.number().int().min(0).max(1e9).default(0),openaiCalls:z.number().int().min(0).max(1e9).default(0),geminiCalls:z.number().int().min(0).max(1e9).default(0)});
 export function parseCaps(value:string|undefined){try{return unitCaps.parse(JSON.parse(value??'{}'));}catch{return unitCaps.parse({});}}
 export function prospectingConfig(){
   const e=process.env;

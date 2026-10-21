@@ -18,7 +18,7 @@ export async function settleUsage(c:PoolClient,jobId:string,usage:ProviderUsage)
 export async function assertReserved(c:PoolClient,jobId:string,units:Units){
   const rows=(await c.query("SELECT event,units FROM app.usage_ledger WHERE job_id=$1 AND event IN('reserve','release')",[jobId])).rows;
   for(const [unit,count]of Object.entries(units)){
-    if(!['candidates','apifyRuns','apolloPages','jevCalls','codexCalls'].includes(unit)||!Number.isSafeInteger(count)||count<0)throw new AppError(422,'Unidade de uso inválida.');
+    if(!['candidates','apifyRuns','apolloPages','jevCalls','codexCalls','openaiCalls','geminiCalls'].includes(unit)||!Number.isSafeInteger(count)||count<0)throw new AppError(422,'Unidade de uso inválida.');
     const remaining=rows.reduce((n,r)=>n+(r.event==='reserve'?1:-1)*Number(r.units[unit]??0),0);
     if(count>remaining)throw new AppError(429,'A execução atingiu a reserva confirmada.','USAGE_LIMIT');
   }

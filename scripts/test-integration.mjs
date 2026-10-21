@@ -20,6 +20,7 @@ const known = [
   "prospecting-results",
   "prospecting-worker",
   "prospecting-pipeline",
+  "ai-settings",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length

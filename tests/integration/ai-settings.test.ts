@@ -1,0 +1,53 @@
+import test,{after,beforeEach} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {readAiPolicy,saveAiPolicy} from '../../src/server/prospecting/ai/settings.ts';
+import {readConnectionCheck,recordConnectionCheck} from '../../src/server/prospecting/ai/connection.ts';
+import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
+import {withLeasedTransaction,workerPool} from '../../src/server/prospecting/worker-db.ts';
+import {prepareJob,confirmJob,cancelJob} from '../../src/server/prospecting/service.ts';
+import {reserveUsage,settleUsage} from '../../src/server/prospecting/usage.ts';
+import {configureProspectingTest,prospectingUser,generationInput,grantTestLease,testAdmin,closeProspectingPools} from './prospecting-helpers.ts';
+import {resetRateLimits} from './helpers.ts';
+beforeEach(resetRateLimits);configureProspectingTest();after(async()=>{await closeProspectingPools();await workerPool().end();});
+const policy={mode:'auto' as const,conventionalProvider:'codex-local' as const,jevEnabled:false};
+test('AI policies persist once, reject stale or foreign writes and recheck downgraded roles',async()=>{
+ const a=await prospectingUser(),b=await prospectingUser();
+ assert.equal((await withWorkspaceTransaction(a.p,readAiPolicy)).conventionalProvider,null);
+ const body={requestId:randomUUID(),expectedRevision:0,policy};
+ const [one,two]=await Promise.all([saveAiPolicy(a.p,body),saveAiPolicy(a.p,body)]);assert.equal(one.revision,1);assert.deepEqual(one,two);
+ await assert.rejects(()=>saveAiPolicy(a.p,{...body,policy:{...policy,jevEnabled:true}}),{status:409});
+ await assert.rejects(()=>saveAiPolicy(a.p,{...body,requestId:randomUUID()}),{status:409});
+ assert.equal((await withWorkspaceTransaction(b.p,readAiPolicy)).revision,0);
+ await assert.rejects(()=>withWorkspaceTransaction(b.p,c=>c.query("INSERT INTO app.ai_policy(workspace_id,mode,conventional_provider,jev_enabled) VALUES($1,'auto','openai',false)",[a.p.workspaceId])));
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=\'admin\' WHERE "organizationId"=$1 AND "userId"=$2',[a.p.workspaceId,a.p.userId]));
+ assert.equal((await saveAiPolicy(a.p,{requestId:randomUUID(),expectedRevision:1,policy})).revision,2);
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[a.p.workspaceId,a.p.userId]));
+ await assert.rejects(()=>saveAiPolicy(a.p,{requestId:randomUUID(),expectedRevision:2,policy}),{status:403});
+});
+test('connection attestations are worker-only, scoped and replay cannot refresh a successful test',async()=>{
+ const a=await prospectingUser(),b=await prospectingUser(),input=generationInput();
+ const review=await prepareJob(a.p,input),job=await confirmJob(a.p,{requestId:randomUUID(),input,reviewToken:review.token}),lease=await grantTestLease(a.p,job.id);
+ const route={provider:'codex-local' as const,model:'fixture-model',configFingerprint:'fingerprint-a',contractVersion:'conventional-v1' as const};
+ const data={operationId:'op-a',route,outcome:'success' as const};
+ await assert.rejects(()=>withWorkspaceTransaction(a.p,c=>recordConnectionCheck(c,lease,data)));
+ await withLeasedTransaction(lease,c=>recordConnectionCheck(c,lease,data));
+ const first=await withWorkspaceTransaction(a.p,c=>readConnectionCheck(c,route));assert.equal(first?.outcome,'success');
+ await withLeasedTransaction(lease,c=>recordConnectionCheck(c,lease,data));
+ assert.equal((await withWorkspaceTransaction(a.p,c=>readConnectionCheck(c,route)))?.checkedAt,first?.checkedAt);
+ assert.equal(await withWorkspaceTransaction(b.p,c=>readConnectionCheck(c,route)),null);
+ assert.equal(await withWorkspaceTransaction(a.p,c=>readConnectionCheck(c,{...route,configFingerprint:'other'})),null);
+ await withLeasedTransaction(lease,c=>recordConnectionCheck(c,lease,{...data,operationId:'op-b',outcome:'failed'}));
+ assert.equal((await withWorkspaceTransaction(a.p,c=>readConnectionCheck(c,route)))?.outcome,'failed');
+ await cancelJob(a.p,job.id);
+});
+test('OpenAI and Gemini budgets are independent and unknown usage stays unknown',async()=>{
+ const a=await prospectingUser(),input=generationInput(),review=await prepareJob(a.p,input),job=await confirmJob(a.p,{requestId:randomUUID(),input,reviewToken:review.token});
+ await withWorkspaceTransaction(a.p,async c=>{
+   await reserveUsage(c,{jobId:job.id,operationId:'api-reserve',units:{openaiCalls:1,geminiCalls:1},caps:{openaiCalls:1,geminiCalls:1},globalCaps:{openaiCalls:100000,geminiCalls:100000}});
+   await settleUsage(c,job.id,{provider:'openai',operationId:'openai-consume',units:{openaiCalls:1},costUsd:null,costKind:'unknown'});
+   const row=(await c.query("SELECT cost_usd FROM app.usage_ledger WHERE operation_id='openai-consume' AND event='consume'")).rows[0];assert.equal(row.cost_usd,null);
+ });
+ await assert.rejects(()=>withWorkspaceTransaction(a.p,c=>reserveUsage(c,{jobId:job.id,operationId:'api-over',units:{openaiCalls:1},caps:{openaiCalls:1},globalCaps:{openaiCalls:100000}})),{status:429});
+ await cancelJob(a.p,job.id);
+});

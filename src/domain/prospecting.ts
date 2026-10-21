@@ -4,7 +4,7 @@ export type ModuleId='email'|'phone'|'website'|'summary'|'deep'|'validateEmail'|
 export type GenerationSource='MAPS'|'WEB'|'CNPJ'|'APOLLO';
 export type Destination={mode:'new';name:string}|{mode:'existing';listId:string};
 export type JobInput={kind:'generation';source:GenerationSource;destination:Destination;filters:Record<string,string>;limit:number;dedupScope:'list'|'workspace'}|{kind:'qualification';listId:string;leadIds:string[];modules:ModuleId[];summaryPolicy:'all'|'fits';escalation:'off'|'ambiguous'};
-export type Unit='candidates'|'apifyRuns'|'apolloPages'|'jevCalls'|'codexCalls';
+export type Unit='candidates'|'apifyRuns'|'apolloPages'|'jevCalls'|'codexCalls'|'openaiCalls'|'geminiCalls';
 export type Units=Partial<Record<Unit,number>>;
 export interface UsageEstimate{provider:string;unit:Unit;maxUnits:number;estimatedUsd:number|null;pricingSource:string|null}
 export interface ProviderUsage{provider:string;operationId:string;units:Units;inputTokens?:number;outputTokens?:number;fetchedCount?:number;acceptedCount?:number;costUsd:number|null;costKind:'reported'|'estimated'|'unknown'}
