@@ -86,6 +86,7 @@ const settings = z.strictObject({
   pauseOnBounce: z.boolean(),
   resume: z.enum(["tomorrow", "hours", "manual"]),
 });
+const origin=z.strictObject({kind:z.enum(['manual','planning']),jobId:id.optional(),optionId:id.optional(),contextVersion:z.int().min(0).optional(),productId:id.optional(),productVersion:z.int().min(0).nullable().optional()});
 const cadence = z.strictObject({
   id,
   name,
@@ -107,6 +108,7 @@ const cadence = z.strictObject({
   settings,
   createdAt: date,
   archived: z.boolean().optional(),
+  origin: origin.optional(),
 });
 const automation = z.strictObject({
   id,
@@ -132,6 +134,9 @@ const automation = z.strictObject({
   filters,
   modules: strings,
   createdAt: date,
+  criteria: z.string().max(4000).optional(),
+  dependsOnAutomationId: id.optional(),
+  origin: origin.optional(),
 });
 const template = z.strictObject({
   id,

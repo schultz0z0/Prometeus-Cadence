@@ -26,6 +26,7 @@ const known = [
   "planning-storage",
   "context-products",
   "planning-pipeline",
+  "planning-confirmation",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length

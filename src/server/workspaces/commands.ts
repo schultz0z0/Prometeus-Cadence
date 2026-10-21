@@ -97,7 +97,7 @@ export async function executeWorkspaceCommand(
         repo.deleteLeads(command.ids);
         break;
       case "cadence.saveDraft":
-        repo.saveCadenceDraft(command.cadence);
+        repo.saveCadenceDraft({...command.cadence,origin:before.data.cadences.find(c=>c.id===command.cadence.id)?.origin??{kind:'manual'}});
         break;
       case "context.saveDraft":
       case "context.approve": {
@@ -131,12 +131,13 @@ export async function executeWorkspaceCommand(
         break;
       case "automation.save":
         repo.saveAutomation(
-          { ...command.automation, status: "paused" },
+          { ...command.automation, status: "paused",origin:before.data.automations.find(a=>a.id===command.automation.id)?.origin??{kind:'manual'} },
           command.list,
         );
         break;
       case "audience.confirm":
         result = repo.confirmAutomationPlan(command.plan, requestId);
+        for(const automation of repo.getSnapshot().automations.filter(a=>result!.automationIds.includes(a.id)))repo.saveAutomation({...automation,origin:{kind:'manual'}});
         break;
       case "preferences.update": {
         const prefs = command.preferences;

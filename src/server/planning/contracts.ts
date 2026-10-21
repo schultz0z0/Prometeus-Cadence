@@ -30,6 +30,8 @@ const variables=new Set(['nome','email','telefone','site','cidade','razaoSocial'
 function validVariables(v:string){return Array.from(v.matchAll(/\{\{\s*([^{}]+?)\s*\}\}/g)).every(m=>variables.has(m[1]));}
 export const planningStepSchema=z.strictObject({channel,delayDays:z.number().int().min(0).max(365),subject:z.string().max(200).refine(validVariables).optional(),body:z.string().trim().min(1).max(2000).refine(validVariables),aiInstructions:brief.optional(),stopOnReply:z.literal(true)}).superRefine((v,c)=>{if(v.channel==='EMAIL'&&!v.subject?.trim())c.addIssue({code:'custom',message:'E-mail exige assunto.'});});
 const cadence=z.strictObject({id:z.enum(['option_1','option_2','option_3']),name:z.string().trim().min(1).max(160),description:brief,steps:z.array(planningStepSchema).length(3)});
+export const audienceOptionSchema=audience;
+export const cadenceOptionSchema=cadence;
 function optionsSchema<T extends z.ZodType>(option:T,key:(o:z.output<T>)=>unknown){return z.strictObject({options:z.array(option).length(3)}).superRefine((v,c)=>{
  if(new Set(v.options.map(o=>(o as {id:string}).id)).size!==3||new Set(v.options.map(o=>JSON.stringify(key(o)))).size!==3)c.addIssue({code:'custom',message:'Retorne três opções diferentes.'});
 });}

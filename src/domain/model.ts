@@ -52,7 +52,11 @@ export interface Automation {
   filters: Record<string, string>;
   modules: string[];
   createdAt: string;
+  criteria?: string;
+  dependsOnAutomationId?: string;
+  origin?: PlanningOrigin;
 }
+export interface PlanningOrigin{kind:'manual'|'planning';jobId?:string;optionId?:string;contextVersion?:number;productId?:string;productVersion?:number|null}
 export interface AudiencePlan {
   id: string;
   title: string;
@@ -102,6 +106,7 @@ export interface Cadence {
   settings: CadenceSettings;
   createdAt: string;
   archived?: boolean;
+  origin?: PlanningOrigin;
 }
 export interface CadenceBrief {
   listId: string;
