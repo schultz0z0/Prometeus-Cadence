@@ -15,6 +15,7 @@ import {createProspectingClient,type ProspectingClient} from './prospecting-clie
 import {createPlanningClient,type PlanningClient} from './planning-client';
 import {createContextClient,type ContextClient} from './context-client';
 import {createAutomationClient,type AutomationClient} from './automation-client';
+import {createChannelClient,type ChannelClient} from './channel-client';
 export interface IdentityView {
   user: { id: string; name: string; email: string };
   activeWorkspaceId: string | null;
@@ -41,6 +42,8 @@ const PlanningContext=createContext<PlanningClient|null>(null);
 const CompanyContext=createContext<ContextClient|null>(null);
 const RefreshContext=createContext<(()=>Promise<void>)|null>(null);
 const AutomationContext=createContext<AutomationClient|null>(null);
+const ChannelContext=createContext<ChannelClient|null>(null);
+export function useChannels(){return useContext(ChannelContext);}
 export function useAutomationClient(){return useContext(AutomationContext);}
 export function useWorkspaceRefresh(){return useContext(RefreshContext);}
 export function usePlanning(){return useContext(PlanningContext);}
@@ -66,6 +69,7 @@ export function WorkspaceProvider({
   const [planning]=useState(()=>createPlanningClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const [company]=useState(()=>createContextClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const [automation]=useState(()=>createAutomationClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+  const [channels]=useState(()=>createChannelClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const current = useSyncExternalStore(
     repo.subscribe,
     repo.snapshot,
@@ -80,7 +84,7 @@ export function WorkspaceProvider({
     return () => {
       mounted.current = false;
       queueMicrotask(() => {
-        if (!mounted.current) {repo.dispose();prospecting.dispose();planning.dispose();company.dispose();automation.dispose();}
+        if (!mounted.current) {repo.dispose();prospecting.dispose();planning.dispose();company.dispose();automation.dispose();channels.dispose();}
       });
     };
   }, [repo]);
@@ -97,7 +101,7 @@ export function WorkspaceProvider({
     return () => window.removeEventListener("focus", focus);
   }, [repo]);
   return (
-    <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}><AutomationContext value={automation}>
+    <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}><AutomationContext value={automation}><ChannelContext value={channels}>
       <CapabilitiesContext value={current.capabilities}>
         <RepositoryContext value={repo}>
           <ToastContext value={setToast}>
@@ -159,6 +163,6 @@ export function WorkspaceProvider({
           </ToastContext>
         </RepositoryContext>
       </CapabilitiesContext>
-    </AutomationContext></RefreshContext></CompanyContext></PlanningContext></ProspectingContext></IdentityContext>
+    </ChannelContext></AutomationContext></RefreshContext></CompanyContext></PlanningContext></ProspectingContext></IdentityContext>
   );
 }

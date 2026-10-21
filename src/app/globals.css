@@ -1115,3 +1115,8 @@ kbd {
     scroll-behavior: auto !important;
   }
 }
+.channel-fields { border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: grid; gap: 16px; min-width: 0; }
+.channel-fields legend { font-weight: 600; padding: 0 6px; }
+.message-preview { white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--hover); }
+.message-preview p { margin: 0 0 8px; }
+.channel-cards > *, .settings-main { min-width: 0; }
