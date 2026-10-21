@@ -17,9 +17,9 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
   const operationId=hashValue({job:lease.jobId,step});
   const prior=await withLeasedTransaction(lease,async c=>{
     const job=(await c.query('SELECT checkpoint FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
-    if(!prospectingConfig().enabled||job.checkpoint.execution?.version!==prospectingConfig().version)throw new AppError(409,'A configuração mudou. Revise antes de continuar.','PROFILE_CHANGED');
     const old=(await c.query('SELECT * FROM app.prospecting_attempt WHERE id=$1',[operationId])).rows[0];
     if(old)return old;
+    if(!prospectingConfig().enabled||job.checkpoint.execution?.version!==prospectingConfig().version)throw new AppError(409,'A configuração mudou. Revise antes de continuar.','PROFILE_CHANGED');
     await assertReserved(c,lease.jobId,units);
     await c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4,'prepared',$5)",[lease.jobId,operationId,provider,step,{reservedUnits:units}]);
     return null;
@@ -41,5 +41,6 @@ export async function handleStepFailure(lease:JobLease,error:unknown){
   if(error instanceof UncertainStep)return;
   if(error instanceof AppError&&error.code==='STALE_JOB')throw error;
   const job=await readLeasedJob(lease);
-  await finishJob(lease,job.counts.inserted||job.counts.pending?'partial':'failed',error instanceof ProviderError?error.code:error instanceof AppError?error.code??'STEP_FAILED':'STEP_FAILED');
+  const hasItems=await withLeasedTransaction(lease,async c=>!!(await c.query('SELECT 1 FROM app.prospecting_item WHERE job_id=$1 LIMIT 1',[lease.jobId])).rowCount);
+  await finishJob(lease,job.counts.inserted||job.counts.pending||hasItems?'partial':'failed',error instanceof ProviderError?error.code:error instanceof AppError?error.code??'STEP_FAILED':'STEP_FAILED');
 }

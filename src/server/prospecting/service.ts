@@ -11,6 +11,10 @@ import {prospectingConfig,requirements,estimateUsage,usageUnits,parseCaps} from 
 import {createReviewToken,verifyReviewToken,hashValue} from './review.ts';
 import {jobView,itemView,encodeCursor,decodeCursor} from './repository.ts';
 import {reserveUsage,releaseUnused} from './usage.ts';
+import {conventionalConfig} from './ai/config.ts';
+import {readAiPolicy} from './ai/settings.ts';
+import {readConnectionCheck} from './ai/connection.ts';
+import {resolveAiRoute,aiRouteView,type AiRoute} from '../../domain/ai-routing.ts';
 const secret=()=>{const s=process.env.BETTER_AUTH_SECRET;if(!s)throw Error('Review signing is not configured');return s;};
 async function authorized(c:PoolClient,p:Principal){
   const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;
@@ -21,7 +25,12 @@ async function reviewState(c:PoolClient,p:Principal,input:JobInput){
   const config=prospectingConfig();
   const policy=(await c.query('SELECT limits,version FROM app.prospecting_policy')).rows[0];
   if(policy){const own=parseCaps(JSON.stringify(policy.limits));for(const k of Object.keys(config.caps) as (keyof typeof config.caps)[])config.caps[k]=Math.min(config.caps[k],own[k]);}
-  const blockers=requirements(config,input,p.workspaceId);
+  let aiRoute:AiRoute|null=null;const aiBlockers:string[]=[];
+  if(input.kind==='qualification'&&input.modules.some(m=>['qualify','summary'].includes(m))){
+    const aiPolicy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),selected=aiPolicy.conventionalProvider?runtime.conventional[aiPolicy.conventionalProvider].route:null;
+    const resolution=resolveAiRoute(aiPolicy,runtime,selected?await readConnectionCheck(c,selected):null);aiRoute=resolution.route;aiBlockers.push(...resolution.blockers);
+  }
+  const blockers=[...aiBlockers,...requirements(config,input,p.workspaceId,aiRoute)];
   let listId:string|null=null;
   if(input.kind==='qualification'||input.destination.mode==='existing'){
     listId=input.kind==='qualification'?input.listId:input.destination.mode==='existing'?input.destination.listId:null;
@@ -36,16 +45,16 @@ async function reviewState(c:PoolClient,p:Principal,input:JobInput){
     if(input.modules.includes('qualify')&&!context?.approvedAt)blockers.push('Revise e aprove o contexto da empresa antes de qualificar com IA.');
   }
   const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);
-  const profileVersion=hashValue({config:config.version,policy:policy??null,contextVersion:context?.version??0});
+  const profileVersion=hashValue({config:config.version,policy:policy??null,contextVersion:context?.version??0,aiRoute});
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};
-  return {config,blockers,proof,profileVersion,checkpoint:{context,bases,execution:{version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:Number(process.env.APOLLO_MAX_PAGES??0)}}};
+  return {config,blockers,proof,profileVersion,aiRoute,checkpoint:{context,bases,execution:{aiRoute,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:Number(process.env.APOLLO_MAX_PAGES??0)}}};
 }
 function parseInput(input:unknown):JobInput{const parsed=jobInputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise fonte, filtros, destino e quantidade.');return parsed.data;}
 export async function prepareJob(p:Principal,input:unknown):Promise<Review>{
   const parsed=parseInput(input);
   return withWorkspaceTransaction(p,async c=>{
     const state=await reviewState(c,p,parsed),now=Date.now();
-    return {token:createReviewToken(state.proof,secret(),now),expiresAt:new Date(now+600000).toISOString(),input:parsed,blockers:state.blockers,profileVersion:state.profileVersion,usage:estimateUsage(parsed),warnings:['A execução usa serviços externos. Custos desconhecidos não são tratados como zero.','Resultados de IA serão apresentados para revisão antes de aplicar.',...(parsed.kind==='generation'&&parsed.source==='CNPJ'?['Filtros e cobertura dependem do Actor; esta fonte não é uma base nacional local.']:[])]};
+    return {token:createReviewToken(state.proof,secret(),now),expiresAt:new Date(now+600000).toISOString(),input:parsed,blockers:state.blockers,profileVersion:state.profileVersion,aiRoute:state.aiRoute?aiRouteView(state.aiRoute):null,usage:estimateUsage(parsed,state.aiRoute),warnings:['A execução usa serviços externos. Custos desconhecidos não são tratados como zero.','Resultados de IA serão apresentados para revisão antes de aplicar.',...(parsed.kind==='generation'&&parsed.source==='CNPJ'?['Filtros e cobertura dependem do Actor; esta fonte não é uma base nacional local.']:[])]};
   });
 }
 export async function confirmJob(p:Principal,input:unknown):Promise<JobView>{
@@ -67,7 +76,7 @@ export async function confirmJob(p:Principal,input:unknown):Promise<JobView>{
     }else listId=body.input.kind==='qualification'?body.input.listId:body.input.destination.mode==='existing'?body.input.destination.listId:'';
     const jobId=randomUUID();
     const row=(await c.query("INSERT INTO app.prospecting_job(workspace_id,id,actor_id,list_id,request_id,body_hash,kind,source,state,input,profile_version,checkpoint) VALUES($1,$2,$3,$4,$5,$6,$7,$8,'queued',$9,$10,$11) RETURNING *",[p.workspaceId,jobId,p.userId,listId,body.requestId,hash,body.input.kind,body.input.kind==='generation'?body.input.source:'QUALIFY',body.input,state.profileVersion,state.checkpoint])).rows[0];
-    await reserveUsage(c,{jobId,operationId:jobId,units:usageUnits(estimateUsage(body.input)),caps:state.config.caps,globalCaps:state.config.globalCaps});
+    await reserveUsage(c,{jobId,operationId:jobId,units:usageUnits(estimateUsage(body.input,state.aiRoute)),caps:state.config.caps,globalCaps:state.config.globalCaps});
     await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,'prospecting.confirm')",[p.workspaceId,p.userId]);
     return jobView(row);
   });

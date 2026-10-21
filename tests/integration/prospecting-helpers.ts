@@ -28,6 +28,13 @@ export async function countRows(table:string,workspaceId:string){
   try{return Number((await pool.query(`SELECT count(*) FROM app.${table} WHERE workspace_id=$1`,[workspaceId])).rows[0].count);}finally{await pool.end();}
 }
 export async function closeProspectingPools(){await getPools().close();}
+export async function seedHybridPolicy(p:import('../../src/domain/workspace.ts').Principal,jobId:string){
+ Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});
+ const {saveAiPolicy}=await import('../../src/server/prospecting/ai/settings.ts'),{conventionalConfig}=await import('../../src/server/prospecting/ai/config.ts');
+ await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'auto',conventionalProvider:'openai',jevEnabled:true}});
+ const r=conventionalConfig(p.workspaceId).conventional.openai.route;
+ await testAdmin(c=>c.query("INSERT INTO app.ai_connection_check(workspace_id,job_id,operation_id,provider,model,config_fingerprint,contract_version,outcome) VALUES($1,$2,$3,$4,$5,$6,$7,'success')",[p.workspaceId,jobId,randomUUID(),r.provider,r.model,r.configFingerprint,r.contractVersion]));
+}
 export async function testAdmin<T>(fn:(c:import('pg').PoolClient)=>Promise<T>):Promise<T>{
   const url=process.env.MIGRATOR_DATABASE_URL!;
   if(!new URL(url).pathname.endsWith('_test'))throw Error('Test database required');

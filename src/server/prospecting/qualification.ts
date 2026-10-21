@@ -15,8 +15,13 @@ import type {SourceAdapter} from './providers/types.ts';
 import {providerContext} from './steps.ts';
 import {ProviderError} from './providers/transport.ts';
 import {AppError} from '../errors.ts';
+import {runConventional,conventionalUnit} from './ai/conventional.ts';
+import {assertAiRouteCurrent} from './ai/route-guard.ts';
+import {diagnoseCodex} from './ai/diagnostics.ts';
+import {recordConnectionCheck} from './ai/connection.ts';
+import type {AiRoute} from '../../domain/ai-routing.ts';
 export interface QualificationAdapters{
-  signal?:AbortSignal;apify?:SourceAdapter;
+  signal?:AbortSignal;apify?:SourceAdapter;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
   collect?:typeof fetchEvidencePack;
   decide?:typeof decide;generate?:typeof generate;
 }
@@ -79,17 +84,21 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
           if(value)result.proposed={[module]:value};else{result.status='skipped';result.reasons=['CONTACT_NOT_FOUND'];}
         }else{
           const context=job.checkpoint.context as CompanyProfile|null,criteria=JSON.stringify({offer:context?.offer,idealCustomer:context?.idealCustomer,products:context?.products,pains:context?.pains});
-          const cacheKey=hashValue({contract:'jev-decisions-v1',model:'typesafe/jev-1.13',criteria,evidence:evidence.map(e=>e.hash),facts:{name:lead.name,cnpj:lead.cnpj}});
-          if(module==='qualify'){
+          const aiRoute=job.checkpoint.execution?.aiRoute as AiRoute|undefined;
+          const cacheKey=hashValue({aiRoute,contract:'jev-decisions-v1',model:'typesafe/jev-1.13',criteria,evidence:evidence.map(e=>e.hash),facts:{name:lead.name,cnpj:lead.cnpj}});
+          if(module==='qualify'&&aiRoute?.decisionProvider!=='jev'&&aiRoute){
+            const classified=await conventionalStep(lease,job,leadId,'qualify',criteria,evidence,deps);
+            if(classified.task!=='qualify')throw Error('INVALID_TASK');result.decision=classified.decision;result.usage=classified.decision.usage;result.proposed={qualification:suggestedQualification(classified.decision),reason:classified.reason};result.reasons=['UNCALIBRATED_SUGGESTION','CONVENTIONAL_EVIDENCE_REVIEW'];
+          }else if(module==='qualify'){
             const cached=await withLeasedTransaction(lease,async c=>(await c.query('SELECT payload FROM app.prospecting_cache WHERE key=$1 AND created_at>now()-interval \'1 day\'',[cacheKey])).rows[0]?.payload as Decision|undefined);
-            const decision=cached?{...cached,evidenceIds:evidence.map(e=>e.id),usage:{...cached.usage,operationId:hashValue({job:lease.jobId,leadId,module}),units:{},costUsd:null,costKind:'unknown' as const}}:await performStep(lease,module+':'+leadId,'openrouter',{jevCalls:1},()=> (deps.decide??decide)({operationId:hashValue({job:lease.jobId,leadId,module}),signal:deps.signal??new AbortController().signal,credential:process.env.OPENROUTER_API_KEY??''},{criteria,evidence,facts:{name:lead.name,cnpj:lead.cnpj}}),r=>r.usage);
+            const decision=cached?{...cached,evidenceIds:evidence.map(e=>e.id),usage:{...cached.usage,operationId:hashValue({job:lease.jobId,leadId,module}),units:{},costUsd:null,costKind:'unknown' as const}}:await performStep(lease,module+':'+leadId,'openrouter',{jevCalls:1},async()=>{await preflight(lease,job,deps,true);return (deps.decide??decide)({operationId:hashValue({job:lease.jobId,leadId,module}),signal:deps.signal??new AbortController().signal,credential:process.env.OPENROUTER_API_KEY??''},{criteria,evidence,facts:{name:lead.name,cnpj:lead.cnpj}});},r=>r.usage);
             if(!cached)await withLeasedTransaction(lease,c=>c.query("INSERT INTO app.prospecting_cache VALUES(current_setting('app.workspace_id'),$1,$2,now()) ON CONFLICT(workspace_id,key) DO UPDATE SET payload=EXCLUDED.payload,created_at=now()",[cacheKey,decision]));
             result.decision=decision;result.proposed={qualification:suggestedQualification(decision)};result.reasons=['UNCALIBRATED_SUGGESTION','CONFIDENCE_IS_NOT_ACCURACY'];
             if(input.escalation==='ambiguous'&&suggestedQualification(decision)!=='pending'&&decision.confidence!==null&&decision.confidence<0.7){
-              const opinion=await generateStep(lease,leadId,'second_opinion',criteria,evidence,deps);result.proposed.reason=opinion.summary;result.reasons.push('SECOND_OPINION_REVIEW_REQUIRED');
+              const opinion=await generateStep(lease,job,leadId,'second_opinion',criteria,evidence,deps);result.proposed.reason=opinion.summary;result.reasons.push('SECOND_OPINION_REVIEW_REQUIRED');
             }
           }else if(module==='summary'){
-            const generated=await generateStep(lease,leadId,'summary',criteria,evidence,deps);result.proposed={summary:generated.summary};result.evidenceIds=generated.evidenceIds;
+            const generated=await generateStep(lease,job,leadId,'summary',criteria,evidence,deps);result.proposed={summary:generated.summary};result.evidenceIds=generated.evidenceIds;
           }
         }
       }
@@ -111,7 +120,23 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
     await handleStepFailure(lease,error);
   }
 }
-async function generateStep(lease:JobLease,leadId:string,task:'summary'|'second_opinion',criteria:string,evidence:Evidence[],deps:QualificationAdapters):Promise<Generation>{
-  const slot=(release:boolean)=>withLeasedTransaction(lease,async c=>Boolean((await c.query('SELECT app.codex_prospecting_slot($1,$2,$3,$4) AS ok',[lease.jobId,lease.token,lease.fence,release])).rows[0].ok));
-  return performStep(lease,task+':'+leadId,'codex',{codexCalls:1},()=> (deps.generate??generate)({operationId:hashValue({job:lease.jobId,leadId,task}),workspaceId:lease.workspaceId,signal:deps.signal??new AbortController().signal,acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{task,criteria,evidence}),r=>r.usage);
+async function preflight(lease:JobLease,job:any,deps:QualificationAdapters,jev=false){
+ await withLeasedTransaction(lease,c=>assertAiRouteCurrent(c,job));
+ const route=job.checkpoint.execution.aiRoute as AiRoute;
+ if(jev&&route.conventional.provider==='codex-local'){
+  const diagnostic=await(deps.diagnose??diagnoseCodex)();
+  if(!diagnostic.authenticated)throw new AppError(409,'O Codex local precisa de autenticação ChatGPT.','AI_COMPANION_UNAVAILABLE');
+ }
+}
+async function conventionalStep(lease:JobLease,job:any,leadId:string,task:'qualify'|'summary'|'second_opinion',criteria:string,evidence:Evidence[],deps:QualificationAdapters){
+ const route=(job.checkpoint.execution.aiRoute as AiRoute).conventional,step=task+':'+leadId,operationId=hashValue({job:lease.jobId,step});
+ const slot=(release:boolean)=>withLeasedTransaction(lease,async c=>Boolean((await c.query('SELECT app.codex_prospecting_slot($1,$2,$3,$4) AS ok',[lease.jobId,lease.token,lease.fence,release])).rows[0].ok));
+ return performStep(lease,step,route.provider==='codex-local'?'codex':route.provider,{[conventionalUnit(route.provider)]:1},async()=>{
+  await preflight(lease,job,deps);
+  try{return await(deps.conventional??runConventional)({operationId,workspaceId:lease.workspaceId,signal:deps.signal??new AbortController().signal,route,acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{task,criteria,evidence,facts:{name:job.checkpoint.bases[leadId].name}});}
+  catch(error){await withLeasedTransaction(lease,c=>recordConnectionCheck(c,lease,{operationId,route,outcome:error instanceof ProviderError&&error.uncertain?'uncertain':'failed',code:error instanceof ProviderError?error.code:'CONVENTIONAL_FAILED'}));throw error;}
+ },r=>r.task==='qualify'?r.decision.usage:r.generation.usage);
+}
+async function generateStep(lease:JobLease,job:any,leadId:string,task:'summary'|'second_opinion',criteria:string,evidence:Evidence[],deps:QualificationAdapters):Promise<Generation>{
+ const result=await conventionalStep(lease,job,leadId,task,criteria,evidence,deps);if(result.task==='qualify')throw Error('INVALID_TASK');return result.generation;
 }
