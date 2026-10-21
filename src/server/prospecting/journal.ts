@@ -6,12 +6,14 @@ import {ProviderError} from './providers/transport.ts';
 import {AppError} from '../errors.ts';
 import {hashValue} from './review.ts';
 import {assertAutomationAuthority} from '../automations/guard.ts';
+import {syncOccurrenceJob} from '../automations/assignments.ts';
 export class UncertainStep extends Error{}
 export async function readLeasedJob(lease:JobLease){return withLeasedTransaction(lease,async c=>(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0]);}
 export async function finishJob(lease:JobLease,state:JobState,code?:string){
   await withLeasedTransaction(lease,async c=>{
     await c.query('UPDATE app.prospecting_job SET state=$2,error_code=$3,error_message=$4,updated_at=now(),revision=revision+1 WHERE id=$1',[lease.jobId,state,code??null,code?'A execução precisa de atenção. Consulte o estado e revise antes de repetir.':null]);
     if(['completed','partial','failed','cancelled'].includes(state))await releaseUnused(c,lease.jobId);
+    const marker=(await c.query('SELECT checkpoint FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0].checkpoint.automation;if(marker)await syncOccurrenceJob(c,marker.occurrenceId);
   });
 }
 export async function performStep<T>(lease:JobLease,step:string,provider:string,units:Units,call:()=>Promise<T>,usage?:(result:T)=>ProviderUsage):Promise<T>{

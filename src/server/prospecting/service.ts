@@ -114,7 +114,7 @@ export async function cancelJob(p:Principal,id:string):Promise<JobView>{return w
   if(['completed','partial','failed','cancelled'].includes(row.state))return jobView(row);
   const state=row.state==='queued'?'cancelled':'cancelling';
   const updated=(await c.query('UPDATE app.prospecting_job SET state=$2,updated_at=now(),revision=revision+1 WHERE id=$1 RETURNING *',[id,state])).rows[0];
-  if(state==='cancelled')await releaseUnused(c,id);
+  if(state==='cancelled'){await releaseUnused(c,id);if(row.checkpoint?.automation)await c.query('SELECT app.sync_cancelled_automation_job($1)',[id]);}
   await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,'prospecting.cancel')",[p.workspaceId,p.userId]);return jobView(updated);
 });}
 export function providerCapabilities(p:Principal){const c=prospectingConfig();return {enabled:c.enabled,sources:Object.fromEntries(Object.entries(c.ready).map(([source,configured])=>[source,{configured}])),decision:{model:'typesafe/jev-1.13',configured:c.jevReady},generation:{provider:'codex-local',configured:c.codexEnabled&&c.codexWorkspaces.includes(p.workspaceId)},limits:{perJob:500,pageSize:100}};}

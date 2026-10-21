@@ -138,7 +138,7 @@ export function Reports({ tab = "overview" }: { tab?: string }) {
     </>
   );
 }
-export function Executions(){return useIdentity()?<JobHistory/>:<DemoExecutions/>;}
+export function Executions({automationId}:{automationId?:string}){return useIdentity()?<JobHistory automationId={automationId}/>:<DemoExecutions/>;}
 function DemoExecutions() {
   const s = useDemo();
   const [filter, setFilter] = useState("");

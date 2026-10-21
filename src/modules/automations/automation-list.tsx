@@ -1,5 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState,useEffect,useCallback } from "react";
+import {useAutomationClient,useCapabilities} from '@/client/workspace-provider';
+import type {AutomationRuntime} from '@/domain/automation-runtime';
+import {RuntimeControls} from './runtime-controls';
+import {ScheduleFields} from './schedule-fields';
+import {scheduleV2Schema} from '@/domain/schedule';
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { sourceLabels, type Source, type Automation } from "@/domain/model";
 import {
@@ -20,6 +25,11 @@ export function AutomationList() {
   const s = useDemo();
   const repo = useRepository();
   const run = useAction();
+  const client=useAutomationClient(),caps=useCapabilities(),canEdit=!client||caps?.includes('data.write');
+  const [runtimes,setRuntimes]=useState<Record<string,AutomationRuntime>>({}),[runtimeError,setRuntimeError]=useState('');
+  const refreshRuntime=useCallback(async()=>{if(client){const rows=await client.list();setRuntimes(Object.fromEntries(rows.map(r=>[r.definition.id,r.runtime])));setRuntimeError('');}},[client]);
+  useEffect(()=>{let active=true;const load=()=>{if(client)client.list().then(rows=>{if(active){setRuntimes(Object.fromEntries(rows.map(r=>[r.definition.id,r.runtime])));setRuntimeError('');}}).catch(e=>{if(active)setRuntimeError(e.message);});};load();const timer=setInterval(load,10000);return()=>{active=false;clearInterval(timer);};},[client,s.automations]);
+  const automations=client?s.automations.map(a=>({...a,status:runtimes[a.id]?.status==='active'?'active' as const:runtimes[a.id]?.status==='blocked'?'error' as const:'paused' as const})):s.automations;
   const [create, setCreate] = useState(false);
   const [query, setQuery] = useState("");
   const [source, setSource] = useState("");
@@ -30,7 +40,7 @@ export function AutomationList() {
   const [comfortable, setComfortable] = useState(true);
   const [frequency, setFrequency] = useState<"daily" | "">("");
   const [module, setModule] = useState("");
-  const filtered = filterAutomations(s.automations, { frequency, module })
+  const filtered = filterAutomations(automations, { frequency, module })
     .filter(
       (a) =>
         (!source || a.source === source) &&
@@ -51,13 +61,14 @@ export function AutomationList() {
     <>
       <PageHeader
         title="Automações"
-        description={`${s.automations.length} automações · ${s.automations.filter((a) => a.status === "active").length} ligadas`}
+        description={`${s.automations.length} automações · ${automations.filter((a) => a.status === "active").length} ligadas`}
         actions={
-          <Button variant="primary" icon="Plus" onClick={() => setCreate(true)}>
+          <Button disabled={!canEdit} variant="primary" icon="Plus" onClick={() => setCreate(true)}>
             Nova automação
           </Button>
         }
       />
+      {runtimeError&&<p role="alert" className="error-bar">{runtimeError}<button onClick={()=>void refreshRuntime().catch(e=>setRuntimeError(e.message))}>Tentar novamente</button></p>}
       <div className="automation-toolbar">
         <div className="input-icon">
           <Icon name="Search" size={15} />
@@ -126,7 +137,7 @@ export function AutomationList() {
                 <span className="dot" />
                 {label}
                 <small>
-                  {s.automations.filter((a) => a.status === k).length}
+                  {automations.filter((a) => a.status === k).length}
                 </small>
               </label>
             ))}
@@ -208,7 +219,7 @@ export function AutomationList() {
                     <div className="automation-name">
                       <div>
                         <span className="dot" />
-                        <button onClick={() => setEditing(structuredClone(a))}>
+                        <button disabled={!canEdit} onClick={() => setEditing(structuredClone(a))}>
                           <strong>{a.name}</strong>
                         </button>
                         <Badge tone="orange">
@@ -251,17 +262,17 @@ export function AutomationList() {
                         · {a.schedule.time}
                       </Badge>
                     </div>
-                    <span className="automation-last">nunca rodou</span>
-                    <Button
+                    {client?<RuntimeControls id={a.id} runtime={runtimes[a.id]} onChange={refreshRuntime}/>:<><span className="automation-last">nunca rodou</span><Button
                       variant="soft"
                       icon="Play"
                       onClick={() => setExecute(true)}
                     >
                       Executar
-                    </Button>
+                    </Button></>}
                     <IconButton
                       icon="MoreVertical"
                       label={`Editar ${a.name}`}
+                      disabled={!canEdit}
                       onClick={() => setEditing(structuredClone(a))}
                     />
                   </div>
@@ -305,7 +316,7 @@ export function AutomationList() {
               e.preventDefault();
               if (
                 await run(
-                  async () => await repo.saveAutomation(editing),
+                  async () => {if(client)scheduleV2Schema.parse(editing.schedule);await repo.saveAutomation(editing);await refreshRuntime();},
                   "Automação salva pausada.",
                 )
               )
@@ -345,20 +356,9 @@ export function AutomationList() {
                     }
                   />
                 </Field>
-                <Field label="Horário">
-                  <input
-                    type="time"
-                    required
-                    value={editing.schedule.time}
-                    onChange={(e) =>
-                      setEditing({
-                        ...editing,
-                        schedule: { ...editing.schedule, time: e.target.value },
-                      })
-                    }
-                  />
-                </Field>
               </div>
+              <ScheduleFields value={editing.schedule} onChange={schedule=>setEditing({...editing,schedule})}/>
+              {editing.source==='QUALIFY'&&<Field label="Critérios de qualificação"><textarea value={editing.criteria??''} onChange={e=>setEditing({...editing,criteria:e.target.value})}/></Field>}
               <Notice>
                 Permanece pausada até que os serviços estejam integrados e você
                 confirme a ativação.

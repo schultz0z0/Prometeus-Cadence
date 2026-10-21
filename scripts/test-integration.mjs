@@ -28,6 +28,7 @@ const known = [
   "planning-pipeline",
   "planning-confirmation",
   "automation-authorization",
+  "automation-scheduler",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length

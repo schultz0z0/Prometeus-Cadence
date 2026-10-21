@@ -34,7 +34,7 @@ export async function automationAuthorizationState(c:PoolClient,p:Principal,defi
  }else blockers.push('Esta fonte ainda não possui execução recorrente.');
  if(input)blockers.push(...requirements(config,input,p.workspaceId,aiRoute));
  if(definition.dependsOnAutomationId){
-  const dependency=(await c.query('SELECT list_id,payload FROM app.automation WHERE id=$1',[definition.dependsOnAutomationId])).rows[0];
+  const dependency=(await c.query("SELECT d.payload->>'listId' AS list_id,d.payload FROM app.automation_definition d JOIN app.automation_runtime r ON r.workspace_id=d.workspace_id AND r.automation_id=d.automation_id AND r.definition_revision=d.revision WHERE d.automation_id=$1",[definition.dependsOnAutomationId])).rows[0];
   if(payload.source!=='QUALIFY'||!dependency||dependency.list_id!==payload.listId||!['MAPS','WEB','CNPJ','APOLLO'].includes(dependency.payload.source)||definition.dependsOnAutomationId===definition.id)blockers.push('A dependência precisa ser uma busca da mesma lista.');
  }
  const draft:Omit<AutomationAuthorization,'id'|'automationId'|'revision'|'epoch'|'origin'|'actorId'>={definitionHash:hashValue({revision:definition.revision,payload}),configVersion:config.version,limitsHash:hashValue({policy,caps:config.caps,globalCaps:config.globalCaps}),context,product,productId:definition.productId,aiRoute,modules,maxItems:payload.dailyLimit,caps:config.caps,globalCaps:config.globalCaps,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:Number(process.env.APOLLO_MAX_PAGES??0)};

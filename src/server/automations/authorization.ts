@@ -14,6 +14,7 @@ import {hashValue,createReviewToken,verifyReviewToken} from '../prospecting/revi
 import {definitionInTransaction,runtimeInTransaction,runtimeView} from './repository.ts';
 import {automationAuthorizationState} from './state.ts';
 import {dispatchManualOccurrence} from './dispatch.ts';
+import {assignEligibleLeads} from './assignments.ts';
 const schema=z.strictObject({action:z.enum(['activate','run-once']),expectedRevision:z.number().int().min(1)}),confirmSchema=schema.extend({requestId:z.uuid(),reviewToken:z.string().min(1).max(8192)}),pauseSchema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(1)});
 const secret=()=>{if(!process.env.BETTER_AUTH_SECRET)throw Error('Review signing unavailable');return process.env.BETTER_AUTH_SECRET;};
 async function admin(c:PoolClient,p:Principal){requirePermission({...p,role:(await c.query('SELECT app.current_role() AS role')).rows[0].role},'workspace.settings');}
@@ -34,7 +35,7 @@ export async function confirmAutomationAction(p:Principal,id:string,input:unknow
   const s=await state(c,p,id,{action:body.action,expectedRevision:body.expectedRevision});verifyReviewToken(body.reviewToken,s.proof,secret());if(s.blockers.length)throw new AppError(409,s.blockers[0],'AUTOMATION_BLOCKED');
   const next=body.action==='activate'?nextOccurrence(s.definition.schedule!,new Date().toISOString()):null;
   const auth:AutomationAuthorization=(await c.query('SELECT app.authorize_automation($1,$2,$3,$4,$5,$6) AS payload',[id,body.expectedRevision,randomUUID(),body.action==='activate'?'schedule':'manual',s.draft,next])).rows[0].payload;
-  const result=body.action==='activate'?runtimeView(await runtimeInTransaction(c,id)):await dispatchManualOccurrence(c,auth,body.requestId);
+  const result=body.action==='activate'?runtimeView(await runtimeInTransaction(c,id)):await dispatchManualOccurrence(c,auth,body.requestId,assignEligibleLeads);
   await c.query('INSERT INTO app.command_result VALUES($1,$2,$3,$4,$5)',[p.workspaceId,body.requestId,p.userId,hash,result]);
   await c.query('UPDATE app.workspace_meta SET revision=revision+1 WHERE workspace_id=$1',[p.workspaceId]);await c.query('INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,$3)',[p.workspaceId,p.userId,'automation.'+body.action]);return result;
  });

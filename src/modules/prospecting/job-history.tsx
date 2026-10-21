@@ -8,8 +8,8 @@ import {planningTaskLabels} from '@/domain/planning';
 import {Button,PageHeader,Badge,EmptyState,LinkButton,Field} from '@/components/ui/primitives';
 export const jobStateLabels:Record<string,string>={queued:'Na fila',running:'Processando',waiting_provider:'Aguardando provedor',needs_reconciliation:'Reconciliar chamada',cancelling:'Cancelando',cancelled:'Cancelada',completed:'Concluída',partial:'Resultado parcial',failed:'Falhou'};
 export function jobTitle(job:JobView){return job.kind==='planning'?planningTaskLabels[job.task!]??'Análise de IA':job.kind==='generation'?'Busca de empresas':'Qualificação de leads';}
-export function JobHistory(){
- const client=useProspecting()!,demo=useDemo(),[jobs,setJobs]=useState<JobView[]>([]),[filters,setFilters]=useState<JobFilters>({}),[cursor,setCursor]=useState<string|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState('');
+export function JobHistory({automationId}:{automationId?:string}){
+ const client=useProspecting()!,demo=useDemo(),[jobs,setJobs]=useState<JobView[]>([]),[filters,setFilters]=useState<JobFilters>({automationId}),[cursor,setCursor]=useState<string|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState('');
  const key=JSON.stringify(filters),currentKey=useRef(key);currentKey.current=key;
  useEffect(()=>{let active=true;setBusy(true);setJobs([]);setCursor(null);client.list(filters).then(page=>{if(active){setJobs(page.items);setCursor(page.nextCursor);setError('');}}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setBusy(false);});return()=>{active=false;};},[client,key]);
  async function load(more=false){const scope=key;setBusy(true);setError('');try{const page=await client.list({...filters,...(more&&cursor?{cursor}:{})});if(scope!==currentKey.current)return;setJobs(old=>more?[...old,...page.items.filter(j=>!old.some(o=>o.id===j.id))]:page.items);setCursor(page.nextCursor);}catch(e){if(scope===currentKey.current)setError(e instanceof Error?e.message:'Falha ao carregar.');}finally{if(scope===currentKey.current)setBusy(false);}}

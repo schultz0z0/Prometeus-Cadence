@@ -443,7 +443,10 @@
   display: flex;
   gap: 16px;
   align-items: center;
+  flex-wrap: wrap;
 }
+.automation-runtime { flex: 1 1 290px; min-width: 0; overflow-wrap: anywhere; }
+.automation-runtime small { line-height: 1.5; }
 .automation-name {
   width: 32%;
   min-width: 200px;
