@@ -22,5 +22,10 @@ export async function savePlanningProposal(c:PoolClient,lease:JobLease,proposal:
 }
 export async function readPlanningProposal(p:Principal,jobId:string):Promise<PlanningProposal>{return withWorkspaceTransaction(p,async c=>{
  const row=(await c.query('SELECT payload FROM app.planning_proposal WHERE job_id=$1',[jobId])).rows[0];
- if(!row)throw new AppError(404,'Proposta não encontrada.');return row.payload;
+ if(!row)throw new AppError(404,'Proposta não encontrada.');
+ const proposal=row.payload as PlanningProposal;
+ const assessment=(await c.query("SELECT payload FROM app.prospecting_attempt WHERE job_id=$1 AND step='planning:rank' AND state='completed'",[jobId])).rows[0]?.payload?.result;
+ const recommendedOptionId=assessment?.recommendedOptionId;
+ if(recommendedOptionId&&'options' in proposal&&proposal.options.some(o=>o.id===recommendedOptionId))return {...proposal,recommendedOptionId};
+ return proposal;
 });}

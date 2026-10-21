@@ -9,6 +9,7 @@ import {withContextTransaction} from '../db/transaction.ts';
 import {prospectingConfig} from './config.ts';
 import {providerContext} from './steps.ts';
 import {ApifyAdapter} from './providers/apify.ts';
+import {runPlanning,type PlanningAdapters} from '../planning/execution.ts';
 async function cleanRevoked(deps:GenerationAdapters,signal:AbortSignal,workspaceId?:string){
   const ticket=(await workerPool().query('SELECT app.claim_revoked_prospecting_cleanup($1) AS ticket',[workspaceId??null])).rows[0].ticket;
   if(!ticket)return false;
@@ -18,7 +19,7 @@ async function cleanRevoked(deps:GenerationAdapters,signal:AbortSignal,workspace
   try{const ctx=providerContext({checkpoint:{execution:ticket.execution}},source,ticket.run.operationId,signal);const result=await(deps.apify??new ApifyAdapter()).abort(ctx,ticket.run);done=['cancelled','failed','succeeded'].includes(result.status);}catch{}
   await workerPool().query('SELECT app.ack_revoked_prospecting_cleanup($1,$2,$3,$4,$5)',[ticket.jobId,ticket.token,ticket.fence,ticket.run.runId,done]);return true;
 }
-export async function runWorkerOnce(deps:GenerationAdapters&QualificationAdapters={},options:{workerId?:string;signal:AbortSignal;workspaceId?:string}):Promise<boolean>{
+export async function runWorkerOnce(deps:GenerationAdapters&QualificationAdapters&PlanningAdapters={},options:{workerId?:string;signal:AbortSignal;workspaceId?:string}):Promise<boolean>{
   if(await cleanRevoked(deps,options.signal,options.workspaceId))return true;
   if(!prospectingConfig().enabled)return false;
   const lease=await claimJob(options.workerId??randomUUID(),options.workspaceId);if(!lease)return false;
@@ -26,7 +27,12 @@ export async function runWorkerOnce(deps:GenerationAdapters&QualificationAdapter
   const timer=setInterval(()=>{checking=checking.then(async()=>{if(!await heartbeat(lease))controller.abort();}).catch(()=>controller.abort());},10000);
   try{
     const job=await readLeasedJob(lease);
-    if(job.kind==='generation')await runGeneration(lease,{...deps,signal});else await runQualification(lease,{...deps,signal});
+    switch(job.kind){
+      case 'generation':await runGeneration(lease,{...deps,signal});break;
+      case 'qualification':await runQualification(lease,{...deps,signal});break;
+      case 'planning':await runPlanning(lease,{...deps,generate:deps.planningGenerate,signal});break;
+      default:throw Error('INVALID_JOB_KIND');
+    }
   }catch{ /* Fencing/revocation leaves the durable journal for reconciliation. */ }
   finally{
     clearInterval(timer);await checking;

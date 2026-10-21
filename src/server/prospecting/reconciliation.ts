@@ -50,6 +50,9 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
       if(run&&job.kind==='generation')providerRun=run;
       if(selection.resultUnavailable){
         if(job.kind==='generation')state=current.counts.found>0?'partial':'failed';
+        else if(job.kind==='planning'){
+          state=(await c.query('SELECT 1 FROM app.planning_proposal WHERE job_id=$1',[id])).rowCount?'partial':'failed';
+        }
         else{
           const [step,leadId]=attempt.step.split(':'),module=(step==='second_opinion'?'qualify':step) as ModuleId;
           if(!job.input.leadIds.includes(leadId)||!['registry','website','qualify','summary'].includes(module))throw new AppError(409,'Esta chamada precisa de resolução administrativa adicional.');
