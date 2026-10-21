@@ -1,6 +1,6 @@
 # Marco 03B — roteamento de IA e Codex local
 
-20/10/2026. Desenho para revisão do usuário antes do marco 04. Execução nativa preservada. Base: `76af8ef` na main; implementação ainda não iniciada.
+20/10/2026. Desenho aprovado pelo usuário antes do marco 04. Execução nativa preservada. Base: `76af8ef` na main; implementação ainda não iniciada.
 
 ## Intenção e aceite
 
@@ -97,4 +97,4 @@ Diagnóstico já realizado em 20/10/2026: `codex-cli 0.163.0-alpha.10.2`, `login
 
 ## Estado
 
-Desenho escrito e conferido contra a solicitação, com opção de configuração incluída. Aguarda revisão do usuário; depois será escrito o plano de implementação. Método nativo já escolhido permanece válido.
+Desenho escrito, conferido contra a solicitação e aprovado pelo usuário, com opção de configuração incluída. Plano de implementação em `docs/superpowers/plans/2026-10-20-prometeus-cadence-03b-ai-routing.md`, aguardando revisão antes do código. Método nativo já escolhido permanece válido.
