@@ -44,7 +44,8 @@ test('auto context reading does not require or call JEV and keeps literal public
  const review=await preparePlanning(p,context);assert.deepEqual(review.blockers,[]);assert.equal(review.usage.length,1);
  const job=await confirmPlanning(p,{requestId:randomUUID(),input:context,reviewToken:review.token}),counter={calls:0};
  await runPlanning(await grantTestLease(p,job.id),{generate:fakeGenerate(counter),collect:async()=>planningSources().map(s=>({id:s.id,url:s.url!,text:s.text,hash:s.hash,fetchedAt:s.obtainedAt,truncated:false})),rank:async()=>{throw Error('JEV must not run');}});
- assert.equal((await getPlanning(p,job.id)).proposal?.task,'context_read');assert.equal(counter.calls,1);
+ const completed=await getPlanning(p,job.id);assert.equal(completed.proposal?.task,'context_read');assert.equal(counter.calls,1);
+ assert.equal((completed as any).sources?.[0]?.url,'https://example.com/');
 });
 test('hybrid recovers generation journal before ranking without repeating the content call',async()=>{
  const {p}=await setup(),seed=await planningStorageJob(p),route=conventionalConfig(p.workspaceId).conventional.openai.route;

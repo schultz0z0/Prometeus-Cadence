@@ -84,5 +84,11 @@ export async function confirmPlanning(p:Principal,input:unknown){
 }
 export async function getPlanning(p:Principal,id:string){
  const job=await getJob(p,id);if(job.kind!=='planning')throw new AppError(404,'Análise não encontrada.');
- try{return {job,proposal:await readPlanningProposal(p,id)};}catch(e){if(e instanceof AppError&&e.status===404)return {job,proposal:null};throw e;}
+ const data=await withWorkspaceTransaction(p,async c=>{
+  const row=(await c.query('SELECT input,checkpoint FROM app.prospecting_job WHERE id=$1',[id])).rows[0];
+  if(!row)throw new AppError(404,'Análise não encontrada.');
+  const sources=(await c.query('SELECT payload FROM app.planning_evidence WHERE job_id=$1 ORDER BY created_at,id',[id])).rows.map(r=>r.payload);
+  return {sources,baseline:row.input.task==='context_read'?row.checkpoint.baseSnapshot??null:null};
+ });
+ try{return {job,...data,proposal:await readPlanningProposal(p,id)};}catch(e){if(e instanceof AppError&&e.status===404)return {job,...data,proposal:null};throw e;}
 }

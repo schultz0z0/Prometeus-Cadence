@@ -1,0 +1,14 @@
+"use client";
+import type {PlanningReview} from '@/domain/planning';
+import {Modal,Button,Notice} from '@/components/ui/primitives';
+export function AnalysisReview({review,busy,error,onConfirm,onClose}:{review:PlanningReview;busy:boolean;error?:string;onConfirm:()=>void;onClose:()=>void}){
+ return <Modal title="Revisar análise de IA" onClose={onClose} description="A análise só começa ao confirmar este botão.">
+  <div className="stack"><p>{review.input.task==='context_read'?'Leitura do site público':review.input.task==='audience_plan'?'Três propostas de público':review.input.task==='cadence_options'?'Três opções de cadência':'Prévia para um lead'}</p>
+  {review.aiRoute&&<p>{review.aiRoute.conventional.provider} · {review.aiRoute.conventional.model}</p>}
+  {review.usage.map(u=><p key={u.unit}>{u.maxUnits} chamada(s) · {u.provider} · {u.estimatedUsd===null?'custo monetário desconhecido':`US$ ${u.estimatedUsd}`}</p>)}
+  {review.warnings.map(w=><small key={w}>{w}</small>)}
+  {review.blockers.map(b=><Notice key={b}>{b}</Notice>)}
+  {error&&<p role="alert" className="error-bar">{error}</p>}
+  <div className="row end"><Button onClick={onClose} disabled={busy}>Voltar</Button><Button variant="primary" onClick={onConfirm} disabled={busy||review.blockers.length>0}>{busy?'Confirmando…':'Confirmar análise'}</Button></div></div>
+ </Modal>;
+}

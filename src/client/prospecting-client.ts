@@ -1,18 +1,11 @@
 import type {ProspectingInput,Review,JobView,JobItemView,Page,ProviderCapabilities} from '../domain/prospecting.ts';
 import type {AiSettingsView,AiPolicy,AiTestReview,CodexDiagnostic} from '../domain/ai-routing.ts';
+import {createWorkspaceTransport} from './workspace-transport.ts';
 export function createProspectingClient(options:{workspaceId:string;transport?:typeof fetch;onAccessLost?:(message:string)=>void}){
-  const transport=options.transport??fetch,controller=new AbortController();let disposed=false;
   const confirmations=new Map<string,Promise<JobView>>(),requestIds=new Map<string,string>(),applications=new Map<string,Promise<{applied:number;revision:number}>>();
   const settingsFlights=new Map<string,Promise<AiPolicy>>();
-  async function request<T>(path:string,body?:unknown):Promise<T>{
-    if(disposed)throw Error('O acesso ao workspace mudou.');
-    const response=await transport('/api/prospecting'+path,{method:body===undefined?'GET':'POST',cache:'no-store',signal:controller.signal,headers:{'x-cadence-workspace':options.workspaceId,...(body===undefined?{}:{'content-type':'application/json'})},...(body===undefined?{}:{body:JSON.stringify(body)})});
-    const data=await response.json();if(disposed)throw Error('A resposta pertence a um workspace anterior.');
-    if(!response.ok){
-      if(response.status===401||response.status===403||data.code==='WORKSPACE_CHANGED'){disposed=true;controller.abort();confirmations.clear();applications.clear();requestIds.clear();options.onAccessLost?.(data.message??'O acesso ao workspace mudou.');}
-      throw Object.assign(Error(data.message??'Não foi possível concluir a operação.'),{status:response.status,code:data.code});
-    }return data as T;
-  }
+  const workspace=createWorkspaceTransport({...options,onAccessLost(message){confirmations.clear();applications.clear();requestIds.clear();settingsFlights.clear();options.onAccessLost?.(message);}});
+  const request=<T>(path:string,body?:unknown)=>workspace.request<T>('/api/prospecting'+path,body);
   const stableId=(key:string)=>{let id=requestIds.get(key);if(!id){id=crypto.randomUUID();requestIds.set(key,id);}return id;};
   return{
     aiSettings:()=>request<AiSettingsView>('/ai/policy'),
@@ -38,7 +31,7 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
       const promise=request<{applied:number;revision:number}>('/jobs/'+encodeURIComponent(id)+'/apply',{requestId:stableId('apply:'+key),itemIds}).catch(error=>{applications.delete(key);throw error;});applications.set(key,promise);return promise;
     },
     reconcile:(id:string,body:{operationId?:string;runId?:string;confirmNotStarted?:true;resultUnavailable?:true})=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/reconcile',body),
-    dispose(){disposed=true;controller.abort();confirmations.clear();requestIds.clear();applications.clear();settingsFlights.clear();},
+    dispose(){workspace.dispose();confirmations.clear();requestIds.clear();applications.clear();settingsFlights.clear();},
   };
 }
 export type ProspectingClient=ReturnType<typeof createProspectingClient>;

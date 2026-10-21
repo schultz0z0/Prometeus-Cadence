@@ -12,6 +12,8 @@ import { createWorkspaceRepository } from "./workspace-repository";
 import { createDraftRecovery } from "./draft-recovery";
 import { RepositoryContext, ToastContext } from "@/demo/provider";
 import {createProspectingClient,type ProspectingClient} from './prospecting-client';
+import {createPlanningClient,type PlanningClient} from './planning-client';
+import {createContextClient,type ContextClient} from './context-client';
 export interface IdentityView {
   user: { id: string; name: string; email: string };
   activeWorkspaceId: string | null;
@@ -34,6 +36,12 @@ export interface IdentityView {
 const IdentityContext = createContext<IdentityView | null>(null);
 const CapabilitiesContext = createContext<string[] | null>(null);
 const ProspectingContext=createContext<ProspectingClient|null>(null);
+const PlanningContext=createContext<PlanningClient|null>(null);
+const CompanyContext=createContext<ContextClient|null>(null);
+const RefreshContext=createContext<(()=>Promise<void>)|null>(null);
+export function useWorkspaceRefresh(){return useContext(RefreshContext);}
+export function usePlanning(){return useContext(PlanningContext);}
+export function useContextClient(){return useContext(CompanyContext);}
 export function useProspecting(){return useContext(ProspectingContext);}
 export function useIdentity() {
   return useContext(IdentityContext);
@@ -52,6 +60,8 @@ export function WorkspaceProvider({
 }) {
   const [repo] = useState(() => createWorkspaceRepository(initial));
   const [prospecting]=useState(()=>createProspectingClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+  const [planning]=useState(()=>createPlanningClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+  const [company]=useState(()=>createContextClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const current = useSyncExternalStore(
     repo.subscribe,
     repo.snapshot,
@@ -66,7 +76,7 @@ export function WorkspaceProvider({
     return () => {
       mounted.current = false;
       queueMicrotask(() => {
-        if (!mounted.current) {repo.dispose();prospecting.dispose();}
+        if (!mounted.current) {repo.dispose();prospecting.dispose();planning.dispose();company.dispose();}
       });
     };
   }, [repo]);
@@ -83,7 +93,7 @@ export function WorkspaceProvider({
     return () => window.removeEventListener("focus", focus);
   }, [repo]);
   return (
-    <IdentityContext value={identity}><ProspectingContext value={prospecting}>
+    <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}>
       <CapabilitiesContext value={current.capabilities}>
         <RepositoryContext value={repo}>
           <ToastContext value={setToast}>
@@ -145,6 +155,6 @@ export function WorkspaceProvider({
           </ToastContext>
         </RepositoryContext>
       </CapabilitiesContext>
-    </ProspectingContext></IdentityContext>
+    </RefreshContext></CompanyContext></PlanningContext></ProspectingContext></IdentityContext>
   );
 }

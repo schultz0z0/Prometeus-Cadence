@@ -6,6 +6,8 @@ import { approveProfile, mergeProfileSuggestion } from "@/domain/context";
 import type { CompanyProfile } from "@/domain/model";
 import { Icon } from "@/components/ui/icon";
 import { Badge, Button, Field, Notice } from "@/components/ui/primitives";
+import {ContextSuggestions} from './context-suggestions';
+import {ProductProfiles} from './product-profiles';
 export function CompanyContext() {
   const identity = useIdentity(),
     capabilities = useCapabilities();
@@ -65,7 +67,7 @@ export function CompanyContext() {
               value={p.domain}
               onChange={(e) => set("domain", e.target.value)}
             />
-            <Button
+            {identity?<ContextSuggestions current={p} onChange={setP}/>:<Button
               onClick={() => {
                 setP(mergeProfileSuggestion(p, {}));
                 notify(
@@ -74,7 +76,7 @@ export function CompanyContext() {
               }}
             >
               Reler
-            </Button>
+            </Button>}
           </div>
           <small className="section-note">PERFIL DA EMPRESA</small>
           <button
@@ -100,8 +102,7 @@ export function CompanyContext() {
         </aside>
         <section>
           <Notice>
-            O que você corrigir vale mais que o que a IA leu. Nesta versão, o
-            contexto é editado e aprovado localmente.
+            {identity?'A leitura do site gera uma proposta com fontes. Aceitar campos altera somente o rascunho; aprovar e salvar é uma ação separada.':'O que você corrigir vale mais que o que a IA leu. Nesta demonstração, o contexto é editado e aprovado localmente.'}
           </Notice>
           <div className="context-accordion">
             <button
@@ -181,6 +182,7 @@ export function CompanyContext() {
           ))}
         </section>
       </div>
+      {identity&&<ProductProfiles domain={p.domain} companyRevision={s.companyProfile.version}/>}
       <div className="context-save-bar">
         <small>
           Versão {s.companyProfile.version} ·{" "}

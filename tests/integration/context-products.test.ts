@@ -8,6 +8,7 @@ import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 import {executeWorkspaceCommand,readWorkspaceSnapshot} from '../../src/server/workspaces/commands.ts';
 import {readApprovedContext,readContextState} from '../../src/server/context/repository.ts';
 import {saveProduct} from '../../src/server/context/products.ts';
+import {contextRequest} from '../../src/server/context/http.ts';
 beforeEach(resetRateLimits);after(closeProspectingPools);
 const profile={name:'Agenda',offer:'Organização de consultas',idealCustomer:'Clínicas',differentiators:'Agenda integrada',socialProof:'',sources:'Manual'};
 test('latest draft does not replace the approved context consumed by jobs',async()=>{
@@ -37,4 +38,10 @@ test('operator cannot manage products and arbitrary AI source references cannot 
  await assert.rejects(()=>saveProduct(p,{requestId:randomUUID(),expectedRevision:0,action:'save-draft',profile,sourceJobId:'foreign-job'}),{status:409});
  await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[p.workspaceId,p.userId]));
  await assert.rejects(()=>saveProduct(p,{requestId:randomUUID(),expectedRevision:0,action:'save-draft',profile}),{status:403});
+});
+test('context HTTP binds the active workspace and product writes require the trusted origin',async()=>{
+ const {p,headers}=await createPlanningFixture();
+ const get=await contextRequest(new Request('http://127.0.0.1:3210/api/context',{headers}),'get');assert.equal(get.status,200);assert.deepEqual((await get.json()).products,[]);assert.equal(get.headers.get('cache-control'),'no-store');
+ const wrong=new Headers(headers);wrong.set('x-cadence-workspace','foreign');assert.equal((await contextRequest(new Request('http://127.0.0.1:3210/api/context',{headers:wrong}),'get')).status,409);
+ wrong.set('origin','https://foreign.example');assert.equal((await contextRequest(new Request('http://127.0.0.1:3210/api/context/products',{method:'POST',headers:wrong,body:'{}'}),'save-product')).status,403);
 });
