@@ -59,8 +59,7 @@ export function CadenceSettings({
             ))}
           </div>
           <small>
-            Quem ganhar um desses vereditos depois entra sozinho quando a régua
-            estiver ativa.
+            Estes vereditos definem os elegíveis do rascunho. Cada publicação revisa e congela sua própria seleção de destinatários.
           </small>
         </div>
       </section>
@@ -106,12 +105,8 @@ export function CadenceSettings({
             ))}
           </div>
         </div>
-        <Toggle
-          label="Pular feriados"
-          description="Feriados nacionais."
-          checked={cfg.skipHolidays}
-          onChange={(v) => set({ skipHolidays: v })}
-        />
+        <label className="row"><input type="checkbox" checked={cfg.skipHolidays} disabled={!cfg.skipHolidays} onChange={e=>set({skipHolidays:e.target.checked})}/>Pular feriados</label>
+        <small>Calendário de feriados ainda indisponível. Se o rascunho tiver esta opção ativa, desmarque e salve para publicar.</small>
         {(["intervalSeconds", "whatsappIntervalSeconds"] as const).map(
           (key) => (
             <div key={key}>
@@ -155,12 +150,14 @@ export function CadenceSettings({
           label="Distribuir envios ao longo do dia"
           description="Distribui os leads em múltiplas janelas de horário."
           checked={cfg.distribute}
+          disabled={!cfg.distribute}
           onChange={(v) => set({ distribute: v })}
         />
         <Toggle
           label="Budget automático"
           description="Divide a capacidade entre as cadências ativas do mesmo canal."
           checked={cfg.budgetPercent === null}
+          disabled={cfg.budgetPercent === null}
           onChange={(v) => set({ budgetPercent: v ? null : 50 })}
         />
         {cfg.budgetPercent !== null && (
@@ -170,6 +167,7 @@ export function CadenceSettings({
               min="1"
               max="100"
               value={cfg.budgetPercent}
+              disabled
               onChange={(e) => set({ budgetPercent: Number(e.target.value) })}
             />
           </Field>
@@ -182,13 +180,13 @@ export function CadenceSettings({
         </p>
         <div className="section-gap">
           <Notice>
-            Nenhum número conectado. As mensagens de WhatsApp ficam esperando
-            até a conexão do canal.
+            Selecione um remetente real e vincule os templates na seção Publicação e envio. E-mail e LinkedIn permanecem apenas em rascunho neste marco.
           </Notice>
         </div>
       </section>
       <section className="panel panel-pad section-gap stack">
         <h2>Pausas automáticas</h2>
+        <Notice>Distribuir envios, budget percentual, só e-mail corporativo, outro contato e reengajamento ainda não são suportados para publicação. Opções antigas podem ser desligadas; o servidor bloqueia publicações enquanto permanecerem ativas.</Notice>
         <p className="secondary-text">Quando a régua para sozinha.</p>
         <Toggle
           label="Parar o lead que responder"
@@ -200,6 +198,7 @@ export function CadenceSettings({
           label="Só e-mail corporativo"
           description="E-mails pessoais pulam a etapa e seguem pelo próximo canal."
           checked={cfg.corporateOnly}
+          disabled={!cfg.corporateOnly}
           onChange={(v) => set({ corporateOnly: v })}
         />
         <Toggle
@@ -211,12 +210,14 @@ export function CadenceSettings({
         <Toggle
           label="Terminou sem resposta? Tentar outro contato do lead"
           checked={cfg.alternateContact}
+          disabled={!cfg.alternateContact}
           onChange={(v) => set({ alternateContact: v })}
         />
         <Toggle
           label="Reengajar quem terminar sem responder"
           description="Leva para outra lista quem concluiu sem resposta."
           checked={cfg.reengage}
+          disabled={!cfg.reengage}
           onChange={(v) => set({ reengage: v })}
         />
         <Field label="Palavras-chave de pausa" help="Uma por linha.">

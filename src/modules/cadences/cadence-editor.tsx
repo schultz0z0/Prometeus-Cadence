@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/primitives";
 import { SequenceCanvas } from "./sequence-canvas";
 import { CadenceSettings } from "./cadence-settings";
+import {CadencePublication} from './cadence-publication-review';
 export function CadenceEditor({ id }: { id: string }) {
   const s = useDemo();
   const repo = useRepository();
@@ -147,6 +148,7 @@ export function CadenceEditor({ id }: { id: string }) {
           ))}
         </div>
       </section>
+      <CadencePublication cadence={c} dirty={dirty||id==='new'}/>
       {issues.length > 0 && (
         <div className="section-gap">
           <Notice tone="error">
@@ -164,15 +166,14 @@ export function CadenceEditor({ id }: { id: string }) {
                 <Icon name="Sparkles" size={17} className="orange" />
                 Com essa configuração
               </h3>
-              <small>{leads.length} leads elegíveis · demonstração</small>
+              <small>{leads.length} leads elegíveis no rascunho</small>
             </div>
             <p>
               Prepare sua sequência.{" "}
               <span>Conexões serão medidas quando a cadência rodar.</span>
             </p>
             <small>
-              Os canais ainda não estão conectados. Nenhuma estimativa de
-              resposta foi inventada.
+              A publicação revisada aparece acima. Entregas e respostas dependem dos eventos reais do provedor.
             </small>
           </section>
           <SequenceCanvas

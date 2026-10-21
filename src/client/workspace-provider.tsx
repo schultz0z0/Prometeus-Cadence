@@ -16,6 +16,7 @@ import {createPlanningClient,type PlanningClient} from './planning-client';
 import {createContextClient,type ContextClient} from './context-client';
 import {createAutomationClient,type AutomationClient} from './automation-client';
 import {createChannelClient,type ChannelClient} from './channel-client';
+import {createMessagingClient,type MessagingClient} from './messaging-client';
 export interface IdentityView {
   user: { id: string; name: string; email: string };
   activeWorkspaceId: string | null;
@@ -43,6 +44,10 @@ const CompanyContext=createContext<ContextClient|null>(null);
 const RefreshContext=createContext<(()=>Promise<void>)|null>(null);
 const AutomationContext=createContext<AutomationClient|null>(null);
 const ChannelContext=createContext<ChannelClient|null>(null);
+const MessagingContext=createContext<MessagingClient|null>(null);
+const RevisionContext=createContext<number|null>(null);
+export function useMessaging(){return useContext(MessagingContext);}
+export function useWorkspaceRevision(){return useContext(RevisionContext);}
 export function useChannels(){return useContext(ChannelContext);}
 export function useAutomationClient(){return useContext(AutomationContext);}
 export function useWorkspaceRefresh(){return useContext(RefreshContext);}
@@ -70,6 +75,7 @@ export function WorkspaceProvider({
   const [company]=useState(()=>createContextClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const [automation]=useState(()=>createAutomationClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const [channels]=useState(()=>createChannelClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+  const [messaging]=useState(()=>createMessagingClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const current = useSyncExternalStore(
     repo.subscribe,
     repo.snapshot,
@@ -84,7 +90,7 @@ export function WorkspaceProvider({
     return () => {
       mounted.current = false;
       queueMicrotask(() => {
-        if (!mounted.current) {repo.dispose();prospecting.dispose();planning.dispose();company.dispose();automation.dispose();channels.dispose();}
+        if (!mounted.current) {repo.dispose();prospecting.dispose();planning.dispose();company.dispose();automation.dispose();channels.dispose();messaging.dispose();}
       });
     };
   }, [repo]);
@@ -101,7 +107,7 @@ export function WorkspaceProvider({
     return () => window.removeEventListener("focus", focus);
   }, [repo]);
   return (
-    <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}><AutomationContext value={automation}><ChannelContext value={channels}>
+    <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}><AutomationContext value={automation}><ChannelContext value={channels}><MessagingContext value={messaging}><RevisionContext value={current.revision}>
       <CapabilitiesContext value={current.capabilities}>
         <RepositoryContext value={repo}>
           <ToastContext value={setToast}>
@@ -163,6 +169,6 @@ export function WorkspaceProvider({
           </ToastContext>
         </RepositoryContext>
       </CapabilitiesContext>
-    </ChannelContext></AutomationContext></RefreshContext></CompanyContext></PlanningContext></ProspectingContext></IdentityContext>
+    </RevisionContext></MessagingContext></ChannelContext></AutomationContext></RefreshContext></CompanyContext></PlanningContext></ProspectingContext></IdentityContext>
   );
 }

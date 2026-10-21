@@ -9,7 +9,7 @@ export function WhatsappContentField({content,templates,onChange,allowText=true}
  </select></Field>
  {content.kind==='text'?<Field label="Mensagem"><textarea rows={4} maxLength={4096} value={content.text} onChange={e=>onChange({kind:'text',text:e.target.value})}/></Field>:current?<>
  <div className="message-preview">{current.components.map((c,i)=><p key={i}>{c.text}</p>)}</div>
- {current.parameters.map((p,i)=>{const key=p.component+'.'+p.key;return <Field key={key+i} label={`Variável ${key}`} help={p.type!=='text'?'Este parâmetro ainda não é suportado para envio.':undefined}><input disabled={p.type!=='text'} value={content.variables[key]??''} maxLength={1024} onChange={e=>onChange({...content,variables:{...content.variables,[key]:e.target.value}})}/></Field>;})}
+ {current.parameters.map((p,i)=>{const key=p.key;return <Field key={key+i} label={`Variável ${key}`} help={p.type!=='text'?'Este parâmetro ainda não é suportado para envio.':undefined}><input disabled={p.type!=='text'} value={content.variables[key]??''} maxLength={1024} onChange={e=>onChange({...content,variables:{...content.variables,[key]:e.target.value}})}/></Field>;})}
  </>:<Notice>Sincronize os templates e selecione uma versão aprovada.</Notice>}
  </div>;
 }

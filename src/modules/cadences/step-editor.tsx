@@ -80,6 +80,7 @@ export function StepEditor({
           </Field>
         </div>
         <div className="stack section-gap">
+          {d.channel==='WHATSAPP'&&<Notice>Este é o texto do rascunho. O template aprovado e suas variáveis serão vinculados na revisão de publicação da cadência.</Notice>}
           {d.channel === "EMAIL" && (
             <Field label="Assunto">
               <input
