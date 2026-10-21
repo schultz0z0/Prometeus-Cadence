@@ -1,12 +1,13 @@
 import type {JobLease,JobState,ProviderUsage,Units} from '../../domain/prospecting.ts';
 import {withLeasedTransaction} from './worker-db.ts';
-import {settleUsage,releaseUnused,assertReserved} from './usage.ts';
+import {releaseUnused,assertReserved} from './usage.ts';
 import {prospectingConfig} from './config.ts';
 import {ProviderError} from './providers/transport.ts';
 import {AppError} from '../errors.ts';
 import {hashValue} from './review.ts';
 import {assertAutomationAuthority} from '../automations/guard.ts';
 import {syncOccurrenceJob} from '../automations/assignments.ts';
+import {workerPool} from './worker-db.ts';
 export class UncertainStep extends Error{}
 export async function readLeasedJob(lease:JobLease){return withLeasedTransaction(lease,async c=>(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0]);}
 export async function finishJob(lease:JobLease,state:JobState,code?:string){
@@ -39,10 +40,12 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
     if(error instanceof ProviderError&&error.uncertain){await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_attempt SET state='uncertain' WHERE id=$1",[operationId]));await finishJob(lease,'needs_reconciliation','UNCERTAIN_STEP');throw new UncertainStep();}
     await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_attempt SET state='failed' WHERE id=$1",[operationId]));throw error;
   }
-  await withLeasedTransaction(lease,async c=>{
-    if(usage){const measured=usage(result);if(Object.keys(measured.units).length)await settleUsage(c,lease.jobId,{...measured,operationId});}
-    await c.query("UPDATE app.prospecting_attempt SET state='completed',payload=$2 WHERE id=$1",[operationId,{result,reservedUnits:units}]);
-  });return result;
+  // A bounded technical receipt survives membership removal during the call.
+  // Domain publication below still goes through the normal membership fence.
+  const measured=usage?{...usage(result),provider,operationId}:null;
+  const received=await workerPool().query('SELECT app.record_received_prospecting_step($1,$2,$3,$4,$5,$6,$7) AS authorized',[lease.jobId,lease.token,lease.fence,lease.actorId,operationId,JSON.stringify(result),measured]);
+  if(!received.rows[0].authorized)throw new AppError(403,'Resposta preservada; o acesso foi removido.','RESULT_RECEIVED_ACCESS_REVOKED');
+  return result;
 }
 export async function handleStepFailure(lease:JobLease,error:unknown){
   if(error instanceof UncertainStep)return;

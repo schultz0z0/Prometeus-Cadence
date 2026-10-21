@@ -30,6 +30,7 @@ const known = [
   "automation-authorization",
   "automation-scheduler",
   "automation-lifecycle",
+  "received-step",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length

@@ -37,12 +37,13 @@ test('offline lifecycle uses actual reviews worker journal scheduler and leaves 
  snapshot=await readWorkspaceSnapshot(p);assert.equal(snapshot.data.automations.length,2);assert.ok(snapshot.data.automations.every(a=>a.status==='paused'));assert.equal(snapshot.data.leads.length,0);
  const cadence=await analyze({kind:'planning',task:'cadence_options',listId:created.listId!,objective:'Primeiro contato',channels:['WHATSAPP'],tone:'Direto',rhythm:'Padrão',highlight:'',avoid:'',decisionMaker:''});assert.ok(cadence.proposal?.task==='cadence_options');assert.equal(cadence.proposal.options.length,3);
  const candidate=cadence.proposal.options[0],cadenceSelection={optionId:candidate.id,edits:{name:'Texto aprovado pelo usuário',steps:candidate.steps}},cadenceReview=await preparePlanningSelection(p,cadence.job.id,cadenceSelection);await confirmPlanningSelection(p,cadence.job.id,{...cadenceSelection,requestId:randomUUID(),reviewToken:cadenceReview.token});
- for(const automation of (await readWorkspaceSnapshot(p)).data.automations){snapshot=await readWorkspaceSnapshot(p);await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'automation.save',automation:{...automation,schedule:{frequency:'daily',time:'07:00',timezone:'UTC',weekdays:[0,1,2,3,4,5,6],anchorDate:'2026-01-01'}}}});}
+ // Activate the exact reviewed AI-created calendars; no manual calendar repair.
  for(const automation of (await readWorkspaceSnapshot(p)).data.automations)await activate(p,automation.id);
+ const tomorrow=new Date(Date.now()+86400000);tomorrow.setUTCHours(23,0,0,0);const schedulerOptions={...options,now:()=>tomorrow};
  await testAdmin(c=>c.query("UPDATE app.automation_runtime SET next_run_at=date_trunc('day',clock_timestamp())-interval '2 days'+interval '7 hours',retry_at=NULL WHERE workspace_id=$1",[p.workspaceId]));
- await Promise.all([runSchedulerOnce(options),runSchedulerOnce(options)]);await runWorkerOnce(deps,options);
+ await Promise.all([runSchedulerOnce(schedulerOptions),runSchedulerOnce(schedulerOptions)]);await runWorkerOnce(deps,options);
  await testAdmin(c=>c.query('UPDATE app.automation_runtime SET retry_at=NULL WHERE workspace_id=$1',[p.workspaceId]));
- for(let i=0;i<4;i++){await runSchedulerOnce(options);await runWorkerOnce(deps,options);}
+ for(let i=0;i<4;i++){await runSchedulerOnce(schedulerOptions);await runWorkerOnce(deps,options);}
  snapshot=await readWorkspaceSnapshot(p);assert.equal(snapshot.data.leads.length,1);assert.equal(snapshot.data.leads[0].qualification,'pending');assert.equal(snapshot.data.cadences[0].status,'draft');assert.equal(generations,3);assert.equal(searches,1);assert.equal(decisions,1);
  const qualifier=snapshot.data.automations.find(a=>a.source==='QUALIFY')!,occurrence=(await listAutomationOccurrences(p,qualifier.id)).items[0];assert.ok(occurrence.jobId);assert.equal(occurrence.state,'completed',JSON.stringify(await getJob(p,occurrence.jobId)));const items=await listJobItems(p,occurrence.jobId);assert.equal(items.items[0].applied,false);assert.ok(items.items[0].results.some(r=>r.proposed.qualification==='qualified'));
  assert.equal((await getJob(p,occurrence.jobId)).usage?.filter(u=>u.units.openaiCalls).length,1);

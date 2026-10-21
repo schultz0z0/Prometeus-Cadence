@@ -19,6 +19,7 @@ beforeEach(resetRateLimits);after(closeProspectingPools);
 test('recurrence activation is administrative, idempotent and invalidated by generic edits',async()=>{
  const {p,id}=await automationFixture(),runtime=await readAutomationRuntime(p,id);assert.equal(runtime.status,'paused');
  const review=await prepareAutomationAction(p,id,{action:'activate',expectedRevision:runtime.revision}),body={requestId:randomUUID(),action:'activate',expectedRevision:runtime.revision,reviewToken:review.token};
+ assert.deepEqual((review as any).scope,{dedupScope:'workspace',source:'MAPS',listId:automationListId(review),filters:{term:'clínicas',location:'São Paulo'},modules:[],criteria:null,dependsOnAutomationId:null,contextVersion:0,productVersion:null,productId:null});
  const [a,b]=await Promise.all([confirmAutomationAction(p,id,body),confirmAutomationAction(p,id,body)]);assert.deepEqual(a,b);assert.ok('status' in a);assert.equal(a.status,'active');assert.ok(a.nextRunAt!>new Date().toISOString());
  let s=await readWorkspaceSnapshot(p);await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'automation.save',automation:{...s.data.automations[0],name:'Editada',status:'active'}}});
  assert.equal((await readAutomationRuntime(p,id)).status,'paused');assert.deepEqual(await confirmAutomationAction(p,id,body),a);
@@ -26,6 +27,7 @@ test('recurrence activation is administrative, idempotent and invalidated by gen
  const bUser=await prospectingUser();await assert.rejects(()=>prepareAutomationAction(bUser.p,id,{action:'activate',expectedRevision:1}),{status:404});
  await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[p.workspaceId,p.userId]));await assert.rejects(()=>prepareAutomationAction(p,id,{action:'activate',expectedRevision:3}),{status:403});
 });
+function automationListId(review:Awaited<ReturnType<typeof prepareAutomationAction>>){return review.definition.payload.listId;}
 test('materialization commits one occurrence job reservation and next window atomically',async()=>{
  const {p,id}=await automationFixture();await activate(p,id);const lease=await dueLease(p,id),definition=await readAutomationDefinition(p,id),runtime=await readAutomationRuntime(p,id),window=latestDueWindow(definition.schedule!,runtime.nextRunAt!,new Date().toISOString())!;
  const first=await schedulerTransaction(p,c=>materializeOccurrence(c,lease,window));assert.equal(first.state,'queued');assert.ok(first.jobId);

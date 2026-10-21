@@ -95,7 +95,8 @@ export async function getJob(p:Principal,id:string):Promise<JobView>{return with
   if(!row)throw new AppError(404,'Execução não encontrada.');
   const usage=(await c.query("SELECT * FROM app.usage_ledger WHERE job_id=$1 AND event='consume' ORDER BY created_at",[id])).rows.map(r=>({provider:r.provider,operationId:r.operation_id,units:r.units,costUsd:r.cost_usd===null?null:Number(r.cost_usd),costKind:r.cost_kind,...r.metadata}));
   const unresolvedAttempts=(await c.query("SELECT id,provider,step FROM app.prospecting_attempt WHERE job_id=$1 AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') ORDER BY created_at,id",[id])).rows.map(a=>({...a,canAttachRun:a.provider==='apify'&&(row.kind==='generation'||a.step.startsWith('registry:')||a.step.startsWith('website:'))}));
-  return {...jobView(row),usage,unresolvedAttempts};
+  const role=(await c.query("SELECT app.current_role() AS role")).rows[0].role;const retainedResults=['owner','admin'].includes(role)?(await c.query("SELECT id,provider,payload FROM app.prospecting_attempt WHERE job_id=$1 AND payload->>'receivedWithoutMembership'='true' ORDER BY created_at,id LIMIT 10",[id])).rows.map(a=>({operationId:a.id,provider:a.provider,result:a.payload.result,receivedAt:a.payload.receivedAt})):undefined;
+  return {...jobView(row),usage,unresolvedAttempts,retainedResults};
 });}
 export async function listJobItems(p:Principal,id:string,input:unknown={}):Promise<Page<JobItemView>>{
   const parsed=pageSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Página inválida.');

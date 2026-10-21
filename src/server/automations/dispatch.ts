@@ -64,7 +64,7 @@ export async function materializeOccurrence(c:PoolClient,lease:SchedulerLease,wi
  const auth=await authorizationInTransaction(c,r.authorization_id),definition=await definitionInTransaction(c,lease.automationId);
  if(auth.actorId!==lease.actorId||auth.epoch!==Number(r.epoch))throw new AppError(409,'Autorização de ativação obsoleta.','AUTOMATION_CHANGED');
  const occurrence=await createOccurrence(c,auth,definition,window.scheduledAt,window.skipped,null,selectLeads);
- await c.query('UPDATE app.automation_runtime SET next_run_at=$2,last_run_at=$3,pending_occurrence_id=$4,retry_at=$5 WHERE automation_id=$1',[lease.automationId,window.nextRunAt,occurrence.scheduledAt,['queued','running','waiting_dependency','needs_reconciliation'].includes(occurrence.state)?occurrence.id:null,occurrence.state==='waiting_dependency'?new Date(Date.now()+10000).toISOString():null]);
+ await c.query('UPDATE app.automation_runtime SET next_run_at=$2,pending_occurrence_id=$3,retry_at=$4 WHERE automation_id=$1',[lease.automationId,window.nextRunAt,['queued','running','waiting_dependency','needs_reconciliation'].includes(occurrence.state)?occurrence.id:null,occurrence.state==='waiting_dependency'?new Date(Date.now()+10000).toISOString():null]);
  return occurrence;
 }
 export async function dispatchManualOccurrence(c:PoolClient,auth:AutomationAuthorization,requestId:string,selectLeads?:LeadSelector){const occurrence=await createOccurrence(c,auth,await definitionInTransaction(c,auth.automationId),new Date().toISOString(),0,requestId,selectLeads);if(occurrence.state==='waiting_dependency')throw new AppError(409,'A busca dependente ainda não terminou. Revise a execução avulsa após sua conclusão.','DEPENDENCY_PENDING');return occurrence;}

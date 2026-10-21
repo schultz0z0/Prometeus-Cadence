@@ -14,15 +14,22 @@ import {normalizeCandidate} from '../../src/server/prospecting/normalize.ts';
 import {finishJob} from '../../src/server/prospecting/journal.ts';
 import {automationRequest} from '../../src/server/automations/http.ts';
 import {cancelJob} from '../../src/server/prospecting/service.ts';
-beforeEach(()=>{resetRateLimits();process.env.AUTOMATIONS_SCHEDULER_ENABLED='true';});after(closeProspectingPools);
+import {eligibleLeads} from '../../src/server/automations/assignments.ts';
+import {pauseAutomation} from '../../src/server/automations/authorization.ts';
+import {claimJob} from '../../src/server/prospecting/lease.ts';
+import {readAutomationDefinition} from '../../src/server/automations/repository.ts';
+import {schedulerTransaction} from './automation-helpers.ts';
+beforeEach(()=>{resetRateLimits();process.env.AUTOMATIONS_SCHEDULER_ENABLED='true';process.env.PROSPECTING_GLOBAL_CONCURRENCY='32';});after(closeProspectingPools);
 const qa=(workspaceId:string)=>({workspaceId,signal:new AbortController().signal});
 async function due(workspaceId:string,id:string){await testAdmin(c=>c.query("UPDATE app.automation_runtime SET next_run_at=date_trunc('day',clock_timestamp())-interval '5 days'+interval '7 hours',retry_at=NULL WHERE workspace_id=$1 AND automation_id=$2",[workspaceId,id]));}
 test('two schedulers materialize the latest missed window once and recover committed jobs',async()=>{
  const {p,id}=await automationFixture();await activate(p,id);await due(p.workspaceId,id);
  await Promise.all([runSchedulerOnce(qa(p.workspaceId)),runSchedulerOnce(qa(p.workspaceId))]);
  const first=await listAutomationOccurrences(p,id);assert.equal(first.items.length,1);assert.ok(first.items[0].jobId);assert.ok(first.items[0].skippedWindows>=4);
+ assert.equal((await readAutomationRuntime(p,id)).lastRunAt,null);
+ const beforeClaim=Date.now(),claim=await claimJob(randomUUID(),p.workspaceId);assert.ok(claim);const actual=(await readAutomationRuntime(p,id)).lastRunAt;assert.ok(actual&&Date.parse(actual)>=beforeClaim);assert.notEqual(actual,first.items[0].scheduledAt);
  assert.ok((await readAutomationRuntime(p,id)).nextRunAt!>new Date().toISOString());
- await runSchedulerOnce(qa(p.workspaceId));assert.deepEqual(await listAutomationOccurrences(p,id),first);
+ await runSchedulerOnce(qa(p.workspaceId));const replay=await listAutomationOccurrences(p,id);assert.equal(replay.items.length,1);assert.equal(replay.items[0].jobId,first.items[0].jobId);assert.equal(replay.items[0].state,'running');
  await testAdmin(c=>c.query("UPDATE app.prospecting_job SET state='needs_reconciliation' WHERE id=$1",[first.items[0].jobId]));
  await due(p.workspaceId,id);assert.equal(await runSchedulerOnce(qa(p.workspaceId)),false);assert.equal((await listAutomationOccurrences(p,id)).items.length,1);
  await testAdmin(c=>c.query("UPDATE app.prospecting_job SET state='completed' WHERE id=$1",[first.items[0].jobId]));
@@ -60,6 +67,7 @@ test('dependent qualification waits for partial search and assigns only newly in
  const f=await automationFixture(),id=await qualifier(f,150,true);await activate(f.p,f.id);await activate(f.p,id);await due(f.p.workspaceId,f.id);await due(f.p.workspaceId,id);
  for(let i=0;i<3;i++)await runSchedulerOnce(qa(f.p.workspaceId));
  const search=(await listAutomationOccurrences(f.p,f.id)).items[0],waiting=(await listAutomationOccurrences(f.p,id)).items[0];assert.equal(waiting.state,'waiting_dependency');assert.equal(waiting.jobId,null);
+ assert.equal((await readAutomationRuntime(f.p,id)).lastRunAt,null);
  const lease=await grantTestLease(f.p,search.jobId!);
  const batch={receiptId:randomUUID(),candidates:[normalizeCandidate({id:'new',name:'Novo QA',site:'https://example.com'},'MAPS')],nextCursor:null,exhausted:true,rawCount:1,rejected:[],usage:{provider:'apify',operationId:randomUUID(),units:{candidates:1},costUsd:null,costKind:'unknown' as const}};
  await withLeasedTransaction(lease,c=>ingestPage(c,lease,batch));await finishJob(lease,'partial');
@@ -90,4 +98,23 @@ test('automation HTTP scopes reads and administrative actions and never exposes 
  assert.equal((await automationRequest(new Request(url+'/api/automations/'+f.id+'/prepare',{method:'POST',headers,body}),f.id,'prepare')).status,200);
  await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));
  assert.equal((await automationRequest(new Request(url+'/api/automations/'+f.id+'/prepare',{method:'POST',headers,body}),f.id,'prepare')).status,403);
+});
+test('dependent backlog retains unassigned inserted leads from previous completed search windows',async()=>{
+ const f=await automationFixture(),id=await qualifier(f,1,true);await activate(f.p,f.id);await due(f.p.workspaceId,f.id);await runSchedulerOnce(qa(f.p.workspaceId));
+ const search=(await listAutomationOccurrences(f.p,f.id)).items[0],lease=await grantTestLease(f.p,search.jobId!);
+ await withLeasedTransaction(lease,c=>ingestPage(c,lease,{receiptId:randomUUID(),candidates:[1,2,3].map(n=>normalizeCandidate({id:'backlog-'+n,name:'Clínica '+n},'MAPS')),rawCount:3,rejected:[],nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:randomUUID(),units:{candidates:3},costUsd:null,costKind:'unknown'}}));await finishJob(lease,'partial');
+ await activate(f.p,id);await due(f.p.workspaceId,id);await runSchedulerOnce(qa(f.p.workspaceId));const first=(await listAutomationOccurrences(f.p,id)).items[0];assert.equal((await readAutomationRuntime(f.p,id)).backlog,2);
+ const day2=new Date(Date.parse(first.scheduledAt)+86400000).toISOString(),newJob=randomUUID();
+ await testAdmin(async c=>{
+  await c.query("INSERT INTO app.prospecting_job(workspace_id,id,actor_id,list_id,request_id,body_hash,kind,source,state,input,profile_version,checkpoint) SELECT workspace_id,$2,actor_id,list_id,$3,body_hash,kind,source,'completed',input,profile_version,checkpoint FROM app.prospecting_job WHERE id=$1",[search.jobId,newJob,randomUUID()]);
+  await c.query("INSERT INTO app.automation_occurrence(workspace_id,id,automation_id,definition_revision,authorization_id,origin,scheduled_at,state,job_id) SELECT workspace_id,$2,automation_id,definition_revision,authorization_id,'schedule',$3,'completed',$4 FROM app.automation_occurrence WHERE id=$1",[search.id,randomUUID(),day2,newJob]);
+ });
+ const definition=await readAutomationDefinition(f.p,id),remaining=await schedulerTransaction(f.p,c=>eligibleLeads(c,definition,{...first,id:randomUUID(),scheduledAt:day2},1));assert.equal(remaining.total,2);assert.equal(remaining.ids.length,1);
+});
+test('reactivation retires an old waiting occurrence instead of mixing authorization epochs',async()=>{
+ const f=await automationFixture(),id=await qualifier(f,1,true);await activate(f.p,id);await due(f.p.workspaceId,id);await runSchedulerOnce(qa(f.p.workspaceId));
+ const waiting=(await listAutomationOccurrences(f.p,id)).items[0];assert.equal(waiting.state,'waiting_dependency');
+ await pauseAutomation(f.p,id,{requestId:randomUUID(),expectedRevision:(await readAutomationRuntime(f.p,id)).revision});await activate(f.p,id);
+ assert.equal((await listAutomationOccurrences(f.p,id)).items.find(o=>o.id===waiting.id)?.state,'cancelled');
+ const pending=await testAdmin(async c=>(await c.query('SELECT pending_occurrence_id FROM app.automation_runtime WHERE automation_id=$1',[id])).rows[0].pending_occurrence_id);assert.equal(pending,null);
 });

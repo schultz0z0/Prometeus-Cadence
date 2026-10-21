@@ -12,6 +12,8 @@ import {executeWorkspaceCommand,readWorkspaceSnapshot} from '../../src/server/wo
 import {audienceResult,cadenceResult} from '../planning-fixtures.ts';
 import type {PlanningInput,PlanningProposal} from '../../src/domain/planning.ts';
 import type {Principal} from '../../src/domain/workspace.ts';
+import {readAutomationDefinition} from '../../src/server/automations/repository.ts';
+import {scheduleV2Schema,localDateAt} from '../../src/domain/schedule.ts';
 beforeEach(resetRateLimits);after(closeProspectingPools);
 async function setup(){
  const {p}=await createPlanningFixture();Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:'{"openaiCalls":20}',PROSPECTING_GLOBAL_DAILY_UNITS:'{"openaiCalls":100000}'});
@@ -28,6 +30,8 @@ test('confirmed audience creates one list and two paused linked automations even
  const [a,b]=await Promise.all([confirmPlanningSelection(p,job,body),confirmPlanningSelection(p,job,body)]);assert.deepEqual(a,b);
  let s=await readWorkspaceSnapshot(p);assert.equal(s.data.lists.length,1);assert.equal(s.data.automations.length,2);assert.ok(s.data.automations.every(a=>a.status==='paused'&&a.dailyLimit===3));assert.ok(s.data.automations.every(a=>a.name.includes('Título humano')));
  const qualifier=s.data.automations.find(a=>a.source==='QUALIFY')!;assert.equal(qualifier.dependsOnAutomationId,a.automationIds![0]);assert.equal(qualifier.criteria,'Clínicas com atendimento presencial');
+ assert.ok(review.edits&&typeof review.edits==='object'&&'schedules' in review.edits);assert.equal((review.edits.schedules as any).search.anchorDate,localDateAt(new Date().toISOString(),'America/Sao_Paulo'));
+ for(const id of a.automationIds!){const definition=await readAutomationDefinition(p,id);assert.equal(scheduleV2Schema.safeParse(definition.schedule).success,true);}
  await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'preferences.update',preferences:{notifyEmail:false}}});
  assert.deepEqual(await confirmPlanningSelection(p,job,body),a);
  await assert.rejects(()=>confirmPlanningSelection(p,job,{...body,edits:{...selection.edits,title:'Outro'}}),{status:409});

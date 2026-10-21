@@ -1,0 +1,69 @@
+-- A receipt is technical evidence for an already dispatched fenced operation.
+-- It grants neither a new dispatch nor publication of domain objects.
+CREATE FUNCTION app.record_received_prospecting_step(p_job text,p_token text,p_fence bigint,p_actor text,p_operation text,p_result jsonb,p_usage jsonb) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+DECLARE j app.prospecting_job; a app.prospecting_attempt; unit text; amount numeric; remaining numeric; revoked boolean; rest jsonb;
+BEGIN
+ IF length(p_job) NOT BETWEEN 1 AND 120 OR length(p_token) NOT BETWEEN 1 AND 120 OR length(p_operation) NOT BETWEEN 1 AND 120 OR p_fence<1 OR p_result IS NULL OR pg_column_size(p_result)>2097152 OR pg_column_size(p_usage)>65536 THEN RAISE EXCEPTION 'INVALID_RECEIPT';END IF;
+ SELECT * INTO j FROM app.prospecting_job WHERE id=p_job AND actor_id=p_actor AND lease_token=p_token AND fence=p_fence AND lease_until>clock_timestamp() AND state IN('running','waiting_provider','cancelling') FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'STALE_JOB';END IF;
+ SELECT * INTO a FROM app.prospecting_attempt WHERE workspace_id=j.workspace_id AND job_id=j.id AND id=p_operation FOR UPDATE;
+ IF NOT FOUND OR a.state NOT IN('prepared','completed') THEN RAISE EXCEPTION 'INVALID_RECEIPT';END IF;
+ IF a.state='completed' THEN IF a.payload->'result'<>p_result THEN RAISE EXCEPTION 'RECEIPT_CONFLICT';END IF;RETURN true;END IF;
+ IF p_usage IS NOT NULL THEN
+  IF jsonb_typeof(p_usage->'units')<>'object' OR p_usage->>'provider'<>a.provider OR p_usage->>'costKind' NOT IN('unknown','reported','estimated') OR (p_usage->>'costUsd' IS NOT NULL AND ((p_usage->>'costUsd')::numeric<0 OR (p_usage->>'costUsd')::numeric>1000000000)) THEN RAISE EXCEPTION 'INVALID_USAGE';END IF;
+  FOR unit,amount IN SELECT key,value::numeric FROM jsonb_each_text(p_usage->'units') LOOP
+   IF unit NOT IN('candidates','apifyRuns','apolloPages','jevCalls','codexCalls','openaiCalls','geminiCalls') OR amount<0 OR amount>1000000000 OR amount<>trunc(amount) OR amount>COALESCE((a.payload->'reservedUnits'->>unit)::numeric,0) THEN RAISE EXCEPTION 'INVALID_USAGE';END IF;
+   SELECT COALESCE(sum((l.units->>unit)::numeric*CASE WHEN l.event='reserve' THEN 1 ELSE -1 END),0) INTO remaining FROM app.usage_ledger l WHERE l.workspace_id=j.workspace_id AND l.job_id=j.id AND l.event IN('reserve','release');
+   IF amount>remaining THEN RAISE EXCEPTION 'USAGE_LIMIT';END IF;
+  END LOOP;
+  IF p_usage->'units'<>'{}'::jsonb THEN
+   INSERT INTO app.usage_ledger(workspace_id,job_id,operation_id,event,units,cost_usd,cost_kind,provider,metadata) VALUES(j.workspace_id,j.id,p_operation,'consume',p_usage->'units',(p_usage->>'costUsd')::numeric,p_usage->>'costKind',a.provider,p_usage-'units'-'provider'-'operationId'-'costUsd'-'costKind');
+   INSERT INTO app.usage_ledger(workspace_id,job_id,operation_id,event,units) VALUES(j.workspace_id,j.id,p_operation,'release',p_usage->'units');
+  END IF;
+ END IF;
+ SELECT NOT EXISTS(SELECT 1 FROM auth.member WHERE "organizationId"=j.workspace_id AND "userId"=j.actor_id) INTO revoked;
+ UPDATE app.prospecting_attempt SET state='completed',payload=jsonb_build_object('result',p_result,'reservedUnits',a.payload->'reservedUnits','receivedAt',clock_timestamp(),'receivedWithoutMembership',revoked) WHERE workspace_id=j.workspace_id AND id=p_operation;
+ IF revoked THEN
+  -- Stop, preserve the technical receipt for current administrators, never publish.
+  UPDATE app.prospecting_job SET state='failed',error_code='RESULT_RECEIVED_ACCESS_REVOKED',error_message='Resposta e consumo preservados após remoção de acesso; não houve publicação nem nova chamada.',revision=revision+1,updated_at=clock_timestamp() WHERE workspace_id=j.workspace_id AND id=j.id;
+  UPDATE app.automation_occurrence SET state='failed',blocked_code='RESULT_RECEIVED_ACCESS_REVOKED' WHERE workspace_id=j.workspace_id AND job_id=j.id;
+  UPDATE app.automation_lead_assignment SET state='uncertain' WHERE workspace_id=j.workspace_id AND job_id=j.id;
+  SELECT COALESCE(jsonb_object_agg(key,amount),'{}') INTO rest FROM (SELECT key,GREATEST(sum(value::numeric*CASE WHEN event='release' THEN -1 ELSE 1 END),0) amount FROM app.usage_ledger l CROSS JOIN LATERAL jsonb_each_text(l.units) WHERE l.workspace_id=j.workspace_id AND l.job_id=j.id AND l.event IN('reserve','release') GROUP BY key) totals;
+  INSERT INTO app.usage_ledger(workspace_id,job_id,operation_id,event,units) VALUES(j.workspace_id,j.id,j.id||':close','release',rest) ON CONFLICT DO NOTHING;
+ END IF;
+ RETURN NOT revoked;
+END $$;
+REVOKE ALL ON FUNCTION app.record_received_prospecting_step(text,text,bigint,text,text,jsonb,jsonb) FROM PUBLIC,cadence_app;
+GRANT EXECUTE ON FUNCTION app.record_received_prospecting_step(text,text,bigint,text,text,jsonb,jsonb) TO cadence_worker;
+
+-- Preserve a single actual processing start, not a scheduled or queued time.
+ALTER TABLE app.prospecting_job ADD COLUMN started_at timestamptz;
+ALTER FUNCTION app.claim_prospecting_job(text,integer,text) RENAME TO claim_prospecting_job_internal;
+REVOKE ALL ON FUNCTION app.claim_prospecting_job_internal(text,integer,text) FROM PUBLIC,cadence_app,cadence_worker;
+CREATE FUNCTION app.claim_prospecting_job(p_worker text,p_limit integer,p_workspace text DEFAULT NULL) RETURNS TABLE(workspace_id text,job_id text,actor_id text,token text,expires_at timestamptz,fence bigint)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+DECLARE ticket record; started timestamptz;
+BEGIN
+ SELECT * INTO ticket FROM app.claim_prospecting_job_internal(p_worker,p_limit,p_workspace);IF NOT FOUND THEN RETURN;END IF;
+ UPDATE app.prospecting_job j SET started_at=COALESCE(j.started_at,clock_timestamp()) WHERE j.workspace_id=ticket.workspace_id AND j.id=ticket.job_id RETURNING started_at INTO started;
+ UPDATE app.automation_runtime r SET last_run_at=GREATEST(r.last_run_at,started) FROM app.automation_occurrence o WHERE o.workspace_id=ticket.workspace_id AND o.job_id=ticket.job_id AND r.workspace_id=o.workspace_id AND r.automation_id=o.automation_id;
+ UPDATE app.automation_occurrence o SET state='running' WHERE o.workspace_id=ticket.workspace_id AND o.job_id=ticket.job_id AND o.state='queued';
+ workspace_id:=ticket.workspace_id;job_id:=ticket.job_id;actor_id:=ticket.actor_id;token:=ticket.token;expires_at:=ticket.expires_at;fence:=ticket.fence;RETURN NEXT;
+END $$;
+REVOKE ALL ON FUNCTION app.claim_prospecting_job(text,integer,text) FROM PUBLIC,cadence_app;
+GRANT EXECUTE ON FUNCTION app.claim_prospecting_job(text,integer,text) TO cadence_worker;
+
+CREATE OR REPLACE FUNCTION app.authorize_automation(p_id text,p_expected bigint,p_authorization text,p_origin text,p_payload jsonb,p_next timestamptz) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+DECLARE ws text:=current_setting('app.workspace_id',true); actor text:=current_setting('app.user_id',true); r app.automation_runtime; data jsonb; activation_epoch bigint;
+BEGIN
+ IF app.current_role() NOT IN('owner','admin') OR app.current_role() IS NULL OR p_origin NOT IN('schedule','manual') THEN RAISE EXCEPTION 'FORBIDDEN';END IF;
+ SELECT * INTO r FROM app.automation_runtime WHERE workspace_id=ws AND automation_id=p_id FOR UPDATE;
+ IF NOT FOUND OR r.revision<>p_expected THEN RAISE EXCEPTION 'AUTOMATION_CHANGED';END IF;
+ activation_epoch:=r.epoch+CASE WHEN p_origin='schedule' THEN 1 ELSE 0 END;
+ IF p_origin='schedule' AND (p_next IS NULL OR p_next<=clock_timestamp()) THEN RAISE EXCEPTION 'FUTURE_OCCURRENCE_REQUIRED';END IF;
+ data:=p_payload||jsonb_build_object('id',p_authorization,'automationId',p_id,'revision',r.definition_revision,'epoch',activation_epoch,'origin',p_origin,'actorId',actor);
+ INSERT INTO app.automation_authorization VALUES(ws,p_authorization,p_id,r.definition_revision,activation_epoch,p_origin,actor,data,now());
+ IF p_origin='schedule' THEN UPDATE app.automation_occurrence SET state='cancelled',blocked_code='ACTIVATION_REPLACED' WHERE workspace_id=ws AND automation_id=p_id AND state='waiting_dependency'; UPDATE app.automation_runtime SET revision=revision+1,epoch=activation_epoch,status='active',pending_occurrence_id=NULL,authorization_id=p_authorization,next_run_at=p_next,blocked_code=NULL,retry_at=NULL,lease_token=NULL,lease_until=NULL,fence=fence+1 WHERE workspace_id=ws AND automation_id=p_id;END IF;
+ RETURN data;
+END $$;

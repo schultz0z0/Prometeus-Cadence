@@ -14,6 +14,7 @@ import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {audienceOptionSchema,cadenceOptionSchema} from './contracts.ts';
 import {defaultCadenceSettings} from '../../demo/seed.ts';
 import {syncAutomationDefinition} from '../automations/repository.ts';
+import {localDateAt} from '../../domain/schedule.ts';
 const selectionSchema=z.strictObject({optionId:z.enum(['option_1','option_2','option_3']),edits:z.record(z.string(),z.unknown())});
 const confirmationSchema=selectionSchema.extend({requestId:z.uuid(),reviewToken:z.string().min(1).max(8192)});
 export interface PlanningSelectionResult{revision:number;listId?:string;automationIds?:[string,string];cadenceId?:string}
@@ -30,6 +31,7 @@ async function selectionState(c:PoolClient,p:Principal,jobId:string,body:z.infer
  const parsed=proposal.task==='audience_plan'?audienceOptionSchema.safeParse({...option,...body.edits}):cadenceOptionSchema.safeParse({...option,...body.edits});
  if(!parsed.success)throw new AppError(422,'Revise os campos da opção escolhida.');
  const edited=parsed.data;
+ if('schedules' in edited)for(const key of ['search','qualification'] as const)edited.schedules[key].anchorDate??=localDateAt(new Date().toISOString(),edited.schedules[key].timezone);
  const approved=await readApprovedContext(c);if((approved?.version??0)!==proposal.base.contextVersion)throw new AppError(409,'O contexto aprovado mudou. Gere e revise novamente.');
  const productId=job.checkpoint.planning.productId;
  if(productId){const product=(await c.query('SELECT * FROM app.product_profile WHERE id=$1',[productId])).rows[0];if(!product||product.archived||(product.approved?.version??null)!==proposal.base.productVersion)throw new AppError(409,'O produto aprovado mudou.');}

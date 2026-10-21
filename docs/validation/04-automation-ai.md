@@ -10,11 +10,11 @@ Definições de automação, autorizações, ocorrências e atribuições são v
 
 ## Evidência
 
-- Unitários121/121 e integração PostgreSQL97/97 passaram, incluindo ciclo integrado e regressão de escopo; typecheck e build de produção passaram. Revisão independente é a etapa final seguinte.
+- Unitários121/121 e integração PostgreSQL101/101 passaram, incluindo ciclo integrado e regressão de escopo; typecheck e build de produção passaram. Revisão independente concluída, seis Important corrigidos RED→GREEN no único passe; sem Critical/Minor pendentes. Veja `04-final-review.md`.
 - Regressões de aceite: estado final de qualificação sincronizado no mesmo commit do job; metadados de escopo manual não entram nos filtros do provedor e o escopo escolhido é respeitado. RED→GREEN observado.
 - Ciclo integrado privado, com serviços, worker, journal e scheduler reais: leitura→rascunho→aprovação→três públicos→lista/par pausado→três cadências→rascunho→ativação→busca→qualificação pendente. Fixture `_test` `572ad97d-c71e-441d-ac8f-77635ea90747`: jobs de contexto `a2efc651-1d50-4c9b-9ebb-6ec195375fc3`, público `0fcd82c0-c162-4524-8ed9-f8f350a832a7`, cadência `2061a4ef-dcab-4b88-972a-262f99387a15`, qualificação `5739dcfe-feca-4d40-a9bf-93b3e583556a`. Três gerações, uma classificação e uma busca sintéticas; nenhuma proposta aplicada e nenhum envio.
 - Concorrência de duas instâncias, replay após commit, recuperação de terminal, bloqueio de incerto, mudança de configuração/papel, quota sem órfão,150 pendentes sem novas chamadas no dia seguinte,501 elegíveis em lote500+backlog1 e dependência parcial cobertos por PG.
-- Migrações014–017 aplicadas e repetidas nos bancos local e `_test`, checksums preservados. Cinco runtimes locais permaneceram pausados. `cadence_app` e `cadence_worker` sem superuser/BYPASSRLS. Nenhum volume apagado, budget ou allowlist OAuth alterado.
+- Migrações014–020 aplicadas e repetidas nos bancos local e `_test`, checksums preservados. Cinco runtimes locais permaneceram pausados. `cadence_app` e `cadence_worker` sem superuser/BYPASSRLS. Nenhum volume apagado, budget ou allowlist OAuth alterado.
 - Build de produção webpack passou; smoke anônimo54/54, com redirects e401 das APIs privadas, em `routes-04.json`. Sem chamadas externas no runner. Scheduler `--once` padrão saiu desabilitado sem claim.
 
 ## QA de navegador
@@ -47,3 +47,9 @@ Sem JEV, a convencional faz toda a IA. JEV só decide/ordena acompanhado de conv
 Custos monetários desconhecidos aparecem como desconhecidos; unidades reservadas não são preço real. Codex ChatGPT é somente local/autorizado. As três inferências reais03B já foram usadas, sem novo piloto04. Apify/Apollo/OpenRouter/OpenAI/Gemini reais e precisão empírica permanecem sem novo aceite neste marco.
 
 Para interromper com segurança: pause pelo produto e pare scheduler/worker conforme o estado dos jobs. Preserve volume, journal e uso para reconciliação; rollback de código não deve remover tabelas/migrações aplicadas. Restore de backup precisa de procedimento próprio antes de qualquer operação destrutiva.
+
+## Fechamento da revisão
+
+Os calendários gerados recebem data de referência validada, mostrada e vinculada à revisão da seleção. A ativação exibe fonte/lista/filtros efetivos, deduplicação, módulos, critérios, dependência e versões aprovadas. Backlog dependente inclui inserts anteriores ainda não atribuídos, sem dispensar o término da busca correspondente. Última execução significa primeira claim real do worker, não horário agendado/enfileiramento. Reativação retira esperas antigas e começa nas novas janelas futuras.
+
+Se acesso for removido durante uma chamada, uma função estreita salva recibo técnico e uso dentro da lease existente. Resultado não é publicado; administradores atuais podem inspecioná-lo no job. Runs remotos retornados continuam elegíveis ao cleanup já autorizado. Lease obsoleta continua exigindo reconciliação. Nenhuma segunda revisão ou piloto externo foi feito.

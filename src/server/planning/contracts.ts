@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {contextFields,type PlanningEvidence,type PlanningTask} from '../../domain/planning.ts';
 import {generationSchema,idSchema} from '../prospecting/schemas.ts';
+import {scheduleV2Schema} from '../../domain/schedule.ts';
 const brief=z.string().trim().max(4000);
 const timezone=z.string().max(100).refine(v=>{try{new Intl.DateTimeFormat('en',{timeZone:v});return true;}catch{return false;}});
 const channel=z.enum(['EMAIL','WHATSAPP']);
@@ -20,7 +21,7 @@ export function validateFieldSupport(value:unknown,sources:PlanningEvidence[]):b
  return f.evidenceIds.every(id=>sources.some(s=>s.id===id&&normalize(s.text).includes(normalize(f.quote))));
 }
 const time=z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
-const schedule=z.strictObject({frequency:z.literal('daily'),time,timezone,weekdays:z.array(z.number().int().min(0).max(6)).min(1).max(7).refine(v=>new Set(v).size===v.length)});
+const schedule=z.strictObject({frequency:z.literal('daily'),time,timezone,weekdays:z.array(z.number().int().min(0).max(6)).min(1).max(7).refine(v=>new Set(v).size===v.length),anchorDate:scheduleV2Schema.shape.anchorDate.optional()});
 const modules=z.array(z.enum(['email','phone','website','summary','deep','validateEmail','registry','qualify'])).min(1).max(8).refine(v=>new Set(v).size===v.length);
 const audience=z.strictObject({id:z.enum(['option_1','option_2','option_3']),title:z.string().trim().min(1).max(160),description:brief,listName:z.string().trim().min(2).max(100),source:z.enum(['MAPS','WEB','CNPJ','APOLLO']),filters:z.record(z.string(),z.string()),channel:z.enum(['email','whatsapp','both']),marketSize:z.null(),dailyLimit:z.number().int().min(1).max(500),modules,criteria:brief,schedules:z.strictObject({search:schedule,qualification:schedule})}).superRefine((v,c)=>{
  const parsed=generationSchema.safeParse({kind:'generation',source:v.source,filters:v.filters,destination:{mode:'new',name:v.listName},limit:v.dailyLimit,dedupScope:'workspace'});

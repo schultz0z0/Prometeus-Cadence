@@ -7,6 +7,7 @@ import {AnalysisStatus,usePlanningAnalysis} from './analysis-status';
 import {SourceList} from './source-list';
 import {Button,PageHeader,Notice,LinkButton} from '@/components/ui/primitives';
 import {ReconciliationReview} from '@/modules/prospecting/reconciliation-review';
+import {RetainedResults} from '@/modules/prospecting/retained-results';
 export function PlanningJobProgress({job}:{job:JobView}){
  const analysis=usePlanningAnalysis(job.id),[reconcile,setReconcile]=useState(false),identity=useIdentity(),role=identity?.workspaces.find(w=>w.id===identity.activeWorkspaceId)?.role;
  const current=analysis.data?.job??job,proposal=analysis.data?.proposal,request=analysis.data?.request;
@@ -20,6 +21,6 @@ export function PlanningJobProgress({job}:{job:JobView}){
    <LinkButton variant="primary" href={wizard}>{'options' in proposal?'Retomar propostas sem nova geração →':'Abrir editor para revisar →'}</LinkButton>
   </>:<Notice>A proposta aparece depois de uma resposta válida. Falhas não produzem conteúdo demonstrativo.</Notice>}<SourceList sources={analysis.data?.sources??[]}/></section>
   <section className="panel panel-pad section-gap"><h3>Uso registrado</h3>{current.usage?.map(u=><p key={u.operationId}>{u.provider} · {Object.entries(u.units).map(([unit,n])=>`${n} ${unit}`).join(', ')} · {u.costUsd===null?'custo monetário desconhecido':`US$ ${u.costUsd}`}</p>)}</section>
-  {reconcile&&<ReconciliationReview job={current} onClose={()=>setReconcile(false)} onDone={()=>{setReconcile(false);analysis.refresh();}}/>}
+  <RetainedResults job={current}/>{reconcile&&<ReconciliationReview job={current} onClose={()=>setReconcile(false)} onDone={()=>{setReconcile(false);analysis.refresh();}}/>}
  </>;
 }
