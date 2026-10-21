@@ -5,6 +5,7 @@ import {prospectingConfig} from './config.ts';
 import {ProviderError} from './providers/transport.ts';
 import {AppError} from '../errors.ts';
 import {hashValue} from './review.ts';
+import {assertAutomationAuthority} from '../automations/guard.ts';
 export class UncertainStep extends Error{}
 export async function readLeasedJob(lease:JobLease){return withLeasedTransaction(lease,async c=>(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0]);}
 export async function finishJob(lease:JobLease,state:JobState,code?:string){
@@ -16,9 +17,10 @@ export async function finishJob(lease:JobLease,state:JobState,code?:string){
 export async function performStep<T>(lease:JobLease,step:string,provider:string,units:Units,call:()=>Promise<T>,usage?:(result:T)=>ProviderUsage):Promise<T>{
   const operationId=hashValue({job:lease.jobId,step});
   const prior=await withLeasedTransaction(lease,async c=>{
-    const job=(await c.query('SELECT checkpoint FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
+    const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
     const old=(await c.query('SELECT * FROM app.prospecting_attempt WHERE id=$1',[operationId])).rows[0];
     if(old)return old;
+    await assertAutomationAuthority(c,job,'dispatch');
     if(!prospectingConfig().enabled||job.checkpoint.execution?.version!==prospectingConfig().version)throw new AppError(409,'A configuração mudou. Revise antes de continuar.','PROFILE_CHANGED');
     await assertReserved(c,lease.jobId,units);
     await c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4,'prepared',$5)",[lease.jobId,operationId,provider,step,{reservedUnits:units}]);
@@ -27,7 +29,10 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
   if(prior?.state==='completed')return prior.payload.result as T;
   if(prior){await finishJob(lease,'needs_reconciliation','UNCERTAIN_STEP');throw new UncertainStep();}
   let result:T;
-  try{result=await call();}
+  try{
+    await withLeasedTransaction(lease,async c=>{const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];await assertAutomationAuthority(c,job,'dispatch',operationId);});
+    result=await call();
+  }
   catch(error){
     if(error instanceof ProviderError&&error.uncertain){await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_attempt SET state='uncertain' WHERE id=$1",[operationId]));await finishJob(lease,'needs_reconciliation','UNCERTAIN_STEP');throw new UncertainStep();}
     await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_attempt SET state='failed' WHERE id=$1",[operationId]));throw error;

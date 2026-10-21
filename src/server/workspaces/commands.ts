@@ -8,6 +8,7 @@ import { envelopeSchema } from "./schemas.ts";
 import { createDemoRepository } from "../../demo/repository.ts";
 import { requirePermission } from "../auth/permissions.ts";
 import { AppError } from "../errors.ts";
+import {syncAutomationDefinition} from '../automations/repository.ts';
 function canonical(v: unknown): string {
   return JSON.stringify(
     v && typeof v === "object"
@@ -160,6 +161,8 @@ export async function executeWorkspaceCommand(
     }
     try {
       await persistDiff(c, p, before.data, repo.getSnapshot());
+      if(command.type==='automation.save')await syncAutomationDefinition(c,command.automation.id);
+      if(command.type==='audience.confirm'&&result)for(const id of result.automationIds)await syncAutomationDefinition(c,id);
     } catch (e) {
       if (e && typeof e === "object" && "code" in e && e.code === "23503")
         throw new AppError(404, "Lista não encontrada neste workspace.");

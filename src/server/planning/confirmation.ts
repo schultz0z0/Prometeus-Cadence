@@ -13,6 +13,7 @@ import {hashValue,createReviewToken,verifyReviewToken} from '../prospecting/revi
 import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {audienceOptionSchema,cadenceOptionSchema} from './contracts.ts';
 import {defaultCadenceSettings} from '../../demo/seed.ts';
+import {syncAutomationDefinition} from '../automations/repository.ts';
 const selectionSchema=z.strictObject({optionId:z.enum(['option_1','option_2','option_3']),edits:z.record(z.string(),z.unknown())});
 const confirmationSchema=selectionSchema.extend({requestId:z.uuid(),reviewToken:z.string().min(1).max(8192)});
 export interface PlanningSelectionResult{revision:number;listId?:string;automationIds?:[string,string];cadenceId?:string}
@@ -56,6 +57,7 @@ async function createAudience(c:PoolClient,p:Principal,option:AudienceOption,ori
   {id:automationIds[1],name:'Qualificar · '+option.title,description:option.description,listId,source:'QUALIFY',status:'paused',schedule:option.schedules.qualification,dailyLimit:option.dailyLimit,filters:{channel:option.channel},modules:option.modules,criteria:option.criteria,dependsOnAutomationId:automationIds[0],createdAt:now,origin},
  ];
  for(const automation of automations)await c.query('INSERT INTO app.automation(workspace_id,id,list_id,payload) VALUES($1,$2,$3,$4)',[p.workspaceId,automation.id,listId,automation]);
+ for(const automation of automations)await syncAutomationDefinition(c,automation.id);
  return {listId,automationIds};
 }
 export async function confirmPlanningSelection(p:Principal,jobId:string,input:unknown):Promise<PlanningSelectionResult>{

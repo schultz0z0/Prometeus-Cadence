@@ -25,6 +25,7 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
     if(items.length!==itemIds.length||items.some(i=>i.applied))throw new AppError(409,'A seleção contém resultado indisponível.');
     const context=await readApprovedContext(c);
     if(Number(context?.version??0)!==Number(job.checkpoint.context?.version??0))throw new AppError(409,'O contexto mudou. Prepare uma nova qualificação.','RESULT_CONFLICT');
+    if(job.checkpoint.product){const row=(await c.query('SELECT approved,archived FROM app.product_profile WHERE id=$1',[job.checkpoint.automation?.productId??job.checkpoint.productId])).rows[0];if(!row||row.archived||row.approved?.version!==job.checkpoint.product.version)throw new AppError(409,'O produto aprovado mudou. Revise a qualificação.','RESULT_CONFLICT');}
     const changes=[];
     for(const item of items){
       const lead=(await c.query('SELECT payload FROM app.lead WHERE id=$1 FOR UPDATE',[item.lead_id])).rows[0]?.payload;

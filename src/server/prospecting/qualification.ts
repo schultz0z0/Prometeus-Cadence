@@ -83,7 +83,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
           const facts=extractContacts(evidence),value=module==='email'?facts.emails[0]:facts.phones[0];
           if(value)result.proposed={[module]:value};else{result.status='skipped';result.reasons=['CONTACT_NOT_FOUND'];}
         }else{
-          const context=job.checkpoint.context as CompanyProfile|null,criteria=JSON.stringify({offer:context?.offer,idealCustomer:context?.idealCustomer,products:context?.products,pains:context?.pains});
+          const context=job.checkpoint.context as CompanyProfile|null,criteria=JSON.stringify({offer:context?.offer,idealCustomer:context?.idealCustomer,products:context?.products,pains:context?.pains,customCriteria:job.checkpoint.automation?.qualificationCriteria,product:job.checkpoint.product});
           const aiRoute=job.checkpoint.execution?.aiRoute as AiRoute|undefined;
           const cacheKey=hashValue({aiRoute,contract:'jev-decisions-v1',model:'typesafe/jev-1.13',criteria,evidence:evidence.map(e=>e.hash),facts:{name:lead.name,cnpj:lead.cnpj}});
           if(module==='qualify'&&aiRoute?.decisionProvider!=='jev'&&aiRoute){
