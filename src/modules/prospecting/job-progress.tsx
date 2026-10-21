@@ -31,7 +31,7 @@ export function JobProgress({id}:{id:string}){
       {job.error&&<p role="alert">{job.error.message} <small>Referência: {job.error.code}</small></p>}
       {job.state==='needs_reconciliation'&&<Notice>A resposta de uma operação externa ficou incerta. O sistema não repetirá a chamada automaticamente. Um administrador precisa conferir o provedor antes de retomar.</Notice>}
       {job.state==='needs_reconciliation'&&['owner','admin'].includes(role??'')&&<Button onClick={()=>setReconcile(true)}>Reconciliar chamada</Button>}
-      <a className="btn" href={'/contacts?list='+encodeURIComponent(job.listId)}>Abrir lista atualizada →</a>
+      {job.listId&&<a className="btn" href={'/contacts?list='+encodeURIComponent(job.listId)}>Abrir lista atualizada →</a>}
     </section>
     <section className="panel panel-pad section-gap"><h3>Uso registrado</h3>{job.usage?.length?job.usage.map(u=><p className="secondary-text section-gap" key={u.operationId}>{u.provider} · {Object.entries(u.units).map(([unit,count])=>`${count} ${unit}`).join(', ')} · {u.costUsd===null?'custo monetário desconhecido':`US$ ${u.costUsd} (${u.costKind})`}</p>):<p className="muted section-gap">Ainda não há consumo registrado. Operações incertas podem continuar com reserva retida.</p>}</section>
     <JobResults job={job}/>

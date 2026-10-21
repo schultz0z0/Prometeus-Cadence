@@ -2,16 +2,17 @@ import 'server-only';
 import {randomUUID} from 'node:crypto';
 import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
-import type {JobInput,JobView,Review,Page,JobItemView} from '../../domain/prospecting.ts';
+import type {ProspectingInput,JobView,Review,Page,JobItemView} from '../../domain/prospecting.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {requirePermission} from '../auth/permissions.ts';
 import {AppError} from '../errors.ts';
 import {jobInputSchema,confirmationSchema,pageSchema} from './schemas.ts';
-import {prospectingConfig,requirements,estimateUsage,usageUnits} from './config.ts';
+import {prospectingConfig,requirements,estimateUsage} from './config.ts';
 import {workspaceProspectingConfig} from './workspace-config.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from './review.ts';
 import {jobView,itemView,encodeCursor,decodeCursor} from './repository.ts';
-import {reserveUsage,releaseUnused} from './usage.ts';
+import {releaseUnused} from './usage.ts';
+import {insertReviewedJob} from './job-store.ts';
 import {conventionalConfig} from './ai/config.ts';
 import {readAiPolicy} from './ai/settings.ts';
 import {readConnectionCheck} from './ai/connection.ts';
@@ -21,7 +22,7 @@ async function authorized(c:PoolClient,p:Principal){
   const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;
   const current={...p,role};requirePermission(current,'data.write');return current;
 }
-async function reviewState(c:PoolClient,p:Principal,input:JobInput){
+async function reviewState(c:PoolClient,p:Principal,input:ProspectingInput){
   await authorized(c,p);
   const {config,policy}=await workspaceProspectingConfig(c);
   let aiRoute:AiRoute|null=null;const aiBlockers:string[]=[];
@@ -48,7 +49,7 @@ async function reviewState(c:PoolClient,p:Principal,input:JobInput){
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};
   return {config,blockers,proof,profileVersion,aiRoute,checkpoint:{context,bases,execution:{aiRoute,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:Number(process.env.APOLLO_MAX_PAGES??0)}}};
 }
-function parseInput(input:unknown):JobInput{const parsed=jobInputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise fonte, filtros, destino e quantidade.');return parsed.data;}
+function parseInput(input:unknown):ProspectingInput{const parsed=jobInputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise fonte, filtros, destino e quantidade.');return parsed.data;}
 export async function prepareJob(p:Principal,input:unknown):Promise<Review>{
   const parsed=parseInput(input);
   return withWorkspaceTransaction(p,async c=>{
@@ -73,11 +74,9 @@ export async function confirmJob(p:Principal,input:unknown):Promise<JobView>{
       listId=randomUUID();await c.query('INSERT INTO app.list(workspace_id,id,name) VALUES($1,$2,$3)',[p.workspaceId,listId,body.input.destination.name]);
       await c.query('UPDATE app.workspace_meta SET revision=revision+1 WHERE workspace_id=$1',[p.workspaceId]);
     }else listId=body.input.kind==='qualification'?body.input.listId:body.input.destination.mode==='existing'?body.input.destination.listId:'';
-    const jobId=randomUUID();
-    const row=(await c.query("INSERT INTO app.prospecting_job(workspace_id,id,actor_id,list_id,request_id,body_hash,kind,source,state,input,profile_version,checkpoint) VALUES($1,$2,$3,$4,$5,$6,$7,$8,'queued',$9,$10,$11) RETURNING *",[p.workspaceId,jobId,p.userId,listId,body.requestId,hash,body.input.kind,body.input.kind==='generation'?body.input.source:'QUALIFY',body.input,state.profileVersion,state.checkpoint])).rows[0];
-    await reserveUsage(c,{jobId,operationId:jobId,units:usageUnits(estimateUsage(body.input,state.aiRoute)),caps:state.config.caps,globalCaps:state.config.globalCaps});
+    const job=await insertReviewedJob(c,p,{requestId:body.requestId,listId,input:body.input,bodyHash:hash,profileVersion:state.profileVersion,checkpoint:state.checkpoint,usage:estimateUsage(body.input,state.aiRoute),caps:state.config.caps,globalCaps:state.config.globalCaps});
     await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,'prospecting.confirm')",[p.workspaceId,p.userId]);
-    return jobView(row);
+    return job;
   });
 }
 export async function listJobs(p:Principal,input:unknown={}):Promise<Page<JobView>>{

@@ -229,4 +229,4 @@ Cobertura: spec§1–5 T1/T4/T5;§6 T2/T4;§7 T3/T6;§8–9 T5/T7;§10 T8/T9/T10
 
 Verificados os consumidores: PlanningInput/ProspectingInput discriminados; PlanningProposal não vira ModuleResult de lead; JobView nullable só onde permitido; Profile draft e approved separados; ScheduleV2/domingo0; clients usam assinaturas de prepare/confirm; scheduler usa insertReviewedJob dentro da sua transação; claims não invertem ordem membership/workspace; programação antiga não autoriza recorrência. O plano amplia APIs internas necessárias, preservando os contratos públicos03B usados pelos clientes existentes.
 
-Plano escrito e auto-revisado para revisão do usuário. Execução nativa preservada. Ainda não iniciar código, migrações ou chamadas externas do marco04 antes da aprovação deste plano.
+Plano aprovado pelo usuário em 21/10/2026: “Aprovar o plano e executar”. Execução nativa iniciada na branch indicada. Progresso e evidências por tarefa no ledger deste plano; chamadas externas continuam sem nova autorização.

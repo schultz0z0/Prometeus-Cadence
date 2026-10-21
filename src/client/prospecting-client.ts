@@ -1,4 +1,4 @@
-import type {JobInput,Review,JobView,JobItemView,Page,ProviderCapabilities} from '../domain/prospecting.ts';
+import type {ProspectingInput,Review,JobView,JobItemView,Page,ProviderCapabilities} from '../domain/prospecting.ts';
 import type {AiSettingsView,AiPolicy,AiTestReview,CodexDiagnostic} from '../domain/ai-routing.ts';
 export function createProspectingClient(options:{workspaceId:string;transport?:typeof fetch;onAccessLost?:(message:string)=>void}){
   const transport=options.transport??fetch,controller=new AbortController();let disposed=false;
@@ -23,7 +23,7 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
     confirmAiTest(review:AiTestReview){const key='probe:'+review.draft.sampleId,flight=key+review.token,prior=confirmations.get(flight);if(prior)return prior;
       const promise=request<JobView>('/ai/test',{requestId:stableId(key),draft:review.draft,reviewToken:review.token}).then(result=>{requestIds.delete(key);return result;}).catch(e=>{confirmations.delete(flight);throw e;});confirmations.set(flight,promise);return promise;},
     capabilities:()=>request<ProviderCapabilities>('/capabilities'),
-    prepare:(input:JobInput)=>request<Review>('/prepare',input),
+    prepare:(input:ProspectingInput)=>request<Review>('/prepare',input),
     confirm(review:Review){
       const key=JSON.stringify(review.input),flightKey=key+review.token,previous=confirmations.get(flightKey);if(previous)return previous;
       const promise=request<JobView>('/jobs',{requestId:stableId('confirm:'+key),input:review.input,reviewToken:review.token}).then(job=>{requestIds.delete('confirm:'+key);return job;}).catch(error=>{confirmations.delete(flightKey);throw error;});

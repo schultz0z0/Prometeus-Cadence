@@ -28,6 +28,11 @@ export function estimateUsage(input:JobInput,route?:AiRoute|null):UsageEstimate[
   if(input.kind==='generation'){
     add(input.source==='APOLLO'?'apollo':'apify','candidates',input.limit);
     add(input.source==='APOLLO'?'apollo':'apify',input.source==='APOLLO'?'apolloPages':'apifyRuns',input.source==='APOLLO'?Math.ceil(input.limit/100):1);
+  }else if(input.kind==='planning'){
+    if(route){
+      add(route.conventional.provider,conventionalUnit(route.conventional.provider),1);
+      if(['audience_plan','cadence_options'].includes(input.task)&&route.decisionProvider==='jev')add('openrouter','jevCalls',1);
+    }
   }else{
     const n=input.leadIds.length;
     if(input.modules.includes('qualify')){if(!route||route.decisionProvider==='jev')add('openrouter','jevCalls',n);else add(route.conventional.provider,conventionalUnit(route.conventional.provider),n);}
