@@ -8,7 +8,7 @@ const channel=z.enum(['EMAIL','WHATSAPP']);
 export const planningInputSchema=z.discriminatedUnion('task',[
  z.strictObject({kind:z.literal('planning'),task:z.literal('context_read'),domain:z.string().trim().min(1).max(253),target:z.discriminatedUnion('kind',[z.strictObject({kind:z.literal('company')}),z.strictObject({kind:z.literal('product'),productId:idSchema})])}),
  z.strictObject({kind:z.literal('planning'),task:z.literal('audience_plan'),description:brief,channel:z.enum(['email','whatsapp','both']),productId:idSchema.optional(),timezone}),
- z.strictObject({kind:z.literal('planning'),task:z.literal('cadence_options'),listId:idSchema,objective:z.string().min(1).max(100),channels:z.array(channel).min(1).max(2).refine(v=>new Set(v).size===v.length),tone:z.string().min(1).max(100),rhythm:z.string().min(1).max(100),highlight:brief,avoid:brief,decisionMaker:brief,productId:idSchema.optional()}),
+ z.strictObject({kind:z.literal('planning'),task:z.literal('cadence_options'),listId:idSchema,objective:z.string().min(1).max(100),channels:z.array(channel).min(1).max(2).refine(v=>new Set(v).size===v.length),tone:z.string().min(1).max(100),rhythm:z.enum(['Curta','Padrão','Longa']),highlight:brief,avoid:brief,decisionMaker:brief,productId:idSchema.optional()}),
  z.strictObject({kind:z.literal('planning'),task:z.literal('message_preview'),cadenceId:idSchema,stepId:idSchema,leadId:idSchema,productId:idSchema.optional()}),
 ]);
 export const planningEvidenceSchema=z.strictObject({id:idSchema,kind:z.enum(['public_page','approved_context','user_brief','lead_fact']),url:z.url().max(2048).nullable(),text:z.string().max(12000),hash:z.string().regex(/^[a-f0-9]{64}$/),obtainedAt:z.iso.datetime()});

@@ -43,7 +43,7 @@ test('web pages flatten organic results with a stable candidate offset',async()=
 });
 test('CNPJ only accepts supported filters and abort remains pending until confirmed',async()=>{
   const profile=providerProfile('CNPJ',{actor:'bigdavidson/brazil-cnpj-companies',build:'pinned'});
-  assert.deepEqual(actorInput(profile,{...input,source:'CNPJ',filters:{term:'contabilidade',cnae:'6920601',state:'SP'}}),{mode:'search',cnae:['6920601'],uf:'SP',limit:5});
+  assert.deepEqual(actorInput(profile,{...input,source:'CNPJ',filters:{term:'contabilidade',cnae:'6920601',state:'SP'}}),{mode:'search',cnae:['6920601'],uf:['SP'],maxRecords:5,includePartners:false});
   assert.throws(()=>actorInput(profile,{...input,source:'CNPJ',filters:{term:'x',employees:'10'}}));
   const adapter=new ApifyAdapter(async()=>Response.json({data:{status:'ABORTING',id:'r'}}));
   assert.equal((await adapter.abort(context(),{provider:'apify',runId:'r',datasetId:null,profileId:'a',build:'b',operationId:'c'})).status,'cancelling');

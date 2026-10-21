@@ -9,6 +9,7 @@ import {generationSchema,generationJsonSchema} from './schemas.ts';
 import {ProviderError} from '../providers/transport.ts';
 import {conventionalPrompt,parseConventional} from './output.ts';
 import {conventionalConfig} from './config.ts';
+import {verifiedCodexVersion} from './codex-runtime.ts';
 export function buildCodexInvocation(config:{binary:string;model:string;cwd:string;schemaPath:string;outputPath:string}){
   const env:NodeJS.ProcessEnv={NODE_ENV:'production'};
   for(const key of ['PATH','Path','SystemRoot','WINDIR','TEMP','TMP','HOME','USERPROFILE','APPDATA','LOCALAPPDATA'])if(process.env[key])env[key]=process.env[key];
@@ -36,7 +37,7 @@ const execute:CodexRun=(invocation,input,signal)=>new Promise((resolve,reject)=>
 export interface GenerationContext{operationId:string;workspaceId:string;signal:AbortSignal;run?:CodexRun;acquireSlot?:()=>Promise<boolean>;releaseSlot?:()=>Promise<void>}
 async function verifyRuntime(invocation:ReturnType<typeof buildCodexInvocation>){
   const version=await new Promise<string>((resolve,reject)=>execFile(invocation.binary,['--version'],{env:invocation.env,windowsHide:true,timeout:5000,maxBuffer:8192},(error,stdout)=>error?reject(Error('CODEX_VERSION_UNAVAILABLE')):resolve(stdout.trim())));
-  if(version!=='codex-cli 0.163.0-alpha.10.2')throw Error('CODEX_VERSION_NOT_VERIFIED');
+  if(!verifiedCodexVersion(version))throw Error('CODEX_VERSION_NOT_VERIFIED');
 }
 export async function codexJson(ctx:GenerationContext,prompt:string,schema:unknown):Promise<unknown>{
   const config=prospectingConfig();

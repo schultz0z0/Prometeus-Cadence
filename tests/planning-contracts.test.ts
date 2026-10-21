@@ -44,6 +44,12 @@ test('planning input is bounded and cannot enter the legacy public prospecting e
   assert.equal(jobInputSchema.safeParse(input).success,false);
   for(const extra of [{description:'a'.repeat(4001)},{timezone:'inventado'},{provider:'openai'},{checkpoint:{}},{model:'anything'}])assert.equal(planningInputSchema.safeParse({...input,...extra}).success,false);
 });
+
+test('cadence rhythm is validated before spending an inference',()=>{
+  const input={kind:'planning',task:'cadence_options',listId:'qa-list',objective:'Primeiro contato',channels:['WHATSAPP'],tone:'Pessoal',rhythm:'Padrão',highlight:'',avoid:'',decisionMaker:''};
+  for(const rhythm of ['Curta','Padrão','Longa'])assert.equal(planningInputSchema.safeParse({...input,rhythm}).success,true);
+  assert.equal(planningInputSchema.safeParse({...input,rhythm:'dias 0, 3 e 7'}).success,false);
+});
 test('planning budgets reserve one content call and rank only audience or cadence in hybrid mode',()=>{
   const conventional={provider:'openai',model:'fixture',configFingerprint:'fixture',contractVersion:'conventional-v1'} as const;
   const route:AiRoute={mode:'auto',policyRevision:1,effectiveMode:'hybrid',conventional,decisionProvider:'jev'};

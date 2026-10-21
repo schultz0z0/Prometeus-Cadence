@@ -31,6 +31,14 @@ test('Codex diagnostics returns only bounded authentication status without raw i
  process.env.CADENCE_RUNTIME_MODE='hosted';let calls=0;assert.equal((await diagnoseCodex(async()=>{calls++;return '';})).available,false);assert.equal(calls,0);
  }finally{for(const k of Object.keys(process.env))if(!(k in saved))delete process.env[k];Object.assign(process.env,saved);}
 });
+
+test('Codex accepts the inspected desktop CLI version and rejects unknown versions before authentication',async()=>{
+ const saved={...process.env};Object.assign(process.env,{CADENCE_RUNTIME_MODE:'local',BETTER_AUTH_URL:'http://127.0.0.1:3210',CODEX_LOCAL_ENABLED:'true',CODEX_BINARY:process.execPath});
+ try{
+  const current=await diagnoseCodex(async args=>args[0]==='--version'?'codex-cli 0.163.0-alpha.11':'Logged in using ChatGPT');assert.equal(current.authenticated,true);
+  let authCalls=0;const unknown=await diagnoseCodex(async args=>{if(args[0]==='--version')return 'codex-cli 9.9.9';authCalls++;return 'Logged in using ChatGPT';});assert.equal(unknown.code,'CODEX_VERSION_NOT_VERIFIED');assert.equal(authCalls,0);
+ }finally{for(const k of Object.keys(process.env))if(!(k in saved))delete process.env[k];Object.assign(process.env,saved);}
+});
 test('Gemini blocked truncated or tool responses remain uncertain and network loss is never retried',async()=>{
  const saved={...process.env};Object.assign(process.env,{PROSPECTING_ENABLED:'true',GEMINI_API_KEY:'fixture',GEMINI_MODEL:'fixture'});
  try{const ctx={workspaceId:'w',operationId:'op',signal:new AbortController().signal,route:conventionalConfig('w').conventional.gemini.route};

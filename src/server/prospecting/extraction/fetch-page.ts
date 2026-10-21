@@ -5,7 +5,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import type {Evidence} from '../../../domain/prospecting.ts';
 import {approvePublicUrl,resolvePublicDns} from './public-url.ts';
 import type {ApprovedUrl,ResolveDns} from './public-url.ts';
-import {parsePage} from './parse-page.ts';
+import {parsePage,isContactLink} from './parse-page.ts';
 export interface PageResponse{status:number;headers:Record<string,string|undefined>;body:Buffer}
 export type PageRequest=(url:ApprovedUrl,signal:AbortSignal)=>Promise<PageResponse>;
 const maxBytes=1_048_576;
@@ -25,7 +25,7 @@ export const requestPinned:PageRequest=(approved,signal)=>new Promise((resolve,r
     response.on('end',()=>resolve({status:response.statusCode??0,headers:Object.fromEntries(Object.entries(response.headers).map(([k,v])=>[k,Array.isArray(v)?v.join(','):v])),body:Buffer.concat(chunks)}));
   });request.on('error',reject);request.end();
 });
-export async function fetchPublicPage(value:string,options:{signal:AbortSignal;resolve?:ResolveDns;request?:PageRequest}):Promise<Evidence>{
+export async function fetchPublicPage(value:string,options:{signal:AbortSignal;resolve?:ResolveDns;request?:PageRequest}):Promise<Evidence&{links:string[]}>{
   const signal=AbortSignal.any([options.signal,AbortSignal.timeout(10000)]);let url=value;
   for(let redirects=0;redirects<=3;redirects++){
     signal.throwIfAborted();const approved=await abortable(approvePublicUrl(url,options.resolve??resolvePublicDns),signal);
@@ -42,15 +42,20 @@ export async function fetchPublicPage(value:string,options:{signal:AbortSignal;r
       const decode=encoding==='gzip'?gunzipSync:encoding==='deflate'?inflateSync:encoding==='br'?brotliDecompressSync:null;
       if(!decode)throw Error('PAGE_ENCODING');body=decode(body,{maxOutputLength:maxBytes});
     }
-    const full=parsePage(body.toString('utf8'),approved.url.toString()).text,text=full.slice(0,12000);
-    return{id:randomUUID(),url:approved.url.toString(),fetchedAt:new Date().toISOString(),text,hash:createHash('sha256').update(text).digest('hex'),truncated:full.length>12000};
+    const parsed=parsePage(body.toString('utf8'),approved.url.toString());
+    const full=(parsed.contactText?'Contatos publicados: '+parsed.contactText+'\n':'')+parsed.text,text=full.slice(0,12000);
+    return{id:randomUUID(),url:approved.url.toString(),fetchedAt:new Date().toISOString(),text,hash:createHash('sha256').update(text).digest('hex'),truncated:full.length>12000,links:parsed.links};
   }throw Error('REDIRECT_LIMIT');
 }
 export async function fetchEvidencePack(url:string,options:{signal:AbortSignal;resolve?:ResolveDns;request?:PageRequest},deep=false){
   const pages:Evidence[]=[];const base=new URL(url);base.hash='';
-  const urls=deep?[base.toString(),new URL('/sobre',base).toString(),new URL('/contato',base).toString()]:[base.toString()];
-  for(const next of [...new Set(urls)]){
-    options.signal.throwIfAborted();try{const evidence=await fetchPublicPage(next,options);if(new URL(evidence.url).hostname.replace(/^www\./,'')!==base.hostname.replace(/^www\./,''))continue;pages.push(evidence);}catch(error){if(options.signal.aborted)throw error;}
+  const urls=[base.toString()];const visited=new Set<string>();
+  for(let index=0;index<urls.length&&index<(deep?3:1);index++){
+    const next=urls[index];visited.add(next);
+    options.signal.throwIfAborted();try{const evidence=await fetchPublicPage(next,options);if(new URL(evidence.url).hostname.replace(/^www\./,'')!==base.hostname.replace(/^www\./,''))continue;pages.push(evidence);
+      if(index===0&&deep){const canonical=new URL(evidence.url);for(const link of [...evidence.links.filter(isContactLink),new URL('/sobre',canonical).toString(),new URL('/contato',canonical).toString()])if(!visited.has(link)&&!urls.includes(link))urls.push(link);}
+    }catch(error){if(options.signal.aborted)throw error;if(index===0&&deep)urls.push(new URL('/sobre',base).toString(),new URL('/contato',base).toString());}
   }
-  let remaining=12000;return pages.map(page=>{const text=page.text.slice(0,remaining);remaining-=text.length;return{...page,text,hash:createHash('sha256').update(text).digest('hex'),truncated:page.truncated||text.length<page.text.length};}).filter(page=>page.text);
+  // Retain room for contact/about evidence even when the homepage fills the budget.
+  let remaining=12000;return pages.map((page,index)=>{const budget=Math.floor(remaining/(pages.length-index)),text=page.text.slice(0,budget);remaining-=text.length;return{...page,text,hash:createHash('sha256').update(text).digest('hex'),truncated:page.truncated||text.length<page.text.length};}).filter(page=>page.text);
 }

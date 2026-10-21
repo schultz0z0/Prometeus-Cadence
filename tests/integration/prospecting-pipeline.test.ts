@@ -65,6 +65,38 @@ test('qualification stores proposals and confirmed application is atomic and con
   assert.equal((await readWorkspaceSnapshot(p)).data.leads[0].email,'company@example.com');
 });
 
+test('registry discovers a unique valid CNPJ from public evidence and keeps lookup proposals for review',async()=>{
+  process.env.APIFY_CNPJ_ACTOR='bigdavidson/brazil-cnpj-companies';process.env.APIFY_CNPJ_BUILD='fixture-build';
+  const {p,job,lease}=await setup(1);
+  const source={start:async()=>({kind:'inline' as const,page:{...page(1),exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
+  await runGeneration(lease,{apify:source});const lead=(await readWorkspaceSnapshot(p)).data.leads[0];
+  const input={kind:'qualification' as const,listId:job.listId,leadIds:[lead.id],modules:['registry' as const],summaryPolicy:'all' as const,escalation:'off' as const};
+  const review=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});let lookups=0;
+  const deps={collect:async()=>[{id:'public',url:'https://example.com',fetchedAt:new Date().toISOString(),text:'CNPJ 37.297.479/0001-80',hash:'public-hash',truncated:false}],apify:{...source,start:async(_ctx:any,request:any)=>{lookups++;assert.equal(request.filters.cnpj,'37297479000180');return{kind:'inline' as const,page:{...page(1),candidates:[normalizeCandidate({cnpj:'37297479000180',razao_social:'Empresa legal',municipio:'Curitiba',uf:'PR'},'CNPJ')],exhausted:true,nextCursor:null}};}}};
+  const qLease=await grantTestLease(p,q.id);await runQualification(qLease,deps);await runQualification(qLease,deps);
+  const item=(await listJobItems(p,q.id)).items[0];
+  assert.equal(lookups,1);assert.equal(item.results[0].status,'pending_review');assert.equal(item.results[0].proposed.cnpj,'37297479000180');assert.ok(item.results[0].evidenceIds.length);
+  assert.equal((await readWorkspaceSnapshot(p)).data.leads[0].cnpj,undefined);
+  const snapshot=await readWorkspaceSnapshot(p);
+  await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...lead,cnpj:'37.297.479/0001-80'}}});
+  const formattedReview=await prepareJob(p,input),formatted=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:formattedReview.token});
+  await runQualification(await grantTestLease(p,formatted.id),deps);
+  assert.equal((await listJobItems(p,formatted.id)).items[0].results[0].status,'pending_review');
+});
+
+test('an absent site during registry cannot cache empty evidence before website discovery',async()=>{
+  process.env.APIFY_WEB_ACTOR='apify/google-search-scraper';process.env.APIFY_WEB_BUILD='fixture-build';process.env.APIFY_CNPJ_ACTOR='bigdavidson/brazil-cnpj-companies';process.env.APIFY_CNPJ_BUILD='fixture-build';
+  const {p,job,lease}=await setup(1);
+  const source={start:async()=>({kind:'inline' as const,page:{...page(1),candidates:[normalizeCandidate({id:'no-site',name:'Empresa'},'MAPS')],exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
+  await runGeneration(lease,{apify:source});const lead=(await readWorkspaceSnapshot(p)).data.leads[0];
+  const input={kind:'qualification' as const,listId:job.listId,leadIds:[lead.id],modules:['registry','website','email'],summaryPolicy:'all' as const,escalation:'off' as const};
+  const review=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),qLease=await grantTestLease(p,q.id);let reads=0;
+  const deps={apify:{...source,start:async()=>({kind:'inline' as const,page:{...page(1),exhausted:true,nextCursor:null}})},collect:async()=>{reads++;return[{id:'e',url:'https://example.com',fetchedAt:new Date().toISOString(),text:'contato@example.com',hash:'h',truncated:false}];}};
+  for(let step=0;step<4;step++)await runQualification(qLease,deps);
+  const results=(await listJobItems(p,q.id)).items[0].results;
+  assert.equal(reads,1);assert.equal(results.find(r=>r.module==='email')?.proposed.email,'contato@example.com');
+});
+
 test('cancellation during start keeps cleanup metadata and blocks publication until abort is confirmed',async()=>{
   const {p,job,lease}=await setup();let aborted=false;
   const adapter={start:async()=>{await cancelJob(p,job.id);return{kind:'remote' as const,run:{provider:'apify' as const,runId:'run1',datasetId:'ds1',profileId:'compass/crawler-google-places',build:'fixture-build',operationId:'start'}};},poll:async(_c:any,run:any)=>({run,status:'succeeded' as const}),readPage:async()=>page(1),abort:async(_c:any,run:any)=>({run,status:aborted?'cancelled' as const:'cancelling' as const})};

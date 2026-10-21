@@ -3,7 +3,7 @@ import {isAbsolute} from 'node:path';
 import {existsSync} from 'node:fs';
 import type {GenerationSource,JobInput,Units,UsageEstimate} from '../../domain/prospecting.ts';
 import {hashValue} from './review.ts';
-import {providerProfile,actorInput} from './providers/profiles.ts';
+import {providerProfile,actorInput,providerContractVersion} from './providers/profiles.ts';
 import type {AiRoute} from '../../domain/ai-routing.ts';
 const conventionalUnit=(p:string):import('../../domain/prospecting.ts').Unit=>p==='codex-local'?'codexCalls':p==='openai'?'openaiCalls':'geminiCalls';
 const unitCaps=z.strictObject({candidates:z.number().int().min(0).max(1e9).default(0),apifyRuns:z.number().int().min(0).max(1e9).default(0),apolloPages:z.number().int().min(0).max(1e9).default(0),jevCalls:z.number().int().min(0).max(1e9).default(0),codexCalls:z.number().int().min(0).max(1e9).default(0),openaiCalls:z.number().int().min(0).max(1e9).default(0),geminiCalls:z.number().int().min(0).max(1e9).default(0)});
@@ -18,7 +18,7 @@ export function prospectingConfig(){
   for(const key of ['MAPS','WEB','CNPJ'] as const)ready[key]=!!e.APIFY_TOKEN&&!!profiles[key].actor&&!!profiles[key].build&&Number(e.APIFY_MAX_CHARGE_USD)>0;
   const codexWorkspaces=(e.CODEX_TEST_WORKSPACE_IDS??'').split(',').map(x=>x.trim()).filter(Boolean);
   const enabled=e.PROSPECTING_ENABLED==='true';
-  const version=hashValue({enabled,profiles,ready,caps,globalCaps,apifyMax:e.APIFY_MAX_CHARGE_USD,apolloMax:e.APOLLO_MAX_PAGES,jev:e.JEV_MODEL??'typesafe/jev-1.13',jevReady:!!e.OPENROUTER_API_KEY,codexEnabled,codexWorkspaces,codexModel:e.CODEX_MODEL,credentials:hashValue([e.APIFY_TOKEN??'',e.APOLLO_API_KEY??'',e.OPENROUTER_API_KEY??''])});
+  const version=hashValue({providerContractVersion,enabled,profiles,ready,caps,globalCaps,apifyMax:e.APIFY_MAX_CHARGE_USD,apolloMax:e.APOLLO_MAX_PAGES,jev:e.JEV_MODEL??'typesafe/jev-1.13',jevReady:!!e.OPENROUTER_API_KEY,codexEnabled,codexWorkspaces,codexModel:e.CODEX_MODEL,credentials:hashValue([e.APIFY_TOKEN??'',e.APOLLO_API_KEY??'',e.OPENROUTER_API_KEY??''])});
   return {enabled,profiles,ready,caps,globalCaps,version,codexEnabled,codexWorkspaces,jevReady:!!e.OPENROUTER_API_KEY&&(e.JEV_MODEL??'typesafe/jev-1.13')==='typesafe/jev-1.13'};
 }
 export type ProspectingConfig=ReturnType<typeof prospectingConfig>;

@@ -10,11 +10,12 @@ export function normalizeSite(value:unknown){
 }
 export function normalizeCandidate(raw:unknown,profile:GenerationSource):Candidate{
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('INVALID_CANDIDATE');
-  const r=raw as Record<string,unknown>,name=string(r.name??r.title??r.razao_social,300),sourceRef=string(r.sourceRef??r.placeId??r.id??r.cnpj,500);
+  const r=raw as Record<string,unknown>,name=string(r.name??r.title??(profile==='CNPJ'?r.nome_fantasia:undefined)??r.razao_social,300)||string(r.razao_social,300),sourceRef=string(r.sourceRef??r.placeId??r.id??r.cnpj,500);
   if(!name||!sourceRef)throw Error('MISSING_IDENTITY');
-  const email=string(r.email)?.toLowerCase(),phone=string(r.phone??r.phoneNumber)?.replace(/[^0-9+]/g,'');
+  const registryPhone=profile==='CNPJ'?(Array.isArray(r.telefones)?r.telefones.find(p=>typeof p==='string'&&p.trim()):undefined)??r.ddd_telefone_1:undefined;
+  const email=string(r.email)?.toLowerCase(),phone=string(r.phone??r.phoneNumber??registryPhone)?.replace(/[^0-9+]/g,'');
   const candidate:Candidate={name,sourceRef,source:profile};
-  const fields={companyName:string(r.companyName,300),email:email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?email:undefined,phone:phone&&/^\+?\d{7,15}$/.test(phone)?phone:undefined,site:normalizeSite(r.site??r.website??r.primary_domain),city:string(r.city,200),state:string(r.state,100),cnpj:normalizeCnpj(r.cnpj)};
+  const fields={companyName:string(r.companyName??(profile==='CNPJ'?r.razao_social:undefined),300),email:email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?email:undefined,phone:phone&&/^\+?\d{7,15}$/.test(phone)?phone:undefined,site:normalizeSite(r.site??r.website??r.primary_domain),city:string(r.city??(profile==='CNPJ'?r.municipio:undefined),200),state:string(r.state??(profile==='CNPJ'?r.uf:undefined),100),cnpj:normalizeCnpj(r.cnpj)};
   for(const [k,v]of Object.entries(fields))if(v)(candidate as unknown as Record<string,unknown>)[k]=v;
   // Arbitrary provider fields and instructions never become editable lead fields.
   return candidate;

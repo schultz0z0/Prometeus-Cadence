@@ -3,7 +3,26 @@ import assert from 'node:assert/strict';
 import {approvePublicUrl} from '../src/server/prospecting/extraction/public-url.ts';
 import {fetchPublicPage,fetchEvidencePack} from '../src/server/prospecting/extraction/fetch-page.ts';
 import {parsePage} from '../src/server/prospecting/extraction/parse-page.ts';
+import {extractContacts,extractCnpjs} from '../src/server/prospecting/extraction/contacts.ts';
 const resolve=async()=>[{address:'93.184.216.34',family:4 as const}];
+test('bounded evidence retains footer contacts, valid CNPJ and mailto/tel attributes',async()=>{
+  const page=await fetchPublicPage('https://example.com',{signal:new AbortController().signal,resolve,request:async()=>({status:200,headers:{'content-type':'text/html'},body:Buffer.from('<p>'+ 'Descrição da empresa. '.repeat(1000)+'</p><footer><a href="mailto:contato@example.com">Email</a><a href="tel:+554130136190">Telefone</a> CNPJ 37.297.479/0001-80</footer>')})});
+  assert.ok(page.text.length<=12000);assert.equal(page.truncated,true);
+  assert.ok(extractContacts([page]).emails.includes('contato@example.com'));
+  assert.ok(extractContacts([page]).phones.includes('+554130136190'));
+  assert.deepEqual(extractCnpjs([page]),['37297479000180']);
+  assert.deepEqual(extractCnpjs([{...page,text:'CNPJ 37.297.479/0001-81 e 00.000.000/0000-00'}]),[]);
+});
+test('deep collection follows real contact links and reserves evidence space for them',async()=>{
+  const paths:string[]=[];
+  const pages=await fetchEvidencePack('https://example.com',{signal:new AbortController().signal,resolve,request:async approved=>{
+    paths.push(approved.url.pathname);
+    return{status:200,headers:{'content-type':'text/html'},body:Buffer.from(approved.url.pathname==='/'?'<p>'+ 'Descrição. '.repeat(2000)+'</p><a href="/fale-conosco/">Contato</a><a href="https://other.example/contact">Fora</a>':'<p>Comercial equipe@example.com</p>')};
+  }},true);
+  assert.equal(paths[1],'/fale-conosco/');assert.ok(paths.length<=3);
+  assert.ok(pages.reduce((n,p)=>n+p.text.length,0)<=12000);
+  assert.ok(extractContacts(pages).emails.includes('equipe@example.com'));
+});
 test('URL validation blocks private mixed DNS mapped and numeric IPs',async()=>{
   for(const url of ['http://127.0.0.1','http://2130706433','http://169.254.169.254','http://[::ffff:127.0.0.1]','file:///etc/passwd','https://user:pass@example.com','https://example.com:444'])await assert.rejects(()=>approvePublicUrl(url,resolve));
   await assert.rejects(()=>approvePublicUrl('https://example.com',async()=>[...await resolve(),{address:'10.0.0.1',family:4}]));

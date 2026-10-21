@@ -22,13 +22,29 @@ export class ApifyAdapter implements SourceAdapter{
     return{run:{...run,datasetId:data.defaultDatasetId?id(data.defaultDatasetId):run.datasetId},status:status[data.status]};
   }
   async readPage(ctx:ProviderContext,run:RemoteRun,cursor:string|null,limit=100):Promise<CandidatePage>{
-    const offset=Number(cursor??0);if(!Number.isSafeInteger(offset)||offset<0||offset>500||!Number.isInteger(limit)||limit<1||limit>100)throw new ProviderError('INVALID_PAGE');
+    const offset=Number(cursor??0);if(!Number.isSafeInteger(offset)||offset<0||offset>(ctx.profile.source==='CNPJ'?2000:500)||!Number.isInteger(limit)||limit<1||limit>100)throw new ProviderError('INVALID_PAGE');
     if(!run.datasetId)throw new ProviderError('MISSING_DATASET');
     const web=ctx.profile.source==='WEB';
-    const raw=await this.request(ctx,`/datasets/${id(run.datasetId)}/items?clean=true&format=json&offset=${web?0:offset}&limit=${web?5:limit}`);
-    if(!Array.isArray(raw)||raw.length>(web?5:limit))throw new ProviderError('INVALID_DATASET');
-    const all=web?raw.flatMap(r=>Array.isArray(r?.organicResults)?r.organicResults:[]):raw;
-    const rows=web?all.slice(offset,offset+limit):all;
+    let rows:any[],nextOffset:number,exhausted:boolean;
+    if(web){
+      const all:any[]=[];let ended=false;
+      // Numeric cursors remain candidate offsets. Read immutable SERP records in
+      // bounded groups instead of assuming the first five contain the whole run.
+      for(let serpOffset=0;serpOffset<50;serpOffset+=5){
+        const raw=await this.request(ctx,`/datasets/${id(run.datasetId)}/items?clean=true&format=json&offset=${serpOffset}&limit=5`);
+        if(!Array.isArray(raw)||raw.length>5||raw.some(r=>!Array.isArray(r?.organicResults)||r.organicResults.length>100))throw new ProviderError('INVALID_DATASET');
+        all.push(...raw.flatMap(r=>r.organicResults));
+        if(raw.length<5||serpOffset===45){ended=true;break;}
+        if(all.length>=offset+limit)break;
+      }
+      rows=all.slice(offset,offset+limit);nextOffset=offset+rows.length;exhausted=ended&&nextOffset>=all.length;
+    }else{
+      const raw=await this.request(ctx,`/datasets/${id(run.datasetId)}/items?clean=true&format=json&offset=${offset}&limit=${limit}`);
+      if(!Array.isArray(raw)||raw.length>limit)throw new ProviderError('INVALID_DATASET');
+      if(ctx.profile.source==='CNPJ'&&raw.some(r=>r?.tipo_registro==='erro'))throw new ProviderError('CNPJ_SOURCE_ERROR');
+      rows=ctx.profile.source==='CNPJ'?raw.filter(r=>r?.tipo_registro!=='aviso'):raw;
+      nextOffset=offset+raw.length;exhausted=raw.length<limit;
+    }
     const candidates=[],rejected=[];
     for(const r of rows.slice(0,limit))try{
       const candidate=normalizeCandidate(ctx.profile.source==='WEB'?{...r,id:r.url,site:r.url}:r,ctx.profile.source);
@@ -39,8 +55,7 @@ export class ApifyAdapter implements SourceAdapter{
       candidates.push(candidate);
     }catch{rejected.push({reason:'MISSING_IDENTITY'});}
     const rawCount=Math.min(rows.length,limit),receiptId=hashValue({run:run.runId,offset,limit});
-    const exhausted=web?offset+limit>=all.length:raw.length<limit;
-    return{receiptId,candidates,rejected,nextCursor:exhausted?null:String(offset+limit),exhausted,rawCount,usage:{provider:'apify',operationId:receiptId,units:{candidates:rawCount},costUsd:null,costKind:'unknown'}};
+    return{receiptId,candidates,rejected,nextCursor:exhausted?null:String(nextOffset),exhausted,rawCount,usage:{provider:'apify',operationId:receiptId,units:{candidates:rawCount},costUsd:null,costKind:'unknown'}};
   }
   async abort(ctx:ProviderContext,run:RemoteRun){await this.request(ctx,`/actor-runs/${id(run.runId)}/abort`,'POST',{});return this.poll(ctx,run);}
 }
