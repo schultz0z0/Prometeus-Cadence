@@ -12,7 +12,7 @@ Revisões congelam a rota e a política. Mudanças antes do próximo despacho ex
 
 ## Evidência executada
 
-- 92 testes unitários e 52 de integração PostgreSQL; typecheck e build webpack. Contagens finais e revisão constam no relatório de encerramento.
+- 92 testes unitários e 59 de integração PostgreSQL; typecheck e build webpack. Contagens finais e revisão constam no relatório de encerramento.
 - Migrações 012 e 013 nos bancos local e `_test`, reaplicadas sem alterar dados/volumes. Checksums históricos preservados.
 - Smoke anônimo: 50 rotas protegidas/APIs; login/401 conforme esperado. Smoke de provedor padrão retorna SKIPPED sem rede.
 - Navegador desktop 1440: owner salva/recarrega política; Automático sem JEV mostra Codex como decisor/gerador; Híbrido obrigatório bloqueia sem JEV; diagnóstico confirma autenticação ChatGPT sem inferência; fechar modal não confirma; confirmar cria job acompanhado na interface, com resultado/uso e sem Aplicar.
@@ -46,3 +46,7 @@ O smoke explícito exige fila QA vazia e flags de workspace, fonte, limite e or�
 ## Limitações
 
 OpenAI/Gemini e a matriz híbrida foram testados por contratos/integração, sem credenciais reais. Este aceite demonstra transporte, contratos, uso e propostas com Codex; não mede qualidade empírica em massa. Cadências, mensagens e scheduler reais continuam nos próximos marcos.
+
+## Revisão final
+
+Uma revisão independente identificou quatro achados importantes, corrigidos com regressões RED→GREEN sem nova inferência. [Relatório, decisões e adiamento menor](03b-final-review.md). O uso no resultado individual do resumo ainda aparece como null; o ledger e total do job estão corretos.

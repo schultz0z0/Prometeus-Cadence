@@ -32,3 +32,28 @@ test('AI HTTP gates origin, active workspace and operator diagnostics without sp
  assert.equal((await aiRequest(new Request(base+'/api/prospecting/ai/diagnostics',{method:'POST',headers:a.headers}),'diagnostics')).status,403);
  const result=await aiRequest(new Request(base+'/api/prospecting/ai/policy',{headers:a.headers}),'policy');assert.equal(result.status,200);const text=await result.text();assert.ok(!text.includes('configFingerprint'));assert.ok(!text.includes('OPENAI_API_KEY'));
 });
+
+test('probe honors persisted workspace caps, consumed allowance and policy changes before confirmation',async()=>{
+ const{p}=await setup();
+ await testAdmin(c=>c.query('INSERT INTO app.prospecting_policy(workspace_id,limits) VALUES($1,$2)',[p.workspaceId,{openaiCalls:0}]));
+ const denied=await prepareAiTest(p);assert.ok(denied.blockers.length);
+ await assert.rejects(()=>confirmAiTest(p,{requestId:randomUUID(),draft:denied.draft,reviewToken:denied.token}),{status:409});
+ assert.equal(await countRows('list',p.workspaceId),0);
+ await testAdmin(c=>c.query('UPDATE app.prospecting_policy SET limits=$2,version=version+1 WHERE workspace_id=$1',[p.workspaceId,{openaiCalls:1}]));
+ const stale=await prepareAiTest(p);assert.deepEqual(stale.blockers,[]);
+ await testAdmin(c=>c.query('UPDATE app.prospecting_policy SET limits=$2,version=version+1 WHERE workspace_id=$1',[p.workspaceId,{openaiCalls:2}]));
+ await assert.rejects(()=>confirmAiTest(p,{requestId:randomUUID(),draft:stale.draft,reviewToken:stale.token}),{status:409});
+ await testAdmin(c=>c.query('UPDATE app.prospecting_policy SET limits=$2,version=version+1 WHERE workspace_id=$1',[p.workspaceId,{openaiCalls:1}]));
+ const one=await prepareAiTest(p);await confirmAiTest(p,{requestId:randomUUID(),draft:one.draft,reviewToken:one.token});
+ const two=await prepareAiTest(p);await assert.rejects(()=>confirmAiTest(p,{requestId:randomUUID(),draft:two.draft,reviewToken:two.token}),{status:429});
+ assert.equal(await countRows('list',p.workspaceId),1);
+});
+
+test('late probe finalization retains the inference timestamp and cannot refresh hybrid validity',async()=>{
+ const{p}=await setup(),r=await prepareAiTest(p),job=await confirmAiTest(p,{requestId:randomUUID(),draft:r.draft,reviewToken:r.token}),lease=await grantTestLease(p,job.id);
+ let calls=0;const deps={conventional:async(ctx:any,input:any)=>{calls++;return{task:'summary' as const,generation:{model:'fixture',summary:'Synthetic.',evidenceIds:input.evidence.map((e:any)=>e.id),usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown' as const}}};}};
+ await runQualification(lease,deps);
+ await testAdmin(c=>c.query("UPDATE app.prospecting_attempt SET created_at=now()-interval '25 hours' WHERE job_id=$1 AND provider='openai'",[job.id]));
+ await runQualification(lease,deps);assert.equal(calls,1);
+ const settings=await getAiSettings(p);assert.equal(settings.lastCheck?.outcome,'success');assert.ok(Date.parse(settings.lastCheck!.checkedAt)<Date.now()-86400000);assert.ok(settings.blockers.length);
+});

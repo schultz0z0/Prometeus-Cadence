@@ -110,7 +110,9 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       const rows=(await c.query('SELECT payload FROM app.prospecting_item WHERE job_id=$1',[lease.jobId])).rows;
       const failed=rows.some(r=>r.payload.results.some((m:ModuleResult)=>m.status==='failed'));
       if(job.checkpoint.purpose==='ai-connection-test'&&!failed&&rows.some(r=>r.payload.results.some((m:ModuleResult)=>m.module==='summary'&&m.status==='pending_review'&&m.proposed.summary))){
-        await recordConnectionCheck(c,lease,{operationId:lease.jobId+':probe',route:job.checkpoint.execution.aiRoute.conventional,outcome:'success'});
+        // Use the durable attempt start conservatively, never the resume time.
+        const attempt=(await c.query("SELECT created_at FROM app.prospecting_attempt WHERE job_id=$1 AND step=$2 AND state='completed'",[lease.jobId,'summary:'+input.leadIds[0]])).rows[0];
+        if(attempt)await recordConnectionCheck(c,lease,{operationId:lease.jobId+':probe',route:job.checkpoint.execution.aiRoute.conventional,outcome:'success',checkedAt:new Date(attempt.created_at).toISOString()});
       }
       await c.query('UPDATE app.prospecting_job SET counts=$2 WHERE id=$1',[lease.jobId,{found:input.leadIds.length,inserted:0,duplicates:0,rejected:0,pending:rows.length}]);
       await c.query('UPDATE app.prospecting_job SET state=$2,revision=revision+1,updated_at=now() WHERE id=$1',[lease.jobId,failed?'partial':'completed']);
@@ -123,19 +125,21 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
     await handleStepFailure(lease,error);
   }
 }
-async function preflight(lease:JobLease,job:any,deps:QualificationAdapters,jev=false){
- await withLeasedTransaction(lease,c=>assertAiRouteCurrent(c,job));
+async function preflight(lease:JobLease,job:any,deps:QualificationAdapters,jev=false,freshOperationId?:string){
+ await withLeasedTransaction(lease,c=>assertAiRouteCurrent(c,job,freshOperationId));
  const route=job.checkpoint.execution.aiRoute as AiRoute;
  if(jev&&route.conventional.provider==='codex-local'){
   const diagnostic=await(deps.diagnose??diagnoseCodex)();
   if(!diagnostic.authenticated)throw new AppError(409,'O Codex local precisa de autenticação ChatGPT.','AI_COMPANION_UNAVAILABLE');
+  await withLeasedTransaction(lease,c=>assertAiRouteCurrent(c,job));
  }
 }
 async function conventionalStep(lease:JobLease,job:any,leadId:string,task:'qualify'|'summary'|'second_opinion',criteria:string,evidence:Evidence[],deps:QualificationAdapters){
  const route=(job.checkpoint.execution.aiRoute as AiRoute).conventional,step=task+':'+leadId,operationId=hashValue({job:lease.jobId,step});
  const slot=(release:boolean)=>withLeasedTransaction(lease,async c=>Boolean((await c.query('SELECT app.codex_prospecting_slot($1,$2,$3,$4) AS ok',[lease.jobId,lease.token,lease.fence,release])).rows[0].ok));
  return performStep(lease,step,route.provider==='codex-local'?'codex':route.provider,{[conventionalUnit(route.provider)]:1},async()=>{
-  await preflight(lease,job,deps);
+  // This callback runs only for a newly prepared intent, never journal replay.
+  await preflight(lease,job,deps,false,operationId);
   try{return await(deps.conventional??runConventional)({operationId,workspaceId:lease.workspaceId,signal:deps.signal??new AbortController().signal,route,acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{task,criteria,evidence,facts:{name:job.checkpoint.bases[leadId].name}});}
   catch(error){await withLeasedTransaction(lease,c=>recordConnectionCheck(c,lease,{operationId,route,outcome:error instanceof ProviderError&&error.uncertain?'uncertain':'failed',code:error instanceof ProviderError?error.code:'CONVENTIONAL_FAILED'}));throw error;}
  },r=>r.task==='qualify'?r.decision.usage:r.generation.usage);

@@ -7,7 +7,8 @@ import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {requirePermission} from '../auth/permissions.ts';
 import {AppError} from '../errors.ts';
 import {jobInputSchema,confirmationSchema,pageSchema} from './schemas.ts';
-import {prospectingConfig,requirements,estimateUsage,usageUnits,parseCaps} from './config.ts';
+import {prospectingConfig,requirements,estimateUsage,usageUnits} from './config.ts';
+import {workspaceProspectingConfig} from './workspace-config.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from './review.ts';
 import {jobView,itemView,encodeCursor,decodeCursor} from './repository.ts';
 import {reserveUsage,releaseUnused} from './usage.ts';
@@ -22,9 +23,7 @@ async function authorized(c:PoolClient,p:Principal){
 }
 async function reviewState(c:PoolClient,p:Principal,input:JobInput){
   await authorized(c,p);
-  const config=prospectingConfig();
-  const policy=(await c.query('SELECT limits,version FROM app.prospecting_policy')).rows[0];
-  if(policy){const own=parseCaps(JSON.stringify(policy.limits));for(const k of Object.keys(config.caps) as (keyof typeof config.caps)[])config.caps[k]=Math.min(config.caps[k],own[k]);}
+  const {config,policy}=await workspaceProspectingConfig(c);
   let aiRoute:AiRoute|null=null;const aiBlockers:string[]=[];
   if(input.kind==='qualification'&&input.modules.some(m=>['qualify','summary'].includes(m))){
     const aiPolicy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),selected=aiPolicy.conventionalProvider?runtime.conventional[aiPolicy.conventionalProvider].route:null;

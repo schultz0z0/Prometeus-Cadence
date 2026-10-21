@@ -4,6 +4,7 @@ import {runQualification} from '../../src/server/prospecting/qualification.ts';i
 import {executeWorkspaceCommand,readWorkspaceSnapshot} from '../../src/server/workspaces/commands.ts';import {reconcileJob} from '../../src/server/prospecting/reconciliation.ts';
 import {configureProspectingTest,prospectingUser,grantTestLease,closeProspectingPools,testAdmin,seedHybridPolicy} from './prospecting-helpers.ts';import {resetRateLimits} from './helpers.ts';import {ProviderError} from '../../src/server/prospecting/providers/transport.ts';
 import {conventionalConfig} from '../../src/server/prospecting/ai/config.ts';
+import {getAiSettings} from '../../src/server/prospecting/ai/probe.ts';import {hashValue} from '../../src/server/prospecting/review.ts';
 configureProspectingTest();beforeEach(resetRateLimits);after(async()=>{await workerPool().end();await closeProspectingPools();});
 async function setup(provider:'codex-local'|'openai'|'gemini',modules:('qualify'|'summary')[]=['qualify','summary']){
  const {p}=await prospectingUser();Object.assign(process.env,{CODEX_LOCAL_ENABLED:'true',CODEX_BINARY:process.execPath,CODEX_MODEL:'fixture',CODEX_TEST_WORKSPACE_IDS:p.workspaceId,OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',GEMINI_API_KEY:'fixture',GEMINI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({codexCalls:10,openaiCalls:10,geminiCalls:10,jevCalls:10}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({codexCalls:100000,openaiCalls:100000,geminiCalls:100000,jevCalls:100000})});
@@ -54,4 +55,43 @@ test('policy changed during inference preserves the committed result and consump
  const{p,input}=await setup('openai'),r=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:r.token}),lease=await grantTestLease(p,q.id);let calls=0;
  const deps={collect,conventional:async(ctx:any,input:any)=>{calls++;await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:1,policy:{mode:'conventional-only',conventionalProvider:'gemini',jevEnabled:false}});return{task:'qualify' as const,reason:'Clinic',decision:{provider:'openai' as const,model:'fixture',verdict:'fits' as const,confidence:null,criteria:{},probabilities:{},evidenceIds:input.evidence.map((e:any)=>e.id),usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown' as const}}};}};
  await runQualification(lease,deps);assert.equal((await getJob(p,q.id)).usage?.[0].units.openaiCalls,1);await runQualification(lease,deps);assert.equal(calls,1);assert.equal((await getJob(p,q.id)).state,'partial');
+});
+
+for(const change of ['policy','revocation','expiry'] as const)test('hybrid revalidates authority after Codex diagnosis: '+change,async()=>{
+ const{p,input}=await setup('codex-local',['qualify']),r=await prepareJob(p,input),seed=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:r.token}),route=conventionalConfig(p.workspaceId).conventional['codex-local'].route;
+ await testAdmin(c=>c.query("INSERT INTO app.ai_connection_check(workspace_id,job_id,operation_id,provider,model,config_fingerprint,contract_version,outcome) VALUES($1,$2,'before-diagnosis',$3,$4,$5,$6,'success')",[p.workspaceId,seed.id,route.provider,route.model,route.configFingerprint,route.contractVersion]));
+ await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:1,policy:{mode:'auto',conventionalProvider:'codex-local',jevEnabled:true}});
+ const review=await prepareJob(p,input),job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});let calls=0;
+ const diagnose=async()=>{
+  if(change==='policy')await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:2,policy:{mode:'conventional-only',conventionalProvider:'codex-local',jevEnabled:false}});
+  if(change==='revocation')await testAdmin(c=>c.query('DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',[p.workspaceId,p.userId]));
+  if(change==='expiry')await testAdmin(c=>c.query("UPDATE app.ai_connection_check SET checked_at=now()-interval '25 hours' WHERE workspace_id=$1",[p.workspaceId]));
+  return{available:true,authenticated:true,authMode:'chatgpt' as const,version:'fixture',code:null};
+ };
+ await runQualification(await grantTestLease(p,job.id),{collect,diagnose,decide:async()=>{calls++;throw Error('JEV must not dispatch after authority changed');}}).catch(()=>{});
+ assert.equal(calls,0);
+});
+
+test('a recovered prepared conventional attempt invalidates old success without a second inference',async()=>{
+ const{p,input}=await setup('openai',['qualify']),r=await prepareJob(p,input),job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:r.token}),route=conventionalConfig(p.workspaceId).conventional.openai.route;
+ await testAdmin(async c=>{
+  await c.query("INSERT INTO app.ai_connection_check(workspace_id,job_id,operation_id,provider,model,config_fingerprint,contract_version,outcome,checked_at) VALUES($1,$2,'old-success',$3,$4,$5,$6,'success',now()-interval '1 hour')",[p.workspaceId,job.id,route.provider,route.model,route.configFingerprint,route.contractVersion]);
+  const step='qualify:'+input.leadIds[0];await c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES($1,$2,$3,'openai',$4,'prepared',$5)",[p.workspaceId,job.id,hashValue({job:job.id,step}),step,{reservedUnits:{openaiCalls:1}}]);
+ });
+ let calls=0;await runQualification(await grantTestLease(p,job.id),{collect,conventional:async()=>{calls++;throw Error('Do not repeat an uncertain inference');}});
+ assert.equal(calls,0);assert.equal((await getJob(p,job.id)).state,'needs_reconciliation');assert.equal((await getAiSettings(p)).lastCheck?.outcome,'uncertain');
+ const waiting=await getJob(p,job.id);await reconcileJob(p,job.id,{operationId:waiting.unresolvedAttempts![0].id,resultUnavailable:true});
+ assert.equal((await getAiSettings(p)).lastCheck?.outcome,'uncertain');
+ await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:1,policy:{mode:'auto',conventionalProvider:'openai',jevEnabled:true}});
+ assert.ok((await prepareJob(p,input)).blockers.length);
+});
+
+test('hybrid allows its own freshly journaled summary while preserving companion validation',async()=>{
+ const{p,input}=await setup('openai'),r=await prepareJob(p,input),seed=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:r.token}),route=conventionalConfig(p.workspaceId).conventional.openai.route;
+ await testAdmin(c=>c.query("INSERT INTO app.ai_connection_check(workspace_id,job_id,operation_id,provider,model,config_fingerprint,contract_version,outcome) VALUES($1,$2,'valid-hybrid-companion',$3,$4,$5,$6,'success')",[p.workspaceId,seed.id,route.provider,route.model,route.configFingerprint,route.contractVersion]));
+ await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:1,policy:{mode:'auto',conventionalProvider:'openai',jevEnabled:true}});
+ const review=await prepareJob(p,input),job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),lease=await grantTestLease(p,job.id);let decisions=0,summaries=0;
+ const deps={collect,decide:async(ctx:any,input:any)=>{decisions++;return{model:'typesafe/jev-1.13',verdict:'fits' as const,confidence:.9,probabilities:{},criteria:{quality:.9,coverage:1},evidenceIds:input.evidence.map((e:any)=>e.id),usage:{provider:'openrouter',operationId:ctx.operationId,units:{jevCalls:1},costUsd:null,costKind:'unknown' as const}};},conventional:async(ctx:any,input:any)=>{summaries++;return{task:'summary' as const,generation:{model:'fixture',summary:'Synthetic clinic.',evidenceIds:input.evidence.map((e:any)=>e.id),usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown' as const}}};}};
+ for(let i=0;i<3;i++){if(['completed','partial','failed','needs_reconciliation'].includes((await getJob(p,job.id)).state))break;await runQualification(lease,deps);}
+ assert.equal(decisions,1);assert.equal(summaries,1);assert.equal((await getJob(p,job.id)).state,'completed');
 });

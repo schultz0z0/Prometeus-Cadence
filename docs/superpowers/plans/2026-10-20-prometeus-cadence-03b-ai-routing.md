@@ -127,4 +127,4 @@ Revisão independente única da branch conforme execução nativa, reclassifica�
 
 Cobertura: matriz/política/RLS/limites T1; três adapters/tarefas/contratos T2; HMAC/checkpoints/cache/uso/legados T3; diagnóstico/probe atômico e validade T4; opção visual solicitada T5; aceite real local e regressões T6. Review Focus1→T1/T3,2→T2/T3,3→T3,4→T4,5→T1/T2/T4/T5. Sem dependências novas, mudança de propósito ou etapa do marco04 antecipada.
 
-Desenho e plano aprovados pelo usuário. T1–T6 implementadas e verificadas; ressalvas de aceite visual e decisões registradas em docs/validation/03b-ai-routing.md. Revisão independente de encerramento em andamento.
+Desenho e plano aprovados pelo usuário. T1–T6 implementadas e verificadas; ressalvas de aceite visual e decisões registradas em docs/validation/03b-ai-routing.md. Revisão independente única realizada; quatro importantes corrigidos em um passe RED→GREEN, menor adiado e decisões em docs/validation/03b-final-review.md. Integração da branch aguardando escolha do usuário.

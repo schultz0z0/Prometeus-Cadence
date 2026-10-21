@@ -1,5 +1,6 @@
 import 'server-only';import {randomUUID} from 'node:crypto';import {z} from 'zod';import type {Principal} from '../../../domain/workspace.ts';import type {PoolClient} from 'pg';
 import type {AiSettingsView,AiTestReview,AiRoute,AiTestDraft} from '../../../domain/ai-routing.ts';import {aiRouteView,resolveAiRoute} from '../../../domain/ai-routing.ts';
+import {workspaceProspectingConfig} from '../workspace-config.ts';
 import {withWorkspaceTransaction} from '../../db/transaction.ts';import {readAiPolicy,requireAiAdmin} from './settings.ts';import {conventionalConfig} from './config.ts';import {readConnectionCheck} from './connection.ts';import {createReviewToken,verifyReviewToken,hashValue} from '../review.ts';import {prospectingConfig,estimateUsage,usageUnits} from '../config.ts';import {jobView} from '../repository.ts';import {reserveUsage} from '../usage.ts';import {lockWorkspace} from '../ingestion.ts';import {AppError} from '../../errors.ts';import type {JobInput} from '../../../domain/prospecting.ts';
 export async function getAiSettings(p:Principal):Promise<AiSettingsView>{return withWorkspaceTransaction(p,async c=>{
  const policy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),selected=policy.conventionalProvider?runtime.conventional[policy.conventionalProvider].route:null,last=selected?await readConnectionCheck(c,selected):null,resolved=resolveAiRoute(policy,runtime,last);const{configFingerprint:_,...lastPublic}=last??{};
@@ -7,11 +8,11 @@ export async function getAiSettings(p:Principal):Promise<AiSettingsView>{return 
 });}
 const draftSchema=z.strictObject({sampleId:z.uuid()}),confirmSchema=z.strictObject({requestId:z.uuid(),draft:draftSchema,reviewToken:z.string().max(2000)});
 async function testState(c:PoolClient,p:Principal,draft:AiTestDraft){
- await requireAiAdmin(c);const policy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),result=resolveAiRoute({...policy,mode:'conventional-only',jevEnabled:false},runtime,null);const route:AiRoute|null=result.route?{...result.route,mode:policy.mode}:null,config=prospectingConfig();
+ await requireAiAdmin(c);const policy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),result=resolveAiRoute({...policy,mode:'conventional-only',jevEnabled:false},runtime,null);const route:AiRoute|null=result.route?{...result.route,mode:policy.mode}:null,{config,policy:usagePolicy}=await workspaceProspectingConfig(c);
  const input:JobInput={kind:'qualification',listId:draft.sampleId,leadIds:[draft.sampleId],modules:['summary'],summaryPolicy:'all',escalation:'off'},usage=estimateUsage(input,route),blockers=[...result.blockers];if(!config.enabled)blockers.push('Habilite as execuções externas neste ambiente.');
  for(const u of usage)if(u.maxUnits>(config.caps[u.unit]??0)||u.maxUnits>(config.globalCaps[u.unit]??0))blockers.push('O orçamento não permite uma chamada de teste.');
  const revision=Number((await c.query("SELECT revision FROM app.workspace_meta WHERE workspace_id=current_setting('app.workspace_id')")).rows[0]?.revision??0),context=(await c.query('SELECT payload FROM app.context_version ORDER BY version DESC LIMIT 1')).rows[0]?.payload??null;
- const proof={purpose:'ai-connection-test',userId:p.userId,workspaceId:p.workspaceId,draft,route,revision,config:config.version,contextVersion:context?.version??0};return{route,usage,blockers,proof,config,context};
+ const proof={purpose:'ai-connection-test',userId:p.userId,workspaceId:p.workspaceId,draft,route,revision,config:config.version,usagePolicy,contextVersion:context?.version??0};return{route,usage,blockers,proof,config,context};
 }
 export async function prepareAiTest(p:Principal):Promise<AiTestReview>{return withWorkspaceTransaction(p,async c=>{const draft={sampleId:randomUUID()},s=await testState(c,p,draft),now=Date.now();return{draft,token:createReviewToken(s.proof,process.env.BETTER_AUTH_SECRET!,now),expiresAt:new Date(now+600000).toISOString(),route:s.route?aiRouteView(s.route):null,usage:s.usage,blockers:s.blockers};});}
 export async function confirmAiTest(p:Principal,body:unknown){
