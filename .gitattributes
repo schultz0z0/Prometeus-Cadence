@@ -1,1 +1,5 @@
 db/migrations/*.sql text eol=lf
+# These three migrations were applied as CRLF; preserve their exact historical bytes.
+db/migrations/018-automation-receipts-and-epochs.sql text eol=crlf
+db/migrations/019-receipt-total-qualification.sql text eol=crlf
+db/migrations/020-received-run-cleanup.sql text eol=crlf

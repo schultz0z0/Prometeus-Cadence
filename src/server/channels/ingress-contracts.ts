@@ -1,0 +1,2 @@
+import type {ConnectionState,Provider} from '../../domain/whatsapp.ts';
+export interface IngressContext {id:string;workspaceId:string;publicId:string;provider:Provider;revision:number;state:ConnectionState;externalAccountId:string|null;identifiers:Record<string,string>;senders:{externalId:string;address:string|null}[];credentialVersions:{revision:number;credentials:Record<string,string>;identifiers?:Record<string,string>;externalAccountId?:string|null}[]}

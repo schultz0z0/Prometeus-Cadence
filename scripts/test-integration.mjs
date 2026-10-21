@@ -11,6 +11,7 @@ process.env.NODE_ENV = "test";
 process.env.CADENCE_INTEGRATION = "1";
 const known = [
   "whatsapp-storage",
+  "whatsapp-connections",
   "migrations",
   "auth",
   "memberships",
