@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-21T23:25:15.224Z",
+  "date": "2026-10-21T23:38:23.620Z",
   "base": "http://127.0.0.1:3210",
   "note": "Local HTTP smoke. Anonymous protected pages redirect to login; private APIs return 401. Authenticated API probes return 200, intentionally missing resources 404. No real external connector is tested.",
   "results": [

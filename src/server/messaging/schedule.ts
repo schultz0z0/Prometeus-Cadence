@@ -17,7 +17,11 @@ export function nextStepAt(input:NextStepInput):string {
  if(!Number.isFinite(anchor)||!Number.isFinite(now)||!Number.isInteger(input.delayDays)||input.delayDays<0||input.delayDays>3650||!input.weekdays.length||input.weekdays.some(d=>!Number.isInteger(d)||d<0||d>6)||new Set(input.weekdays).size!==input.weekdays.length)throw Error('Agenda inválida.');
  if(input.skipHolidays&&!input.holidayDates)throw Error('Configure um calendário explícito de feriados.');
  const date=addDays(localDateAt(input.anchorAt,input.timezone),input.delayDays);
- const due=Date.parse(wallTimeToUtc(date,localTimeAt(input.anchorAt,input.timezone),input.timezone));
+ // PostgreSQL timestamps may carry microseconds. Round any remainder up so
+ // converting through JS milliseconds never schedules before the SQL minimum.
+ const fraction=input.anchorAt.match(/\.(\d+)(?:Z|[+-]\d{2}:\d{2})$/i)?.[1]??'';
+ const subMinute=((anchor%60000)+60000)%60000+( /[1-9]/.test(fraction.slice(3))?1:0);
+ const due=Date.parse(wallTimeToUtc(date,localTimeAt(input.anchorAt,input.timezone),input.timezone))+subMinute;
  const minimum=Math.max(due,now),start=localDateAt(new Date(minimum).toISOString(),input.timezone);
  for(let days=0;days<3660;days++){
   const candidate=addDays(start,days),weekday=new Date(candidate+'T00:00:00Z').getUTCDay();

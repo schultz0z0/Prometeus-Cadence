@@ -22,6 +22,6 @@ export function dispatchBlocker(ctx:Record<string,any>,now:string):string|null {
   const expected=publication?.snapshot.templateProofs[send.content.templateId]?.hash??o.proof.templateHash;
   if(!template||template.hash!==expected)return 'TEMPLATE_CHANGED';
  }
- const policy=evaluateSendPolicy({now,lastInboundAt:i.last_inbound_at,purpose:send.purpose,hasOptIn:ctx.consents.length>0,suppressed:ctx.suppressions.length>0,senderReady:s.ready,content:send.content,template});
+ const policy=evaluateSendPolicy({now,lastInboundAt:ctx.lastInboundAt??null,purpose:send.purpose,hasOptIn:ctx.consents.length>0,suppressed:ctx.suppressions.length>0,senderReady:s.ready,content:send.content,template});
  return policy.blockers[0]??null;
 }

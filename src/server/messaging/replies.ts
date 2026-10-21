@@ -44,8 +44,9 @@ export async function replyState(c:PoolClient,p:Principal,target:{conversationId
  const purpose=test?'test':'service',consents=identity?(await c.query('SELECT id FROM app.consent_evidence WHERE identity_id=$1 AND purpose=$2 AND occurred_at<=clock_timestamp() ORDER BY id',[identity.id,purpose])).rows:[];
  const suppressions=identity?(await c.query("SELECT scope FROM app.contact_suppression WHERE identity_id=$1 AND scope IN('all',$2) ORDER BY scope",[identity.id,purpose])).rows:[];
  const declared=testInput?.consent,declaredValid=!!declared&&Date.parse(declared.occurredAt)<=Date.now();
+ const lastInboundAt=identity?(await c.query('SELECT last_inbound_at FROM app.channel_conversation WHERE sender_id=$1 AND identity_id=$2',[sender.id,identity.id])).rows[0]?.last_inbound_at?.toISOString()??null:null;
  const limits=(await c.query('SELECT * FROM app.messaging_limits')).rows[0],currentNow=new Date().toISOString();
- const eligibility=evaluateSendPolicy({now:currentNow,lastInboundAt:identity?.last_inbound_at?.toISOString()??null,purpose,hasOptIn:consents.length>0||declaredValid,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready'&&(!conn.token_expires_at||conn.token_expires_at.getTime()>Date.now()),content,template});
+ const eligibility=evaluateSendPolicy({now:currentNow,lastInboundAt,purpose,hasOptIn:consents.length>0||declaredValid,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready'&&(!conn.token_expires_at||conn.token_expires_at.getTime()>Date.now()),content,template});
  const blockers=[...eligibility.blockers];if(!limits||!sender.dailyLimit)blockers.push('EXPLICIT_LIMITS_REQUIRED');
  try{channelCallbackUrl(conn.provider,conn.public_id);}catch{blockers.push('PUBLIC_HTTPS_REQUIRED');}
  if(declared&&!declaredValid)blockers.push('INVALID_CONSENT_TIME');
@@ -53,7 +54,7 @@ export async function replyState(c:PoolClient,p:Principal,target:{conversationId
  const snapshot:PreparedSend={connectionId:conn.id,connectionRevision:Number(conn.revision),senderId:sender.id,identity:identityView,content,purpose};
  let preview=content.kind==='text'?content.text:template?template.components.map(part=>part.text.replace(/\{\{\s*(\w+)\s*\}\}/g,(_match,key:string)=>content.kind==='template'?content.variables[part.type+'.'+key]??'{{'+key+'}}':'')).join('\n'):'Template indisponível';
  if(preview.length>4096)blockers.push('PREVIEW_TOO_LARGE');
- const proof={workspaceId:p.workspaceId,actorId:p.userId,target,input,snapshot,senderRevision:sender.revision,identity:identity??null,leadHash:lead?hashValue(lead):null,consents,suppressions,templateHash:template?.hash??null,limits:limits??null};
+ const proof={workspaceId:p.workspaceId,actorId:p.userId,target,input,snapshot,senderRevision:sender.revision,identity:identity??null,lastInboundAt,leadHash:lead?hashValue(lead):null,consents,suppressions,templateHash:template?.hash??null,limits:limits??null};
  return {snapshot,blockers,proof,sender,conn,identity,conversation,preview,template,declared,lead};
 }
 async function prepare(p:Principal,target:{conversationId:string}|{connectionId:string},input:unknown):Promise<Review<PreparedSend>&{preview:string}>{

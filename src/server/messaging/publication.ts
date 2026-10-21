@@ -55,8 +55,9 @@ export async function publicationState(c:PoolClient,p:Principal,input:z.infer<ty
   const consents=identity?(await c.query("SELECT id FROM app.consent_evidence WHERE identity_id=$1 AND purpose='campaign' AND occurred_at<=clock_timestamp() ORDER BY id",[identity.id])).rows:[];
   const suppressions=identity?(await c.query("SELECT scope FROM app.contact_suppression WHERE identity_id=$1 AND scope IN('all','campaign') ORDER BY scope",[identity.id])).rows:[];
   if(identity&&cadence.settings.excludeReplied&&Number(identity.reply_epoch)>0)blockers.push('LEAD_ALREADY_REPLIED:'+leadId);
+  const lastInboundAt=identity?(await c.query('SELECT last_inbound_at FROM app.channel_conversation WHERE sender_id=$1 AND identity_id=$2',[sender.id,identity.id])).rows[0]?.last_inbound_at?.toISOString()??null:null;
   const record={scope,externalId:identity?.external_id??address?.slice(1)??'',phone:address};
-  snapshot.recipients.push({leadId,identityId:identity?.id??'',identity:record,factsHash:hashValue({lead,identity:identity??null,consents,suppressions})});
+  snapshot.recipients.push({leadId,identityId:identity?.id??'',identity:record,factsHash:hashValue({lead,identity:identity??null,consents,suppressions,lastInboundAt})});
   snapshot.recipientFacts[leadId]=lead;snapshot.recipientContents[leadId]={};snapshot.messagePreviews[leadId]={};let anchor=now;
   for(const step of cadence.steps){
    const binding=input.bindings[step.id];if(!binding)continue;
@@ -70,7 +71,7 @@ export async function publicationState(c:PoolClient,p:Principal,input:z.infer<ty
     if(binding.kind==='template'&&Object.values(binding.variables).some(v=>v.trim()===step.body.trim()&&v.trim().length>50))blockers.push('TEMPLATE_VARIABLE_IS_MESSAGE:'+step.id);
    }
    let at=now;try{at=nextStepAt({anchorAt:anchor,delayDays:step.delayDays,now:anchor,timezone:cadence.settings.timezone,weekdays:cadence.settings.weekdays,sendTime:cadence.settings.sendTime,skipHolidays:cadence.settings.skipHolidays,holidayDates:null});anchor=at;}catch{blockers.push('SCHEDULE_UNAVAILABLE:'+step.id);}
-   const eligibility=evaluateSendPolicy({now:at,lastInboundAt:identity?.last_inbound_at?.toISOString()??null,purpose:'campaign',hasOptIn:consents.length>0,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready',content,template});
+   const eligibility=evaluateSendPolicy({now:at,lastInboundAt,purpose:'campaign',hasOptIn:consents.length>0,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready',content,template});
    for(const blocker of eligibility.blockers)blockers.push(leadId+':'+step.id+':'+blocker);
    snapshot.messagePreviews[leadId][step.id]=content.kind==='text'?content.text:template?templatePreview(template,content.variables):'Template indisponível';
   }

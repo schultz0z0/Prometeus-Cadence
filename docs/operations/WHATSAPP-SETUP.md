@@ -51,7 +51,7 @@ O rascunho pode ser gerado/editado sem ativar envio. Na cadência salva, selecio
 
 A revisão resolve variáveis por lead, mostra bloqueios e congela conteúdo, destinatários, contexto, produto, rota de IA, versões e limites. Confirmar ativa essa versão. Salvar outro rascunho não a altera. Pause explicitamente a publicação antes de publicar outra versão da mesma cadência. Feriados sem calendário, canais de e-mail/LinkedIn e opções ainda indisponíveis bloqueiam a publicação; não são silenciosamente ignorados.
 
-Texto livre exige mensagem recebida autêntica há menos de24horas. Fora dessa janela, exige template aprovado e autorização da finalidade. A inbox aceita contatos sem empresa vinculada e identificadores opacos sem inventar telefone/lead. Marcar como lido só avança até a última mensagem exibida. Mídia é identificada; download/visualização do arquivo não faz parte deste piloto.
+Texto livre exige mensagem recebida autêntica **pelo remetente dessa conversa** há menos de24horas. A entrada em outro número da mesma conta não abre esta janela. Fora dela, exige template aprovado e autorização da finalidade. A inbox aceita contatos sem empresa vinculada e identificadores opacos sem inventar telefone/lead. Marcar como lido só avança até a última mensagem exibida. Mídia é identificada; download/visualização do arquivo não faz parte deste piloto.
 
 ## Worker e manutenção
 

@@ -2,6 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {nextStepAt,dispatchTimeAllowed} from '../src/server/messaging/schedule.ts';
 const base={anchorAt:'2026-10-23T12:00:00Z',delayDays:1,now:'2026-10-23T12:00:00Z',timezone:'America/Sao_Paulo',weekdays:[1,2,3,4,5],sendTime:'09:00',skipHolidays:false,holidayDates:null};
+
+test('acceptance seconds and milliseconds never shorten the local-day minimum',()=>{
+ const at=nextStepAt({...base,anchorAt:'2026-10-21T12:00:03.123Z',now:'2026-10-21T12:00:03.123Z',delayDays:1});
+ assert.ok(Date.parse(at)>=Date.parse('2026-10-22T12:00:03.123Z'),at);
+ const micro=nextStepAt({...base,anchorAt:'2026-10-21T12:00:00.000456+00:00',now:'2026-10-21T12:00:00Z',delayDays:1});
+ assert.ok(Date.parse(micro)>Date.parse('2026-10-22T12:00:00Z'),micro);
+});
 test('delay begins at acceptance and weekdays follow the local calendar',()=>{
  assert.equal(nextStepAt(base),'2026-10-26T12:00:00.000Z');
  assert.equal(nextStepAt({...base,delayDays:0,anchorAt:'2026-10-21T13:00:00Z',now:'2026-10-21T13:00:00Z'}),'2026-10-22T12:00:00.000Z');
