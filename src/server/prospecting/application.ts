@@ -18,6 +18,7 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
     if(old){if(old.user_id!==p.userId||old.body_hash!==hash)throw new AppError(409,'Identificador já utilizado.');return old.result;}
     const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1 FOR UPDATE',[jobId])).rows[0];
     if(!job)throw new AppError(404,'Execução não encontrada.');
+    if(job.checkpoint.purpose==='ai-connection-test')throw new AppError(409,'Teste de conexão não pode alterar contatos.');
     if(job.kind!=='qualification'||!['completed','partial'].includes(job.state))throw new AppError(409,'Aguarde o término da qualificação.');
     const items=(await c.query('SELECT * FROM app.prospecting_item WHERE job_id=$1 AND id=ANY($2::text[]) FOR UPDATE',[jobId,itemIds])).rows;
     if(items.length!==itemIds.length||items.some(i=>i.applied))throw new AppError(409,'A seleção contém resultado indisponível.');

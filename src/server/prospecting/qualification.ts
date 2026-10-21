@@ -25,10 +25,10 @@ export interface QualificationAdapters{
   collect?:typeof fetchEvidencePack;
   decide?:typeof decide;generate?:typeof generate;
 }
-async function collectEvidence(lease:JobLease,lead:Lead,deep:boolean,deps:QualificationAdapters):Promise<Evidence[]>{
+async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,deps:QualificationAdapters):Promise<Evidence[]>{
   return performStep(lease,'evidence:'+lead.id+':'+deep,'public-web',{},async()=>{
     if(!lead.site)return[];
-    const pages=await (deps.collect??fetchEvidencePack)(lead.site,{signal:deps.signal??new AbortController().signal},deep);
+    const pages=job.checkpoint.purpose==='ai-connection-test'?[{id:'connection-sample',url:'https://example.com/',fetchedAt:new Date().toISOString(),text:'Evidência sintética de teste: clínica odontológica fictícia com consultas e ortodontia. Não representa uma empresa real.',hash:hashValue('connection-sample-v1'),truncated:false}]:await (deps.collect??fetchEvidencePack)(lead.site,{signal:deps.signal??new AbortController().signal},deep);
     return withLeasedTransaction(lease,async c=>{
       const ids=await saveEvidence(c,lease.jobId,lead.id,pages);
       return pages.slice(0,ids.length).map((e,i)=>({...e,id:ids[i]}));
@@ -76,7 +76,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       }else if(module==='validateEmail'){
         const validation=lead.email?await checkEmailDns(lead.email):null;result.status='succeeded';result.reasons=[!validation?'NO_EMAIL':validation.format?'FORMAT_VALID':'FORMAT_INVALID',validation?.dns===true?'MAIL_DOMAIN_FOUND':'MAIL_DOMAIN_UNKNOWN','MAILBOX_NOT_VERIFIED'];
       }else{
-        const evidence=await collectEvidence(lease,lead,input.modules.includes('deep'),deps);result.evidenceIds=evidence.map(e=>e.id);
+        const evidence=await collectEvidence(lease,job,lead,input.modules.includes('deep'),deps);result.evidenceIds=evidence.map(e=>e.id);
         if(!evidence.length){result.status='skipped';result.reasons=['NO_EVIDENCE'];}
         else if(module==='deep'){result.status='succeeded';result.reasons=['PUBLIC_PAGES_ONLY'];}
         else if(module==='email'||module==='phone'){
@@ -109,6 +109,9 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
     await withLeasedTransaction(lease,async c=>{
       const rows=(await c.query('SELECT payload FROM app.prospecting_item WHERE job_id=$1',[lease.jobId])).rows;
       const failed=rows.some(r=>r.payload.results.some((m:ModuleResult)=>m.status==='failed'));
+      if(job.checkpoint.purpose==='ai-connection-test'&&!failed&&rows.some(r=>r.payload.results.some((m:ModuleResult)=>m.module==='summary'&&m.status==='pending_review'&&m.proposed.summary))){
+        await recordConnectionCheck(c,lease,{operationId:lease.jobId+':probe',route:job.checkpoint.execution.aiRoute.conventional,outcome:'success'});
+      }
       await c.query('UPDATE app.prospecting_job SET counts=$2 WHERE id=$1',[lease.jobId,{found:input.leadIds.length,inserted:0,duplicates:0,rejected:0,pending:rows.length}]);
       await c.query('UPDATE app.prospecting_job SET state=$2,revision=revision+1,updated_at=now() WHERE id=$1',[lease.jobId,failed?'partial':'completed']);
       const {releaseUnused}=await import('./usage.ts');await releaseUnused(c,lease.jobId);
