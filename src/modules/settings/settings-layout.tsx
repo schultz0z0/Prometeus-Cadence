@@ -10,6 +10,7 @@ import { Integrations } from "./integrations";
 import { Plan } from "./plan";
 import { Members as WorkspaceMembers } from "./members";
 import { Security } from "./security";
+import { AiSettings } from "./ai";
 import { useIdentity } from "@/client/workspace-provider";
 import {
   Button,
@@ -177,6 +178,8 @@ export function SettingsLayout({ section = "account" }: { section?: string }) {
       <div className="settings-main" key={section}>
         {section === "account" ? (
           <Account />
+        ) : section === "ai" ? (
+          <AiSettings />
         ) : section === "context" ? (
           <CompanyContext />
         ) : ["email", "whatsapp", "dispatch-limits"].includes(section) ? (
