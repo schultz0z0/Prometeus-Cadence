@@ -72,6 +72,10 @@ for (const route of [
   "/api/prospecting/capabilities",
   "/api/prospecting/jobs",
   "/api/prospecting/ai/policy",
+  "/api/context",
+  "/api/planning/jobs/qa-missing",
+  "/api/automations",
+  "/api/automations/qa-missing/occurrences",
 ]) {
   const response = await fetch(base + route, {
     headers: process.env.SMOKE_COOKIE
@@ -93,7 +97,7 @@ const report = {
 };
 fs.mkdirSync("docs/validation", { recursive: true });
 fs.writeFileSync(
-  "docs/validation/routes-03b.json",
+  "docs/validation/routes-04.json",
   JSON.stringify(report, null, 2) + "\n",
 );
 console.log(

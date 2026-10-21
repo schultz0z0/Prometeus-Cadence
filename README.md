@@ -29,17 +29,20 @@ O Compose `prometeus-cadence` tem PostgreSQL em `127.0.0.1:55432`, SMTP em `127.
 - Contatos, listas, filtros, ficha, cadastro, edição e importação CSV/TXT com revisão antes de salvar.
 - Templates, variáveis e prévia com avisos quando faltam valores.
 - Prospecção e qualificação com revisão, jobs PostgreSQL, worker separado, deduplicação, evidências e uso. Adaptadores Apify/Apollo, JEV1.13, Codex CLI local, OpenAI e Gemini. Política por workspace e teste confirmado em Provedores de IA; três inferências Codex reais validadas no aceite03B.
-- Automações por formulário ou propostas demonstrativas: confirmação cria lista e automações pausadas em uma transação.
+- Planejamento por IA: leitura de site com fontes, três propostas de público e cadência, edição humana e criação confirmada de lista/automações pausadas ou cadência em rascunho.
+- Agendador PostgreSQL separado, desligado por padrão: autorizações por revisão, próxima ocorrência, execução avulsa, histórico, dependência busca→qualificação e backlog sem requalificação automática dos resultados pendentes.
 - Cadência por etapas, revisão de mensagens, canvas editável, esperas, ordenação, zoom, configurações e rascunhos.
 - Contexto da empresa editável e versionado, canais desconectados, inbox de exemplo, relatórios e demais superfícies.
 
-Contas novas começam vazias. Contatos, templates, contexto versionado, cadências e automações confirmadas ficam no PostgreSQL; preferências pessoais são separadas das configurações do workspace. Propostas não confirmadas continuam temporárias. Nenhuma criação ativa envio. Busca pontual exige confirmação, configuração e worker ativo.
+Contas novas começam vazias. Contatos, templates, contexto versionado, produtos aprovados, cadências, automações e propostas de IA ficam no PostgreSQL; preferências pessoais são separadas das configurações do workspace. Uma análise cria somente job e proposta. Nenhuma criação ativa envio. Busca pontual exige confirmação, configuração e worker ativo.
 
 O modo demonstrativo anterior permanece disponível ao definir explicitamente `APP_DATA_MODE=demo` no ambiente e reiniciar o app. Ele usa dados fictícios na chave `prometeus-cadence-demo-v1` do localStorage, com banner próprio. Esses dados não são importados automaticamente para contas reais; falhas no banco nunca ativam a demonstração como fallback.
 
 ## Limites e próximas entregas
 
-WhatsApp, e-mail, LinkedIn, SDR, billing e agendamentos **não estão conectados**. Execuções externas começam desabilitadas; não houve busca/inferência real no aceite03. Horários das automações ainda não executam jobs recorrentes. Valores desconhecidos não são inventados.
+WhatsApp, e-mail, LinkedIn, SDR e billing **não estão conectados**. Execuções externas e o agendador começam desabilitados. O marco04 foi validado com fixtures privadas: nenhuma nova inferência paga ou busca real foi feita. Valores desconhecidos não são inventados.
+
+Para operar o marco04, consulte a [validação e operação04](docs/validation/04-automation-ai.md). Os processos são independentes: aplicativo3210, `rtk npm run scheduler` e `rtk npm run worker`. O scheduler exige `AUTOMATIONS_SCHEDULER_ENABLED=true`, revisão de ativação e configuração/cotas válidas; não é iniciado pelo aplicativo. `rtk npm run scheduler -- --once --workspace ID` processa no máximo uma ocorrência elegível. Desligá-lo não cancela jobs já criados; pause a automação para impedir novos despachos recorrentes e trate jobs enviados no histórico. Não aumentar budgets para executar um teste.
 
 Configure e opere prospecção conforme a [validação03](docs/validation/03-prospecting.md) e o [roteamento03B](docs/validation/03b-ai-routing.md). Sem JEV, a LLM convencional selecionada faz qualificação e geração. JEV habilitado exige uma convencional com teste válido; nunca roda sozinho. Worker: `rtk npm run worker`. Chaves somente no ambiente local, nunca chat/Git. Codex CLI via ChatGPT é restrito aos testes locais autorizados; JEV usa OpenRouter Decisions API.
 
@@ -62,6 +65,7 @@ O último comando requer o servidor local ativo. Os testes de domínio verificam
 - [Validação de identidade e isolamento](docs/validation/02-identity.md)
 - [Validação de prospecção e IA híbrida](docs/validation/03-prospecting.md)
 - [Validação do roteamento e Codex ChatGPT](docs/validation/03b-ai-routing.md)
+- [Validação do planejamento e agendador04](docs/validation/04-automation-ai.md)
 - [Especificação aprovada](docs/superpowers/specs/2026-10-20-prometeus-cadence-design.md)
 - [Investigação e evidências REA](docs/reverse-engineering/README.md)
 

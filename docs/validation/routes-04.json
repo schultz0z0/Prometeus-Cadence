@@ -1,0 +1,321 @@
+{
+  "date": "2026-10-21T06:03:56.699Z",
+  "base": "http://127.0.0.1:3210",
+  "note": "Authenticated identity milestone. Anonymous app routes must redirect to login; private APIs must return 401. No real external connector is tested.",
+  "results": [
+    {
+      "route": "/",
+      "status": 307,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/dashboard",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/contacts",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/leads/lead-1",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/leads/generator",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/leads/enrich",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/leads/qualifier",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/automations",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/automations/new",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/automations/new/ai",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/cadences",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/cadences/new",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/cadences/new/ai",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/cadences/cadence-initial",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/cadences/pipeline",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/templates",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/inbox",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/messages/whatsapp",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/reports",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/reports/funnel",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/reports/crm",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/executions",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/executions/qa-missing",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/first-steps",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/sdr",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/dashboard",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/campaigns",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/people",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/approvals",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/account",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/context",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/ai",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/notifications",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/seats",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/security",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/mcp",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/plan",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/email",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/whatsapp",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/dispatch-limits",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/dados",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/privacy",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/apps",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/settings/webhooks",
+      "status": 307,
+      "protectedRedirect": true,
+      "ok": true
+    },
+    {
+      "route": "/api/workspace/snapshot",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "route": "/api/identity",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "route": "/api/security",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "route": "/api/prospecting/capabilities",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "route": "/api/prospecting/jobs",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "route": "/api/prospecting/ai/policy",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "route": "/api/context",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "route": "/api/planning/jobs/qa-missing",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "route": "/api/automations",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "route": "/api/automations/qa-missing/occurrences",
+      "status": 401,
+      "ok": true
+    }
+  ]
+}

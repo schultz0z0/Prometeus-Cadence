@@ -62,6 +62,13 @@ test('manual execution is one-shot, replayable and independent of recurring paus
  await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[p.workspaceId,p.userId]));
  await assert.rejects(()=>schedulerTransaction(p,c=>assertAutomationAuthority(c,job,'dispatch')),{status:409});
 });
+test('manual saved dedup scope is execution metadata and never an upstream search filter',async()=>{
+ const {p,id}=await automationFixture(),snapshot=await readWorkspaceSnapshot(p),automation=snapshot.data.automations[0];
+ await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'automation.save',automation:{...automation,filters:{...automation.filters,scope:'list',dedup:'cnpj'}}}});
+ const runtime=await readAutomationRuntime(p,id),review=await prepareAutomationAction(p,id,{action:'run-once',expectedRevision:runtime.revision});assert.deepEqual(review.blockers,[]);
+ const occurrence=await confirmAutomationAction(p,id,{requestId:randomUUID(),action:'run-once',expectedRevision:runtime.revision,reviewToken:review.token});assert.ok('jobId' in occurrence);
+ const input=await testAdmin(async c=>(await c.query('SELECT input FROM app.prospecting_job WHERE id=$1',[occurrence.jobId])).rows[0].input);assert.equal(input.dedupScope,'list');assert.deepEqual(input.filters,automation.filters);
+});
 
 test('configuration changes invalidate the review and dispatch without network; worker needs a current lease',async()=>{
  const {p,id}=await automationFixture(),runtime=await readAutomationRuntime(p,id);

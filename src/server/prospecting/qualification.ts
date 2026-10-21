@@ -20,6 +20,7 @@ import {assertAiRouteCurrent} from './ai/route-guard.ts';
 import {diagnoseCodex} from './ai/diagnostics.ts';
 import {recordConnectionCheck} from './ai/connection.ts';
 import type {AiRoute} from '../../domain/ai-routing.ts';
+import {syncOccurrenceJob} from '../automations/assignments.ts';
 export interface QualificationAdapters{
   signal?:AbortSignal;apify?:SourceAdapter;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
   collect?:typeof fetchEvidencePack;
@@ -117,6 +118,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       await c.query('UPDATE app.prospecting_job SET counts=$2 WHERE id=$1',[lease.jobId,{found:input.leadIds.length,inserted:0,duplicates:0,rejected:0,pending:rows.length}]);
       await c.query('UPDATE app.prospecting_job SET state=$2,revision=revision+1,updated_at=now() WHERE id=$1',[lease.jobId,failed?'partial':'completed']);
       const {releaseUnused}=await import('./usage.ts');await releaseUnused(c,lease.jobId);
+      if(job.checkpoint.automation)await syncOccurrenceJob(c,job.checkpoint.automation.occurrenceId);
     });
   }catch(error){
     if(current&&!(error instanceof AppError)&&!(error instanceof Error&&error.constructor.name==='UncertainStep')){

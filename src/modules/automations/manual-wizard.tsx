@@ -10,12 +10,14 @@ import { Button, Field, PageHeader, Notice } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/icon";
 import {localDateAt,scheduleV2Schema} from '@/domain/schedule';
 import {ScheduleFields} from './schedule-fields';
+import {useIdentity} from '@/client/workspace-provider';
 export function ManualWizard({
   initialSource = "MAPS",
 }: {
   initialSource?: string;
 }) {
   const s = useDemo();
+  const identity=useIdentity();
   const repo = useRepository();
   const run = useAction();
   const router = useRouter();
@@ -34,6 +36,7 @@ export function ManualWizard({
   const [filters, setFilters] = useState<Record<string, string>>({
     term: "",
     location: "",
+    scope:"list",
   });
   const [limit, setLimit] = useState(150);
   const [destination, setDestination] = useState("new");
@@ -51,7 +54,7 @@ export function ManualWizard({
   const names = ["Fonte", "Termos", "Filtros", "Destino", "Agendamento"];
   const canAdvance =
     step === 0
-      ? name.trim() && source !== "APOLLO"
+      ? name.trim()
       : step === 1
         ? ["QUALIFY", "REENGAGE"].includes(source) ||
           (filters.term.trim() &&
@@ -206,7 +209,7 @@ export function ManualWizard({
                 </Field>
                 <div>
                   <p className="field-label">Deduplicação</p>
-                  <div className="row wrap">
+                  {identity?<small>Usa CNPJ e identificador estável da fonte. E-mail e telefone isolados não identificam uma empresa com segurança.</small>:<div className="row wrap">
                     {[
                       ["email", "Por e-mail"],
                       ["cnpj", "Por CNPJ"],
@@ -227,7 +230,7 @@ export function ManualWizard({
                         {label}
                       </label>
                     ))}
-                  </div>
+                  </div>}
                 </div>
                 <Field label="Escopo">
                   <select

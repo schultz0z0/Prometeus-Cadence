@@ -29,6 +29,7 @@ const known = [
   "planning-confirmation",
   "automation-authorization",
   "automation-scheduler",
+  "automation-lifecycle",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length

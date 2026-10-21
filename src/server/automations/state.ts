@@ -24,8 +24,9 @@ export async function automationAuthorizationState(c:PoolClient,p:Principal,defi
  let input:ProspectingInput|null=null;
  if(['MAPS','WEB','CNPJ','APOLLO'].includes(payload.source)){
   if(payload.modules.length)blockers.push('Separe a busca e os módulos de qualificação em automações próprias.');
-  const {dedup,channel,...filters}=payload.filters;
-  const parsed=jobInputSchema.safeParse({kind:'generation',source:payload.source,destination:{mode:'existing',listId:payload.listId},filters,limit:payload.dailyLimit,dedupScope:'workspace'});
+  const {dedup,channel,scope,...filters}=payload.filters;
+  if(scope!==undefined&&!['list','workspace'].includes(scope))blockers.push('O escopo de deduplicação não é válido.');
+  const parsed=jobInputSchema.safeParse({kind:'generation',source:payload.source,destination:{mode:'existing',listId:payload.listId},filters,limit:payload.dailyLimit,dedupScope:scope==='list'?'list':'workspace'});
   if(parsed.success)input=parsed.data;else blockers.push('A fonte ou os filtros não têm um contrato de busca válido.');
  }else if(payload.source==='QUALIFY'){
   // Forecast IDs count calls only; no lead or list is created for an estimate.

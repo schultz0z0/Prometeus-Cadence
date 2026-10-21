@@ -1,0 +1,50 @@
+import test,{after,beforeEach} from 'node:test';
+import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';
+import {createPlanningFixture} from './planning-helpers.ts';
+import {testAdmin,closeProspectingPools} from './prospecting-helpers.ts';
+import {resetRateLimits} from './helpers.ts';
+import {planningSources,audienceResult,cadenceResult} from '../planning-fixtures.ts';
+import {saveAiPolicy} from '../../src/server/prospecting/ai/settings.ts';
+import {preparePlanning,confirmPlanning,getPlanning} from '../../src/server/planning/service.ts';
+import {preparePlanningSelection,confirmPlanningSelection} from '../../src/server/planning/confirmation.ts';
+import {executeWorkspaceCommand,readWorkspaceSnapshot} from '../../src/server/workspaces/commands.ts';
+import {readContextState} from '../../src/server/context/repository.ts';
+import {runWorkerOnce} from '../../src/server/prospecting/worker.ts';
+import {runSchedulerOnce} from '../../src/server/automations/scheduler.ts';
+import {activate} from './automation-helpers.ts';
+import {listAutomationOccurrences} from '../../src/server/automations/repository.ts';
+import {getJob,listJobItems} from '../../src/server/prospecting/service.ts';
+import {normalizeCandidate} from '../../src/server/prospecting/normalize.ts';
+import type {PlanningInput} from '../../src/domain/planning.ts';
+beforeEach(resetRateLimits);after(closeProspectingPools);
+test('offline lifecycle uses actual reviews worker journal scheduler and leaves qualification proposals unapplied',async()=>{
+ const {p}=await createPlanningFixture(),signal=new AbortController().signal;
+ Object.assign(process.env,{AUTOMATIONS_SCHEDULER_ENABLED:'true',PROSPECTING_GLOBAL_CONCURRENCY:'32',OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({openaiCalls:20,candidates:100,apifyRuns:10}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({openaiCalls:100000,candidates:100000,apifyRuns:10000})});
+ await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});
+ let generations=0,decisions=0,searches=0;
+ const collect=async()=>planningSources().map(s=>({id:s.id,url:s.url!,text:s.text,hash:s.hash,fetchedAt:s.obtainedAt,truncated:false}));
+ const planningGenerate=async(ctx:any,data:any)=>{generations++;const request=data.request,payload=request.task==='context_read'?{task:'context_read',fields:{offer:{value:'Automação de agenda.',quote:'Automação de agenda.',evidenceIds:['page_1']},idealCustomer:{value:'Clínicas',quote:'Atendemos clínicas.',evidenceIds:['page_1']}}}:request.task==='audience_plan'?{task:'audience_plan',...audienceResult()}:{task:'cadence_options',...cadenceResult()};return {proposal:{...payload,contractVersion:'planning-v1',jobId:ctx.jobId,base:data.base,evidenceIds:data.sources.map((s:any)=>s.id),recommendedOptionId:null} as any,usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown' as const}};};
+ const conventional=async(ctx:any,input:any)=>{decisions++;return {task:'qualify' as const,reason:'Clínica na evidência.',decision:{provider:'openai' as const,model:'fixture',verdict:'fits' as const,confidence:null,probabilities:{},criteria:{},evidenceIds:input.evidence.map((e:any)=>e.id),usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown' as const}}};};
+ const apify={start:async()=>{searches++;return {kind:'inline' as const,page:{receiptId:randomUUID(),candidates:[normalizeCandidate({id:'clinic',name:'Clínica sintética QA',site:'https://example.com'},'MAPS')],rawCount:1,rejected:[],nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:randomUUID(),units:{candidates:1},costUsd:null,costKind:'unknown' as const}}};},poll:async()=>{throw Error('No live polling');},readPage:async()=>{throw Error('No live dataset');},abort:async()=>{throw Error('No live abort');}};
+ const deps={planningGenerate,conventional,collect,apify},options={workspaceId:p.workspaceId,signal};
+ async function analyze(input:PlanningInput){const review=await preparePlanning(p,input);assert.deepEqual(review.blockers,[]);const job=await confirmPlanning(p,{requestId:randomUUID(),input,reviewToken:review.token});await runWorkerOnce(deps,options);const result=await getPlanning(p,job.id);assert.equal(result.job.state,'completed');return result;}
+ const context=await analyze({kind:'planning',task:'context_read',domain:'example.com',target:{kind:'company'}});assert.equal(context.proposal?.task,'context_read');assert.equal((await readContextState(p)).approved,null);
+ let snapshot=await readWorkspaceSnapshot(p);assert.ok(context.proposal?.task==='context_read');const fields=context.proposal.fields;
+ await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'context.saveDraft',profile:{...snapshot.data.companyProfile,offer:fields.offer!.value,idealCustomer:fields.idealCustomer!.value}}});assert.equal((await readContextState(p)).approved,null);
+ snapshot=await readWorkspaceSnapshot(p);await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'context.approve',profile:snapshot.data.companyProfile}});
+ const audience=await analyze({kind:'planning',task:'audience_plan',description:'Clínicas',channel:'whatsapp',timezone:'America/Sao_Paulo'});assert.ok(audience.proposal?.task==='audience_plan');assert.equal(audience.proposal.options.length,3);
+ const {id,description,marketSize,...edits}=audience.proposal.options[0],selection={optionId:id,edits},review=await preparePlanningSelection(p,audience.job.id,selection),created=await confirmPlanningSelection(p,audience.job.id,{...selection,requestId:randomUUID(),reviewToken:review.token});
+ snapshot=await readWorkspaceSnapshot(p);assert.equal(snapshot.data.automations.length,2);assert.ok(snapshot.data.automations.every(a=>a.status==='paused'));assert.equal(snapshot.data.leads.length,0);
+ const cadence=await analyze({kind:'planning',task:'cadence_options',listId:created.listId!,objective:'Primeiro contato',channels:['WHATSAPP'],tone:'Direto',rhythm:'Padrão',highlight:'',avoid:'',decisionMaker:''});assert.ok(cadence.proposal?.task==='cadence_options');assert.equal(cadence.proposal.options.length,3);
+ const candidate=cadence.proposal.options[0],cadenceSelection={optionId:candidate.id,edits:{name:'Texto aprovado pelo usuário',steps:candidate.steps}},cadenceReview=await preparePlanningSelection(p,cadence.job.id,cadenceSelection);await confirmPlanningSelection(p,cadence.job.id,{...cadenceSelection,requestId:randomUUID(),reviewToken:cadenceReview.token});
+ for(const automation of (await readWorkspaceSnapshot(p)).data.automations){snapshot=await readWorkspaceSnapshot(p);await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'automation.save',automation:{...automation,schedule:{frequency:'daily',time:'07:00',timezone:'UTC',weekdays:[0,1,2,3,4,5,6],anchorDate:'2026-01-01'}}}});}
+ for(const automation of (await readWorkspaceSnapshot(p)).data.automations)await activate(p,automation.id);
+ await testAdmin(c=>c.query("UPDATE app.automation_runtime SET next_run_at=date_trunc('day',clock_timestamp())-interval '2 days'+interval '7 hours',retry_at=NULL WHERE workspace_id=$1",[p.workspaceId]));
+ await Promise.all([runSchedulerOnce(options),runSchedulerOnce(options)]);await runWorkerOnce(deps,options);
+ await testAdmin(c=>c.query('UPDATE app.automation_runtime SET retry_at=NULL WHERE workspace_id=$1',[p.workspaceId]));
+ for(let i=0;i<4;i++){await runSchedulerOnce(options);await runWorkerOnce(deps,options);}
+ snapshot=await readWorkspaceSnapshot(p);assert.equal(snapshot.data.leads.length,1);assert.equal(snapshot.data.leads[0].qualification,'pending');assert.equal(snapshot.data.cadences[0].status,'draft');assert.equal(generations,3);assert.equal(searches,1);assert.equal(decisions,1);
+ const qualifier=snapshot.data.automations.find(a=>a.source==='QUALIFY')!,occurrence=(await listAutomationOccurrences(p,qualifier.id)).items[0];assert.ok(occurrence.jobId);assert.equal(occurrence.state,'completed',JSON.stringify(await getJob(p,occurrence.jobId)));const items=await listJobItems(p,occurrence.jobId);assert.equal(items.items[0].applied,false);assert.ok(items.items[0].results.some(r=>r.proposed.qualification==='qualified'));
+ assert.equal((await getJob(p,occurrence.jobId)).usage?.filter(u=>u.units.openaiCalls).length,1);
+ console.log(JSON.stringify({fixture:true,workspaceId:p.workspaceId,contextJob:context.job.id,audienceJob:audience.job.id,cadenceJob:cadence.job.id,qualificationJob:occurrence.jobId,generationCalls:generations,qualificationCalls:decisions,sourceCalls:searches,applied:false}));
+});
