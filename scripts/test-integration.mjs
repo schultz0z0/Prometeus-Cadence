@@ -12,6 +12,7 @@ process.env.CADENCE_INTEGRATION = "1";
 const known = [
   "whatsapp-storage",
   "whatsapp-connections",
+  "whatsapp-ingress",
   "migrations",
   "auth",
   "memberships",
