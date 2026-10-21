@@ -44,4 +44,6 @@ Node local `v24.16.0`, npm `11.13.0`, RTK e REA já disponíveis. Next.js/React 
 - [x] Revisão do plano 03 aprovada; execução nativa: `2026-10-20-prometeus-cadence-03-prospecting.md`.
 - [x] Infraestrutura03 implementada; aceite contratual/local em `docs/validation/03-prospecting.md`. Chamadas reais e avaliação empírica pendentes de credenciais/saldo/dataset humano.
 - [x] Marco03B: configuração de IA e aceite Codex ChatGPT em `docs/validation/03b-ai-routing.md`; APIs alternativas sem credenciais reais.
+- [x] Desenho04 aprovado: `../specs/2026-10-20-prometeus-cadence-04-automation-ai-design.md`.
+- [ ] Plano04 escrito para revisão: `2026-10-20-prometeus-cadence-04-automation-ai.md`; execução nativa preservada.
 - [ ] Demais marcos, incluindo SaaS operacional completo.

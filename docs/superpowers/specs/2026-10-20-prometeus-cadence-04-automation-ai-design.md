@@ -146,4 +146,4 @@ As três inferências autorizadas para03B já foram consumidas. Planejar04 sem a
 
 ## Estado e próxima etapa
 
-Desenho escrito para revisão do usuário. Auto-revisão: contratos de proposta/confirmar/ativar separados; orçamento e validade03B preservados; recorrência não se confunde com envio; jobs de planejamento não exigem objetos fictícios; dados observados e escolhas próprias identificados. Após aprovação deste documento, escrever plano executável por blocos, com testes RED→GREEN e execução nativa. Ainda não há código do marco04 implementado.
+Desenho aprovado pelo usuário em20/10/2026: “Aprovar o desenho e seguir ao plano”. Auto-revisão: contratos de proposta/confirmar/ativar separados; orçamento e validade03B preservados; recorrência não se confunde com envio; jobs de planejamento não exigem objetos fictícios; dados observados e escolhas próprias identificados. Plano executável em `../plans/2026-10-20-prometeus-cadence-04-automation-ai.md`, com testes RED→GREEN e execução nativa, aguardando sua própria revisão. Ainda não há código do marco04 implementado.
