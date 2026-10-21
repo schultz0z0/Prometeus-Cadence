@@ -6,11 +6,15 @@ export const permissions = [
   "context.approve",
   "workspace.settings",
   "members.manage",
+  "channels.manage",
+  "cadences.publish",
+  "messages.reply",
+  "consents.manage",
 ] as const;
 export type Permission = (typeof permissions)[number];
 export function capabilities(role: Principal["role"]): Permission[] {
   return role === "operator"
-    ? ["data.write", "context.draft"]
+    ? ["data.write", "context.draft", "messages.reply"]
     : [...permissions];
 }
 export function requirePermission(p: Principal, permission: Permission) {

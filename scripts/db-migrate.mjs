@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import {ensureWorkerEnvironment,provisionWorker} from './provision-worker.mjs';
+import {ensureChannelEnvironment,provisionChannelRoles} from './provision-channel-roles.mjs';
 
 export async function runMigrations(
   pool,
@@ -63,6 +64,7 @@ if (
 ) {
   process.loadEnvFile(".env.local");
   ensureWorkerEnvironment();
+  ensureChannelEnvironment();
   const useTest = process.argv.includes("--test");
   const connectionString =
     process.env[
@@ -75,6 +77,7 @@ if (
   const pool = new pg.Pool({ connectionString });
   try {
     await provisionWorker(pool);
+    await provisionChannelRoles(pool);
     await runMigrations(pool, "db/migrations");
     console.log(`Migrations applied (${useTest ? "test" : "local"} database).`);
   } finally {

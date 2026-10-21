@@ -1,0 +1,31 @@
+import test,{after} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {getPools} from '../../src/server/db/pool.ts';
+import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
+import {saveConnection,readConnections,readCredentialInTransaction} from '../../src/server/channels/repository.ts';
+import {whatsappUser,metaConnectionInput,testAdmin} from './whatsapp-helpers.ts';
+after(async()=>getPools().close());
+test('connections are tenant scoped; saves preserve blank secrets and replay without leaking keys',async()=>{
+ const a=await whatsappUser(),b=await whatsappUser(),input=metaConnectionInput();
+ const first=await saveConnection(a.p,input);
+ assert.equal(first.hasSecrets,true);assert.equal(first.state,'pending');assert.equal(first.externalAccountId,null);
+ assert.equal(JSON.stringify(first).includes('fixture-access-token'),false);
+ assert.deepEqual(await saveConnection(a.p,input),first);
+ await assert.rejects(saveConnection(a.p,{...input,name:'changed'}),{status:409});
+ assert.deepEqual(await readConnections(b.p),[]);
+ await assert.rejects(saveConnection(b.p,{...input,id:first.id,requestId:randomUUID(),expectedRevision:1}),{status:404});
+ const updated=await saveConnection(a.p,{...input,id:first.id,requestId:randomUUID(),expectedRevision:1,credentials:{accessToken:'',appSecret:''}});
+ assert.equal(updated.revision,2);
+ const secret=await withWorkspaceTransaction(a.p,c=>readCredentialInTransaction(c,first.id));assert.equal(secret.credentials.accessToken,'fixture-access-token');
+ const inspection=await testAdmin(async c=>({cipher:(await c.query('SELECT envelope FROM app.channel_credential WHERE workspace_id=$1 AND connection_id=$2',[a.p.workspaceId,first.id])).rows,owners:(await c.query('SELECT * FROM app.channel_account_ownership WHERE workspace_id=$1',[a.p.workspaceId])).rows}));
+ assert.equal(JSON.stringify(inspection.cipher).includes('fixture-access-token'),false);assert.equal(inspection.owners.length,0);
+ await withWorkspaceTransaction(a.p,async c=>{await assert.rejects(c.query('SELECT * FROM app.channel_credential'),{code:'42501'});});
+});
+test('current database role defeats stale administrative principal and no key means no save',async()=>{
+ const a=await whatsappUser(),input=metaConnectionInput();
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=$3 WHERE "organizationId"=$1 AND "userId"=$2',[a.p.workspaceId,a.p.userId,'operator']));
+ await assert.rejects(saveConnection(a.p,input),{status:403});
+ const b=await whatsappUser();delete process.env.CHANNEL_KEYRING_JSON;
+ await assert.rejects(saveConnection(b.p,metaConnectionInput()));assert.deepEqual(await readConnections(b.p),[]);
+});
