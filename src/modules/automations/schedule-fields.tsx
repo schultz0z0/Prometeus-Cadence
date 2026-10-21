@@ -1,0 +1,10 @@
+"use client";
+import type {Schedule} from '@/domain/model';
+import {Field} from '@/components/ui/primitives';
+export function ScheduleFields({value,onChange}:{value:Schedule;onChange:(value:Schedule)=>void}){
+ const set=(values:Partial<Schedule>)=>onChange({...value,...values});
+ return <div className="stack"><Field label="Frequência"><select value={value.frequency} onChange={e=>set({frequency:e.target.value as Schedule['frequency']})}>{[['once','Execução única'],['daily','Diária'],['weekly','Semanal'],['biweekly','Quinzenal'],['monthly','Mensal'],['custom','Personalizada']].map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></Field><div className="field-grid"><Field label={value.frequency==='once'?'Data da execução':'Data inicial de referência'}><input required type="date" value={value.anchorDate??''} onChange={e=>set({anchorDate:e.target.value})}/></Field><Field label="Horário local"><input required type="time" value={value.time} onChange={e=>set({time:e.target.value})}/></Field><Field label="Fuso horário"><input required value={value.timezone} onChange={e=>set({timezone:e.target.value})} placeholder="America/Sao_Paulo"/></Field>{value.frequency==='monthly'&&<Field label="Dia do mês" help="Se o mês for mais curto, usa seu último dia."><input required type="number" min={1} max={31} value={value.monthDay??''} onChange={e=>set({monthDay:Number(e.target.value)})}/></Field>}{value.frequency==='custom'&&<Field label="Intervalo em dias"><input required type="number" min={1} max={365} value={value.intervalDays??''} onChange={e=>set({intervalDays:Number(e.target.value)})}/></Field>}</div>
+ {['daily','weekly'].includes(value.frequency)&&<div className="row wrap" aria-label="Dias de execução">{['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((label,day)=><label className="row" key={day}><input type="checkbox" checked={value.weekdays.includes(day)} onChange={e=>set({weekdays:e.target.checked?[...value.weekdays,day]:value.weekdays.filter(d=>d!==day)})}/>{label}</label>)}</div>}
+ {!value.anchorDate&&<small>Programação legada: informe a data de referência antes de ativar.</small>}
+ </div>;
+}

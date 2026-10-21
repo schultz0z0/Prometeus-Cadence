@@ -39,6 +39,9 @@ export interface Schedule {
   time: string;
   timezone: string;
   weekdays: number[];
+  anchorDate?: string;
+  monthDay?: number;
+  intervalDays?: number;
 }
 export interface Automation {
   id: string;

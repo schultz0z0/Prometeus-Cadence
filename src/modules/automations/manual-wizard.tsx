@@ -8,6 +8,8 @@ import { SourcePicker } from "@/modules/prospecting/source-picker";
 import { CnpjFilters } from "@/modules/prospecting/cnpj-filters";
 import { Button, Field, PageHeader, Notice } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/icon";
+import {localDateAt,scheduleV2Schema} from '@/domain/schedule';
+import {ScheduleFields} from './schedule-fields';
 export function ManualWizard({
   initialSource = "MAPS",
 }: {
@@ -41,6 +43,9 @@ export function ManualWizard({
     time: "07:00",
     timezone: s.preferences.timezone,
     weekdays: [1, 2, 3, 4, 5],
+    anchorDate:localDateAt(new Date().toISOString(),s.preferences.timezone),
+    monthDay:1,
+    intervalDays:1,
   });
   const [dedup, setDedup] = useState(["email", "cnpj"]);
   const names = ["Fonte", "Termos", "Filtros", "Destino", "Agendamento"];
@@ -55,6 +60,7 @@ export function ManualWizard({
   async function save() {
     if (
       await run(async () => {
+        if(!scheduleV2Schema.safeParse(schedule).success)throw Error('Revise data, fuso, frequência e dias de execução.');
         await operation.confirm(
           {
             name,
@@ -283,66 +289,7 @@ export function ManualWizard({
               <>
                 <h2>Agendamento</h2>
                 <p className="secondary-text">Quando executar a automação?</p>
-                <Field label="Frequência">
-                  <select
-                    value={schedule.frequency}
-                    onChange={(e) =>
-                      setSchedule({
-                        ...schedule,
-                        frequency: e.target.value as Schedule["frequency"],
-                      })
-                    }
-                  >
-                    {[
-                      ["once", "Execução Única"],
-                      ["daily", "Diária"],
-                      ["weekly", "Semanal"],
-                      ["biweekly", "Quinzenal"],
-                      ["monthly", "Mensal"],
-                      ["custom", "Personalizada"],
-                    ].map(([v, label]) => (
-                      <option value={v} key={v}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                {schedule.frequency !== "once" && (
-                  <>
-                    <Field label="Horário">
-                      <input
-                        required
-                        type="time"
-                        value={schedule.time}
-                        onChange={(e) =>
-                          setSchedule({ ...schedule, time: e.target.value })
-                        }
-                      />
-                    </Field>
-                    <div className="row wrap">
-                      {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map(
-                        (d, i) => (
-                          <button
-                            type="button"
-                            className={`chip ${schedule.weekdays.includes(i) ? "selected" : ""}`}
-                            key={d}
-                            onClick={() =>
-                              setSchedule({
-                                ...schedule,
-                                weekdays: schedule.weekdays.includes(i)
-                                  ? schedule.weekdays.filter((x) => x !== i)
-                                  : [...schedule.weekdays, i],
-                              })
-                            }
-                          >
-                            {d}
-                          </button>
-                        ),
-                      )}
-                    </div>
-                    <small>{schedule.timezone}</small>
-                  </>
-                )}
+                <ScheduleFields value={schedule} onChange={setSchedule}/>
                 <Notice>
                   Esta automação será criada pausada. A recorrência real depende
                   do serviço de execução.
