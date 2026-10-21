@@ -15,3 +15,4 @@ const qualification=z.strictObject({kind:z.literal('qualification'),listId:idSch
 export const jobInputSchema=z.discriminatedUnion('kind',[generationSchema,qualification]);
 export const confirmationSchema=z.strictObject({requestId:z.uuid(),input:jobInputSchema,reviewToken:z.string().min(1).max(8192)});
 export const pageSchema=z.strictObject({cursor:z.string().max(1000).optional(),limit:z.coerce.number().int().min(1).max(100).default(25)});
+export const jobPageSchema=pageSchema.extend({kind:z.enum(['generation','qualification','planning']).optional(),state:z.enum(['queued','running','waiting_provider','needs_reconciliation','cancelling','cancelled','completed','partial','failed']).optional(),source:z.enum(['MAPS','WEB','CNPJ','APOLLO','QUALIFY','AI']).optional(),automationId:idSchema.optional()});

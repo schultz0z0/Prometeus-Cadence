@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlanningClient} from '../src/client/planning-client.ts';
 import {createContextClient} from '../src/client/context-client.ts';
+import {createProspectingClient} from '../src/client/prospecting-client.ts';
 import type {PlanningReview,PlanningSelectionReview} from '../src/domain/planning.ts';
 const review:PlanningReview={input:{kind:'planning',task:'audience_plan',description:'Clínicas',channel:'whatsapp',timezone:'UTC'},token:'proof',expiresAt:'',profileVersion:'fixture',usage:[],blockers:[],warnings:[],base:{contextVersion:1,productVersion:null,workspaceRevision:1},productId:null};
 test('prepare never confirms and lost analysis response retries the same identity without another flight',async()=>{
@@ -22,4 +23,10 @@ test('revoked access aborts workspace requests and disposed context drops late r
  const client=createPlanningClient({workspaceId:'a',onAccessLost:()=>lost=true,transport:async(_url,init)=>{signal=init!.signal!;return Response.json({message:'Sem acesso'},{status:403});}});
  await assert.rejects(()=>client.get('job'),{status:403});assert.equal(lost,true);assert.equal(signal?.aborted,true);await assert.rejects(()=>client.prepare(review.input));
  let finish!:(r:Response)=>void;const context=createContextClient({workspaceId:'b',transport:()=>new Promise(resolve=>finish=resolve)}),pending=context.get();context.dispose();finish(Response.json({products:[]}));await assert.rejects(pending);
+});
+test('job pagination carries active filters and retains the legacy cursor-only call',async()=>{
+ const paths:string[]=[],client=createProspectingClient({workspaceId:'a',transport:async(url)=>{paths.push(String(url));return Response.json({items:[],nextCursor:null});}});
+ await client.list({kind:'planning',state:'completed',source:'AI',cursor:'next',automationId:'automation'});
+ const params=new URL(paths[0],'http://local').searchParams;assert.equal(params.get('kind'),'planning');assert.equal(params.get('cursor'),'next');assert.equal(params.get('automationId'),'automation');
+ await client.list('legacy');assert.equal(new URL(paths[1],'http://local').searchParams.get('cursor'),'legacy');
 });

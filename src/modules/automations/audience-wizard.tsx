@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { suggestDemoAudiences } from "@/demo/audience";
+import {useIdentity} from '@/client/workspace-provider';
+import {ServerAudienceWizard} from './server-audience-wizard';
 import {
   sourceLabels,
   type AudiencePlan,
@@ -25,7 +27,10 @@ const examples = [
   "escritórios de contabilidade com mais de 10 funcionários",
   "lojas de material de construção do interior",
 ];
-export function AudienceWizard() {
+export function AudienceWizard({initialJob}:{initialJob?:string}) {
+  const identity=useIdentity();return identity?<ServerAudienceWizard initialJob={initialJob}/>:<DemoAudienceWizard/>;
+}
+function DemoAudienceWizard() {
   const s = useDemo();
   const repo = useRepository();
   const run = useAction();

@@ -6,7 +6,7 @@ import type {ProspectingInput,JobView,Review,Page,JobItemView} from '../../domai
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {requirePermission} from '../auth/permissions.ts';
 import {AppError} from '../errors.ts';
-import {jobInputSchema,confirmationSchema,pageSchema} from './schemas.ts';
+import {jobInputSchema,confirmationSchema,pageSchema,jobPageSchema} from './schemas.ts';
 import {prospectingConfig,requirements,estimateUsage} from './config.ts';
 import {workspaceProspectingConfig} from './workspace-config.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from './review.ts';
@@ -81,11 +81,11 @@ export async function confirmJob(p:Principal,input:unknown):Promise<JobView>{
   });
 }
 export async function listJobs(p:Principal,input:unknown={}):Promise<Page<JobView>>{
-  const parsed=pageSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Página inválida.');
+  const parsed=jobPageSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Página inválida.');
   const {limit,cursor}=parsed.data,after=decodeCursor(cursor);
   if(after&&!after.date)throw new AppError(422,'Página inválida.');
   return withWorkspaceTransaction(p,async c=>{
-    const rows=(await c.query('SELECT * FROM app.prospecting_job WHERE ($1::timestamptz IS NULL OR (created_at,id)<($1::timestamptz,$2::text)) ORDER BY created_at DESC,id DESC LIMIT $3',[after?.date??null,after?.id??null,limit+1])).rows;
+    const rows=(await c.query("SELECT * FROM app.prospecting_job WHERE ($1::timestamptz IS NULL OR (created_at,id)<($1::timestamptz,$2::text)) AND ($4::text IS NULL OR kind=$4) AND ($5::text IS NULL OR state=$5) AND ($6::text IS NULL OR source=$6) AND ($7::text IS NULL OR checkpoint->'automation'->>'id'=$7) ORDER BY created_at DESC,id DESC LIMIT $3",[after?.date??null,after?.id??null,limit+1,parsed.data.kind??null,parsed.data.state??null,parsed.data.source??null,parsed.data.automationId??null])).rows;
     const items=rows.slice(0,limit),last=items.at(-1);
     return {items:items.map(jobView),nextCursor:rows.length>limit&&last?encodeCursor({date:new Date(last.created_at).toISOString(),id:last.id}):null};
   });

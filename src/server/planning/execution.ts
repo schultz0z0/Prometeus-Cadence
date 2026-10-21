@@ -64,7 +64,10 @@ export async function runPlanning(lease:JobLease,deps:PlanningExecutionAdapters=
     if(job.checkpoint.product)sources.push(source('approved-product','approved_context',job.checkpoint.product));
     if(input.task==='audience_plan')sources.push(source('audience-brief','user_brief',{description:input.description,channel:input.channel}));
     else if(input.task==='cadence_options')sources.push(source('cadence-brief','user_brief',input));
-    else sources.push(source('selected-lead','lead_fact',job.checkpoint.baseSnapshot));
+    else{
+     const {lead,step}=job.checkpoint.baseSnapshot;
+     sources.push(source('selected-lead','lead_fact',{step:{channel:step.channel,body:step.body.slice(0,2000),subject:step.subject?.slice(0,200),delayDays:step.delayDays},lead:{name:lead.name,companyName:lead.companyName,email:lead.email,phone:lead.phone,site:lead.site,city:lead.city,cnpj:lead.cnpj,summary:lead.summary?.slice(0,2000)}}));
+    }
    }
    return withLeasedTransaction(lease,c=>savePlanningEvidence(c,lease,sources));
   });

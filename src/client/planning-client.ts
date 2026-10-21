@@ -1,10 +1,10 @@
 import type {PlanningInput,PlanningReview,PlanningSelectionReview,PlanningProposal,PlanningEvidence} from '../domain/planning.ts';
 import type {JobView} from '../domain/prospecting.ts';
-import type {CompanyProfile} from '../domain/model.ts';
+import type {CompanyProfile,CadenceStep} from '../domain/model.ts';
 import type {ProductProfile} from '../domain/products.ts';
 import type {PlanningSelectionResult} from '../server/planning/confirmation.ts';
 import {createWorkspaceTransport,type WorkspaceTransportOptions} from './workspace-transport.ts';
-export interface PlanningAnalysis{job:JobView;proposal:PlanningProposal|null;baseline:CompanyProfile|ProductProfile|null;sources:PlanningEvidence[]}
+export interface PlanningAnalysis{job:JobView;request:PlanningInput;proposal:PlanningProposal|null;baseline:CompanyProfile|ProductProfile|null;sources:PlanningEvidence[];previewStep?:CadenceStep}
 export function createPlanningClient(options:WorkspaceTransportOptions){
  const api=createWorkspaceTransport(options),ids=new Map<string,string>(),flights=new Map<string,Promise<any>>();
  const stable=(key:string)=>{let id=ids.get(key);if(!id){id=crypto.randomUUID();ids.set(key,id);}return id;};

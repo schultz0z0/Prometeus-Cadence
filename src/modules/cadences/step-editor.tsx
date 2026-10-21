@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useDemo } from "@/demo/provider";
 import type { CadenceStep, Channel } from "@/domain/model";
 import { renderStepPreview } from "@/domain/cadence";
+import {useIdentity} from '@/client/workspace-provider';
+import {MessagePreview} from '@/modules/planning/message-preview';
 import {
   Button,
   Field,
@@ -15,6 +17,7 @@ export function StepEditor({
   index,
   total,
   listId,
+  cadenceId,
   pending = false,
   onSave,
   onDelete,
@@ -25,6 +28,7 @@ export function StepEditor({
   index: number;
   total: number;
   listId: string;
+  cadenceId?: string;
   pending?: boolean;
   onSave: (s: CadenceStep) => void;
   onDelete: () => void;
@@ -32,6 +36,7 @@ export function StepEditor({
   onClose: () => void;
 }) {
   const s = useDemo();
+  const identity=useIdentity();
   const [d, setD] = useState(structuredClone(step));
   const leads = s.leads.filter((l) => l.listId === listId);
   const [leadId, setLeadId] = useState(leads[0]?.id ?? "");
@@ -208,6 +213,7 @@ export function StepEditor({
           </div>
         </div>
       </form>
+      {identity&&cadenceId&&!pending&&lead&&<MessagePreview key={lead.id+step.id} cadenceId={cadenceId} step={d} lead={lead} onAccept={setD}/>}
     </Modal>
   );
 }

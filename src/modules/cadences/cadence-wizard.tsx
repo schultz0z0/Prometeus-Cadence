@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { buildDemoCadenceOptions } from "@/demo/cadence";
+import {useIdentity} from '@/client/workspace-provider';
+import {ServerCadenceWizard} from './server-cadence-wizard';
 import { validateCadence } from "@/domain/cadence";
 import type { CadenceBrief, Cadence, Channel } from "@/domain/model";
 import { Icon } from "@/components/ui/icon";
@@ -41,7 +43,10 @@ const objectives = [
     "Alguém indicou, ou você quer propor parceria. Começa pelo nome em comum.",
   ],
 ];
-export function CadenceWizard({
+export function CadenceWizard(props:{initialList?:string;initialChannel?:string;initialProduct?:string;initialJob?:string}){
+  const identity=useIdentity();return identity?<ServerCadenceWizard {...props}/>:<DemoCadenceWizard {...props}/>;
+}
+function DemoCadenceWizard({
   initialList = "",
   initialChannel = "whatsapp",
 }: {

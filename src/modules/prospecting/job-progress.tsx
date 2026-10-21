@@ -6,6 +6,7 @@ import {Button,PageHeader,Badge,Notice} from '@/components/ui/primitives';
 import {ReconciliationReview} from './reconciliation-review';
 import {JobResults} from './job-results';
 import {jobStateLabels} from './job-history';
+import {PlanningJobProgress} from '@/modules/planning/planning-job-progress';
 const activeStates=['queued','running','waiting_provider','cancelling'];
 export function useProspectingJob(id:string){
   const client=useProspecting(),[job,setJob]=useState<JobView|null>(null),[error,setError]=useState(''),[revision,setRevision]=useState(0);
@@ -20,6 +21,7 @@ export function JobProgress({id}:{id:string}){
   const role=identity?.workspaces.find(w=>w.id===identity.activeWorkspaceId)?.role;
   async function cancel(){if(!client||busy)return;setBusy(true);setActionError('');try{await client.cancel(id);refresh();}catch(e){setActionError(e instanceof Error?e.message:'Falha ao cancelar.');}finally{setBusy(false);}}
   if(!job)return <><PageHeader title="Execução" back="/executions"/><p role={error?'alert':'status'}>{error||'Carregando execução…'}</p></>;
+  if(job.kind==='planning')return <PlanningJobProgress job={job}/>;
   return <><PageHeader title={job.kind==='generation'?'Busca de empresas':'Qualificação de leads'} description={`Fonte ${job.source} · ${new Date(job.createdAt).toLocaleString('pt-BR')}`} back="/executions" actions={<><Button disabled={busy} onClick={refresh} icon="RefreshCw">Atualizar</Button>{activeStates.includes(job.state)&&<Button disabled={busy||job.state==='cancelling'} onClick={cancel}>{job.state==='cancelling'?'Aguardando cancelamento':'Cancelar execução'}</Button>}</>}/>
     {job.purpose==='ai-connection-test'?<Notice>Teste de conexão com evidência sintética. Pode consumir uma chamada real da LLM convencional, conforme o uso registrado. Nenhuma proposta deste teste será aplicada.</Notice>:job.testFixture&&<Notice>Validação com dados sintéticos. Esta execução usa fixtures de QA e não comprova uma chamada real ao provedor.</Notice>}
     {job.aiRoute&&<p className="secondary-text">{job.aiRoute.effectiveMode==='hybrid'?'JEV + LLM convencional':'LLM convencional'} · {job.aiRoute.conventional.provider} · {job.aiRoute.conventional.model} · <a href="/settings/ai">Provedores de IA</a></p>}

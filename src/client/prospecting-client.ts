@@ -1,4 +1,4 @@
-import type {ProspectingInput,Review,JobView,JobItemView,Page,ProviderCapabilities} from '../domain/prospecting.ts';
+import type {ProspectingInput,Review,JobView,JobItemView,Page,ProviderCapabilities,JobFilters} from '../domain/prospecting.ts';
 import type {AiSettingsView,AiPolicy,AiTestReview,CodexDiagnostic} from '../domain/ai-routing.ts';
 import {createWorkspaceTransport} from './workspace-transport.ts';
 export function createProspectingClient(options:{workspaceId:string;transport?:typeof fetch;onAccessLost?:(message:string)=>void}){
@@ -22,7 +22,7 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
       const promise=request<JobView>('/jobs',{requestId:stableId('confirm:'+key),input:review.input,reviewToken:review.token}).then(job=>{requestIds.delete('confirm:'+key);return job;}).catch(error=>{confirmations.delete(flightKey);throw error;});
       confirmations.set(flightKey,promise);return promise;
     },
-    list:(cursor?:string)=>request<Page<JobView>>('/jobs'+(cursor?'?cursor='+encodeURIComponent(cursor):'')),
+    list:(input?:string|JobFilters)=>{const filters=typeof input==='string'?{cursor:input}:input??{},params=new URLSearchParams(Object.entries(filters).filter(([,v])=>v!==undefined) as [string,string][]);return request<Page<JobView>>('/jobs'+(params.size?'?'+params.toString():''));},
     get:(id:string)=>request<JobView>('/jobs/'+encodeURIComponent(id)),
     items:(id:string,cursor?:string)=>request<Page<JobItemView>>('/jobs/'+encodeURIComponent(id)+'/items'+(cursor?'?cursor='+encodeURIComponent(cursor):'')),
     cancel:(id:string)=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/cancel',{}),

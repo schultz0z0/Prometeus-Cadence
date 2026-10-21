@@ -1,4 +1,8 @@
 import type { Cadence, CadenceStep, Lead, ValidationIssue } from "./model.ts";
+export function mergeMessagePreview(base:Pick<CadenceStep,'body'|'subject'|'channel'>,current:CadenceStep,suggestion:{body:string;subject?:string}):{step:CadenceStep;conflict:boolean}{
+ if(base.body!==current.body||base.subject!==current.subject||base.channel!==current.channel)return {step:current,conflict:true};
+ return {step:{...current,body:suggestion.body,...(suggestion.subject===undefined?{}:{subject:suggestion.subject})},conflict:false};
+}
 
 export function eligibleCadenceLeads(
   cadence: Cadence,

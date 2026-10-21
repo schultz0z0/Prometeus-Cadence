@@ -15,6 +15,7 @@ export interface IngestCounts{found:number;inserted:number;duplicates:number;rej
 export interface JobView{id:string;kind:JobInput['kind'];source:GenerationSource|'QUALIFY'|'AI';task?:import('./planning.ts').PlanningTask;state:JobState;listId:string|null;createdBy:string;createdAt:string;updatedAt:string;revision:number;counts:IngestCounts;error:{code:string;message:string}|null;usage?:ProviderUsage[];testFixture?:boolean;purpose?:'ai-connection-test';aiRoute?:import('./ai-routing.ts').AiRouteView|null;unresolvedAttempts?:{id:string;provider:string;step:string;canAttachRun:boolean}[]}
 export interface ProviderCapabilities{enabled:boolean;sources:Record<GenerationSource,{configured:boolean}>;decision:{model:string;configured:boolean};generation:{provider:string;configured:boolean};limits:{perJob:number;pageSize:number}}
 export interface Page<T>{items:T[];nextCursor:string|null}
+export interface JobFilters{kind?:JobInput['kind'];state?:JobState;source?:JobView['source'];automationId?:string;cursor?:string}
 export interface Evidence{id:string;url:string;fetchedAt:string;text:string;hash:string;truncated:boolean}
 export interface Candidate extends Omit<Lead,'id'|'listId'|'createdAt'|'qualification'>{sourceRef:string;facts?:Record<string,unknown>;contacts?:{emails:string[];phones:string[]};evidence?:Evidence[]}
 export interface CandidatePage{receiptId:string;candidates:Candidate[];nextCursor:string|null;exhausted:boolean;rawCount:number;rejected:{sourceRef?:string;reason:string}[];usage:ProviderUsage}

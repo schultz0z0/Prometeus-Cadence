@@ -9,12 +9,14 @@ import {runPlanning} from '../../src/server/planning/execution.ts';
 import {planningRequest} from '../../src/server/planning/http.ts';
 import {saveAiPolicy} from '../../src/server/prospecting/ai/settings.ts';
 import {conventionalConfig} from '../../src/server/prospecting/ai/config.ts';
-import {getJob} from '../../src/server/prospecting/service.ts';
+import {getJob,listJobs} from '../../src/server/prospecting/service.ts';
 import {reconcileJob} from '../../src/server/prospecting/reconciliation.ts';
 import {withLeasedTransaction} from '../../src/server/prospecting/worker-db.ts';
 import {ProviderError} from '../../src/server/prospecting/providers/transport.ts';
 import {audienceResult,planningSources} from '../planning-fixtures.ts';
 import type {PlanningInput,PlanningProposal} from '../../src/domain/planning.ts';
+import {executeWorkspaceCommand,readWorkspaceSnapshot} from '../../src/server/workspaces/commands.ts';
+import {defaultCadenceSettings} from '../../src/demo/seed.ts';
 beforeEach(resetRateLimits);after(closeProspectingPools);
 const audience:PlanningInput={kind:'planning',task:'audience_plan',description:'Clínicas',channel:'whatsapp',timezone:'America/Sao_Paulo'};
 const context:PlanningInput={kind:'planning',task:'context_read',domain:'example.com',target:{kind:'company'}};
@@ -92,4 +94,23 @@ test('budget and server-only fields block confirmation without orphan jobs',asyn
  await assert.rejects(()=>preparePlanning(p,{...audience,checkpoint:{}}),{status:422});
  process.env.PROSPECTING_WORKSPACE_DAILY_UNITS='{}';const review=await preparePlanning(p,audience);assert.ok(review.blockers.length);
  await assert.rejects(()=>confirmPlanning(p,{requestId:randomUUID(),input:audience,reviewToken:review.token}),{status:409});assert.equal(await countRows('prospecting_job',p.workspaceId),0);
+});
+test('job history filters are validated and paginate only the current workspace',async()=>{
+ const {p}=await setup();for(let i=0;i<3;i++){const input={...audience,description:'Público '+i},review=await preparePlanning(p,input);await confirmPlanning(p,{requestId:randomUUID(),input,reviewToken:review.token});}
+ const first=await listJobs(p,{kind:'planning',state:'queued',source:'AI',limit:1});assert.equal(first.items.length,1);assert.ok(first.nextCursor);
+ const second=await listJobs(p,{kind:'planning',state:'queued',source:'AI',limit:1,cursor:first.nextCursor});assert.equal(second.items.length,1);assert.notEqual(first.items[0].id,second.items[0].id);
+ assert.equal((await listJobs(p,{kind:'qualification'})).items.length,0);assert.equal((await listJobs(p,{automationId:'foreign'})).items.length,0);
+ await assert.rejects(()=>listJobs(p,{source:'forged'}),{status:422});
+ const b=await setup();assert.equal((await listJobs(b.p,{kind:'planning'})).items.length,0);
+});
+test('personalized preview binds one saved step and a lead from its list without unrelated messages',async()=>{
+ const {p}=await setup(),listId=randomUUID(),leadId=randomUUID(),cadenceId=randomUUID(),stepId=randomUUID();let s=await readWorkspaceSnapshot(p);
+ await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'leads.import',list:{id:listId,name:'Preview'},leads:[{id:leadId,listId,name:'Clínica específica',qualification:'pending',source:'MANUAL',createdAt:new Date().toISOString()}]}});s=await readWorkspaceSnapshot(p);
+ const step={id:stepId,channel:'WHATSAPP',delayDays:1,body:'SELECTED_STEP',stopOnReply:true};
+ await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'cadence.saveDraft',cadence:{id:cadenceId,name:'Preview',listId,status:'draft',steps:[{...step,id:randomUUID(),body:'OTHER_PRIVATE_STEP'},step],settings:defaultCadenceSettings(),createdAt:new Date().toISOString()}}});
+ const input:PlanningInput={kind:'planning',task:'message_preview',cadenceId,stepId,leadId};
+ await assert.rejects(()=>preparePlanning(p,{...input,leadId:'foreign'}),{status:404});
+ const review=await preparePlanning(p,input),job=await confirmPlanning(p,{requestId:randomUUID(),input,reviewToken:review.token});let calls=0;
+ await runPlanning(await grantTestLease(p,job.id),{generate:async(ctx,data)=>{calls++;const text=data.sources.find(s=>s.kind==='lead_fact')!.text;assert.ok(text.includes('SELECTED_STEP'));assert.ok(text.includes('Clínica específica'));assert.ok(!text.includes('OTHER_PRIVATE_STEP'));return {proposal:{task:'message_preview',contractVersion:'planning-v1',jobId:ctx.jobId,base:data.base,body:'Olá {{nome}}, podemos conversar?',evidenceIds:data.sources.map(s=>s.id),recommendedOptionId:null},usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown'}};}});
+ const result=await getPlanning(p,job.id);assert.equal(calls,1);assert.equal(result.previewStep?.body,'SELECTED_STEP');assert.equal(result.job.state,'completed');assert.equal((await readWorkspaceSnapshot(p)).data.cadences[0].steps[1].body,'SELECTED_STEP');
 });

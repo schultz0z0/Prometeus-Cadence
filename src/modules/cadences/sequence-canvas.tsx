@@ -253,6 +253,7 @@ export function SequenceCanvas({
           index={index}
           total={cadence.steps.length}
           listId={cadence.listId}
+          cadenceId={cadence.id}
           pending={!!pending}
           onSave={update}
           onMove={move}

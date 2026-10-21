@@ -88,7 +88,7 @@ export async function getPlanning(p:Principal,id:string){
   const row=(await c.query('SELECT input,checkpoint FROM app.prospecting_job WHERE id=$1',[id])).rows[0];
   if(!row)throw new AppError(404,'Análise não encontrada.');
   const sources=(await c.query('SELECT payload FROM app.planning_evidence WHERE job_id=$1 ORDER BY created_at,id',[id])).rows.map(r=>r.payload);
-  return {sources,baseline:row.input.task==='context_read'?row.checkpoint.baseSnapshot??null:null};
+  return {request:row.input as PlanningInput,sources,baseline:row.input.task==='context_read'?row.checkpoint.baseSnapshot??null:null,...(row.input.task==='message_preview'?{previewStep:row.checkpoint.baseSnapshot?.step}:{})};
  });
  try{return {job,...data,proposal:await readPlanningProposal(p,id)};}catch(e){if(e instanceof AppError&&e.status===404)return {job,...data,proposal:null};throw e;}
 }

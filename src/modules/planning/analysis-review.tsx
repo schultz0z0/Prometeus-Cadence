@@ -1,5 +1,5 @@
 "use client";
-import type {PlanningReview} from '@/domain/planning';
+import type {PlanningReview,PlanningSelectionReview} from '@/domain/planning';
 import {Modal,Button,Notice} from '@/components/ui/primitives';
 export function AnalysisReview({review,busy,error,onConfirm,onClose}:{review:PlanningReview;busy:boolean;error?:string;onConfirm:()=>void;onClose:()=>void}){
  return <Modal title="Revisar análise de IA" onClose={onClose} description="A análise só começa ao confirmar este botão.">
@@ -11,4 +11,7 @@ export function AnalysisReview({review,busy,error,onConfirm,onClose}:{review:Pla
   {error&&<p role="alert" className="error-bar">{error}</p>}
   <div className="row end"><Button onClick={onClose} disabled={busy}>Voltar</Button><Button variant="primary" onClick={onConfirm} disabled={busy||review.blockers.length>0}>{busy?'Confirmando…':'Confirmar análise'}</Button></div></div>
  </Modal>;
+}
+export function SelectionReview({review,busy,error,onConfirm,onClose}:{review:PlanningSelectionReview;busy:boolean;error?:string;onConfirm:()=>void;onClose:()=>void}){
+ return <Modal title="Confirmar criação" onClose={onClose}><div className="stack">{review.effects.map(effect=><p key={effect}>{effect}</p>)}{review.blockers.map(b=><Notice key={b}>{b}</Notice>)}{error&&<p role="alert">{error}</p>}<div className="row end"><Button disabled={busy} onClick={onClose}>Voltar</Button><Button variant="primary" disabled={busy||!!review.blockers.length} onClick={onConfirm}>{busy?'Criando…':'Confirmar criação'}</Button></div></div></Modal>;
 }
