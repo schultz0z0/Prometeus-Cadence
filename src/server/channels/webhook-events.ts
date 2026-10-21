@@ -24,7 +24,8 @@ export function normalizeMetaEvents(data:any,ctx:IngressContext):WebhookEvent[]{
     }
     for(const s of v.statuses??[]){
      const id=bounded(s.id),status=bounded(s.status,80);if(!id||!status)throw new AppError(422,'Status Meta inválido.');
-     events.push({kind:'status',dedupKey:key(['status',id,status]),accountId:ctx.externalAccountId!,senderExternalId:sender,occurredAt:timestamp(s.timestamp),remoteId:id,status,errorCode:s.errors?.[0]?.code===undefined?null:String(s.errors[0].code).slice(0,80)});
+     const trace=bounded(s.biz_opaque_callback_data,36);
+     events.push({kind:'status',dedupKey:key(['status',id,status]),accountId:ctx.externalAccountId!,senderExternalId:sender,occurredAt:timestamp(s.timestamp),remoteId:id,status,errorCode:s.errors?.[0]?.code===undefined?null:String(s.errors[0].code).slice(0,80),...(trace&&/^[a-f0-9-]{36}$/.test(trace)?{traceId:trace}:{})});
     }
     if(!(v.messages?.length||v.statuses?.length))events.push({kind:'unknown',dedupKey:key(change),accountId:ctx.externalAccountId!,senderExternalId:sender,occurredAt:null,eventType:'messages-other'});
    }else if(change.field==='message_template_status_update'){

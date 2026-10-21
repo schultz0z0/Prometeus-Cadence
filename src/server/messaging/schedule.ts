@@ -5,6 +5,13 @@ function localTimeAt(iso:string,zone:string){
  return new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(iso));
 }
 function addDays(date:string,count:number){return new Date(Date.parse(date+'T00:00:00Z')+count*DAY).toISOString().slice(0,10);}
+export function dispatchTimeAllowed(now:string,input:Pick<NextStepInput,'timezone'|'weekdays'|'sendTime'|'skipHolidays'|'holidayDates'>):boolean{
+ try{
+  const date=localDateAt(now,input.timezone),weekday=new Date(date+'T00:00:00Z').getUTCDay();
+  if(!input.weekdays.includes(weekday)||localTimeAt(now,input.timezone)<input.sendTime)return false;
+  return !input.skipHolidays||!!input.holidayDates&&!input.holidayDates.includes(date);
+ }catch{return false;}
+}
 export function nextStepAt(input:NextStepInput):string {
  const anchor=Date.parse(input.anchorAt),now=Date.parse(input.now);
  if(!Number.isFinite(anchor)||!Number.isFinite(now)||!Number.isInteger(input.delayDays)||input.delayDays<0||input.delayDays>3650||!input.weekdays.length||input.weekdays.some(d=>!Number.isInteger(d)||d<0||d>6)||new Set(input.weekdays).size!==input.weekdays.length)throw Error('Agenda inválida.');

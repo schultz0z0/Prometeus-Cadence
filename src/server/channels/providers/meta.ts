@@ -64,6 +64,7 @@ export function createMetaAdapter(fetcher:typeof fetch=fetch):ProviderAdapter{re
     });
     payload={messaging_product:'whatsapp',to:send.identity.phone.replace(/^\+/,''),type:'template',template:{name:t.name,language:{code:t.language},...(components.length?{components}:{})}};
    }
+   if(send.traceId)payload.biz_opaque_callback_data=send.traceId;
    const r=await channelRequest(origin+'/'+c.identifiers.phoneNumberId+'/messages',headers(c),{method:'POST',body:JSON.stringify(payload)},fetcher);
    if(r.ok&&typeof r.data?.messages?.[0]?.id==='string')return {kind:'accepted',remoteId:r.data.messages[0].id,acceptedAt:new Date().toISOString()};
    if(r.status>=400&&r.status<500&&typeof r.data?.error?.code==='number')return {kind:'not_accepted',code:'META_'+r.data.error.code,retryable:r.status===429,retryAfterMs:r.retryAfterMs};

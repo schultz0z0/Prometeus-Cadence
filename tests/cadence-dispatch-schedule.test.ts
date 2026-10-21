@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {nextStepAt} from '../src/server/messaging/schedule.ts';
+import {nextStepAt,dispatchTimeAllowed} from '../src/server/messaging/schedule.ts';
 const base={anchorAt:'2026-10-23T12:00:00Z',delayDays:1,now:'2026-10-23T12:00:00Z',timezone:'America/Sao_Paulo',weekdays:[1,2,3,4,5],sendTime:'09:00',skipHolidays:false,holidayDates:null};
 test('delay begins at acceptance and weekdays follow the local calendar',()=>{
  assert.equal(nextStepAt(base),'2026-10-26T12:00:00.000Z');
@@ -20,4 +20,10 @@ test('holiday skipping requires explicit calendar; invalid and unbounded inputs 
  assert.throws(()=>nextStepAt({...base,skipHolidays:true}),/calendário/i);
  assert.equal(nextStepAt({...base,skipHolidays:true,holidayDates:['2026-10-26']}),'2026-10-27T12:00:00.000Z');
  for(const change of [{weekdays:[]},{delayDays:-1},{delayDays:0.5},{sendTime:'25:00'},{timezone:'invalid'},{anchorAt:'bad'},{weekdays:[8]}])assert.throws(()=>nextStepAt({...base,...change}));
+});
+test('queued dispatch may finish after its starting minute but never on excluded days or before the local sending time',()=>{
+ assert.equal(dispatchTimeAllowed('2026-10-21T12:00:03Z',base),true);
+ assert.equal(dispatchTimeAllowed('2026-10-21T11:59:59Z',base),false);
+ assert.equal(dispatchTimeAllowed('2026-10-24T15:00:00Z',base),false);
+ assert.equal(dispatchTimeAllowed('2026-10-21T15:00:00Z',{...base,skipHolidays:true,holidayDates:null}),false);
 });

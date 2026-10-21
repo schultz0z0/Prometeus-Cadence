@@ -30,20 +30,23 @@ export async function authenticateWebhook(request:Request,publicId:string,kind:'
   if(!request.headers.get('content-type')?.toLowerCase().startsWith('application/json'))throw new AppError(415,'Tipo de callback inválido.');
   const signature=request.headers.get('x-hub-signature-256')??'';if(!/^sha256=[a-fA-F0-9]{64}$/.test(signature))throw new AppError(403,'Assinatura inválida.');
   for(const version of ctx.credentialVersions){
-   if(!version.credentials.appSecret)continue;const expected='sha256='+createHmac('sha256',version.credentials.appSecret).update(bytes).digest('hex');
+   if(!version.credentials.appSecret||version.externalAccountId===null)continue;const expected='sha256='+createHmac('sha256',version.credentials.appSecret).update(bytes).digest('hex');
    if(safeEqual(expected,signature.toLowerCase())){revision=version.revision;effective={...ctx,identifiers:version.identifiers??ctx.identifiers,externalAccountId:version.externalAccountId===undefined?ctx.externalAccountId:version.externalAccountId};break;}
   }
   if(revision===undefined)throw new AppError(403,'Assinatura inválida.');
   try{parsed=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{throw new AppError(422,'Callback JSON inválido.');}
  }else{
   if(!request.headers.get('content-type')?.toLowerCase().startsWith('application/x-www-form-urlencoded'))throw new AppError(415,'Tipo de callback inválido.');
-  const canonical=channelCallbackUrl('twilio',publicId,kind==='twilio-status'?'status':'messages');if(new URL(request.url).search)throw new AppError(403,'Query de callback não configurada.');
+  let canonical=channelCallbackUrl('twilio',publicId,kind==='twilio-status'?'status':'messages');
+  const query=new URL(request.url).searchParams;
+  if([...query.keys()].length){const attempt=query.get('attempt');if(kind!=='twilio-status'||[...query.keys()].length!==1||!attempt||!/^[a-f0-9-]{36}$/.test(attempt))throw new AppError(403,'Query de callback não configurada.');canonical+='?attempt='+encodeURIComponent(attempt);}
   const params=new URLSearchParams(new TextDecoder('utf-8',{fatal:true}).decode(bytes)),fields:Record<string,string>=Object.create(null);
   for(const [key,value]of params){if(Object.hasOwn(fields,key)||key.length>200||value.length>65536)throw new AppError(422,'Parâmetros de callback inválidos.');fields[key]=value;}
-  for(const version of ctx.credentialVersions){if(version.credentials.authToken&&twilio.validateRequest(version.credentials.authToken,request.headers.get('x-twilio-signature')??'',canonical,fields)){revision=version.revision;effective={...ctx,identifiers:version.identifiers??ctx.identifiers,externalAccountId:version.externalAccountId===undefined?ctx.externalAccountId:version.externalAccountId};break;}}
+  for(const version of ctx.credentialVersions){if(version.externalAccountId!==null&&version.credentials.authToken&&twilio.validateRequest(version.credentials.authToken,request.headers.get('x-twilio-signature')??'',canonical,fields)){revision=version.revision;effective={...ctx,identifiers:version.identifiers??ctx.identifiers,externalAccountId:version.externalAccountId===undefined?ctx.externalAccountId:version.externalAccountId};break;}}
   if(revision===undefined)throw new AppError(403,'Assinatura inválida.');parsed=fields;
  }
  if(!effective.externalAccountId)throw new AppError(403,'Os ativos desta conexão ainda não foram verificados.');
  const events=meta?normalizeMetaEvents(parsed,effective):normalizeTwilioEvents(parsed,effective,kind==='twilio-status');
+ if(kind==='twilio-status'){const trace=new URL(request.url).searchParams.get('attempt');if(trace)for(const event of events)if(event.kind==='status')event.traceId=trace;}
  return {connectionId:ctx.id,credentialRevision:revision!,bodyHash:createHash('sha256').update(bytes).digest('hex'),receivedAt:deps.now?.()??new Date().toISOString(),events};
 }

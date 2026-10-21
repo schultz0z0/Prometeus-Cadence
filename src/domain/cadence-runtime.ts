@@ -12,4 +12,4 @@ export interface PublicationSnapshot {
 }
 export type PublicationReview=Review<PublicationSnapshot>;
 export interface PublicationView {id:string;cadenceId:string;revision:number;state:'active'|'paused'|'completed';enrollmentCount:number}
-export interface ReconciliationSnapshot {messageId:string;attemptId:string;remoteId:string|null;resolution:'accepted'|'not_accepted';evidence:string}
+export interface ReconciliationSnapshot {messageId:string;attemptId:string;remoteId:string|null;resolution:'accepted'|'not_accepted';evidence:string;reference:string;proofKind:'provider-log';verifiedByUser:true;verification:'administrator-evidence'|'provider-api'}

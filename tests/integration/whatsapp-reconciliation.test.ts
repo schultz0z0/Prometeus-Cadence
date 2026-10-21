@@ -1,0 +1,24 @@
+import test,{after} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {publicationFixture} from './messaging-helpers.ts';
+import {testAdmin} from './whatsapp-helpers.ts';
+import {preparePublication,confirmPublication} from '../../src/server/messaging/publication.ts';
+import {materializeDueMessages} from '../../src/server/messaging/outbox.ts';
+import {claimDispatch} from '../../src/server/messaging/lease.ts';
+import {dispatchOne} from '../../src/server/messaging/dispatch.ts';
+import {prepareReconciliation,confirmReconciliation} from '../../src/server/messaging/reconciliation.ts';
+import {getPools} from '../../src/server/db/pool.ts';
+import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';
+import {closeDispatchPool} from '../../src/server/messaging/worker-db.ts';
+after(async()=>{await getPools().close();await closeIngressPool();await closeDispatchPool();});
+test('administrative reconciliation requires reviewed provider evidence and never repeats an uncertain POST',async()=>{
+ const f=await publicationFixture(),review=await preparePublication(f.u.p,f.input);await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token});
+ const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);let posts=0;
+ await dispatchOne(lease,{adapter:{...f.adapter,sendOnce:async()=>{posts++;return {kind:'uncertain',code:'LOST'};}},now:()=>now});
+ const input={resolution:'not_accepted',remoteId:null,evidence:'Registro de teste do provedor revisado: a solicitação não foi aceita.',reference:'https://business.facebook.com/wa/manage/logs/fixture',proofKind:'provider-log',verifiedByUser:true};
+ await assert.rejects(prepareReconciliation(f.u.p,lease.messageId,{...input,evidence:'acho que não'}),{status:422});
+ const prepared=await prepareReconciliation(f.u.p,lease.messageId,input),command={...input,requestId:randomUUID(),reviewToken:prepared.token};assert.deepEqual(prepared.blockers,[]);
+ const first=await confirmReconciliation(f.u.p,{...command,messageId:lease.messageId});assert.equal(first.state,'failed');assert.equal((await confirmReconciliation(f.u.p,{...command,messageId:lease.messageId})).id,first.id);assert.equal(posts,1);
+ const used=await testAdmin(async c=>(await c.query("SELECT sum(units*CASE WHEN event='release' THEN -1 ELSE 1 END) AS units FROM app.message_usage_ledger WHERE workspace_id=$1",[f.u.p.workspaceId])).rows[0].units);assert.equal(Number(used),0);
+});

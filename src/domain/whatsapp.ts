@@ -19,13 +19,13 @@ export type MessagePurpose='service'|'campaign'|'test';
 export interface SendPolicyInput {now:string;lastInboundAt:string|null;purpose:MessagePurpose;hasOptIn:boolean;suppressed:boolean;senderReady:boolean;content:OutboundContent;template:TemplateView|null}
 export interface SendPolicyResult {allowed:boolean;blockers:string[]}
 export interface Review<T> {token:string;expiresAt:string;snapshot:T;blockers:string[]}
-export interface PreparedSend {connectionId:string;connectionRevision:number;senderId:string;identity:Identity;content:OutboundContent;purpose:MessagePurpose}
-export type SendOutcome={kind:'accepted';remoteId:string;acceptedAt:string}|{kind:'not_accepted';code:string;retryable:boolean;retryAfterMs:number|null}|{kind:'uncertain';code:string};
+export interface PreparedSend {connectionId:string;connectionRevision:number;senderId:string;identity:Identity;content:OutboundContent;purpose:MessagePurpose;traceId?:string}
+export type SendOutcome={kind:'accepted';remoteId:string;acceptedAt:string;evidence?:{accountId:string;from:string;to:string}}|{kind:'not_accepted';code:string;retryable:boolean;retryAfterMs:number|null}|{kind:'uncertain';code:string};
 export interface Receipt {attemptId:string;outcome:SendOutcome;costUsd:number|null;costKind:'reported'|'unknown'}
 interface EventBase {dedupKey:string;accountId:string;senderExternalId:string|null;occurredAt:string|null}
 export type WebhookEvent=EventBase&(
  {kind:'inbound';remoteId:string;identity:Identity;text:string|null;mediaKind:string|null}|
- {kind:'status';remoteId:string;status:string;errorCode:string|null}|
+ {kind:'status';remoteId:string;status:string;errorCode:string|null;traceId?:string}|
  {kind:'template';remoteId:string;status:TemplateStatus}|
  {kind:'unknown';eventType:string}
 );

@@ -61,6 +61,7 @@ export function createTwilioAdapter(fetcher:typeof fetch=fetch):ProviderAdapter{
   config(c);if(!/^SM[a-fA-F0-9]{32}$/.test(remoteId))throw new ChannelProviderError('TWILIO_MESSAGE_INVALID');
   const r=requireOk(await channelRequest('https://api.twilio.com/2010-04-01/Accounts/'+c.identifiers.accountSid+'/Messages/'+remoteId+'.json',headers(c),{},fetcher));
   if(r.sid!==remoteId||r.account_sid!==c.identifiers.accountSid)throw new ChannelProviderError('TWILIO_MESSAGE_MISMATCH');
-  return {kind:'accepted',remoteId,acceptedAt:new Date(r.date_created).toISOString()};
+  if(typeof r.from!=='string'||typeof r.to!=='string')throw new ChannelProviderError('TWILIO_MESSAGE_EVIDENCE_INCOMPLETE');
+  return {kind:'accepted',remoteId,acceptedAt:new Date(r.date_created).toISOString(),evidence:{accountId:r.account_sid,from:r.from,to:r.to}};
  },
 };}

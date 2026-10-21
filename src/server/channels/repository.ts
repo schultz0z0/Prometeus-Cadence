@@ -52,7 +52,9 @@ export async function readCredentialInTransaction(c:PoolClient,id:string,revisio
 export async function saveConnection(p:Principal,input:unknown):Promise<ConnectionView>{
  const parsed=saveConnectionSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Configuração da conexão inválida.');const b=parsed.data;
  return withWorkspaceTransaction(p,async c=>{
-  await requireChannelAdmin(c);await lockWorkspace(c);const hash=commandHash({action:'channel.save',input:b}),old=await priorCommand<ConnectionView>(c,p,b.requestId,hash);if(old)return old;
+  await requireChannelAdmin(c);
+  await c.query('INSERT INTO app.workspace_meta(workspace_id) VALUES($1) ON CONFLICT DO NOTHING',[p.workspaceId]);
+  await lockWorkspace(c);const hash=commandHash({action:'channel.save',input:b}),old=await priorCommand<ConnectionView>(c,p,b.requestId,hash);if(old)return old;
   const existing=b.id?await connectionRow(c,b.id,true):null;
   if((existing?Number(existing.revision):0)!==b.expectedRevision)throw new AppError(409,'A conexão mudou. Revise novamente.');
   if(existing&&existing.provider!==b.provider)throw new AppError(409,'Crie outra conexão para trocar de provedor.');
