@@ -156,7 +156,7 @@ export function Modal({
       ref={ref}
       className={`modal ${wide ? "wide" : ""}`}
       aria-labelledby={id}
-      onCancel={onClose}
+      onCancel={(event)=>{event.preventDefault();onClose();}}
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}

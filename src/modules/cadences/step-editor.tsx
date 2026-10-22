@@ -82,7 +82,7 @@ export function StepEditor({
         <div className="stack section-gap">
           {d.channel==='WHATSAPP'&&<Notice>Este é o texto do rascunho. O template aprovado e suas variáveis serão vinculados na revisão de publicação da cadência.</Notice>}
           {d.channel === "EMAIL" && (
-            <Field label="Assunto">
+            <Field label="Assunto" help="A assinatura da caixa e o descadastro são incluídos na revisão de publicação.">
               <input
                 value={d.subject ?? ""}
                 onChange={(e) => setD({ ...d, subject: e.target.value })}

@@ -16,6 +16,10 @@ export function messagingRequestHandler(request:Request,params:Record<string,str
   if(resource==='conversations'&&!id)return listConversations(p,{...(url.searchParams.get('search')?{search:url.searchParams.get('search')!}:{}),...(url.searchParams.get('cursor')?{cursor:url.searchParams.get('cursor')!}:{}),...(url.searchParams.get('senderId')?{senderId:url.searchParams.get('senderId')!}:{})});
   if(resource==='conversations'&&action==='messages')return readConversation(p,id,url.searchParams.get('cursor')??undefined);
   if(resource==='publications'&&!id)return listPublications(p);
+  if(resource==='publications'&&id&&!action)return withWorkspaceTransaction(p,async c=>{
+   const row=(await c.query('SELECT p.*,count(e.id) AS enrolled FROM app.cadence_publication p LEFT JOIN app.cadence_enrollment e ON e.workspace_id=p.workspace_id AND e.publication_id=p.id WHERE p.id=$1 GROUP BY p.workspace_id,p.id',[id])).rows[0];if(!row)throw new AppError(404,'Publicação não encontrada.');
+   return {publication:{id:row.id,cadenceId:row.cadence_id,revision:Number(row.revision),state:row.state,enrollmentCount:Number(row.enrolled)},snapshot:row.snapshot};
+  });
   if(resource==='limits'&&!id)return readMessagingLimits(p);
   if(resource==='usage'&&!id)return readMessageUsage(p);
   if(resource==='templates'&&!id){const connectionId=url.searchParams.get('connectionId');if(!connectionId)throw new AppError(422,'Escolha uma conexão.');return withWorkspaceTransaction(p,async c=>{await connectionRow(c,connectionId);return (await c.query('SELECT payload FROM app.channel_remote_template WHERE connection_id=$1 ORDER BY id',[connectionId])).rows.map(r=>r.payload);});}

@@ -6,7 +6,7 @@ import {defaultCadenceSettings} from '../../src/demo/seed.ts';
 import {verifiedMetaFixture,testAdmin} from './whatsapp-helpers.ts';
 import type {Cadence,Lead} from '../../src/domain/model.ts';
 export async function publicationFixture(){
- const f=await verifiedMetaFixture(),now=new Date(),date=now.toISOString(),time=new Date(now.getTime()+60000).toISOString().slice(11,16);
+ const f=await verifiedMetaFixture(),now=new Date(),date=now.toISOString(),time=new Date(now.getTime()+120000).toISOString().slice(11,16);
  await webhookRequest(f.request({messages:[{id:'wamid.'+randomUUID(),from:'5541988888888',timestamp:String(Math.floor(now.getTime()/1000)),type:'text',text:{body:'Oi'}}]}),f.publicId,'meta');
  const templates=await syncTemplates(f.u.p,f.connection.id,1,{adapter:f.adapter});
  const listId=randomUUID(),lead:Lead={id:randomUUID(),listId,name:'Clínica QA',phone:'+5541988888888',qualification:'qualified',source:'MANUAL',createdAt:date};
