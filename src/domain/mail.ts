@@ -11,6 +11,7 @@ export interface MailMessage {
  remoteId:string;remoteThreadId:string|null;rfcMessageId:string|null;inReplyTo:string|null;references:string[];
  from:string;to:string[];subject:string;text:string;receivedAt:string;direction:'inbound'|'outbound';
  classification:'human'|'automatic'|'dsn'|'ambiguous';attachments:{name:string|null;type:string;size:number|null}[];truncated:boolean;
+ headers?:Record<string,string>;deliveryStatus?:string;
 }
 export type SyncCursor={kind:'gmail';historyId:string;pageToken:string|null;watermark:string}|
  {kind:'imap';path:string;uidValidity:string;lastUid:number;watermark:string};
