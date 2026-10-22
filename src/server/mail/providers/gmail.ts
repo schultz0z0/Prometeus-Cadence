@@ -12,7 +12,7 @@ export async function gmailRequest(path:string,config:MailConfig,deps:MailDeps,i
  return {data,status:response.status,ok:response.ok,retryAfterMs:response.headers.has('retry-after')?(Number.isFinite(retry)?Math.max(0,retry*1000):Number.isFinite(retryDate)?Math.max(0,retryDate-Date.now()):null):null};
 }
 function requireSuccess(r:{ok:boolean;status:number;data:any}){if(!r.ok)throw Error(r.status===404?'GMAIL_HISTORY_EXPIRED':'GMAIL_API_FAILED');return r.data;}
-async function readRaw(config:MailConfig,id:string,deps:MailDeps):Promise<MailMessage&{labels:string[]}>{
+export async function readGmailRaw(config:MailConfig,id:string,deps:MailDeps):Promise<MailMessage&{labels:string[]}>{
  const data=requireSuccess(await gmailRequest('messages/'+encodeURIComponent(id)+'?format=raw',config,deps));
  if(typeof data.raw!=='string'||data.raw.length>2796204||!/^\d{1,20}$/.test(String(data.internalDate)))throw Error('GMAIL_MESSAGE_INVALID');
  const labels=Array.isArray(data.labelIds)?data.labelIds:[],bytes=Buffer.from(data.raw,'base64url');
@@ -40,7 +40,7 @@ export function createGmailAdapter(deps:MailDeps={}):MailAdapter {
    for(let n=0;n<budget.maxPages;n++){
     const q=new URLSearchParams({startHistoryId:cursor.historyId,maxResults:String(budget.maxMessages),historyTypes:'messageAdded'});if(page)q.set('pageToken',page);
     const data=requireSuccess(await gmailRequest('history?'+q,config,deps));
-    for(const h of data.history??[])for(const item of h.messagesAdded??[]){const id=item.message?.id;if(typeof id!=='string'||seen.has(id))continue;if(messages.length>=budget.maxMessages)throw Error('GMAIL_BATCH_REQUIRES_SMALLER_PAGE');seen.add(id);const mail=await readRaw(config,id,deps);if(mail.labels.includes('INBOX'))messages.push(mail);}
+    for(const h of data.history??[])for(const item of h.messagesAdded??[]){const id=item.message?.id;if(typeof id!=='string'||seen.has(id))continue;if(messages.length>=budget.maxMessages)throw Error('GMAIL_BATCH_REQUIRES_SMALLER_PAGE');seen.add(id);const mail=await readGmailRaw(config,id,deps);if(mail.labels.includes('INBOX'))messages.push(mail);}
     if(typeof data.historyId!=='string'||!/^\d{1,40}$/.test(data.historyId))throw Error('GMAIL_HISTORY_INVALID');historyId=data.historyId;
     page=typeof data.nextPageToken==='string'?data.nextPageToken:null;if(!page){complete=true;break;}if(messages.length>=budget.maxMessages)break;
    }
@@ -49,7 +49,7 @@ export function createGmailAdapter(deps:MailDeps={}):MailAdapter {
   async findSent(config,send){
    const profile=requireSuccess(await gmailRequest('profile',config,deps));if(normalizeMailAddress(profile.emailAddress)!==send.address)return null;
    const q=new URLSearchParams({q:'in:sent rfc822msgid:'+send.rfcMessageId,maxResults:'10'}),found=requireSuccess(await gmailRequest('messages?'+q,config,deps));
-   for(const item of found.messages??[]){if(typeof item.id!=='string')continue;const mail=await readRaw(config,item.id,deps);if(mail.labels.includes('SENT')&&mail.rfcMessageId===send.rfcMessageId&&mail.from===send.address&&mail.to.length===1&&mail.to[0]===send.to)return {kind:'accepted',remoteId:item.id,acceptedAt:mail.receivedAt};}
+   for(const item of found.messages??[]){if(typeof item.id!=='string')continue;const mail=await readGmailRaw(config,item.id,deps);if(mail.labels.includes('SENT')&&mail.rfcMessageId===send.rfcMessageId&&mail.from===send.address&&mail.to.length===1&&mail.to[0]===send.to)return {kind:'accepted',remoteId:item.id,acceptedAt:mail.receivedAt};}
    return null;
   },
  };

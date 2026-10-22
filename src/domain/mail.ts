@@ -13,8 +13,8 @@ export interface MailMessage {
  classification:'human'|'automatic'|'dsn'|'ambiguous';attachments:{name:string|null;type:string;size:number|null}[];truncated:boolean;
  headers?:Record<string,string>;deliveryStatus?:string;
 }
-export type SyncCursor={kind:'gmail';historyId:string;pageToken:string|null;watermark:string}|
- {kind:'imap';path:string;uidValidity:string;lastUid:number;watermark:string};
+export type SyncCursor={kind:'gmail';historyId:string;pageToken:string|null;watermark:string;recovery?:{since:string;historyId:string;pageToken:string|null}}|
+ {kind:'imap';path:string;uidValidity:string;lastUid:number;watermark:string;recovery?:{since:string}};
 export interface SyncBatch {messages:MailMessage[];next:SyncCursor;complete:boolean;gap:boolean}
 export interface MailSend {
  connectionId:string;connectionRevision:number;senderId:string;address:string;to:string;content:MailContent;

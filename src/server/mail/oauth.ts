@@ -16,7 +16,7 @@ import {createGmailAdapter} from './providers/gmail.ts';
 const digest=(text:string)=>createHash('sha256').update(text).digest('hex');
 const inputSchema=z.strictObject({id:z.uuid(),expectedRevision:z.number().int().min(1)});
 const now=(deps:MailDeps)=>deps.now?.()??new Date().toISOString();
-async function tokenRequest(params:URLSearchParams,deps:MailDeps):Promise<Record<string,any>> {
+export async function tokenRequest(params:URLSearchParams,deps:MailDeps):Promise<Record<string,any>> {
  const response=await(deps.fetch??fetch)('https://oauth2.googleapis.com/token',{method:'POST',body:params.toString(),headers:{'content-type':'application/x-www-form-urlencoded'},redirect:'error',signal:AbortSignal.timeout(30000)});
  let data:any;try{data=JSON.parse(Buffer.from(await readBoundedBody(response,65536)).toString('utf8'));}catch{throw Error('GMAIL_TOKEN_INVALID');}
  if(!response.ok)throw Error(data?.error==='invalid_grant'?'GMAIL_INVALID_GRANT':'GMAIL_TOKEN_FAILED');
