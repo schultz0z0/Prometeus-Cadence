@@ -15,6 +15,7 @@ process.env.CADENCE_INTEGRATION = "1";
 const known = [
   "mail-storage",
   "mail-oauth",
+  "mail-connections",
   "whatsapp-review-regressions",
   "whatsapp-lifecycle",
   "whatsapp-storage",
