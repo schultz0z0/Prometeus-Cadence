@@ -22,6 +22,7 @@ const known = [
   "mail-inbound",
   "mail-http",
   "mail-inbox",
+  "mail-maintenance",
   "whatsapp-review-regressions",
   "whatsapp-lifecycle",
   "whatsapp-storage",

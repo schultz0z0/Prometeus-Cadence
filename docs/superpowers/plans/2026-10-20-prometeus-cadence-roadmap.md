@@ -25,7 +25,7 @@ Os marcos de engenharia 02–06 podem exigir pequenos ajustes de sequência quan
 - Não assumir Apify, banco, fila ou modelo do concorrente sem evidência.
 - Conta comercial própria e marca de trabalho Prometeus Cadence.
 - Distinguir ambiente demonstrativo de integração real em toda entrega.
-- Antes de novas recomendações de skills, plugins, ferramentas ou MCPs, concluir consulta autenticada ao O Setup. A tentativa desta sessão retornou 401.
+- A exigência anterior de consulta ao O Setup foi dispensada explicitamente pelo usuário nesta conversa.
 
 ## Recursos verificados nesta sessão
 
@@ -46,4 +46,6 @@ Node local `v24.16.0`, npm `11.13.0`, RTK e REA já disponíveis. Next.js/React 
 - [x] Marco03B: configuração de IA e aceite Codex ChatGPT em `docs/validation/03b-ai-routing.md`; APIs alternativas sem credenciais reais.
 - [x] Desenho04 aprovado: `../specs/2026-10-20-prometeus-cadence-04-automation-ai-design.md`.
 - [x] Plano04 aprovado e implementado por execução nativa; aceite local em `docs/validation/04-automation-ai.md`. Revisão final/integracão registradas no relatório04; provedores pagos não receberam novo piloto.
+- [x] 05A: Meta/Twilio, inbox e cadências com aceite local; piloto externo pendente.
+- [x] 05B: Gmail OAuth + SMTP/IMAP, inbox com threads, respostas revisadas e cadências mistas implementados; aceite local documentado no relatório05B e roteiro manual em CHANNELS-PILOT.
 - [ ] Demais marcos, incluindo SaaS operacional completo.

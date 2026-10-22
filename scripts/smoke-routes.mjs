@@ -1,5 +1,6 @@
 import fs from "node:fs";
 const base = process.env.SMOKE_URL || "http://127.0.0.1:3210";
+const emailMilestone=process.argv.includes('--email');
 const whatsappMilestone=process.argv.includes('--whatsapp');
 const files = [
   "src/components/shell/navigation.ts",
@@ -24,6 +25,8 @@ const routes = new Set([
   "/templates",
   "/inbox",
   "/messages/whatsapp",
+  "/messages/email",
+  "/inbox?channel=email",
   "/reports",
   "/reports/funnel",
   "/reports/crm",
@@ -77,7 +80,8 @@ for (const route of [
   "/api/planning/jobs/qa-missing",
   "/api/automations",
   "/api/automations/qa-missing/occurrences",
-  ...(whatsappMilestone?['/api/channels','/api/messaging/conversations','/api/messaging/publications','/api/messaging/limits','/api/messaging/usage']:[]),
+  ...(emailMilestone?['/api/mailboxes','/api/messaging/conversations?channel=EMAIL']:[]),
+  ...(whatsappMilestone||emailMilestone?['/api/channels','/api/messaging/conversations','/api/messaging/publications','/api/messaging/limits','/api/messaging/usage']:[]),
 ]) {
   const response = await fetch(base + route, {
     headers: process.env.SMOKE_COOKIE
@@ -99,7 +103,7 @@ const report = {
 };
 fs.mkdirSync("docs/validation", { recursive: true });
 fs.writeFileSync(
-  whatsappMilestone?'docs/validation/routes-05a.json':"docs/validation/routes-04.json",
+  emailMilestone?'docs/validation/routes-05b.json':whatsappMilestone?'docs/validation/routes-05a.json':"docs/validation/routes-04.json",
   JSON.stringify(report, null, 2) + "\n",
 );
 console.log(

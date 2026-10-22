@@ -44,7 +44,8 @@ export async function saveMailbox(p:Principal,input:unknown):Promise<MailboxView
   else await c.query("INSERT INTO app.channel_connection(workspace_id,id,provider,channel,name,public_id,identifiers,created_by) VALUES($1,$2,$3,'EMAIL',$4,$5,$6,$7)",[p.workspaceId,id,b.provider,b.name,randomUUID(),identifiers,p.userId]);
   await c.query('SELECT app.write_channel_credential($1,$2,$3)',[id,revision,envelope]);
   const address=b.provider==='smtp-imap'?b.address:current?.address??null,state=b.provider==='gmail'?'authorization_required':'pending';
-  await c.query('INSERT INTO app.email_mailbox(workspace_id,id,provider,address,signature,state) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(workspace_id,id) DO UPDATE SET address=EXCLUDED.address,signature=EXCLUDED.signature,state=EXCLUDED.state,send_verified=false,read_verified=false,last_error=NULL',[p.workspaceId,id,b.provider,address,b.signature,state]);
+  await c.query('INSERT INTO app.email_mailbox(workspace_id,id,provider,address,signature,state) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(workspace_id,id) DO UPDATE SET address=EXCLUDED.address,signature=EXCLUDED.signature,state=EXCLUDED.state,send_verified=false,read_verified=false,proof_verified=false,baseline_at=NULL,last_synced_at=NULL,sync_state=\'baseline\',last_error=NULL',[p.workspaceId,id,b.provider,address,b.signature,state]);
+  if(current)await c.query('SELECT app.reset_mailbox_sync_revision($1,$2)',[id,revision]);
   await c.query('UPDATE app.channel_sender SET ready=false,revision=revision+1 WHERE connection_id=$1',[id]);
   const result=await mailboxView(c,await mailboxRow(c,id));await completeCommand(c,p,b.requestId,hash,result,'mailbox.save');return result;
  });

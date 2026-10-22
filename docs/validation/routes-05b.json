@@ -1,0 +1,368 @@
+{
+  "date": "2026-10-22T06:15:12.277Z",
+  "base": "http://127.0.0.1:3210",
+  "note": "Local HTTP smoke. Anonymous protected pages redirect to login; private APIs return 401. Authenticated API probes return 200, intentionally missing resources 404. No real external connector is tested.",
+  "results": [
+    {
+      "route": "/",
+      "status": 307,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/dashboard",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/contacts",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/leads/lead-1",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/leads/generator",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/leads/enrich",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/leads/qualifier",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/automations",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/automations/new",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/automations/new/ai",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/cadences",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/cadences/new",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/cadences/new/ai",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/cadences/cadence-initial",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/cadences/pipeline",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/templates",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/inbox",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/messages/whatsapp",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/messages/email",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/inbox?channel=email",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/reports",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/reports/funnel",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/reports/crm",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/executions",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/executions/qa-missing",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/first-steps",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/sdr",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/dashboard",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/campaigns",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/people",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/linkedin/approvals",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/account",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/context",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/ai",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/notifications",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/seats",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/security",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/mcp",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/plan",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/email",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/whatsapp",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/dispatch-limits",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/dados",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/privacy",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/apps",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/settings/webhooks",
+      "status": 200,
+      "protectedRedirect": false,
+      "ok": true
+    },
+    {
+      "route": "/api/workspace/snapshot",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/identity",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/security",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/prospecting/capabilities",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/prospecting/jobs",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/prospecting/ai/policy",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/context",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/planning/jobs/qa-missing",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "route": "/api/automations",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/automations/qa-missing/occurrences",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "route": "/api/mailboxes",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/messaging/conversations?channel=EMAIL",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/channels",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/messaging/conversations",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/messaging/publications",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/messaging/limits",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "route": "/api/messaging/usage",
+      "status": 200,
+      "ok": true
+    }
+  ]
+}

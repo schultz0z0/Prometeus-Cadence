@@ -41,7 +41,9 @@ O modo demonstrativo anterior permanece disponível ao definir explicitamente `A
 
 ## Limites e próximas entregas
 
-E-mail, LinkedIn, SDR e billing ainda não estão integrados. Meta/Twilio têm implementação e contratos locais, mas não foram ativados com contas reais nesta entrega. Execuções externas, scheduler e worker de mensagens começam desabilitados. Valores desconhecidos não são inventados.
+LinkedIn, SDR e billing ainda não estão integrados. Gmail OAuth e SMTP/IMAP têm implementação local05B, com piloto de conta real pendente. Meta/Twilio têm implementação e contratos locais, mas não foram ativados com contas reais nesta entrega. Execuções externas, scheduler e worker de mensagens começam desabilitados. Valores desconhecidos não são inventados.
+
+Para configurar e operar05B, consulte [E-mail: configuração e operação](docs/operations/EMAIL-SETUP.md), [piloto conjunto Meta/Google/SMTP](docs/operations/CHANNELS-PILOT.md) e [validação05B](docs/validation/2026-10-21-email-05b.md). Acesse `/settings/email`, `/messages/email` e `/inbox?channel=email`. Sync, envio e piloto têm gates separados e começam desligados. A IA não responde autonomamente; cada resposta/publicação exige revisão. Credenciais reais permanecem para o trabalho manual final.
 
 Para configurar e operar05A, consulte [WhatsApp: configuração, recuperação e piloto](docs/operations/WHATSAPP-SETUP.md) e a [validação05A](docs/validation/2026-10-21-whatsapp-05a.md). Acesse `/settings/whatsapp`, `/cadences` e `/inbox`. Salvar/verificar/sincronizar não envia; teste, resposta e publicação exigem revisão e confirmação. Credenciais de cada empresa são preenchidas no app. O piloto real fica para a configuração manual final do usuário; nenhum domínio/túnel foi exposto automaticamente.
 

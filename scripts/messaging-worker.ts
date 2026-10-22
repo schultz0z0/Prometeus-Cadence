@@ -8,7 +8,7 @@ try{
  else {
   const {runMessagingTick}=await import('../src/server/messaging/worker.ts');
   console.log('Messaging worker enabled for the explicitly selected scope.');
-  do{const result=await runMessagingTick({now:()=>new Date().toISOString(),maxMessages:options.maxMessages,...(options.workspaceId?{workspaceId:options.workspaceId}:{}),...(options.messageId?{messageId:options.messageId}:{})});console.log(JSON.stringify(result));if(options.once||controller.signal.aborted)break;await delay(2000,undefined,{signal:controller.signal}).catch(()=>{});}while(!controller.signal.aborted);
+  do{const result=await runMessagingTick({now:()=>new Date().toISOString(),maxMessages:options.maxMessages,allowSync:options.allowSync,...(options.workspaceId?{workspaceId:options.workspaceId}:{}),...(options.messageId?{messageId:options.messageId}:{})});console.log(JSON.stringify(result));if(options.once||controller.signal.aborted)break;await delay(2000,undefined,{signal:controller.signal}).catch(()=>{});}while(!controller.signal.aborted);
  }
 }catch{console.error('Messaging worker stopped. Check database availability, options and server configuration. No automatic replay was initiated.');process.exitCode=1;}
 finally{

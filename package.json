@@ -17,7 +17,9 @@
     "scheduler": "node --conditions=react-server --experimental-strip-types scripts/automation-scheduler.ts",
     "messaging:worker": "node --conditions=react-server --experimental-strip-types scripts/messaging-worker.ts",
     "messaging:maintenance": "node --conditions=react-server --experimental-strip-types scripts/messaging-maintenance.ts",
-    "messaging:smoke": "node --conditions=react-server --experimental-strip-types scripts/smoke-whatsapp.ts"
+    "messaging:smoke": "node --conditions=react-server --experimental-strip-types scripts/smoke-whatsapp.ts",
+    "mail:sync": "node --conditions=react-server --experimental-strip-types scripts/mail-sync-worker.ts",
+    "mail:smoke": "node --conditions=react-server --experimental-strip-types scripts/smoke-email.ts"
   },
   "dependencies": {
     "better-auth": "1.7.12",

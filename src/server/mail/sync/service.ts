@@ -7,13 +7,14 @@ import {ensureSyncGmailAccess,heartbeatMailboxSync,failMailboxSync} from './repo
 import {ingestMailBatch} from '../ingestion.ts';
 import {recoverGmailBatch} from './gmail.ts';
 import {recoverImapBatch} from './imap.ts';
-export async function runMailboxSync(lease:SyncLease,deps:MailDeps&{adapter?:MailAdapter}={}):Promise<{messages:number;complete:boolean;gap:boolean}> {
+export async function runMailboxSync(lease:SyncLease,deps:MailDeps&{adapter?:MailAdapter;maxMessages?:number;maxPages?:number}={}):Promise<{messages:number;complete:boolean;gap:boolean}> {
+ const maxMessages=deps.maxMessages??100,maxPages=deps.maxPages??5;if(!Number.isInteger(maxMessages)||maxMessages<1||maxMessages>100||!Number.isInteger(maxPages)||maxPages<1||maxPages>5)throw Error("INVALID_SYNC_BUDGET");
  let heartbeatError=false;const timer=setInterval(()=>{void heartbeatMailboxSync(lease).catch(()=>{heartbeatError=true;});},15000);timer.unref();
  try{
   const config=await ensureSyncGmailAccess(lease,deps),adapter=deps.adapter??(config.mailbox.provider==='gmail'?createGmailAdapter(deps):createSmtpImapAdapter(deps));
   let batch;
   if(config.cursor?.recovery)batch=config.cursor.kind==='gmail'?await recoverGmailBatch(config,config.cursor,deps):await recoverImapBatch(config,config.cursor,{...deps,adapter});
-  else try{batch=await adapter.readBatch(config,config.cursor,{maxMessages:100,maxPages:5});}catch(error){
+  else try{batch=await adapter.readBatch(config,config.cursor,{maxMessages,maxPages});}catch(error){
    if(config.cursor?.kind==='gmail'&&error instanceof Error&&error.message==='GMAIL_HISTORY_EXPIRED')batch=await recoverGmailBatch(config,config.cursor,deps);
    else if(config.cursor?.kind==='imap'&&error instanceof Error&&error.message==='IMAP_UIDVALIDITY_CHANGED')batch=await recoverImapBatch(config,config.cursor,{...deps,adapter});
    else throw error;
