@@ -4,7 +4,8 @@ import {connectionRow} from '../channels/repository.ts';
 import {readMessagingLimits} from '../channels/limits.ts';
 import {AppError} from '../errors.ts';
 import {listConversations,readConversation,markConversationRead,linkConversationLead} from './inbox.ts';
-import {recordConsent,recordLeadConsent,suppressIdentity} from './consent.ts';
+import {recordConsent,recordLeadConsent,recordEmailConsent,suppressIdentity} from './consent.ts';
+import {prepareMailReply,confirmMailReply} from './email-replies.ts';
 import {preparePublication,confirmPublication,listPublications,pausePublication} from './publication.ts';
 import {prepareReply,confirmReply} from './replies.ts';
 import {prepareReconciliation,confirmReconciliation} from './reconciliation.ts';
@@ -21,10 +22,14 @@ export function messagingRequestHandler(request:Request,params:Record<string,str
  }
  if(request.method==='POST'){
   if(!id){
-   if(resource==='consents')return recordConsent(p,body);if(resource==='lead-consents')return recordLeadConsent(p,body);if(resource==='suppressions')return suppressIdentity(p,body);
+   if(resource==='consents')return recordConsent(p,body);if(resource==='lead-consents')return recordLeadConsent(p,body);if(resource==='email-consents')return recordEmailConsent(p,body);if(resource==='suppressions')return suppressIdentity(p,body);
    if(resource==='publication-prepare')return preparePublication(p,body);if(resource==='publication-confirm')return confirmPublication(p,body);
   }
   if(resource==='conversations'){
+   if(action==='reply-prepare'||action==='reply-confirm'){
+    const channel=await withWorkspaceTransaction(p,async c=>(await c.query('SELECT channel FROM app.channel_conversation WHERE id=$1',[id])).rows[0]?.channel);
+    if(channel==='EMAIL')return action==='reply-prepare'?prepareMailReply(p,id,body):confirmMailReply(p,id,body);
+   }
    if(action==='read')return markConversationRead(p,id,body);if(action==='link-lead')return linkConversationLead(p,id,body);if(action==='reply-prepare')return prepareReply(p,id,body);if(action==='reply-confirm')return confirmReply(p,id,body);
   }
   if(resource==='publications'&&action==='pause')return pausePublication(p,{...(body as Record<string,unknown>),publicationId:id});

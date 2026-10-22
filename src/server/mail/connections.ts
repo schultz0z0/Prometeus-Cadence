@@ -19,6 +19,7 @@ export async function verifyMailbox(p:Principal,id:string,expectedRevision:numbe
   if(row.address&&row.address!==verified.address)throw new AppError(409,'O endereço da caixa mudou.');
   await c.query("UPDATE app.email_mailbox SET send_verified=$2,read_verified=$3,state='verifying',last_error=NULL WHERE id=$1",[id,verified.send,verified.read]);
   await c.query("UPDATE app.channel_connection SET credentials_verified=true,state='credentials_verified' WHERE id=$1",[id]);
+  if(row.provider==='smtp-imap')await c.query('SELECT app.provision_mail_sender($1,$2)',[id,expectedRevision]);
   await c.query('INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,$3)',[p.workspaceId,p.userId,'mailbox.verify']);return mailboxView(c,await mailboxRow(c,id));
  });
 }

@@ -9,6 +9,10 @@ test('email composition freezes explicit sender recipient subject RFC id and tex
  await assert.rejects(composeMail({...outgoing,content:{...outgoing.content,subject:'Hi\r\nBcc: bad@example.org'}}));
  await assert.rejects(composeMail({...outgoing,to:'x@example.org,y@example.org'}));
 });
+test('campaign unsubscribe header targets the actual anonymous one-click API route',async()=>{
+ const mime=(await composeMail({...outgoing,purpose:'campaign',unsubscribeUrl:'https://hooks.example/unsubscribe/'+'a'.repeat(43)})).toString();
+ assert.match(mime.replace(/\r\n[ \t]+/g,''),/List-Unsubscribe:\s*<https:\/\/hooks.example\/api\/mail-unsubscribe\/[a]+\/one-click>/);
+});
 test('received HTML stays inert text and attachment metadata is bounded',async()=>{
  const html=await parseMail(rawMail('Content-Type: text/html; charset=utf-8\r\n\r\n<p>Olá</p><script>steal()</script><img src="https://evil.example/pixel">'),source);
  assert.match(html.text,/Olá/);assert.doesNotMatch(html.text,/<script|<img|steal\(\)/);assert.equal(html.from,'sender@example.org');

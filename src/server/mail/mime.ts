@@ -4,7 +4,7 @@ import {Readable,Transform} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import {parseFragment} from 'parse5';
 import type {MailSend,MailMessage} from '../../domain/mail.ts';
-import {normalizeMailAddress,validateMailContent} from '../../domain/mail-policy.ts';
+import {normalizeMailAddress,validateMailContent,renderMailBody} from '../../domain/mail-policy.ts';
 export interface MailSource {remoteId:string;remoteThreadId:string|null;receivedAt:string;direction:'inbound'|'outbound'}
 const maxBytes=2097152;
 const rfcId=(value:string)=>/^<[^<>\s\x00-\x1f]{1,500}@[^<>\s\x00-\x1f]{1,253}>$/.test(value);
@@ -13,13 +13,14 @@ export async function composeMail(send:MailSend):Promise<Buffer> {
  const from=normalizeMailAddress(send.address),to=normalizeMailAddress(send.to),thread=send.thread;
  if(thread&&[thread.inReplyTo,...thread.references].some(v=>v!==null&&!rfcId(v)))throw Error('MAIL_REFERENCES_INVALID');
  if(thread&&thread.references.length>100)throw Error('MAIL_REFERENCES_INVALID');
- let text=send.content.text+(send.content.signature?'\n\n'+send.content.signature:'');
+ let text=renderMailBody(send.content);
  const headers:Record<string,string>={};
  if(send.purpose==='campaign'){
   if(!send.unsubscribeUrl)throw Error('MAIL_UNSUBSCRIBE_REQUIRED');
   const url=new URL(send.unsubscribeUrl);if(url.protocol!=='https:'||url.username||url.password||/[\r\n<>]/.test(send.unsubscribeUrl))throw Error('MAIL_UNSUBSCRIBE_INVALID');
-  text+='\n\nPara não receber mais e-mails: '+url.toString();
-  headers['List-Unsubscribe']='<'+url.toString().replace(/\/$/,'')+'/one-click>';
+  const token=url.pathname.match(/^\/unsubscribe\/([A-Za-z0-9_-]{43})$/)?.[1];if(!token||url.search||url.hash)throw Error('MAIL_UNSUBSCRIBE_INVALID');
+  text=renderMailBody(send.content,url.toString());
+  headers['List-Unsubscribe']='<'+new URL('/api/mail-unsubscribe/'+token+'/one-click',url).toString()+'>';
   headers['List-Unsubscribe-Post']='List-Unsubscribe=One-Click';
  }
  if(Buffer.byteLength(text)>65536)throw Error('MAIL_CONTENT_TOO_LARGE');

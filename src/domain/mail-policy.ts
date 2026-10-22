@@ -28,3 +28,6 @@ export function evaluateMailPolicy(input:MailPolicyInput):{allowed:boolean;block
  if(input.purpose==='campaign'&&(input.syncState!=='ready'||!Number.isFinite(synced)||synced>now||now-synced>300000))blockers.push('EMAIL_SYNC_REQUIRED');
  return {allowed:blockers.length===0,blockers};
 }
+export function renderMailBody(content:MailContent,unsubscribeUrl:string|null=null):string{
+ return content.text+(content.signature?'\n\n'+content.signature:'')+(unsubscribeUrl?'\n\nPara não receber mais e-mails: '+unsubscribeUrl:'');
+}
