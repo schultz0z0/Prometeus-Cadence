@@ -24,3 +24,12 @@ test('SMTP refuses a trusted fixture certificate with the wrong hostname before 
   assert.equal(f.smtp.state.dataCount,0);
  }finally{await f.close();}
 });
+test('IMAP Inbox and configured Sent keep independent read-only checkpoints',async()=>{
+ const f=await mailTransports();try{
+  const config={...smtpConfig,config:{...smtpConfig.config,sentFolder:'Sent'}} as typeof smtpConfig,adapter=createSmtpImapAdapter(f.deps);
+  const baseline=await adapter.readBatch(config,null,{maxMessages:10,maxPages:1});
+  assert.equal(baseline.next.kind,'imap');assert.equal((baseline.next as any).sent?.path,'Sent');
+  await adapter.readBatch(config,baseline.next,{maxMessages:10,maxPages:1});assert.ok(f.imap.commands.filter(c=>c==='EXAMINE').length>=4);
+  assert.ok(!f.imap.commands.some(c=>['SELECT','STORE','CLOSE','EXPUNGE','APPEND'].includes(c)));
+ }finally{await f.close();}
+});

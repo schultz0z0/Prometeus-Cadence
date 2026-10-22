@@ -10,9 +10,12 @@ import {dispatchPool} from './worker-db.ts';
 import {dispatchBlocker} from './guard.ts';
 import {recordDispatchReceipt} from './receipts.ts';
 import {dispatchTimeAllowed,nextStepAt} from './schedule.ts';
-export async function dispatchOne(lease:DispatchLease,deps:{adapter?:ProviderAdapter;now:()=>string}):Promise<void>{
+import {dispatchEmail} from './email-dispatch.ts';
+import type {MailAdapter,MailDeps} from '../mail/providers/contracts.ts';
+export async function dispatchOne(lease:DispatchLease,deps:{adapter?:ProviderAdapter;mailAdapter?:MailAdapter;mailDeps?:MailDeps;now:()=>string}):Promise<void>{
  try{await heartbeatDispatch(lease);}catch{return;}
  const ctx=(await dispatchPool().query('SELECT app.read_message_dispatch($1,$2,$3,$4) AS context',leaseArgs(lease))).rows[0].context;if(!ctx)return;
+ if(ctx.outbox?.prepared_send?.channel==='EMAIL'){await dispatchEmail(lease,ctx,{...deps.mailDeps,now:deps.now,adapter:deps.mailAdapter});return;}
  let blocker=dispatchBlocker(ctx,deps.now()),config:ProviderConfig|undefined,callback:string|undefined;
  if(!blocker&&ctx.publication?.id){
   const settings=ctx.publication.snapshot.cadence.settings,now=deps.now();

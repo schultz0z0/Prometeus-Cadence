@@ -35,22 +35,7 @@ export function createSmtpImapAdapter(deps:SmtpImapDeps={}):MailAdapter {
   try{await client.connect();return client;}catch(error){client.close();throw error;}
  }
  const logout=async(client:ImapFlow)=>{try{await client.logout();}catch{client.close();}};
- return {
-  async verify(config){const transport=await smtp(config);try{await transport.verify();}finally{transport.close();}const client=await imap(config);try{const lock=await client.getMailboxLock(settings(config).inbox,{readOnly:true,acquireTimeout:10000});lock.release();}finally{await logout(client);}return {address:normalizeMailAddress(config.mailbox.address??''),send:true,read:true};},
-  async sendOnce(config,send){
-   const bytes=await composeMail(send);let transport:Transporter<SMTPSentMessageInfo>;
-   try{transport=await smtp(config);}catch{return {kind:'not_accepted',code:'MAIL_DESTINATION_UNAVAILABLE',retryable:false,retryAfterMs:null};}
-   try{
-    const result=await transport.sendMail({envelope:{from:normalizeMailAddress(send.address),to:[normalizeMailAddress(send.to)]},raw:bytes,disableFileAccess:true,disableUrlAccess:true});
-    if(result.accepted?.length===1&&String(result.accepted[0])===send.to)return {kind:'accepted',remoteId:send.rfcMessageId,acceptedAt:now()};
-    return {kind:'uncertain',code:'SMTP_ACCEPTANCE_UNCONFIRMED'};
-   }catch(error){
-    const e=error as {responseCode?:number;command?:string;code?:string};
-    if(e.responseCode&&e.responseCode>=400&&e.responseCode<600)return {kind:'not_accepted',code:'SMTP_'+e.responseCode,retryable:e.responseCode<500,retryAfterMs:null};
-    return {kind:'uncertain',code:'SMTP_SEND_RESULT_MISSING'};
-   }finally{transport.close();}
-  },
-  async readBatch(config,cursor,budget){
+ const readFolder:MailAdapter['readBatch']=async(config,cursor,budget)=>{
    if(!Number.isInteger(budget.maxMessages)||budget.maxMessages<1||budget.maxMessages>100)throw Error('IMAP_SYNC_BUDGET_INVALID');
    const client=await imap(config),folder=settings(config).inbox;
    try{
@@ -71,6 +56,31 @@ export function createSmtpImapAdapter(deps:SmtpImapDeps={}):MailAdapter {
      const complete=end>=high;return {messages,next:{kind:'imap',path:folder,uidValidity:validity,lastUid:Math.max(cursor.lastUid,end),watermark:complete?now():cursor.watermark},complete,gap:false};
     }finally{lock.release();}
    }finally{await logout(client);}
+ };
+ return {
+  async verify(config){const transport=await smtp(config);try{await transport.verify();}finally{transport.close();}const client=await imap(config);try{const lock=await client.getMailboxLock(settings(config).inbox,{readOnly:true,acquireTimeout:10000});lock.release();}finally{await logout(client);}return {address:normalizeMailAddress(config.mailbox.address??''),send:true,read:true};},
+  async sendOnce(config,send){
+   const bytes=await composeMail(send);let transport:Transporter<SMTPSentMessageInfo>;
+   try{transport=await smtp(config);}catch{return {kind:'not_accepted',code:'MAIL_DESTINATION_UNAVAILABLE',retryable:false,retryAfterMs:null};}
+   try{
+    const result=await transport.sendMail({envelope:{from:normalizeMailAddress(send.address),to:[normalizeMailAddress(send.to)]},raw:bytes,disableFileAccess:true,disableUrlAccess:true});
+    if(result.accepted?.length===1&&String(result.accepted[0])===send.to)return {kind:'accepted',remoteId:send.rfcMessageId,acceptedAt:now()};
+    return {kind:'uncertain',code:'SMTP_ACCEPTANCE_UNCONFIRMED'};
+   }catch(error){
+    const e=error as {responseCode?:number;command?:string;code?:string};
+    if(e.responseCode&&e.responseCode>=400&&e.responseCode<600)return {kind:'not_accepted',code:'SMTP_'+e.responseCode,retryable:e.responseCode<500,retryAfterMs:null};
+    return {kind:'uncertain',code:'SMTP_SEND_RESULT_MISSING'};
+   }finally{transport.close();}
+  },
+  async readBatch(config,cursor,budget){
+   const conf=settings(config),sent=conf.sentFolder;
+   if(!sent||sent===conf.inbox)return readFolder(config,cursor,budget);
+   if(budget.maxMessages<2)throw Error('IMAP_SYNC_BUDGET_INVALID');
+   const inbox=await readFolder(config,cursor,{...budget,maxMessages:Math.ceil(budget.maxMessages/2)});
+   const sentCursor=cursor?.kind==='imap'?cursor.sent??null:null;
+   const sentBatch=await readFolder({...config,config:{...conf,inbox:sent,sentFolder:null}},sentCursor,{...budget,maxMessages:Math.floor(budget.maxMessages/2)});
+   if(inbox.next.kind!=='imap'||sentBatch.next.kind!=='imap')throw Error('IMAP_CURSOR_INVALID');
+   return {messages:[...inbox.messages,...sentBatch.messages.map(m=>({...m,direction:'outbound' as const}))],next:{...inbox.next,sent:sentBatch.next},complete:inbox.complete&&sentBatch.complete,gap:inbox.gap||sentBatch.gap};
   },
   async findSent(config,send){
    const folder=settings(config).sentFolder;if(!folder)return null;const client=await imap(config);

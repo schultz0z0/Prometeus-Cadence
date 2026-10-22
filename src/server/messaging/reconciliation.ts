@@ -11,6 +11,7 @@ import {requireChannelAdmin,commandHash,priorCommand,completeCommand,senderView}
 import {decryptCredential} from '../channels/crypto.ts';
 import {providerAdapter} from '../channels/connections.ts';
 import {messageView} from './repository.ts';
+import {mailReconciliationState} from './email-reconciliation.ts';
 const schema=z.strictObject({resolution:z.enum(['accepted','not_accepted']),remoteId:z.string().min(1).max(512).nullable(),evidence:z.string().trim().min(40).max(4000),reference:z.url().max(2000),proofKind:z.literal('provider-log'),verifiedByUser:z.literal(true)});
 const secret=()=>{if(!process.env.BETTER_AUTH_SECRET)throw Error('Review signing unavailable');return process.env.BETTER_AUTH_SECRET;};
 async function state(p:Principal,messageId:string,input:z.infer<typeof schema>){
@@ -18,6 +19,7 @@ async function state(p:Principal,messageId:string,input:z.infer<typeof schema>){
   await requireChannelAdmin(c);const row=(await c.query('SELECT state FROM app.message_outbox WHERE message_id=$1',[messageId])).rows[0];if(!row)throw new AppError(404,'Mensagem não encontrada.');if(row.state!=='uncertain')throw new AppError(409,'A mensagem não está mais incerta.');
   return (await c.query('SELECT app.inspect_uncertain_message($1) AS context',[messageId])).rows[0].context;
  });
+ if(ctx.connection.channel==='EMAIL')return mailReconciliationState(p,ctx,messageId,input);
  const url=new URL(input.reference),hosts=ctx.connection.provider==='meta'?['business.facebook.com','developers.facebook.com']:['console.twilio.com'];
  if(url.protocol!=='https:'||url.username||url.password||url.port||!hosts.includes(url.hostname))throw new AppError(422,'Informe uma referência do painel do próprio provedor.');
  if((input.resolution==='accepted'&&!input.remoteId)||(input.resolution==='not_accepted'&&input.remoteId))throw new AppError(422,'Revise o resultado e o identificador remoto.');

@@ -36,15 +36,19 @@ export function createGmailAdapter(deps:MailDeps={}):MailAdapter {
    if(!Number.isInteger(budget.maxMessages)||budget.maxMessages<1||budget.maxMessages>100||!Number.isInteger(budget.maxPages)||budget.maxPages<1||budget.maxPages>5)throw Error('GMAIL_SYNC_BUDGET_INVALID');
    if(!cursor){const profile=requireSuccess(await gmailRequest('profile',config,deps));if(!/^\d{1,40}$/.test(profile.historyId))throw Error('GMAIL_HISTORY_INVALID');return {messages:[],next:{kind:'gmail',historyId:profile.historyId,pageToken:null,watermark:now()},complete:true,gap:false};}
    if(cursor.kind!=='gmail')throw Error('GMAIL_CURSOR_INVALID');
-   const messages:MailMessage[]=[],seen=new Set<string>();let page=cursor.pageToken,historyId=cursor.historyId,complete=false;
+   const messages:MailMessage[]=[],seen=new Set<string>();let page=cursor.pageToken,historyId=cursor.historyId,complete=false,pending=cursor.pending,readCount=0;
    for(let n=0;n<budget.maxPages;n++){
     const q=new URLSearchParams({startHistoryId:cursor.historyId,maxResults:String(budget.maxMessages),historyTypes:'messageAdded'});if(page)q.set('pageToken',page);
-    const data=requireSuccess(await gmailRequest('history?'+q,config,deps));
-    for(const h of data.history??[])for(const item of h.messagesAdded??[]){const id=item.message?.id;if(typeof id!=='string'||seen.has(id))continue;if(messages.length>=budget.maxMessages)throw Error('GMAIL_BATCH_REQUIRES_SMALLER_PAGE');seen.add(id);const mail=await readGmailRaw(config,id,deps);if(mail.labels.includes('INBOX'))messages.push(mail);}
+    const data=pending?{historyId:pending.historyId,nextPageToken:pending.pageToken,history:[{messagesAdded:pending.ids.map(id=>({message:{id}}))}]}:requireSuccess(await gmailRequest('history?'+q,config,deps));pending=undefined;
+    const ids:string[]=[];for(const h of data.history??[])for(const item of h.messagesAdded??[]){const id=item.message?.id;if(typeof id!=='string'||seen.has(id))continue;if(id.length>100||ids.length>=500)throw Error('GMAIL_HISTORY_RECORD_TOO_LARGE');seen.add(id);ids.push(id);}
     if(typeof data.historyId!=='string'||!/^\d{1,40}$/.test(data.historyId))throw Error('GMAIL_HISTORY_INVALID');historyId=data.historyId;
-    page=typeof data.nextPageToken==='string'?data.nextPageToken:null;if(!page){complete=true;break;}if(messages.length>=budget.maxMessages)break;
+    page=typeof data.nextPageToken==='string'?data.nextPageToken:null;
+    const take=Math.min(ids.length,budget.maxMessages-readCount);
+    for(const id of ids.slice(0,take)){const mail=await readGmailRaw(config,id,deps);readCount++;if(mail.labels.includes('INBOX')||mail.labels.includes('SENT'))messages.push(mail);}
+    if(take<ids.length){pending={ids:ids.slice(take),historyId,pageToken:page};break;}
+    if(!page){complete=true;break;}if(readCount>=budget.maxMessages)break;
    }
-   return {messages,next:{kind:'gmail',historyId:complete?historyId:cursor.historyId,pageToken:page,watermark:complete?now():cursor.watermark},complete,gap:false};
+   return {messages,next:{kind:'gmail',historyId:complete?historyId:cursor.historyId,pageToken:page,watermark:complete?now():cursor.watermark,...(pending?{pending}:{})},complete,gap:false};
   },
   async findSent(config,send){
    const profile=requireSuccess(await gmailRequest('profile',config,deps));if(normalizeMailAddress(profile.emailAddress)!==send.address)return null;
