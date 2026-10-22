@@ -206,11 +206,11 @@ Cada tarefa abaixo tem ciclo RED → implementação mínima → GREEN → commi
 
 **Interfaces:** `listConversations({channel:'EMAIL',senderId?,direction?,search?,cursor?})` e `readConversation` retornam união discriminada com email-thread DTO e cursor; `EmailInbox()`/`EmailReply({conversationId,client,onQueued})`. `/inbox?channel=email|whatsapp` escolhe aba explícita; sem parâmetro mantém WhatsApp por compatibilidade, `/messages/email` abre email e `/messages/whatsapp` continua direto.
 
-- [ ] **Step 1:** Testes de fluxo: mesma pessoa com duas threads não mistura compose/references; seleção rápida A→B não injeta resultadoA; cursor de lidos usa última mensagem exibida, sem marcar remotamente; email externo mostra autoria externa; accepted não exibe delivered/read. Previewreply perdido/retentado mantém um comando. Thread com conteúdo limitado exibe aviso e hold, sem render HTML/remoteimage.
-- [ ] **Step 2:** `rtk node --experimental-strip-types --test tests/mail-inbox-flow.test.ts` → FAIL.
-- [ ] **Step 3:** Inbox usa filtros caixa/direção/busca, paginação estável e não-lidos por usuário; headers subject/from/to, texto seguro e status reais. Reply só na thread e ao endereço revisado, assinatura prévia, confirmação/outbox; ações admin de consentimento/supressão/reconciliação separadas. Nenhuma IA responde autonomamente. Métricas sem rastreio retornam null/indisponível; estado lido app não é recibo do destinatário. Corrigir navegação E-mail que hoje aponta para `/inbox` WhatsApp.
-- [ ] **Step 4:** Mesmo comando + messaging-flow/mail-client/mail-http + typecheck/build → PASS. QA de desktop/mobile/teclado com navegador autorizado se disponível; caso contrário pendência explícita no relatório.
-- [ ] **Step 5:** Commit `feat: operate threaded email inbox and reviewed replies`.
+- [x] **Step 1:** Testes de fluxo: mesma pessoa com duas threads não mistura compose/references; seleção rápida A→B não injeta resultadoA; cursor de lidos usa última mensagem exibida, sem marcar remotamente; email externo mostra autoria externa; accepted não exibe delivered/read. Previewreply perdido/retentado mantém um comando. Thread com conteúdo limitado exibe aviso e hold, sem render HTML/remoteimage.
+- [x] **Step 2:** `rtk node --experimental-strip-types --test tests/mail-inbox-flow.test.ts` → FAIL.
+- [x] **Step 3:** Inbox usa filtros caixa/direção/busca, paginação estável e não-lidos por usuário; headers subject/from/to, texto seguro e status reais. Reply só na thread e ao endereço revisado, assinatura prévia, confirmação/outbox; ações admin de consentimento/supressão/reconciliação separadas. Nenhuma IA responde autonomamente. Métricas sem rastreio retornam null/indisponível; estado lido app não é recibo do destinatário. Corrigir navegação E-mail que hoje aponta para `/inbox` WhatsApp.
+- [x] **Step 4:** Mesmo comando + messaging-flow/mail-client/mail-http + typecheck/build → PASS. QA de desktop/mobile/teclado com navegador autorizado se disponível; caso contrário pendência explícita no relatório.
+- [x] **Step 5:** Commit `feat: operate threaded email inbox and reviewed replies`.
 
 ### Task 13: Workers locais, documentação conjunta e aceite final
 

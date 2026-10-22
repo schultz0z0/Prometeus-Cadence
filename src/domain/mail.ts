@@ -1,4 +1,5 @@
 export type MailProvider='gmail'|'smtp-imap';
+import type {ConversationView,MessageView} from './whatsapp.ts';
 export interface MailContent {kind:'email';subject:string;text:string;signature:string}
 export interface MailIdentity {channel:'EMAIL';scope:'email';address:string}
 export type MailboxState='pending'|'authorization_required'|'verifying'|'ready'|'attention'|'disconnected';
@@ -28,3 +29,6 @@ export interface MailPolicyInput {
  purpose:MailSend['purpose'];authorized:boolean;suppressed:boolean;hasInbound:boolean;sendReady:boolean;
  syncState:MailboxView['syncState'];lastSyncedAt:string|null;now:string;
 }
+export interface EmailConversationView extends ConversationView {channel:'EMAIL';mail:{mailboxId:string;mailboxName:string;mailboxAddress:string;subject:string;needsReview:boolean}}
+export interface EmailMessageView extends MessageView {channel:'EMAIL';mail:{subject:string;from:string;to:string[];origin:'app'|'external';classification:MailMessage['classification'];attachments:MailMessage['attachments'];truncated:boolean;rfcMessageId:string|null;inReplyTo:string|null;references:string[]}}
+export interface EmailThreadView {channel:'EMAIL';conversation:EmailConversationView;messages:EmailMessageView[];nextCursor:string|null}

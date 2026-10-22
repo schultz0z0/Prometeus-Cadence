@@ -18,3 +18,10 @@ test('SMTP credentials stay out of draft recovery and no client action writes br
  const {createDraftRecovery}=await import('../src/client/draft-recovery.ts'),recovery=createDraftRecovery(),field={tagName:'INPUT',type:'password',name:'smtpPassword',id:'',value:'fixture-secret',getAttribute:()=>null};
  recovery.capture(field);recovery.capture({...field,name:'imapPassword'});assert.equal(recovery.size(),0);assert.equal(recovery.text(),'');
 });
+test('reply confirmation retry retains the command and thread references after a lost response',async()=>{
+ const calls:{path:string;body:any}[]=[];let lost=true;
+ const client=createMailClient({workspaceId:'A',transport:async(path,init)=>{const body=init?.body?JSON.parse(String(init.body)):undefined;calls.push({path:String(path),body});if(String(path).endsWith('reply-prepare'))return Response.json({token:'review',snapshot:{thread:{inReplyTo:'<inbound-A@example.test>'}},blockers:[],preview:'Resposta A',expiresAt:'2026-10-22T12:00:00Z'});if(lost){lost=false;throw Error('Lost after commit');}return Response.json({id:'queued-A'});}});
+ const prepared=await client.prepareReply('thread-A',{messageId:crypto.randomUUID(),content:{kind:'email',subject:'Re: A',text:'Resposta A',signature:'Equipe'}});
+ assert.equal(calls.length,1);assert.equal(prepared.review.snapshot.thread?.inReplyTo,'<inbound-A@example.test>');await assert.rejects(client.confirmReply(prepared));await client.confirmReply(prepared);
+ const confirms=calls.filter(c=>c.path.endsWith('reply-confirm'));assert.equal(confirms[0].body.requestId,confirms[1].body.requestId);assert.equal(confirms[0].body.messageId,confirms[1].body.messageId);assert.ok(confirms.every(c=>c.path.includes('/thread-A/')));
+});

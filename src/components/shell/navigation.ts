@@ -46,7 +46,7 @@ export const navigation: NavigationItem[] = [
     label: "Mensagens",
     icon: "Inbox",
     children: [
-      { label: "E-mail", href: "/inbox", icon: "Mail" },
+      { label: "E-mail", href: "/messages/email", icon: "Mail" },
       { label: "WhatsApp", href: "/messages/whatsapp", icon: "MessageSquare" },
     ],
   },

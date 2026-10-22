@@ -21,6 +21,7 @@ const known = [
   "mail-dispatch",
   "mail-inbound",
   "mail-http",
+  "mail-inbox",
   "whatsapp-review-regressions",
   "whatsapp-lifecycle",
   "whatsapp-storage",

@@ -13,8 +13,14 @@ import {readMessageUsage} from './usage.ts';
 export function messagingRequestHandler(request:Request,params:Record<string,string>):Promise<Response>{return channelHttp(request,async(p,body)=>{
  const {resource,id,action}=params,url=new URL(request.url);
  if(request.method==='GET'){
-  if(resource==='conversations'&&!id)return listConversations(p,{...(url.searchParams.get('search')?{search:url.searchParams.get('search')!}:{}),...(url.searchParams.get('cursor')?{cursor:url.searchParams.get('cursor')!}:{}),...(url.searchParams.get('senderId')?{senderId:url.searchParams.get('senderId')!}:{})});
-  if(resource==='conversations'&&action==='messages')return readConversation(p,id,url.searchParams.get('cursor')??undefined);
+  if(resource==='conversations'){
+   const channel=url.searchParams.get('channel')??'WHATSAPP';if(channel!=='EMAIL'&&channel!=='WHATSAPP')throw new AppError(422,'Canal inválido.');
+   if(!id){const query={...(url.searchParams.get('search')?{search:url.searchParams.get('search')!}:{}),...(url.searchParams.get('cursor')?{cursor:url.searchParams.get('cursor')!}:{}),...(url.searchParams.get('senderId')?{senderId:url.searchParams.get('senderId')!}:{})};
+    if(channel==='EMAIL'){const direction=url.searchParams.get('direction');if(direction!==null&&direction!==''&&direction!=='inbound'&&direction!=='outbound')throw new AppError(422,'Direção inválida.');return listConversations(p,{...query,channel:'EMAIL',...(direction==='inbound'||direction==='outbound'?{direction}:{})});}
+    return listConversations(p,query);
+   }
+   if(action==='messages')return channel==='EMAIL'?readConversation(p,id,url.searchParams.get('cursor')??undefined,'EMAIL'):readConversation(p,id,url.searchParams.get('cursor')??undefined);
+  }
   if(resource==='publications'&&!id)return listPublications(p);
   if(resource==='publications'&&id&&!action)return withWorkspaceTransaction(p,async c=>{
    const row=(await c.query('SELECT p.*,count(e.id) AS enrolled FROM app.cadence_publication p LEFT JOIN app.cadence_enrollment e ON e.workspace_id=p.workspace_id AND e.publication_id=p.id WHERE p.id=$1 GROUP BY p.workspace_id,p.id',[id])).rows[0];if(!row)throw new AppError(404,'Publicação não encontrada.');
