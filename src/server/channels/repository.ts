@@ -32,6 +32,7 @@ export async function connectionRow(c:PoolClient,id:string,lock=false){
 }
 export function senderView(row:Record<string,any>):SenderView{return {id:row.id,connectionId:row.connection_id,provider:row.provider,address:row.address,externalId:row.external_id,identityScope:row.identity_scope,revision:Number(row.revision),ready:row.ready,dailyLimit:row.daily_limit};}
 export async function connectionView(c:PoolClient,row:Record<string,any>):Promise<ConnectionView>{
+ if(row.channel==='EMAIL')throw new AppError(404,'Conexão WhatsApp não encontrada.');
  const senders=(await c.query('SELECT * FROM app.channel_sender WHERE connection_id=$1 ORDER BY id',[row.id])).rows.map(senderView);
  let callbackUrl:string|null=null,callbackStatusUrl:string|null=null;try{callbackUrl=channelCallbackUrl(row.provider,row.public_id);if(row.provider==='twilio')callbackStatusUrl=channelCallbackUrl('twilio',row.public_id,'status');}catch{}
  const expired=row.token_expires_at&&row.token_expires_at.getTime()<=Date.now();
@@ -39,7 +40,7 @@ export async function connectionView(c:PoolClient,row:Record<string,any>):Promis
 }
 export async function readConnections(p:Principal):Promise<ConnectionView[]>{
  return withWorkspaceTransaction(p,async c=>{
-  const rows=(await c.query('SELECT * FROM app.channel_connection ORDER BY created_at,id')).rows;
+  const rows=(await c.query("SELECT * FROM app.channel_connection WHERE channel='WHATSAPP' ORDER BY created_at,id")).rows;
   return Promise.all(rows.map(row=>connectionView(c,row)));
  });
 }

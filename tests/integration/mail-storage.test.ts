@@ -1,0 +1,45 @@
+import test,{after} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {getPools} from '../../src/server/db/pool.ts';
+import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
+import {listMailboxes,saveMailbox,readMailConfig} from '../../src/server/mail/repository.ts';
+import {disconnectMailbox} from '../../src/server/mail/connections.ts';
+import {readConnections} from '../../src/server/channels/repository.ts';
+import {providerAdapter} from '../../src/server/channels/connections.ts';
+import {mailUser,smtpMailboxInput,testAdmin} from './mail-helpers.ts';
+import {assertLegacyMailUpgrade} from './mail-upgrade.ts';
+import {dispatchPool,closeDispatchPool} from '../../src/server/messaging/worker-db.ts';
+after(async()=>{await getPools().close();await closeDispatchPool();});
+test('mailbox commands isolate tenants preserve blank passwords and never read back credentials',async()=>{
+ const a=await mailUser(),b=await mailUser(),input=smtpMailboxInput();
+ const first=await saveMailbox(a.p,input);
+ assert.equal(first.state,'pending');assert.equal(first.sendVerified,false);assert.equal(first.lastSyncedAt,null);
+ assert.equal(first.hasSecrets,true);assert.equal(JSON.stringify(first).includes('password'),false);
+ assert.deepEqual(await saveMailbox(a.p,input),first);
+ await assert.rejects(saveMailbox(a.p,{...input,name:'Changed'}),{status:409});
+ assert.deepEqual(await listMailboxes(b.p),[]);assert.deepEqual(await readConnections(a.p),[]);
+ await assert.rejects(saveMailbox(b.p,{...input,id:first.id,expectedRevision:1,requestId:randomUUID()}),{status:404});
+ const changed=await saveMailbox(a.p,{...input,id:first.id,expectedRevision:1,requestId:randomUUID(),credentials:{smtpPassword:'',imapPassword:''}});
+ assert.equal(changed.revision,2);
+ const cfg=await withWorkspaceTransaction(a.p,c=>readMailConfig(c,first.id));assert.equal(cfg.credentials.smtpPassword,'fixture-smtp-password');
+ const inspection=await testAdmin(async c=>({secrets:(await c.query('SELECT envelope FROM app.channel_credential WHERE workspace_id=$1',[a.p.workspaceId])).rows,owners:(await c.query('SELECT * FROM app.email_address_ownership WHERE workspace_id=$1',[a.p.workspaceId])).rows}));
+ assert.equal(JSON.stringify(inspection.secrets).includes('fixture-smtp'),false);assert.equal(inspection.owners.length,0);
+ await assert.rejects(withWorkspaceTransaction(a.p,c=>c.query('SELECT * FROM app.channel_credential')),{code:'42501'});
+ await assert.rejects(dispatchPool().query('SELECT * FROM app.channel_credential'),{code:'42501'});
+ await assert.rejects(testAdmin(c=>c.query("UPDATE app.email_mailbox SET state='ready' WHERE workspace_id=$1 AND id=$2",[a.p.workspaceId,first.id])),{code:'23514'});
+ const closed=await disconnectMailbox(a.p,{id:first.id,expectedRevision:2,requestId:randomUUID()});assert.equal(closed.state,'disconnected');assert.equal(closed.revision,3);
+});
+test('mailbox saves recheck roles and reject unexpected config no provider downgrade to Twilio',async()=>{
+ const a=await mailUser();
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=$3 WHERE "organizationId"=$1 AND "userId"=$2',[a.p.workspaceId,a.p.userId,'operator']));
+ await assert.rejects(saveMailbox(a.p,smtpMailboxInput()),{status:403});
+ const b=await mailUser();
+ await assert.rejects(saveMailbox(b.p,{...smtpMailboxInput(),config:{...smtpMailboxInput().config,proxy:'http://localhost'}}),{status:422});
+ assert.throws(()=>providerAdapter('gmail'));
+});
+test('mailboxes without encryption key never persist partial connection records',async()=>{
+ const a=await mailUser();delete process.env.CHANNEL_KEYRING_JSON;
+ await assert.rejects(saveMailbox(a.p,smtpMailboxInput()));assert.deepEqual(await listMailboxes(a.p),[]);
+});
+test('email migration preserves legacy publication snapshots and recorded accepted outcomes',assertLegacyMailUpgrade);

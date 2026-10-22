@@ -74,11 +74,11 @@ Cada tarefa abaixo tem ciclo RED → implementação mínima → GREEN → commi
 
 **Interfaces:** Produz os tipos acima; `normalizeMailAddress(value:string):string`, `evaluateMailPolicy(input:{purpose:'service'|'campaign'|'test';authorized:boolean;suppressed:boolean;hasInbound:boolean;sendReady:boolean;syncState:MailboxView['syncState'];lastSyncedAt:string|null;now:string}):{allowed:boolean;blockers:string[]}`; `isPublicationV2(snapshot:unknown):snapshot is PublicationSnapshotV2`. `MessagingProvider='meta'|'twilio'|'gmail'|'smtp-imap'`; fábrica WhatsApp rejeita explicitamente provedor desconhecido.
 
-- [ ] **Step 1:** Escrever `mail-policy.test.ts`: `assert.equal(normalizeMailAddress('Sales+one@EXAMPLE.com'),'Sales+one@example.com')`; pontos/aliases e local-parts diferentes permanecem distintos; CR/LF, listas e display-name como endereço falham. Campanha sem autorização bloqueia mesmo com lead qualificado; reply sem inbound bloqueia; sync exatamente com 300 segundos pode passar, acima disso bloqueia; futuro inválido bloqueia; WhatsApp continua tendo sua janela própria.
-- [ ] **Step 2:** `rtk node --experimental-strip-types --test tests/mail-policy.test.ts` → FAIL por contrato ausente.
-- [ ] **Step 3:** Implementar os contratos, validações de mailbox único (ASCII local-part, domínio IDNA, comprimento total até 254), uniões discriminadas e guard legado/v2; não mudar payload persistido de WhatsApp. Conteúdo de e-mail: assunto 1–200 caracteres, texto 1–64 KiB, assinatura até 4 KiB; MIME total respeita 2 MiB.
-- [ ] **Step 4:** Mesmo comando → PASS; `rtk npm run typecheck` e testes WhatsApp de política existentes → PASS.
-- [ ] **Step 5:** Commit `feat: define versioned email messaging contracts` com somente arquivos da tarefa.
+- [x] **Step 1:** Escrever `mail-policy.test.ts`: `assert.equal(normalizeMailAddress('Sales+one@EXAMPLE.com'),'Sales+one@example.com')`; pontos/aliases e local-parts diferentes permanecem distintos; CR/LF, listas e display-name como endereço falham. Campanha sem autorização bloqueia mesmo com lead qualificado; reply sem inbound bloqueia; sync exatamente com 300 segundos pode passar, acima disso bloqueia; futuro inválido bloqueia; WhatsApp continua tendo sua janela própria.
+- [x] **Step 2:** `rtk node --experimental-strip-types --test tests/mail-policy.test.ts` → FAIL por contrato ausente.
+- [x] **Step 3:** Implementar os contratos, validações de mailbox único (ASCII local-part, domínio IDNA, comprimento total até 254), uniões discriminadas e guard legado/v2; não mudar payload persistido de WhatsApp. Conteúdo de e-mail: assunto 1–200 caracteres, texto 1–64 KiB, assinatura até 4 KiB; MIME total respeita 2 MiB.
+- [x] **Step 4:** Mesmo comando → PASS; `rtk npm run typecheck` e testes WhatsApp de política existentes → PASS.
+- [x] **Step 5:** Commit `feat: define versioned email messaging contracts` com somente arquivos da tarefa.
 
 ### Task 2: Armazenamento de caixas, cifra e compatibilidade 05A
 
@@ -86,11 +86,11 @@ Cada tarefa abaixo tem ciclo RED → implementação mínima → GREEN → commi
 
 **Interfaces:** `listMailboxes(p:Principal):Promise<MailboxView[]>`, `saveMailbox(p,input:unknown):Promise<MailboxView>`, `disconnectMailbox(p,input:unknown):Promise<MailboxView>`, `readMailConfig(c:PoolClient,id:string,expectedRevision?:number):Promise<MailConfig>`. Saves exigem requestId/revisão; propriedades públicas de SMTP/IMAP passam por strictZod. Operação externa não permanece dentro de transação longa.
 
-- [ ] **Step 1:** Teste `mail-storage`: dois workspaces, papel operador, segredo vazio preservado, rotação/revogação; assert readback não contém token/senha/envelope; assert SQL direto de app/dispatcher não lê credential table; caixa pendente não obtém ownership só por endereço digitado; baseline inexistente impede ready. Fixture legada criada antes da migração mantém snapshot e recibos com hash igual depois.
-- [ ] **Step 2:** `rtk npm run test:integration -- mail-storage` → FAIL pela estrutura ausente (registrar suite primeiro).
-- [ ] **Step 3:** Migração adiciona canal/provedor email a connection/sender e checks coerentes. Criar `email_mailbox`, `email_oauth_attempt`, `email_sync_cursor`, `email_thread`, `email_message`, `email_address_ownership`, `messaging_channel_limits`, com RLS/FKs compostas/revisões/índices. Remover unicidade universal sender/identity de conversation e recriar índice parcial WhatsApp; email usa thread_key por caixa. Channel_message mantém texto WhatsApp ≤4096; email ≤64 KiB, metadados próprios e sem bytes de anexo. Credential AAD usa união de provedores. Ownership unificado por endereço entre Gmail e SMTP só após prova; caixa não pode estar ativa em outro workspace, inclusive usando outro conector. Endpoints WhatsApp filtram canal e não tratam email como Twilio.
-- [ ] **Step 4:** `rtk npm run test:integration -- mail-storage whatsapp-storage whatsapp-connections migrations` → PASS; `rtk npm test` → PASS.
-- [ ] **Step 5:** Commit `feat: persist tenant mailboxes and versioned credentials`.
+- [x] **Step 1:** Teste `mail-storage`: dois workspaces, papel operador, segredo vazio preservado, rotação/revogação; assert readback não contém token/senha/envelope; assert SQL direto de app/dispatcher não lê credential table; caixa pendente não obtém ownership só por endereço digitado; baseline inexistente impede ready. Fixture legada criada antes da migração mantém snapshot e recibos com hash igual depois.
+- [x] **Step 2:** `rtk npm run test:integration -- mail-storage` → FAIL pela estrutura ausente (registrar suite primeiro).
+- [x] **Step 3:** Migração adiciona canal/provedor email a connection/sender e checks coerentes. Criar `email_mailbox`, `email_oauth_attempt`, `email_sync_cursor`, `email_thread`, `email_message`, `email_address_ownership`, `messaging_channel_limits`, com RLS/FKs compostas/revisões/índices. Remover unicidade universal sender/identity de conversation e recriar índice parcial WhatsApp; email usa thread_key por caixa. Channel_message mantém texto WhatsApp ≤4096; email ≤64 KiB, metadados próprios e sem bytes de anexo. Credential AAD usa união de provedores. Ownership unificado por endereço entre Gmail e SMTP só após prova; caixa não pode estar ativa em outro workspace, inclusive usando outro conector. Endpoints WhatsApp filtram canal e não tratam email como Twilio.
+- [x] **Step 4:** `rtk npm run test:integration -- mail-storage whatsapp-storage whatsapp-connections migrations` → PASS; `rtk npm test` → PASS.
+- [x] **Step 5:** Commit `feat: persist tenant mailboxes and versioned credentials`.
 
 ### Task 3: Rede pública pinada e MIME limitado
 
