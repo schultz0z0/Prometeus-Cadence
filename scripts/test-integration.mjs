@@ -17,6 +17,7 @@ const known = [
   "mail-oauth",
   "mail-connections",
   "mail-sync",
+  "multichannel-publication",
   "whatsapp-review-regressions",
   "whatsapp-lifecycle",
   "whatsapp-storage",

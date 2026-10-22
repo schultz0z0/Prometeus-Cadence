@@ -71,7 +71,7 @@ async function confirm(p:Principal,target:{conversationId:string}|{connectionId:
   if(state.declared)await c.query('INSERT INTO app.consent_evidence(workspace_id,id,identity_id,purpose,source,occurred_at,evidence,actor_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.workspaceId,randomUUID(),identity.id,'test',state.declared.source,state.declared.occurredAt,state.declared.evidence,p.userId]);
   let conversation=state.conversation;
   if(!conversation){
-   await c.query('INSERT INTO app.channel_conversation(workspace_id,id,connection_id,sender_id,identity_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT(workspace_id,sender_id,identity_id) DO NOTHING',[p.workspaceId,randomUUID(),state.conn.id,state.sender.id,identity.id]);
+   await c.query('INSERT INTO app.channel_conversation(workspace_id,id,connection_id,sender_id,identity_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT(workspace_id,sender_id,identity_id,thread_key) DO NOTHING',[p.workspaceId,randomUUID(),state.conn.id,state.sender.id,identity.id]);
    conversation=(await c.query('SELECT * FROM app.channel_conversation WHERE sender_id=$1 AND identity_id=$2',[state.sender.id,identity.id])).rows[0];
   }
   const proof={senderRevision:state.sender.revision,replyEpoch:Number(identity.reply_epoch),templateHash:state.template?.hash??null,leadId:state.lead?.id??null,leadHash:state.lead?hashValue(state.lead):null};
