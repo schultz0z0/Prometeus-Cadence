@@ -7,6 +7,7 @@ import {AppError} from '../errors.ts';
 import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {requireChannelAdmin,commandHash,priorCommand,completeCommand} from '../channels/repository.ts';
 import {ensurePhoneIdentity} from './replies.ts';
+import {normalizeMailAddress} from '../../domain/mail-policy.ts';
 const consentSchema=z.strictObject({requestId:z.uuid(),identityId:z.uuid(),purpose:z.enum(['service','campaign','test']),source:z.string().trim().min(1).max(200),occurredAt:z.iso.datetime(),evidence:z.string().trim().min(1).max(4000)});
 const suppressionSchema=z.strictObject({requestId:z.uuid(),identityId:z.uuid(),scope:z.enum(['all','service','campaign','test']).default('all'),reason:z.string().trim().min(1).max(500)});
 export async function recordConsent(p:Principal,input:unknown):Promise<void>{
@@ -40,5 +41,18 @@ export async function recordLeadConsent(p:Principal,input:unknown):Promise<void>
   const identity=await ensurePhoneIdentity(c,p,sender.provider+':'+sender.external_account_id,b.phone);
   await c.query('INSERT INTO app.consent_evidence(workspace_id,id,identity_id,purpose,source,occurred_at,evidence,actor_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.workspaceId,randomUUID(),identity.id,'campaign',b.source,b.occurredAt,b.evidence,p.userId]);
   await completeCommand(c,p,b.requestId,hash,{recorded:true},'lead.consent');
+ });
+}
+const emailConsentSchema=z.strictObject({requestId:z.uuid(),leadId:z.string().min(1).max(120),address:z.string().max(254),purpose:z.enum(['campaign','test']),source:z.string().trim().min(1).max(200),occurredAt:z.iso.datetime(),evidence:z.string().trim().min(1).max(4000)});
+export async function recordEmailConsent(p:Principal,input:unknown):Promise<void>{
+ const parsed=emailConsentSchema.safeParse(input);if(!parsed.success||Date.parse(parsed.data.occurredAt)>Date.now())throw new AppError(422,'Revise endereço, origem e evidência do consentimento.');
+ const b=parsed.data;let address:string;try{address=normalizeMailAddress(b.address);}catch{throw new AppError(422,'Endereço inválido.');}
+ await withWorkspaceTransaction(p,async c=>{await requireChannelAdmin(c);await lockWorkspace(c);const hash=commandHash({action:'email.consent',input:{...b,address}});if(await priorCommand(c,p,b.requestId,hash))return;
+  const lead=(await c.query('SELECT payload FROM app.lead WHERE id=$1',[b.leadId])).rows[0]?.payload;if(!lead)throw new AppError(404,'Lead não encontrado.');
+  let current:string;try{current=normalizeMailAddress(lead.email??'');}catch{throw new AppError(409,'O endereço atual do lead não é válido.');}if(current!==address)throw new AppError(409,'O endereço do lead mudou. Revise o consentimento.');
+  await c.query("INSERT INTO app.channel_identity(workspace_id,id,scope,external_id) VALUES($1,$2,'email',$3) ON CONFLICT(workspace_id,scope,external_id) DO NOTHING",[p.workspaceId,randomUUID(),address]);
+  const identity=(await c.query("SELECT id FROM app.channel_identity WHERE scope='email' AND external_id=$1",[address])).rows[0];
+  await c.query('INSERT INTO app.consent_evidence(workspace_id,id,identity_id,purpose,source,occurred_at,evidence,actor_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.workspaceId,randomUUID(),identity.id,b.purpose,b.source,b.occurredAt,b.evidence,p.userId]);
+  await completeCommand(c,p,b.requestId,hash,{recorded:true},'email.consent');
  });
 }

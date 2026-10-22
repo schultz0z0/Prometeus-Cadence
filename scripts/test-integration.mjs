@@ -19,6 +19,7 @@ const known = [
   "mail-sync",
   "multichannel-publication",
   "mail-dispatch",
+  "mail-inbound",
   "whatsapp-review-regressions",
   "whatsapp-lifecycle",
   "whatsapp-storage",

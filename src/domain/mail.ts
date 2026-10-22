@@ -12,6 +12,7 @@ export interface MailMessage {
  from:string;to:string[];subject:string;text:string;receivedAt:string;direction:'inbound'|'outbound';
  classification:'human'|'automatic'|'dsn'|'ambiguous';attachments:{name:string|null;type:string;size:number|null}[];truncated:boolean;
  headers?:Record<string,string>;deliveryStatus?:string;
+ assessment?:{kind:'human'|'automatic'|'hard-bounce'|'soft-bounce'|'ambiguous';correlationId:string|null;recipient?:string;stopRequested:boolean};
 }
 export interface ImapFolderCursor {kind:'imap';path:string;uidValidity:string;lastUid:number;watermark:string;recovery?:{since:string}}
 export type SyncCursor={kind:'gmail';historyId:string;pageToken:string|null;watermark:string;pending?:{ids:string[];historyId:string;pageToken:string|null};recovery?:{since:string;historyId:string;pageToken:string|null}}|
