@@ -1,6 +1,6 @@
 # Marco 05B — e-mail, cadências por canal e inbox
 
-Data: 21/10/2026. Estado: **proposta para revisão; implementação não iniciada**. Base: `b84e44e`, marco 05A na main. Execução pretendida: nativa nesta conversa, conforme escolha anterior do usuário. Pesquisa: [e-mail 05B](../../research/2026-10-21-email-05b-study.md).
+Data: 21/10/2026. Estado: **desenho aprovado pelo usuário; plano em elaboração; implementação não iniciada**. Base: `b84e44e`, marco 05A na main. Execução: nativa nesta conversa, conforme escolha anterior do usuário. Pesquisa: [e-mail 05B](../../research/2026-10-21-email-05b-study.md).
 
 ## 1. Intenção e sucesso
 
