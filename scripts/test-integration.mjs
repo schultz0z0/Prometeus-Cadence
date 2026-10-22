@@ -14,6 +14,7 @@ process.env.NODE_ENV = "test";
 process.env.CADENCE_INTEGRATION = "1";
 const known = [
   "mail-storage",
+  "mail-oauth",
   "whatsapp-review-regressions",
   "whatsapp-lifecycle",
   "whatsapp-storage",
