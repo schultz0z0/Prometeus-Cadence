@@ -10,6 +10,7 @@ import {preparePublication,confirmPublication,listPublications,pausePublication}
 import {prepareReply,confirmReply} from './replies.ts';
 import {prepareReconciliation,confirmReconciliation} from './reconciliation.ts';
 import {readMessageUsage} from './usage.ts';
+import {acknowledgeMailThread} from '../mail/thread-review.ts';
 export function messagingRequestHandler(request:Request,params:Record<string,string>):Promise<Response>{return channelHttp(request,async(p,body)=>{
  const {resource,id,action}=params,url=new URL(request.url);
  if(request.method==='GET'){
@@ -31,6 +32,7 @@ export function messagingRequestHandler(request:Request,params:Record<string,str
   if(resource==='templates'&&!id){const connectionId=url.searchParams.get('connectionId');if(!connectionId)throw new AppError(422,'Escolha uma conexão.');return withWorkspaceTransaction(p,async c=>{await connectionRow(c,connectionId);return (await c.query('SELECT payload FROM app.channel_remote_template WHERE connection_id=$1 ORDER BY id',[connectionId])).rows.map(r=>r.payload);});}
  }
  if(request.method==='POST'){
+  if(resource==='conversations'&&id&&action==='email-review')return acknowledgeMailThread(p,id,body);
   if(!id){
    if(resource==='consents')return recordConsent(p,body);if(resource==='lead-consents')return recordLeadConsent(p,body);if(resource==='email-consents')return recordEmailConsent(p,body);if(resource==='suppressions')return suppressIdentity(p,body);
    if(resource==='publication-prepare')return preparePublication(p,body);if(resource==='publication-confirm')return confirmPublication(p,body);

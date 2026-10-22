@@ -7,7 +7,7 @@ import type {Cadence,Lead} from '../../domain/model.ts';
 import type {PublicationInputV2,PublicationSnapshotV2,PublicationReviewV2,PublicationView} from '../../domain/cadence-runtime.ts';
 import type {TemplateView,OutboundContent} from '../../domain/whatsapp.ts';
 import {renderMessage,validateCadence} from '../../domain/cadence.ts';
-import {normalizeMailAddress,validateMailContent,evaluateMailPolicy,renderMailBody} from '../../domain/mail-policy.ts';
+import {normalizeMailAddress,validateMailContent,validateRenderedMail,evaluateMailPolicy,renderMailBody} from '../../domain/mail-policy.ts';
 import {evaluateSendPolicy} from '../../domain/whatsapp-policy.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {readApprovedContext} from '../context/repository.ts';
@@ -83,7 +83,7 @@ export async function publicationV2State(c:PoolClient,p:Principal,input:Publicat
    const eligibility=step.channel==='EMAIL'?evaluateMailPolicy({now:new Date().toISOString(),purpose:'campaign',authorized:consents.length>0,suppressed:suppressions.length>0,hasInbound:!!lastInboundAt,sendReady:sender.ready&&mailbox?.state==='ready'&&!mailbox?.bounce_paused,syncState:mailbox?.sync_state??'error',lastSyncedAt:mailbox?.last_synced_at?.toISOString()??null}):evaluateSendPolicy({now:at,lastInboundAt,purpose:'campaign',hasOptIn:consents.length>0,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready',content:content as OutboundContent,template});
    blockers.push(...eligibility.blockers.map(b=>leadId+':'+step.id+':'+b));
    const unsubscribe=step.channel==='EMAIL'?unsubscribeArtifact(tokens[leadId]):null;
-   if(step.channel==='EMAIL'){if(!unsubscribe)blockers.push('EMAIL_PUBLIC_URL_REQUIRED');else if(content.kind==='email')preview=content.subject+'\n\n'+renderMailBody(content,unsubscribe.url);}
+   if(step.channel==='EMAIL'){if(!unsubscribe)blockers.push('EMAIL_PUBLIC_URL_REQUIRED');if(content.kind==='email'){blockers.push(...validateRenderedMail(content,unsubscribe?.url??null).map(b=>b+':'+step.id));preview=content.subject+'\n\n'+renderMailBody(content,unsubscribe?.url??null);}}
    const key=step.id+':'+scope+':'+address;if(seen.has(key))blockers.push('DUPLICATE_RECIPIENT:'+step.id);seen.add(key);
    recipient.steps[step.id]={sender:{...sender,provider:conn.provider},connectionRevision:Number(conn.revision),identityId:person?.id??'',address,identity:scope==='email'?{channel:'EMAIL',scope:'email',address}:{scope,externalId:external,phone:address},content,preview,consentIds:consents.map(r=>r.id),suppressionVersion:hashValue(suppressions),replyEpoch:Number(person?.reply_epoch??0),...(unsubscribe?{unsubscribe}:{}),...(template?{templateProof:{revision:template.revision,hash:template.hash}}:{})};
    proofFacts.push({leadId,stepId:step.id,mailbox,person,lastInboundAt});

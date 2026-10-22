@@ -31,3 +31,7 @@ export function evaluateMailPolicy(input:MailPolicyInput):{allowed:boolean;block
 export function renderMailBody(content:MailContent,unsubscribeUrl:string|null=null):string{
  return content.text+(content.signature?'\n\n'+content.signature:'')+(unsubscribeUrl?'\n\nPara não receber mais e-mails: '+unsubscribeUrl:'');
 }
+export function validateRenderedMail(content:MailContent,unsubscribeUrl:string|null=null):string[]{
+ const body=renderMailBody(content,unsubscribeUrl),bytes=(value:string)=>new TextEncoder().encode(value).length;
+ return [...new Set([...validateMailContent(content),...(bytes(body)>65536||bytes(content.subject+'\n\n'+body)>65536?['EMAIL_TEXT_INVALID']:[])])];
+}

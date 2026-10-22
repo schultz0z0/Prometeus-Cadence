@@ -2,6 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {composeMail,parseMail} from '../src/server/mail/mime.ts';
 import {matchMailThread} from '../src/server/mail/threading.ts';
 import {outgoing,source,rawMail,attachments} from './fixtures/mail-messages.ts';
+import {classifyMail,parseDsnFacts} from '../src/server/mail/classification.ts';
 test('email composition freezes explicit sender recipient subject RFC id and text signature',async()=>{
  const bytes=await composeMail(outgoing);const mime=bytes.toString();
  assert.match(mime,/From: sender@example.org/);assert.match(mime,/To: contact@example.net/);assert.match(mime,/d47c98f1-0e58-4e94-ae59-9e543631e117@cadence.example.org/);
@@ -35,4 +36,10 @@ test('delivery status MIME retains only bounded classification evidence for boun
  const body='Auto-Submitted: auto-replied\r\nContent-Type: multipart/report; report-type=delivery-status; boundary="dsn"\r\n\r\n--dsn\r\nContent-Type: text/plain\r\n\r\nDelivery failed\r\n--dsn\r\nContent-Type: message/delivery-status\r\n\r\nFinal-Recipient: rfc822; contact@example.net\r\nAction: failed\r\nStatus: 5.1.1\r\n\r\n--dsn--\r\n';
  const mail=await parseMail(rawMail(body),source);
  assert.equal(mail.headers?.['auto-submitted'],'auto-replied');assert.match(mail.deliveryStatus??'',/Final-Recipient: rfc822; contact@example.net/);
+});
+test('DSN correlates bounded returned original headers without importing an attached message body',async()=>{
+ for(const type of ['text/rfc822-headers','message/rfc822']){
+  const body='Content-Type: multipart/report; report-type=delivery-status; boundary="dsn"\r\n\r\n--dsn\r\nContent-Type: text/plain\r\n\r\nDelivery failed\r\n--dsn\r\nContent-Type: message/delivery-status\r\n\r\nReporting-MTA: dns; mx.example.org\r\n\r\nFinal-Recipient: rfc822; contact@example.net\r\nAction: failed\r\nStatus: 5.1.1\r\n\r\n--dsn\r\nContent-Type: '+type+'\r\n\r\nMessage-ID: <original@example.org>\r\nFrom: sender@example.org\r\nTo: contact@example.net\r\n\r\n'+(type==='message/rfc822'?'Original body not needed':'')+'\r\n--dsn--\r\n';
+  const mail=await parseMail(rawMail(body),source),assessment=classifyMail(mail,mail.headers??{},parseDsnFacts(mail.deliveryStatus));assert.equal(assessment.kind,'hard-bounce');assert.equal(assessment.correlationId,'<original@example.org>');assert.doesNotMatch(mail.text,/Original body not needed/);
+ }
 });

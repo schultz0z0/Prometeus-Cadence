@@ -19,6 +19,7 @@ export function createMessagingClient(options:WorkspaceTransportOptions){
   readEmailConversation:(id:string,cursor?:string)=>api.request<EmailThreadView>(path('conversations',id,'messages')+'?channel=EMAIL'+(cursor?'&cursor='+encodeURIComponent(cursor):'')),
   readConversation:(id:string,cursor?:string)=>api.request<ThreadView>(path('conversations',id,'messages')+(cursor?'?cursor='+encodeURIComponent(cursor):'')),
   markRead:(id:string,messageId:string)=>api.request<void>(path('conversations',id,'read'),{requestId:crypto.randomUUID(),messageId}),
+  acknowledgeEmailThread:(id:string,input:{expectedRevision:number;lastMessageId:string;acknowledge:true;reason:string})=>commands.run<{reviewed:true}>(input,path('conversations',id,'email-review'),input),
   linkLead:(id:string,input:{leadId:string;expectedLeadId:string|null;evidence:string})=>commands.run<ConversationView>(input,path('conversations',id,'link-lead'),input),
   recordConsent:(input:{identityId:string;purpose:'service'|'campaign'|'test';source:string;occurredAt:string;evidence:string})=>commands.run<void>(input,root+'consents',input),
   recordLeadConsent:(input:LeadConsentInput)=>commands.run<void>(input,root+'lead-consents',{...input}),

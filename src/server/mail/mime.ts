@@ -38,15 +38,15 @@ function plainHtml(html:string):string {
 function boundUtf8(value:string,limit:number){const b=Buffer.from(value);if(b.length<=limit)return value;let end=limit;while(end>0&&(b[end]&192)===128)end--;return b.subarray(0,end).toString('utf8');}
 export async function parseMail(source:AsyncIterable<Uint8Array>|Iterable<Uint8Array>,meta:MailSource):Promise<MailMessage> {
  const parser=new MailParser({skipTextToHtml:true,skipImageLinks:true,skipHtmlToText:true,keepDeliveryStatus:true,maxHtmlLengthToParse:maxBytes});
- let headers=new Map<string,any>(),text='',html='',limited=false,total=0,headerBytes=0,headersDone=false,headerTail='',deliveryStatus='';
+ let headers=new Map<string,any>(),text='',html='',limited=false,total=0,headerBytes=0,headersDone=false,headerTail='',deliveryStatus='';const originalIds:string[]=[];
  const attachments:MailMessage['attachments']=[];
  parser.on('headers',h=>{headers=h;if(h.size>200)limited=true;});
  parser.on('data',part=>{
   if(part.type==='attachment'){
    if(attachments.length<100)attachments.push({name:part.filename?boundUtf8(String(part.filename),255):null,type:boundUtf8(String(part.contentType??'application/octet-stream'),200),size:null});else limited=true;
-   const report:Buffer[]=[];let reportSize=0;
-   if(part.contentType==='message/delivery-status')part.content.on('data',(chunk:Buffer)=>{reportSize+=chunk.length;if(reportSize<=8192)report.push(Buffer.from(chunk));else limited=true;});
-   const release=part.release;part.content.on('error',()=>{});part.content.once('end',()=>{if(report.length)deliveryStatus=Buffer.concat(report).toString('utf8');release?.();});part.content.resume();
+   const report:Buffer[]=[];let reportSize=0;const isDsn=part.contentType==='message/delivery-status',isOriginal=['text/rfc822-headers','message/rfc822'].includes(part.contentType);
+   if(isDsn||isOriginal)part.content.on('data',(chunk:Buffer)=>{if(reportSize<8192)report.push(Buffer.from(chunk.subarray(0,8192-reportSize)));reportSize+=chunk.length;if(isDsn&&reportSize>8192)limited=true;});
+   const release=part.release;part.content.on('error',()=>{});part.content.once('end',()=>{if(report.length){const value=Buffer.concat(report).toString('utf8');if(isDsn)deliveryStatus=value;else if(isOriginal){const boundary=value.search(/\r?\n\r?\n/),header=boundary>=0?value.slice(0,boundary):value;if(boundary<0&&reportSize>8192)limited=true;const ids=header.replace(/\r?\n[ \t]+/g,' ').split(/\r?\n/).filter(line=>/^message-id:/i.test(line)).map(line=>line.slice(line.indexOf(':')+1).trim());if(ids.length!==1||!rfcId(ids[0]))limited=true;else originalIds.push(ids[0]);}}release?.();});part.content.resume();
   }else{if(part.text)text=part.text;if(typeof part.html==='string')html=part.html;}
  });
  const bound=new Transform({transform(chunk:Buffer,_encoding,done){
@@ -65,5 +65,6 @@ export async function parseMail(source:AsyncIterable<Uint8Array>|Iterable<Uint8A
  const references=headers.get('references'),refArray=typeof references==='string'?references.match(/<[^<>]+>/g)??[]:Array.isArray(references)?references:[];
  const refs=refArray.filter((v:unknown)=>typeof v==='string'&&rfcId(v));if(refs.length>100)limited=true;
  const facts:Record<string,string>={};for(const key of ['auto-submitted','precedence','x-autoreply','x-autorespond','content-type']){const value=headers.get(key);if(value)facts[key]=boundUtf8(typeof value==='string'?value:String(value.value??''),1000);}
+ if(deliveryStatus&&originalIds.length){if(originalIds.length!==1||!/^multipart\/report\b/i.test(facts['content-type']??''))limited=true;else{const declared=deliveryStatus.match(/^original-message-id:[ \t]*(.+)$/gim)?.map(line=>line.slice(line.indexOf(':')+1).trim())??[];if(declared.length&&!(declared.length===1&&declared[0]===originalIds[0]))limited=true;else if(!declared.length){deliveryStatus+='\r\nOriginal-Message-ID: '+originalIds[0];if(Buffer.byteLength(deliveryStatus)>8192)limited=true;}}}
  return {...meta,rfcMessageId:typeof headers.get('message-id')==='string'?headers.get('message-id'):null,inReplyTo:typeof headers.get('in-reply-to')==='string'?headers.get('in-reply-to'):null,references:refs.slice(-100),from:from[0]??'',to,subject:boundUtf8(String(headers.get('subject')??''),1000),text:boundUtf8(text,65536),classification:limited?'ambiguous':'human',attachments,truncated:limited,headers:facts,...(deliveryStatus?{deliveryStatus}:{})};
 }

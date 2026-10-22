@@ -4,7 +4,7 @@ import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
 import type {MailSend} from '../../domain/mail.ts';
 import type {Review,MessageView} from '../../domain/whatsapp.ts';
-import {evaluateMailPolicy,validateMailContent,normalizeMailAddress} from '../../domain/mail-policy.ts';
+import {evaluateMailPolicy,validateRenderedMail,normalizeMailAddress} from '../../domain/mail-policy.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from '../prospecting/review.ts';
@@ -22,7 +22,7 @@ async function state(c:PoolClient,p:Principal,conversationId:string,input:z.infe
  const inbound=(await c.query("SELECT em.*,cm.occurred_at FROM app.email_message em JOIN app.channel_message cm ON cm.workspace_id=em.workspace_id AND cm.id=em.message_id WHERE cm.conversation_id=$1 AND cm.direction='inbound' AND em.classification='human' AND NOT em.truncated ORDER BY cm.message_order DESC LIMIT 1",[conversationId])).rows[0];
  const suppressions=(await c.query("SELECT scope FROM app.contact_suppression WHERE identity_id=$1 AND scope IN('all','service') ORDER BY scope",[identity.id])).rows;
  const limits=(await c.query('SELECT * FROM app.messaging_limits')).rows[0],channelLimit=(await c.query("SELECT * FROM app.messaging_channel_limits WHERE channel='EMAIL'")).rows[0];
- const blockers=validateMailContent(input.content);let to='';try{to=normalizeMailAddress(identity.external_id);}catch{blockers.push('VALID_EMAIL_REQUIRED');}
+ const blockers=validateRenderedMail(input.content);let to='';try{to=normalizeMailAddress(identity.external_id);}catch{blockers.push('VALID_EMAIL_REQUIRED');}
  if(thread.needs_review)blockers.push('EMAIL_THREAD_REVIEW_REQUIRED');
  if(input.content.signature!==box.signature)blockers.push('MAIL_SIGNATURE_CHANGED');
  if(subjectKey(input.content.subject)!==subjectKey(thread.subject)&&subjectKey(input.content.subject)!==subjectKey(inbound?.subject??''))blockers.push('EMAIL_SUBJECT_THREAD_MISMATCH');

@@ -13,9 +13,19 @@ export async function gmailRequest(path:string,config:MailConfig,deps:MailDeps,i
 }
 function requireSuccess(r:{ok:boolean;status:number;data:any}){if(!r.ok)throw Error(r.status===404?'GMAIL_HISTORY_EXPIRED':'GMAIL_API_FAILED');return r.data;}
 export async function readGmailRaw(config:MailConfig,id:string,deps:MailDeps):Promise<MailMessage&{labels:string[]}>{
- const data=requireSuccess(await gmailRequest('messages/'+encodeURIComponent(id)+'?format=raw',config,deps));
- if(typeof data.raw!=='string'||data.raw.length>2796204||!/^\d{1,20}$/.test(String(data.internalDate)))throw Error('GMAIL_MESSAGE_INVALID');
+ const placeholder=async()=>{
+  const q=new URLSearchParams({format:'metadata'});for(const name of ['From','To','Subject','Message-ID','In-Reply-To','References'])q.append('metadataHeaders',name);
+  const data=requireSuccess(await gmailRequest('messages/'+encodeURIComponent(id)+'?'+q,config,deps)),hs=data.payload?.headers;
+  if(!Number.isFinite(data.sizeEstimate)||data.sizeEstimate<=2097152||!/^\d{1,20}$/.test(String(data.internalDate))||!Array.isArray(hs)||hs.length>200)throw Error('GMAIL_MESSAGE_INVALID');
+  const allowed=new Set(['from','to','subject','message-id','in-reply-to','references']);const headers=hs.filter((h:any)=>typeof h.name==='string'&&allowed.has(h.name.toLowerCase()));if(headers.some((h:any)=>typeof h.value!=='string'||/[\r\n\x00]/.test(h.value)))throw Error('GMAIL_MESSAGE_INVALID');
+  const raw=headers.map((h:any)=>h.name+': '+h.value).join('\r\n');if(Buffer.byteLength(raw)>65536)throw Error('GMAIL_MESSAGE_INVALID');
+  const labels=Array.isArray(data.labelIds)?data.labelIds:[],parsed=await parseMail([Buffer.from(raw+'\r\n\r\nConteúdo acima do limite de leitura. Confira a mensagem original na caixa.')],{remoteId:id,remoteThreadId:typeof data.threadId==='string'?data.threadId:null,receivedAt:new Date(Number(data.internalDate)).toISOString(),direction:labels.includes('SENT')?'outbound':'inbound'});
+  return {...parsed,truncated:true,classification:'ambiguous' as const,labels};
+ };
+ let data:any;try{data=requireSuccess(await gmailRequest('messages/'+encodeURIComponent(id)+'?format=raw',config,deps));}catch(error){if(error instanceof Error&&error.message==='GMAIL_RESPONSE_INVALID')return placeholder();throw error;}
+ if(typeof data.raw!=='string'||!/^\d{1,20}$/.test(String(data.internalDate)))throw Error('GMAIL_MESSAGE_INVALID');if(data.raw.length>2796204)return placeholder();
  const labels=Array.isArray(data.labelIds)?data.labelIds:[],bytes=Buffer.from(data.raw,'base64url');
+ if(bytes.length>2097152)return placeholder();
  const parsed=await parseMail([bytes],{remoteId:id,remoteThreadId:typeof data.threadId==='string'?data.threadId:null,receivedAt:new Date(Number(data.internalDate)).toISOString(),direction:labels.includes('SENT')?'outbound':'inbound'});
  return {...parsed,labels};
 }

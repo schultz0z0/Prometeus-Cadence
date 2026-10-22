@@ -5,7 +5,7 @@ import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
 import type {MailSend} from '../../domain/mail.ts';
 import type {MessageView,Review} from '../../domain/whatsapp.ts';
-import {normalizeMailAddress,validateMailContent,renderMailBody} from '../../domain/mail-policy.ts';
+import {normalizeMailAddress,validateRenderedMail,renderMailBody} from '../../domain/mail-policy.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {mailboxRow} from './repository.ts';
 import {requireChannelAdmin,commandHash,priorCommand,completeCommand} from '../channels/repository.ts';
@@ -30,7 +30,7 @@ async function state(c:PoolClient,p:Principal,id:string,input:z.infer<typeof sch
  else if(box.state!=='ready'||!sender?.ready)blockers.push('SENDER_UNAVAILABLE');
  let to='';try{to=normalizeMailAddress(proof?box.address:input.to);}catch{blockers.push('VALID_EMAIL_REQUIRED');}
  const body=proof?{kind:'email' as const,subject:'Confirmação da sua caixa — Prometeus Cadence',text:'Confirmação da caixa Prometeus Cadence\n\n'+nonce+'\n\nEsta mensagem confirma somente a conexão da própria caixa.',signature:box.signature}:input.content;
- blockers.push(...validateMailContent(body));if(body.signature!==box.signature)blockers.push('MAIL_SIGNATURE_CHANGED');
+ blockers.push(...validateRenderedMail(body));if(body.signature!==box.signature)blockers.push('MAIL_SIGNATURE_CHANGED');
  if(!proof&&Date.parse(input.consent.occurredAt)>Date.now())blockers.push('INVALID_CONSENT_TIME');
  const identity=(await c.query("SELECT * FROM app.channel_identity WHERE scope='email' AND external_id=$1",[to])).rows[0],suppressions=identity?(await c.query("SELECT scope FROM app.contact_suppression WHERE identity_id=$1 AND scope IN('all','test') ORDER BY scope",[identity.id])).rows:[];if(suppressions.length)blockers.push('CONTACT_SUPPRESSED');
  const snapshot:MailSend={connectionId:id,connectionRevision:Number(box.revision),senderId:sender?.id??'',address:box.address??'',to,content:body,rfcMessageId:'<'+input.messageId+'@'+(box.address?.split('@')[1]??'invalid')+'>',thread:null,purpose:'test',unsubscribeUrl:null};

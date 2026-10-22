@@ -8,6 +8,33 @@ async function fixture(){const f=await multiFixture(),review=await preparePublic
 function incoming(f:Awaited<ReturnType<typeof fixture>>,overrides:Partial<MailMessage>={}):MailMessage{return {remoteId:randomUUID(),remoteThreadId:null,rfcMessageId:'<'+randomUUID()+'@example.net>',inReplyTo:f.message.rfc_message_id,references:[f.message.rfc_message_id],from:f.lead.email!,to:[f.mailbox.address!],subject:'Re: Olá',text:'Podemos conversar',receivedAt:new Date().toISOString(),direction:'inbound',classification:'human',attachments:[],truncated:false,...overrides};}
 async function ingest(f:Awaited<ReturnType<typeof fixture>>,messages:MailMessage[]){await testAdmin(c=>c.query("UPDATE app.email_sync_cursor SET next_at=clock_timestamp()-interval '1 second' WHERE mailbox_id=$1",[f.mailbox.id]));const leases=await claimMailboxSync(new Date(Date.now()+1000).toISOString(),{workspaceId:f.u.p.workspaceId,mailboxId:f.mailbox.id,limit:1});assert.equal(leases.length,1);await ingestMailBatch(leases[0],{messages,next:{kind:'imap',path:'INBOX',uidValidity:'1',lastUid:1,watermark:new Date().toISOString()},complete:true,gap:false});}
 const state=async(f:Awaited<ReturnType<typeof fixture>>)=>(await testAdmin(c=>c.query('SELECT state FROM app.cadence_enrollment WHERE publication_id=$1',[f.publication.id]))).rows[0].state;
+test('held email thread requires scoped admin acknowledgement of the current history and fresh sync before reviewed reply',async()=>{
+ const {acknowledgeMailThread}=await import('../../src/server/mail/thread-review.ts'),{withWorkspaceTransaction}=await import('../../src/server/db/transaction.ts');
+ const f=await fixture();await ingest(f,[incoming(f,{truncated:true})]);
+ // A subsequent complete human message does not silently clear the prior hold.
+ await ingest(f,[incoming(f)]);const id=f.message.conversation_id,body={messageId:randomUUID(),content:{kind:'email' as const,subject:'Re: '+f.message.subject,text:'Obrigado pelo retorno',signature:'Equipe QA'}};
+ assert.ok((await prepareMailReply(f.u.p,id,body)).blockers.includes('EMAIL_THREAD_REVIEW_REQUIRED'));
+ const latest=async()=>(await testAdmin(c=>c.query('SELECT id FROM app.channel_message WHERE conversation_id=$1 ORDER BY message_order DESC LIMIT 1',[id]))).rows[0].id as string;
+ const command={requestId:randomUUID(),expectedRevision:1,lastMessageId:await latest(),acknowledge:true as const,reason:'Revisei a mensagem completa na caixa original e a identidade do contato.'};
+ const other=await fixture();await assert.rejects(acknowledgeMailThread(other.u.p,id,command),{status:404});
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=$3 WHERE "organizationId"=$1 AND "userId"=$2',[f.u.p.workspaceId,f.u.p.userId,'operator']));await assert.rejects(acknowledgeMailThread(f.u.p,id,command),{status:403});await testAdmin(c=>c.query('UPDATE auth.member SET role=$3 WHERE "organizationId"=$1 AND "userId"=$2',[f.u.p.workspaceId,f.u.p.userId,'owner']));
+ await ingest(f,[incoming(f)]);await assert.rejects(acknowledgeMailThread(f.u.p,id,command),{status:409});
+ const current={...command,requestId:randomUUID(),lastMessageId:await latest()};await acknowledgeMailThread(f.u.p,id,current);await acknowledgeMailThread(f.u.p,id,current);
+ assert.ok((await prepareMailReply(f.u.p,id,body)).blockers.includes('SENDER_UNAVAILABLE'));
+ await withWorkspaceTransaction(f.u.p,c=>c.query('SELECT app.resume_mailbox($1,$2,$3)',[f.mailbox.id,1,'Revisei a lacuna e vou sincronizar novamente antes da retomada.']));
+ await ingest(f,[]);const review=await prepareMailReply(f.u.p,id,body);assert.deepEqual(review.blockers,[]);await confirmMailReply(f.u.p,id,{...body,requestId:randomUUID(),reviewToken:review.token});
+ assert.equal((await testAdmin(c=>c.query('SELECT count(*) FROM app.email_thread_review WHERE conversation_id=$1',[id]))).rows[0].count,'1');
+ await ingest(f,[incoming(f,{truncated:true})]);assert.ok((await prepareMailReply(f.u.p,id,{...body,messageId:randomUUID()})).blockers.includes('EMAIL_THREAD_REVIEW_REQUIRED'));
+});
+test('returned original DSN MIME headers correlate exact recipient before suppressing or holding enrollment',async()=>{
+ const {parseMail}=await import('../../src/server/mail/mime.ts');
+ for(const hard of [true,false]){
+  const f=await fixture();await testAdmin(c=>c.query("UPDATE app.channel_message SET state='accepted' WHERE id=$1",[f.message.message_id]));
+  const raw='From: mailer-daemon@example.org\r\nTo: '+f.mailbox.address+'\r\nMessage-ID: <dsn-'+randomUUID()+'@example.org>\r\nSubject: Delivery report\r\nContent-Type: multipart/report; report-type=delivery-status; boundary="dsn"\r\n\r\n--dsn\r\nContent-Type: text/plain\r\n\r\nDelivery report\r\n--dsn\r\nContent-Type: message/delivery-status\r\n\r\nReporting-MTA: dns; mx.example.org\r\n\r\nFinal-Recipient: rfc822; '+f.lead.email+'\r\nAction: '+(hard?'failed':'delayed')+'\r\nStatus: '+(hard?'5.1.1':'4.2.2')+'\r\n\r\n--dsn\r\nContent-Type: text/rfc822-headers\r\n\r\nMessage-ID: '+f.message.rfc_message_id+'\r\nFrom: '+f.mailbox.address+'\r\nTo: '+f.lead.email+'\r\n\r\n--dsn--\r\n';
+  const mail=await parseMail([Buffer.from(raw)],{remoteId:randomUUID(),remoteThreadId:null,direction:'inbound',receivedAt:new Date().toISOString()});await ingest(f,[mail]);
+  assert.equal((await testAdmin(c=>c.query('SELECT * FROM app.contact_suppression WHERE identity_id=$1',[f.emailIdentity]))).rowCount,hard?1:0);assert.equal((await testAdmin(c=>c.query('SELECT kind FROM app.email_bounce WHERE mailbox_id=$1',[f.mailbox.id]))).rows[0].kind,hard?'hard-bounce':'soft-bounce');
+ }
+});
 test('human mail reply stops the explicitly linked mixed enrollment without granting WhatsApp consent',async()=>{
  const f=await fixture(),before=(await testAdmin(c=>c.query('SELECT count(*) FROM app.consent_evidence WHERE identity_id=$1',[f.identity]))).rows[0].count;
  await ingest(f,[incoming(f)]);assert.equal(await state(f),'stopped');

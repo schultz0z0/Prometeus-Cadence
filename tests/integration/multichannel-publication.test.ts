@@ -6,6 +6,14 @@ import {prepareChannelTest,confirmChannelTest} from '../../src/server/messaging/
 import {materializeDueMessages} from '../../src/server/messaging/outbox.ts';import type {PublicationInputV2} from '../../src/domain/cadence-runtime.ts';
 after(async()=>{await getPools().close();await closeDispatchPool();await closeIngressPool();});
 import {multiFixture} from './multichannel-helpers.ts';
+test('aggregate rendered email size including Unicode subject signature and footer is blocked before publication',async()=>{
+ const f=await multiFixture(true);await testAdmin(c=>c.query("UPDATE app.email_mailbox SET signature=$2 WHERE id=$1",[f.mailbox.id,'S'.repeat(100)]));
+ for(const text of ['A'.repeat(65500),'é'.repeat(32750)]){
+  const input={...f.input,steps:{...f.input.steps,first:{...f.input.steps.first,content:{kind:'email' as const,subject:'Assunto',text,signature:'S'.repeat(100)}}}},review=await preparePublication(f.u.p,input);
+  assert.ok(review.blockers.some(b=>b.includes('EMAIL_TEXT_INVALID')));await assert.rejects(confirmPublication(f.u.p,{...input,requestId:randomUUID(),reviewToken:review.token,material:review.material}),{status:409});
+ }
+ assert.equal((await testAdmin(c=>c.query('SELECT * FROM app.cadence_publication WHERE workspace_id=$1',[f.u.p.workspaceId]))).rowCount,0);
+});
 
 test('email-only publication needs no telephone and creates exactly one immutable enrollment on confirm',async()=>{
  const f=await multiFixture(true),review=await preparePublication(f.u.p,f.input);assert.deepEqual(review.blockers,[]);assert.equal(review.snapshot.version,2);assert.match(review.snapshot.recipients[0].steps.first.preview,/contact|Podemos/);assert.match(review.snapshot.recipients[0].steps.first.preview,/unsubscribe/);

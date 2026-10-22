@@ -1,6 +1,6 @@
 # Decisões de implementação05B
 
-Registro integral das decisões tomadas durante a execução nativa. Cada entrada registra a justificativa e o custo se a decisão estiver errada. A revisão independente final acrescentará os achados e decisões finais.
+Registro integral das decisões da execução nativa, incluindo justificativas, custos e decisões finais sobre os itens reservados pelo revisor. Nenhum achado Minor foi reportado.
 
 - Ruling: Reuse clean feature checkout codex/email-05b-design in the primary workspace instead of creating another checkout — already dedicated to the approved delivery, user requested native execution and shared installed runtime — cost if wrong: working preview may see new code before build; main stays unchanged until integration.
 
@@ -81,3 +81,19 @@ Registro integral das decisões tomadas durante a execução nativa. Cada entrad
 - Task 13: Ruling: Every saved mailbox revision resets proof, baseline, freshness and fenced cursor via restricted admin function055; stale proof after IMAP configuration rotation failed a regression — cost if wrong: even cosmetic edits require reverification; historical messages and ownership reservations remain.
 
 - Task 13: Ruling: Older SMTP verification test expected no sender, but051 intentionally provisions an unready sender for the reviewed self-proof; assert sender.ready=false instead — cost if wrong: provisional sender must never bypass the exact self-proof registry/barrier, covered by mail-http integration.
+
+- Final: Ruling: Most-capable reviewer gpt-6-astra could not start due to account usage limit and produced no review; dispatch the one substantive fresh review on gpt-6.1-sol — cost if wrong: reviewer capability differs, with no duplicate review expense or author-only gate.
+
+- Final: Ruling: Real Gmail/SMTP acceptance, delivery, quotas and revocation stay deferred to the user-selected final credential pilot — no external calls authorized for this local acceptance — cost if wrong: integration may expose provider-specific restrictions during pilot.
+
+- Final: Ruling: Public OAuth verification/security assessment, DKIM alignment, reputation and DNS deployment remain launch prerequisites — no public approval or deliverability claim — cost if wrong: public release must wait for provider review/configuration.
+
+- Final: Ruling: Populated-provider/mobile rendered QA stays explicitly pending; available CUA evidence covers desktop empty flows, populated contracts are tested locally — cost if wrong: visual issues may remain at narrow widths or with real account data.
+
+- Final: Ruling: Historical mailbox migration and unrelated Sent import remain excluded; only bounded recovery/app-correlated Sent is implemented — avoids unexpected whole-mailbox ingestion — cost if wrong: older unrelated conversations are absent from the app.
+
+- Final: Ruling: Microsoft OAuth, Pub/Sub, MX hosting, full attachments, arbitrary HTML and recipient tracking remain outside05B — user chose GmailOAuth plusSMTP/IMAP — cost if wrong: those capabilities require later scoped delivery.
+
+- Final: Ruling: Unsubscribe throttle remains per-process; deployment-wide enforcement belongs to public ingress operations — atomic suppression remains in PostgreSQL — cost if wrong: multi-instance aggregate abuse protection requires an edge-wide limiter before launch.
+
+- Final: Ruling: Thread acknowledgement is per-conversation, admin-only and bound to latest displayed message plus mailbox revision, with immutable review audit; it does not reset mailbox freshness or suppression — cost if wrong: administrator must additionally recover/sync the mailbox before sending.
