@@ -3,7 +3,7 @@ const config: NextConfig = {
   devIndicators: false,
   logging: {
     incomingRequests: {
-      ignore: [/\/api\/auth\//, /\/reset-password/, /\/accept-invitation/],
+      ignore: [/\/api\/auth\//, /\/reset-password/, /\/accept-invitation/, /\/api\/mail-oauth\/google\/callback/],
     },
   },
 };

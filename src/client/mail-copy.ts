@@ -16,3 +16,8 @@ const copy:Record<string,string>={
 };
 export function mailBlocker(value:string){const code=Object.keys(copy).find(k=>value.includes(k));return code?copy[code]:whatsappBlocker(value);}
 export const mailboxStateLabel={pending:'Configuração pendente',authorization_required:'Conectar novamente',verifying:'Verificação em andamento',ready:'Pronta',attention:'Requer atenção',disconnected:'Desconectada'};
+export function gmailAuthorizationNotice(result:string|null):{kind:'success'|'error';message:string}|null{
+ if(result==='connected')return {kind:'success',message:'Autorização Google recebida e salva. Confira a caixa e conclua a sincronização inicial antes do teste de envio.'};
+ if(result==='failed')return {kind:'error',message:'Não foi possível concluir a conexão com o Google. Confira o estado da caixa e tente novamente em Gerenciar caixa e limites → Conectar com Google.'};
+ return null;
+}

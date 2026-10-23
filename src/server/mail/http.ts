@@ -17,6 +17,9 @@ import {unsubscribeMail} from './unsubscribe.ts';
 import {readBoundedBody} from '../channels/providers/http.ts';
 import type {Principal} from '../../domain/workspace.ts';
 import type {SmtpImapDeps} from './providers/smtp-imap.ts';
+import type {MailDeps} from './providers/contracts.ts';
+import {gmailOAuthSettings} from './oauth-protocol.ts';
+import {gmailCallbackUrl} from './callback-url.ts';
 const actionSchema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(1)});
 const limitsSchema=actionSchema.extend({limitsRevision:z.number().int().min(0),channelRevision:z.number().int().min(0),workspaceDailyLimit:z.number().int().min(1).max(100000),channelDailyLimit:z.number().int().min(1).max(100000),senderDailyLimit:z.number().int().min(1).max(100000),minIntervalSeconds:z.number().int().min(1).max(86400),maxIntervalSeconds:z.number().int().min(1).max(86400)}).refine(b=>b.maxIntervalSeconds>=b.minIntervalSeconds);
 async function detail(p:Principal,id:string){return withWorkspaceTransaction(p,async c=>{await requireChannelAdmin(c);const row=await mailboxRow(c,id),sender=(await c.query("SELECT * FROM app.channel_sender WHERE connection_id=$1 AND channel='EMAIL' ORDER BY id LIMIT 1",[id])).rows[0];
@@ -52,10 +55,11 @@ export function mailboxHttp(request:Request,params:Record<string,string>,deps:{t
  else{const leases=await claimMailboxSync(new Date().toISOString(),{workspaceId:p.workspaceId,mailboxId:id,limit:1});if(leases[0])await runMailboxSync(leases[0],deps.transport);result=await detail(p,id);}
  return withWorkspaceTransaction(p,async c=>{await requireChannelAdmin(c);await lockWorkspace(c);const prior=await priorCommand(c,p,b.requestId,hash);if(prior)return prior;await completeCommand(c,p,b.requestId,hash,result,'mail.'+action);return result;});
 });}
-export async function gmailCallbackHttp(request:Request):Promise<Response>{
+export async function gmailCallbackHttp(request:Request,deps:MailDeps={}):Promise<Response>{
  const destination=new URL('/settings/email',process.env.BETTER_AUTH_URL??'http://127.0.0.1:3210');
- try{if(request.method!=='GET')throw new AppError(405,'Método não permitido.');const p=await requirePrincipal(request.headers);await finishGmailAuthorization(p,p.sessionId,new URL(request.url));destination.searchParams.set('oauth','connected');}
- catch{destination.searchParams.set('oauth','failed');}
+ let stage='session';
+ try{if(request.method!=='GET')throw new AppError(405,'Método não permitido.');const p=await requirePrincipal(request.headers);stage='authorization';const callback=gmailCallbackUrl(request,gmailOAuthSettings().redirectUri);await finishGmailAuthorization(p,p.sessionId,callback,deps);destination.searchParams.set('oauth','connected');}
+ catch(error){console.warn('[gmail-oauth-callback]',JSON.stringify({stage,status:error instanceof AppError?error.status:500,hasCookie:request.headers.has('cookie'),hasCode:new URL(request.url).searchParams.has('code'),hasProviderError:new URL(request.url).searchParams.has('error')}));destination.searchParams.set('oauth','failed');}
  return new Response(null,{status:303,headers:{location:destination.toString(),'cache-control':'no-store','referrer-policy':'no-referrer'}});
 }
 const postCounts=new Map<string,{at:number;count:number}>();

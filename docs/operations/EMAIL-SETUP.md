@@ -19,7 +19,7 @@ SMTP exige TLS implícito 465 ou STARTTLS obrigatório 587. IMAP exige TLS 993. 
 1. Adicionar a caixa. Gmail: autorizar Google; SMTP/IMAP: verificar autenticação. Essas ações não enviam.
 2. Concluir a sincronização inicial. A baseline não dispara campanhas nem importa toda a caixa antiga.
 3. SMTP/IMAP: preparar e confirmar a prova para o próprio endereço; transmitir somente essa mensagem, depois sincronizar a entrada para ler o nonce autenticado. Login SMTP sozinho não comprova posse.
-4. Definir limites explícitos globais do workspace, do canal e da caixa, com intervalos. Contas não compartilham identidade ou quota entre workspaces; ambos os canais compartilham o teto agregado.
+4. Definir limites explícitos globais do workspace, do canal e da caixa, com intervalos. Contas não compartilham identidade ou quota entre workspaces; ambos os canais compartilham o teto agregado. Se os limites forem salvos após a primeira sincronização, clique em **Sincronizar agora** novamente para reavaliar o estado pronto. Um horário de sincronização preenchido com a caixa ainda em verificação pode indicar limites pendentes; confira os três tetos e os intervalos.
 5. Registrar evidência real de consentimento para campanhas/testes; atendimento exige resposta humana coerente nesta thread. Não transformar prospecção em consentimento.
 6. Revisar um teste, resposta ou publicação. Confirmar apenas enfileira. Sender, destinatário, assinatura, conteúdo e versões são revalidados antes do envio.
 

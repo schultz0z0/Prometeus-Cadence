@@ -39,6 +39,16 @@ test('Google callback requires the same session and returns no authorization dat
  const path='/api/mail-oauth/google/callback?state='+'a'.repeat(43)+'&code=secret-code';
  const result=await gmailCallbackHttp(req(u.headers,path));assert.ok(result.status===303||result.status===400);assert.doesNotMatch((result.headers.get('location')??'')+await result.text(),/secret-code|fixture-secret|state=/);
 });
+test('real NextRequest loopback normalization preserves the registered Google callback and saves authorization',async()=>{
+ const {NextRequest}=await import('next/server.js'),{gmailApi}=await import('../fixtures/gmail-api.ts'),{startGmailAuthorization}=await import('../../src/server/mail/oauth.ts');
+ const u=await mailUser(),provider=gmailApi('callback-'+randomUUID()+'@example.org');Object.assign(process.env,{GMAIL_CLIENT_ID:'fixture-client',GMAIL_CLIENT_SECRET:'fixture-secret',GMAIL_REDIRECT_URI:base+'/api/mail-oauth/google/callback'});
+ const box=await saveMailbox(u.p,{requestId:randomUUID(),expectedRevision:0,provider:'gmail',name:'Next callback',signature:'Equipe',config:{},credentials:{}}),started=await startGmailAuthorization(u.p,u.p.sessionId,{id:box.id,expectedRevision:1});
+ const callback=new URL(process.env.GMAIL_REDIRECT_URI!);callback.searchParams.set('state',new URL(started.authorizationUrl).searchParams.get('state')!);callback.searchParams.set('code','fixture-code-never-expose');
+ const headers=new Headers(u.headers);headers.delete('origin');headers.set('host',new URL(base).host);headers.set('referer','https://accounts.google.com/');headers.set('sec-fetch-site','cross-site');headers.set('sec-fetch-mode','navigate');
+ const request=new NextRequest(callback,{headers});assert.equal(new URL(request.url).hostname,'localhost');
+ const response=await gmailCallbackHttp(request,{fetch:provider.fetcher});assert.equal(new URL(response.headers.get('location')!).searchParams.get('oauth'),'connected');assert.doesNotMatch(response.headers.get('location')!,/fixture-code|state=|token=/);
+ const stored=(await testAdmin(c=>c.query('SELECT c.revision,c.credentials_verified,m.address,m.state FROM app.channel_connection c JOIN app.email_mailbox m ON m.workspace_id=c.workspace_id AND m.id=c.id WHERE c.id=$1',[box.id]))).rows[0];assert.equal(stored.revision,'2');assert.equal(stored.credentials_verified,true);assert.equal(stored.state,'verifying');assert.match(stored.address,/^callback-/);assert.equal(provider.calls.filter(call=>call.url.includes('oauth2.googleapis.com')).length,1);
+});
 test('DNS observations never claim authentication and DKIM requires an explicit selector',async()=>{
  const f=await multiFixture(true),queries:string[]=[];const resolve=async(name:string)=>{queries.push(name);return [[name.startsWith('_dmarc')?'v=DMARC1; p=none':'v=spf1 -all']];};
  const result=await diagnoseMailDomain(f.u.p,f.mailbox.id,undefined,{resolveTxt:resolve});assert.equal(result.spf,'observed');assert.equal(result.dkim,'unverified');assert.equal(result.alignment,'unverified');assert.ok(queries.every(q=>!q.includes('_domainkey')));

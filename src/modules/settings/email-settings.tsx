@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import {useMail,useIdentity} from '@/client/workspace-provider';
 import type {MailClient,MailDetail,MailLimitsInput,MailTestPrepared} from '@/client/mail-client';
 import type {MailProvider,MailboxView,MailSend} from '@/domain/mail';
-import {mailBlocker,mailboxStateLabel} from '@/client/mail-copy';
+import {mailBlocker,mailboxStateLabel,gmailAuthorizationNotice} from '@/client/mail-copy';
 import {useMessagingReview} from '@/modules/messages/use-messaging-review';
 import {Button,Badge,Field,Modal,Notice,EmptyState,LinkButton} from '@/components/ui/primitives';
 import {EmailConnectionForm} from './email-connection-form';
@@ -52,12 +52,15 @@ function MailManagement({client,initial,onClose,onChanged}:{client:MailClient;in
 export function EmailSettings({limitsOnly=false}:{limitsOnly?:boolean}){
  const client=useMail(),identity=useIdentity(),role=identity?.workspaces.find(w=>w.id===identity.activeWorkspaceId)?.role,canManage=role==='owner'||role==='admin';
  const [boxes,setBoxes]=useState<MailboxView[]|null>(null),[provider,setProvider]=useState<MailProvider|null>(null),[detail,setDetail]=useState<MailDetail|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),pending=useRef(false);
+ const [oauthNotice,setOauthNotice]=useState<ReturnType<typeof gmailAuthorizationNotice>>(null);
+ useEffect(()=>{setOauthNotice(gmailAuthorizationNotice(new URLSearchParams(location.search).get('oauth')));},[client]);
  async function refresh(){if(client)setBoxes(await client.list());}
  useEffect(()=>{let active=true;setBoxes(null);setDetail(null);setProvider(null);setError('');if(client)client.list().then(boxes=>{if(active)setBoxes(boxes);}).catch(error=>{if(active)setError(error.message);});return()=>{active=false;};},[client]);
  async function manage(id:string){if(!client||pending.current)return;pending.current=true;setBusy(true);setError('');try{setDetail(await client.detail(id));}catch(error){setError(error instanceof Error?error.message:'Falha ao consultar caixa.');}finally{pending.current=false;setBusy(false);}}
  if(!client)return <Notice>Conexões de e-mail exigem uma conta autenticada no workspace.</Notice>;
  return <section className="stack"><div className="row between wrap"><div><h1>{limitsOnly?'Limites de e-mail':'Contas de e-mail'}</h1><p className="subtitle">Gmail/Google Workspace por OAuth ou outras caixas por SMTP + IMAP.</p></div><Button disabled={busy} onClick={()=>void refresh().catch(e=>setError(e.message))}>Atualizar</Button></div>
  {!limitsOnly&&canManage&&<div className="channel-cards">{(['gmail','smtp-imap'] as const).map(provider=><section className="panel panel-pad stack" key={provider}><h2>{provider==='gmail'?'Gmail / Google Workspace':'SMTP + IMAP'}</h2><p>{provider==='gmail'?'Autorize envio e leitura pela sua conta Google.':'Conecte uma caixa com TLS e comprove a leitura no próprio endereço.'}</p><div><Button variant={provider==='gmail'?'primary':''} onClick={()=>setProvider(provider)}>Adicionar caixa</Button></div></section>)}</div>}
+ {!limitsOnly&&oauthNotice&&<p role={oauthNotice.kind==='error'?'alert':'status'} className={oauthNotice.kind==='error'?'error-bar':'notice'}>{oauthNotice.message}</p>}
  {!canManage&&<Notice>Você pode acompanhar e responder pela inbox. A configuração das caixas exige um administrador.</Notice>}
  {error&&<p role="alert">{error}</p>}{boxes===null?<p role="status">Consultando caixas…</p>:!boxes.length?<EmptyState icon="Mail" title="Nenhuma caixa conectada" description="Adicione uma conta para preparar envio e leitura de e-mail."/>:boxes.map(box=><section className="panel panel-pad stack" key={box.id}><div className="row between wrap"><h2>{box.name}</h2><Badge tone={box.state==='ready'?'green':box.state==='attention'?'red':'neutral'}>{mailboxStateLabel[box.state]}</Badge></div><p>{box.address??'Aguardando autorização Google'} · {box.provider==='gmail'?'Google OAuth':'SMTP + IMAP'} · limite {box.dailyLimit??'não definido'}/dia</p><p className="muted">Envio: {box.sendVerified?'verificado':'pendente'} · leitura: {box.readVerified?'verificada':'pendente'} · sincronização: {box.lastSyncedAt?new Date(box.lastSyncedAt).toLocaleString('pt-BR'):'pendente'}</p>{box.lastError&&<Notice>{mailBlocker(box.lastError)}</Notice>}{canManage&&<div><Button disabled={busy} onClick={()=>void manage(box.id)}>Gerenciar caixa e limites</Button></div>}</section>)}
  {provider&&<Modal title={provider==='gmail'?'Adicionar caixa Google':'Adicionar SMTP + IMAP'} onClose={()=>setProvider(null)}><EmailConnectionForm client={client} provider={provider} onCancel={()=>setProvider(null)} onSaved={async()=>{setProvider(null);await refresh();}}/></Modal>}
