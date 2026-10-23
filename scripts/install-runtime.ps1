@@ -3,8 +3,10 @@ $ErrorActionPreference = 'Stop'
 $hasher = [Security.Cryptography.SHA256]::Create()
 try { $hash = ([BitConverter]::ToString($hasher.ComputeHash([Text.Encoding]::UTF8.GetBytes($Workspace)))).Replace('-','') } finally { $hasher.Dispose() }
 $taskName = 'PrometeusCadence-' + $hash.Substring(0,12)
-$arguments = '-NoProfile -NonInteractive -WindowStyle Hidden -File "' + (Join-Path $Workspace 'scripts/runtime-ensure.ps1') + '" -NodePath "' + $NodePath + '" -Workspace "' + $Workspace + '"'
-$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $arguments -WorkingDirectory $Workspace
+$launcher = Join-Path $env:SystemRoot 'System32\wscript.exe'
+if (-not (Test-Path -LiteralPath $launcher)) { throw 'Windows Script Host is required for console-free recovery.' }
+$arguments = '//B //NoLogo "' + (Join-Path $Workspace 'scripts/runtime-ensure.vbs') + '" "' + $NodePath + '" "' + $Workspace + '"'
+$action = New-ScheduledTaskAction -Execute $launcher -Argument $arguments -WorkingDirectory $Workspace
 $logonTrigger = New-ScheduledTaskTrigger -AtLogOn -User ([Security.Principal.WindowsIdentity]::GetCurrent().Name)
 $recoveryTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(5) -RepetitionInterval (New-TimeSpan -Minutes 1)
 $principal = New-ScheduledTaskPrincipal -UserId ([Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Limited

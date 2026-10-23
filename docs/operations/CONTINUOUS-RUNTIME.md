@@ -15,6 +15,8 @@ npm start
 
 `runtime:install` registra uma tarefa do usuário Windows atual, sem elevação, executada ao fazer login e a cada minuto para verificar o supervisor. A tarefa garante o processo oculto e recupera sua ausência; não inicia outro quando ele já está ativo. `npm start` e `npm run dev` também garantem o supervisor. O aplicativo web continua tendo seu comando próprio; a tarefa registrada mantém os serviços de fundo, não a interface Next.
 
+A ação agendada usa `wscript.exe` com `scripts/runtime-ensure.vbs`, iniciando a verificação Node com janela oculta. Não usa PowerShell como entrada da tarefa: um executável de console pode exibir uma janela brevemente antes de aplicar `-WindowStyle Hidden`. Windows Script Host precisa estar disponível nessa instalação. Depois de atualizar esse iniciador, execute `npm run runtime:install` uma vez para substituir a ação da tarefa existente, sem criar uma tarefa duplicada.
+
 ```powershell
 npm run runtime:status
 npm run runtime:stop
