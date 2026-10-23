@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
+import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useMail,useIdentity} from '@/client/workspace-provider';
 import type {MailClient,MailDetail,MailLimitsInput,MailTestPrepared} from '@/client/mail-client';
 import type {MailProvider,MailboxView,MailSend} from '@/domain/mail';
@@ -32,6 +33,7 @@ function MailLimits({client,detail,onSaved}:{client:MailClient;detail:MailDetail
 function MailManagement({client,initial,onClose,onChanged}:{client:MailClient;initial:MailDetail;onClose:()=>void;onChanged:()=>Promise<void>}){
  const [detail,setDetail]=useState(initial),[edit,setEdit]=useState(false),[test,setTest]=useState(false),[disconnect,setDisconnect]=useState(false),[resume,setResume]=useState(false),[ack,setAck]=useState(false),[reason,setReason]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),pending=useRef(false),commands=useRef(new Map<string,object>()),box=detail.mailbox;
  async function refresh(){setDetail(await client.detail(box.id));await onChanged();}
+ useLiveRefresh(async signal=>{if(pending.current||edit||test||disconnect||resume)return;const next=await client.detail(box.id);if(!signal.aborted&&!pending.current)setDetail(old=>({...old,mailbox:{...old.mailbox,state:next.mailbox.state,syncState:next.mailbox.syncState,lastSyncedAt:next.mailbox.lastSyncedAt,lastError:next.mailbox.lastError,sendVerified:next.mailbox.sendVerified,readVerified:next.mailbox.readVerified},bouncePaused:next.bouncePaused,syncGap:next.syncGap}));},10000,true,box.id);
  function key<T extends object>(name:string,input:T):T{const id=name+':'+JSON.stringify(input);if(!commands.current.has(id))commands.current.set(id,input);return commands.current.get(id) as T;}
  async function act(run:()=>Promise<void>){if(pending.current)return;pending.current=true;setBusy(true);setError('');setNotice('');try{await run();commands.current.clear();await refresh();}catch(error){setError(error instanceof Error?error.message:'Não foi possível concluir.');}finally{pending.current=false;setBusy(false);}}
  if(edit)return <Modal title="Editar caixa" onClose={()=>setEdit(false)}><EmailConnectionForm client={client} provider={box.provider} detail={detail} onCancel={()=>setEdit(false)} onSaved={async()=>{setEdit(false);await refresh();}}/></Modal>;
@@ -57,6 +59,7 @@ export function EmailSettings({limitsOnly=false}:{limitsOnly?:boolean}){
  async function refresh(){if(client)setBoxes(await client.list());}
  useEffect(()=>{let active=true;setBoxes(null);setDetail(null);setProvider(null);setError('');if(client)client.list().then(boxes=>{if(active)setBoxes(boxes);}).catch(error=>{if(active)setError(error.message);});return()=>{active=false;};},[client]);
  async function manage(id:string){if(!client||pending.current)return;pending.current=true;setBusy(true);setError('');try{setDetail(await client.detail(id));}catch(error){setError(error instanceof Error?error.message:'Falha ao consultar caixa.');}finally{pending.current=false;setBusy(false);}}
+ useLiveRefresh(async signal=>{if(!client||pending.current)return;const value=await client.list();if(!signal.aborted&&!pending.current)setBoxes(value);},10000,!!client,client);
  if(!client)return <Notice>Conexões de e-mail exigem uma conta autenticada no workspace.</Notice>;
  return <section className="stack"><div className="row between wrap"><div><h1>{limitsOnly?'Limites de e-mail':'Contas de e-mail'}</h1><p className="subtitle">Gmail/Google Workspace por OAuth ou outras caixas por SMTP + IMAP.</p></div><Button disabled={busy} onClick={()=>void refresh().catch(e=>setError(e.message))}>Atualizar</Button></div>
  {!limitsOnly&&canManage&&<div className="channel-cards">{(['gmail','smtp-imap'] as const).map(provider=><section className="panel panel-pad stack" key={provider}><h2>{provider==='gmail'?'Gmail / Google Workspace':'SMTP + IMAP'}</h2><p>{provider==='gmail'?'Autorize envio e leitura pela sua conta Google.':'Conecte uma caixa com TLS e comprove a leitura no próprio endereço.'}</p><div><Button variant={provider==='gmail'?'primary':''} onClick={()=>setProvider(provider)}>Adicionar caixa</Button></div></section>)}</div>}

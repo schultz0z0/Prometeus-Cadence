@@ -12,6 +12,17 @@ const initial = () => ({
   data: emptyWorkspace(),
   capabilities: ["data.write"],
 });
+test('conditional unchanged refresh neither parses an empty body nor publishes a new snapshot',async()=>{
+ let header='';const repo=createWorkspaceRepository(initial(),async(_url,init)=>{header=new Headers(init?.headers).get('if-none-match')??'';return new Response(null,{status:304});});
+ let changes=0;repo.subscribe(()=>changes++);const before=repo.snapshot();await repo.refresh();assert.ok(header);assert.equal(repo.snapshot(),before);assert.equal(changes,0);
+});
+test('live refresh updates an idle view but holds writes when an editor has unsaved text',async()=>{
+ let dirty=false,revision=1;
+ const repo=createWorkspaceRepository(initial(),async()=>Response.json({...initial(),revision}),{hasEdits:()=>dirty});
+ await repo.refresh();assert.equal(repo.snapshot().revision,1);assert.equal(repo.access().kind,'ready');
+ dirty=true;revision=2;await repo.refresh();assert.equal(repo.access().kind,'conflict');
+ await assert.rejects(repo.deleteTemplate('old-draft'));
+});
 test("an external refresh never gives an old form permission to overwrite newer data", async () => {
   let writes = 0;
   const repo = createWorkspaceRepository(initial(), async (_url, init) => {

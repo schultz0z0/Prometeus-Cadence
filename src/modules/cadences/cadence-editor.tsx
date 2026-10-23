@@ -81,7 +81,7 @@ export function CadenceEditor({ id }: { id: string }) {
     );
   return (
     <>
-      <section className="panel cadence-header">
+      <section className="panel cadence-header" data-workspace-editing={dirty}>
         <div className="cadence-title-row">
           <Link
             href="/cadences"

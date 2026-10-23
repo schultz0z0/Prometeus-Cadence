@@ -1,11 +1,21 @@
 import test,{after} from 'node:test';import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';
 import {multiFixture} from './multichannel-helpers.ts';import {testAdmin} from './mail-helpers.ts';
+import {readMessageMetrics} from '../../src/server/messaging/metrics.ts';
 import {prepareMailReconciliation} from '../../src/server/messaging/email-reconciliation.ts';
 import {claimMailboxSync} from '../../src/server/mail/sync/repository.ts';import {ingestMailBatch} from '../../src/server/mail/ingestion.ts';import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 import {preparePublication,confirmPublication} from '../../src/server/messaging/publication.ts';import {materializeDueMessages} from '../../src/server/messaging/outbox.ts';import {claimDispatch,leaseArgs} from '../../src/server/messaging/lease.ts';import {dispatchOne} from '../../src/server/messaging/dispatch.ts';import {dispatchPool,closeDispatchPool} from '../../src/server/messaging/worker-db.ts';import {getPools} from '../../src/server/db/pool.ts';import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';import type {MailAdapter} from '../../src/server/mail/providers/contracts.ts';
 after(async()=>{await getPools().close();await closeDispatchPool();await closeIngressPool();});
 const fake=(sendOnce:MailAdapter['sendOnce']):MailAdapter=>({verify:async()=>{throw Error('not used');},readBatch:async()=>{throw Error('not used');},findSent:async()=>null,sendOnce});
 async function queued(){const f=await multiFixture(true),review=await preparePublication(f.u.p,f.input);assert.deepEqual(review.blockers,[]);await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token,material:review.material});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100,f.u.p.workspaceId);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);return {...f,now,lease};}
+test('live metrics count actual acceptance once and never expose another workspace',async()=>{
+ const f=await queued(),other=await multiFixture(true);
+ assert.equal((await readMessageMetrics(f.u.p,{days:30})).sent,0);
+ await dispatchOne(f.lease,{now:()=>f.now,mailAdapter:fake(async()=>({kind:'accepted',remoteId:'metrics-'+randomUUID(),acceptedAt:f.now}))});
+ const metrics=await readMessageMetrics(f.u.p,{days:30});assert.equal(metrics.sent,1);assert.equal(metrics.email,1);assert.equal(metrics.whatsapp,0);assert.equal(metrics.tracking.opens,null);
+ assert.equal((await readMessageMetrics(other.u.p,{days:30})).sent,0);
+ assert.equal((await readMessageMetrics(f.u.p,{days:30,cadenceId:'not-mine'})).sent,0);
+ await assert.rejects(readMessageMetrics(f.u.p,{days:0}));
+});
 test('email timeout after acceptance retains one reservation and never repeats the POST',async()=>{
  const f=await queued();let count=0;
  await dispatchOne(f.lease,{now:()=>f.now,mailAdapter:fake(async(_config,send)=>{count++;assert.match(send.rfcMessageId,/^</);return {kind:'uncertain',code:'LOST_AFTER_ACCEPTANCE'};})});

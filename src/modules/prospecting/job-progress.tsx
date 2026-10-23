@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from 'react';
+import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useIdentity,useProspecting} from '@/client/workspace-provider';
 import type {JobView} from '@/domain/prospecting';
 import {Button,PageHeader,Badge,Notice} from '@/components/ui/primitives';
@@ -12,10 +13,11 @@ const activeStates=['queued','running','waiting_provider','cancelling'];
 export function useProspectingJob(id:string){
   const client=useProspecting(),[job,setJob]=useState<JobView|null>(null),[error,setError]=useState(''),[revision,setRevision]=useState(0);
   useEffect(()=>{
-    let active=true,timer:ReturnType<typeof setTimeout>|undefined;
-    async function tick(){try{if(!client)throw Error('Esta execução exige uma conta real.');const next=await client.get(id);if(!active)return;setJob(next);setError('');if(activeStates.includes(next.state))timer=setTimeout(tick,3000);}catch(e){if(active)setError(e instanceof Error?e.message:'Falha ao consultar a execução.');}}
-    void tick();return()=>{active=false;if(timer)clearTimeout(timer);};
-  },[client,id,revision]);return{job,error,refresh:()=>setRevision(r=>r+1)};
+    let active=true;setJob(null);
+    client?.get(id).then(next=>{if(active){setJob(next);setError('');}}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};
+  },[client,id,revision]);
+  useLiveRefresh(async signal=>{if(!client)return;try{const next=await client.get(id);if(!signal.aborted){setJob(next);setError('');}}catch(e){if(!signal.aborted)setError((e as Error).message);throw e;}},5000,!!client,client? id:'');
+  return{job,error,refresh:()=>setRevision(r=>r+1)};
 }
 export function JobProgress({id}:{id:string}){
   const client=useProspecting(),identity=useIdentity(),{job,error,refresh}=useProspectingJob(id),[actionError,setActionError]=useState(''),[busy,setBusy]=useState(false),[reconcile,setReconcile]=useState(false);

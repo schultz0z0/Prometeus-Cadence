@@ -1,9 +1,11 @@
 "use client";
+import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useEffect,useState} from 'react';import {useProspecting} from '@/client/workspace-provider';import type {AiPolicy,AiSettingsView,AiTestReview,CodexDiagnostic,ConventionalProvider,AiMode} from '@/domain/ai-routing';import {Button,Field,Notice,Badge,Toggle,Modal} from '@/components/ui/primitives';
 export const aiProviderNames:Record<ConventionalProvider,string>={'codex-local':'Codex CLI · ChatGPT local',openai:'OpenAI API',gemini:'Google Gemini API'};
 export function AiSettings(){const client=useProspecting(),[view,setView]=useState<AiSettingsView|null>(null),[draft,setDraft]=useState<AiPolicy|null>(null),[diagnostic,setDiagnostic]=useState<CodexDiagnostic|null>(null),[review,setReview]=useState<AiTestReview|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
  useEffect(()=>{let active=true;setView(null);setDraft(null);setDiagnostic(null);setReview(null);setError('');client?.aiSettings().then(v=>{if(active){setView(v);setDraft(v.policy);}}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[client]);
  const dirty=JSON.stringify(draft)!==JSON.stringify(view?.policy);
+ useLiveRefresh(async signal=>{if(!client||busy||review)return;const next=await client.aiSettings();if(!signal.aborted){setView(next);if(!dirty)setDraft(next.policy);}},15000,!!client,client);
  async function act(fn:()=>Promise<void>){if(busy||!client)return;setBusy(true);setError('');setMessage('');try{await fn();}catch(e){setError(e instanceof Error?e.message:'Não foi possível concluir.');}finally{setBusy(false);}}
  if(!client)return <><h1>Provedores de IA</h1><Notice>Conexões de IA exigem o ambiente autenticado. A demonstração não conecta contas reais.</Notice></>;
  if(!view||!draft)return <><h1>Provedores de IA</h1><p role={error?'alert':'status'}>{error||'Consultando configuração…'}</p></>;

@@ -6,6 +6,8 @@ import {createInboxSelection,lastDisplayedMessage,mergeEmailHistory} from '@/cli
 import {Button,EmptyState,Field,LinkButton,Notice,PageHeader,Badge} from '@/components/ui/primitives';
 import {EmailThread} from './email-thread';
 import {ReconciliationReview} from './reconciliation-review';
+import {useLiveRefresh} from '@/client/use-live-refresh';
+import {mergeLiveItems} from '@/client/live-page';
 export function EmailInbox(){
  const client=useMessaging(),mail=useMail(),identity=useIdentity(),canManage=['owner','admin'].includes(identity?.workspaces.find(w=>w.id===identity.activeWorkspaceId)?.role??'');
  const [selection]=useState(()=>createInboxSelection<EmailThreadView>()),current=useSyncExternalStore(selection.subscribe,selection.current,selection.current);
@@ -17,6 +19,14 @@ export function EmailInbox(){
  async function open(id:string){if(!client)return;const ticket=selection.select(id);setReconcile('');setError('');try{selection.accept(ticket,await client.readEmailConversation(id));}catch(e){if(selection.ticket().epoch===ticket.epoch)setError(e instanceof Error?e.message:'Não foi possível abrir o histórico.');}}
  async function refresh(){if(!client)return;const ticket=selection.ticket();if(!ticket.id)return;const thread=await client.readEmailConversation(ticket.id);if(selection.accept(ticket,thread))setItems(old=>old.map(item=>item.id===ticket.id?thread.conversation:item));}
  async function act(run:()=>Promise<void>){if(pending.current)return;pending.current=true;setBusy(true);setError('');try{await run();}catch(e){setError(e instanceof Error?e.message:'Não foi possível concluir.');}finally{pending.current=false;setBusy(false);}}
+ useLiveRefresh(async signal=>{
+  if(!client||pending.current)return;const epoch=listEpoch.current,ticket=selection.ticket();
+  const page=await client.listEmailConversations(filters);
+  if(signal.aborted||epoch!==listEpoch.current||pending.current)return;
+  setItems(old=>mergeLiveItems(old,page.items));setCursor(old=>old??page.nextCursor);setLoaded(true);
+  if(ticket.id){const fresh=await client.readEmailConversation(ticket.id);if(signal.aborted||pending.current)return;const old=selection.current().thread;selection.accept(ticket,old&&old.conversation.id===ticket.id?mergeEmailHistory(fresh,old):fresh);}
+ },5000,!!client,JSON.stringify([search,senderId,direction]));
+ useLiveRefresh(async signal=>{if(!mail)return;const value=await mail.list();if(!signal.aborted)setBoxes(value);},10000,!!mail,mail);
  if(!client||!mail)return <><PageHeader title="Inbox de e-mail"/><Notice>Entre em um workspace para conectar uma caixa e acompanhar as conversas.</Notice></>;
  const thread=current.thread;
  return <><PageHeader title="Inbox de e-mail" description="Conversas separadas por caixa e thread." actions={<><LinkButton href="/messages/whatsapp">WhatsApp</LinkButton><LinkButton href="/settings/email">Contas de e-mail</LinkButton><Button disabled={busy} onClick={()=>act(async()=>{const ticket=++listEpoch.current,value=await client.listEmailConversations(filters);if(ticket===listEpoch.current){setItems(value.items);setCursor(value.nextCursor);setLoaded(true);}await refresh();})}>Atualizar</Button></>}/>

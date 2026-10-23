@@ -8,6 +8,8 @@ import {Button,Badge,EmptyState,Field,LinkButton,PageHeader,Notice} from '@/comp
 import {WhatsappReply} from './whatsapp-reply';
 import {ReconciliationReview} from './reconciliation-review';
 import {ConversationActions} from './conversation-actions';
+import {useLiveRefresh} from '@/client/use-live-refresh';
+import {mergeLiveItems} from '@/client/live-page';
 const stateNames:Record<MessageState,string>={received:'Recebida',pending:'Na fila',dispatching:'Tentativa em andamento',accepted:'Aceita pelo provedor',delivered:'Entregue',read:'Lida',failed:'Falhou',uncertain:'Resultado incerto',cancelled:'Cancelada',blocked:'Bloqueada'};
 export function WhatsappInbox(){
  const client=useMessaging(),channels=useChannels(),identity=useIdentity(),s=useDemo();
@@ -23,6 +25,13 @@ export function WhatsappInbox(){
  useEffect(()=>{let active=true;setTemplates([]);if(channels&&connection)channels.templates(connection.id).then(t=>{if(active)setTemplates(t);}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[channels,connection?.id]);
  async function refreshThread(){if(!client||!selected)return;const id=selected;const value=await client.readConversation(id);if(selectedRef.current===id){setThread(value);setItems(old=>old.map(v=>v.id===id?{...v,unread:value.conversation.unread}:v));}}
  async function act(fn:()=>Promise<void>){if(busy)return;setBusy(true);setError('');try{await fn();}catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar.');}finally{setBusy(false);}}
+ useLiveRefresh(async signal=>{
+  if(!client||busy)return;const epoch=listGeneration.current,id=selectedRef.current;
+  const page=await client.listConversations({search,...(senderFilter?{senderId:senderFilter}:{})});
+  if(signal.aborted||epoch!==listGeneration.current)return;setItems(old=>mergeLiveItems(old,page.items));setCursor(old=>old??page.nextCursor);setLoaded(true);
+  if(id){const fresh=await client.readConversation(id);if(!signal.aborted&&selectedRef.current===id)setThread(old=>old&&old.conversation.id===id?{...fresh,messages:[...old.messages.filter(m=>!fresh.messages.some(n=>n.id===m.id)),...fresh.messages],nextCursor:old.nextCursor}:fresh);}
+ },5000,!!client,search+':'+senderFilter);
+ useLiveRefresh(async signal=>{if(!channels)return;const value=await channels.list();if(!signal.aborted)setConnections(value);},10000,!!channels,channels);
  if(!client)return <><PageHeader title="Inbox WhatsApp"/><Notice>Demonstração visual sem conversas reais. Entre em um workspace para conectar sua conta.</Notice></>;
  return <><PageHeader title="Inbox WhatsApp" description="Conversas e estados reais dos seus remetentes." actions={<><LinkButton href="/settings/whatsapp">Conexões</LinkButton><Button disabled={busy} onClick={()=>act(async()=>{const token=++listGeneration.current;const result=await client.listConversations({search,...(senderFilter?{senderId:senderFilter}:{})});if(token===listGeneration.current){setItems(result.items);setCursor(result.nextCursor);setLoaded(true);}await refreshThread();})}>Atualizar</Button></>}/>
  {error&&<p role="alert" className="error-bar">{error}</p>}

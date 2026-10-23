@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
+import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useDemo} from '@/demo/provider';
 import {useMail,useMessaging,useChannels,useIdentity,useWorkspaceRevision} from '@/client/workspace-provider';
 import {eligibleCadenceLeads} from '@/domain/cadence';
@@ -36,6 +37,7 @@ export function CadencePublicationV2({cadence,dirty}:{cadence:Cadence;dirty:bool
  async function refresh(){if(!mail||!messaging||!channels)return;const [boxes,connections,pubs]=await Promise.all([mail.list(),channels.list(),messaging.listPublications()]);setBoxes(boxes);setConnections(connections);setPublications(pubs);}
  useEffect(()=>{let active=true;setPrepared(null);setSteps({});setSelected([]);setBoxes([]);setConnections([]);setPublications([]);if(mail&&messaging&&channels)Promise.all([mail.list(),channels.list(),messaging.listPublications()]).then(([boxes,connections,pubs])=>{if(active){setBoxes(boxes);setConnections(connections);setPublications(pubs);}}).catch(error=>{if(active)setError(error.message);});return()=>{active=false;};},[mail,messaging,channels,cadence.id]);
  const templateIds=[...new Set(Object.values(steps).map(entry=>waSenders.find(sender=>sender.id===entry.senderId)?.connectionId).filter((id):id is string=>!!id))].sort().join(',');
+ useLiveRefresh(async signal=>{if(!messaging||!mail||!channels||pending.current||prepared)return;const [pubs,nextBoxes,nextConnections]=await Promise.all([messaging.listPublications(),mail.list(),channels.list()]);if(!signal.aborted&&!pending.current){setPublications(pubs);setBoxes(nextBoxes);setConnections(nextConnections);}},15000,!!messaging,cadence.id);
  useEffect(()=>{let active=true;setTemplates({});if(channels&&templateIds)Promise.all(templateIds.split(',').map(async id=>[id,await channels.templates(id)] as const)).then(entries=>{if(active)setTemplates(Object.fromEntries(entries));}).catch(error=>{if(active)setError(error.message);});return()=>{active=false;};},[channels,templateIds]);
  async function act(run:()=>Promise<void>){if(pending.current)return;pending.current=true;setBusy(true);setError('');try{await run();}catch(error){setError(error instanceof Error?error.message:'Não foi possível concluir a publicação.');}finally{pending.current=false;setBusy(false);}}
  if(!mail||!channels||!messaging||revision===null)return <Notice>A publicação exige o workspace autenticado. A demonstração preserva apenas rascunhos.</Notice>;

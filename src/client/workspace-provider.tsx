@@ -18,6 +18,7 @@ import {createAutomationClient,type AutomationClient} from './automation-client'
 import {createChannelClient,type ChannelClient} from './channel-client';
 import {createMessagingClient,type MessagingClient} from './messaging-client';
 import {createMailClient,type MailClient} from './mail-client';
+import {useLiveRefresh} from './use-live-refresh';
 export interface IdentityView {
   user: { id: string; name: string; email: string };
   activeWorkspaceId: string | null;
@@ -72,7 +73,12 @@ export function WorkspaceProvider({
   identity: IdentityView;
   children: React.ReactNode;
 }) {
-  const [repo] = useState(() => createWorkspaceRepository(initial));
+  const fields=useRef(new Map<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement,string>());
+  const fieldValue=(field:HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement)=>field instanceof HTMLInputElement&&['checkbox','radio'].includes(field.type)?String(field.checked):field.value;
+  const [repo] = useState(() => createWorkspaceRepository(initial,fetch,{hasEdits:()=>{
+    if(document.querySelector('[data-workspace-editing="true"],[role="dialog"]'))return true;
+    for(const [field,original] of fields.current){if(!field.isConnected){fields.current.delete(field);continue;}if(fieldValue(field)!==original)return true;}return false;
+  },onLocalCommit:()=>fields.current.clear()}));
   const [prospecting]=useState(()=>createProspectingClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const [planning]=useState(()=>createPlanningClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const [company]=useState(()=>createContextClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
@@ -104,13 +110,7 @@ export function WorkspaceProvider({
     const timer = setTimeout(() => setToast(""), 6000);
     return () => clearTimeout(timer);
   }, [toast]);
-  useEffect(() => {
-    const focus = () => {
-      void repo.refresh().catch((e) => setToast(e.message));
-    };
-    window.addEventListener("focus", focus);
-    return () => window.removeEventListener("focus", focus);
-  }, [repo]);
+  useLiveRefresh(()=>repo.refresh(),15000,access.kind!=='blocked',repo);
   return (
     <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}><AutomationContext value={automation}><ChannelContext value={channels}><MessagingContext value={messaging}><MailContext value={mail}><RevisionContext value={current.revision}>
       <CapabilitiesContext value={current.capabilities}>
@@ -145,6 +145,7 @@ export function WorkspaceProvider({
               </main>
             ) : (
               <div
+                onFocusCapture={e=>{const field=e.target;if(field instanceof HTMLInputElement||field instanceof HTMLTextAreaElement||field instanceof HTMLSelectElement){if(!fields.current.has(field))fields.current.set(field,fieldValue(field));}}}
                 onChangeCapture={(e) => {
                   edited.capture(e.target as HTMLInputElement);
                 }}

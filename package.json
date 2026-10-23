@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/runtime-control.mjs start",
+    "prestart": "node scripts/runtime-control.mjs start",
+    "runtime:start": "node scripts/runtime-control.mjs start",
+    "runtime:stop": "node scripts/runtime-control.mjs stop",
+    "runtime:status": "node scripts/runtime-control.mjs status",
+    "runtime:install": "node scripts/runtime-control.mjs install",
     "dev": "next dev --hostname 127.0.0.1 --port 3210",
     "build": "next build --webpack",
     "start": "next start --hostname 127.0.0.1 --port 3210",

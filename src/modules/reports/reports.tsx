@@ -14,11 +14,14 @@ import {
 } from "@/components/ui/primitives";
 import { PeriodSelector } from "@/components/ui/period-selector";
 import { LineChart } from "@/components/charts/line-chart";
+import {useMessageMetrics} from '@/client/use-message-metrics';
 export function Reports({ tab = "overview" }: { tab?: string }) {
   const s = useDemo();
   const m = calculateMetrics(s);
   const [period, setPeriod] = useState("30 dias");
   const [cadence, setCadence] = useState("");
+  const {metrics:messages,error:metricsError,live}=useMessageMetrics(period,cadence);
+  const metric=(value:number|undefined)=>value===undefined?(live?'…':'0'):String(value);
   return (
     <>
       <PageHeader
@@ -55,26 +58,26 @@ export function Reports({ tab = "overview" }: { tab?: string }) {
           </Link>
         ))}
       </nav>
+      {metricsError&&<p role="status">Indicadores de mensagens: {metricsError}</p>}
       {tab === "overview" || tab === "performance" ? (
         <>
           <div className="report-stats">
             {[
-              ["Mail", "E-mails enviados"],
-              ["MessageSquare", "WhatsApp enviados"],
-              ["Eye", "Aberturas"],
-              ["Link2", "Cliques"],
-              ["MessageSquare", "Respostas"],
-              ["CheckCircle2", "Conexões"],
-              ["XCircle", "Bounces"],
-              ["LogOut", "Opt-outs"],
-            ].map(([icon, name]) => (
+              ["Mail", "E-mails aceitos",metric(messages?.email)],
+              ["MessageSquare", "WhatsApp aceitos",metric(messages?.whatsapp)],
+              ["Eye", "Aberturas","—"],
+              ["Link2", "Cliques","—"],
+              ["MessageSquare", "Respostas",metric(messages?.replies)],
+              ["XCircle", "Bounces",cadence?'—':metric(messages?.bounces)],
+              ["LogOut", "Opt-outs",cadence?'—':metric(messages?.optouts)],
+            ].map(([icon, name,value]) => (
               <section className="panel panel-pad" key={name}>
                 <div className="row between">
                   <small>{name}</small>
                   <Icon name={icon} size={15} className="orange" />
                 </div>
-                <strong>0</strong>
-                <small>sem execução real</small>
+                <strong>{value}</strong>
+                <small>{value==='—'?'Medição indisponível neste filtro':'histórico sincronizado'}</small>
               </section>
             ))}
           </div>
@@ -88,10 +91,9 @@ export function Reports({ tab = "overview" }: { tab?: string }) {
               <section className="panel panel-pad" key={title}>
                 <h3>{title}</h3>
                 <div className="chart-legend">
-                  <span className="dot orange" /> {period} · nenhuma mensagem
-                  enviada
+                  <span className="dot orange" /> {period} · histórico sincronizado
                 </div>
-                <LineChart empty values={[0, 0, 0, 0, 0, 0, 0]} />
+                <LineChart empty={!messages?.series.length} values={title==='Envios por dia'?messages?.series.map(day=>day.sent)??[]:title==='Conexões & Respostas por dia'?messages?.series.map(day=>day.replies)??[]:[]}/>
               </section>
             ))}
           </div>
@@ -103,9 +105,8 @@ export function Reports({ tab = "overview" }: { tab?: string }) {
             {[
               ["Leads na base", m.total],
               ["Qualificados", m.qualified],
-              ["Mensagens enviadas", 0],
-              ["Respostas", 0],
-              ["Conexões", 0],
+              ["Mensagens aceitas", messages?.sent??0],
+              ["Respostas", messages?.replies??0],
             ].map(([label, n]) => (
               <div key={String(label)}>
                 <div className="row between">

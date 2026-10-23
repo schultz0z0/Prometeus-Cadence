@@ -11,9 +11,11 @@ import {prepareReply,confirmReply} from './replies.ts';
 import {prepareReconciliation,confirmReconciliation} from './reconciliation.ts';
 import {readMessageUsage} from './usage.ts';
 import {acknowledgeMailThread} from '../mail/thread-review.ts';
+import {readMessageMetrics} from './metrics.ts';
 export function messagingRequestHandler(request:Request,params:Record<string,string>):Promise<Response>{return channelHttp(request,async(p,body)=>{
  const {resource,id,action}=params,url=new URL(request.url);
  if(request.method==='GET'){
+  if(resource==='metrics'&&!id)return readMessageMetrics(p,{days:Number(url.searchParams.get('days')??30),...(url.searchParams.get('cadenceId')?{cadenceId:url.searchParams.get('cadenceId')!}:{})});
   if(resource==='conversations'){
    const channel=url.searchParams.get('channel')??'WHATSAPP';if(channel!=='EMAIL'&&channel!=='WHATSAPP')throw new AppError(422,'Canal inválido.');
    if(!id){const query={...(url.searchParams.get('search')?{search:url.searchParams.get('search')!}:{}),...(url.searchParams.get('cursor')?{cursor:url.searchParams.get('cursor')!}:{}),...(url.searchParams.get('senderId')?{senderId:url.searchParams.get('senderId')!}:{})};

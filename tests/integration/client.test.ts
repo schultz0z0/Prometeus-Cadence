@@ -7,6 +7,7 @@ import {
   snapshotRequest,
 } from "../../src/server/workspaces/http.ts";
 import { verifiedUser, resetRateLimits, base } from "./helpers.ts";
+import {workspaceTag} from '../../src/domain/workspace-tag.ts';
 after(async () => getPools().close());
 test("HTTP authorizes session, validates envelope, rejects old workspace preconditions and returns private DTO", async () => {
   await resetRateLimits();
@@ -34,6 +35,12 @@ test("HTTP authorizes session, validates envelope, rejects old workspace precond
   const first = await get.json();
   assert.equal(first.data.preferences.accountName, "Test User");
   assert.equal(first.data.leads.length, 0);
+  h.set('if-none-match',workspaceTag(first.workspaceId,first.revision,first.capabilities));
+  const unchanged=await snapshotRequest(new Request(base+'/api/workspace/snapshot',{headers:h}));
+  assert.equal(unchanged.status,304);assert.equal(await unchanged.text(),'');
+  h.set('if-none-match',workspaceTag('another-workspace',first.revision,first.capabilities));
+  assert.equal((await snapshotRequest(new Request(base+'/api/workspace/snapshot',{headers:h}))).status,200);
+  h.delete('if-none-match');
   const request = (body: unknown) =>
     new Request(base + "/api/workspace/commands", {
       method: "POST",

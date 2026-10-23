@@ -1,5 +1,6 @@
 "use client";
 import { useState,useEffect,useCallback } from "react";
+import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useAutomationClient,useCapabilities} from '@/client/workspace-provider';
 import type {AutomationRuntime} from '@/domain/automation-runtime';
 import {RuntimeControls} from './runtime-controls';
@@ -28,7 +29,8 @@ export function AutomationList() {
   const client=useAutomationClient(),caps=useCapabilities(),canEdit=!client||caps?.includes('data.write');
   const [runtimes,setRuntimes]=useState<Record<string,AutomationRuntime>>({}),[runtimeError,setRuntimeError]=useState('');
   const refreshRuntime=useCallback(async()=>{if(client){const rows=await client.list();setRuntimes(Object.fromEntries(rows.map(r=>[r.definition.id,r.runtime])));setRuntimeError('');}},[client]);
-  useEffect(()=>{let active=true;const load=()=>{if(client)client.list().then(rows=>{if(active){setRuntimes(Object.fromEntries(rows.map(r=>[r.definition.id,r.runtime])));setRuntimeError('');}}).catch(e=>{if(active)setRuntimeError(e.message);});};load();const timer=setInterval(load,10000);return()=>{active=false;clearInterval(timer);};},[client,s.automations]);
+  useEffect(()=>{void refreshRuntime().catch(e=>setRuntimeError(e.message));},[refreshRuntime]);
+  useLiveRefresh(async signal=>{if(!client)return;const rows=await client.list();if(!signal.aborted){setRuntimes(Object.fromEntries(rows.map(r=>[r.definition.id,r.runtime])));setRuntimeError('');}},15000,!!client,client);
   const automations=client?s.automations.map(a=>({...a,status:runtimes[a.id]?.status==='active'?'active' as const:runtimes[a.id]?.status==='blocked'?'error' as const:'paused' as const})):s.automations;
   const [create, setCreate] = useState(false);
   const [query, setQuery] = useState("");

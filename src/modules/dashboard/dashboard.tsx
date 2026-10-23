@@ -14,6 +14,8 @@ import {
 import { PeriodSelector } from "@/components/ui/period-selector";
 import { LineChart } from "@/components/charts/line-chart";
 import { Tour } from "@/components/onboarding/tour";
+import {useMessageMetrics} from '@/client/use-message-metrics';
+import {useWorkspaceRefresh} from '@/client/workspace-provider';
 export function Dashboard() {
   const state = useDemo();
   const repo = useRepository();
@@ -21,6 +23,8 @@ export function Dashboard() {
   const run = useAction();
   const m = calculateMetrics(state);
   const [period, setPeriod] = useState("30 dias");
+  const {metrics:messages,error:metricsError,live}=useMessageMetrics(period),refresh=useWorkspaceRefresh();
+  const metric=(value:number|undefined)=>value===undefined?(live?'…':'0'):String(value);
   const [tour, setTour] = useState(false);
   const list = state.lists[0];
   const stats = [
@@ -32,10 +36,10 @@ export function Dashboard() {
       "CheckCircle2",
       "green-text",
     ],
-    ["Mensagens enviadas", "0", "0 e-mail · 0 WhatsApp", "Send", "orange"],
-    ["Respostas", "0", "0% dos envios", "MessageSquare", "green-text"],
-    ["Abertura de e-mail", "0%", "0% clicaram", "Eye", "purple-text"],
-    ["Opt-outs", "0", "no período", "XCircle", "orange"],
+    ["Mensagens aceitas", metric(messages?.sent), metric(messages?.email)+" e-mail · "+metric(messages?.whatsapp)+" WhatsApp", "Send", "orange"],
+    ["Respostas", metric(messages?.replies), "recebidas no período", "MessageSquare", "green-text"],
+    ["Abertura de e-mail", "—", "Rastreamento indisponível", "Eye", "purple-text"],
+    ["Opt-outs", metric(messages?.optouts), "no período", "XCircle", "orange"],
   ];
   return (
     <>
@@ -49,12 +53,13 @@ export function Dashboard() {
               icon="RefreshCw"
               label="Atualizar"
               onClick={() =>
-                notify("Indicadores atualizados com a base do workspace.")
+                void refresh?.().then(()=>notify("Indicadores atualizados com a base do workspace.")).catch(e=>notify(e.message))
               }
             />
           </>
         }
       />
+      {metricsError&&<p role="status">Indicadores de mensagens: {metricsError}</p>}
       {!state.preferences.onboardingHidden && (
         <section className="panel setup-panel">
           <div className="setup-heading">
@@ -194,12 +199,12 @@ export function Dashboard() {
         </div>
         <div className="today-grid">
           {[
-            ["Previsto", "Calendar", "0", "nada previsto"],
-            ["E-mails", "Mail", "0", ""],
-            ["WhatsApp", "MessageSquare", "0", ""],
-            ["Respostas", "MessageSquare", "0", ""],
-            ["Erros", "XCircle", "0", ""],
-            ["Cadências", "Send", "0", "que enviaram"],
+            ["Na fila", "Calendar", metric(messages?.today.pending), "mensagens criadas hoje"],
+            ["E-mails", "Mail", metric(messages?.today.email), "aceitos"],
+            ["WhatsApp", "MessageSquare", metric(messages?.today.whatsapp), "aceitos"],
+            ["Respostas", "MessageSquare", metric(messages?.today.replies), ""],
+            ["Erros", "XCircle", metric(messages?.today.failed), ""],
+            ["Cadências", "Send", String(state.cadences.length), "no workspace"],
             [
               "Automações",
               "Workflow",
@@ -277,17 +282,16 @@ export function Dashboard() {
           <small>no período</small>
           <div className="metric-list">
             {[
-              "E-mails",
-              "WhatsApp",
-              "Respostas",
-              "Conexões",
-              "Aberturas",
-              "Cliques",
-              "Opt-out",
-            ].map((x) => (
-              <div key={x}>
-                <span>{x}</span>
-                <strong>0</strong>
+              ["E-mails",metric(messages?.email)],
+              ["WhatsApp",metric(messages?.whatsapp)],
+              ["Respostas",metric(messages?.replies)],
+              ["Aberturas","—"],
+              ["Cliques","—"],
+              ["Opt-out",metric(messages?.optouts)],
+            ].map(([name,value]) => (
+              <div key={name}>
+                <span>{name}</span>
+                <strong>{value}</strong>
               </div>
             ))}
           </div>

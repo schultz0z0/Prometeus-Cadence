@@ -4,6 +4,7 @@ import type { WorkspaceCommand } from "../domain/commands.ts";
 import type { ConfirmationResult } from "../domain/model.ts";
 import { decodeDemoState } from "../demo/storage.ts";
 import { emptyWorkspace } from "../domain/empty-workspace.ts";
+import {workspaceTag} from '../domain/workspace-tag.ts';
 export interface WorkspaceAccess {
   kind: "ready" | "conflict" | "blocked";
   message: string;
@@ -52,6 +53,7 @@ function validate(value: unknown, workspaceId: string): WorkspaceSnapshot {
 export function createWorkspaceRepository(
   initial: WorkspaceSnapshot,
   transport: typeof fetch = fetch,
+  options:{hasEdits?:()=>boolean;onLocalCommit?:()=>void}={},
 ) {
   let snapshot = validate(initial, initial.workspaceId),
     disposed = false,
@@ -80,7 +82,7 @@ export function createWorkspaceRepository(
     if (disposed) throw Error("O workspace foi alterado.");
     if (access.kind === "blocked") throw Error(access.message);
     if (next.revision < snapshot.revision) return;
-    if (external && next.revision > snapshot.revision)
+    if (external && next.revision > snapshot.revision && (pending.size>0||(options.hasEdits?.()??true)))
       access = {
         kind: "conflict",
         message:
@@ -92,8 +94,9 @@ export function createWorkspaceRepository(
   async function refresh() {
     const r = await transport("/api/workspace/snapshot", {
       cache: "no-store",
-      headers: { "x-cadence-workspace": snapshot.workspaceId },
+      headers: { "x-cadence-workspace": snapshot.workspaceId,"if-none-match":workspaceTag(snapshot.workspaceId,snapshot.revision,snapshot.capabilities) },
     });
+    if(r.status===304||disposed)return;
     const body = await r.json();
     if (!r.ok) {
       if (
@@ -162,6 +165,7 @@ export function createWorkspaceRepository(
           );
         }
         publish(validate(body.snapshot, snapshot.workspaceId));
+        options.onLocalCommit?.();
         pending.delete(key);
         return body.result as ConfirmationResult | undefined;
       } catch (e) {

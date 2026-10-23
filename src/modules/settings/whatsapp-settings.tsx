@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from 'react';
+import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useChannels,useIdentity} from '@/client/workspace-provider';
 import type {ConnectionView,OutboundContent,Provider,SenderView,TemplateView} from '@/domain/whatsapp';
 import type {ChannelClient,TestSendReview} from '@/client/channel-client';
@@ -41,6 +42,7 @@ export function WhatsappSettings({limitsOnly=false}:{limitsOnly?:boolean}){
  useEffect(()=>{let active=true;setConnections(null);setLimits(null);setToken(null);setForm(null);setTest(null);setError('');if(client)Promise.all([client.list(),client.limits()]).then(([c,l])=>{if(active){setConnections(c);setLimits(l);}}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[client]);
  async function act(fn:()=>Promise<void>){if(busy)return;setBusy(true);setError('');setNotice('');try{await fn();await refresh();}catch(e){setError(e instanceof Error?e.message:'Não foi possível concluir.');}finally{setBusy(false);}}
  const title=limitsOnly?'Limites de disparo':'WhatsApp';
+ useLiveRefresh(async signal=>{if(!client||busy||form||test||disconnect)return;const c=await client.list();if(!signal.aborted)setConnections(c);},10000,!!client,client);
  if(!client)return <><h1>{title}</h1><Notice>Demonstração visual. Conexões reais exigem uma conta autenticada no workspace.</Notice></>;
  return <><div className="row between wrap"><div><h1>{title}</h1><p className="subtitle">Conecte a conta da sua empresa e acompanhe cada etapa de ativação.</p></div><Button disabled={busy} onClick={()=>act(refresh)}>Atualizar estado</Button></div>
  {error&&<p role="alert" className="error-bar">{error}</p>}{notice&&<p role="status">{notice}</p>}

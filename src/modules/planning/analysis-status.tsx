@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from 'react';
+import {useLiveRefresh} from '@/client/use-live-refresh';
 import Link from 'next/link';
 import {usePlanning,useProspecting} from '@/client/workspace-provider';
 import type {PlanningAnalysis} from '@/client/planning-client';
@@ -8,10 +9,10 @@ import {jobStateLabels} from '@/modules/prospecting/job-history';
 const active=['queued','running','waiting_provider','cancelling'];
 export function usePlanningAnalysis(id:string|null){
  const client=usePlanning(),[data,setData]=useState<PlanningAnalysis|null>(null),[error,setError]=useState(''),[revision,setRevision]=useState(0);
- useEffect(()=>{let live=true,timer:ReturnType<typeof setTimeout>|undefined;setData(null);setError('');
-  async function tick(){if(!id||!client)return;try{const next=await client.get(id);if(!live)return;setData(next);if(active.includes(next.job.state))timer=setTimeout(tick,2500);}catch(e){if(live)setError(e instanceof Error?e.message:'Falha ao consultar análise.');}}
-  void tick();return()=>{live=false;if(timer)clearTimeout(timer);};
+ useEffect(()=>{let live=true;setData(null);setError('');
+  if(id&&client)client.get(id).then(next=>{if(live)setData(next);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};
  },[client,id,revision]);
+ useLiveRefresh(async signal=>{if(!client||!id)return;try{const next=await client.get(id);if(!signal.aborted){setData(next);setError('');}}catch(e){if(!signal.aborted)setError((e as Error).message);throw e;}},5000,!!client&&!!id,id);
  return {data,error,refresh:()=>setRevision(v=>v+1)};
 }
 export function AnalysisStatus({data,error,onRefresh}:{data:PlanningAnalysis|null;error?:string;onRefresh:()=>void}){
