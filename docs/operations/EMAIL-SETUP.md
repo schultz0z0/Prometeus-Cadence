@@ -27,6 +27,8 @@ SPF/DMARC e DKIM (com selector informado) são observações DNS; não são gara
 
 ## Processos e comandos
 
+Para o piloto manual local, prefira a versão compilada: pare o servidor de desenvolvimento, execute `rtk npm run build` e depois `rtk npm start`. A origem continua `http://127.0.0.1:3210`, com o mesmo banco e callback Google. Isso evita compilação de novas rotas durante a navegação. Alterações de código exigem novo build; `rtk npm run dev` fica reservado ao desenvolvimento. Iniciar a versão compilada não liga workers de envio ou sincronização.
+
 Padrões são seguros: `rtk npm run mail:sync`, `rtk npm run mail:smoke` e `rtk npm run messaging:worker` retornam disabled/skipped sem chamadas de provedor. A aplicação não liga esses processos automaticamente.
 
 ```powershell

@@ -86,3 +86,30 @@ test('soft bounce holds only the enrollment and a new human mail thread can rece
  const conv=(await testAdmin(c=>c.query('SELECT conversation_id FROM app.channel_message WHERE connection_id=$1 AND remote_id=$2',[g.mailbox.id,mail.remoteId]))).rows[0].conversation_id;
  const body={messageId:randomUUID(),content:{kind:'email' as const,subject:'Re: Dúvida sobre o serviço',text:'Vamos conversar',signature:'Equipe QA'}},review=await prepareMailReply(g.u.p,conv,body);assert.deepEqual(review.blockers,[]);await confirmMailReply(g.u.p,conv,{...body,requestId:randomUUID(),reviewToken:review.token});assert.equal(await state(g),'active');
 });
+
+// Regression: Gmail can replace the MIME Message-ID; the app must learn the
+// provider identity from its exact accepted remote message before matching replies.
+test("Gmail sent observation binds rewritten Message-ID before an earlier reply in the same sync batch",async()=>{
+ const f=await fixture(),remote="sent-"+randomUUID(),thread="gmail-thread-"+randomUUID(),actual="<rewritten-"+randomUUID()+"@mail.gmail.com>";
+ const {claimDispatch}=await import("../../src/server/messaging/lease.ts"),{dispatchOne}=await import("../../src/server/messaging/dispatch.ts"),now=new Date(Date.now()+121000).toISOString();
+ const dispatch=await claimDispatch(now,{workspaceId:f.u.p.workspaceId,messageId:f.message.message_id});assert.ok(dispatch);
+ await dispatchOne(dispatch,{now:()=>now,mailAdapter:{verify:async()=>{throw Error("unused");},readBatch:async()=>{throw Error("unused");},findSent:async()=>null,sendOnce:async()=>({kind:"accepted",remoteId:remote,acceptedAt:now})}});
+ assert.equal((await testAdmin(c=>c.query("SELECT state FROM app.message_outbox WHERE message_id=$1",[f.message.message_id]))).rows[0].state,"accepted");
+ const reply=incoming(f,{remoteThreadId:thread,inReplyTo:actual,references:[actual],text:"Resposta real"});
+ const sent:MailMessage={...incoming(f),direction:"outbound",remoteId:remote,remoteThreadId:thread,rfcMessageId:actual,inReplyTo:null,references:[],from:f.mailbox.address!,to:[f.lead.email!],text:"Mensagem enviada"};
+ await ingest(f,[reply,sent]);
+ const {listEmailConversations,readEmailConversation}=await import("../../src/server/mail/inbox.ts"),list=await listEmailConversations(f.u.p,{channel:"EMAIL"});
+ assert.equal(list.items.length,1,"reply must remain with the app sent message");
+ const history=await readEmailConversation(f.u.p,f.message.conversation_id);assert.equal(history.messages.length,2);assert.equal(history.messages[1].text,"Resposta real");assert.equal(history.messages[0].mail.rfcMessageId,actual);assert.equal(await state(f),"stopped");
+ await ingest(f,[sent,reply]);assert.equal((await readEmailConversation(f.u.p,f.message.conversation_id)).messages.length,2,"replay must not duplicate sent or received messages");
+});
+test('rewritten sent headers cannot change an accepted identity with another remote receipt or recipient',async()=>{
+ const {claimDispatch}=await import('../../src/server/messaging/lease.ts'),{dispatchOne}=await import('../../src/server/messaging/dispatch.ts');
+ for(const mismatch of ['remote','sender','recipient']){
+  const f=await fixture(),remote='accepted-'+randomUUID(),now=new Date(Date.now()+121000).toISOString(),claimed=await claimDispatch(now,{workspaceId:f.u.p.workspaceId,messageId:f.message.message_id});assert.ok(claimed);
+  await dispatchOne(claimed,{now:()=>now,mailAdapter:{verify:async()=>{throw Error('unused');},readBatch:async()=>{throw Error('unused');},findSent:async()=>null,sendOnce:async()=>({kind:'accepted',remoteId:remote,acceptedAt:now})}});
+  await ingest(f,[incoming(f,{direction:'outbound',remoteId:mismatch==='remote'?'unrelated-'+randomUUID():remote,remoteThreadId:'unrelated-thread',rfcMessageId:'<unrelated@mail.gmail.com>',inReplyTo:null,references:[],from:mismatch==='sender'?'other@example.org':f.mailbox.address!,to:[mismatch==='recipient'?'other@example.net':f.lead.email!]})]);
+  const stored=(await testAdmin(c=>c.query('SELECT e.rfc_message_id,t.remote_thread_id,o.remote_id,o.state FROM app.email_message e JOIN app.email_thread t ON t.workspace_id=e.workspace_id AND t.id=e.thread_id JOIN app.message_outbox o ON o.workspace_id=e.workspace_id AND o.message_id=e.message_id WHERE e.message_id=$1',[f.message.message_id]))).rows[0];
+  assert.equal(stored.rfc_message_id,f.message.rfc_message_id,mismatch);assert.equal(stored.remote_thread_id,null,mismatch);assert.equal(stored.remote_id,remote,mismatch);assert.equal(stored.state,'accepted',mismatch);
+ }
+});
