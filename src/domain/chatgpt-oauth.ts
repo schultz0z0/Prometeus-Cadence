@@ -1,0 +1,1 @@
+export interface ChatGptOAuthView {available:boolean;state:'disconnected'|'connected'|'attention';revision:number;email:string|null;model:string;models:{id:string;name:string}[];expiresAt:string|null;lastError:string|null}

@@ -1,6 +1,6 @@
 import {createCipheriv,createDecipheriv,randomBytes} from 'node:crypto';
 import type {MessagingProvider} from '../../domain/messaging.ts';
-export interface CredentialAAD {workspaceId:string;connectionId:string;provider:MessagingProvider;revision:number}
+export interface CredentialAAD {workspaceId:string;connectionId:string;provider:MessagingProvider|'chatgpt-oauth';revision:number}
 export interface EncryptedCredential {keyId:string;iv:string;tag:string;ciphertext:string}
 function keyring(){
  try{

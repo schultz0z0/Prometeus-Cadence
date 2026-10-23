@@ -1,4 +1,4 @@
-export type ConventionalProvider='codex-local'|'openai'|'gemini';
+export type ConventionalProvider='codex-local'|'chatgpt-oauth'|'openai'|'gemini';
 export type AiMode='auto'|'conventional-only'|'hybrid-required';
 export interface AiPolicy{revision:number;mode:AiMode;conventionalProvider:ConventionalProvider|null;jevEnabled:boolean}
 export interface ConventionalRoute{provider:ConventionalProvider;model:string;configFingerprint:string;contractVersion:'conventional-v1'}
@@ -20,6 +20,6 @@ export function resolveAiRoute(policy:AiPolicy,runtime:AiRuntime,check:Connectio
 }
 export function aiRouteView(route:AiRoute):AiRouteView{const{configFingerprint:_,...conventional}=route.conventional;return{...route,conventional};}
 export interface CodexDiagnostic{available:boolean;authenticated:boolean;authMode:'chatgpt'|'other'|'unknown';version:string|null;code:string|null}
-export interface AiSettingsView{policy:AiPolicy;canManage:boolean;providers:Record<ConventionalProvider,{configured:boolean;model:string}>;jevConfigured:boolean;route:AiRouteView|null;blockers:string[];lastCheck:Omit<ConnectionCheck,'configFingerprint'>|null;diagnostic?:CodexDiagnostic}
+export interface AiSettingsView{policy:AiPolicy;canManage:boolean;providers:Record<ConventionalProvider,{configured:boolean;model:string}>;jevConfigured:boolean;route:AiRouteView|null;blockers:string[];lastCheck:Omit<ConnectionCheck,'configFingerprint'>|null;diagnostic?:CodexDiagnostic;chatgpt?:import('./chatgpt-oauth.ts').ChatGptOAuthView}
 export interface AiTestDraft{sampleId:string}
 export interface AiTestReview{draft:AiTestDraft;token:string;expiresAt:string;route:AiRouteView|null;usage:import('./prospecting.ts').UsageEstimate[];blockers:string[]}

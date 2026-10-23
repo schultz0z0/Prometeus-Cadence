@@ -19,6 +19,7 @@ import {AppError} from '../errors.ts';
 import {runConventional,conventionalUnit} from './ai/conventional.ts';
 import {assertAiRouteCurrent} from './ai/route-guard.ts';
 import {diagnoseCodex} from './ai/diagnostics.ts';
+import {ensureOAuthCompanion} from './ai/json.ts';
 import {recordConnectionCheck} from './ai/connection.ts';
 import type {AiRoute} from '../../domain/ai-routing.ts';
 import {syncOccurrenceJob} from '../automations/assignments.ts';
@@ -146,6 +147,10 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
 async function preflight(lease:JobLease,job:any,deps:QualificationAdapters,jev=false,freshOperationId?:string){
  await withLeasedTransaction(lease,c=>assertAiRouteCurrent(c,job,freshOperationId));
  const route=job.checkpoint.execution.aiRoute as AiRoute;
+ if(jev&&route.conventional.provider==='chatgpt-oauth'){
+  await ensureOAuthCompanion(lease.workspaceId,route.conventional,deps.signal);
+  await withLeasedTransaction(lease,c=>assertAiRouteCurrent(c,job));
+ }
  if(jev&&route.conventional.provider==='codex-local'){
   const diagnostic=await(deps.diagnose??diagnoseCodex)();
   if(!diagnostic.authenticated)throw new AppError(409,'O Codex local precisa de autenticação ChatGPT.','AI_COMPANION_UNAVAILABLE');

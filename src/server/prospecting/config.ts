@@ -5,7 +5,7 @@ import type {GenerationSource,JobInput,Units,UsageEstimate} from '../../domain/p
 import {hashValue} from './review.ts';
 import {providerProfile,actorInput,providerContractVersion} from './providers/profiles.ts';
 import type {AiRoute} from '../../domain/ai-routing.ts';
-const conventionalUnit=(p:string):import('../../domain/prospecting.ts').Unit=>p==='codex-local'?'codexCalls':p==='openai'?'openaiCalls':'geminiCalls';
+const conventionalUnit=(p:string):import('../../domain/prospecting.ts').Unit=>(p==='codex-local'||p==='chatgpt-oauth')?'codexCalls':p==='openai'?'openaiCalls':'geminiCalls';
 const unitCaps=z.strictObject({candidates:z.number().int().min(0).max(1e9).default(0),apifyRuns:z.number().int().min(0).max(1e9).default(0),apolloPages:z.number().int().min(0).max(1e9).default(0),jevCalls:z.number().int().min(0).max(1e9).default(0),codexCalls:z.number().int().min(0).max(1e9).default(0),openaiCalls:z.number().int().min(0).max(1e9).default(0),geminiCalls:z.number().int().min(0).max(1e9).default(0)});
 export function parseCaps(value:string|undefined){try{return unitCaps.parse(JSON.parse(value??'{}'));}catch{return unitCaps.parse({});}}
 export function prospectingConfig(){

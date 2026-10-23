@@ -12,7 +12,7 @@ import {savePlanningProposal} from './repository.ts';
 import {assertAiRouteCurrent} from '../prospecting/ai/route-guard.ts';
 import {diagnoseCodex} from '../prospecting/ai/diagnostics.ts';
 import {recordConnectionCheck} from '../prospecting/ai/connection.ts';
-import {conventionalUnit} from '../prospecting/ai/json.ts';
+import {conventionalUnit,ensureOAuthCompanion} from '../prospecting/ai/json.ts';
 import {hashValue} from '../prospecting/review.ts';
 import {workspaceProspectingConfig} from '../prospecting/workspace-config.ts';
 import {readApprovedContext} from '../context/repository.ts';
@@ -35,6 +35,10 @@ async function preflight(lease:JobLease,job:any,deps:PlanningExecutionAdapters,f
   }
  });
  await check();
+ if(job.checkpoint.execution.aiRoute.conventional.provider==='chatgpt-oauth'){
+  await ensureOAuthCompanion(lease.workspaceId,job.checkpoint.execution.aiRoute.conventional,deps.signal);
+  await check();
+ }
  if(job.checkpoint.execution.aiRoute.conventional.provider==='codex-local'){
   const result=await(deps.diagnose??diagnoseCodex)();if(!result.authenticated||result.authMode!=='chatgpt')throw new AppError(409,'Autentique o Codex local com ChatGPT.','AI_COMPANION_UNAVAILABLE');
   await check();

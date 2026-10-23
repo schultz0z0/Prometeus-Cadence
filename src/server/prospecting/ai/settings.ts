@@ -7,7 +7,7 @@ import {withWorkspaceTransaction} from '../../db/transaction.ts';
 import {AppError} from '../../errors.ts';
 import {lockWorkspace} from '../ingestion.ts';
 import {hashValue} from '../review.ts';
-const schema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(0),policy:z.strictObject({mode:z.enum(['auto','conventional-only','hybrid-required']),conventionalProvider:z.enum(['codex-local','openai','gemini']).nullable(),jevEnabled:z.boolean()})});
+const schema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(0),policy:z.strictObject({mode:z.enum(['auto','conventional-only','hybrid-required']),conventionalProvider:z.enum(['codex-local','chatgpt-oauth','openai','gemini']).nullable(),jevEnabled:z.boolean()})});
 export async function requireAiAdmin(c:PoolClient){const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;if(!['owner','admin'].includes(role))throw new AppError(403,'Somente administradores podem configurar ou testar provedores de IA.');}
 export async function readAiPolicy(c:PoolClient):Promise<AiPolicy>{const r=(await c.query("SELECT * FROM app.ai_policy WHERE workspace_id=current_setting('app.workspace_id')")).rows[0];return r?{revision:Number(r.revision),mode:r.mode,conventionalProvider:r.conventional_provider,jevEnabled:r.jev_enabled}:{...defaultAiPolicy};}
 export async function saveAiPolicy(p:Principal,input:unknown):Promise<AiPolicy>{

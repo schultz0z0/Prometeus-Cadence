@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {resolveAiRoute,type AiPolicy,type AiRuntime,type ConnectionCheck} from '../src/domain/ai-routing.ts';
 import {conventionalConfig} from '../src/server/prospecting/ai/config.ts';
 const now=1800000000000;
-for(const provider of ['codex-local','openai','gemini'] as const){
+for(const provider of ['codex-local','chatgpt-oauth','openai','gemini'] as const){
   test(provider+' runs alone without JEV, prioritizes JEV only with a validated companion, and obeys explicit routing',()=>{
     const route={provider,model:'fixture-model',configFingerprint:'config-a',contractVersion:'conventional-v1' as const};
     const runtime={conventional:{[provider]:{configured:true,route}},jevReady:false} as AiRuntime;

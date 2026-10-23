@@ -1,5 +1,6 @@
 import type {ProspectingInput,Review,JobView,JobItemView,Page,ProviderCapabilities,JobFilters} from '../domain/prospecting.ts';
 import type {AiSettingsView,AiPolicy,AiTestReview,CodexDiagnostic} from '../domain/ai-routing.ts';
+import type {ChatGptOAuthView} from '../domain/chatgpt-oauth.ts';
 import {createWorkspaceTransport} from './workspace-transport.ts';
 export function createProspectingClient(options:{workspaceId:string;transport?:typeof fetch;onAccessLost?:(message:string)=>void}){
   const confirmations=new Map<string,Promise<JobView>>(),requestIds=new Map<string,string>(),applications=new Map<string,Promise<{applied:number;revision:number}>>();
@@ -9,6 +10,9 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
   const stableId=(key:string)=>{let id=requestIds.get(key);if(!id){id=crypto.randomUUID();requestIds.set(key,id);}return id;};
   return{
     aiSettings:()=>request<AiSettingsView>('/ai/policy'),
+    connectChatgpt:(expectedRevision:number)=>request<{url:string}>('/ai/oauth/start',{expectedRevision}),
+    selectChatgptModel:(expectedRevision:number,model:string)=>request<ChatGptOAuthView>('/ai/oauth/model',{expectedRevision,model}),
+    disconnectChatgpt:(expectedRevision:number)=>request<ChatGptOAuthView>('/ai/oauth/disconnect',{expectedRevision}),
     saveAiPolicy(policy:AiPolicy){const key='policy:'+JSON.stringify(policy),prior=settingsFlights.get(key);if(prior)return prior;
       const{revision,...values}=policy;const promise=request<AiPolicy>('/ai/policy',{requestId:stableId(key),expectedRevision:revision,policy:values}).then(result=>{requestIds.delete(key);settingsFlights.delete(key);return result;}).catch(e=>{settingsFlights.delete(key);throw e;});settingsFlights.set(key,promise);return promise;},
     diagnoseAi:()=>request<CodexDiagnostic>('/ai/diagnostics',{}),

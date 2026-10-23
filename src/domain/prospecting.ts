@@ -21,7 +21,7 @@ export interface Candidate extends Omit<Lead,'id'|'listId'|'createdAt'|'qualific
 export interface CandidatePage{receiptId:string;candidates:Candidate[];nextCursor:string|null;exhausted:boolean;rawCount:number;rejected:{sourceRef?:string;reason:string}[];usage:ProviderUsage}
 export interface RemoteRun{provider:'apify';runId:string;datasetId:string|null;profileId:string;build:string;operationId:string}
 export interface RemoteState{run:RemoteRun;status:'ready'|'running'|'succeeded'|'failed'|'cancelling'|'cancelled';error?:{code:string;message:string}}
-export interface Decision{provider?:'jev'|'codex-local'|'openai'|'gemini';model:string;verdict:'fits'|'does_not_fit'|'insufficient_evidence';confidence:number|null;probabilities:Record<string,number>;criteria:Record<string,number>;evidenceIds:string[];usage:ProviderUsage}
+export interface Decision{provider?:'jev'|'codex-local'|'chatgpt-oauth'|'openai'|'gemini';model:string;verdict:'fits'|'does_not_fit'|'insufficient_evidence';confidence:number|null;probabilities:Record<string,number>;criteria:Record<string,number>;evidenceIds:string[];usage:ProviderUsage}
 export interface Generation{model:string;summary:string;evidenceIds:string[];usage:ProviderUsage}
 export interface ModuleResult{module:ModuleId;status:'succeeded'|'skipped'|'failed'|'pending_review';proposed:Partial<Lead>;base:Partial<Lead>;reasons:string[];evidenceIds:string[];usage:ProviderUsage|null;decision?:Decision;contextVersion?:number}
 export interface JobItemView{id:string;leadId:string|null;sourceRef:string|null;name:string;status:string;results:ModuleResult[];applied:boolean;evidence?:Pick<Evidence,'id'|'url'|'fetchedAt'|'truncated'>[]}

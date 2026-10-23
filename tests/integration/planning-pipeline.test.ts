@@ -1,3 +1,5 @@
+import {seedOAuthFixture} from './oauth-fixture.ts';
+import {conventionalUnit} from '../../src/server/prospecting/ai/json.ts';
 import test,{after,beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID,createHash} from 'node:crypto';
@@ -20,11 +22,12 @@ import {defaultCadenceSettings} from '../../src/demo/seed.ts';
 beforeEach(resetRateLimits);after(closeProspectingPools);
 const audience:PlanningInput={kind:'planning',task:'audience_plan',description:'Clínicas',channel:'whatsapp',timezone:'America/Sao_Paulo'};
 const context:PlanningInput={kind:'planning',task:'context_read',domain:'example.com',target:{kind:'company'}};
-async function setup(provider:'codex-local'|'openai'|'gemini'='openai'){
+async function setup(provider:'codex-local'|'chatgpt-oauth'|'openai'|'gemini'='openai'){
  const fixture=await createPlanningFixture();Object.assign(process.env,{CODEX_LOCAL_ENABLED:'true',CODEX_BINARY:process.execPath,CODEX_MODEL:'fixture',CODEX_TEST_WORKSPACE_IDS:fixture.p.workspaceId,OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',GEMINI_API_KEY:'fixture',GEMINI_MODEL:'fixture',OPENROUTER_API_KEY:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({codexCalls:10,openaiCalls:10,geminiCalls:10,jevCalls:10}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({codexCalls:100000,openaiCalls:100000,geminiCalls:100000,jevCalls:100000})});
+ if(provider==='chatgpt-oauth')seedOAuthFixture(fixture.p.workspaceId);
  await saveAiPolicy(fixture.p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:provider,jevEnabled:false}});return fixture;
 }
-function fakeGenerate(counter:{calls:number}){return async(ctx:any,input:any)=>{counter.calls++;const payload=input.request.task==='context_read'?{task:'context_read' as const,fields:{offer:{value:'Clínicas',quote:'Atendemos clínicas.',evidenceIds:['page_1']}}}:{task:'audience_plan' as const,...audienceResult()};return {proposal:{...payload,contractVersion:'planning-v1' as const,jobId:ctx.jobId,base:input.base,evidenceIds:input.sources.map((s:any)=>s.id),recommendedOptionId:null} as PlanningProposal,usage:{provider:ctx.route.provider==='codex-local'?'codex':ctx.route.provider,operationId:ctx.operationId,units:{[ctx.route.provider==='codex-local'?'codexCalls':ctx.route.provider+'Calls']:1},costUsd:null,costKind:'unknown' as const}};};}
+function fakeGenerate(counter:{calls:number}){return async(ctx:any,input:any)=>{counter.calls++;const payload=input.request.task==='context_read'?{task:'context_read' as const,fields:{offer:{value:'Clínicas',quote:'Atendemos clínicas.',evidenceIds:['page_1']}}}:{task:'audience_plan' as const,...audienceResult()};return {proposal:{...payload,contractVersion:'planning-v1' as const,jobId:ctx.jobId,base:input.base,evidenceIds:input.sources.map((s:any)=>s.id),recommendedOptionId:null} as PlanningProposal,usage:{provider:ctx.route.provider==='codex-local'?'codex':ctx.route.provider,operationId:ctx.operationId,units:{[conventionalUnit(ctx.route.provider)]:1},costUsd:null,costKind:'unknown' as const}};};}
 const diagnose=async()=>({available:true,authenticated:true,authMode:'chatgpt' as const,version:'fixture',code:null});
 test('planning review is pure and confirmation reserves once without creating any domain object',async()=>{
  const {p,headers}=await setup(),review=await preparePlanning(p,audience);assert.deepEqual(review.blockers,[]);assert.equal(await countRows('prospecting_job',p.workspaceId),0);
@@ -36,7 +39,7 @@ test('planning review is pure and confirmation reserves once without creating an
   const response=await planningRequest(new Request('http://127.0.0.1:3210/api/planning/prepare',{method:'POST',headers:h,body:JSON.stringify(audience)}),'prepare');assert.ok([403,409].includes(response.status));
  }
 });
-for(const provider of ['codex-local','openai','gemini'] as const)test(`${provider} planning runs solo and stores proposals without changing leads`,async()=>{
+for(const provider of ['codex-local','chatgpt-oauth','openai','gemini'] as const)test(`${provider} planning runs solo and stores proposals without changing leads`,async()=>{
  const {p}=await setup(provider),review=await preparePlanning(p,audience),job=await confirmPlanning(p,{requestId:randomUUID(),input:audience,reviewToken:review.token}),counter={calls:0};
  await runPlanning(await grantTestLease(p,job.id),{generate:fakeGenerate(counter),diagnose});
  const result=await getPlanning(p,job.id);assert.equal(result.job.state,'completed');assert.equal(counter.calls,1);assert.equal(result.proposal?.task,'audience_plan');assert.equal(result.job.usage?.length,1);assert.equal(await countRows('list',p.workspaceId),0);

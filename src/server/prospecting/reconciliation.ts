@@ -39,7 +39,7 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
     const current=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1 FOR UPDATE',[id])).rows[0];
     if(current.state!=='needs_reconciliation'||String(current.revision)!==String(job.revision))throw new AppError(409,'A execução mudou. Revise novamente.');
     if(!(await c.query(`SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND id=$2 AND ${unresolvedSql} FOR UPDATE`,[id,attempt.id])).rowCount)throw new AppError(409,'Esta chamada já foi reconciliada.');
-    const units:Units=attempt.payload.reservedUnits??(attempt.provider==='apify'?{apifyRuns:1}:attempt.provider==='apollo'?{apolloPages:1}:attempt.provider==='openrouter'?{jevCalls:1}:attempt.provider==='codex'?{codexCalls:1}:attempt.provider==='openai'?{openaiCalls:1}:attempt.provider==='gemini'?{geminiCalls:1}:{});
+    const units:Units=attempt.payload.reservedUnits??(attempt.provider==='apify'?{apifyRuns:1}:attempt.provider==='apollo'?{apolloPages:1}:attempt.provider==='openrouter'?{jevCalls:1}:(attempt.provider==='codex'||attempt.provider==='chatgpt-oauth')?{codexCalls:1}:attempt.provider==='openai'?{openaiCalls:1}:attempt.provider==='gemini'?{geminiCalls:1}:{});
     let state='queued',providerRun=current.provider_run;
     if(selection.confirmNotStarted){
       await c.query('DELETE FROM app.prospecting_attempt WHERE job_id=$1 AND id=$2',[id,attempt.id]);

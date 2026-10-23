@@ -1,6 +1,6 @@
 # Correção 03C — LLM convencional com ChatGPT OAuth direto
 
-Data: 23/10/2026. Estado: proposta para aprovação. Motivação: esclarecimento do usuário de que OAuth significa autorizar sua conta na plataforma, sem executável Codex CLI local. Referência: [estudo e fontes verificadas](../../research/2026-10-23-chatgpt-oauth-correction.md).
+Data: 23/10/2026. Estado: aprovado pelo usuário para implementação direta, sem nova rodada de desenho/plano. Motivação: esclarecimento do usuário de que OAuth significa autorizar sua conta na plataforma, sem executável Codex CLI local. Referência: [estudo e fontes verificadas](../../research/2026-10-23-chatgpt-oauth-correction.md).
 
 ## Resultado
 
@@ -52,3 +52,5 @@ Manter `Codex CLI local` explicitamente identificado como opção separada para 
 ## Revisão de implementação
 
 Mapear os pontos síncronos atuais de configuração da IA para leitura de metadados por workspace, sem colocar tokens em `AiRoute`. Atualizar tipos/validações e funções de banco com migrações novas; não editar migrações aplicadas. Reaproveitar transporte, cifra e contratos existentes quando compatíveis, preservando privilégios mínimos do worker.
+
+Decisão de implementação local: registros OAuth cifrados em armazenamento local privado por workspace, conforme a documentação do fluxo local, com gravação atômica. Uma trava transacional do PostgreSQL serializa refresh e alterações entre processos usando o papel existente do worker, sem ampliar seus privilégios. A intenção de refresh é persistida antes da chamada; interrupção exige reconexão sem repetir o token rotativo. Isso preserva os contratos síncronos de configuração atuais. Somente metadados não secretos compõem o fingerprint. O PostgreSQL continua armazenando política, revisão, jobs e uso. A modalidade hospedada comercial permanece desabilitada.

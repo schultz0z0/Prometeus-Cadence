@@ -18,7 +18,7 @@ export async function prospectingRequest(request:Request,action:ProspectingActio
     const url=new URL(request.url),page=Object.fromEntries(url.searchParams);
     let result:unknown;
     switch(action){
-      case 'capabilities':result=providerCapabilities(p);break;
+      case 'capabilities':result=await providerCapabilities(p);break;
       case 'prepare':result=await prepareJob(p,await readProspectingBody(request));break;
       case 'confirm':result=await confirmJob(p,await readProspectingBody(request));break;
       case 'list':result=await listJobs(p,page);break;
