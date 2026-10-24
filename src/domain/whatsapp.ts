@@ -28,6 +28,7 @@ export type WebhookEvent=EventBase&(
  {kind:'inbound';remoteId:string;identity:Identity;text:string|null;mediaKind:string|null}|
  {kind:'status';remoteId:string;status:string;errorCode:string|null;traceId?:string}|
  {kind:'template';remoteId:string;status:TemplateStatus}|
+ {kind:'session';phase:string;restricted:boolean;restrictionCode:string|null}|
  {kind:'unknown';eventType:string}
 );
 export interface AuthenticatedBatch {connectionId:string;credentialRevision:number;bodyHash:string;receivedAt:string;events:WebhookEvent[]}

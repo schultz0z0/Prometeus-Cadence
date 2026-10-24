@@ -15,6 +15,7 @@ process.env.CADENCE_INTEGRATION = "1";
 const known = [
   "openwa-storage",
   "openwa-connections",
+  "openwa-ingress",
   "chatgpt-oauth",
   "mail-storage",
   "mail-oauth",

@@ -22,3 +22,15 @@ test('rendered Compose keeps gateway loopback, receiver private and isolates per
  assert.equal(gateway.volumes[0].target,'/app/data');assert.match(gateway.volumes[0].source,/openwa/);
  for(const service of [gateway,receiver]){assert.equal(service.restart,'unless-stopped');for(const volume of service.volumes??[])assert.doesNotMatch(volume.source,/docker\.sock|docker_engine/);}
 });
+test('receiver bounds body bytes and admits only sixteen concurrent callbacks',async()=>{
+ const releases:(()=>void)[]=[];let entered=0;
+ const server=createChannelIngress(async()=>{entered++;await new Promise<void>(resolve=>releases.push(resolve));return new Response(null,{status:200});});
+ server.listen(0,'127.0.0.1');await once(server,'listening');const address=server.address();assert.ok(address&&typeof address!=='string');const endpoint=`http://127.0.0.1:${address.port}/api/channel-webhooks/openwa/fixture-public`;
+ try{
+  assert.equal((await fetch(endpoint,{method:'POST',body:'x'.repeat(1048577)})).status,413);assert.equal(entered,0);
+  const pending=Array.from({length:16},()=>fetch(endpoint,{method:'POST',body:'{}'}));
+  for(let i=0;i<100&&entered<16;i++)await new Promise(resolve=>setTimeout(resolve,5));assert.equal(entered,16);
+  assert.equal((await fetch(endpoint,{method:'POST',body:'{}'})).status,503);assert.equal(entered,16);
+  releases.splice(0).forEach(release=>release());assert.ok((await Promise.all(pending)).every(r=>r.status===200));
+ }finally{releases.forEach(release=>release());server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
+});

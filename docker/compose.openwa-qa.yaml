@@ -1,0 +1,34 @@
+name: prometeus-cadence-openwa-qa
+services:
+  openwa:
+    image: prometeus-cadence-openwa:latest
+    environment:
+      NODE_ENV: production
+      API_MASTER_KEY: ${OPENWA_ADMIN_API_KEY:?QA key required}
+      ENGINE_TYPE: whatsapp-web.js
+      WWEBJS_WEB_VERSION: 'off'
+      AUTO_START_SESSIONS: 'true'
+      SEND_PACING_ENABLED: 'true'
+      SEND_PACING_WARMUP_SCHEDULE: '20'
+      SEND_PACING_COLD_DAILY_CAP: '5'
+      WEBHOOK_SSRF_PROTECT: 'true'
+      SSRF_ALLOWED_HOSTS: channel-ingress
+      MCP_ENABLED: 'false'
+      LOG_LEVEL: warn
+    ports: ['127.0.0.1:2786:2785']
+    volumes: [openwa_qa_data:/app/data]
+    restart: unless-stopped
+  channel-ingress:
+    image: prometeus-cadence-channel-ingress:latest
+    environment:
+      INGRESS_DATABASE_URL: ${INGRESS_DATABASE_URL:?Ephemeral test database required}
+      CHANNEL_ACTIVE_KEY_ID: ${CHANNEL_ACTIVE_KEY_ID:?QA encryption key required}
+      CHANNEL_KEYRING_JSON: ${CHANNEL_KEYRING_JSON:?QA encryption key required}
+    networks: [default, test-database]
+    restart: unless-stopped
+volumes:
+  openwa_qa_data:
+networks:
+  test-database:
+    external: true
+    name: ${OPENWA_QA_DB_NETWORK:-prometeus-cadence_default}

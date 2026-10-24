@@ -37,7 +37,7 @@ async function requestState(p:Principal,id:string,input:OpenwaCommand,desired:'c
   await c.query("UPDATE app.channel_connection SET revision=$2,state=$3,credentials_verified=false,updated_at=clock_timestamp() WHERE id=$1",[id,revision,desired==='connected'?'pending':'disconnected']);
   await c.query('SELECT app.write_channel_credential($1,$2,$3)',[id,revision,encryptCredential(next,{workspaceId:p.workspaceId,connectionId:id,provider:'openwa',revision})]);
   await c.query('UPDATE app.channel_sender SET ready=false,revision=revision+1 WHERE connection_id=$1',[id]);
-  await c.query("UPDATE app.openwa_connection SET revision=$2,desired_state=$3,phase='provisioning',stage=CASE WHEN $3='disconnected' THEN 'logout' WHEN remote_session_id IS NULL THEN 'session' ELSE 'key' END,requested_by=$4,restart_requested=($3='connected'),webhook_registered=false,attempts=0,error_code=NULL,lease_token=NULL,lease_until=NULL,lease_revision=NULL,fence=fence+1,next_at=clock_timestamp(),updated_at=clock_timestamp() WHERE connection_id=$1",[id,revision,desired,p.userId]);
+  await c.query("UPDATE app.openwa_connection SET revision=$2,desired_state=$3,phase='provisioning',stage=CASE WHEN $3='disconnected' THEN 'logout' WHEN remote_session_id IS NULL THEN 'session' ELSE 'key' END,requested_by=$4,restart_requested=($3='connected'),webhook_registered=false,automation_paused=false,attempts=0,error_code=NULL,lease_token=NULL,lease_until=NULL,lease_revision=NULL,fence=fence+1,next_at=clock_timestamp(),updated_at=clock_timestamp() WHERE connection_id=$1",[id,revision,desired,p.userId]);
   const result=await openwaView(c,id);await completeCommand(c,p,body.requestId,hash,result,'openwa.'+desired);return result;
  });
 }

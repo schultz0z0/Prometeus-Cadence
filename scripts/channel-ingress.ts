@@ -26,7 +26,8 @@ export function createChannelIngress(handler?:ChannelIngressHandler){
  });
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
- const server=createChannelIngress();server.listen(3214,'0.0.0.0');
+ const {handleChannelIngress}=await import('../src/server/channels/openwa/events.ts');
+ const server=createChannelIngress(handleChannelIngress);server.listen(3214,'0.0.0.0');
  const shutdown=()=>{server.close(()=>process.exit(0));setTimeout(()=>{server.closeAllConnections();process.exit(1);},10000).unref();};
  process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
 }
