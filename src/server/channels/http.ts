@@ -8,9 +8,10 @@ import {prepareChannelTest,confirmChannelTest} from '../messaging/replies.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {AppError} from '../errors.ts';
+import {openwaAction} from './openwa/http.ts';
 const actionSchema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(1)});
 export function channelRequestHandler(request:Request,params:Record<string,string>):Promise<Response>{return channelHttp(request,async(p,body)=>{
- const {id,action}=params;if(!id){if(request.method==='GET')return readConnections(p);if(request.method==='POST')return saveConnection(p,body);}
+ const {id,action}=params;if(id==='openwa'||action?.startsWith('openwa-'))return openwaAction(p,request,body,id,action);if(!id){if(request.method==='GET')return readConnections(p);if(request.method==='POST')return saveConnection(p,body);}
  if(request.method!=='POST')throw new AppError(405,'Método não permitido.');
  if(action==='test-prepare')return prepareChannelTest(p,id,body);
  if(action==='test-confirm')return confirmChannelTest(p,id,body);

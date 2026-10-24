@@ -14,6 +14,7 @@ process.env.NODE_ENV = "test";
 process.env.CADENCE_INTEGRATION = "1";
 const known = [
   "openwa-storage",
+  "openwa-connections",
   "chatgpt-oauth",
   "mail-storage",
   "mail-oauth",

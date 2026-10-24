@@ -1,6 +1,7 @@
 import type {ConnectionView,TemplateView,MessageView,OutboundContent,PreparedSend,Review} from '../domain/whatsapp.ts';
 import type {SaveConnectionInput,SenderLimitsInput} from '../server/channels/schemas.ts';
 import type {MessagingLimitsView} from '../server/channels/limits.ts';
+import type {OpenwaConnectionView,OpenwaQrView} from '../domain/openwa.ts';
 import {createWorkspaceTransport,type WorkspaceTransportOptions} from './workspace-transport.ts';
 export interface ChannelTestInput {senderId:string;phone:string;content:OutboundContent;consent?:{source:string;occurredAt:string;evidence:string}}
 export interface TestSendReview {connectionId:string;input:ChannelTestInput;review:Review<PreparedSend>&{preview:string}}
@@ -26,6 +27,11 @@ export function createChannelClient(options:WorkspaceTransportOptions){
  const action=<T>(id:string,name:string,expectedRevision:number)=>api.request<T>(path(id,name),{expectedRevision,requestId:crypto.randomUUID()});
  return {
   list:()=>api.request<ConnectionView[]>('/api/channels'),
+  createOpenwa:(input:{name:string;expectedRevision:0})=>commands.run<OpenwaConnectionView>(input,'/api/channels/openwa',input),
+  openwaStatus:(id:string)=>api.request<OpenwaConnectionView>(path(id,'openwa-status')),
+  openwaQr:(id:string,revision:number)=>api.request<OpenwaQrView>(path(id,'openwa-qr')+'?revision='+encodeURIComponent(revision)),
+  reconnectOpenwa:(id:string,input:{expectedRevision:number})=>commands.run<OpenwaConnectionView>(input,path(id,'openwa-reconnect'),input),
+  disconnectOpenwa:(id:string,input:{expectedRevision:number})=>commands.run<OpenwaConnectionView>(input,path(id,'openwa-disconnect'),input),
   save:(input:Omit<SaveConnectionInput,'requestId'>)=>commands.run<ConnectionView>(input,'/api/channels',input),
   verify:(id:string,revision:number)=>action<ConnectionView>(id,'verify',revision),
   syncTemplates:(id:string,revision:number)=>action<TemplateView[]>(id,'sync-templates',revision),

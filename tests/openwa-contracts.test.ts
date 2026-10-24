@@ -25,7 +25,7 @@ test('HTTP acceptance requires raw WhatsApp ID and integral seconds; never suppl
  for(const value of [{timestamp:1792785600},{messageId:'',timestamp:1792785600},{messageId:'m',timestamp:NaN},{messageId:'m',timestamp:1792785600000},{messageId:'m',timestamp:1.5}])assert.throws(()=>parseOpenwaSend(value));
 });
 test('stored remote messages map waMessageId, preserving session/chat proof rather than storage UUID',()=>{
- const message=parseOpenwaRemoteMessage({id:'22222222-2222-4222-8222-222222222222',waMessageId:'true_15550000002@c.us_SAMPLE',sessionId:'11111111-1111-4111-8111-111111111111',chatId:'15550000002@c.us',fromMe:true,status:'read',timestamp:1792785600});
- assert.equal(message.gatewayId,'22222222-2222-4222-8222-222222222222');assert.equal(message.remoteId,'true_15550000002@c.us_SAMPLE');assert.equal(message.status,'read');
+ const message=parseOpenwaRemoteMessage({id:'22222222-2222-4222-8222-222222222222',waMessageId:'true_15550000002@c.us_SAMPLE',sessionId:'11111111-1111-4111-8111-111111111111',chatId:'15550000002@c.us',direction:'outgoing',status:'read',timestamp:1792785600});
+ assert.equal(message.gatewayId,'22222222-2222-4222-8222-222222222222');assert.equal(message.remoteId,'true_15550000002@c.us_SAMPLE');assert.equal(message.status,'read');assert.equal(message.fromMe,true);
  assert.throws(()=>parseOpenwaRemoteMessage({...message,waMessageId:null}));
 });

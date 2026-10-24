@@ -18,6 +18,8 @@ Session response source: `src/modules/session/dto/session-response.dto.ts`. Send
 
 Webhook envelope: `{event,sessionId,timestamp,idempotencyKey,deliveryId,data}`. Envelope timestamp is ISO, incoming message timestamp is Unix seconds. HMAC-SHA256 covers exact transmitted bytes, `X-OpenWA-Signature: sha256=<hex>`. Headers alone are not event identity. `message.received` has incoming `data.id`, `chatId`, `from`, `to`, `fromMe`, `body`, `type`, `timestamp`; ACK has `messageId,status,ack,chatId?`. `message.failed` duplicates failed ACK semantics and must deduplicate by message/state. `session.restriction` includes `active,kind,code,expiresAt`; restrictions pause automation, and lifting them does not silently unpause a reviewed cadence. Session events do not prove an inbound service window.
 
+Stored message REST rows expose `direction: incoming|outgoing`; they do not expose the engine event's `fromMe`. Prometeus derives its internal Boolean from that direction. The listing response is `{messages,total,unknownTimestampTotal?}`, newest first; `after` takes a stored UUID and continues toward older rows. The client derives a bounded continuation from the last storage UUID. Never treat a full first page as a complete forward sync.
+
 The idempotency store retains keys for 24 hours per session. In-progress/uncertain outcomes and transport loss are uncertain in Prometeus; expiration is never permission to send again. ACK can arrive before POST response; retain receipt evidence until association. Only signed, session-bound callbacks or authenticated fixed-origin REST reads are accepted as gateway evidence.
 
 Fixtures are synthetic; the QR is a one-pixel PNG, not an authentication QR. No live account identifiers, credentials or session files are included.
