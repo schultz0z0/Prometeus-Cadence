@@ -1,6 +1,6 @@
 # Marco06A — assinatura, franquias e pacotes pré-pagos
 
-Data:24/10/2026. Estado: proposta concreta para revisão; implementação ainda não iniciada. Decisões recebidas: Stripe em teste; mensalidade com pacotes de consumo pré-pagos; catálogo pode seguir a referência; execução nativa nesta conversa.
+Data:24/10/2026. Estado: aprovado pelo usuário para implementação nativa. Decisões recebidas: Stripe em teste; mensalidade com pacotes de consumo pré-pagos; catálogo pode seguir a referência; trial alterado expressamente pelo usuário para7 dias. Os14 dias documentados na auditoria pertencem somente à referência.
 
 ## Intenção
 
@@ -52,7 +52,7 @@ Assentos/caixas/números extras são capacidade, não créditos consumíveis. Ne
 ## Ciclo de vida comercial
 
 - Preparação antes do trial: permitir configuração e rascunhos, sem execução externa comercial.
-- Trial proposto:14 dias por workspace, uso dos direitos Essential, sem reinício por novo login/checkout. Ativação explícita pelo proprietário. Sem cartão, encerrar trial em estado de acesso restrito para novas execuções; não gerar cobrança inesperada.
+- Trial:7 dias por workspace, uso dos direitos Essential, sem reinício por novo login/checkout. Ativação explícita pelo proprietário. Sem cartão, encerrar trial em estado de acesso restrito para novas execuções; não gerar cobrança inesperada.
 - Compra: proprietário/admin com permissão de cobrança revisa plano, ciclo, preço e moeda. O servidor cria uma intenção local e uma sessão Stripe vinculada ao workspace/usuário/catálogo.
 - Ativação: assinatura paga e estado elegível confirmados por leitura/evento Stripe. Retorno da página mostra “confirmando pagamento” até sincronizar; nunca confiar em parâmetros da URL.
 - Renovação: uma concessão por período pago, sem duplicar com replay de evento. Franquias de extração/importação renovam em janelas mensais ancoradas na contratação, mesmo em plano anual. Enriquecimento mensal usa dia1 do calendário conforme referência; saldo comprado é separado. Mostrar relógios/datas distintos.
