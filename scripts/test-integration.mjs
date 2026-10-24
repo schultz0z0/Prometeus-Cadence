@@ -17,6 +17,7 @@ const known = [
   "openwa-connections",
   "openwa-ingress",
   "openwa-limits",
+  "openwa-dispatch",
   "chatgpt-oauth",
   "mail-storage",
   "mail-oauth",

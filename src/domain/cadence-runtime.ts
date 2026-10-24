@@ -14,7 +14,7 @@ export interface PublicationSnapshot {
 }
 export type PublicationReview=Review<PublicationSnapshot>;
 export interface PublicationView {id:string;cadenceId:string;revision:number;state:'active'|'paused'|'completed';enrollmentCount:number}
-export interface ReconciliationSnapshot {messageId:string;attemptId:string;remoteId:string|null;resolution:'accepted'|'not_accepted';evidence:string;reference:string;proofKind:'provider-log';verifiedByUser:true;verification:'administrator-evidence'|'provider-api'}
+export interface ReconciliationSnapshot {messageId:string;attemptId:string;remoteId:string|null;resolution:'accepted'|'not_accepted';evidence:string;reference:string;proofKind:'provider-log';verifiedByUser:true;verification:'administrator-evidence'|'provider-api';remoteStatus?:'sent'|'delivered'|'read'|'failed'|'unknown'}
 export interface PublicationInputV2 {version:2;cadenceId:string;expectedRevision:number;leadIds:string[];steps:Record<string,{senderId:string;content:MailContent|OutboundContent}>}
 export interface PublicationRecipientStepV2 {
  sender:MessagingSenderView;connectionRevision:number;identityId:string;address:string;

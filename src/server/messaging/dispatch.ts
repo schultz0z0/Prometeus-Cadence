@@ -28,7 +28,7 @@ export async function dispatchOne(lease:DispatchLease,deps:{adapter?:ProviderAda
   const connection=ctx.connection,send=ctx.outbox.prepared_send as PreparedSend;
   const credentials=decryptCredential(ctx.credentialEnvelope,{workspaceId:lease.workspaceId,connectionId:connection.id,provider:connection.provider,revision:send.connectionRevision});
   config={provider:connection.provider,connectionId:connection.id,revision:Number(connection.revision),identifiers:connection.identifiers,credentials,sender:senderView(ctx.sender),templates:ctx.template?[ctx.template]:[]};
-  callback=channelCallbackUrl(connection.provider,connection.public_id,'status');if(connection.provider==='twilio')callback+='?attempt='+encodeURIComponent(lease.attemptId);
+  if(connection.provider!=='openwa'){callback=channelCallbackUrl(connection.provider,connection.public_id,'status');if(connection.provider==='twilio')callback+='?attempt='+encodeURIComponent(lease.attemptId);}
  }catch{blocker='CREDENTIAL_OR_CALLBACK_UNAVAILABLE';}}
  if(blocker){await dispatchPool().query('SELECT app.block_message_dispatch($1,$2,$3,$4,$5)',[...leaseArgs(lease),blocker]);return;}
  const gate=(await dispatchPool().query('SELECT app.begin_message_dispatch($1,$2,$3,$4,$5,$6,$7)',[lease.workspaceId,lease.messageId,lease.attemptId,lease.token,lease.fence,ctx.guard,deps.now()])).rows[0].begin_message_dispatch;if(!gate?.allowed)return;

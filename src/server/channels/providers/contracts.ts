@@ -5,7 +5,7 @@ export interface VerifiedAssets {externalAccountId:string;senders:VerifiedSender
 export interface ProviderAdapter {
  verifyAssets(config:ProviderConfig):Promise<VerifiedAssets>;
  listTemplates(config:ProviderConfig):Promise<TemplateView[]>;
- sendOnce(config:ProviderConfig,send:PreparedSend,callbackUrl:string):Promise<SendOutcome>;
+ sendOnce(config:ProviderConfig,send:PreparedSend,callbackUrl?:string):Promise<SendOutcome>;
  lookupMessage(config:ProviderConfig,remoteId:string):Promise<SendOutcome|null>;
 }
 export class ChannelProviderError extends Error {code:string;constructor(code:string){super('Não foi possível validar o recurso no provedor.');this.code=code;}}

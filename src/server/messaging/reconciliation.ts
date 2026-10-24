@@ -20,6 +20,16 @@ async function state(p:Principal,messageId:string,input:z.infer<typeof schema>){
   return (await c.query('SELECT app.inspect_uncertain_message($1) AS context',[messageId])).rows[0].context;
  });
  if(ctx.connection.channel==='EMAIL')return mailReconciliationState(p,ctx,messageId,input);
+ if(ctx.connection.provider==='openwa'){
+  if(input.resolution!=='accepted'||!input.remoteId)throw new AppError(409,'Uma busca vazia não comprova que a mensagem não foi enviada. O resultado continua incerto.','OPENWA_NON_ACCEPTANCE_UNPROVEN');
+  const url=new URL(input.reference),appOrigin=new URL(process.env.BETTER_AUTH_URL??'http://127.0.0.1:3210').origin;
+  if(url.origin!==appOrigin||url.pathname!=='/messages/whatsapp'||url.username||url.password||url.hash)throw new AppError(422,'Use o endereço do inbox WhatsApp deste aplicativo como referência.');
+  const record=ctx.credential,config={provider:ctx.connection.provider,connectionId:ctx.connection.id,revision:Number(record.revision),identifiers:record.identifiers,credentials:decryptCredential(record.envelope,{workspaceId:p.workspaceId,connectionId:ctx.connection.id,provider:'openwa',revision:Number(record.revision)}),sender:senderView(ctx.sender),templates:[]};
+  const remote=await providerAdapter('openwa').lookupMessage(config,input.remoteId);
+  if(remote?.kind!=='accepted'||remote.evidence?.accountId!==record.verified_account_id||remote.evidence?.from!==ctx.sender.address||remote.evidence?.to!==ctx.outbox.prepared_send.identity.externalId)throw new AppError(409,'A API não comprovou a mensagem desta sessão, remetente e destinatário. O resultado continua incerto.');
+  const snapshot:ReconciliationSnapshot={...input,messageId,attemptId:ctx.attempt.id,verification:'provider-api',remoteStatus:remote.evidence?.status};
+  return {ctx,snapshot,proof:{workspaceId:p.workspaceId,actorId:p.userId,snapshot,fence:Number(ctx.attempt.fence),attemptOutcome:ctx.attempt.outcome}};
+ }
  const url=new URL(input.reference),hosts=ctx.connection.provider==='meta'?['business.facebook.com','developers.facebook.com']:['console.twilio.com'];
  if(url.protocol!=='https:'||url.username||url.password||url.port||!hosts.includes(url.hostname))throw new AppError(422,'Informe uma referência do painel do próprio provedor.');
  if((input.resolution==='accepted'&&!input.remoteId)||(input.resolution==='not_accepted'&&input.remoteId))throw new AppError(422,'Revise o resultado e o identificador remoto.');

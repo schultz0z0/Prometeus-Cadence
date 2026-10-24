@@ -21,7 +21,7 @@ export interface SendPolicyInput {provider:Provider;now:string;lastInboundAt:str
 export interface SendPolicyResult {allowed:boolean;blockers:string[]}
 export interface Review<T> {token:string;expiresAt:string;snapshot:T;blockers:string[]}
 export interface PreparedSend {connectionId:string;connectionRevision:number;senderId:string;identity:Identity;content:OutboundContent;purpose:MessagePurpose;traceId?:string}
-export type SendOutcome={kind:'accepted';remoteId:string;acceptedAt:string;evidence?:{accountId:string;from:string;to:string}}|{kind:'not_accepted';code:string;retryable:boolean;retryAfterMs:number|null}|{kind:'uncertain';code:string};
+export type SendOutcome={kind:'accepted';remoteId:string;acceptedAt:string;evidence?:{accountId:string;from:string;to:string;status?:'sent'|'delivered'|'read'|'failed'|'unknown'}}|{kind:'not_accepted';code:string;retryable:boolean;retryAfterMs:number|null}|{kind:'uncertain';code:string};
 export interface Receipt {attemptId:string;outcome:SendOutcome;costUsd:number|null;costKind:'reported'|'unknown'}
 interface EventBase {dedupKey:string;accountId:string;senderExternalId:string|null;occurredAt:string|null}
 export type WebhookEvent=EventBase&(

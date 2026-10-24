@@ -11,8 +11,9 @@ import {connectionRow,connectionView,requireChannelAdmin,readCredentialInTransac
 import {encryptCredential} from './crypto.ts';
 import {createMetaAdapter} from './providers/meta.ts';
 import {createTwilioAdapter} from './providers/twilio.ts';
+import {createOpenwaAdapter} from './providers/openwa.ts';
 import type {ProviderAdapter,ProviderConfig} from './providers/contracts.ts';
-export const providerAdapter=(provider:string)=>{if(provider==='meta')return createMetaAdapter();if(provider==='twilio')return createTwilioAdapter();throw new AppError(422,'Provedor WhatsApp inválido.');};
+export const providerAdapter=(provider:string)=>{if(provider==='meta')return createMetaAdapter();if(provider==='openwa')return createOpenwaAdapter();if(provider==='twilio')return createTwilioAdapter();throw new AppError(422,'Provedor WhatsApp inválido.');};
 export async function configInTransaction(c:PoolClient,id:string,expectedRevision?:number):Promise<ProviderConfig>{
  await requireChannelAdmin(c);const row=await connectionRow(c,id);
  if(expectedRevision!==undefined&&Number(row.revision)!==expectedRevision)throw new AppError(409,'A conexão mudou. Revise novamente.');

@@ -44,6 +44,7 @@ export function createTwilioAdapter(fetcher:typeof fetch=fetch):ProviderAdapter{
  async sendOnce(c,send,callbackUrl){
   try{
    config(c);if(!c.sender||send.connectionId!==c.connectionId||send.connectionRevision!==c.revision||send.senderId!==c.sender.id||c.sender.address!==c.identifiers.sender||!send.identity.phone)throw new ChannelProviderError('TWILIO_SEND_INVALID');
+   if(!callbackUrl)throw new ChannelProviderError('TWILIO_CALLBACK_INVALID');
    const callback=new URL(callbackUrl);if(callback.protocol!=='https:'||callback.username||callback.password)throw new ChannelProviderError('TWILIO_CALLBACK_INVALID');
    const body=new URLSearchParams({From:'whatsapp:'+c.identifiers.sender,To:'whatsapp:'+send.identity.phone,StatusCallback:callbackUrl});if(c.identifiers.messagingServiceSid)body.set('MessagingServiceSid',c.identifiers.messagingServiceSid);
    const content=send.content;
