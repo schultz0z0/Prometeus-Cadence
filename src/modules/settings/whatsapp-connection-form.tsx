@@ -11,6 +11,7 @@ export function WhatsappConnectionForm({provider,connection,client,onSaved,onCan
  return <form ref={formRef} className="stack" autoComplete="off" onChange={()=>pending.current=null} onSubmit={async e=>{
   e.preventDefault();if(busy)return;setBusy(true);setError('');
   try{
+   if(provider==='openwa')throw new Error('OpenWA usa conexão gerenciada por QR Code.');
    if(!pending.current){const data=new FormData(e.currentTarget),value=(key:string)=>String(data.get(key)??'').trim();
     const base={...(connection?{id:connection.id}:{}),expectedRevision:connection?.revision??0,name:value('name')};
     pending.current=provider==='meta'?{...base,provider,identifiers:{appId:value('appId'),wabaId:value('wabaId'),phoneNumberId:value('phoneNumberId')},credentials:{accessToken:value('accessToken'),appSecret:value('appSecret')}}:{...base,provider,identifiers:{accountSid:value('accountSid'),sender:value('sender'),authMode:value('authMode') as 'api-key'|'auth-token',...(value('messagingServiceSid')?{messagingServiceSid:value('messagingServiceSid')}:{})},credentials:{apiKeySid:value('apiKeySid'),apiKeySecret:value('apiKeySecret'),authToken:value('authToken')}};

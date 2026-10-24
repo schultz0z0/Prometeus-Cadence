@@ -1,4 +1,5 @@
-export type Provider='meta'|'twilio';
+export type Provider='meta'|'openwa'|'twilio';
+export type ConnectableProvider='meta'|'openwa';
 export type ConnectionState='pending'|'credentials_verified'|'awaiting_webhook'|'ready'|'attention'|'disconnected';
 export interface ConnectionView {
  id:string;provider:Provider;name:string;revision:number;state:ConnectionState;
