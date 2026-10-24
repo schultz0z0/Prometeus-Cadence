@@ -24,6 +24,6 @@ if(command==='install'){
  if(await owner()){await writeFile('.runtime/stop','stop');let stopped=false;for(let i=0;i<120;i++){await delay(500);if(!await owner()){stopped=true;break;}}if(!stopped)throw Error('Runtime is draining active work. Check runtime:status; no forced termination performed.');}
  console.log('Continuous runtime stopped.');
 }else if(command==='status'){
- const supervisor=await owner();const services={};for(const name of ['dispatch','sync','jobs','scheduler','channels'])try{const value=JSON.parse(await readFile('.runtime/'+name+'.json','utf8'));let alive=false;try{if(value.pid){process.kill(value.pid,0);alive=true;}}catch{}services[name]={...value,alive};}catch{services[name]={state:'not-started',alive:false};}
+ const supervisor=await owner();const services={};for(const name of ['dispatch','sync','jobs','scheduler','channels','billing'])try{const value=JSON.parse(await readFile('.runtime/'+name+'.json','utf8'));let alive=false;try{if(value.pid){process.kill(value.pid,0);alive=true;}}catch{}services[name]={...value,alive};}catch{services[name]={state:'not-started',alive:false};}
  console.log(JSON.stringify({running:!!supervisor,supervisor,services},null,2));
 }else throw Error('Use start, stop, status or install.');

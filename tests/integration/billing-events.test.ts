@@ -36,6 +36,7 @@ async function fixture(){
   if(path.includes('/checkout/sessions/'))return Response.json(sessions.get(path.split('/').at(-1)!));
   if(path.includes('/payment_intents/'))return Response.json({id:path.split('/').at(-1),status:'succeeded',currency:'brl',latest_charge:{id:'ch_fixture',refunded,amount_refunded:refunded?39700:0,disputed:false}});
   if(path.includes('/charges/'))return Response.json({id:'ch_fixture',customer,payment_intent:pi,refunded:true,amount_refunded:39700,disputed:false});
+  if(path.includes('/disputes/'))return Response.json({id:'dp_fixture',charge:'ch_fixture'});
   throw Error('Unexpected GET '+path);
  },billingConfig());
  return {u,customer,subid,pi,sub,invoice,adapter,sessions,mutations,setRefund:()=>{refunded=true;}};
@@ -70,6 +71,10 @@ test('fresh remote state prevents old subscription event from restoring canceled
  const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});f.sub.status='canceled';
  await deliver(f,'customer.subscription.updated',{id:f.subid,customer:f.customer,status:'active'});assert.equal((await readBilling(f.u.p)).status,'canceled');
 });
+test('dispute without a customer field resolves authenticated charge ownership before freezing credits',async()=>{
+ const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});
+ await deliver(f,'charge.dispute.created',{id:'dp_fixture'});assert.equal((await readBilling(f.u.p)).status,'attention');
+});
 test('upgrade uses the reviewed proration and waits for payment; downgrade schedules next period',async()=>{
  const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});
  const review=await prepareBilling(f.u.p,{kind:'upgrade',sku:'pro'},{adapter:f.adapter});assert.equal(review.amount,25000);
@@ -77,5 +82,10 @@ test('upgrade uses the reviewed proration and waits for payment; downgrade sched
  const call=f.mutations.find(x=>x.path.endsWith('/'+f.subid))!;assert.equal(call.form.get('payment_behavior'),'pending_if_incomplete');assert.equal(call.form.get('proration_behavior'),'always_invoice');assert.equal(call.form.get('proration_date'),String(review.prorationDate));assert.equal((await readBilling(f.u.p)).plan,'essential');
  const g=await fixture();g.sub.items.data[0].price.unit_amount=89700;g.sub.items.data[0].price.id='price_pro';g.invoice.amount_paid=g.invoice.amount_due=89700;g.invoice.lines.data[0].amount=89700;g.invoice.lines.data[0].pricing.price_details.price='price_pro';
  await deliver(g,'invoice.paid',{id:g.invoice.id,customer:g.customer});const down=await prepareBilling(g.u.p,{kind:'downgrade',sku:'essential'},{adapter:g.adapter});
- await confirmBilling(g.u.p,{requestId:randomUUID(),review:down},{adapter:g.adapter});assert.equal((await readBilling(g.u.p)).plan,'pro');const schedule=g.mutations.find(x=>x.path.endsWith('/sub_sched_fixture'))!;assert.equal(schedule.form.get('phases[0][end_date]'),String(g.sub.items.data[0].current_period_end));assert.equal(schedule.form.get('phases[1][items][0][price]'),'price_target');
+ await confirmBilling(g.u.p,{requestId:randomUUID(),review:down},{adapter:g.adapter});assert.equal((await readBilling(g.u.p)).plan,'pro');assert.equal((await readBilling(g.u.p)).nextPlan,'essential');const schedule=g.mutations.find(x=>x.path.endsWith('/sub_sched_fixture'))!;assert.equal(schedule.form.get('phases[0][end_date]'),String(g.sub.items.data[0].current_period_end));assert.equal(schedule.form.get('phases[1][items][0][price]'),'price_target');
+});
+test('an existing paid subscription cannot be replaced with a new free trial after payment trouble',async()=>{
+ const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});
+ await testAdmin(c=>c.query("UPDATE app.billing_account SET state='attention' WHERE workspace_id=$1",[f.u.p.workspaceId]));
+ await assert.rejects(beginTrial(f.u.p),{code:'SUBSCRIPTION_ACTIVE'});assert.equal((await readBilling(f.u.p)).trialAvailable,false);
 });

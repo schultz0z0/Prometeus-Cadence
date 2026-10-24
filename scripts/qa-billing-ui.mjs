@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import {mkdir} from 'node:fs/promises';
+const {chromium}=await import(process.env.QA_PLAYWRIGHT_MODULE);
+const browser=await chromium.launch({executablePath:process.env.QA_CHROME_PATH,headless:true});
+const origin=process.env.QA_ORIGIN??'http://127.0.0.1:3213',output='.runtime/billing-ui';await mkdir(output,{recursive:true});
+try{
+ const context=await browser.newContext({viewport:{width:1440,height:1000}});
+ await context.addCookies([{name:'better-auth.session_token',value:process.env.QA_SESSION_COOKIE,domain:'127.0.0.1',path:'/'}]);
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ let state={version:'2026-10-24-v1',configured:true,canManage:true,status:'inactive',plan:null,nextPlan:null,periodEnd:null,cancelAtPeriodEnd:false,trialAvailable:true,revision:0,contact:{email:null,phone:null},balances:['extractions','imports','enrichment','sdr'].map(unit=>({unit,plan:0,purchased:0,reserved:0,consumed:0,nextReset:null})),capacity:null,usage:{seats:1,pendingSeats:0,mailboxes:0,whatsapp:0,cadences:0,automations:0},operations:[],invoices:[]};
+ await page.route('**/api/billing{,/**}',async route=>{
+  const path=new URL(route.request().url()).pathname,body=route.request().postDataJSON();let result=state;
+  if(path.endsWith('/trial')){state={...state,status:'trial',plan:'essential',trialAvailable:false,revision:1,periodEnd:new Date(Date.now()+7*86400000).toISOString(),capacity:{seats:2,mailboxes:3,whatsapp:2,cadences:100,automations:50,linkedin:0}};result=state;}
+  if(path.endsWith('/prepare'))result={...body,sku:body.sku??null,amount:39700,currency:'brl',revision:state.revision,token:'fixture',expiresAt:new Date(Date.now()+600000).toISOString(),effects:['Assinatura mensal em ambiente de teste.','Acesso após confirmação do pagamento.']};
+  if(path.endsWith('/confirm')){result={id:'fixture',kind:'checkout',sku:'essential',state:'awaiting_payment',createdAt:new Date().toISOString(),url:null,error:null};state={...state,operations:[result]};}
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(result)});
+ });
+ await page.goto(origin+'/settings/plan');await page.getByText('Sem assinatura ativa',{exact:true}).first().waitFor();
+ await page.getByRole('button',{name:'Ativar teste de 7 dias',exact:true}).click();await page.getByRole('dialog').waitFor();assert.match(await page.getByRole('dialog').innerText(),/Não exige cartão/);await page.getByRole('button',{name:'Ativar por 7 dias',exact:true}).click();await page.getByRole('dialog').waitFor({state:'hidden'});
+ await page.getByRole('tab',{name:'Cobrança',exact:true}).click();await page.getByRole('button',{name:'Editar contato',exact:true}).click();await page.getByLabel('E-mail para cobrança').fill('rascunho@example.com');await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.waitForTimeout(700);assert.equal(await page.getByLabel('E-mail para cobrança').inputValue(),'rascunho@example.com');await page.getByRole('button',{name:'Cancelar',exact:true}).click();
+ await page.getByRole('tab',{name:'Planos e pacotes',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Em breve',exact:true}).count(),3);await page.getByRole('button',{name:'Revisar assinatura',exact:true}).first().click();await page.getByRole('dialog').waitFor();await page.getByRole('button',{name:'Confirmar alteração',exact:true}).click();await page.getByText('Aguardando pagamento. O acesso será atualizado após a confirmação do Stripe.',{exact:true}).waitFor();await page.getByRole('button',{name:'Fechar',exact:true}).last().click();
+ await page.screenshot({path:output+'/catalog-desktop.png',fullPage:true});
+ for(const status of ['active','past_due','attention','canceled']){state={...state,status,trialAvailable:false};await page.getByRole('button',{name:'Atualizar',exact:true}).click();await page.getByRole('tab',{name:'Meu plano',exact:true}).click();await page.waitForTimeout(100);assert.equal(await page.getByRole('button',{name:'Ativar teste de 7 dias',exact:true}).count(),0);}
+ state={...state,status:'active',plan:'pro',nextPlan:'essential',cancelAtPeriodEnd:false};await page.getByRole('button',{name:'Atualizar',exact:true}).click();await page.getByText(/Mudança para Essential agendada/).waitFor();await page.screenshot({path:output+'/summary-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});await page.waitForTimeout(250);console.log(await page.evaluate(()=>{let e=document.querySelector('.billing-page');const a=[];while(e){a.push({tag:e.tagName,cls:e.className,width:e.getBoundingClientRect().width,x:e.getBoundingClientRect().x});e=e.parentElement;}return a;}));await page.screenshot({path:output+'/summary-mobile.png',fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'mobile has no page-wide horizontal overflow');assert.ok(await page.locator('.billing-page').evaluate(e=>e.getBoundingClientRect().width)>300,'mobile content uses available width');
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({states:7,reviewedCheckout:true,trialSevenDays:true,draftSurvivesRefresh:true,mobileOverflow:false,screenshots:output}));
+}finally{await browser.close();}

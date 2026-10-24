@@ -1,7 +1,7 @@
 import {setTimeout as delay} from 'node:timers/promises';
 export function runtimeConfig(env:Record<string,string|undefined>){
  const integer=(key:string,fallback:number,min:number,max:number)=>{const value=Number(env[key]??fallback);if(!Number.isInteger(value)||value<min||value>max)throw Error('Invalid '+key);return value;};
- return {channelsMs:integer('RUNTIME_CHANNELS_MS',5000,1000,60000),dispatchMs:integer('RUNTIME_DISPATCH_MS',2000,1000,60000),syncMs:integer('RUNTIME_SYNC_MS',5000,1000,60000),jobMs:integer('RUNTIME_JOB_MS',2000,1000,60000),schedulerMs:integer('RUNTIME_SCHEDULER_MS',2000,1000,60000),messages:integer('RUNTIME_DISPATCH_MESSAGES',5,1,20),syncBoxes:integer('RUNTIME_SYNC_BOXES',5,1,10),syncMessages:integer('RUNTIME_SYNC_MESSAGES',20,1,100)};
+ return {billingMs:integer('RUNTIME_BILLING_MS',5000,5000,60000),billingBatch:integer('RUNTIME_BILLING_BATCH',5,1,10),channelsMs:integer('RUNTIME_CHANNELS_MS',5000,1000,60000),dispatchMs:integer('RUNTIME_DISPATCH_MS',2000,1000,60000),syncMs:integer('RUNTIME_SYNC_MS',5000,1000,60000),jobMs:integer('RUNTIME_JOB_MS',2000,1000,60000),schedulerMs:integer('RUNTIME_SCHEDULER_MS',2000,1000,60000),messages:integer('RUNTIME_DISPATCH_MESSAGES',5,1,20),syncBoxes:integer('RUNTIME_SYNC_BOXES',5,1,10),syncMessages:integer('RUNTIME_SYNC_MESSAGES',20,1,100)};
 }
 export async function runSerialLoop(tick:()=>Promise<unknown>,options:{signal:AbortSignal;intervalMs:number;random?:()=>number;sleep?:(ms:number)=>Promise<void>;onError?:()=>void;onSuccess?:()=>void}){
  let failures=0;const random=options.random??Math.random;

@@ -3,7 +3,7 @@ import {randomUUID} from 'node:crypto';
 import {runtimeConfig,runSerialLoop} from './runtime-core.ts';
 process.loadEnvFile('.env.local');
 const name=process.argv[2],config=runtimeConfig(process.env),controller=new AbortController(),workerId=randomUUID();
-if(!['dispatch','sync','jobs','scheduler','channels'].includes(name))throw Error('Invalid runtime lane');
+if(!['dispatch','sync','jobs','scheduler','channels','billing'].includes(name))throw Error('Invalid runtime lane');
 for(const signal of ['SIGINT','SIGTERM'] as const)process.on(signal,()=>controller.abort());
 process.on('message',message=>{if(message==='shutdown')controller.abort();});
 process.on('disconnect',()=>controller.abort());
@@ -20,6 +20,8 @@ if(name==='dispatch'){
  tick=()=>runMailSyncTick({now:new Date().toISOString(),maxMailboxes:config.syncBoxes,maxMessages:config.syncMessages,allowSync:true,signal:controller.signal}).then(result=>{if(result.failed)throw Error('Mailbox sync failed');return result;});intervalMs=config.syncMs;
 }else if(name==='channels'){
  const {runOpenwaChannelTick}=await import('../src/server/channels/openwa/worker.ts');tick=()=>runOpenwaChannelTick({now:new Date().toISOString(),signal:controller.signal}).then(result=>{if(result.failed)throw Error('Channel maintenance failed');return result;});intervalMs=config.channelsMs;
+}else if(name==='billing'){
+ const {processBillingTick}=await import('../src/server/billing/worker.ts');tick=()=>processBillingTick({limit:config.billingBatch,signal:controller.signal});intervalMs=config.billingMs;
 }else if(name==='jobs'){
  const {runWorkerOnce}=await import('../src/server/prospecting/worker.ts');tick=()=>runWorkerOnce({},{workerId,signal:controller.signal});intervalMs=config.jobMs;
 }else{
@@ -32,6 +34,7 @@ try{
  state='stopped';await report();
  const [{closeDispatchPool},{closeIngressPool}]=await Promise.all([import('../src/server/messaging/worker-db.ts'),import('../src/server/channels/ingress-db.ts')]);
  await Promise.allSettled([closeDispatchPool(),closeIngressPool()]);
+ if(name==='billing'){const {closeBillingPool}=await import('../src/server/billing/db.ts');await closeBillingPool();}
  if(name==='jobs'||name==='scheduler'){const {workerPool}=await import('../src/server/prospecting/worker-db.ts');await workerPool().end();}
  process.disconnect?.();
 }

@@ -9,6 +9,7 @@ const id=(v:any):string|null=>typeof v==='string'?v:v?.id??null;
 const ensure=(ok:unknown):void=>{if(!ok)throw Error('BILLING_REMOTE_MISMATCH');};
 export async function receiveBillingEvent(bytes:Uint8Array,header:string|null){
  const e=verifyStripeEvent(bytes,header,billingConfig().webhookSecret),customer=id(e.data.object.customer);
+ if(!/^(checkout\.session\.(completed|async_payment_succeeded|async_payment_failed|expired)|customer\.subscription\.(created|updated|deleted)|invoice\.(paid|payment_failed|payment_action_required)|charge\.(refunded|dispute\.(created|updated|closed)))$/.test(e.type))return e.id;
  return enqueue({id:e.id,type:e.type,object_id:e.data.object.id,customer_id:customer,created:e.created,body_hash:createHash('sha256').update(bytes).digest('hex')});
 }
 async function enqueue(e:any){return (await billingPool().query('SELECT app.billing_receive_event($1) AS id',[e])).rows[0].id as string;}
@@ -54,7 +55,14 @@ export async function processBillingEvent(eventId?:string,adapter:StripeAdapter=
  const e=(await billingPool().query('SELECT app.billing_claim_event($1) AS event',[eventId??null])).rows[0].event;if(!e)return false;
  let data:any={},error:string|null=null;
  try{
-  const a=e.account;if(!a)throw Error('CUSTOMER_NOT_MAPPED');
+  const a=e.account;
+  if(!a&&!e.customer_id&&(e.type==='charge.refunded'||e.type.startsWith('charge.dispute.'))){
+   let chargeId=e.object_id;if(e.type.startsWith('charge.dispute.'))chargeId=stripeId(id((await adapter.readDispute(stripeId(e.object_id,'dp'))).charge),'ch');
+   const charge=await adapter.readCharge(stripeId(chargeId,'ch')),customer=stripeId(id(charge.customer),'cus');
+   const bound=(await billingPool().query('SELECT app.billing_bind_event_customer($1,$2,$3) AS bound',[e.id,e.lease_token,customer])).rows[0].bound;
+   if(bound){await processBillingEvent(e.id,adapter);return true;}
+  }
+  if(!a)throw Error('CUSTOMER_NOT_MAPPED');
   if(e.type.startsWith('checkout.session.')||e.type==='billing.checkout')data=await checkoutSnapshot(a,stripeId(e.object_id,'cs'),adapter);
   else if(e.type.startsWith('customer.subscription.'))data=await subscriptionSnapshot(a,stripeId(e.object_id,'sub'),adapter);
   else if(e.type.startsWith('invoice.')){
