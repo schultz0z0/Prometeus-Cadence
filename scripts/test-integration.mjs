@@ -3,8 +3,10 @@ import fs from "node:fs";
 import pg from 'pg';
 import {randomBytes} from 'node:crypto';
 import {runMigrations} from './db-migrate.mjs';
+import {ensureBillingEnvironment,provisionBilling} from './provision-billing.mjs';
 process.loadEnvFile(".env.local");
-for (const prefix of ["MIGRATOR", "AUTH", "APP", "WORKER", "INGRESS", "DISPATCH"]) {
+ensureBillingEnvironment();
+for (const prefix of ["MIGRATOR", "AUTH", "APP", "WORKER", "INGRESS", "DISPATCH", "BILLING"]) {
   const value = process.env[`TEST_${prefix}_DATABASE_URL`];
   if (!value || !new URL(value).pathname.endsWith("_test"))
     throw Error("Refusing integration tests against a non-test database.");
@@ -13,6 +15,8 @@ for (const prefix of ["MIGRATOR", "AUTH", "APP", "WORKER", "INGRESS", "DISPATCH"
 process.env.NODE_ENV = "test";
 process.env.CADENCE_INTEGRATION = "1";
 const known = [
+  "billing-storage",
+  "billing-entitlements",
   "openwa-storage",
   "openwa-connections",
   "openwa-ingress",
@@ -86,8 +90,9 @@ if(!/^prometeus_it_[a-f0-9]{16}_test$/.test(database))throw Error('Invalid isola
 const admin=new pg.Pool({connectionString:process.env.MIGRATOR_DATABASE_URL});
 let created=false;
 try{
+ await provisionBilling(admin);
  await admin.query('CREATE DATABASE "'+database+'"');created=true;
- for(const prefix of ['MIGRATOR','AUTH','APP','WORKER','INGRESS','DISPATCH']){
+ for(const prefix of ['MIGRATOR','AUTH','APP','WORKER','INGRESS','DISPATCH','BILLING']){
   const u=new URL(process.env[`${prefix}_DATABASE_URL`]);u.pathname='/'+database;process.env[`${prefix}_DATABASE_URL`]=u.toString();
  }
  const migrator=new pg.Pool({connectionString:process.env.MIGRATOR_DATABASE_URL});
