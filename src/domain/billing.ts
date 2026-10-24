@@ -19,6 +19,9 @@ const packs:PackOffer[]=[
  ...[[50,6500],[100,12000],[300,33000]].map(([quantity,amount])=>({code:'enrichment-'+quantity,name:quantity+' créditos de enriquecimento',unit:'enrichment' as const,quantity,amount,currency:'brl' as const,available:false})),
 ];
 export function getPlan(code:string):PlanOffer {if(code!=='essential'&&code!=='pro')throw Error('Plano inválido.');return structuredClone(plans[code]);}
+export function getSku(code:PlanCode):PlanOffer;
+export function getSku(code:`${CommercialUnit}-${number}`):PackOffer;
+export function getSku(code:string):PlanOffer|PackOffer;
 export function getSku(code:string):PlanOffer|PackOffer {if(code==='essential'||code==='pro')return getPlan(code);const p=packs.find(p=>p.code===code);if(!p)throw Error('Pacote inválido.');return {...p};}
 export function billingCatalog(){return {version:BILLING_VERSION,trialDays:TRIAL_DAYS,plans:Object.values(plans).map(p=>structuredClone(p)),packs:packs.map(p=>({...p}))};}
 export function trialEnd(start:string):string {const t=Date.parse(start);if(!Number.isFinite(t))throw Error('Relógio inválido.');return new Date(t+TRIAL_DAYS*86400000).toISOString();}
@@ -28,6 +31,6 @@ export function monthlyWindow(anchor:string,now:string){
  let m=(n.getUTCFullYear()-a.getUTCFullYear())*12+n.getUTCMonth()-a.getUTCMonth();if(+at(m)>+n)m--;return {start:at(m).toISOString(),end:at(m+1).toISOString()};
 }
 export interface BillingBalance {unit:CommercialUnit;plan:number;purchased:number;reserved:number;consumed:number;nextReset:string|null;}
-export interface BillingOperation {id:string;kind:string;sku:string|null;state:'prepared'|'processing'|'uncertain'|'completed'|'failed';createdAt:string;url:string|null;error:string|null;}
+export interface BillingOperation {id:string;kind:string;sku:string|null;state:'prepared'|'processing'|'uncertain'|'awaiting_payment'|'completed'|'failed';createdAt:string;url:string|null;error:string|null;}
 export interface BillingView {version:string;configured:boolean;canManage:boolean;status:BillingStatus;plan:PlanCode|null;periodEnd:string|null;cancelAtPeriodEnd:boolean;trialAvailable:boolean;revision:number;contact:{email:string|null;phone:string|null};balances:BillingBalance[];capacity:PlanOffer['capacity']|null;usage:Record<string,number>;operations:BillingOperation[];invoices:{id:string;status:string;amount:number;currency:string;url:string|null;createdAt:string}[];}
-export interface BillingReview {token:string;expiresAt:string;kind:'checkout'|'cancel'|'upgrade'|'downgrade'|'payment-method';sku:string|null;amount:number;currency:'brl';effects:string[];}
+export interface BillingReview {token:string;expiresAt:string;kind:'checkout'|'cancel'|'upgrade'|'downgrade'|'payment-method';sku:string|null;amount:number;currency:'brl';effects:string[];revision:number;prorationDate?:number;priceId?:string;}

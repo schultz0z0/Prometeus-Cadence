@@ -17,6 +17,7 @@ process.env.CADENCE_INTEGRATION = "1";
 const known = [
   "billing-storage",
   "billing-entitlements",
+  "billing-operations",
   "openwa-storage",
   "openwa-connections",
   "openwa-ingress",
