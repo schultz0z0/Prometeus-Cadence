@@ -1,8 +1,8 @@
 # WhatsApp próprio com OpenWA — desenho
 
-Data: 23/10/2026. Estado: proposta para revisão. Execução nativa nesta conversa, conforme preferência já recebida.
+Data: 23/10/2026. Estado: desenho aprovado pelo usuário em 23/10/2026; plano de implementação em revisão. Execução nativa nesta conversa, conforme preferência já recebida.
 
-Revisão de construibilidade por leitor independente concluída nesta conversa, sem questões importantes em aberto. A aprovação do desenho pelo usuário permanece pendente.
+Revisão de construibilidade por leitor independente concluída nesta conversa, sem questões importantes em aberto. O usuário aprovou este desenho e solicitou seguir ao plano.
 
 ## Intenção e decisão do usuário
 
@@ -103,4 +103,4 @@ Ver [estudo do OpenWA](../../research/2026-10-23-openwa-study.md). Referência u
 
 Instância externa por cliente, escolha dinâmica de motor, importação completa do WhatsApp, grupos/canais, anexos, gestão de infraestrutura pelo dashboard OpenWA e início do próximo marco. Não há garantia de banimento zero nem de que uma conta restrita pela Meta será liberada pelo uso de OpenWA. O piloto de envio Meta continua registrado com erro de entrega `130497`.
 
-Implementação depende da aprovação deste desenho e do plano subsequente. As decisões de detalhes que não alterem estes contratos ficam com o implementador.
+Desenho aprovado. Implementação depende da revisão do [plano subsequente](../plans/2026-10-23-prometeus-cadence-openwa.md). As decisões de detalhes que não alterem estes contratos ficam com o implementador.
