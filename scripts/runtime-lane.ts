@@ -3,7 +3,7 @@ import {randomUUID} from 'node:crypto';
 import {runtimeConfig,runSerialLoop} from './runtime-core.ts';
 process.loadEnvFile('.env.local');
 const name=process.argv[2],config=runtimeConfig(process.env),controller=new AbortController(),workerId=randomUUID();
-if(!['dispatch','sync','jobs','scheduler'].includes(name))throw Error('Invalid runtime lane');
+if(!['dispatch','sync','jobs','scheduler','channels'].includes(name))throw Error('Invalid runtime lane');
 for(const signal of ['SIGINT','SIGTERM'] as const)process.on(signal,()=>controller.abort());
 process.on('message',message=>{if(message==='shutdown')controller.abort();});
 process.on('disconnect',()=>controller.abort());
@@ -18,6 +18,8 @@ if(name==='dispatch'){
 }else if(name==='sync'){
  process.env.MAIL_SYNC_ENABLED='true';const {runMailSyncTick}=await import('../src/server/mail/sync/worker.ts');
  tick=()=>runMailSyncTick({now:new Date().toISOString(),maxMailboxes:config.syncBoxes,maxMessages:config.syncMessages,allowSync:true,signal:controller.signal}).then(result=>{if(result.failed)throw Error('Mailbox sync failed');return result;});intervalMs=config.syncMs;
+}else if(name==='channels'){
+ const {runOpenwaChannelTick}=await import('../src/server/channels/openwa/worker.ts');tick=()=>runOpenwaChannelTick({now:new Date().toISOString(),signal:controller.signal}).then(result=>{if(result.failed)throw Error('Channel maintenance failed');return result;});intervalMs=config.channelsMs;
 }else if(name==='jobs'){
  const {runWorkerOnce}=await import('../src/server/prospecting/worker.ts');tick=()=>runWorkerOnce({},{workerId,signal:controller.signal});intervalMs=config.jobMs;
 }else{

@@ -35,9 +35,10 @@ export function createOpenwaClient({origin,apiKey,fetchImpl=fetch}:{origin:strin
  const parse=<T>(fn:()=>T):T=>{try{return fn();}catch{throw new OpenwaClientError('OPENWA_PROTOCOL_INVALID');}};
  const sessionPath=(id:string)=>'/sessions/'+parse(()=>openwaId.parse(id));
  const checkedSession=(value:unknown,id?:string)=>parse(()=>{const s=parseOpenwaSession(value);if(id&&s.id!==id)throw Error();return s;});
- async function readMessagePage(id:string,query:{after?:string;limit:number;remoteId?:string;since?:number}){
+ async function readMessagePage(id:string,query:{after?:string;limit:number;remoteId?:string;since?:number;until?:number}){
   const path=sessionPath(id),params=new URLSearchParams({limit:String(z.number().int().min(1).max(100).parse(query.limit)),inlineMedia:'false'});
   if(query.after)params.set('after',openwaId.parse(query.after));if(query.remoteId)params.set('messageId',openwaRawMessageId.parse(query.remoteId));
+  if(query.until!==undefined)params.set('until',String(z.number().int().min(0).max(253402300799000).parse(query.until)));
   if(query.since!==undefined)params.set('since',String(z.number().int().min(0).max(253402300799000).parse(query.since)));
   const data=await call('GET',path+'/messages?'+params);
   return parse(()=>{
@@ -67,7 +68,7 @@ export function createOpenwaClient({origin,apiKey,fetchImpl=fetch}:{origin:strin
   async updateWebhook(id:string,hookId:string,publicId:string,secret:string){const value=await call('PUT',sessionPath(id)+'/webhooks/'+openwaId.parse(hookId),{url:privateOpenwaCallback(publicId),events:openwaEvents,secret,active:true,retryCount:5});return parse(()=>hookSchema.parse(value));},
   async logoutSession(id:string){await call('POST',sessionPath(id)+'/logout');},
   async readRemoteMessage(id:string,remoteId:string){const page=await readMessagePage(id,{limit:2,remoteId});if(page.items.some(i=>i.remoteId!==remoteId)||page.items.length>1)throw new OpenwaClientError('OPENWA_PROTOCOL_INVALID');return page.items[0]??null;},
-  readMessages:(id:string,query:{after?:string;limit:number;since?:number})=>readMessagePage(id,query),
+  readMessages:(id:string,query:{after?:string;limit:number;since?:number;until?:number})=>readMessagePage(id,query),
  };
 }
 export type OpenwaClient=ReturnType<typeof createOpenwaClient>;

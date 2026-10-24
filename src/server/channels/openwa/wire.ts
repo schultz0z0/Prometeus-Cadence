@@ -17,7 +17,7 @@ const png=z.string().max(262144).regex(/^data:image\/png;base64,iVBORw0KGgo[A-Za
  .refine(value=>value.slice('data:image/png;base64,'.length).length%4===0,'Invalid PNG encoding');
 const qr=z.object({qrCode:png,status:z.literal('qr_ready')});
 const send=z.object({messageId:openwaRawMessageId,timestamp:openwaSeconds});
-const message=z.object({id:openwaId,waMessageId:openwaRawMessageId,sessionId:openwaId,chatId:z.string().min(1).max(256),direction:z.enum(['incoming','outgoing']),status:z.enum(['pending','sent','delivered','read','failed','revoked','unknown']),timestamp:openwaSeconds.nullish()});
+const message=z.object({id:openwaId,waMessageId:openwaRawMessageId,sessionId:openwaId,chatId:z.string().min(1).max(256),direction:z.enum(['incoming','outgoing']),status:z.enum(['pending','sent','delivered','read','failed','revoked','unknown']),timestamp:openwaSeconds.nullish(),from:z.string().max(256).optional(),to:z.string().max(256).optional(),body:z.string().max(65536).nullish(),type:z.string().max(80).optional()});
 
 export function parseOpenwaSession(value:unknown){return session.parse(value);}
 export type OpenwaSession=ReturnType<typeof parseOpenwaSession>;
@@ -26,5 +26,5 @@ export function parseOpenwaSend(value:unknown){return send.parse(value);}
 export function parseOpenwaRemoteMessage(value:unknown):OpenwaRemoteMessage {
  const parsed=message.parse(value);
  return {gatewayId:parsed.id,remoteId:parsed.waMessageId,sessionId:parsed.sessionId,chatId:parsed.chatId,fromMe:parsed.direction==='outgoing',
-  status:parsed.status==='pending'||parsed.status==='revoked'?'unknown':parsed.status,timestamp:parsed.timestamp??null};
+  status:parsed.status==='pending'||parsed.status==='revoked'?'unknown':parsed.status,timestamp:parsed.timestamp??null,from:parsed.from,to:parsed.to,body:parsed.body,type:parsed.type};
 }

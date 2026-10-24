@@ -11,4 +11,5 @@ export interface OpenwaTickOptions {now:string;maxConnections:number;signal?:Abo
 export interface OpenwaRemoteMessage {
  gatewayId:string;remoteId:string;sessionId:string;chatId:string;fromMe:boolean;
  status:'sent'|'delivered'|'read'|'failed'|'unknown';timestamp:number|null;
+ from?:string;to?:string;body?:string|null;type?:string;
 }

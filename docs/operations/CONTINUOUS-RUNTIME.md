@@ -55,3 +55,13 @@ O início do runtime habilita processamento de mensagens já confirmadas, sincro
 - Snapshot do workspace utiliza uma verificação de versão e permissões antes de ler os registros completos. Dashboard e relatórios consultam contagens reais de mensagens separadamente, sem carregar os corpos. Aceitação pelo provedor não é confirmação de entrega; abertura/clique permanecem indisponíveis.
 
 Esta instalação funciona enquanto o computador e Docker estiverem disponíveis e o usuário tiver iniciado a sessão Windows. Sono, desligamento e falta de rede interrompem a operação local. Hospedagem futura precisa executar os mesmos serviços sob um gerenciador de processos no servidor. Gmail usa polling controlado; WhatsApp depende de webhooks válidos e de suas credenciais Meta/Twilio.
+# OpenWA gerenciado
+
+A quinta lane, `channels`, executa a cada `RUNTIME_CHANNELS_MS=5000` (configurável de 1 a 60 segundos). Cada rodada realiza até cinco operações de sessão e cinco trabalhos de recuperação; não transmite mensagens. Uma sessão pronta é conferida a cada 30 segundos. O gateway conserva a autenticação no volume Docker e controla sua reconexão.
+
+A recuperação consulta a API privada com a chave limitada à sessão, em páginas de até 20 mensagens, e verifica até 20 recibos conhecidos a cada rodada elegível de 15 segundos. O cursor anda do mais recente ao mais antigo dentro de uma janela superior fixa. O checkpoint só avança depois da última página, com sobreposição de dois segundos; webhook e leitura REST compartilham deduplicação. Evidências REST recebem a origem `gateway-read`.
+
+O limite é de 15 minutos de atraso e cinco páginas por janela. Lacunas, tempos desconhecidos ou cinco falhas consecutivas pausam a automação e exigem ação na conexão. Falhas transitórias têm espera persistida, limitada a cinco minutos. Resultado incerto mantém a reserva e nunca autoriza um novo envio pela ausência da mensagem no histórico, inclusive após 24 horas.
+
+Depois de mudar o ambiente, reinicie explicitamente o supervisor e os containers afetados com a mesma configuração. `npm run runtime:status` deve mostrar `dispatch`, `sync`, `jobs`, `scheduler` e `channels` vivos. O instalador Windows continua usando VBS/wscript e processos ocultos. Shutdown drena operações; uma resposta posterior a logout, revisão nova ou lease vencida é descartada.
+

@@ -26,5 +26,5 @@ async function supervise(name:string){
 }
 const monitor=setInterval(()=>{void readFile('.runtime/stop').then(()=>controller.abort()).catch(()=>{});},500);
 controller.signal.addEventListener('abort',()=>{for(const child of children.values())if(child.connected)child.send('shutdown');});
-try{await Promise.all(['dispatch','sync','jobs','scheduler'].map(supervise));}
+try{await Promise.all(['dispatch','sync','jobs','scheduler','channels'].map(supervise));}
 finally{clearInterval(monitor);await unlink(lock).catch(()=>{});await unlink('.runtime/stop').catch(()=>{});}
