@@ -88,11 +88,11 @@ Contratos compartilhados definidos na tarefa 1:
 
 Contrato SQL da manutenção: `app.claim_openwa_operation(p_now timestamptz)`, `app.read_openwa_operation(p_ws text,p_connection text,p_token text,p_fence bigint)` e `app.finish_openwa_operation(p_ws text,p_connection text,p_token text,p_fence bigint,p_result jsonb)`. Somente o papel dispatcher pode usá-los; read/finish conferem lease, revisão e estado desejado. A implementação TS esconde token/envelope e valida `p_result` por fase, sem UPDATE genérico fornecido pelo navegador.
 
-- [ ] Criar integração com duas empresas e papéis distintos: mesmo requestId retorna mesma conexão, corpo diferente dá 409; empresa B não lê nem altera conexão A; operador não provisiona; uma sessão não pode pertencer a dois workspaces. Assert: `assert.equal(otherWorkspaceStatus,404)`.
-- [ ] Rodar `rtk npm run test:integration -- openwa-storage`; observar falta de migração/repositório.
-- [ ] Ampliar checks do canal para OpenWA preservando provedores legados/e-mail; criar tabela `app.openwa_connection` com RLS/FORCE RLS, FK composta, unicidade de sessão e associação única por conexão. Criar operações duráveis e funções restritas de claim/read/finish para `cadence_dispatcher`, com lease/fence de 60 segundos e validação de estado/revisão. Nunca liberar SELECT genérico nas credenciais para o receiver/dispatcher.
-- [ ] Rodar integração e suíte `migrations`: instalação limpa e upgrade de catálogo existente preservam Meta/e-mail e grants. Testar remoção de associação de usuário entre claim e finalização.
-- [ ] Commit: `feat(openwa): persist tenant-bound session lifecycle`.
+- [x] Criar integração com duas empresas e papéis distintos: mesmo requestId retorna mesma conexão, corpo diferente dá 409; empresa B não lê nem altera conexão A; operador não provisiona; uma sessão não pode pertencer a dois workspaces. Assert: `assert.equal(otherWorkspaceStatus,404)`.
+- [x] Rodar `rtk npm run test:integration -- openwa-storage`; observar falta de migração/repositório.
+- [x] Ampliar checks do canal para OpenWA preservando provedores legados/e-mail; criar tabela `app.openwa_connection` com RLS/FORCE RLS, FK composta, unicidade de sessão e associação única por conexão. Criar operações duráveis e funções restritas de claim/read/finish para `cadence_dispatcher`, com lease/fence de 60 segundos e validação de estado/revisão. Nunca liberar SELECT genérico nas credenciais para o receiver/dispatcher.
+- [x] Rodar integração e suíte `migrations`: instalação limpa e upgrade de catálogo existente preservam Meta/e-mail e grants. Testar remoção de associação de usuário entre claim e finalização.
+- [x] Commit: `feat(openwa): persist tenant-bound session lifecycle`.
 
 ## Tarefa 4 — Provisionamento recuperável e API autenticada de conexão
 
