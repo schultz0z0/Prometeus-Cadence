@@ -28,3 +28,10 @@ test('network uncertainty never silently retries a financial POST',async()=>{
  let calls=0;const adapter=createStripeAdapter(async()=>{calls++;throw Error('lost response');},billingConfig({STRIPE_SECRET_KEY:'sk_test_fixture'}));
  await assert.rejects(adapter.createCheckout({customer:'cus_fixture',sku:'imports-5000',workspaceId:'w',operationId:'op'}),/incerto/i);assert.equal(calls,1);
 });
+test('downgrade refuses a foreign schedule and recovers only this operation owned phases',async()=>{
+ let posts=0;const sub={id:'sub_fixture',schedule:'sub_sched_existing',items:{data:[{price:{id:'price_pro'},quantity:1,current_period_start:100,current_period_end:200}]}},schedule:any={id:'sub_sched_existing',subscription:'sub_fixture',status:'active',end_behavior:'release',metadata:{cadence_operation:'someone-else'},current_phase:{start_date:100,end_date:200},phases:[{start_date:100,end_date:200,items:[{price:'price_pro',quantity:1}]}]};
+ const adapter=createStripeAdapter(async(_input,init)=>{if(init?.method==='POST')posts++;return Response.json(schedule);},billingConfig({STRIPE_SECRET_KEY:'sk_test_fixture'}));
+ await assert.rejects(adapter.downgrade(sub,'price_essential','op_fixture'));assert.equal(posts,0);
+ schedule.metadata.cadence_operation='op_fixture';await adapter.downgrade(sub,'price_essential','op_fixture');assert.equal(posts,1);
+ schedule.phases.push({start_date:200,end_date:300,items:[{price:'price_foreign',quantity:1}]});await assert.rejects(adapter.downgrade(sub,'price_essential','op_fixture'));assert.equal(posts,1);
+});

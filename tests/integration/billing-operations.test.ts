@@ -46,3 +46,16 @@ test('prepaid purchase requires valid subscription and unavailable enrichment ca
  await beginTrial(u.p);await assert.rejects(prepareBilling(u.p,{kind:'checkout',sku:'enrichment-50'}),/disponível/i);
  const review=await prepareBilling(u.p,{kind:'checkout',sku:'imports-5000'});assert.equal(review.amount,2700);assert.match(review.effects.join(' '),/única/i);
 });
+test('customer creation retries frozen parameters after lost response even if contact was edited',async()=>{
+ const u=await billingUser();let created=false,lost=false;const bodies:string[]=[];
+ const adapter=createStripeAdapter(async(input,init)=>{
+  const path=new URL(String(input)).pathname;
+  if(path.endsWith('/customers')){bodies.push(String(init?.body));if(created&&bodies.at(-1)!==bodies[0])return Response.json({error:'idempotency_error'},{status:400});created=true;if(!lost){lost=true;throw Error('response lost');}return Response.json({id:'cus_frozen',livemode:false});}
+  if(path.endsWith('/checkout/sessions'))return Response.json({id:'cs_test_frozen',url:'https://checkout.stripe.com/c/pay/cs_test_frozen',livemode:false});
+  if(path.endsWith('/cus_frozen'))return Response.json({id:'cus_frozen',livemode:false});throw Error('Unexpected endpoint');
+ },billingConfig());
+ const review=await prepareBilling(u.p,{kind:'checkout',sku:'essential'}),op=await confirmBilling(u.p,{requestId:randomUUID(),review},{adapter});assert.equal(op.state,'uncertain');
+ await testAdmin(c=>c.query("UPDATE app.billing_account SET contact='{\"email\":\"changed@example.com\",\"phone\":null}',revision=revision+1 WHERE workspace_id=$1",[u.p.workspaceId]));
+ await processBillingOperation(op.id,adapter);assert.equal((await readBilling(u.p)).operations.find(x=>x.id===op.id)?.state,'awaiting_payment');assert.equal(bodies[0],bodies[1]);
+ await processBillingOperation(undefined,adapter);assert.equal((await readBilling(u.p)).operations.some(x=>x.kind==='contact'&&x.state==='completed'),true);
+});

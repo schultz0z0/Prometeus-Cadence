@@ -7,6 +7,7 @@ import {withLeasedTransaction} from './worker-db.ts';
 import {readLeasedJob,performStep,finishJob,handleStepFailure,UncertainStep} from './journal.ts';
 import {ingestPage} from './ingestion.ts';
 import {ProviderError} from './providers/transport.ts';
+import {hashValue} from './review.ts';
 export {runQualification} from './qualification.ts';
 export interface GenerationAdapters{apify?:SourceAdapter;apollo?:ApolloAdapter;signal?:AbortSignal}
 export function providerContext(job:any,source:'MAPS'|'WEB'|'CNPJ'|'APOLLO',operationId:string,signal:AbortSignal):ProviderContext{
@@ -20,8 +21,18 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
   try{
     let run=job.provider_run as RemoteRun|null;
     if(job.state==='cancelling'){
-      if(run){const remote=await apify.abort(ctx,run);if(!['cancelled','failed','succeeded'].includes(remote.status))return;}
-      else if((await withLeasedTransaction(lease,c=>c.query('SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1',[lease.jobId]))).rowCount){await finishJob(lease,'needs_reconciliation','CANCEL_UNCERTAIN');return;}
+      if(run){
+       const step='abort:'+run.runId,operation=hashValue({job:lease.jobId,step});
+       const prior=await withLeasedTransaction(lease,async c=>{const existing=(await c.query('SELECT * FROM app.prospecting_attempt WHERE id=$1',[operation])).rows[0];if(existing)return existing;await c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES(current_setting('app.workspace_id'),$1,$2,'apify',$3,'prepared',$4)",[lease.jobId,operation,step,{reservedUnits:{},runId:run!.runId,cleanup:true}]);return null;});
+       if(prior&&prior.state!=='completed'){await finishJob(lease,'needs_reconciliation','ABORT_OUTCOME_UNKNOWN');return;}
+       try{
+        const remote=prior?['cancelled','failed','succeeded'].includes(prior.payload.result?.status)?{status:prior.payload.result.status}:await apify.poll(ctx,run):await apify.abort({...ctx,operationId:operation},run);
+        const terminal=['cancelled','failed','succeeded'].includes(remote.status);
+        await withLeasedTransaction(lease,async c=>{await c.query("UPDATE app.prospecting_attempt SET state='completed',payload=payload||$2::jsonb WHERE id=$1",[operation,{result:{status:remote.status}}]);if(terminal)await c.query("UPDATE app.prospecting_job SET checkpoint=checkpoint||'{\"remoteTerminal\":true}'::jsonb WHERE id=$1",[lease.jobId]);});
+        if(!terminal)return;
+       }catch{await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_attempt SET state='uncertain' WHERE id=$1",[operation]));throw new ProviderError('ABORT_OUTCOME_UNKNOWN',0,true);}
+      }
+      else if((await withLeasedTransaction(lease,c=>c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND(state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain')",[lease.jobId]))).rowCount){await finishJob(lease,'needs_reconciliation','CANCEL_UNCERTAIN');return;}
       await finishJob(lease,'cancelled');return;
     }
     if(job.checkpoint.exhausted===true||job.counts.found>=input.limit){await finishJob(lease,'completed');return;}
@@ -38,6 +49,7 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
       run=started.run;await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_job SET provider_run=$2,state=CASE WHEN state='cancelling' THEN state ELSE 'waiting_provider' END WHERE id=$1",[lease.jobId,run]));
     }
     const state=await apify.poll(ctx,run);
+    if(['failed','cancelled','succeeded'].includes(state.status))await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_job SET checkpoint=checkpoint||'{\"remoteTerminal\":true}'::jsonb WHERE id=$1",[lease.jobId]));
     if(['failed','cancelled'].includes(state.status))throw new ProviderError('REMOTE_'+state.status.toUpperCase());
     await withLeasedTransaction(lease,c=>c.query('UPDATE app.prospecting_job SET provider_run=$2 WHERE id=$1',[lease.jobId,state.run]));
     if(state.status!=='succeeded')return;

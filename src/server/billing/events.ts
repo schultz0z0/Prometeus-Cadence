@@ -9,7 +9,7 @@ const id=(v:any):string|null=>typeof v==='string'?v:v?.id??null;
 const ensure=(ok:unknown):void=>{if(!ok)throw Error('BILLING_REMOTE_MISMATCH');};
 export async function receiveBillingEvent(bytes:Uint8Array,header:string|null){
  const e=verifyStripeEvent(bytes,header,billingConfig().webhookSecret),customer=id(e.data.object.customer);
- if(!/^(checkout\.session\.(completed|async_payment_succeeded|async_payment_failed|expired)|customer\.subscription\.(created|updated|deleted)|invoice\.(paid|payment_failed|payment_action_required)|charge\.(refunded|dispute\.(created|updated|closed)))$/.test(e.type))return e.id;
+ if(!/^(checkout\.session\.(completed|async_payment_succeeded|async_payment_failed|expired)|customer\.subscription\.(created|updated|deleted|pending_update_expired|pending_update_applied)|invoice\.(paid|payment_failed|payment_action_required)|charge\.(refunded|dispute\.(created|updated|closed)))$/.test(e.type))return e.id;
  return enqueue({id:e.id,type:e.type,object_id:e.data.object.id,customer_id:customer,created:e.created,body_hash:createHash('sha256').update(bytes).digest('hex')});
 }
 async function enqueue(e:any){return (await billingPool().query('SELECT app.billing_receive_event($1) AS id',[e])).rows[0].id as string;}
@@ -24,19 +24,22 @@ export async function subscriptionSnapshot(a:any,subId:string,adapter:StripeAdap
  ensure(item.quantity===1&&price.currency==='brl'&&price.recurring?.interval==='month'&&(price.recurring.interval_count??1)===1);
  const plan=price.unit_amount===39700?'essential':price.unit_amount===89700?'pro':null;ensure(plan);const offer=getPlan(plan!);
  const start=item.current_period_start,end=item.current_period_end;ensure(Number.isSafeInteger(start)&&Number.isSafeInteger(end)&&start<end);
- const base={kind:'subscription',subscription_id:s.id,plan,status:s.status,period_start:start,period_end:end,cancel_at_period_end:!!s.cancel_at_period_end,paid:false};
+ const pending=(await billingPool().query("SELECT id,sku,proof,result FROM app.billing_operation WHERE workspace_id=$1 AND kind='upgrade' AND remote_id=$2 AND state='awaiting_payment' ORDER BY created_at DESC LIMIT 1",[a.workspace_id,s.id])).rows[0];
+ let expiry:Record<string,string>={};
+ if(pending?.result?.invoiceId&&!s.pending_update&&pending.sku!==plan){const previous=await adapter.readInvoice(stripeId(pending.result.invoiceId,'in'));ensure(id(previous.customer)===a.customer_id&&id(previous.parent?.subscription_details?.subscription)===s.id);if(previous.status==='void')expiry={upgrade_expired_operation_id:pending.id,expired_invoice_id:previous.id};}
+ const base={kind:'subscription',subscription_id:s.id,plan,status:s.status,period_start:start,period_end:end,cancel_at_period_end:!!s.cancel_at_period_end,paid:false,...expiry};
  if(!s.latest_invoice||!['active','past_due'].includes(s.status))return base;
  const inv=await adapter.readInvoice(stripeId(id(s.latest_invoice),'in'));
  ensure(inv.id===id(s.latest_invoice)&&id(inv.customer)===a.customer_id&&inv.currency==='brl'&&id(inv.parent?.subscription_details?.subscription)===s.id);
  if(inv.status!=='paid'||inv.amount_paid!==inv.amount_due||inv.amount_remaining!==0||!(inv.amount_paid>0))return {...base,invoice:invoiceView(inv,s.id)};
  ensure(!inv.lines?.has_more&&inv.lines?.data?.some((line:any)=>line.quantity===1&&line.pricing?.price_details?.price===price.id&&line.period?.end===end&&line.amount>0));
  if(inv.billing_reason==='subscription_update'){
-  const approved=(await billingPool().query("SELECT proof FROM app.billing_operation WHERE workspace_id=$1 AND kind='upgrade' AND sku=$2 AND state IN('processing','uncertain','awaiting_payment','completed') ORDER BY created_at DESC LIMIT 1",[a.workspace_id,plan])).rows[0];
+  const approved=(await billingPool().query("SELECT id,proof FROM app.billing_operation WHERE workspace_id=$1 AND kind='upgrade' AND sku=$2 AND result->>'invoiceId'=$3 AND state IN('awaiting_payment','completed') ORDER BY created_at DESC LIMIT 1",[a.workspace_id,plan,inv.id])).rows[0];
   ensure(approved&&approved.proof.amount===inv.amount_due);
  }else ensure(['subscription_create','subscription_cycle'].includes(inv.billing_reason)&&inv.amount_due===offer.amount&&inv.lines.data.length===1&&inv.lines.data[0].period.start===start);
  ensure(!inv.payments?.has_more);const paid=inv.payments?.data?.filter((p:any)=>p.status==='paid'&&p.payment?.type==='payment_intent');ensure(paid?.length===1);const pi=stripeId(id(paid[0].payment.payment_intent),'pi');
  if(!await healthyPayment(pi,adapter))return {kind:'freeze',payment_intent:pi};
- return {...base,paid:s.status==='active',invoice_id:inv.id,payment_intent:pi,invoice:invoiceView(inv,s.id)};
+ return {...base,paid:s.status==='active',invoice_id:inv.id,payment_intent:pi,invoice:invoiceView(inv,s.id),...(inv.billing_reason==='subscription_update'&&pending?.result?.invoiceId===inv.id&&pending.sku===plan?{upgrade_paid_operation_id:pending.id}:{})};
 }
 function invoiceView(v:any,sub:string){return {id:v.id,subscription_id:sub,status:v.status,amount:v.amount_paid??0,url:v.hosted_invoice_url?stripeUrl(v.hosted_invoice_url,'invoice'):null,created:v.created};}
 async function checkoutSnapshot(a:any,sessionId:string,adapter:StripeAdapter){
@@ -46,7 +49,7 @@ async function checkoutSnapshot(a:any,sessionId:string,adapter:StripeAdapter){
  if(s.status==='expired')return {kind:'expired',session_id:s.id};
  if(s.status!=='complete'||s.payment_status!=='paid')return {};
  const offer=getSku(String(m.sku));ensure(s.currency==='brl'&&s.amount_total===offer.amount&&!s.line_items?.has_more&&s.line_items?.data?.length===1&&s.line_items.data[0].quantity===1&&s.line_items.data[0].amount_total===offer.amount);
- if('cycle' in offer){ensure(s.mode==='subscription');return subscriptionSnapshot(a,stripeId(id(s.subscription),'sub'),adapter);}
+ if('cycle' in offer){ensure(s.mode==='subscription');return {...await subscriptionSnapshot(a,stripeId(id(s.subscription),'sub'),adapter),approved_operation_id:o.id,approved_session_id:s.id};}
  ensure(s.mode==='payment'&&offer.available);const pi=stripeId(id(s.payment_intent),'pi');
  if(!await healthyPayment(pi,adapter))return {kind:'freeze',payment_intent:pi};
  return {kind:'pack',sku:offer.code,payment_id:s.id,payment_intent:pi,operation_id:o.id};
@@ -75,6 +78,18 @@ export async function processBillingEvent(eventId?:string,adapter:StripeAdapter=
    const c=await adapter.readCharge(stripeId(chargeId,'ch'));ensure(id(c.customer)===a.customer_id);
    if(c.disputed||c.refunded||c.amount_refunded>0)data={kind:'freeze',payment_intent:stripeId(id(c.payment_intent),'pi')};
   }
+  if(data.kind==='subscription'&&a.subscription_id&&a.subscription_id!==data.subscription_id&&!data.approved_operation_id){
+   const retired=(await billingPool().query('SELECT 1 FROM app.billing_subscription_history WHERE workspace_id=$1 AND subscription_id=$2',[a.workspace_id,data.subscription_id])).rowCount;
+   if(retired)data={};
+   else{
+    const checkout=(await billingPool().query("SELECT remote_id FROM app.billing_operation WHERE workspace_id=$1 AND kind='checkout' AND sku IN('essential','pro') AND state='awaiting_payment' AND remote_id IS NOT NULL LIMIT 1",[a.workspace_id])).rows[0];
+    if(!checkout)throw Error('UNAPPROVED_SUBSCRIPTION');
+    const replacement:any=await checkoutSnapshot(a,checkout.remote_id,adapter);
+    if(replacement.kind!=='subscription'||replacement.subscription_id!==data.subscription_id)throw Error('CHECKOUT_NOT_CONFIRMED');data=replacement;
+   }
+  }
  }catch{error='REMOTE_RECONCILIATION_REQUIRED';}
- const r=await billingPool().query('SELECT app.billing_apply_event($1,$2,$3,$4) AS saved',[e.id,e.lease_token,data,error]);if(!r.rows[0].saved)throw Error('Billing event lease lost.');return true;
+ let r;try{r=await billingPool().query('SELECT app.billing_apply_event($1,$2,$3,$4) AS saved',[e.id,e.lease_token,data,error]);}
+ catch{r=await billingPool().query('SELECT app.billing_apply_event($1,$2,$3,$4) AS saved',[e.id,e.lease_token,{},'APPLY_RECONCILIATION_REQUIRED']);}
+ if(!r.rows[0].saved)throw Error('Billing event lease lost.');return true;
 }

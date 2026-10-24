@@ -31,6 +31,7 @@ async function fixture(){
    throw Error('Unexpected POST '+path);
   }
   if(path.endsWith('/prices'))return Response.json({data:[{id:'price_target',unit_amount:new URL(String(input)).searchParams.get('lookup_keys[0]')?.endsWith('pro')?89700:39700,currency:'brl',recurring:{interval:'month',interval_count:1}}]});
+  if(path.endsWith('/sub_sched_fixture'))return Response.json({id:'sub_sched_fixture',subscription:sub.id,status:'active',end_behavior:'release',metadata:{cadence_operation:mutations.find(x=>x.path.endsWith('/subscription_schedules'))?.form.get('metadata[cadence_operation]')},current_phase:{start_date:sub.items.data[0].current_period_start,end_date:sub.items.data[0].current_period_end},phases:[{start_date:sub.items.data[0].current_period_start,end_date:sub.items.data[0].current_period_end,items:[{price:sub.items.data[0].price.id,quantity:1}]}]});
   if(path.endsWith('/'+subid))return Response.json(sub);
   if(path.endsWith('/'+invoice.id))return Response.json(invoice);
   if(path.includes('/checkout/sessions/'))return Response.json(sessions.get(path.split('/').at(-1)!));
@@ -88,4 +89,23 @@ test('an existing paid subscription cannot be replaced with a new free trial aft
  const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});
  await testAdmin(c=>c.query("UPDATE app.billing_account SET state='attention' WHERE workspace_id=$1",[f.u.p.workspaceId]));
  await assert.rejects(beginTrial(f.u.p),{code:'SUBSCRIPTION_ACTIVE'});assert.equal((await readBilling(f.u.p)).trialAvailable,false);
+});
+test('a paid replacement checkout restores canceled access while delayed old-subscription events stay harmless',async()=>{
+ const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});const old=f.subid;
+ await testAdmin(c=>c.query("UPDATE app.billing_account SET state='canceled' WHERE workspace_id=$1",[f.u.p.workspaceId]));
+ const op=randomUUID(),session='cs_test_replacement',replacement='sub_replacement';
+ await testAdmin(c=>c.query("INSERT INTO app.billing_operation(workspace_id,id,request_id,actor_id,body_hash,kind,sku,expected_revision,state,customer_id,remote_id) VALUES($1,$2,$2,$3,'hash','checkout','essential',0,'awaiting_payment',$4,$5)",[f.u.p.workspaceId,op,f.u.p.userId,f.customer,session]));
+ f.sub.id=replacement;f.invoice.id='in_replacement';f.sub.latest_invoice=f.invoice.id;f.invoice.parent.subscription_details.subscription=replacement;
+ f.sessions.set(session,{id:session,customer:f.customer,mode:'subscription',status:'complete',payment_status:'paid',currency:'brl',amount_total:39700,subscription:replacement,metadata:{workspace_id:f.u.p.workspaceId,operation_id:op,sku:'essential',catalog_version:BILLING_VERSION},line_items:{data:[{quantity:1,amount_total:39700}],has_more:false}});
+ const adapter={...f.adapter,readSubscription:async(id:string)=>id===replacement?f.sub:{...f.sub,id:old,status:'canceled'}};
+ const early=event('customer.subscription.created',{id:replacement,customer:f.customer});await receiveBillingEvent(early.bytes,early.header);await processBillingEvent(early.id,adapter);assert.equal((await readBilling(f.u.p)).status,'active');
+ const e=event('checkout.session.completed',{id:session,customer:f.customer});await receiveBillingEvent(e.bytes,e.header);await processBillingEvent(e.id,adapter);assert.equal((await readBilling(f.u.p)).status,'active');assert.equal((await readBilling(f.u.p)).balances.find(x=>x.unit==='extractions')?.plan,5000);
+ const delayed=event('customer.subscription.deleted',{id:old,customer:f.customer});await receiveBillingEvent(delayed.bytes,delayed.header);await processBillingEvent(delayed.id,adapter);assert.equal((await readBilling(f.u.p)).status,'active');
+});
+test('voided pending upgrade fails independently of a later paid Essential renewal',async()=>{
+ const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});const op=randomUUID();
+ await testAdmin(c=>c.query("INSERT INTO app.billing_operation(workspace_id,id,request_id,actor_id,body_hash,kind,sku,expected_revision,state,customer_id,remote_id,proof,result) VALUES($1,$2,$2,$3,'hash','upgrade','pro',0,'awaiting_payment',$4,$5,'{\"amount\":25000}','{\"invoiceId\":\"in_void_upgrade\"}')",[f.u.p.workspaceId,op,f.u.p.userId,f.customer,f.subid]));
+ const adapter={...f.adapter,readInvoice:async(id:string)=>id==='in_void_upgrade'?{...f.invoice,id,status:'void',billing_reason:'subscription_update',amount_paid:0,amount_due:25000}:f.invoice};
+ const e=event('customer.subscription.pending_update_expired',{id:f.subid,customer:f.customer});await receiveBillingEvent(e.bytes,e.header);await processBillingEvent(e.id,adapter);
+ assert.equal((await readBilling(f.u.p)).operations.find(x=>x.id===op)?.state,'failed');assert.equal((await readBilling(f.u.p)).plan,'essential');
 });

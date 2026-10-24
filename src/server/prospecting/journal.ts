@@ -51,6 +51,7 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
 }
 export async function handleStepFailure(lease:JobLease,error:unknown){
   if(error instanceof UncertainStep)return;
+  if(error instanceof ProviderError&&error.uncertain){await finishJob(lease,'needs_reconciliation',error.code);return;}
   if(error instanceof AppError&&error.code==='STALE_JOB')throw error;
   const job=await readLeasedJob(lease);
   const hasItems=await withLeasedTransaction(lease,async c=>!!(await c.query('SELECT 1 FROM app.prospecting_item WHERE job_id=$1 LIMIT 1',[lease.jobId])).rowCount);

@@ -72,5 +72,7 @@ Node local `v24.16.0`, npm `11.13.0`, RTK e REA já disponíveis. Next.js/React 
 - [x] 05B: Gmail OAuth + SMTP/IMAP, inbox com threads, respostas revisadas e cadências mistas implementados; aceite local documentado no relatório05B e roteiro manual em CHANNELS-PILOT.
 - [x] OpenWA e interface limpa por dois cartões/popups aceitos pelo usuário. Pareamento/readiness não substituem prova de entrega de mensagem; homologação de ida e volta permanece item do 06D quando não documentada.
 - [x] Auditoria06 atualizada e roteiro corrigido em24/10/2026, com marcos06B–06E e divisão07A–07D/08A–08B.
-- [ ] Implementação e homologação comercial06A.
+- [x] Implementação local06A, trial de7 dias e revisão independente: `docs/validation/06-billing.md` e `docs/validation/06-billing-review.md`.
+- [ ] Homologação financeira06A com credenciais próprias do Stripe sandbox; implementação testada não substitui pagamento/eventos reais.
+- [ ] Observabilidade08B: backfill idempotente dos eventos iniciais dos40 grants de piloto no ledger, conforme P3 da revisão06A. Saldos/consumo/reservas já estão preservados; não afeta cobrança Stripe.
 - [ ] Correções e demais marcos, incluindo SaaS operacional completo.

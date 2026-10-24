@@ -65,10 +65,12 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
   let customer=o.account.customer_id;
   if(!customer){
    if(Date.now()-Date.parse(o.account.customer_started_at)>23*3600000){await update('uncertain',{code:'MANUAL_RECONCILIATION'});return true;}
-   const value=await adapter.createCustomer(o.workspace_id,'workspace:'+o.workspace_id,{email:o.account.contact.email??null,phone:o.account.contact.phone??null});
+   const contact=o.account.customer_request??o.account.contact;
+   const value=await adapter.createCustomer(o.workspace_id,'workspace:'+o.workspace_id,{email:contact.email??null,phone:contact.phone??null});
    customer=value.id;await update('customer',{id:customer});
   }
   if(o.kind==='checkout'){
+   await update('financial_request',{});
    const session=await adapter.createCheckout({customer,sku:o.sku,workspaceId:o.workspace_id,operationId:o.id});
    await update('awaiting_payment',{id:session.id,result:{url:session.url}});
   }else if(o.kind==='cancel'){
@@ -81,14 +83,17 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
    const sub=await adapter.readSubscription(o.account.subscription_id),item=sub.items?.data?.[0];
    if(sub.customer!==customer||sub.status!=='active'||sub.items?.data?.length!==1||item?.quantity!==1)throw new StripeFailure(false);
    if(o.kind==='upgrade'){
+    let changed=sub;
     // An acknowledged remote change is recovered by reading it, never by charging a second time.
     if(item.price?.id!==o.proof.priceId){
      if(item.price?.unit_amount!==getPlan(o.account.plan).amount)throw new StripeFailure(false);
-     const preview=await adapter.previewChange(sub.id,item.id,o.proof.priceId,o.proof.prorationDate);
-     if(preview.currency!=='brl'||preview.amount_due!==o.proof.amount)throw new StripeFailure(false);
-     await adapter.upgrade(sub.id,item.id,o.proof.priceId,o.proof.prorationDate,o.id);
+     if(o.stage!=='financial_requested'){const preview=await adapter.previewChange(sub.id,item.id,o.proof.priceId,o.proof.prorationDate);if(preview.currency!=='brl'||preview.amount_due!==o.proof.amount)throw new StripeFailure(false);}
+     await update('financial_request',{});
+     changed=await adapter.upgrade(sub.id,item.id,o.proof.priceId,o.proof.prorationDate,o.id);
     }
-    await update('awaiting_payment',{id:sub.id});
+    const invoiceId=typeof changed.latest_invoice==='string'?changed.latest_invoice:changed.latest_invoice?.id;
+    if(!invoiceId)throw new StripeFailure(true);
+    await update('awaiting_payment',{id:sub.id,result:{invoiceId}});
    }else {const schedule=await adapter.downgrade(sub,o.proof.priceId,o.id);await update('completed',{id:schedule.id});}
   }else throw new StripeFailure(false);
  }catch(error){
