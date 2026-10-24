@@ -10,7 +10,7 @@ test('concurrent reservations cannot spend the same credits twice',async()=>{
  await testAdmin(c=>c.query("UPDATE app.billing_grant SET quantity=3 WHERE workspace_id=$1 AND unit='imports'",[u.p.workspaceId]));
  const reserve=(key:string)=>withWorkspaceTransaction(u.p,c=>c.query("SELECT app.billing_reserve($1,'imports',2)",[key]));
  const results=await Promise.allSettled([reserve(randomUUID()),reserve(randomUUID())]);assert.equal(results.filter(x=>x.status==='fulfilled').length,1);
- assert.match(String((results.find(x=>x.status==='rejected') as PromiseRejectedResult).reason),/BILLING_QUOTA/);
+ assert.equal((results.find(x=>x.status==='rejected') as PromiseRejectedResult).reason.code,'BILLING_QUOTA');
 });
 test('plan allocation precedes prepaid balance; consume and release are idempotent',async()=>{
  const u=await billingUser();await beginTrial(u.p);
@@ -29,6 +29,6 @@ test('expired trial denies new work but a received result consumes its existing 
  const u=await billingUser();await beginTrial(u.p);const key=randomUUID();
  await withWorkspaceTransaction(u.p,c=>c.query("SELECT app.billing_reserve($1,'imports',2)",[key]));
  await testAdmin(c=>c.query("UPDATE app.billing_account SET period_end=now()-interval '1 second' WHERE workspace_id=$1",[u.p.workspaceId]));
- await assert.rejects(withWorkspaceTransaction(u.p,c=>c.query("SELECT app.billing_reserve($1,'imports',1)",[randomUUID()])),/BILLING_REQUIRED/);
+ await assert.rejects(withWorkspaceTransaction(u.p,c=>c.query("SELECT app.billing_reserve($1,'imports',1)",[randomUUID()])),{code:'BILLING_REQUIRED'});
  await withWorkspaceTransaction(u.p,c=>c.query("SELECT app.billing_consume($1,'imports',1,$2)",[randomUUID(),key]));
 });

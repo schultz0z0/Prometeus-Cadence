@@ -1,144 +1,32 @@
 "use client";
-import { useState } from "react";
-import { useDemo } from "@/demo/provider";
-import { Badge, Button, Modal, Notice } from "@/components/ui/primitives";
-export function Plan() {
-  const s = useDemo();
-  const [tab, setTab] = useState("Meu plano");
-  const [gate, setGate] = useState(false);
-  const usage = [
-    ["Extrações de leads/mês", 0, 5000],
-    [
-      "Importações/mês",
-      s.leads.filter((l) => l.source === "MANUAL").length,
-      5000,
-    ],
-    ["Contas de e-mail", 0, 3],
-    ["Cadências ativas", 0, 100],
-    ["Templates", s.templates.length, 0],
-    ["Automações ativas", 0, 50],
-  ] as const;
-  return (
-    <>
-      <div className="tabs">
-        {["Meu plano", "Cobrança", "Planos e pacotes"].map((t) => (
-          <button
-            key={t}
-            className={tab === t ? "active" : ""}
-            onClick={() => setTab(t)}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
-      {tab === "Meu plano" ? (
-        <>
-          <section className="panel panel-pad">
-            <div className="row between">
-              <h2>Workspace de demonstração</h2>
-              <Badge tone="orange">Local</Badge>
-            </div>
-            <p className="secondary-text section-gap">
-              Prepare sua prospecção. Nenhuma assinatura, cartão ou cobrança
-              está ativo nesta versão.
-            </p>
-            <div className="section-gap">
-              <Button variant="primary" onClick={() => setGate(true)}>
-                Conhecer planos
-              </Button>
-            </div>
-          </section>
-          <section className="panel panel-pad section-gap">
-            <h3>Uso do plano · exemplo de cotas</h3>
-            <div className="usage-grid">
-              {usage.map(([label, value, max]) => (
-                <div key={label}>
-                  <div className="row between">
-                    <span>{label}</span>
-                    <span>
-                      <strong>{value}</strong>
-                      <small> / {max || "ilimitado"}</small>
-                    </span>
-                  </div>
-                  <div className="usage-track">
-                    <i
-                      style={{
-                        width: `${max ? Math.min(100, (value / max) * 100) : 0}%`,
-                      }}
-                    />
-                  </div>
-                  <small>
-                    {max
-                      ? `${Math.round((value / max) * 100)}% utilizado`
-                      : "Sem limite no exemplo"}
-                  </small>
-                </div>
-              ))}
-            </div>
-          </section>
-        </>
-      ) : tab === "Cobrança" ? (
-        <section className="panel panel-pad">
-          <h2>Sem cobrança ativa</h2>
-          <p className="secondary-text section-gap">
-            Nenhum meio de pagamento foi cadastrado. Faturas, recibos e
-            renovação aparecerão aqui depois da integração de cobrança.
-          </p>
-          <div className="section-gap">
-            <Notice>
-              Esta versão não abre checkout e não contrata serviços.
-            </Notice>
-          </div>
-        </section>
-      ) : (
-        <div className="plan-grid">
-          {[
-            [
-              "Essential",
-              "Para começar a prospecção ativa",
-              "5.000 extrações",
-              "3 contas de e-mail",
-              "Cadências de e-mail e WhatsApp",
-              "2 assentos",
-            ],
-            [
-              "Pro",
-              "Para times e operação multicanal",
-              "8.000 extrações",
-              "5 contas de e-mail",
-              "LinkedIn e Agente SDR",
-              "3 assentos",
-            ],
-          ].map(([name, desc, ...features]) => (
-            <section key={name} className="panel panel-pad">
-              <Badge tone="orange">Catálogo de referência</Badge>
-              <h2 className="section-gap">{name}</h2>
-              <p className="secondary-text section-gap">{desc}</p>
-              <strong className="plan-price">Preço a configurar</strong>
-              <ul className="explainer-list">
-                {features.map((f) => (
-                  <li key={f}>{f}</li>
-                ))}
-              </ul>
-              <Button variant="primary" onClick={() => setGate(true)}>
-                Ver detalhes
-              </Button>
-            </section>
-          ))}
-        </div>
-      )}
-      {gate && (
-        <Modal title="Planos e cobrança" onClose={() => setGate(false)}>
-          <Notice>
-            O catálogo comercial e o checkout do Prometeus Cadence serão
-            configurados na etapa de assinatura. Os valores do produto de
-            referência não foram adotados como preço do seu SaaS.
-          </Notice>
-          <div className="form-actions">
-            <Button onClick={() => setGate(false)}>Entendi</Button>
-          </div>
-        </Modal>
-      )}
-    </>
-  );
+import {useEffect,useState} from 'react';
+import {useIdentity} from '@/client/workspace-provider';
+import {createBillingClient,type BillingClient} from '@/client/billing-client';
+import {useLiveRefresh} from '@/client/use-live-refresh';
+import type {BillingView,BillingReview} from '@/domain/billing';
+import {Button,Modal,Notice,Badge} from '@/components/ui/primitives';
+import {BillingSummary,money,date} from './billing-summary';
+import {BillingCatalog} from './billing-catalog';
+import {BillingDialog,BillingContact} from './billing-dialog';
+export function Plan(){const identity=useIdentity(),workspaceId=identity?.activeWorkspaceId??null;return <BillingPage key={workspaceId??'demo'} workspaceId={workspaceId}/>;}
+function BillingPage({workspaceId}:{workspaceId:string|null}){
+ const [client,setClient]=useState<BillingClient|null>(null);
+ const [view,setView]=useState<BillingView|null>(null),[tab,setTab]=useState('Meu plano'),[busy,setBusy]=useState(false),[error,setError]=useState(''),[review,setReview]=useState<BillingReview|null>(null),[contact,setContact]=useState(false),[trial,setTrial]=useState<object|null>(null);
+ async function refresh(){if(client)setView(await client.read());}
+ useEffect(()=>{let active=true;const api=workspaceId?createBillingClient({workspaceId}):null;setClient(api);if(api)api.read().then(v=>{if(active)setView(v);}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;api?.dispose();};},[workspaceId]);
+ useLiveRefresh(async signal=>{if(!client)return;const v=await client.read();if(!signal.aborted)setView(v);},15000,!!client,client);
+ async function act(fn:()=>Promise<void>){if(busy)return;setBusy(true);setError('');try{await fn();}catch(e){setError(e instanceof Error?e.message:'Não foi possível concluir.');}finally{setBusy(false);}}
+ const choose=(kind:BillingReview['kind'],sku?:string)=>act(async()=>{if(client)setReview(await client.prepare({kind,...(sku?{sku}:{})}));});
+ return <div className="billing-page stack"><div className="row between wrap"><div><h1>Meu plano</h1><p className="subtitle">Assinatura, consumo e pacotes do seu workspace.</p></div>{client&&<Button disabled={busy} onClick={()=>act(refresh)}>Atualizar</Button>}</div><div className="tabs" role="tablist" aria-label="Plano e cobrança">{['Meu plano','Cobrança','Planos e pacotes'].map(t=><button key={t} role="tab" aria-selected={tab===t} className={tab===t?'active':''} onClick={()=>setTab(t)}>{t}</button>)}</div>
+ {error&&<p role="alert" className="error-bar">{error}</p>}
+ {!client?<><Notice>Entre em um workspace para consultar seu plano e ativar o teste de 7 dias.</Notice><BillingCatalog view={null} onChoose={()=>{}}/></>:!view?<p role="status">Consultando assinatura…</p>:<>
+ {!view.configured&&<Notice>A cobrança de teste aguarda configuração. O teste gratuito de 7 dias pode ser ativado pelo proprietário, sem cartão.</Notice>}
+ {view.operations.some(o=>['prepared','processing','uncertain','awaiting_payment'].includes(o.state))&&<Notice>Existe uma operação de cobrança em andamento. Confira o resultado na aba Cobrança antes de tentar novamente.</Notice>}
+ {tab==='Meu plano'?<BillingSummary view={view} onTrial={()=>setTrial({})} onCatalog={()=>setTab('Planos e pacotes')}/>:tab==='Planos e pacotes'?<BillingCatalog view={view} onChoose={choose}/>:<div className="stack"><section className="panel panel-pad stack"><div className="row between wrap"><h2>Dados de cobrança</h2><Badge tone="orange">Stripe · teste</Badge></div>{view.canManage?<><p>{view.contact.email??'Nenhum contato de cobrança informado.'}{view.contact.phone?' · '+view.contact.phone:''}</p><div className="row wrap"><Button onClick={()=>setContact(true)}>Editar contato</Button>{view.status==='active'&&<><Button disabled={busy||!view.configured} onClick={()=>choose('payment-method')}>Forma de pagamento</Button>{!view.cancelAtPeriodEnd&&<Button disabled={busy||!view.configured} onClick={()=>choose('cancel')}>Cancelar renovação</Button>}</>}<Button disabled={busy||!view.configured} onClick={()=>act(async()=>{setView(await client.reconcile());})}>Confirmar estado do pagamento</Button></div></>:<p>Somente proprietários e administradores gerenciam a cobrança.</p>}</section>
+ <section className="panel panel-pad stack"><h3>Operações recentes</h3>{view.operations.length?view.operations.map(o=><div className="billing-operation" key={o.id}><div><strong>{o.sku??({cancel:'Cancelar renovação',contact:'Contato de cobrança','payment-method':'Forma de pagamento'} as Record<string,string>)[o.kind]??'Alteração de plano'}</strong><p>{date(o.createdAt)} · {{prepared:'Preparando',processing:'Processando',uncertain:'Em conciliação',awaiting_payment:'Aguardando pagamento',completed:'Confirmada',failed:'Não concluída'}[o.state]}</p>{o.error&&<small>{o.error}</small>}</div>{o.url&&o.state!=='failed'&&<a className="btn" href={o.url} target="_blank" rel="noopener noreferrer">Abrir no Stripe</a>}</div>):<p className="muted">Nenhuma operação de cobrança registrada.</p>}</section>
+ <section className="panel panel-pad stack"><h3>Faturas</h3>{view.invoices.length?<div className="table-scroll"><table><thead><tr><th>Data</th><th>Valor pago</th><th>Estado</th><th>Fatura</th></tr></thead><tbody>{view.invoices.map(i=><tr key={i.id}><td>{date(i.createdAt)}</td><td>{money(i.amount)}</td><td>{i.status==='paid'?'Paga':i.status==='open'?'Em aberto':i.status}</td><td>{i.url?<a href={i.url} target="_blank" rel="noopener noreferrer">Ver fatura</a>:'—'}</td></tr>)}</tbody></table></div>:<p className="muted">Nenhuma fatura. Trial e piloto local não são pagamentos.</p>}</section></div>}
+ {review&&<BillingDialog review={review} client={client} onClose={()=>setReview(null)} onChanged={refresh}/>}{contact&&<BillingContact view={view} client={client} onClose={()=>setContact(false)} onChanged={refresh}/>}
+ {trial&&<Modal title="Ativar teste gratuito de 7 dias" onClose={()=>{if(!busy)setTrial(null);}}><div className="stack"><Notice>O teste usa as franquias Essential durante 7 dias. Não exige cartão e não cria cobrança automática. Uma ativação por workspace.</Notice><p>Ao terminar, seus dados e configurações permanecem; novas execuções exigem assinatura válida.</p><div className="form-actions"><Button disabled={busy} onClick={()=>setTrial(null)}>Voltar</Button><Button variant="primary" disabled={busy} onClick={()=>act(async()=>{setView(await client.trial(trial));setTrial(null);})}>{busy?'Ativando…':'Ativar por 7 dias'}</Button></div></div></Modal>}
+ </>}
+ </div>;
 }

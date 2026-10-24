@@ -12,7 +12,7 @@ test('new workspaces have no subscription; owner trial is exactly seven days and
  const initial=await withWorkspaceTransaction(u.p,async c=>(await c.query('SELECT state FROM app.billing_account')).rows[0]);assert.equal(initial.state,'inactive');
  const key=randomUUID(),trial=await beginTrial(u.p,key);assert.equal(trial.state,'trial');
  assert.equal(Date.parse(trial.period_end)-Date.parse(trial.period_start),7*86400000);
- assert.deepEqual(await beginTrial(u.p,key),trial);await assert.rejects(beginTrial(u.p),/TRIAL_ALREADY_USED/);
+ assert.deepEqual(await beginTrial(u.p,key),trial);await assert.rejects(beginTrial(u.p),{code:'TRIAL_ALREADY_USED'});
 });
 test('billing rows are tenant isolated and app SQL cannot mint credit or rewrite account status',async()=>{
  const a=await billingUser(),b=await billingUser();await beginTrial(a.p);

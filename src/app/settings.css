@@ -639,3 +639,12 @@
 .whatsapp-provider-benefits svg{width:15px;height:15px;flex-shrink:0;margin-top:3px;color:#00a775}
 .whatsapp-provider-benefits .caution svg{color:var(--primary,#ff6b00)}
 .whatsapp-provider-cards{margin-top:22px}
+.billing-page{max-width:1160px}
+.billing-balances{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.billing-balance{border:1px solid var(--border,#e2e5ed);border-radius:9px;padding:18px;overflow-wrap:anywhere}
+.billing-balance h4{margin:0 0 12px}.billing-balance p{margin:8px 0}.billing-balance small{color:var(--muted,#68758c)}
+.billing-pack-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.billing-pack{border:1px solid var(--border,#e2e5ed);border-radius:9px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
+.billing-operation{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--border,#e2e5ed)}
+.billing-operation p{margin:6px 0;color:var(--muted,#68758c)}.billing-review-total{font-size:26px}.billing-page .plan-price small{font-size:14px;font-weight:400}
+@media(max-width:1000px){.billing-balances,.billing-pack-grid{grid-template-columns:1fr}.billing-operation{flex-wrap:wrap}}

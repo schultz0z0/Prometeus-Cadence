@@ -35,7 +35,7 @@ test('generation reserves commercial quota, expired subscription denies the next
  const lease=await grantTestLease(u.p,job.id);await testAdmin(c=>c.query("UPDATE app.billing_account SET period_end=now()-interval '1 second' WHERE workspace_id=$1",[u.p.workspaceId]));let calls=0;
  await assert.rejects(performStep(lease,'new-expense','apify',{apifyRuns:1},async()=>{calls++;return {};}),/teste|assinatura|BILLING_REQUIRED/i);assert.equal(calls,0);
  const hold=await withLeasedTransaction(lease,async c=>(await c.query("SELECT sum(held)::int AS n FROM app.billing_allocation WHERE key=$1",['job:'+job.id])).rows[0].n);assert.equal(hold,5);
- const receipt=randomUUID();await withLeasedTransaction(lease,c=>ingestPage(c,lease,{receiptId:receipt,candidates:[{sourceRef:'late-result',name:'Already received',phone:'5511998877665'}],rejected:[],rawCount:1,nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:receipt,units:{candidates:1},costUsd:null,costKind:'unknown'}}));
+ const receipt=randomUUID();await withLeasedTransaction(lease,c=>ingestPage(c,lease,{receiptId:receipt,candidates:[{source:'MAPS',sourceRef:'late-result',name:'Already received',phone:'5511998877665'}],rejected:[],rawCount:1,nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:receipt,units:{candidates:1},costUsd:null,costKind:'unknown'}}));
  assert.equal((await readBilling(u.p)).balances.find(x=>x.unit==='extractions')?.consumed,1);
 });
 test('activating another cadence above capacity fails without truncating stored drafts',async()=>{

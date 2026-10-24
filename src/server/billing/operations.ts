@@ -75,6 +75,8 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
    await adapter.cancelSubscription(o.account.subscription_id,o.id);await update('completed',{id:o.account.subscription_id});
   }else if(o.kind==='payment-method'){
    const result=await adapter.paymentPortal(customer,o.id);await update('completed',{id:result.id,result:{url:stripeUrl(result.url,'portal')}});
+  }else if(o.kind==='contact'){
+   await adapter.updateCustomer(customer,o.proof.contact,o.id);await update('completed',{id:customer});
   }else if(o.kind==='upgrade'||o.kind==='downgrade'){
    const sub=await adapter.readSubscription(o.account.subscription_id),item=sub.items?.data?.[0];
    if(sub.customer!==customer||sub.status!=='active'||sub.items?.data?.length!==1||item?.quantity!==1)throw new StripeFailure(false);
