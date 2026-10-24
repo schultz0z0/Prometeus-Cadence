@@ -1,0 +1,118 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/settings/security".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/settings/security
+	2 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+	3 container
+		4 image CadenceFlow
+		5 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+		6 container
+			7 button Contatos
+			8 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			9 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			10 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			11 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+		12 container
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+		18 container
+			19 button LinkedIn Upgrade
+				59 text LinkedIn
+				60 text Upgrade
+			20 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+			21 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+			22 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+			23 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+			24 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+			25 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+			26 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+			27 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+		28 container
+			29 button Mensagens
+			30 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+			31 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+			61 button LinkedIn Upgrade
+				62 text LinkedIn
+				63 text Upgrade
+		33 link Description: Automações, Value: app.cadenceflow.pro/automations
+		34 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+		64 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+		43 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		44 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		65 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		66 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		45 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		46 text R [operator] [email]
+		47 button Sair
+	67 text Você está
+	68 text montando
+	69 text  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+	70 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+	48 container
+		49 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		50 text Segurança
+		51 button Description: Como funciona esta área, Help: Como funciona: Configurações: plano, avisos e time · 1 min
+		52 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			53 text Buscar…
+			54 text Ctrl K
+		55 button Abrir assistente
+		71 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		56 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		57 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		58 button Description: Ativar tema escuro, Help: Tema escuro
+	72 container
+		73 container Configurações
+			74 text CONTA
+			75 content list
+				76 link Description: Conta, Value: app.cadenceflow.pro/settings/account
+				77 link Description: Contexto de IA, Value: app.cadenceflow.pro/settings/context
+				78 link Description: Notificações, Value: app.cadenceflow.pro/settings/notifications
+				79 link Description: Membros, Value: app.cadenceflow.pro/settings/seats
+				80 link Description: Segurança, Value: app.cadenceflow.pro/settings/security
+				81 link Description: MCP, Value: app.cadenceflow.pro/settings/mcp
+				82 link Description: Meu plano, Value: app.cadenceflow.pro/settings/plan
+			83 text ENVIO
+			84 content list
+				85 link Description: Contas de e-mail, Value: app.cadenceflow.pro/settings/email
+				86 link Description: WhatsApp, Value: app.cadenceflow.pro/settings/whatsapp
+				87 link Description: Limites de disparo, Value: app.cadenceflow.pro/settings/dispatch-limits
+			88 text DADOS
+			89 content list
+				90 link Description: Contatos duplicados, Value: app.cadenceflow.pro/settings/dados
+				91 link Description: Privacidade, Value: app.cadenceflow.pro/settings/privacy
+			92 text INTEGRAÇÕES
+			93 content list
+				94 link Description: CRM e apps, Value: app.cadenceflow.pro/settings/apps
+				95 link Description: Webhooks e API, Value: app.cadenceflow.pro/settings/webhooks
+			96 button Como funciona esta área
+		97 heading Segurança, Value: 1
+			98 text Segurança
+		99 text Senha, autenticador e os dispositivos que confiam na sua conta
+		100 container
+			101 heading Senha, Value: 2
+				102 text Senha
+			103 text Mínimo de 8 caracteres. Depois de trocar, você continua logado neste navegador.
+			104 text Senha atual
+			105 text field (settable) Senha atual
+			106 button Mostrar senha
+			107 text Nova senha
+			108 text field (settable) Nova senha
+			109 button Mostrar senha
+			110 text Confirmar nova senha
+			111 text field (settable) Confirmar nova senha
+			112 button Mostrar senha
+			113 button (disabled) Trocar senha
+		114 container
+			115 heading Autenticador (2FA), Value: 2
+				116 text Autenticador (2FA)
+			117 text Google Authenticator, 1Password, Authy ou similar. Quando ativo, substitui o código por e-mail no login. Inativo
+		118 text Sem autenticador. No login, você recebe o código por e-mail a cada novo dispositivo.
+		119 button Ativar autenticador
+		120 container
+			121 heading Dispositivos confiáveis, Value: 2
+				122 text Dispositivos confiáveis
+			123 text Navegadores que não pedem código no login (válidos por 30 dias). Remova o que não for seu.
+		124 text Chrome  ·  Windows 10/11 este dispositivo [ip] Último uso  20/10/2026, 08:31 Expira  19/11/2026, 08:31
+
+The focused UI element is 1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/settings/security

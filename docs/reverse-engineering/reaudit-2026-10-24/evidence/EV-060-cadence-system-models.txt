@@ -1,0 +1,480 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/cadences".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/cadences
+	2 container
+		3 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+		4 image CadenceFlow
+		5 container
+			6 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+			7 button Contatos
+			8 container
+				9 link Description: Leads, Value: app.cadenceflow.pro/contacts
+				10 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+				11 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+				12 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+			18 button LinkedIn Upgrade
+				19 text LinkedIn
+				20 text Upgrade
+			21 container
+				22 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+				23 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+				24 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+				25 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+				26 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+				27 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+				28 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+				29 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+			30 button Mensagens
+			31 container
+				32 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+				33 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+				34 button LinkedIn Upgrade
+					35 text LinkedIn
+					36 text Upgrade
+			37 link Description: Automações, Value: app.cadenceflow.pro/automations
+			38 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+			39 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+			40 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		41 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		42 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		43 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		44 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		45 text R
+		46 text [operator]
+		47 text [email]
+		48 button Sair
+		49 text Você está  montando  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+		50 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+		51 text Disparos em Massa
+		52 button Description: Como funciona esta área, Help: Como funciona: Disparos em massa · 1 min
+		53 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			54 text Buscar…
+			55 text Ctrl K
+		56 button Abrir assistente
+		57 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		58 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		59 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		60 button Description: Ativar tema escuro, Help: Tema escuro
+		61 heading Cadências, Value: 1
+			62 text Cadências
+		63 text 1 cadência · 0 ativas
+		64 button Nova cadência
+		65 button (collapsed) Hoje 0 JÁ SAÍRAM 0 AINDA HOJE 0 FICAM PRA DEPOIS entender por quê, Secondary Actions: Expand
+			66 text Hoje
+			67 text 0
+			68 text JÁ SAÍRAM
+			69 text 0
+			70 text AINDA HOJE
+			71 text 0
+			72 text FICAM PRA DEPOIS
+			73 text entender por quê
+		74 search text field (settable)
+		75 pop up button (collapsed, settable) Description: Status, Value: Status: todas, Secondary Actions: Expand
+			76 menu
+				77 (selected) Status: todas
+				78 Ativas
+				79 Pausadas
+				80 Inativas
+				81 Concluídas
+				82 Rascunhos
+		83 pop up button (collapsed, settable) Description: Período das métricas, Value: Métricas: 30 dias, Secondary Actions: Expand
+			84 menu
+				85 Métricas: hoje
+				86 Métricas: 7 dias
+				87 (selected) Métricas: 30 dias
+				88 Métricas: 90 dias
+				89 Métricas: tudo
+		90 pop up button (collapsed, settable) Description: Ordenar, Value: Mais recentes, Secondary Actions: Expand
+			91 menu
+				92 (selected) Mais recentes
+				93 Mais antigas
+				94 Nome A–Z
+				95 Mais enviados
+				96 Mais respostas
+				97 Melhor taxa de resposta
+				98 Mais ativas hoje
+		99 button Filtros
+		100 Visualização
+			101 radio button Description: Lista, Value: 1
+			102 radio button Description: Cards, Value: 0
+		103 text Enviados
+		104 text 0
+		105 text 0 e-mail · 0 WhatsApp
+		106 text Respostas
+		107 text 0
+		108 text últimos 30 dias
+		109 text Abertura de e-mail
+		110 text —
+		111 text últimos 30 dias
+		112 text Hoje
+		113 text 0
+		114 text nenhuma régua rodou ainda
+		115 table
+			116 row
+				117 cell
+					118 text CADÊNCIA
+				119 cell
+					120 text LEADS
+				121 cell
+					122 text ENVIADOS
+				123 cell
+					124 text RESPONDERAM
+				125 cell
+					126 text ABERTURA
+				127 cell
+					128 text RETORNOS
+				129 cell
+					130 text HOJE
+				131 cell
+					132 text AÇÃO
+			133 row
+				134 cell
+					135 link Description: [existing configuration], Value: app.cadenceflow.pro/cadences/:id
+					136 text Rascunho [existing configuration]
+				137 cell
+					138 text 20
+				139 cell
+					140 text 0
+				141 cell
+					142 text 0
+					143 text —
+				144 cell
+					145 text —
+				146 cell
+					147 text 0
+				148 cell
+					149 text 0
+				150 cell
+					151 button Ativar
+					152 button Description: Editar fluxo de [existing configuration], Help: Editar fluxo
+					153 button Description: Arquivar [existing configuration], Help: Arquivar (pausa e tira da lista, sem apagar)
+					154 button Description: Excluir [existing configuration], Help: Excluir
+					155 link Description: Abrir, Value: app.cadenceflow.pro/cadences/:id
+		156 container
+			161 button Voltar
+			157 heading Modelos de cadência, Value: 2
+				158 text Modelos de cadência
+			159 text Estruturas prontas, escolhidas pelo que mais respondeu na plataforma. Veja os passos, use e ajuste o texto.
+			160 button Fechar
+			162 container
+				163 text field (settable)
+				164 content list
+					165 button Todos os modelos 20
+						166 text Todos os modelos
+						167 text 20
+					168 button Pra começar 4
+						169 text Pra começar
+						170 text 4
+					171 button Por segmento 7
+						172 text Por segmento
+						173 text 7
+					174 button Por momento 7
+						175 text Por momento
+						176 text 7
+					177 button Por canal 2
+						178 text Por canal
+						179 text 2
+			180 heading Todos os modelos, Value: 3
+				181 text Todos os modelos
+			182 text Cada modelo mostra a resposta medida na plataforma. Clique pra ver os passos.
+			183 button 6 toques · 12 dias Pra começar B2B completo, e-mail + WhatsApp A estrutura que mais respondeu na plataforma: 6 toques em 12 dias, alternando e-mail e WhatsApp, terminando com uma despedida honesta. por CadenceFlow · 8,4% de resposta medida 5 a 13 respostas 0 a 2 reuniões a cada 100 contatos ver os passos Usar modelo
+				184 text 6
+				185 text  toques ·
+				186 text 12
+				187 text  dias
+				188 text Pra começar
+				189 heading B2B completo, e-mail + WhatsApp, Value: 4
+					190 text B2B completo, e-mail + WhatsApp
+				191 text A estrutura que mais respondeu na plataforma: 6 toques em 12 dias, alternando e-mail e WhatsApp, terminando com uma despedida honesta.
+				192 container
+					193 text por CadenceFlow  ·  8,4 %  de resposta medida
+				194 container A cada 100 contatos: 5 a 13 respostas e 0 a 2 reuniões. • modelo com 8% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 6 toques em 2 canais (multicanal rende mais): tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					195 text 5 a 13  respostas 0 a 2 reuniões a cada 100 contatos
+				196 text ver os passos
+				197 button Usar modelo
+			198 button 5 toques · 14 dias Pra começar B2B só e-mail, 5 toques Quando você só tem e-mail. Cinco mensagens curtas em 14 dias, cada uma com um argumento diferente. por CadenceFlow · 3,2% de resposta medida 1 a 5 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				199 text 5
+				200 text  toques ·
+				201 text 14
+				202 text  dias
+				203 text Pra começar
+				204 heading B2B só e-mail, 5 toques, Value: 4
+					205 text B2B só e-mail, 5 toques
+				206 text Quando você só tem e-mail. Cinco mensagens curtas em 14 dias, cada uma com um argumento diferente.
+				207 container
+					208 text por CadenceFlow  ·  3,2 %  de resposta medida
+				209 container A cada 100 contatos: 1 a 5 respostas e 0 a 1 reunião. • modelo com 3% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 5 toques só por e-mail: tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					210 text 1 a 5  respostas 0 a 1 reunião a cada 100 contatos
+				211 text ver os passos
+				212 button Usar modelo
+			213 button 4 toques · 10 dias Pra começar WhatsApp com pergunta, 4 toques Nada de pitch: cada mensagem é uma pergunta curta sobre o negócio do lead. Funciona muito bem com lead do Google Maps. por CadenceFlow · 5,3% de resposta medida 3 a 8 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				214 text 4
+				215 text  toques ·
+				216 text 10
+				217 text  dias
+				218 text Pra começar
+				219 heading WhatsApp com pergunta, 4 toques, Value: 4
+					220 text WhatsApp com pergunta, 4 toques
+				221 text Nada de pitch: cada mensagem é uma pergunta curta sobre o negócio do lead. Funciona muito bem com lead do Google Maps.
+				222 container
+					223 text por CadenceFlow  ·  5,3 %  de resposta medida
+				224 container A cada 100 contatos: 3 a 8 respostas e 0 a 1 reunião. • modelo com 5% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 4 toques só por WhatsApp: régua curta responde menos • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					225 text 3 a 8  respostas 0 a 1 reunião a cada 100 contatos
+				226 text ver os passos
+				227 button Usar modelo
+			228 button 5 toques · 10 dias Pra começar Negócio local: WhatsApp primeiro Pra clínica, loja, restaurante, salão: o WhatsApp vai no dia 1, o e-mail dá suporte. Leads do Google Maps. por CadenceFlow · 6,4% de resposta medida 3 a 10 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				229 text 5
+				230 text  toques ·
+				231 text 10
+				232 text  dias
+				233 text Pra começar
+				234 heading Negócio local: WhatsApp primeiro, Value: 4
+					235 text Negócio local: WhatsApp primeiro
+				236 text Pra clínica, loja, restaurante, salão: o WhatsApp vai no dia 1, o e-mail dá suporte. Leads do Google Maps.
+				237 container
+					238 text por CadenceFlow  ·  6,4 %  de resposta medida
+				239 container A cada 100 contatos: 3 a 10 respostas e 0 a 1 reunião. • modelo com 6% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 5 toques em 2 canais (multicanal rende mais): tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					240 text 3 a 10  respostas 0 a 1 reunião a cada 100 contatos
+				241 text ver os passos
+				242 button Usar modelo
+			243 button 6 toques · 12 dias Por segmento Software / SaaS para empresas Automação, sistema, plataforma: abre com a dor do processo manual, prova com custo de time e fecha com despedida. por CadenceFlow · 8,4% de resposta medida 5 a 13 respostas 0 a 2 reuniões a cada 100 contatos ver os passos Usar modelo
+				244 text 6
+				245 text  toques ·
+				246 text 12
+				247 text  dias
+				248 text Por segmento
+				249 heading Software / SaaS para empresas, Value: 4
+					250 text Software / SaaS para empresas
+				251 text Automação, sistema, plataforma: abre com a dor do processo manual, prova com custo de time e fecha com despedida.
+				252 container
+					253 text por CadenceFlow  ·  8,4 %  de resposta medida
+				254 container A cada 100 contatos: 5 a 13 respostas e 0 a 2 reuniões. • modelo com 8% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 6 toques em 2 canais (multicanal rende mais): tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					255 text 5 a 13  respostas 0 a 2 reuniões a cada 100 contatos
+				256 text ver os passos
+				257 button Usar modelo
+			258 button 6 toques · 12 dias Por segmento Agência / serviços de marketing Fala de resultado, não de serviço: tráfego, site, conteúdo viram 'mais clientes' na conversa. por CadenceFlow · 4,1% de resposta medida 2 a 7 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				259 text 6
+				260 text  toques ·
+				261 text 12
+				262 text  dias
+				263 text Por segmento
+				264 heading Agência / serviços de marketing, Value: 4
+					265 text Agência / serviços de marketing
+				266 text Fala de resultado, não de serviço: tráfego, site, conteúdo viram 'mais clientes' na conversa.
+				267 container
+					268 text por CadenceFlow  ·  4,1 %  de resposta medida
+				269 container A cada 100 contatos: 2 a 7 respostas e 0 a 1 reunião. • modelo com 4% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 6 toques em 2 canais (multicanal rende mais): tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					270 text 2 a 7  respostas 0 a 1 reunião a cada 100 contatos
+				271 text ver os passos
+				272 button Usar modelo
+			273 button 6 toques · 16 dias Por segmento Indústria e fábricas Ciclo mais longo: 6 toques em 16 dias, com o WhatsApp só depois de dois e-mails. por CadenceFlow · 4,1% de resposta medida 2 a 7 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				274 text 6
+				275 text  toques ·
+				276 text 16
+				277 text  dias
+				278 text Por segmento
+				279 heading Indústria e fábricas, Value: 4
+					280 text Indústria e fábricas
+				281 text Ciclo mais longo: 6 toques em 16 dias, com o WhatsApp só depois de dois e-mails.
+				282 container
+					283 text por CadenceFlow  ·  4,1 %  de resposta medida
+				284 container A cada 100 contatos: 2 a 7 respostas e 0 a 1 reunião. • modelo com 4% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 6 toques em 2 canais (multicanal rende mais): tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					285 text 2 a 7  respostas 0 a 1 reunião a cada 100 contatos
+				286 text ver os passos
+				287 button Usar modelo
+			288 button 7 toques · 12 dias Por segmento Varejo e lojas Sete toques rápidos: dono de loja responde WhatsApp e e-mail curto, não texto longo. por CadenceFlow · 2,6% de resposta medida 1 a 4 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				289 text 7
+				290 text  toques ·
+				291 text 12
+				292 text  dias
+				293 text Por segmento
+				294 heading Varejo e lojas, Value: 4
+					295 text Varejo e lojas
+				296 text Sete toques rápidos: dono de loja responde WhatsApp e e-mail curto, não texto longo.
+				297 container
+					298 text por CadenceFlow  ·  2,6 %  de resposta medida
+				299 container A cada 100 contatos: 1 a 4 respostas e 0 a 1 reunião. • modelo com 3% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 7 toques em 2 canais (multicanal rende mais): régua longa responde mais, com a despedida honesta • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					300 text 1 a 4  respostas 0 a 1 reunião a cada 100 contatos
+				301 text ver os passos
+				302 button Usar modelo
+			303 button 6 toques · 14 dias Por segmento Clínicas e consultórios Fisioterapia, odontologia, estética: pergunta sobre agenda vazia no dia 1 e conta simples no dia 4. por CadenceFlow · 6,4% de resposta medida 3 a 10 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				304 text 6
+				305 text  toques ·
+				306 text 14
+				307 text  dias
+				308 text Por segmento
+				309 heading Clínicas e consultórios, Value: 4
+					310 text Clínicas e consultórios
+				311 text Fisioterapia, odontologia, estética: pergunta sobre agenda vazia no dia 1 e conta simples no dia 4.
+				312 container
+					313 text por CadenceFlow  ·  6,4 %  de resposta medida
+				314 container A cada 100 contatos: 3 a 10 respostas e 0 a 1 reunião. • modelo com 6% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 6 toques em 2 canais (multicanal rende mais): tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					315 text 3 a 10  respostas 0 a 1 reunião a cada 100 contatos
+				316 text ver os passos
+				317 button Usar modelo
+			318 button 5 toques · 14 dias Por segmento Contabilidade / financeiro (fala com o financeiro@) Quando o e-mail da lista é o financeiro@ ou contabil@: o texto pede o encaminhamento certo e fala a língua de quem paga conta. por CadenceFlow · 3,2% de resposta medida 1 a 5 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				319 text 5
+				320 text  toques ·
+				321 text 14
+				322 text  dias
+				323 text Por segmento
+				324 heading Contabilidade / financeiro (fala com o financeiro@), Value: 4
+					325 text Contabilidade / financeiro (fala com o financeiro@)
+				326 text Quando o e-mail da lista é o financeiro@ ou contabil@: o texto pede o encaminhamento certo e fala a língua de quem paga conta.
+				327 container
+					328 text por CadenceFlow  ·  3,2 %  de resposta medida
+				329 container A cada 100 contatos: 1 a 5 respostas e 0 a 1 reunião. • modelo com 3% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 5 toques só por e-mail: tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					330 text 1 a 5  respostas 0 a 1 reunião a cada 100 contatos
+				331 text ver os passos
+				332 button Usar modelo
+			333 button 5 toques · 21 dias Por segmento Imobiliárias e construtoras Ciclo espaçado (até 3 semanas) e argumento de captação de imóveis e leads. por CadenceFlow 9 a 35 respostas 0 a 3 reuniões a cada 100 contatos ver os passos Usar modelo
+				334 text 5
+				335 text  toques ·
+				336 text 21
+				337 text  dias
+				338 text Por segmento
+				339 heading Imobiliárias e construtoras, Value: 4
+					340 text Imobiliárias e construtoras
+				341 text Ciclo espaçado (até 3 semanas) e argumento de captação de imóveis e leads.
+				342 text por CadenceFlow
+				343 container A cada 100 contatos: 9 a 35 respostas e 0 a 3 reuniões. • lista sem origem conhecida: resposta na média da plataforma • 5 toques em 2 canais (multicanal rende mais): tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: média da plataforma · confiança baixa. Estimativa, não promessa.
+					344 text 9 a 35  respostas 0 a 3 reuniões a cada 100 contatos
+				345 text ver os passos
+				346 button Usar modelo
+			347 button 5 toques · 5 dias Por momento Lead que pediu contato, responder em 1 hora Formulário, WhatsApp, indicação: o primeiro toque sai no mesmo dia, pelos dois canais, e a régua é curta. por CadenceFlow 9 a 35 respostas 0 a 3 reuniões a cada 100 contatos ver os passos Usar modelo
+				348 text 5
+				349 text  toques ·
+				350 text 5
+				351 text  dias
+				352 text Por momento
+				353 heading Lead que pediu contato, responder em 1 hora, Value: 4
+					354 text Lead que pediu contato, responder em 1 hora
+				355 text Formulário, WhatsApp, indicação: o primeiro toque sai no mesmo dia, pelos dois canais, e a régua é curta.
+				356 text por CadenceFlow
+				357 container A cada 100 contatos: 9 a 35 respostas e 0 a 3 reuniões. • lista sem origem conhecida: resposta na média da plataforma • 5 toques em 2 canais (multicanal rende mais): tamanho ideal de régua • equipe respondendo: 5% das respostas viram reunião Base: média da plataforma · confiança baixa. Estimativa, não promessa.
+					358 text 9 a 35  respostas 0 a 3 reuniões a cada 100 contatos
+				359 text ver os passos
+				360 button Usar modelo
+			361 button 4 toques · 10 dias Por momento Proposta enviada e sem resposta Quatro toques em 10 dias pra destravar uma proposta: dúvida, prazo, alternativa e fechamento. por CadenceFlow 7 a 27 respostas 0 a 3 reuniões a cada 100 contatos ver os passos Usar modelo
+				362 text 4
+				363 text  toques ·
+				364 text 10
+				365 text  dias
+				366 text Por momento
+				367 heading Proposta enviada e sem resposta, Value: 4
+					368 text Proposta enviada e sem resposta
+				369 text Quatro toques em 10 dias pra destravar uma proposta: dúvida, prazo, alternativa e fechamento.
+				370 text por CadenceFlow
+				371 container A cada 100 contatos: 6 a 27 respostas e 0 a 3 reuniões. • lista sem origem conhecida: resposta na média da plataforma • 4 toques em 2 canais (multicanal rende mais): régua curta responde menos • equipe respondendo: 5% das respostas viram reunião Base: média da plataforma · confiança baixa. Estimativa, não promessa.
+					372 text 7 a 27  respostas 0 a 3 reuniões a cada 100 contatos
+				373 text ver os passos
+				374 button Usar modelo
+			375 button 3 toques · 8 dias Por momento Depois de um evento ou feira Três toques enquanto a lembrança está fresca: no dia seguinte, no 4º e no 8º. por CadenceFlow 7 a 27 respostas 0 a 3 reuniões a cada 100 contatos ver os passos Usar modelo
+				376 text 3
+				377 text  toques ·
+				378 text 8
+				379 text  dias
+				380 text Por momento
+				381 heading Depois de um evento ou feira, Value: 4
+					382 text Depois de um evento ou feira
+				383 text Três toques enquanto a lembrança está fresca: no dia seguinte, no 4º e no 8º.
+				384 text por CadenceFlow
+				385 container A cada 100 contatos: 6 a 27 respostas e 0 a 3 reuniões. • lista sem origem conhecida: resposta na média da plataforma • 3 toques em 2 canais (multicanal rende mais): régua curta responde menos • equipe respondendo: 5% das respostas viram reunião Base: média da plataforma · confiança baixa. Estimativa, não promessa.
+					386 text 7 a 27  respostas 0 a 3 reuniões a cada 100 contatos
+				387 text ver os passos
+				388 button Usar modelo
+			389 button 4 toques · 14 dias Por momento Reconquista de cliente que saiu Sem cobrança: reconhece o motivo, mostra o que mudou e oferece uma volta fácil. por CadenceFlow 7 a 27 respostas 0 a 3 reuniões a cada 100 contatos ver os passos Usar modelo
+				390 text 4
+				391 text  toques ·
+				392 text 14
+				393 text  dias
+				394 text Por momento
+				395 heading Reconquista de cliente que saiu, Value: 4
+					396 text Reconquista de cliente que saiu
+				397 text Sem cobrança: reconhece o motivo, mostra o que mudou e oferece uma volta fácil.
+				398 text por CadenceFlow
+				399 container A cada 100 contatos: 6 a 27 respostas e 0 a 3 reuniões. • lista sem origem conhecida: resposta na média da plataforma • 4 toques em 2 canais (multicanal rende mais): régua curta responde menos • equipe respondendo: 5% das respostas viram reunião Base: média da plataforma · confiança baixa. Estimativa, não promessa.
+					400 text 7 a 27  respostas 0 a 3 reuniões a cada 100 contatos
+				401 text ver os passos
+				402 button Usar modelo
+			403 button 3 toques · 8 dias Por momento Reengajamento, quem não respondeu há 60 dias Três toques novos, com ângulo diferente do primeiro contato. Use a lista de quem concluiu uma régua sem responder. por CadenceFlow · 1,7% de resposta medida 1 a 3 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				404 text 3
+				405 text  toques ·
+				406 text 8
+				407 text  dias
+				408 text Por momento
+				409 heading Reengajamento, quem não respondeu há 60 dias, Value: 4
+					410 text Reengajamento, quem não respondeu há 60 dias
+				411 text Três toques novos, com ângulo diferente do primeiro contato. Use a lista de quem concluiu uma régua sem responder.
+				412 container
+					413 text por CadenceFlow  ·  1,7 %  de resposta medida
+				414 container A cada 100 contatos: 1 a 3 respostas e 0 a 1 reunião. • modelo com 2% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 3 toques em 2 canais (multicanal rende mais): régua curta responde menos • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					415 text 1 a 3  respostas 0 a 1 reunião a cada 100 contatos
+				416 text ver os passos
+				417 button Usar modelo
+			418 button 3 toques · 7 dias Por momento Base de clientes, oferta nova Pra quem já compra de você: anuncia algo novo em 3 toques, sem parecer disparo em massa. por CadenceFlow 7 a 27 respostas 0 a 3 reuniões a cada 100 contatos ver os passos Usar modelo
+				419 text 3
+				420 text  toques ·
+				421 text 7
+				422 text  dias
+				423 text Por momento
+				424 heading Base de clientes, oferta nova, Value: 4
+					425 text Base de clientes, oferta nova
+				426 text Pra quem já compra de você: anuncia algo novo em 3 toques, sem parecer disparo em massa.
+				427 text por CadenceFlow
+				428 container A cada 100 contatos: 6 a 27 respostas e 0 a 3 reuniões. • lista sem origem conhecida: resposta na média da plataforma • 3 toques em 2 canais (multicanal rende mais): régua curta responde menos • equipe respondendo: 5% das respostas viram reunião Base: média da plataforma · confiança baixa. Estimativa, não promessa.
+					429 text 7 a 27  respostas 0 a 3 reuniões a cada 100 contatos
+				430 text ver os passos
+				431 button Usar modelo
+			432 button 3 toques · 8 dias Por momento Indicação ou parceria Quando alguém te indicou ou quando você quer propor parceria: o nome de quem indicou vai no assunto. por CadenceFlow 7 a 27 respostas 0 a 3 reuniões a cada 100 contatos ver os passos Usar modelo
+				433 text 3
+				434 text  toques ·
+				435 text 8
+				436 text  dias
+				437 text Por momento
+				438 heading Indicação ou parceria, Value: 4
+					439 text Indicação ou parceria
+				440 text Quando alguém te indicou ou quando você quer propor parceria: o nome de quem indicou vai no assunto.
+				441 text por CadenceFlow
+				442 container A cada 100 contatos: 6 a 27 respostas e 0 a 3 reuniões. • lista sem origem conhecida: resposta na média da plataforma • 3 toques em 2 canais (multicanal rende mais): régua curta responde menos • equipe respondendo: 5% das respostas viram reunião Base: média da plataforma · confiança baixa. Estimativa, não promessa.
+					443 text 7 a 27  respostas 0 a 3 reuniões a cada 100 contatos
+				444 text ver os passos
+				445 button Usar modelo
+			446 button 3 toques · 7 dias Por canal Só WhatsApp, 3 toques leves Versão curta pra quem tem só o WhatsApp ligado e lista pequena. por CadenceFlow · 5,3% de resposta medida 3 a 8 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				447 text 3
+				448 text  toques ·
+				449 text 7
+				450 text  dias
+				451 text Por canal
+				452 heading Só WhatsApp, 3 toques leves, Value: 4
+					453 text Só WhatsApp, 3 toques leves
+				454 text Versão curta pra quem tem só o WhatsApp ligado e lista pequena.
+				455 container
+					456 text por CadenceFlow  ·  5,3 %  de resposta medida
+				457 container A cada 100 contatos: 3 a 8 respostas e 0 a 1 reunião. • modelo com 5% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 3 toques só por WhatsApp: régua curta responde menos • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					458 text 3 a 8  respostas 0 a 1 reunião a cada 100 contatos
+				459 text ver os passos
+				460 button Usar modelo
+			461 button 3 toques · 7 dias Por canal Só e-mail, 3 toques curtos Pra lista pequena e bem escolhida: três e-mails curtos, em texto simples, em uma semana. por CadenceFlow · 2,2% de resposta medida 1 a 4 respostas 0 a 1 reunião a cada 100 contatos ver os passos Usar modelo
+				462 text 3
+				463 text  toques ·
+				464 text 7
+				465 text  dias
+				466 text Por canal
+				467 heading Só e-mail, 3 toques curtos, Value: 4
+					468 text Só e-mail, 3 toques curtos
+				469 text Pra lista pequena e bem escolhida: três e-mails curtos, em texto simples, em uma semana.
+				470 container
+					471 text por CadenceFlow  ·  2,2 %  de resposta medida
+				472 container A cada 100 contatos: 1 a 4 respostas e 0 a 1 reunião. • modelo com 2% de resposta medida na plataforma • lista sem origem conhecida: resposta na média da plataforma • 3 toques só por e-mail: régua curta responde menos • equipe respondendo: 5% das respostas viram reunião Base: modelo medido na plataforma · confiança baixa. Estimativa, não promessa.
+					473 text 1 a 4  respostas 0 a 1 reunião a cada 100 contatos
+				474 text ver os passos
+				475 button Usar modelo
+			476 text Os modelos são do sistema e não mudam. O que você criar a partir deles é seu.
+			477 button Criar do zero
+
+The focused UI element is 1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/cadences

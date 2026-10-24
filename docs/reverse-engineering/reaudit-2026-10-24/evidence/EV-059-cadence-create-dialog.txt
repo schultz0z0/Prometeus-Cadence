@@ -1,0 +1,176 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/cadences".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/cadences
+	2 container
+		3 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+		4 image CadenceFlow
+		5 container
+			6 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+			7 button Contatos
+			8 container
+				9 link Description: Leads, Value: app.cadenceflow.pro/contacts
+				10 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+				11 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+				12 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+			18 button LinkedIn Upgrade
+				19 text LinkedIn
+				20 text Upgrade
+			21 container
+				22 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+				23 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+				24 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+				25 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+				26 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+				27 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+				28 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+				29 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+			30 button Mensagens
+			31 container
+				32 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+				33 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+				34 button LinkedIn Upgrade
+					35 text LinkedIn
+					36 text Upgrade
+			37 link Description: Automações, Value: app.cadenceflow.pro/automations
+			38 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+			39 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+			40 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		41 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		42 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		43 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		44 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		45 text R
+		46 text [operator]
+		47 text [email]
+		48 button Sair
+		49 text Você está  montando  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+		50 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+		51 text Disparos em Massa
+		52 button Description: Como funciona esta área, Help: Como funciona: Disparos em massa · 1 min
+		53 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			54 text Buscar…
+			55 text Ctrl K
+		56 button Abrir assistente
+		57 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		58 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		59 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		60 button Description: Ativar tema escuro, Help: Tema escuro
+		61 heading Cadências, Value: 1
+			62 text Cadências
+		63 text 1 cadência · 0 ativas
+		64 button Nova cadência
+		65 button (collapsed) Hoje 0 JÁ SAÍRAM 0 AINDA HOJE 0 FICAM PRA DEPOIS entender por quê, Secondary Actions: Expand
+			66 text Hoje
+			67 text 0
+			68 text JÁ SAÍRAM
+			69 text 0
+			70 text AINDA HOJE
+			71 text 0
+			72 text FICAM PRA DEPOIS
+			73 text entender por quê
+		74 search text field (settable)
+		75 pop up button (collapsed, settable) Description: Status, Value: Status: todas, Secondary Actions: Expand
+			76 menu
+				77 (selected) Status: todas
+				78 Ativas
+				79 Pausadas
+				80 Inativas
+				81 Concluídas
+				82 Rascunhos
+		83 pop up button (collapsed, settable) Description: Período das métricas, Value: Métricas: 30 dias, Secondary Actions: Expand
+			84 menu
+				85 Métricas: hoje
+				86 Métricas: 7 dias
+				87 (selected) Métricas: 30 dias
+				88 Métricas: 90 dias
+				89 Métricas: tudo
+		90 pop up button (collapsed, settable) Description: Ordenar, Value: Mais recentes, Secondary Actions: Expand
+			91 menu
+				92 (selected) Mais recentes
+				93 Mais antigas
+				94 Nome A–Z
+				95 Mais enviados
+				96 Mais respostas
+				97 Melhor taxa de resposta
+				98 Mais ativas hoje
+		99 button Filtros
+		100 Visualização
+			101 radio button Description: Lista, Value: 1
+			102 radio button Description: Cards, Value: 0
+		103 text Enviados
+		104 text 0
+		105 text 0 e-mail · 0 WhatsApp
+		106 text Respostas
+		107 text 0
+		108 text últimos 30 dias
+		109 text Abertura de e-mail
+		110 text —
+		111 text últimos 30 dias
+		112 text Hoje
+		113 text 0
+		114 text nenhuma régua rodou ainda
+		115 table
+			116 row
+				117 cell
+					118 text CADÊNCIA
+				119 cell
+					120 text LEADS
+				121 cell
+					122 text ENVIADOS
+				123 cell
+					124 text RESPONDERAM
+				125 cell
+					126 text ABERTURA
+				127 cell
+					128 text RETORNOS
+				129 cell
+					130 text HOJE
+				131 cell
+					132 text AÇÃO
+			133 row
+				134 cell
+					135 link Description: [existing configuration], Value: app.cadenceflow.pro/cadences/:id
+					136 text Rascunho [existing configuration]
+				137 cell
+					138 text 20
+				139 cell
+					140 text 0
+				141 cell
+					142 text 0
+					143 text —
+				144 cell
+					145 text —
+				146 cell
+					147 text 0
+				148 cell
+					149 text 0
+				150 cell
+					151 button Ativar
+					152 button Description: Editar fluxo de [existing configuration], Help: Editar fluxo
+					153 button Description: Arquivar [existing configuration], Help: Arquivar (pausa e tira da lista, sem apagar)
+					154 button Description: Excluir [existing configuration], Help: Excluir
+					155 link Description: Abrir, Value: app.cadenceflow.pro/cadences/:id
+		156 container
+			157 heading Criar cadência, Value: 2
+				158 text Criar cadência
+			159 text Uma cadência é a sequência de mensagens (e-mail, WhatsApp) que cada lead recebe, no ritmo que você define. Como quer começar?
+			160 button Fechar
+			161 button Assistida por IA RECOMENDADO Diga o objetivo e a lista. A IA escreve opções multicanal (e-mail e WhatsApp) a partir do seu Contexto de IA, com o retorno esperado de cada uma.
+				162 text Assistida por IA
+				163 text RECOMENDADO
+				164 text Diga o objetivo e a lista. A IA escreve opções multicanal (e-mail e WhatsApp) a partir do seu Contexto de IA, com o retorno esperado de cada uma.
+			165 button Modelos 20 estruturas prontas, escolhidas pelo que mais respondeu na plataforma.
+				166 text Modelos
+				167 text 20 estruturas prontas, escolhidas pelo que mais respondeu na plataforma.
+			168 button Clonar Copie uma cadência sua que já funciona e mude só o que precisar.
+				169 text Clonar
+				170 text Copie uma cadência sua que já funciona e mude só o que precisar.
+			171 button Do zero Editor em branco: você escreve cada passo e escolhe o ritmo.
+				172 text Do zero
+				173 text Editor em branco: você escreve cada passo e escolhe o ritmo.
+
+The focused UI element is 160 button Fechar

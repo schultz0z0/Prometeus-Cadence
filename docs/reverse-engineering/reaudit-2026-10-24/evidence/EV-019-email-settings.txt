@@ -1,0 +1,97 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/settings/email".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/settings/email
+	2 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+	3 container
+		4 image CadenceFlow
+		5 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+		6 container
+			7 button Contatos
+			8 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			9 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			10 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			11 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+		12 container
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+		18 container
+			19 button LinkedIn Upgrade
+				20 text LinkedIn
+				21 text Upgrade
+			22 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+			23 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+			24 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+			25 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+			26 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+			27 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+			28 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+			29 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+		30 container
+			31 button Mensagens
+			32 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+			33 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+			34 button LinkedIn Upgrade
+				35 text LinkedIn
+				36 text Upgrade
+		37 link Description: Automações, Value: app.cadenceflow.pro/automations
+		38 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+		39 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+		40 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		41 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		42 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		43 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		44 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		45 text R [operator] [email]
+		46 button Sair
+	47 text Você está
+	48 text montando
+	49 text  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+	50 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+	51 container
+		52 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		53 text Contas de e-mail
+		54 button Description: Como funciona esta área, Help: Como funciona: Canais: e-mail e WhatsApp · 1 min
+		55 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			56 text Buscar…
+			57 text Ctrl K
+		58 button Abrir assistente
+		59 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		60 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		61 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		62 button Description: Ativar tema escuro, Help: Tema escuro
+	63 container
+		64 container Configurações
+			65 text CONTA
+			66 content list
+				67 link Description: Conta, Value: app.cadenceflow.pro/settings/account
+				68 link Description: Contexto de IA, Value: app.cadenceflow.pro/settings/context
+				69 link Description: Notificações, Value: app.cadenceflow.pro/settings/notifications
+				70 link Description: Membros, Value: app.cadenceflow.pro/settings/seats
+				71 link Description: Segurança, Value: app.cadenceflow.pro/settings/security
+				72 link Description: MCP, Value: app.cadenceflow.pro/settings/mcp
+				73 link Description: Meu plano, Value: app.cadenceflow.pro/settings/plan
+			74 text ENVIO
+			75 content list
+				76 link Description: Contas de e-mail, Value: app.cadenceflow.pro/settings/email
+				77 link Description: WhatsApp, Value: app.cadenceflow.pro/settings/whatsapp
+				78 link Description: Limites de disparo, Value: app.cadenceflow.pro/settings/dispatch-limits
+			79 text DADOS
+			80 content list
+				81 link Description: Contatos duplicados, Value: app.cadenceflow.pro/settings/dados
+				82 link Description: Privacidade, Value: app.cadenceflow.pro/settings/privacy
+			83 text INTEGRAÇÕES
+			84 content list
+				85 link Description: CRM e apps, Value: app.cadenceflow.pro/settings/apps
+				86 link Description: Webhooks e API, Value: app.cadenceflow.pro/settings/webhooks
+			87 button Como funciona esta área
+		88 heading Contas de e-mail, Value: 1
+			89 text Contas de e-mail
+		90 text Cada caixa manda  80 e-mails por dia com segurança, 100 no máximo ; quer mais volume, conecte mais caixas, em mais de um domínio.
+		91 link Description: Quantas caixas preciso? Guia de escala →, Value: cadenceflow.pro/central-de-ajuda/estrategia-de-caixas
+		92 button Conectar e-mail
+		93 text Nenhuma conta de email configurada Adicione uma conta para enviar emails pelas cadências
+		94 button Adicionar Conta
+
+The focused UI element is 1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/settings/email

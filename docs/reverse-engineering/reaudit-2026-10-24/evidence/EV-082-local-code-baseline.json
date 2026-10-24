@@ -1,0 +1,463 @@
+{
+  "revision": "a63161f",
+  "branch": "codex/billing-06",
+  "kind": "local source inspection, not new runtime test",
+  "entries": [
+    {
+      "path": "src/modules/settings/plan.tsx",
+      "sha256": "acfe2959c5a99a696e7ed4bd31b5cd0bfae76d05279972a48c911ef33eebe97e",
+      "lineCount": 145,
+      "landmarks": [
+        {
+          "line": 5,
+          "text": "export function Plan() {"
+        },
+        {
+          "line": 38,
+          "text": "<h2>Workspace de demonstração</h2>"
+        }
+      ]
+    },
+    {
+      "path": "src/modules/settings/security.tsx",
+      "sha256": "00380cd68e86499e1dec73737682b3772ac9eeb48f3d8628f431129cf135bd88",
+      "lineCount": 145,
+      "landmarks": [
+        {
+          "line": 15,
+          "text": "export function Security() {"
+        }
+      ]
+    },
+    {
+      "path": "src/modules/settings/settings-layout.tsx",
+      "sha256": "77e3f7340199610e848aabd827afaffd2ad3a0b3a3ee5aa08d1ccb8ba117ed75",
+      "lineCount": 204,
+      "landmarks": [
+        {
+          "line": 137,
+          "text": "? \"Autenticação ainda não integrada\""
+        },
+        {
+          "line": 157,
+          "text": "export function SettingsLayout({ section = \"account\" }: { section?: string }) {"
+        }
+      ]
+    },
+    {
+      "path": "src/modules/settings/account.tsx",
+      "sha256": "b30999459b7889b22b0dc51b55b3da15466659730abb7c414a8502fea35f723f",
+      "lineCount": 193,
+      "landmarks": [
+        {
+          "line": 8,
+          "text": "export function Account() {"
+        },
+        {
+          "line": 52,
+          "text": "<small>{identity?.user.email ?? \"Demonstração local\"}</small>"
+        },
+        {
+          "line": 167,
+          "text": "Preferências pessoais. O envio depende da futura integração de e-mail."
+        }
+      ]
+    },
+    {
+      "path": "src/modules/settings/members.tsx",
+      "sha256": "96ce7106fbd58e78e8e9b86aec8ebebcbca7ce616978c01999338be9f2abddfd",
+      "lineCount": 175,
+      "landmarks": [
+        {
+          "line": 18,
+          "text": "export function Members() {"
+        }
+      ]
+    },
+    {
+      "path": "src/modules/settings/integrations.tsx",
+      "sha256": "0548f72d996109cd1652f74da57a0a24b8275dbd74934add90c1bc206dc548fe",
+      "lineCount": 69,
+      "landmarks": [
+        {
+          "line": 6,
+          "text": "export function Integrations() {"
+        },
+        {
+          "line": 59,
+          "text": "{selected==='Apollo'?'A configuração de prospecção é administrada no ambiente seguro. Consulte o status dos provedores acima; esta tela não recebe chaves.':`O adaptador de ${selected} ainda não foi integrado. Não informe chaves ou credenciais nesta tela.`}"
+        }
+      ]
+    },
+    {
+      "path": "src/modules/settings/linkedin-sdr.tsx",
+      "sha256": "eb033ba755b8b777f404d68e777a06d1fdb4c8ec049962498bbeb46bb2738fe3",
+      "lineCount": 173,
+      "landmarks": [
+        {
+          "line": 13,
+          "text": "export function LinkedinSdr({"
+        },
+        {
+          "line": 116,
+          "text": "? \"Ex.: qualificar quem pedir uma demonstração\""
+        }
+      ]
+    },
+    {
+      "path": "src/modules/prospecting/enrichment.tsx",
+      "sha256": "79e125ca189b2ff6d378727076798a0cd37fc76e5c6b5eef8f8bd148e395e74c",
+      "lineCount": 119,
+      "landmarks": [
+        {
+          "line": 13,
+          "text": "export function Enrichment() {"
+        },
+        {
+          "line": 25,
+          "text": "actions={<Badge>Demonstração · nenhum crédito disponível</Badge>}"
+        },
+        {
+          "line": 106,
+          "text": "O enriquecimento real está pendente de integração. Nenhum crédito"
+        }
+      ]
+    },
+    {
+      "path": "src/modules/prospecting/server-qualifier.tsx",
+      "sha256": "f80777f56618841a96c074f70657ffad6721d2e8d6ed0df97b9f8f0182e83281",
+      "lineCount": 25,
+      "landmarks": [
+        {
+          "line": 9,
+          "text": "const modules:[ModuleId,string,string][]=[['email','Extrair e-mails','Recolhe e-mails publicados no site.'],['phone','Extrair telefones','Recolhe telefones sem inventar DDD.'],['website','Descobrir site','Busca o site pelo nome da empresa.'],['deep','Extração profunda','Lê até três páginas públicas por domínio.'],['validateEmail','Verificar formato e domínio','Consulta DNS; não verifica a existência da caixa.'],['registry','Consulta cadastral','C"
+        },
+        {
+          "line": 10,
+          "text": "export function ServerQualifier(){"
+        }
+      ]
+    },
+    {
+      "path": "src/server/prospecting/qualification.ts",
+      "sha256": "3c68105679bfdb9cb91816e38b422756cff518fffdab59aca372821e521a8cb2",
+      "lineCount": 173,
+      "landmarks": [
+        {
+          "line": 61,
+          "text": "export async function runQualification(lease:JobLease,deps:QualificationAdapters={}){"
+        },
+        {
+          "line": 95,
+          "text": "const validation=lead.email?await checkEmailDns(lead.email):null;result.status='succeeded';result.reasons=[!validation?'NO_EMAIL':validation.format?'FORMAT_VALID':'FORMAT_INVALID',validation?.dns===true?'MAIL_DOMAIN_FOUND':'MAIL_DOMAIN_UNKNOWN','MAILBOX_NOT_VERIFIED'];"
+        }
+      ]
+    },
+    {
+      "path": "src/server/prospecting/schemas.ts",
+      "sha256": "ce44e28d57bcc195fae05caf8a6ac58c7e5288c92d30a028a8ffad3620d6d70a",
+      "lineCount": 19,
+      "landmarks": []
+    },
+    {
+      "path": "src/server/prospecting/usage.ts",
+      "sha256": "3cdc91b8c03583c6d7456d607e57cf516131350f1568edf1966c8af333e9e3e5",
+      "lineCount": 33,
+      "landmarks": [
+        {
+          "line": 5,
+          "text": "export async function reserveUsage(c:PoolClient,operation:{jobId:string;operationId:string;units:Units;caps:Units;globalCaps:Units}){"
+        },
+        {
+          "line": 9,
+          "text": "export async function settleUsage(c:PoolClient,jobId:string,usage:ProviderUsage){"
+        },
+        {
+          "line": 18,
+          "text": "export async function assertReserved(c:PoolClient,jobId:string,units:Units){"
+        },
+        {
+          "line": 26,
+          "text": "export async function releaseUnused(c:PoolClient,jobId:string){"
+        }
+      ]
+    },
+    {
+      "path": "src/modules/dashboard/dashboard.tsx",
+      "sha256": "d090756da383ef1d8765f9a875f2e8c7af7d61240fb6d5991a492fa3227d9adf",
+      "lineCount": 370,
+      "landmarks": [
+        {
+          "line": 19,
+          "text": "export function Dashboard() {"
+        },
+        {
+          "line": 242,
+          "text": "<LineChart values={[0, 0, 0, 0, 0, 0, 0, 0, 0, m.total]} />"
+        },
+        {
+          "line": 319,
+          "text": "<p className=\"muted\">Nenhuma integração externa executada.</p>"
+        },
+        {
+          "line": 330,
+          "text": "<i style={{ width: \"100%\", background: \"var(--primary)\" }} />"
+        },
+        {
+          "line": 354,
+          "text": "<Badge>Demonstração</Badge>"
+        }
+      ]
+    },
+    {
+      "path": "src/modules/reports/reports.tsx",
+      "sha256": "c66cc2e85fbebfdda21a2edaaf0b55e6c1b8f2284c92c38048fc76ffb30386cc",
+      "lineCount": 208,
+      "landmarks": [
+        {
+          "line": 18,
+          "text": "export function Reports({ tab = \"overview\" }: { tab?: string }) {"
+        },
+        {
+          "line": 142,
+          "text": "export function Executions({automationId}:{automationId?:string}){return useIdentity()?<JobHistory automationId={automationId}/>:<DemoExecutions/>;}"
+        },
+        {
+          "line": 185,
+          "text": "<Badge>Demonstração local</Badge>"
+        }
+      ]
+    },
+    {
+      "path": "src/server/messaging/metrics.ts",
+      "sha256": "a183b68f0ba1fe4890871ace9f0bfb2bf29213b96d291f0687dfcac000a7d5e8",
+      "lineCount": 28,
+      "landmarks": [
+        {
+          "line": 5,
+          "text": "export async function readMessageMetrics(p:Principal,options:{days:number;cadenceId?:string}):Promise<MessageMetrics>{"
+        },
+        {
+          "line": 25,
+          "text": "return {...total,sent:total.email+total.whatsapp,optouts:options.cadenceId?0:counts.optouts,bounces:options.cadenceId?0:counts.bounces,today:{email:current.email,whatsapp:current.whatsapp,replies:current.replies,failed:current.failed,pending:current.pending},series:rows.map(row=>({date:row.date,sent:row.email+row.whatsapp,replies:row.replies})),tracking:{opens:null,clicks:null}};"
+        }
+      ]
+    },
+    {
+      "path": "src/server/messaging/usage.ts",
+      "sha256": "d24085776e26b97bc266d41c86b37a4295832a70c8ef79cbce104967e59a4665",
+      "lineCount": 7,
+      "landmarks": [
+        {
+          "line": 4,
+          "text": "export async function readMessageUsage(p:Principal):Promise<{reserved:number;consumed:number;costUsd:number|null;emailTracking:{opens:null;clicks:null;delivered:null;read:null}}>{return withWorkspaceTransaction(p,async c=>{"
+        }
+      ]
+    },
+    {
+      "path": "src/modules/settings/whatsapp-settings.tsx",
+      "sha256": "e9f222d7ba8f6f556ac58d3686e28e1243cef97740bf80712993b9ebcf763ed5",
+      "lineCount": 97,
+      "landmarks": [
+        {
+          "line": 43,
+          "text": "export function LimitsForm({sender,limits,client,onSaved,platformDailyCap=20,platformNewConversationCap=5}:{sender:SenderView;limits:MessagingLimitsView;client:ChannelClient;onSaved:()=>Promise<void>;platformDailyCap?:number;platformNewConversationCap?:number}){"
+        },
+        {
+          "line": 52,
+          "text": "export function WhatsappSettings({limitsOnly=false}:{limitsOnly?:boolean}){"
+        },
+        {
+          "line": 63,
+          "text": "if(!client)return <><h1>{title}</h1><Notice>Demonstração visual. Conexões reais exigem uma conta autenticada no workspace.</Notice></>;"
+        }
+      ]
+    },
+    {
+      "path": "src/client/workspace-provider.tsx",
+      "sha256": "e67491b9e9f81b6a246a1b3f1b4284a95745bb859cd5582ac820199c554855d1",
+      "lineCount": 181,
+      "landmarks": [
+        {
+          "line": 51,
+          "text": "export function useMail(){return useContext(MailContext);}"
+        },
+        {
+          "line": 53,
+          "text": "export function useMessaging(){return useContext(MessagingContext);}"
+        },
+        {
+          "line": 54,
+          "text": "export function useWorkspaceRevision(){return useContext(RevisionContext);}"
+        },
+        {
+          "line": 55,
+          "text": "export function useChannels(){return useContext(ChannelContext);}"
+        },
+        {
+          "line": 56,
+          "text": "export function useAutomationClient(){return useContext(AutomationContext);}"
+        },
+        {
+          "line": 57,
+          "text": "export function useWorkspaceRefresh(){return useContext(RefreshContext);}"
+        },
+        {
+          "line": 58,
+          "text": "export function usePlanning(){return useContext(PlanningContext);}"
+        },
+        {
+          "line": 59,
+          "text": "export function useContextClient(){return useContext(CompanyContext);}"
+        },
+        {
+          "line": 60,
+          "text": "export function useProspecting(){return useContext(ProspectingContext);}"
+        },
+        {
+          "line": 61,
+          "text": "export function useIdentity() {"
+        },
+        {
+          "line": 64,
+          "text": "export function useCapabilities() {"
+        },
+        {
+          "line": 67,
+          "text": "export function WorkspaceProvider({"
+        }
+      ]
+    },
+    {
+      "path": "src/client/use-live-refresh.ts",
+      "sha256": "1fcf0b48ca7068d0c2847d1e8d0d6342ccebbfd52900499f6cb22453141acf54",
+      "lineCount": 16,
+      "landmarks": [
+        {
+          "line": 4,
+          "text": "export function useLiveRefresh(run:(signal:AbortSignal)=>Promise<unknown>,intervalMs=15000,enabled=true,scope:unknown=''){"
+        }
+      ]
+    },
+    {
+      "path": "src/server/mail/classification.ts",
+      "sha256": "3763430242ed69fb1acd0acad09f4c004107dc6aa7cb9a1997e26d62befc2c3d",
+      "lineCount": 23,
+      "landmarks": [
+        {
+          "line": 5,
+          "text": "export function parseDsnFacts(value:string|undefined):DsnFacts|null{"
+        },
+        {
+          "line": 13,
+          "text": "export function classifyMail(message:MailMessage,headers:Record<string,string>,dsn:DsnFacts|null):MailAssessment{"
+        }
+      ]
+    },
+    {
+      "path": "src/server/mail/threading.ts",
+      "sha256": "f635c0fe163ad6e4dea7c2c055817cb8d79c530fa8a25177b8fe13b1581b0d57",
+      "lineCount": 10,
+      "landmarks": [
+        {
+          "line": 3,
+          "text": "export function matchMailThread(message:MailMessage,candidates:ThreadCandidate[]):{kind:'matched';id:string}|{kind:'new'}|{kind:'ambiguous'} {"
+        }
+      ]
+    },
+    {
+      "path": "src/server/messaging/publication-v2.ts",
+      "sha256": "688e84670528679893309760a75ccfe4f051116c28166b657a144175d1ab36cf",
+      "lineCount": 112,
+      "landmarks": [
+        {
+          "line": 28,
+          "text": "export async function publicationV2State(c:PoolClient,p:Principal,input:PublicationInputV2,material:string){"
+        },
+        {
+          "line": 96,
+          "text": "export async function preparePublicationV2(p:Principal,input:unknown):Promise<PublicationReviewV2>{"
+        },
+        {
+          "line": 100,
+          "text": "export async function confirmPublicationV2(p:Principal,input:unknown):Promise<PublicationView>{"
+        }
+      ]
+    },
+    {
+      "path": "src/server/auth/auth.ts",
+      "sha256": "25d3d672d3ca2a84536651dde6f9b26151e80c1e4cc670bc18b2866db0fb4bed",
+      "lineCount": 208,
+      "landmarks": [
+        {
+          "line": 13,
+          "text": "export function authOptions(pool: Pool) {"
+        },
+        {
+          "line": 112,
+          "text": "export function createAuth(pool: Pool) {"
+        },
+        {
+          "line": 116,
+          "text": "export function getAuth() {"
+        },
+        {
+          "line": 119,
+          "text": "export async function handleAuthRequest(request: Request) {"
+        }
+      ]
+    },
+    {
+      "path": "src/server/auth/permissions.ts",
+      "sha256": "6f5109e710ed6ccfd85f764a938f7d3e816a98efcd083825bc4f12b2bf576f63",
+      "lineCount": 24,
+      "landmarks": [
+        {
+          "line": 15,
+          "text": "export function capabilities(role: Principal[\"role\"]): Permission[] {"
+        },
+        {
+          "line": 20,
+          "text": "export function requirePermission(p: Principal, permission: Permission) {"
+        }
+      ]
+    },
+    {
+      "path": "src/server/workspaces/commands.ts",
+      "sha256": "f5d419cc9807d930e07ea9a26cf3b486c67230be4e63e53073240ade1b8c26a4",
+      "lineCount": 189,
+      "landmarks": [
+        {
+          "line": 25,
+          "text": "export async function readWorkspaceSnapshot(p: Principal) {"
+        },
+        {
+          "line": 28,
+          "text": "export async function executeWorkspaceCommand("
+        }
+      ]
+    },
+    {
+      "path": "src/modules/contacts/contacts-table.tsx",
+      "sha256": "01f84d6e810c4a70ca005fa02d78f62723a443240344280a552efac494d403b0",
+      "lineCount": 526,
+      "landmarks": [
+        {
+          "line": 25,
+          "text": "export function ContactsTable({ initialList = \"\" }: { initialList?: string }) {"
+        },
+        {
+          "line": 250,
+          "text": ": \"Dados fictícios de demonstração\"}"
+        }
+      ]
+    }
+  ],
+  "additionalStyleInspection": {
+    "path": "src/app/globals.css",
+    "sha256": "9bdfb895f14d87711ee34464e53ad4e57abe37a2569728f0519771db7a20ef96",
+    "bodyRootSize": "14px",
+    "headingFamily": "Sora",
+    "referenceComparison": "EV-078 sampled Exo 2 24px title and Manrope 16px body; classify with size preference/breakpoints before global change"
+  }
+}

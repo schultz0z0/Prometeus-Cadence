@@ -1,0 +1,146 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/settings/plan".
+0 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/settings/plan
+	1 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+	2 container
+		3 image CadenceFlow
+		4 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+		5 container
+			6 button Contatos
+			7 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			8 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			9 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			10 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+		11 container
+			12 button Disparos em Massa
+			13 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			14 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			15 link Description: Templates, Value: app.cadenceflow.pro/templates
+			16 link Description: Execuções, Value: app.cadenceflow.pro/executions
+		17 container
+			18 button LinkedIn Upgrade
+				19 text LinkedIn
+				20 text Upgrade
+			21 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+			22 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+			23 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+			24 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+			25 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+			26 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+			27 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+			28 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+		29 container
+			30 button Mensagens
+			31 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+			32 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+			33 button LinkedIn Upgrade
+				34 text LinkedIn
+				35 text Upgrade
+		36 link Description: Automações, Value: app.cadenceflow.pro/automations
+		37 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+		38 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+		39 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		40 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		41 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		42 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		43 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		44 text R [operator] [email]
+		45 button Sair
+	46 text Você está
+	47 text montando
+	48 text  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+	49 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+	50 container
+		61 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		113 text Plano e cobrança
+		52 button Description: Como funciona esta área, Help: Como funciona: Configurações: plano, avisos e time · 1 min
+		53 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			54 text Buscar…
+			55 text Ctrl K
+		56 button Abrir assistente
+		57 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		58 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		59 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		60 button Description: Ativar tema escuro, Help: Tema escuro
+	88 container
+		89 container Configurações
+			90 text CONTA
+			91 content list
+				92 link Description: Conta, Value: app.cadenceflow.pro/settings/account
+				93 link Description: Contexto de IA, Value: app.cadenceflow.pro/settings/context
+				94 link Description: Notificações, Value: app.cadenceflow.pro/settings/notifications
+				95 link Description: Membros, Value: app.cadenceflow.pro/settings/seats
+				96 link Description: Segurança, Value: app.cadenceflow.pro/settings/security
+				97 link Description: MCP, Value: app.cadenceflow.pro/settings/mcp
+				98 link Description: Meu plano, Value: app.cadenceflow.pro/settings/plan
+			99 text ENVIO
+			100 content list
+				101 link Description: Contas de e-mail, Value: app.cadenceflow.pro/settings/email
+				102 link Description: WhatsApp, Value: app.cadenceflow.pro/settings/whatsapp
+				103 link Description: Limites de disparo, Value: app.cadenceflow.pro/settings/dispatch-limits
+			104 text DADOS
+			105 content list
+				106 link Description: Contatos duplicados, Value: app.cadenceflow.pro/settings/dados
+				107 link Description: Privacidade, Value: app.cadenceflow.pro/settings/privacy
+			108 text INTEGRAÇÕES
+			109 content list
+				110 link Description: CRM e apps, Value: app.cadenceflow.pro/settings/apps
+				111 link Description: Webhooks e API, Value: app.cadenceflow.pro/settings/webhooks
+			112 button Como funciona esta área
+		114 button Meu plano
+		115 button Cobrança
+		116 button Planos e pacotes
+		117 heading Plano Essential, Value: 2
+			118 text Plano  Essential
+		119 text Teste por ativar
+		120 text Você está montando a prospecção. Pra ligar os envios, comece o teste grátis de 14 dias: nada é cobrado hoje.
+		121 container
+			122 text R$ 0  até ativar · depois  R$ 397,00/mês
+		123 button Começar o teste grátis
+		124 button ou testar o Pro
+			125 text ou
+			126 text testar
+			127 text  o
+			128 text Pro
+		129 heading Uso do plano, Value: 3
+			130 text Uso do plano
+		131 text Normal
+		132 text Extrações de leads/mês
+		133 text Base CNPJ, Google Maps e Search, automações e leads do LinkedIn
+		134 text 20
+		135 container
+			136 text /  5.000
+		137 container
+			138 text 0 % utilizado · Renova  20/11/2026
+		139 text Importações/mês
+		140 text Planilha (CSV), cadastro manual, Apollo e API
+		141 text 0
+		142 container
+			143 text /  5.000
+		144 container
+			145 text 0 % utilizado · Renova  20/11/2026
+		146 text Contas de Email
+		147 text 0
+		148 container
+			149 text /  3
+		150 container
+			151 text 0 % utilizado
+		152 text Cadências ativas
+		153 text 0
+		154 container
+			155 text /  100
+		156 container
+			157 text 0 % utilizado
+		158 text Templates
+		159 text 0
+		160 text Ilimitado
+		161 text Automações ativas
+		162 text 0
+		163 container
+			164 text /  50
+		165 container
+			166 text 0 % utilizado
+		167 container
+			168 text 20  de 5.000  extrações este mês  · renova em 20/11/2026  ·  20  leads armazenados (sem limite)
+	87 text CadenceFlow: Prospecção Inteligente
+
+The focused UI element is 98 link Description: Meu plano, URL: app.cadenceflow.pro/settings/plan

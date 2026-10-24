@@ -1,0 +1,339 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/settings/plan".
+0 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/settings/plan
+	1 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+	2 container
+		3 image CadenceFlow
+		4 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+		5 container
+			6 button Contatos
+			7 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			8 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			9 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			10 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+		11 container
+			12 button Disparos em Massa
+			13 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			14 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			15 link Description: Templates, Value: app.cadenceflow.pro/templates
+			16 link Description: Execuções, Value: app.cadenceflow.pro/executions
+		17 container
+			18 button LinkedIn Upgrade
+				19 text LinkedIn
+				20 text Upgrade
+			21 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+			22 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+			23 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+			24 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+			25 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+			26 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+			27 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+			28 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+		29 container
+			30 button Mensagens
+			31 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+			32 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+			33 button LinkedIn Upgrade
+				34 text LinkedIn
+				35 text Upgrade
+		36 link Description: Automações, Value: app.cadenceflow.pro/automations
+		37 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+		38 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+		39 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		40 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		41 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		42 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		43 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		44 text R [operator] [email]
+		45 button Sair
+	46 text Você está
+	47 text montando
+	48 text  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+	49 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+	50 container
+		61 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		113 text Plano e cobrança
+		52 button Description: Como funciona esta área, Help: Como funciona: Configurações: plano, avisos e time · 1 min
+		53 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			54 text Buscar…
+			55 text Ctrl K
+		56 button Abrir assistente
+		57 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		58 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		59 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		60 button Description: Ativar tema escuro, Help: Tema escuro
+	88 container
+		89 container Configurações
+			90 text CONTA
+			91 content list
+				92 link Description: Conta, Value: app.cadenceflow.pro/settings/account
+				93 link Description: Contexto de IA, Value: app.cadenceflow.pro/settings/context
+				94 link Description: Notificações, Value: app.cadenceflow.pro/settings/notifications
+				95 link Description: Membros, Value: app.cadenceflow.pro/settings/seats
+				96 link Description: Segurança, Value: app.cadenceflow.pro/settings/security
+				97 link Description: MCP, Value: app.cadenceflow.pro/settings/mcp
+				98 link Description: Meu plano, Value: app.cadenceflow.pro/settings/plan
+			99 text ENVIO
+			100 content list
+				101 link Description: Contas de e-mail, Value: app.cadenceflow.pro/settings/email
+				102 link Description: WhatsApp, Value: app.cadenceflow.pro/settings/whatsapp
+				103 link Description: Limites de disparo, Value: app.cadenceflow.pro/settings/dispatch-limits
+			104 text DADOS
+			105 content list
+				106 link Description: Contatos duplicados, Value: app.cadenceflow.pro/settings/dados
+				107 link Description: Privacidade, Value: app.cadenceflow.pro/settings/privacy
+			108 text INTEGRAÇÕES
+			109 content list
+				110 link Description: CRM e apps, Value: app.cadenceflow.pro/settings/apps
+				111 link Description: Webhooks e API, Value: app.cadenceflow.pro/settings/webhooks
+			112 button Como funciona esta área
+		114 button Meu plano
+		115 button Cobrança
+		116 button Planos e pacotes
+		117 button Pacotes Adicionais
+			118 heading Pacotes Adicionais, Value: 3
+				119 text Pacotes Adicionais
+		120 text Aumente os limites do seu plano sem trocar de plano. Some à fatura e sai quando você cancelar. Tem um cupom?
+		121 text field (settable)
+		122 text Aplicado ao pacote que você contratar Extrações de Leads
+		123 pop up button (collapsed, settable) Value: +2.000 extrações, R$ 97,00, Secondary Actions: Expand
+			124 menu
+				125 (selected) +2.000 extrações, R$ 97,00
+				126 +5.000 extrações, R$ 219,00
+				127 +10.000 extrações, R$ 399,00
+		128 text Adicione +2.000 extrações de leads/mês (CNPJ ou Google) R$ 97,00 /mês
+		129 button Contratar
+		130 text Importações
+		131 pop up button (collapsed, settable) Value: +5.000 importações, R$ 27,00, Secondary Actions: Expand
+			132 menu
+				133 (selected) +5.000 importações, R$ 27,00
+				134 +10.000 importações, R$ 47,00
+				135 +50.000 importações, R$ 147,00
+		136 text Adicione +5.000 leads da sua própria base por mês (CSV ou manual) R$ 27,00 /mês
+		137 button Contratar
+		138 text Contas de E-mail
+		139 pop up button (collapsed, settable) Description: Quantidade, Value: 1 unidade, Secondary Actions: Expand
+			140 menu
+				141 (selected) 1 unidade
+				142 2 unidades
+				143 3 unidades
+				144 4 unidades
+				145 5 unidades
+				146 6 unidades
+				147 7 unidades
+				148 8 unidades
+				149 9 unidades
+				150 10 unidades
+		151 text Adicione 1 conta de email extra ao seu plano R$ 19,00 /mês
+		152 button Contratar
+		153 text Números de WhatsApp
+		154 pop up button (collapsed, settable) Description: Quantidade, Value: 1 unidade, Secondary Actions: Expand
+			155 menu
+				156 (selected) 1 unidade
+				157 2 unidades
+				158 3 unidades
+				159 4 unidades
+				160 5 unidades
+				161 6 unidades
+				162 7 unidades
+				163 8 unidades
+				164 9 unidades
+				165 10 unidades
+		166 text Conecte mais um número de WhatsApp à sua conta R$ 49,00 /mês
+		167 button Contratar
+		168 text Usuários Extras
+		169 pop up button (collapsed, settable) Description: Quantidade, Value: 1 unidade, Secondary Actions: Expand
+			170 menu
+				171 (selected) 1 unidade
+				172 2 unidades
+				173 3 unidades
+				174 4 unidades
+				175 5 unidades
+				176 6 unidades
+				177 7 unidades
+				178 8 unidades
+				179 9 unidades
+				180 10 unidades
+		181 text Adicione 1 usuário à sua conta R$ 59,00 /mês
+		182 button Contratar
+		183 text Módulo LinkedIn Convites automáticos com nota personalizada, LinkedIn como canal na régua e inbox unificado. Requer conta paga do LinkedIn (a partir de R$90/mês, contratada por você). R$ 149,00 /mês
+		184 button Contratar
+		185 text Enriquecimento (dados de sócios)
+		186 pop up button (collapsed, settable) Value: 1 crédito/mês, R$ 1,50, Secondary Actions: Expand
+			187 menu
+				188 (selected) 1 crédito/mês, R$ 1,50
+				189 50 créditos/mês, R$ 65,00
+				190 100 créditos/mês, R$ 120,00
+				191 300 créditos/mês, R$ 330,00
+		192 text 1 empresa resolvida por mês, escolha quantas no seletor R$ 1,50 /mês R$ 1,50/crédito
+		193 button Assinar
+		194 container planos
+			195 button Comparação de planos
+				196 heading Comparação de planos, Value: 3
+					197 text Comparação de planos
+			198 button Mensal
+			199 button Anual-20%
+				200 text Anual
+				201 text -
+				202 text 20
+				203 text %
+			204 container
+				205 text Seu plano
+				206 heading Essential, Value: 4
+					207 text Essential
+				208 text Para quem está começando a prospecção ativa R$ 397,00 /mês Até 5.000 extrações de leads/mês (CNPJ, Google Maps ou Search) 3 contas de email Cadências de email + WhatsApp (até 2 números) Mensagens personalizadas por IA Geração de leads (Google Maps + Google Search + CNPJ) Automação de extração de leads agendada Qualificação com IA + deep extraction
+				209 button + 9 recursos
+				210 button (disabled) Seu plano
+			211 container
+				212 text Mais Popular
+				213 heading Pro, Value: 4
+					214 text Pro
+				215 text E-mail + WhatsApp, com SDR no automático R$ 897,00 /mês Tudo do Essential + Cadências de WhatsApp (multicanal), até 3 números Até 5 contas de email 3 assentos para o seu time Até 8.000 extrações de leads/mês SDR automático no e-mail, WhatsApp e LinkedIn (300 conversas/mês) 1 conta de LinkedIn para prospecção
+				216 button + 5 recursos
+				217 button Fazer Upgrade
+		218 button Funcionalidades por plano
+			219 heading Funcionalidades por plano, Value: 3
+				220 text Funcionalidades por plano
+		221 table
+			222 row
+				223 cell
+					224 text RECURSO
+				225 cell
+					226 text ESSENTIAL seu plano
+				227 cell
+					228 text PRO
+			229 row
+				230 cell
+					231 text GERAR E QUALIFICAR LEADS
+			232 row
+				233 cell
+					234 text Extrações de leads por mês
+				235 cell
+					236 text 5.000
+				237 cell
+					238 text 8.000
+			239 row
+				240 cell
+					241 text Google Maps, Google Search e Base CNPJ
+			242 row
+				243 cell
+					244 text Automações de extração agendadas
+				245 cell
+					246 text 50
+				247 cell
+					248 text 50
+			249 row
+				250 cell
+					251 text Qualificação com IA + deep extraction
+			252 row
+				253 cell
+					254 text Dados de sócios (decisor com WhatsApp)
+			255 row
+				256 cell
+					257 text Importações de leads por mês
+				258 cell
+					259 text 5.000
+				260 cell
+					261 text 15.000
+			262 row
+				263 cell
+					264 text PROSPECTAR
+			265 row
+				266 cell
+					267 text Cadências simultâneas
+				268 cell
+					269 text 100
+				270 cell
+					271 text 100
+			272 row
+				273 cell
+					274 text Cadências de e-mail
+			275 row
+				276 cell
+					277 text Cadências de WhatsApp
+				278 cell
+					279 text 2 nº
+				280 cell
+					281 text 3 nº
+			282 row
+				283 cell
+					284 text Contas de e-mail
+				285 cell
+					286 text 3
+				287 cell
+					288 text 5
+			289 row
+				290 cell
+					291 text E-mails por dia
+				292 cell
+					293 text 100 por caixa · 300/dia na conta
+				294 cell
+					295 text 100 por caixa · 500/dia na conta
+			296 row
+				297 cell
+					298 text Pessoas alcançadas por mês (e-mail + WhatsApp)
+				299 cell
+					300 text ~4.402
+				301 cell
+					302 text ~6.897
+			303 row
+				304 cell
+					305 text Mensagens personalizadas por IA
+			306 row
+				307 cell
+					308 text Inbox unificado + tracking de e-mail
+			309 row
+				310 cell
+					311 text Agente SDR (responde no automático)
+				312 cell
+					313 text 300 conv./mês
+			314 row
+				315 cell
+					316 text Módulo LinkedIn
+			317 row
+				318 cell
+					319 text TIME E INTEGRAÇÕES
+			320 row
+				321 cell
+					322 text Assentos (usuários)
+				323 cell
+					324 text 2
+				325 cell
+					326 text 3
+			327 row
+				328 cell
+					329 text CRM nativo (FunnelsFlow)
+			330 row
+				331 cell
+					332 text 1 usuário do CRM grátis com a assinatura ativa (R$ 97/mês)
+			333 row
+				334 cell
+					335 text Google Planilhas
+			336 row
+				337 cell
+					338 text Webhooks e API
+			339 row
+				340 cell
+					341 text MCP (Claude e ChatGPT)
+		342 container creditos-enriquecimento
+			343 button Créditos de Enriquecimento 50 créditos
+				344 heading Créditos de Enriquecimento, Value: 3
+					345 text Créditos de Enriquecimento
+				346 text 50
+				347 text  créditos
+			348 container
+				349 text Grátis do Plano 50 de  50 Comprados 0 Total Disponível 50 Os créditos do plano
+				350 text não acumulam
+				351 text : zeram e renovam no dia 1º de cada mês. Os da assinatura entram a cada fatura paga, não expiram e só são usados depois que a franquia do mês acaba. Cancele a assinatura quando quiser em Pacotes Ativos. Enriqueça seus leads com dados reais: telefones diretos, e-mails corporativos, faturamento estimado e mais. Telefones 1  crédito /consulta E-mails 1  crédito /consulta Dados Básicos 1  crédito /consulta Indicadores 2  crédito s /consulta Dados Profissionais 2  crédito s /consulta Assinar créditos
+				352 pop up button (collapsed, settable) Value: 1 crédito/mês, R$ 1,50, Secondary Actions: Expand
+					353 menu
+						354 (selected) 1 crédito/mês, R$ 1,50
+						355 50 créditos/mês, R$ 65,00
+						356 100 créditos/mês, R$ 120,00
+						357 300 créditos/mês, R$ 330,00
+				358 text 1 empresa resolvida por mês, escolha quantas no seletor R$ 1,50 /mês R$ 1,50/crédito
+				359 button Assinar
+		360 text Dúvidas sobre planos? O time de vendas responde pelo WhatsApp.
+		361 link Description: Falar com vendas, Value: wa.me/[number]?[redacted]
+	87 text CadenceFlow: Prospecção Inteligente
+
+The focused UI element is 116 button Planos e pacotes

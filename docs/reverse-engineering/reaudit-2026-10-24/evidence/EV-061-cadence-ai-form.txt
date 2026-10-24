@@ -1,0 +1,160 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/cadences/new/ai".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/cadences/new/ai
+	2 container
+		3 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+		4 image CadenceFlow
+		5 container
+			6 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+			7 button Contatos
+			8 container
+				9 link Description: Leads, Value: app.cadenceflow.pro/contacts
+				10 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+				11 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+				12 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+			18 button LinkedIn Upgrade
+				19 text LinkedIn
+				20 text Upgrade
+			21 container
+				22 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+				23 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+				24 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+				25 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+				26 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+				27 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+				28 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+				29 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+			30 button Mensagens
+			31 container
+				32 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+				33 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+				34 button LinkedIn Upgrade
+					35 text LinkedIn
+					36 text Upgrade
+			37 link Description: Automações, Value: app.cadenceflow.pro/automations
+			38 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+			39 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+			40 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		41 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		42 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		43 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		44 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		45 text R
+		46 text [operator]
+		47 text [email]
+		48 button Sair
+		49 text Você está  montando  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+		50 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+		61 container
+			62 link Description: Disparos em Massa, Value: app.cadenceflow.pro/cadences
+			63 link Description: Nova cadência, Value: app.cadenceflow.pro/cadences/new
+			64 text Com IA
+		52 button Description: Como funciona esta área, Help: Como funciona: Disparos em massa · 1 min
+		53 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			54 text Buscar…
+			55 text Ctrl K
+		56 button Abrir assistente
+		57 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		58 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		59 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		60 button Description: Ativar tema escuro, Help: Tema escuro
+		65 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+		66 heading Nova cadência com IA, Value: 1
+			67 text Nova cadência com IA
+		68 text Diga o objetivo e a lista. A IA escreve três opções; você escolhe e ajusta.
+		69 container Etapas
+			70 content list
+				71 button 1 Sobre a cadência, Help: Sobre a cadência
+					72 text 1
+					73 text Sobre a cadência
+				74 button 2 Opções da IA, Help: Opções da IA
+					75 text 2
+					76 text Opções da IA
+				77 button 3 Revisar e criar, Help: Revisar e criar
+					78 text 3
+					79 text Revisar e criar
+		80 container
+			81 heading O que a sua empresa vende, Value: 2
+				82 text O que a sua empresa vende
+[private business configuration redacted]
+			84 link Description: edite lá, Value: app.cadenceflow.pro/settings/context
+			85 text . Produto em foco desta cadência
+			86 pop up button (collapsed, settable) Produto em foco desta cadência, Value: Padrão da conta, Secondary Actions: Expand
+				87 menu
+					88 (selected) Padrão da conta
+[private business configuration redacted]
+[private business configuration redacted]
+[private business configuration redacted]
+[private business configuration redacted]
+[private business configuration redacted]
+[private business configuration redacted]
+		95 container
+			96 heading Qual é o objetivo, Value: 2
+				97 text Qual é o objetivo
+			98 checkbox Primeiro contato Gente que nunca falou com você. Abre com o que você viu da empresa e uma pergunta., Value: 1
+			99 checkbox Retomar quem sumiu Já conversou, mas parou. Retoma do ponto em que parou, sem culpa., Value: 0
+			100 checkbox Value: 0, Proposta parada Mandou proposta e não teve resposta. Tira a dúvida do caminho e propõe o próximo passo.
+			101 checkbox Value: 0, Pós-evento ou webinar Quem se inscreveu ou passou no evento. Aproveita o gancho enquanto está quente.
+			102 checkbox Value: 0, Reativar base ou ex-clientes Clientes antigos ou base parada. Oferta ou novidade, sem parecer disparo.
+			103 checkbox Indicação ou parceria Alguém indicou, ou você quer propor parceria. Começa pelo nome em comum., Value: 0
+		104 container
+			105 heading Pra quem, Value: 2
+				106 text Pra quem
+			107 text Lista de contatos
+			108 pop up button (collapsed, settable) Lista de contatos A lista define o retorno esperado e o jeito de falar (segmento, cidade, porte)., Value: Escolher depois, no editor, Secondary Actions: Expand
+				109 menu
+					110 (selected) Escolher depois, no editor
+					111 [existing configuration] (0)
+					112 [existing configuration] (20)
+			113 text A lista define o retorno esperado e o jeito de falar (segmento, cidade, porte). Quem decide (opcional)
+			114 text field (settable) Quem decide (opcional), ID: ia-publico
+			115 text Ajuda a IA a escolher o registro certo (formal x leve).
+		116 container
+			117 heading Canais, tom e ritmo, Value: 2
+				118 text Canais, tom e ritmo
+			119 checkbox WhatsApp, Value: 0
+				120 text WhatsApp
+			121 checkbox E-mail, Value: 0
+				122 text E-mail
+			123 text Bolinha verde = canal conectado. Dá pra gerar com um canal não conectado; a cadência só envia por ele depois que você conectar. Tom
+			124 checkbox Pessoal, Help: à mão, próximo, direto, Value: 1
+			125 checkbox Direto, Help: menos palavras, ao ponto, Value: 0
+			126 checkbox Leve, Help: caloroso, humor discreto, Value: 0
+			127 checkbox Formal, Help: profissional, sem gíria, Value: 0
+			128 text Ritmo
+			129 checkbox Curta · até 7 dias, Value: 0
+				130 text Curta
+				131 text ·
+				132 text até 7 dias
+			133 checkbox Padrão · 10 a 14 dias, Value: 1
+				134 text Padrão
+				135 text ·
+				136 text 10 a 14 dias
+			137 checkbox Longa · 3 semanas, Value: 0
+				138 text Longa
+				139 text ·
+				140 text 3 semanas
+			141 text Destacar (opcional)
+			142 text field (settable) Destacar (opcional), ID: ia-destacar
+			143 text Evitar (opcional)
+			144 text field (settable) Evitar (opcional), ID: ia-evitar
+		145 button (disabled) Gerar opções com IA
+		146 container O que a IA vai escrever
+			147 container
+				148 heading O que a IA vai escrever, Value: 2
+					149 text O que a IA vai escrever
+				150 content list
+					151 container
+						152 text Três réguas inteiras, cada uma com os toques já escritos: dia de cada um, canal, assunto e mensagem.
+					153 container
+						154 text Escritas pra sua empresa, usando o que o Contexto de IA sabe do que você vende. Sem contexto, elas saem dos modelos da biblioteca, com colchetes pra trocar.
+					155 container
+						156 text Você escolhe uma, edita texto por texto e só então ela nasce, como rascunho.
+				157 text Quanto mais específico o Destacar e o Evitar, menos genérico sai o texto. É o campo que mais muda o resultado.
+		158 text Nova cadência com IA
+
+The focused UI element is 1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/cadences/new/ai

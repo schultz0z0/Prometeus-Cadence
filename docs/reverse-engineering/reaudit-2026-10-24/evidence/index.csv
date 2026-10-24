@@ -1,0 +1,85 @@
+id,date,session,route,shows,masked
+EV-001,2026-10-24,s01,/dashboard,repaired full dashboard state,true
+EV-002,2026-10-24,s01,/settings/account,repaired full settings state,true
+EV-003,2026-10-24,s01,/settings/plan,plan-summary,true
+EV-004,2026-10-24,s01,/settings/plan,plan-catalog-monthly,true
+EV-005,2026-10-24,s01,/settings/plan,plan-catalog-annual,true
+EV-006,2026-10-24,s01,/settings/plan,public catalog crop excludes account sidebar,true
+EV-007,2026-10-24,s01,/settings/plan,billing-history-contact,true
+EV-008,2026-10-24,s01,/settings/plan,observed first-party static script URLs,true
+EV-009,2026-10-24,s01,/settings/seats,members,true
+EV-010,2026-10-24,s01,/settings/plan,current observed public script hashes,true
+EV-011,2026-10-24,s01,/settings/plan,partial REA summary,true
+EV-012,2026-10-24,s01,/settings/security,security,true
+EV-013,2026-10-24,s01,/settings/mcp,mcp,true
+EV-014,2026-10-24,s01,/settings/apps,integrations,true
+EV-015,2026-10-24,s01,/settings/webhooks,webhooks-api,true
+EV-016,2026-10-24,s01,/settings/privacy,privacy,true
+EV-017,2026-10-24,s01,/settings/dispatch-limits,dispatch-limits,true
+EV-018,2026-10-24,s01,/settings/notifications,notifications,true
+EV-019,2026-10-24,s01,/settings/email,email-settings,true
+EV-020,2026-10-24,s01,/settings/whatsapp,whatsapp-settings,true
+EV-021,2026-10-24,s01,/settings/dados,data-deduplication,true
+EV-022,2026-10-24,s01,/settings/context,ai-context,true
+EV-023,2026-10-24,s01,/settings/account,account,true
+EV-024,2026-10-24,s01,/leads/generator,lead-generator,true
+EV-025,2026-10-24,s01,/leads/generator,generator-maps,true
+EV-026,2026-10-24,s01,/leads/generator,generator-web,true
+EV-027,2026-10-24,s01,/leads/enrich,lead-enrichment,true
+EV-028,2026-10-24,s01,/leads/qualifier,lead-qualification,true
+EV-029,2026-10-24,s01,/leads/qualifier,qualification-options,true
+EV-030,2026-10-24,s01,/contacts,contacts,true
+EV-031,2026-10-24,s01,/contacts,contacts-add-menu,true
+EV-032,2026-10-24,s01,/contacts,contacts-filter-menu,true
+EV-033,2026-10-24,s01,/contacts,contacts-actions-menu,true
+EV-034,2026-10-24,s01,/contacts,contacts-columns,true
+EV-035,2026-10-24,s01,/cadences,cadences,true
+EV-036,2026-10-24,s01,/cadences/pipeline,cadences-pipeline,true
+EV-037,2026-10-24,s01,/templates,templates,true
+EV-038,2026-10-24,s01,/executions,executions,true
+EV-039,2026-10-24,s01,/automations,automations,true
+EV-040,2026-10-24,s01,/reports,reports,true
+EV-041,2026-10-24,s01,/inbox,email-inbox,true
+EV-042,2026-10-24,s01,/messages/whatsapp,whatsapp-inbox,true
+EV-043,2026-10-24,s01,/sdr,sdr,true
+EV-044,2026-10-24,s01,/linkedin/dashboard,linkedin-dashboard,true
+EV-045,2026-10-24,s01,/linkedin/campaigns,linkedin-campaigns,true
+EV-046,2026-10-24,s01,/linkedin/people,linkedin-people,true
+EV-047,2026-10-24,s01,/linkedin/pipeline,linkedin-pipeline,true
+EV-048,2026-10-24,s01,/linkedin/enrichment,linkedin-enrichment,true
+EV-049,2026-10-24,s01,/linkedin/approvals,linkedin-approvals,true
+EV-050,2026-10-24,s01,/linkedin/cadences,linkedin-cadences,true
+EV-051,2026-10-24,s01,/linkedin/templates?[redacted],linkedin-templates,true
+EV-052,2026-10-24,s01,/leads/import,import,true
+EV-053,2026-10-24,s01,/settings/apps/google-sheets,google-sheets,true
+EV-054,2026-10-24,s01,/settings/apps/apollo,apollo,true
+EV-055,2026-10-24,s01,/reports/funnel,reports-funnel,true
+EV-056,2026-10-24,s01,/reports/negocios,reports-crm,true
+EV-057,2026-10-24,s01,/reports/performance,reports-performance,true
+EV-058,2026-10-24,s01,/cadences,cadences-settled,true
+EV-059,2026-10-24,s01,/cadences,cadence-create-dialog,true
+EV-060,2026-10-24,s01,/cadences,cadence-system-models,true
+EV-061,2026-10-24,s01,/cadences/new/ai,cadence-ai-form,true
+EV-062,2026-10-24,s01,/templates,templates-before-dialog,true
+EV-063,2026-10-24,s01,/templates,template-new-form,true
+EV-064,2026-10-24,s01,/automations/new,automation-new,true
+EV-065,2026-10-24,s01,/settings/apps/funnelsflow,crm-funnelsflow,true
+EV-066,2026-10-24,s01,/settings/apps/meetflow,meetflow,true
+EV-067,2026-10-24,s01,/linkedin/campaigns/new,linkedin-campaign-new,true
+EV-068,2026-10-24,s01,/dashboard,dashboard-full,true
+EV-069,2026-10-24,s01,/first-steps,first-steps,true
+EV-070,2026-10-24,s01,/settings/account,settings-baseline,true
+EV-071,2026-10-24,s01,/leads/import,import-baseline,true
+EV-072,2026-10-24,s01,/leads/import,import-manual-form,true
+EV-073,2026-10-24,s01,/settings/webhooks,webhook-baseline,true
+EV-074,2026-10-24,s01,/settings/webhooks,webhook-form,true
+EV-075,2026-10-24,s01,/automations/new,automation-wizard-source,true
+EV-076,2026-10-24,s01,/automations/new,automation-wizard-terms,true
+EV-077,2026-10-24,s01,/automations,automation-cancel-baseline,true
+EV-078,2026-10-24,s01,/settings/whatsapp,DOM computed typography and geometry; no text values,true
+EV-079,2026-10-24,s01,/settings/whatsapp,whatsapp-final-empty,true
+EV-080,2026-10-24,s01,/settings/whatsapp,two connection cards crop excluding operator sidebar,true
+EV-081,2026-10-24,s01,/settings/plan,static endpoint candidates; not network evidence,true
+EV-082,2026-10-24,s01,local a63161f,code hashes and inspected landmarks,true
+EV-083,2026-10-24,s01,/contacts,baseline-contacts-final,true
+EV-084,2026-10-24,s01,/settings/plan,plan-final-baseline,true

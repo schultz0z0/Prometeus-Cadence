@@ -1,0 +1,195 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/linkedin/campaigns/new".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/linkedin/campaigns/new
+	2 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+	3 container
+		4 image CadenceFlow
+		5 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+		6 container
+			7 button Contatos
+			8 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			9 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			10 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			11 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+		12 container
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+		18 container
+			19 button LinkedIn Upgrade
+				20 text LinkedIn
+				21 text Upgrade
+			22 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+			23 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+			24 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+			25 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+			26 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+			27 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+			28 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+			29 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+		30 container
+			31 button Mensagens
+			32 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+			33 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+			34 button LinkedIn Upgrade
+				35 text LinkedIn
+				36 text Upgrade
+		37 link Description: Automações, Value: app.cadenceflow.pro/automations
+		38 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+		39 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+		40 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		41 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		42 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		43 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		44 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		45 text R [operator] [email]
+		46 button Sair
+	47 text Você está
+	48 text montando
+	49 text  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+	50 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+	51 container
+		52 link Description: LinkedIn, Value: app.cadenceflow.pro/linkedin
+		53 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+		54 text Nova campanha
+		55 button Description: Como funciona esta área, Help: Como funciona: LinkedIn · 1 min
+		56 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			57 text Buscar…
+			58 text Ctrl K
+		59 button Abrir assistente
+		60 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		61 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		62 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		63 button Description: Ativar tema escuro, Help: Tema escuro
+	64 container
+		65 link Description: Convites LinkedIn, Value: app.cadenceflow.pro/linkedin/campaigns
+		66 heading Nova campanha, Value: 1
+			67 text Nova campanha
+		68 text 1
+		69 heading Como você vai chamar esta prospecção, Value: 2
+			70 text Como você vai chamar esta prospecção
+		71 text Nome da campanha
+		72 text field (settable)
+		73 text 2
+		74 heading Quem você quer alcançar, Value: 2
+			75 text Quem você quer alcançar
+		76 text Descreva o público e explore antes de ativar: convite enviado não volta atrás.
+		77 button Por filtros Cargo, setor e localização. Encontra quem se parece com o cliente ideal, mas a pessoa não fez nada, você que a achou.
+			78 text Por filtros
+			79 text Cargo, setor e localização. Encontra quem se parece com o cliente ideal, mas a pessoa não fez nada, você que a achou.
+		80 button Por engajamento em post Quem curtiu ou comentou um post. Já demonstrou interesse num assunto, e o assunto vira a abertura da conversa.
+			81 text Por engajamento em post
+			82 text Quem curtiu ou comentou um post. Já demonstrou interesse num assunto, e o assunto vira a abertura da conversa.
+		83 text Descreva quem você quer alcançar
+		84 text entry area (settable)
+		85 button (disabled) Montar filtros com IA
+		86 text A sugestão cai nos campos abaixo para você revisar. Nada é aplicado sozinho.
+		87 button Montar filtros
+		88 button Colar link do LinkedIn
+		89 text Cargos
+		90 text field (settable)
+		91 button CEO
+		92 button Sócio
+		93 button Fundador
+		94 button Proprietário
+		95 button Diretor
+		96 button Diretor Comercial
+		97 button Head de Vendas
+		98 button Gerente Comercial
+		99 button Diretor de Marketing
+		100 button Gerente de Marketing
+		101 button Head de Marketing
+		102 button Diretor de TI
+		103 text Até 5. Cada cargo vira uma busca própria e a campanha alterna entre elas, então somar cargos AMPLIA o público. Pode digitar um cargo que não está na lista e apertar Enter.
+		104 text Cargo vazio é uma escolha boa
+		105 text quando "descartar quem não for decisor" está ligado: a IA lê o perfil inteiro e reconhece CEO, fundador, sócio, head e as variações que um campo de texto não pega. Preencher aqui fecha o público a um título só. Localização
+		106 text field (settable)
+		107 button Brasil
+		108 button São Paulo
+		109 button Rio de Janeiro
+		110 button Minas Gerais
+		111 button Paraná
+		112 button Santa Catarina
+		113 button Rio Grande do Sul
+		114 button São Paulo e Região
+		115 button Argentina
+		116 button México
+		117 button Portugal
+		118 button Estados Unidos
+		119 text Qualquer país, estado ou cidade. Escolha na lista; se não aparecer, digite e aperte Enter (o nome vira o filtro oficial do LinkedIn na hora da busca). Somar lugares AMPLIA o público. Setor
+		120 text field (settable)
+		121 button Software
+		122 button Marketing e publicidade
+		123 button Serviços financeiros
+		124 button Educação
+		125 button Varejo
+		126 button Logística e cadeia de suprimentos
+		127 button Indústria
+		128 button Serviços e consultoria de TI
+		129 button Hospitais e atendimento médico
+		130 button Construção
+		131 text Opcional, e FECHA o público: só entra quem o LinkedIn classificou nesse setor. Somar dois setores amplia; deixar vazio amplia mais ainda. Palavra-chave no perfil (opcional)
+		132 text field (settable)
+		133 text Único campo digitado à mão, e o que mais zera a busca: a palavra precisa aparecer no perfil exatamente assim. Na dúvida, deixe vazio e explore antes. Como estes campos se combinam
+		134 content list
+			135 container
+				136 text Dentro do mesmo campo, soma. Belo Horizonte + São Paulo traz gente das duas cidades. Vale para localização, setor e grau.
+			137 container
+				138 text Entre campos, cruza.  Cargo e  localização  e  setor, a pessoa precisa atender a todos. Cada campo novo que você preenche FECHA o público, nunca abre.
+			139 container
+				140 text Quantos usar:  localização é o que mais vale a pena somar (2 a 4 cidades ou um estado). Setor, no máximo 2, três já costuma virar um público que não tem nada a ver entre si. Cargos somam (cada um é uma busca), e vazio funciona bem quando a triagem de decisor está ligada.
+		141 text Distância na rede
+		142 checkbox (settable, integer) Value: 1, Description: 2º grau, amigo de amigo Vocês têm conexões em comum, e o LinkedIn mostra isso para a pessoa. É de longe o que mais aceita.
+		143 text 2º grau, amigo de amigo Vocês têm conexões em comum, e o LinkedIn mostra isso para a pessoa. É de longe o que mais aceita.
+		144 checkbox (settable, integer) Description: 3º grau, fora da sua rede Nenhuma conexão em comum. Amplia muito o público e aceita bem menos., Value: 1
+		145 text 3º grau, fora da sua rede Nenhuma conexão em comum. Amplia muito o público e aceita bem menos. Quem já é sua conexão (1º grau) fica sempre de fora: convite só existe para quem ainda não está conectado.
+		146 button Explorar público
+		147 text Explorar
+		148 text não gasta convite
+		149 text : é só uma consulta. Conta gratuita do LinkedIn tem cerca de 300 consultas por mês; passando disso, ela devolve só 3 resultados por busca até o dia 1º. Por isso vale explorar quando você mudar os filtros, não a cada ajuste.
+		150 checkbox (settable, integer) Value: 1, Description: Descartar antes do convite quem não for decisor Numa fila real de 60 leads montada com o filtro de cargo do próprio LinkedIn, 21 eram técnicos. Convite gasto com quem não decide ainda ocupa vaga na cota da semana.
+		151 text Descartar antes do convite quem não for decisor Numa fila real de 60 leads montada com o filtro de cargo do próprio LinkedIn, 21 eram técnicos. Convite gasto com quem não decide ainda ocupa vaga na cota da semana. 3
+		152 heading O que a pessoa vai ler no convite, Value: 2
+			153 text O que a pessoa vai ler no convite
+		154 text Deixe em branco para enviar convite SEM nota, não gasta o limite de notas e tem aceite alto em rede próxima. Suas provas (o que a ficha {prova} escreve) padrão
+		155 text field (settable)
+		156 button Outra prova (para usar em outro ângulo)
+		157 text Frases curtas e verificáveis sobre você ou a empresa. Vão literais, sem a IA reescrever. A primeira é a que vale quando o passo não pede um ângulo específico. Inserir:
+		158 button {nome}
+		159 button {empresa}
+		160 button {cargo}
+		161 button {setor}
+		162 button {prova}
+		163 button trecho da IA
+		164 text Texto do convite 0 / 300
+		165 text entry area (settable)
+		166 button Usar a nota sugerida (sem pedido, só o motivo pra conectar)
+		167 text Quer uma frase escrita pela IA para cada pessoa? Clique em trecho da IA  no texto acima, o campo para dizer o que ela deve escrever aparece aqui embaixo. 4
+		168 heading Em que ritmo os convites saem, Value: 2
+			169 text Em que ritmo os convites saem
+		170 text Convites por dia
+		171 stepper (settable, integer) 12
+		172 text É o ALVO da campanha, não uma promessa: o motor nunca passa do que a conta aguenta na semana, e sobe sozinho conforme o aceite melhora. Expirar convite depois de (dias)
+		173 stepper (settable, integer) 30
+		174 text Ao expirar, o convite é retirado para limpar a sua lista de pendentes. Retirar não devolve convites da semana e o LinkedIn bloqueia convidar a mesma pessoa de novo por até 3 semanas.
+		175 checkbox (settable, integer) Value: 1, Description: Permitir aquecimento social Visitar o perfil e curtir um post antes do convite. É remédio, não rotina: liga sozinho quando a taxa de aceite cai abaixo de 25%, e desliga quando ela volta. Ligado o tempo todo, esconderia o efeito real da sua copy.
+		176 text Permitir aquecimento social Visitar o perfil e curtir um post antes do convite. É remédio, não rotina: liga sozinho quando a taxa de aceite cai abaixo de 25%, e desliga quando ela volta. Ligado o tempo todo, esconderia o efeito real da sua copy. 5
+		177 heading Para onde vão os que aceitarem, Value: 2
+			178 text Para onde vão os que aceitarem
+		179 text Lista dos aceites
+		180 pop up button (collapsed, settable) Value: Criar uma lista nova automaticamente (recomendado), Secondary Actions: Expand
+			181 menu
+				182 (selected) Criar uma lista nova automaticamente (recomendado)
+		183 text É esta lista que alimenta a cadência. Deixando em 'criar automaticamente', ela nasce junto da campanha, com o nome dela, sem volta nenhuma. O lead só entra depois de enriquecido. Enriquecer sozinho quem aceitar Roda logo depois do aceite, antes de a cadência falar com a pessoa. São os mesmos módulos do Qualificador que o resto da plataforma usa.
+		184 switch 0
+		185 text Lista dos não aceites (opcional)
+		186 pop up button (collapsed, settable) Value: Não usar, Secondary Actions: Expand
+			187 menu
+				188 (selected) Não usar
+				189 + Criar uma lista nova
+		190 text Convites expirados. Público aproveitável numa cadência fria de e-mail. No LinkedIn a ação não é imediata. Os convites entram numa fila e saem espaçados ao longo do horário comercial, em intervalos irregulares, rajada é o padrão que o LinkedIn identifica como automação.
+		191 button (disabled) Salvar como rascunho
+		192 text A campanha nasce como rascunho. Antes de ativar você vê quantos convites ela geraria por semana com a base atual, o ativo em risco é a sua conta pessoal do LinkedIn, e conta restrita não tem recurso.
+
+The focused UI element is 1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/linkedin/campaigns/new

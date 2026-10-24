@@ -1,0 +1,295 @@
+{
+  "date": "2026-10-24",
+  "sourceEvidence": "EV-008",
+  "capture": "public static files; no cookies; bytes never executed",
+  "manifest": [
+    {
+      "name": "0-4srap-ffvu1.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/0-4srap-ffvu1.js",
+      "bytes": 204607,
+      "sha256": "aba12ba12cd4dbd298e982461bc9ea117651a537c9b32dfd68ce11fb6002127a",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "04umz9wfptf1a.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/04umz9wfptf1a.js",
+      "bytes": 43205,
+      "sha256": "cd5335318f66db671a92127ff190697c28b1d04bdc8231c5a4a8b21ec7057b76",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "05n47h1ay477x.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/05n47h1ay477x.js",
+      "bytes": 21433,
+      "sha256": "da0962795c1f34327b92c20f4ee0afa15e7b1210642838143834c6637052fe2b",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "0cz1d0mv5g_q7.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/0cz1d0mv5g_q7.js",
+      "bytes": 112594,
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "0epdq-8l3ixe4.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/0epdq-8l3ixe4.js",
+      "bytes": 4224,
+      "sha256": "5054ce1d5d5db6eff9df5404d38fcdab449c7e4f9c3c40cfc68d2305b395297d",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "0ra99bs14vv1h.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/0ra99bs14vv1h.js",
+      "bytes": 45244,
+      "sha256": "358920bd9b3213bb11765903def44956722c7b6cb7179d4b09fee028f10a370c",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "19cvonh53a960.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/19cvonh53a960.js",
+      "bytes": 24876,
+      "sha256": "ab4a92262547501151ea817cd76cba83a86c9db8987f6ca257044063e18aef0d",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "1e-4ox_wo5ip7.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/1e-4ox_wo5ip7.js",
+      "bytes": 88258,
+      "sha256": "c9be6c651940c083710185bf1d960edbf5ce61aa4b5672e05c69198e77137e94",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "1gk-zn3qz54jm.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/1gk-zn3qz54jm.js",
+      "bytes": 11801,
+      "sha256": "3bf922a8a9bc53e4ceedb99be001b0b6ee741431706fee04b8980fb8be0fb361",
+      "billingCandidate": true,
+      "status": "downloaded"
+    },
+    {
+      "name": "1p4qh0t0ln9-e.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/1p4qh0t0ln9-e.js",
+      "bytes": 5800,
+      "sha256": "4ac30a578259a29d3e92cc6edb92634a27aebe1754cee69395de70bdd09e834b",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "1v6zcrqwme_iu.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/1v6zcrqwme_iu.js",
+      "bytes": 5629,
+      "sha256": "82677d48e1716fe12a94a0143092e1137e36fb177e3224df7cd92755f2d905c8",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "1x4b_pak5ymnk.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/1x4b_pak5ymnk.js",
+      "bytes": 18958,
+      "sha256": "a809a016fca441a20c635e2c7d18fff20230d2299f5ee5eb7c63ae26bfcec631",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "1z4hk0c-exzbd.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/1z4hk0c-exzbd.js",
+      "bytes": 5680,
+      "sha256": "19827a3a96a1d656d41415bec0504d0e7c37eef7f34019f620492d0763338375",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "1zvg97ep65v3d.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/1zvg97ep65v3d.js",
+      "bytes": 32709,
+      "sha256": "f22b4366653e1a60c62149a65eda4c67f230a1afabbd50a2bdd3dce5f3394f02",
+      "billingCandidate": true,
+      "status": "downloaded"
+    },
+    {
+      "name": "23zbdse-4tzat.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/23zbdse-4tzat.js",
+      "bytes": 37803,
+      "sha256": "6b59eeda5ebee1e79043c571b1121c806ba19285ddd6113ceaf465a64ca4c66c",
+      "billingCandidate": true,
+      "status": "downloaded"
+    },
+    {
+      "name": "25xcl2rx7yyp-.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/25xcl2rx7yyp-.js",
+      "bytes": 38679,
+      "sha256": "167a702c4068444f05c8396ab1230c0f956fbd3cc3caeb273b0dc69833c676ee",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "26g4tn5b226u5.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/26g4tn5b226u5.js",
+      "bytes": 31996,
+      "sha256": "9882888c4c654545dc12df98ecd755a711563ca428114ed7ca9d686e4e58ce00",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "2b7rig6_yq_ny.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/2b7rig6_yq_ny.js",
+      "bytes": 26530,
+      "sha256": "1d489443592c2d3ac5942e117b25d3340bdbda76c599b3bdcaf8bbfde664800d",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "2e9vj0g4n5tdb.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/2e9vj0g4n5tdb.js",
+      "bytes": 29131,
+      "sha256": "7fad49fd37fb737d81d135c9238924abf19fce457b860371d9147073527e3fea",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "2lfhpbqzwgurk.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/2lfhpbqzwgurk.js",
+      "bytes": 155744,
+      "sha256": "9bc62ebb661ccabbbc1de5ce141781532c21be858218d77c7c3aae866468110d",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "2o6wtbn0-fkn3.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/2o6wtbn0-fkn3.js",
+      "bytes": 23591,
+      "sha256": "ea646fe1dbb7938308fe52fa49fd6f43bfa0ed4ff8010f8cf64ac04b188b7cde",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "2qolmso-e4wq0.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/2qolmso-e4wq0.js",
+      "bytes": 54789,
+      "sha256": "bdadf7800024cc3c243114174bd8aa0f2bf86ada56063ea4e600f23f4be09590",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "32nrytvl5qb4z.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/32nrytvl5qb4z.js",
+      "bytes": 57666,
+      "sha256": "ff63d84edc478bda3788304eedec3ff3ae195e1a407095c1d738a152f2eb92a9",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "33t46atd3n2zd.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/33t46atd3n2zd.js",
+      "bytes": 14434,
+      "sha256": "141d490992efe754b616f1a6d952ce6ce7c6ab1edc7c8af9fe5250808ab10d39",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "3bp7k99bc7_rw.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3bp7k99bc7_rw.js",
+      "bytes": 61778,
+      "sha256": "9f8759191eb476b0bc3cc70440501bbdf0577c37cd4642935251bb8e05727c44",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "3ebgs4bcjc6zj.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3ebgs4bcjc6zj.js",
+      "bytes": 217,
+      "sha256": "0467da852c42da5e20df5b0cdb346afa203142adbe4312665d25029c8cee2f8e",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "3k4mc_-m3l_4v.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3k4mc_-m3l_4v.js",
+      "bytes": 53048,
+      "sha256": "5ffc73e42cdb79fa1fa36880f2a8954bdcfc8147a18d5b3f1fb7aed2a0d89aec",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "3n255nqvs2973.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3n255nqvs2973.js",
+      "bytes": 128200,
+      "sha256": "1c8276a086a06fe9460829503c44f1f00d5c3c4c7e1e265d869beab8887d5206",
+      "billingCandidate": true,
+      "status": "downloaded"
+    },
+    {
+      "name": "3obogi2doaq0m.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3obogi2doaq0m.js",
+      "bytes": 23057,
+      "sha256": "bb8455a665fd72a5035e48e19f5bd3e7754a3176ecbf57e9f6524aaca7ccec5b",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "3q74pie1ja0za.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3q74pie1ja0za.js",
+      "bytes": 29624,
+      "sha256": "8b7f62d42b66625e69c6e9ebafd37036c3255cd0153c4d5b35e11f8fc4d24ec6",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "3tw453fuldij9.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3tw453fuldij9.js",
+      "bytes": 31695,
+      "sha256": "a31250aae12341212943360c7ba8bae0e13fc831d630d210d119958d5f6e9794",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "3yfm54dmcmlun.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3yfm54dmcmlun.js",
+      "bytes": 41929,
+      "sha256": "e12947350e3579fdb6184e874cbb2104a21f241b3357540f9786c6e066ce79aa",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "3zqd331w9koan.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3zqd331w9koan.js",
+      "bytes": 32295,
+      "sha256": "17833941255387f958421345df966f63695faa9f13b54b2bb01023d624eb69bf",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "3zrd50aerezl3.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/3zrd50aerezl3.js",
+      "bytes": 27917,
+      "sha256": "3ddb54c2a5e8b6ff7573083eec1352f2d8ff6b6776fb3e2717482fcf337b7bc3",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "431bw722fec3m.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/431bw722fec3m.js",
+      "bytes": 13894,
+      "sha256": "2530de10810d785f883895182c2049e0a16f0d8e2cfcd73cb7b497e71448cae1",
+      "billingCandidate": false,
+      "status": "downloaded"
+    },
+    {
+      "name": "turbopack-2_jgh21i2faci.js",
+      "url": "https://app.cadenceflow.pro/_next/static/chunks/turbopack-2_jgh21i2faci.js",
+      "bytes": 11007,
+      "sha256": "8e97884b008060e1852b2aa342b3c2bd62415813a9e2fd67f9123003720ea400",
+      "billingCandidate": false,
+      "status": "downloaded"
+    }
+  ]
+}

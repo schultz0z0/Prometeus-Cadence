@@ -1,0 +1,438 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/contacts".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/contacts
+	2 container
+		3 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+		4 image CadenceFlow
+		5 container
+			6 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+			7 button Contatos
+			8 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			9 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			10 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			11 link Description: [record value]r, Value: app.cadenceflow.pro/leads/qualifier
+			12 button Disparos em Massa
+			13 container
+				14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+				15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+				16 link Description: Templates, Value: app.cadenceflow.pro/templates
+				17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+			18 button LinkedIn Upgrade
+				19 text LinkedIn
+				20 text Upgrade
+			21 container
+				22 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+				23 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+				24 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+				25 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+				26 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+				27 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+				28 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+				29 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+			30 button Mensagens
+			31 container
+				32 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+				33 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+				34 button LinkedIn Upgrade
+					35 text LinkedIn
+					36 text Upgrade
+			37 link Description: Automações, Value: app.cadenceflow.pro/automations
+			38 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+			39 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+			40 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		41 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		42 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		43 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		44 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		45 text R
+		46 text [operator]
+		47 text [email]
+		48 button Sair
+		49 text Você está  montando  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+		50 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+		51 text Contatos
+		52 button Description: Como funciona esta área, Help: Como funciona: Contatos e fontes · 1 min
+		53 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			54 text Buscar…
+			55 text Ctrl K
+		56 button Abrir assistente
+		57 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		58 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		59 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		60 button Description: Ativar tema escuro, Help: Tema escuro
+		61 heading Leads, Value: 1
+			62 text Leads
+		63 text 20
+		64 button (collapsed) Adicionar, Secondary Actions: Expand
+		65 button (collapsed) Description: Mais ações, Secondary Actions: Expand
+		66 button (collapsed) Todos os contatos, Secondary Actions: Expand
+		67 button (expanded) Adicionar filtro, Secondary Actions: Collapse
+		68 search text field (settable)
+		69 button Excluir por e-mail
+		70 button Colunas
+		71 text 20  contato s
+		72 table
+			73 row
+				74 cell
+					75 checkbox (settable, integer) Description: Selecionar todos da página, Value: 0
+				76 cell
+					77 button NOME
+				78 cell
+					79 text CONTATO
+				80 cell
+					81 text STATUS
+				82 cell
+					83 text CADÊNCIA
+				84 cell
+					85 button CIDADE / UF
+			86 row
+				87 cell
+					88 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				89 cell
+					90 button Favoritar
+					91 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					92 text [record value]
+				93 cell
+					94 text [record value] [record value]
+				95 cell
+					96 text [record value]
+				97 cell
+					98 text [record value]
+				99 cell
+					100 text [record value]
+				101 cell
+					102 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			103 row
+				104 cell
+					105 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				106 cell
+					107 button Favoritar
+					108 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					109 text [record value]
+				110 cell
+					111 text [record value]
+				112 cell
+					113 text [record value]
+				114 cell
+					115 text [record value]
+				116 cell
+					117 text [record value]
+				118 cell
+					119 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			120 row
+				121 cell
+					122 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				123 cell
+					124 button Favoritar
+					125 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					126 text [record value]
+				127 cell
+					128 text [record value]
+				129 cell
+					130 text [record value]
+				131 cell
+					132 text [record value]
+				133 cell
+					134 text [record value]
+				135 cell
+					136 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			137 row
+				138 cell
+					139 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				140 cell
+					141 button Favoritar
+					142 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					143 text [record value]
+				144 cell
+					145 text [record value]
+				146 cell
+					147 text [record value]
+				148 cell
+					149 text [record value]
+				150 cell
+					151 text [record value]
+				152 cell
+					153 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			154 row
+				155 cell
+					156 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				157 cell
+					158 button Favoritar
+					159 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					160 text [record value]
+				161 cell
+					162 text [record value] [record value]
+				163 cell
+					164 text [record value]
+				165 cell
+					166 text [record value]
+				167 cell
+					168 text [record value]
+				169 cell
+					170 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			171 row
+				172 cell
+					173 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				174 cell
+					175 button Favoritar
+					176 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					177 text [record value]
+				178 cell
+					179 text [record value]
+				180 cell
+					181 text [record value]
+				182 cell
+					183 text [record value]
+				184 cell
+					185 text [record value]
+				186 cell
+					187 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			188 row
+				189 cell
+					190 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				191 cell
+					192 button Favoritar
+					193 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					194 text [record value]
+				195 cell
+					196 text [record value]
+				197 cell
+					198 text [record value]
+				199 cell
+					200 text [record value]
+				201 cell
+					202 text [record value]
+				203 cell
+					204 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			205 row
+				206 cell
+					207 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				208 cell
+					209 button Favoritar
+					210 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					211 text [record value]
+				212 cell
+					213 text [record value]
+				214 cell
+					215 text [record value]
+				216 cell
+					217 text [record value]
+				218 cell
+					219 text [record value]
+				220 cell
+					221 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			222 row
+				223 cell
+					224 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				225 cell
+					226 button Favoritar
+					227 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					228 text [record value]
+				229 cell
+					230 text [record value]
+				231 cell
+					232 text [record value]
+				233 cell
+					234 text [record value]
+				235 cell
+					236 text [record value]
+				237 cell
+					238 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			239 row
+				240 cell
+					241 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				242 cell
+					243 button Favoritar
+					244 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					245 text [record value]
+				246 cell
+					247 text [record value]
+				248 cell
+					249 text [record value]
+				250 cell
+					251 text [record value]
+				252 cell
+					253 text [record value]
+				254 cell
+					255 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			256 row
+				257 cell
+					258 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				259 cell
+					260 button Favoritar
+					261 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					262 text [record value]
+				263 cell
+					264 text [record value] [record value]
+				265 cell
+					266 text [record value]
+				267 cell
+					268 text [record value]
+				269 cell
+					270 text [record value]
+				271 cell
+					272 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			273 row
+				274 cell
+					275 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				276 cell
+					277 button Favoritar
+					278 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					279 text [record value]
+				280 cell
+					281 text [record value] [record value]
+				282 cell
+					283 text [record value]
+				284 cell
+					285 text [record value]
+				286 cell
+					287 text [record value]
+				288 cell
+					289 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			290 row
+				291 cell
+					292 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				293 cell
+					294 button Favoritar
+					295 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+				296 cell
+					297 text [record value] [record value]
+				298 cell
+					299 text [record value]
+				300 cell
+					301 text [record value]
+				302 cell
+					303 text [record value]
+				304 cell
+					305 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			306 row
+				307 cell
+					308 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				309 cell
+					310 button Favoritar
+					311 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					312 text [record value]
+				313 cell
+					314 text [record value] [record value]
+				315 cell
+					316 text [record value]
+				317 cell
+					318 text [record value]
+				319 cell
+					320 text [record value]
+				321 cell
+					322 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			323 row
+				324 cell
+					325 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				326 cell
+					327 button Favoritar
+					328 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+				329 cell
+					330 text [record value] [record value]
+				331 cell
+					332 text [record value]
+				333 cell
+					334 text [record value]
+				335 cell
+					336 text [record value]
+				337 cell
+					338 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			339 row
+				340 cell
+					341 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				342 cell
+					343 button Favoritar
+					344 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					345 text [record value]
+				346 cell
+					347 text [record value] [record value]
+				348 cell
+					349 text [record value]
+				350 cell
+					351 text [record value]
+				352 cell
+					353 text [record value]
+				354 cell
+					355 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			356 row
+				357 cell
+					358 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				359 cell
+					360 button Favoritar
+					361 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					362 text [record value]
+				363 cell
+					364 text [record value] [record value]
+				365 cell
+					366 text [record value]
+				367 cell
+					368 text [record value]
+				369 cell
+					370 text [record value]
+				371 cell
+					372 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			373 row
+				374 cell
+					375 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				376 cell
+					377 button Favoritar
+					378 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					379 text [record value]
+				380 cell
+					381 text [record value] [record value]
+				382 cell
+					383 text [record value]
+				384 cell
+					385 text [record value]
+				386 cell
+					387 text [record value]
+				388 cell
+					389 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			390 row
+				391 cell
+					392 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				393 cell
+					394 button Favoritar
+					395 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					396 text [record value]
+				397 cell
+					398 text [record value] [record value]
+				399 cell
+					400 text [record value]
+				401 cell
+					402 text [record value]
+				403 cell
+					404 text [record value]
+				405 cell
+					406 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+			407 row
+				408 cell
+					409 checkbox (settable, integer) Description: Selecionar [record value], Value: 0
+				410 cell
+					411 button Favoritar
+					412 link Description: [record value], Value: app.cadenceflow.pro/leads/:id
+					413 text [record value]
+				414 cell
+					415 text [record value] [record value]
+				416 cell
+					417 text [record value]
+				418 cell
+					419 text [record value]
+				420 cell
+					421 text [record value]
+				422 cell
+					423 link Description: Abrir, Value: app.cadenceflow.pro/leads/:id
+		424 button Status
+		425 button Cadência
+		426 button Contato disponível
+		427 button Resposta
+		428 button Origem
+		429 button Enriquecimento
+		430 button Estado
+		431 button Criado em
+		432 button Favoritos
+		433 button CRM
+		434 button E-mail verificado
+		435 button Opt-out
+
+The focused UI element is 67 button (expanded) Adicionar filtro, Secondary Actions: Collapse

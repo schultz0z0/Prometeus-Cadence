@@ -1,0 +1,276 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/dashboard".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/dashboard
+	2 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+	3 container
+		4 image CadenceFlow
+		5 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+		6 container
+			7 button Contatos
+			8 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			9 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			10 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			11 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+		12 container
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+		18 container
+			19 button LinkedIn Upgrade
+				20 text LinkedIn
+				21 text Upgrade
+			22 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+			23 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+			24 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+			25 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+			26 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+			27 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+			28 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+			29 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+		30 container
+			31 button Mensagens
+			32 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+			33 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+			34 button LinkedIn Upgrade
+				35 text LinkedIn
+				36 text Upgrade
+		37 link Description: Automações, Value: app.cadenceflow.pro/automations
+		38 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+		39 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+		40 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		41 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		42 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		43 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		44 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		45 text R [operator] [email]
+		46 button Sair
+	47 text Você está
+	48 text montando
+	49 text  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+	50 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+	51 container
+		52 text Dashboard
+		53 button Description: Como funciona esta área, Help: Como funciona: Como tudo se liga · 1 min
+		54 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			55 text Buscar…
+			56 text Ctrl K
+		57 button Abrir assistente
+		58 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		59 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		60 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		61 button Description: Ativar tema escuro, Help: Tema escuro
+	62 container
+		63 heading Comece a prospectar, Value: 2
+			64 text Comece a prospectar
+		65 text Complete todos os passos nos primeiros 14 dias e ganhe 15% de desconto nas 3 primeiras mensalidades.
+		66 progress indicator Description: Primeiros passos, Value: 8
+		67 text 8
+		68 text  de  14
+		69 container
+			70 text Faltam 6 passos para o seu código de 15% : economize R$ 178,65 .
+		71 container Encontre os leads certos
+			72 button (collapsed) Encontre os leads certos parte do seu desconto 6 de 6, Secondary Actions: Expand
+				73 heading Encontre os leads certos, Value: 2, ID: bloco-leads
+					74 text Encontre os leads certos
+				75 text parte do seu desconto
+				76 text 6
+				77 text  de
+				78 text 6
+		79 container Prepare seus canais
+			80 button (expanded) Prepare seus canais parte do seu desconto 0 de 2, Secondary Actions: Collapse
+				81 heading Prepare seus canais, Value: 2, ID: bloco-canais
+					82 text Prepare seus canais
+				83 text parte do seu desconto
+				84 text 0
+				85 text  de
+				86 text 2
+			87 content list bloco-canais-tarefas
+				88 container
+					89 image Por fazer
+					90 text Conecte seu canal de envio A caixa de e-mail ou o WhatsApp que vai mandar as mensagens e receber as respostas.
+					91 button Ver como funciona
+					92 button Conectar o e-mail
+				93 container
+					94 image Por fazer
+					95 text Conecte seu WhatsApp O número que manda as mensagens da cadência e recebe as respostas. Pelo QR Code leva um minuto.
+					96 button Conectar o WhatsApp
+		97 container Coloque a prospecção no ar
+			98 button (collapsed) Coloque a prospecção no ar parte do seu desconto 1 de 4, Secondary Actions: Expand
+				99 heading Coloque a prospecção no ar, Value: 2, ID: bloco-no-ar
+					100 text Coloque a prospecção no ar
+				101 text parte do seu desconto
+				102 text 1
+				103 text  de
+				104 text 4
+		105 container Converse e marque reuniões
+			106 button (collapsed) Converse e marque reuniões parte do seu desconto 1 de 2, Secondary Actions: Expand
+				107 heading Converse e marque reuniões, Value: 2, ID: bloco-reunioes
+					108 text Converse e marque reuniões
+				109 text parte do seu desconto
+				110 text 1
+				111 text  de
+				112 text 2
+		113 container Ajuda para começar
+			114 heading Veja em 2 minutos, Value: 3
+				115 text Veja em 2 minutos
+			116 text Um passeio pelas telas: da lista à primeira resposta.
+			117 button Ver o passeio
+			118 heading Central de Ajuda, Value: 3
+				119 text Central de Ajuda
+			120 text Passo a passo de cada tela, quando você precisar.
+			121 link Description: Abrir a Central, Value: cadenceflow.pro/central-de-ajuda
+			122 heading Prefere que a gente monte?, Value: 3
+				123 text Prefere que a gente monte?
+			124 text Na implantação assistida, nosso time monta o público, conecta os canais e escreve a primeira cadência com você.
+			125 link Description: Falar com o time, Value: wa.me/[number]?[redacted]
+		126 button Esconder estes passos
+		127 heading Dashboard, Value: 1
+			128 text Dashboard
+		129 text Visão geral da sua prospecção
+		130 checkbox Hoje, Value: 0
+		131 checkbox 7 dias, Value: 0
+		132 checkbox 30 dias, Value: 1
+		133 checkbox 90 dias, Value: 0
+		134 checkbox Personalizado, Value: 0
+		135 button Atualizar
+		136 button Ver de onde veio este número
+			137 text Leads novos
+			138 text 20
+			139 text base: 20
+		140 button Ver de onde veio este número
+			141 text Qualificados
+			142 text 10
+			143 text 50% dos novos
+		144 button Ver de onde veio este número
+			145 text Mensagens enviadas
+			146 text 0
+			147 text 0 e-mail · 0 WhatsApp
+		148 button Ver de onde veio este número
+			149 text Respostas
+			150 text 0
+			151 text 0 e-mail · 0 WhatsApp
+			152 text 0
+			153 text % dos envios
+		154 button Ver de onde veio este número
+			155 text Abertura de e-mail
+			156 text 0%
+			157 text 0% clicaram
+		158 button Ver de onde veio este número
+			159 text Opt-outs
+			160 text 0
+			161 text no período
+		162 heading Hoje, Value: 3
+			163 text Hoje
+		164 text desde 00:00  · America/Sao Paulo
+		165 button E-MAILS 0, Help: Ver de onde veio este número
+			166 text E-MAILS
+			167 text 0
+		168 button WHATSAPP 0, Help: Ver de onde veio este número
+			169 text WHATSAPP
+			170 text 0
+		171 button RESPOSTAS 0, Help: Ver de onde veio este número
+			172 text RESPOSTAS
+			173 text 0
+		174 button ERROS 0, Help: Ver de onde veio este número
+			175 text ERROS
+			176 text 0
+		177 button CADÊNCIAS 0 que enviaram, Help: Ver de onde veio este número
+			178 text CADÊNCIAS
+			179 text 0
+			180 text que enviaram
+		181 button AUTOMAÇÕES 0 execuções, Help: Ver de onde veio este número
+			182 text AUTOMAÇÕES
+			183 text 0
+			184 text execuções
+		185 button LEADS 0 novos, Help: Ver de onde veio este número
+			186 text LEADS
+			187 text 0
+			188 text novos
+		189 button QUALIFICADOS 0, Help: Ver de onde veio este número
+			190 text QUALIFICADOS
+			191 text 0
+		192 heading Leads novos por dia, Value: 3
+			193 text Leads novos por dia
+		194 text 30  dias
+		195 container
+			196 text 25/09 :  0
+		197 container
+			198 text 26/09 :  0
+		199 container
+			200 text 27/09 :  0
+		201 container
+			202 text 28/09 :  0
+		203 container
+			204 text 29/09 :  0
+		205 container
+			206 text 30/09 :  0
+		207 container
+			208 text 01/10 :  0
+		209 container
+			210 text 02/10 :  0
+		211 container
+			212 text 03/10 :  0
+		213 container
+			214 text 04/10 :  0
+		215 container
+			216 text 05/10 :  0
+		217 container
+			218 text 06/10 :  0
+		219 container
+			220 text 07/10 :  0
+		221 container
+			222 text 08/10 :  0
+		223 container
+			224 text 09/10 :  0
+		225 container
+			226 text 10/10 :  0
+		227 container
+			228 text 11/10 :  0
+		229 container
+			230 text 12/10 :  0
+		231 container
+			232 text 13/10 :  0
+		233 container
+			234 text 14/10 :  0
+		235 container
+			236 text 15/10 :  0
+		237 container
+			238 text 16/10 :  0
+		239 container
+			240 text 17/10 :  0
+		241 container
+			242 text 18/10 :  0
+		243 container
+			244 text 19/10 :  0
+		245 container
+			246 text 20/10 :  20
+		247 container
+			248 text 21/10 :  0
+		249 container
+			250 text 22/10 :  0
+		251 container
+			252 text 23/10 :  0
+		253 container
+			254 text 24/10 :  0
+		255 text 25/09 24/10
+		256 heading Funil de qualificação, Value: 3
+			257 text Funil de qualificação
+		258 text Qualificado 11  ( 55 %) Pendente 7  ( 35 %) Desqualificado 2  ( 10 %)
+		259 heading Prospecção, Value: 3
+			260 text Prospecção
+		261 text no período E-mails 0 WhatsApp 0 Respostas 0 ( 0 % ) Conexões 0 ( 0 %) Aberturas 0 ( 0 %) Cliques 0 ( 0 %) Opt-out 0
+		262 link Description: Ver relatório detalhado →, Value: app.cadenceflow.pro/reports
+		263 heading Geração e qualificação, Value: 3
+			264 text Geração e qualificação
+		265 text no período 0 ENCONTRADOS 0 SALVOS 0 DUPLICADOS Execuções de automação 0 Buscas no gerador 0 Leads avaliados pelo qualificador 0 Aprovados 0 ( 0 %) Reprovados 0
+		266 heading Leads nas cadências, Value: 3
+			267 text Leads nas cadências
+		268 text no período Aguardando início [number] %) 0  cadência s  ativa s  · 0 rodaram hoje
+		269 link Description: Ver cadências →, Value: app.cadenceflow.pro/cadences
+		270 heading Atividade recente, Value: 3
+			271 text Atividade recente
+		272 link Description: Ver todas →, Value: app.cadenceflow.pro/executions
+		273 text Nenhuma execução encontrada Configure suas cadências para começar
+
+The focused UI element is 1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/dashboard

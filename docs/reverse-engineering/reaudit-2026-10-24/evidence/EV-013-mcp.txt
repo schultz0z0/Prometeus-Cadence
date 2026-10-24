@@ -1,0 +1,144 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/settings/mcp".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/settings/mcp
+	2 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+	3 container
+		4 image CadenceFlow
+		5 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+		6 container
+			7 button Contatos
+			8 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			9 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			10 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			11 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+		12 container
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+		18 container
+			19 button LinkedIn Upgrade
+				59 text LinkedIn
+				60 text Upgrade
+			20 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+			21 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+			22 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+			23 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+			24 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+			25 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+			26 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+			27 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+		28 container
+			29 button Mensagens
+			30 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+			31 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+			61 button LinkedIn Upgrade
+				62 text LinkedIn
+				63 text Upgrade
+		33 link Description: Automações, Value: app.cadenceflow.pro/automations
+		34 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+		64 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+		43 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		44 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		65 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		66 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		45 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		46 text R [operator] [email]
+		47 button Sair
+	67 text Você está
+	68 text montando
+	69 text  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+	70 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+	48 container
+		49 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		97 text MCP
+		51 button Description: Como funciona esta área, Help: Como funciona: MCP: Claude e ChatGPT · 1 min
+		52 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			53 text Buscar…
+			54 text Ctrl K
+		55 button Abrir assistente
+		71 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		56 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		57 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		58 button Description: Ativar tema escuro, Help: Tema escuro
+	72 container
+		73 container Configurações
+			74 text CONTA
+			75 content list
+				76 link Description: Conta, Value: app.cadenceflow.pro/settings/account
+				77 link Description: Contexto de IA, Value: app.cadenceflow.pro/settings/context
+				78 link Description: Notificações, Value: app.cadenceflow.pro/settings/notifications
+				79 link Description: Membros, Value: app.cadenceflow.pro/settings/seats
+				80 link Description: Segurança, Value: app.cadenceflow.pro/settings/security
+				81 link Description: MCP, Value: app.cadenceflow.pro/settings/mcp
+				82 link Description: Meu plano, Value: app.cadenceflow.pro/settings/plan
+			83 text ENVIO
+			84 content list
+				85 link Description: Contas de e-mail, Value: app.cadenceflow.pro/settings/email
+				86 link Description: WhatsApp, Value: app.cadenceflow.pro/settings/whatsapp
+				87 link Description: Limites de disparo, Value: app.cadenceflow.pro/settings/dispatch-limits
+			88 text DADOS
+			89 content list
+				90 link Description: Contatos duplicados, Value: app.cadenceflow.pro/settings/dados
+				91 link Description: Privacidade, Value: app.cadenceflow.pro/settings/privacy
+			92 text INTEGRAÇÕES
+			93 content list
+				94 link Description: CRM e apps, Value: app.cadenceflow.pro/settings/apps
+				95 link Description: Webhooks e API, Value: app.cadenceflow.pro/settings/webhooks
+			96 button Como funciona esta área
+		98 heading MCP, Value: 1
+			99 text MCP
+		100 text Opere o CadenceFlow de dentro do Claude ou do ChatGPT, por linguagem natural
+		101 container
+			102 heading Como funciona, em 2 minutos, Value: 2
+				103 text Como funciona, em 2 minutos
+			104 text Do conector instalado ao primeiro pedido feito pela conversa.
+		105 button Ver o vídeo
+		106 container
+			107 heading Claude e ChatGPT, Value: 2
+				108 text Claude e ChatGPT
+			109 text Criar cadências, qualificar leads, extrair da base CNPJ e ler métricas sem sair da conversa. Incluído no seu plano
+		110 text URL DO CONECTOR
+		111 text https://mcp.cadenceflow.pro/mcp
+		112 button Copiar
+		113 text LOGIN NO CONECTOR
+		114 text O mesmo e-mail e senha deste painel (autenticação OAuth).
+		115 text Onde adicionar
+		116 text Claude
+		117 container
+			118 text Configurações → Conectores →  Adicionar conector personalizado .
+		119 container
+			120 text ChatGPT  (Plus, Pro ou Business)
+		121 container
+			122 text Configurações → Conectores → Avançado →  Modo desenvolvedor  →  Criar , autenticação OAuth.
+		123 text Já tinha tentado conectar antes e deu erro? Remova o conector e adicione de novo, liberar o acesso não reconecta um conector que já existia.
+		124 container
+			125 heading Quem tem acesso, Value: 2
+				126 text Quem tem acesso
+			127 text Quem consegue operar esta conta pelo Claude ou ChatGPT. Cada pessoa entra com o próprio login.
+		128 text R
+		129 text [operator]
+		130 text [email]
+		131 text Dono · acesso total
+		132 container
+			133 text Nenhum membro na conta. Para dar acesso a alguém da equipe, convide em
+			134 link Description: Membros, Value: app.cadenceflow.pro/settings/seats
+			135 text  e marque "Acesso ao MCP".
+		136 container
+			137 heading Comece por aqui: pedidos prontos, Value: 2
+				138 text Comece por aqui: pedidos prontos
+			139 text Cole no Claude ou no ChatGPT e troque o que está entre colchetes. Nada é ligado sem você ver antes.
+		140 text Configurar a conta do zero
+		141 button Copiar
+		142 text Configura minha conta do CadenceFlow do zero. Eu vendo [o que você vende] para [quem decide a compra]. Monta uma lista de até 100 empresas de [segmento] em [cidade ou estado] pela Base CNPJ, qualifica com IA lendo o site de cada uma, e escreve uma cadência de 3 mensagens de [WhatsApp ou e-mail] nos dias 1, 3 e 7, com tom pessoal, como se eu mesmo tivesse escrito. Me mostra tudo antes de ligar.
+		143 text Reescrever uma cadência com tom humano
+		144 button Copiar
+		145 text Revisa a cadência "[nome da cadência]" e reescreve as mensagens pra parecerem escritas por uma pessoa: curtas, primeiro nome, uma ideia por mensagem, uma pergunta no fim, sem caixa alta, sem promessa de resultado. Mantém as variáveis que já existem e me mostra antes e depois.
+		146 text Leads novos toda semana, sozinho
+		147 button Copiar
+		148 text Cria uma automação que toda segunda-feira busca 50 novas empresas de [segmento] em [região], qualifica com IA e coloca as qualificadas na cadência "[nome da cadência]". Respeita o limite do meu plano.
+		149 text O que responder pra quem respondeu
+		150 button Copiar
+		151 text Quais leads responderam nos últimos 7 dias? Pra cada um, resume o que a pessoa disse e sugere uma resposta curta no meu tom.
+
+The focused UI element is 81 link Description: MCP, URL: app.cadenceflow.pro/settings/mcp

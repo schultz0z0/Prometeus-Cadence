@@ -1,0 +1,214 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/first-steps".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/first-steps
+	2 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+	3 container
+		4 image CadenceFlow
+		5 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+		6 container
+			7 button Contatos
+			8 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			9 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			10 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			11 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+		12 container
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+		18 container
+			19 button LinkedIn Upgrade
+				20 text LinkedIn
+				21 text Upgrade
+			22 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+			23 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+			24 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+			25 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+			26 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+			27 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+			28 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+			29 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+		30 container
+			31 button Mensagens
+			32 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+			33 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+			34 button LinkedIn Upgrade
+				35 text LinkedIn
+				36 text Upgrade
+		37 link Description: Automações, Value: app.cadenceflow.pro/automations
+		38 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+		39 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+		40 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		41 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		42 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		43 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		44 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		45 text R [operator] [email]
+		46 button Sair
+	47 text Você está
+	48 text montando
+	49 text  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+	50 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+	51 container
+		52 text Primeiros passos
+		53 button Description: Como funciona esta área, Help: Como funciona: Primeiros passos · 1 min
+		54 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			55 text Buscar…
+			56 text Ctrl K
+		57 button Abrir assistente
+		58 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		59 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		60 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		61 button Description: Ativar tema escuro, Help: Tema escuro
+	62 container
+		63 heading Primeiros passos, Value: 1
+			64 text Primeiros passos
+		65 text As tarefas até a primeira resposta de um lead, em quatro blocos. Cada uma leva pra tela certa e mostra como ela funciona; o sistema marca sozinho o que você já fez.
+		66 container
+			67 text 57 %
+		68 container
+			69 text 8  de  14  etapas
+		70 content list Etapas
+			71 container
+				72 text A IA já sabe o que você vende
+				73 button Como funciona
+				74 link Description: Abrir, Value: app.cadenceflow.pro/settings/context
+			75 container
+				76 text Produto cadastrado no contexto
+				77 button Como funciona
+				78 link Description: Abrir, Value: app.cadenceflow.pro/settings/context
+			79 container
+				80 text Lista montada: 20 empresas
+				81 button Como funciona
+				82 link Description: Abrir, Value: app.cadenceflow.pro/contacts?[redacted]
+			83 container
+				84 text Leads avaliados pela IA
+				85 button Como funciona
+				86 link Description: Abrir, Value: app.cadenceflow.pro/leads/qualifier
+			87 container
+				88 text Automação criada
+				89 button Como funciona
+				90 link Description: Abrir, Value: app.cadenceflow.pro/automations
+			91 container
+				92 text Contatos organizados
+				93 button Como funciona
+				94 link Description: Abrir, Value: app.cadenceflow.pro/contacts
+			95 container
+				96 text 7 Conecte seu canal de envio A caixa de e-mail ou o WhatsApp que vai mandar as mensagens e receber as respostas.
+				97 button Como funciona
+				98 button Conectar o e-mail
+			99 container
+				100 text 8 Conecte seu WhatsApp O número que manda as mensagens da cadência e recebe as respostas. Pelo QR Code leva um minuto.
+				101 button Como funciona
+				102 button Conectar o WhatsApp
+			103 container
+				104 text Cadência criada
+				105 button Como funciona
+				106 link Description: Abrir, Value: app.cadenceflow.pro/cadences/:id
+			107 container
+				108 text 10 Salve uma mensagem pronta Um template é um texto pronto para reaproveitar nas cadências, com o nome da empresa entrando sozinho.
+				109 button Como funciona
+				110 button Criar um template
+			111 container
+				112 text 11 Ligue a cadência Ligar começa pelo teste grátis: 14 dias, com cartão e sem cobrança hoje.
+				113 button Ativar o teste grátis
+			114 container
+				115 text 12 Veja a primeira mensagem sair Sai no próximo horário de envio da cadência. Cada envio aparece em Execuções, com o resultado.
+				116 button Como funciona
+				117 button Ver execuções
+			118 container
+				119 text Aviso de resposta no seu WhatsApp
+				120 link Description: Abrir, Value: app.cadenceflow.pro/settings/notifications
+			121 container
+				122 text 14 Conecte seu CRM opcional O CadenceFlow se integra ao CRM FunnelsFlow. São três passos: crie sua conta no FunnelsFlow, gere a chave de API em Configurações › Integrações e conecte aqui. Os leads que responderem caem no funil sozinhos.
+				123 button Conectar o CRM
+			124 container
+				125 text 15 Receba e responda o primeiro lead Respostas costumam vir entre o 2º e o 5º dia. Responder em até 24 horas é o que mais vira reunião.
+				126 button Como funciona
+				127 button Abrir Mensagens
+		128 text DEPOIS: O CRM E A IA TRABALHANDO POR VOCÊ
+		129 content list Próximo nível
+			130 container
+				131 text 16 Use o CadenceFlow pelo Claude ou pelo ChatGPT Com o MCP, você opera a conta conversando no Claude ou no ChatGPT. Ele fica fora do teste grátis e entra quando o plano vira pago. Exemplos do que pedir
+				132 content list
+					133 container
+						134 text “ Gere 50 leads de clínicas em Curitiba e qualifique com IA ”
+					135 container
+						136 text “ Reescreva a cadência "Clínicas" com tom mais pessoal ”
+					137 container
+						138 text “ Quem respondeu nesta semana? Resuma cada um ”
+				139 text Quer saber mais?
+				140 button Como conectar ao Claude ou ao ChatGPT
+				141 button O que é o MCP do CadenceFlow
+				142 button Como funciona
+				143 button Ver em Meu plano
+		144 container
+			145 text Dá pra fazer tudo sozinho.  Cada passo leva pra tela certa e mostra como ela funciona.
+		146 link Description: Prefere que a gente monte? Implantação assistida, com CS no WhatsApp junto Público e listas montados com você Caixas de e-mail e WhatsApp conectados e aquecidos Primeira cadência escrita e ligada Falar com o comercial, Value: wa.me/[number]?[redacted]
+		147 container Conheça cada tela
+			148 heading Conheça cada tela, Value: 2, ID: passeios-titulo
+				149 text Conheça cada tela
+			150 text Cada um abre a tela de verdade e explica, em balões, o que é cada parte e o que fazer ali. Dá pra rever quantas vezes quiser.
+			151 content list
+				152 container
+					153 text O que você acabou de criar ·  1  min A lista, o veredito da IA, o critério, a cadência e as automações que o assistente montou, e o que falta.
+					154 button Ver
+				155 container
+					156 text Como tudo se liga ·  1  min O ciclo em cinco paradas: a lista, a cadência, o canal, as respostas e as automações. Visto em  20/10
+					157 button Rever
+				158 container
+					159 text Contatos e fontes ·  1  min A base, as listas, de onde vêm mais empresas e o veredito da IA.
+					160 button Ver
+				161 container
+					162 text Disparos em massa ·  1  min O que é uma cadência, cada mensagem, quem entra e o que acontece ao ligar.
+					163 button Ver
+				164 container
+					165 text Canais: e-mail e WhatsApp ·  1  min Conectar caixas e números, a saúde de cada um e por que mais volume é mais caixa.
+					166 button Ver
+				167 container
+					168 text Automações ·  1  min Buscar e qualificar todo dia, o critério e o que cada rodada trouxe.
+					169 button Ver
+				170 container
+					171 text Mensagens e relatórios ·  1  min As respostas num lugar só, o que está rendendo e o funil.
+					172 button Ver
+				173 container
+					174 text Contexto de IA ·  1  min O que a IA sabe da sua empresa: ler o site, perfil e produtos, revisar e aprovar.
+					175 button Ver
+				176 container
+					177 text Gerar leads ·  1  min As fontes, o que buscar, a lista de destino e quando usar uma automação.
+					178 button Ver
+				179 container
+					180 text Enriquecer decisores ·  1  min Créditos, a lista, o preview grátis com teto e a lista de decisores com WhatsApp.
+					181 button Ver
+				182 container
+					183 text Qualificador ·  1  min Escolher a lista, o que ele faz com cada lead, iniciar e o histórico.
+					184 button Ver
+				185 container
+					186 text WhatsApp Oficial (API da Meta) ·  1  min Conectar o número pela Meta, o primeiro template com IA, a aprovação e o teste.
+					187 button Ver
+				188 container
+					189 text Templates ·  1  min Modelos de mensagem por canal, o filtro e a aprovação da Meta no WhatsApp Oficial.
+					190 button Ver
+				191 container
+					192 text Execuções ·  1  min O que aconteceu com cada envio, por que algo não saiu e o detalhe de cada ação.
+					193 button Ver
+				194 container
+					195 text Pipeline ·  1  min Em que ponto está cada lead de uma cadência, etapa por etapa.
+					196 button Ver
+				197 container
+					198 text Mensagens do WhatsApp ·  1  min As conversas, quem espera você e como responder.
+					199 button Ver
+				200 container
+					201 text Apollo como fonte ·  1  min O que a conexão com o Apollo liberou: gerador, revelar e-mails, lista de destino.
+					202 button Ver
+				203 container
+					204 text Primeiros passos ·  1  min As etapas até a primeira resposta, a próxima ação e todos os passeios pra rever.
+					205 button Ver
+				206 container
+					207 text MCP: Claude e ChatGPT ·  1  min O que o MCP faz, um exemplo de conversa e como ativar e conectar.
+					208 button Ver
+				209 container
+					210 text Configurações: plano, avisos e time ·  1  min O mapa das configurações, plano e pacotes, avisos e limites de disparo.
+					211 button Ver
+
+The focused UI element is 1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/first-steps

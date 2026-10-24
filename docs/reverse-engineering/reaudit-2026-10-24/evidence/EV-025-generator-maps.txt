@@ -1,0 +1,108 @@
+Browser tab: [number], Title: "CadenceFlow: Prospecção Inteligente", URL: "https://app.cadenceflow.pro/leads/generator".
+1 AXWebArea CadenceFlow: Prospecção Inteligente, URL: app.cadenceflow.pro/leads/generator
+	2 button Description: Recolher ou expandir o menu lateral, Help: Recolher/expandir menu
+	3 container
+		4 image CadenceFlow
+		5 link Description: Dashboard, Value: app.cadenceflow.pro/dashboard
+		6 container
+			7 button Contatos
+			8 link Description: Leads, Value: app.cadenceflow.pro/contacts
+			9 link Description: Gerador, Value: app.cadenceflow.pro/leads/generator
+			10 link Description: Enriquecer, Value: app.cadenceflow.pro/leads/enrich
+			11 link Description: Qualificador, Value: app.cadenceflow.pro/leads/qualifier
+		12 container
+			13 button Disparos em Massa
+			14 link Description: Cadências, Value: app.cadenceflow.pro/cadences
+			15 link Description: Pipeline, Value: app.cadenceflow.pro/cadences/pipeline
+			16 link Description: Templates, Value: app.cadenceflow.pro/templates
+			17 link Description: Execuções, Value: app.cadenceflow.pro/executions
+		18 container
+			19 button LinkedIn Upgrade
+				20 text LinkedIn
+				21 text Upgrade
+			22 link Description: Visão geral, Value: app.cadenceflow.pro/linkedin/dashboard
+			23 link Description: Campanhas, Value: app.cadenceflow.pro/linkedin/campaigns
+			24 link Description: Pessoas, Value: app.cadenceflow.pro/linkedin/people
+			25 link Description: Pipeline, Value: app.cadenceflow.pro/linkedin/pipeline
+			26 link Description: Enriquecimento, Value: app.cadenceflow.pro/linkedin/enrichment
+			27 link Description: Aprovações, Value: app.cadenceflow.pro/linkedin/approvals
+			28 link Description: Cadências, Value: app.cadenceflow.pro/linkedin/cadences
+			29 link Description: Templates, Value: app.cadenceflow.pro/linkedin/templates
+		30 container
+			31 button Mensagens
+			32 link Description: E-mail, Value: app.cadenceflow.pro/inbox
+			33 link Description: WhatsApp, Value: app.cadenceflow.pro/messages/whatsapp
+			34 button LinkedIn Upgrade
+				35 text LinkedIn
+				36 text Upgrade
+		37 link Description: Automações, Value: app.cadenceflow.pro/automations
+		38 link Description: Relatórios, Value: app.cadenceflow.pro/reports
+		39 link Description: Agente SDR Upgrade, Value: app.cadenceflow.pro/sdr
+		40 link Description: Configurações, Value: app.cadenceflow.pro/settings
+		41 link Description: Central de Ajuda, Value: cadenceflow.pro/central-de-ajuda
+		42 link Description: Primeiros passos 6, Value: app.cadenceflow.pro/first-steps
+		43 link Description: Começar o teste grátis, Help: Começar o teste grátis de 14 dias, Value: app.cadenceflow.pro/start-trial
+		44 link Description: Teste por ativar, Value: app.cadenceflow.pro/settings/plan
+		45 text R [operator] [email]
+		46 button Sair
+	47 text Você está
+	48 text montando
+	49 text  a sua prospecção. Pra ligar, comece o teste grátis de 14 dias.
+	50 link Description: Começar o teste, Value: app.cadenceflow.pro/start-trial
+	51 container
+		52 link Description: Leads, Value: app.cadenceflow.pro/leads
+		53 text Gerador
+		54 button Description: Como funciona esta área, Help: Como funciona: Gerar leads · 1 min
+		55 button Description: Buscar (Ctrl+K), Help: Buscar lead, cadência ou página (Ctrl+K)
+			56 text Buscar…
+			57 text Ctrl K
+		58 button Abrir assistente
+		59 button (collapsed) Description: Fale com a gente, Secondary Actions: Expand
+		60 button (collapsed) Description: Notificações, Secondary Actions: Expand
+		61 button Description: Alternar tamanho do texto, Help: Tamanho do texto: compacto / normal / grande
+		62 button Description: Ativar tema escuro, Help: Tema escuro
+	63 container
+		64 heading Gerador de leads, Value: 1
+			65 text Gerador de leads
+		66 text Encontre empresas no Google Maps, na busca da web ou na Base CNPJ e salve numa lista pronta pra qualificar. Esta é a forma avulsa: você roda agora, uma vez.
+		67 link Description: Em Automações, Value: app.cadenceflow.pro/automations/new
+		68 text o sistema repete isso sozinho e traz leads novos toda semana. Isto roda  uma vez , agora.
+		69 link Description: Para ter leads entrando sozinho, crie uma automação, Value: app.cadenceflow.pro/automations/new
+		70 text Fonte de busca
+		71 Fonte de busca
+			72 radio button Value: 1, Google Maps Empresas com endereço: comércio local e serviços por cidade ou região. Traz: nome, telefone, site, endereço, nota
+				73 text Google Maps
+				74 text Empresas com endereço: comércio local e serviços por cidade ou região.
+				75 text Traz:
+				76 text nome, telefone, site, endereço, nota
+			77 radio button Value: 0, Busca na web Qualquer nicho que você descreva; a IA monta a busca e filtra o que não é empresa. Traz: nome, site, cidade, e-mail e telefone via qualificação
+				78 text Busca na web
+				79 text Qualquer nicho que você descreva; a IA monta a busca e filtra o que não é empresa.
+				80 text Traz:
+				81 text nome, site, cidade, e-mail e telefone via qualificação
+			82 radio button Value: 0, Base CNPJ Receita Federal: 120 milhões de empresas por CNAE, porte, estado e mais. Traz: razão social, CNPJ, sócios, endereço, telefone
+				83 text Base CNPJ
+				84 text Receita Federal: 120 milhões de empresas por CNAE, porte, estado e mais.
+				85 text Traz:
+				86 text razão social, CNPJ, sócios, endereço, telefone
+			87 radio button Help: Conecte a sua chave do Apollo pra usar esta fonte, Value: 0, Apollo CONECTAR Pessoas por cargo, setor, tamanho e local no banco do Apollo, e as listas que você já salvou lá. Cole a sua chave do Apollo em Configurações › CRM e apps
+				88 text Apollo
+				89 text CONECTAR
+				90 text Pessoas por cargo, setor, tamanho e local no banco do Apollo, e as listas que você já salvou lá.
+				91 text Cole a sua chave do Apollo em Configurações › CRM e apps
+		92 text Lista de destino
+		93 button Criar nova
+		94 button Usar existente
+		95 text field (settable)
+		96 text Palavra-chave / Nicho
+		206 text field (settable)
+		207 button Sugerir com IA
+		101 text field (settable)
+		208 text Localização
+		209 text field (settable)
+		210 text Máximo de resultados
+		211 stepper (settable, integer) 50
+		212 text Os leads entram na lista sem qualificação; rode o Qualificador depois pra achar e-mail, telefone e o que a empresa faz.
+		205 button Iniciar geração
+
+The focused UI element is 72 radio button Value: 1, Google Maps Empresas com endereço: comércio local e serviços por cidade ou região. Traz: nome, telefone, site, endereço, nota
