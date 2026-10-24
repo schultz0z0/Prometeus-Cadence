@@ -30,15 +30,12 @@ async function state(p:Principal,messageId:string,input:z.infer<typeof schema>){
   const snapshot:ReconciliationSnapshot={...input,messageId,attemptId:ctx.attempt.id,verification:'provider-api',remoteStatus:remote.evidence?.status};
   return {ctx,snapshot,proof:{workspaceId:p.workspaceId,actorId:p.userId,snapshot,fence:Number(ctx.attempt.fence),attemptOutcome:ctx.attempt.outcome}};
  }
- const url=new URL(input.reference),hosts=ctx.connection.provider==='meta'?['business.facebook.com','developers.facebook.com']:['console.twilio.com'];
+ if(ctx.connection.provider==='twilio')throw new AppError(410,'O histórico Twilio é somente para leitura.','PROVIDER_RETIRED');
+ const url=new URL(input.reference),hosts=['business.facebook.com','developers.facebook.com'];
  if(url.protocol!=='https:'||url.username||url.password||url.port||!hosts.includes(url.hostname))throw new AppError(422,'Informe uma referência do painel do próprio provedor.');
  if((input.resolution==='accepted'&&!input.remoteId)||(input.resolution==='not_accepted'&&input.remoteId))throw new AppError(422,'Revise o resultado e o identificador remoto.');
  let verification:ReconciliationSnapshot['verification']='administrator-evidence';
- if(input.resolution==='accepted'&&ctx.connection.provider==='twilio'){
-  const record=ctx.credential,config={provider:ctx.connection.provider,connectionId:ctx.connection.id,revision:Number(record.revision),identifiers:record.identifiers,credentials:decryptCredential(record.envelope,{workspaceId:p.workspaceId,connectionId:ctx.connection.id,provider:ctx.connection.provider,revision:Number(record.revision)}),sender:senderView(ctx.sender),templates:[]};
-  const remote=await providerAdapter('twilio').lookupMessage(config,input.remoteId!);
-  if(remote?.kind!=='accepted'||remote.evidence?.accountId!==record.verified_account_id||remote.evidence?.from!=='whatsapp:'+ctx.sender.address||remote.evidence?.to!=='whatsapp:'+ctx.outbox.prepared_send.identity.phone)throw new AppError(409,'O registro remoto não corresponde ao remetente e destinatário desta tentativa.');verification='provider-api';
- }
+
  const snapshot:ReconciliationSnapshot={...input,messageId,attemptId:ctx.attempt.id,verification};
  return {ctx,snapshot,proof:{workspaceId:p.workspaceId,actorId:p.userId,snapshot,fence:Number(ctx.attempt.fence),attemptOutcome:ctx.attempt.outcome}};
 }

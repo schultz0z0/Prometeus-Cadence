@@ -34,6 +34,7 @@ export async function replyState(c:PoolClient,p:Principal,target:{conversationId
  const senderId=test?(input as z.infer<typeof channelTestSchema>).senderId:conversation.sender_id;
  const row=(await c.query('SELECT * FROM app.channel_sender WHERE id=$1',[senderId])).rows[0];if(!row)throw new AppError(404,'Remetente não encontrado.');
  const sender=senderView(row),conn=await connectionRow(c,sender.connectionId);if(test&&conn.id!==target.connectionId)throw new AppError(404,'Remetente não pertence à conexão.');
+ if(conn.provider==='twilio')throw new AppError(410,'Twilio foi aposentado.','PROVIDER_RETIRED');
  const testInput=test?input as z.infer<typeof channelTestSchema>:null,scope=whatsappIdentityScope(conn.provider,conn.id,conn.external_account_id);
  const identities=test?(await c.query('SELECT * FROM app.channel_identity WHERE scope=$1 AND (external_id=$2 OR phone=$3) ORDER BY id LIMIT 2',[scope,whatsappPhoneExternalId(scope,testInput!.phone),testInput!.phone])).rows:[];
  if(identities.length>1)throw new AppError(409,'Revise as identidades desse telefone antes do teste.');

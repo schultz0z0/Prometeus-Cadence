@@ -38,6 +38,7 @@ export async function recordLeadConsent(p:Principal,input:unknown):Promise<void>
   if(!lead)throw new AppError(404,'Lead não encontrado.');const normalized=String(lead.phone??'').trim().startsWith('+')?'+'+String(lead.phone).replace(/\D/g,''):null;
   if(normalized!==b.phone)throw new AppError(409,'O telefone do lead mudou. Revise o consentimento.');
   const sender=(await c.query('SELECT s.*,c.external_account_id,c.credentials_verified FROM app.channel_sender s JOIN app.channel_connection c ON c.workspace_id=s.workspace_id AND c.id=s.connection_id WHERE s.id=$1',[b.senderId])).rows[0];
+  if(sender?.provider==='twilio')throw new AppError(410,'Twilio foi aposentado.','PROVIDER_RETIRED');
   if(!sender?.credentials_verified||!sender.external_account_id)throw new AppError(409,'Verifique a conexão antes de registrar o consentimento.');
   const identity=await ensurePhoneIdentity(c,p,whatsappIdentityScope(sender.provider,sender.connection_id,sender.external_account_id),b.phone);
   await c.query('INSERT INTO app.consent_evidence(workspace_id,id,identity_id,purpose,source,occurred_at,evidence,actor_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.workspaceId,randomUUID(),identity.id,'campaign',b.source,b.occurredAt,b.evidence,p.userId]);

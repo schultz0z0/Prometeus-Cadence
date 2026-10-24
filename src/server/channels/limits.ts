@@ -17,6 +17,7 @@ export async function saveSenderLimits(p:Principal,input:unknown):Promise<void>{
   await requireChannelAdmin(c);await lockWorkspace(c);const hash=commandHash({action:'sender.limits',input:b});if(await priorCommand(c,p,b.requestId,hash))return;
   const row=(await c.query('SELECT * FROM app.messaging_limits FOR UPDATE')).rows[0],sender=(await c.query('SELECT * FROM app.channel_sender WHERE id=$1 FOR UPDATE',[b.senderId])).rows[0];
   if(!sender)throw new AppError(404,'Remetente não encontrado.');if(Number(row?.revision??0)!==b.expectedRevision)throw new AppError(409,'Os limites mudaram. Revise novamente.');
+  if(sender.provider==='twilio')throw new AppError(410,'Twilio foi aposentado.','PROVIDER_RETIRED');
   if(sender.provider==='openwa'){
    const caps=openwaPlatformCaps(),policy=openwaLimitPolicy({dailyLimit:b.senderDailyLimit,newConversationLimit:b.senderNewConversationLimit??Math.min(sender.new_conversation_limit??5,b.senderDailyLimit),platformDailyCap:caps.daily,platformNewConversationCap:caps.newConversation});
    if(!policy.allowed)throw new AppError(422,'O limite excede a capacidade da plataforma OpenWA.','OPENWA_PLATFORM_LIMIT');

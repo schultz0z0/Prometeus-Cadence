@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {channelHttp} from './request.ts';
-import {readConnections,saveConnection,requireChannelAdmin,commandHash,priorCommand,completeCommand} from './repository.ts';
+import {readConnections,saveConnection,connectionRow,requireChannelAdmin,commandHash,priorCommand,completeCommand} from './repository.ts';
 import {verifyConnection,disconnectConnection,readVerifyToken} from './connections.ts';
 import {syncTemplates} from './templates.ts';
 import {saveSenderLimits} from './limits.ts';
@@ -12,6 +12,7 @@ import {openwaAction} from './openwa/http.ts';
 const actionSchema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(1)});
 export function channelRequestHandler(request:Request,params:Record<string,string>):Promise<Response>{return channelHttp(request,async(p,body)=>{
  const {id,action}=params;if(id==='openwa'||action?.startsWith('openwa-'))return openwaAction(p,request,body,id,action);if(!id){if(request.method==='GET')return readConnections(p);if(request.method==='POST')return saveConnection(p,body);}
+ if(id)await withWorkspaceTransaction(p,async c=>{const row=await connectionRow(c,id);if(row.provider==='twilio')throw new AppError(410,'Twilio foi aposentado.','PROVIDER_RETIRED');});
  if(request.method!=='POST')throw new AppError(405,'Método não permitido.');
  if(action==='test-prepare')return prepareChannelTest(p,id,body);
  if(action==='test-confirm')return confirmChannelTest(p,id,body);

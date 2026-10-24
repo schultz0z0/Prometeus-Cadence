@@ -184,11 +184,11 @@ Contrato SQL da manutenção: `app.claim_openwa_operation(p_now timestamptz)`, `
 
 **Interfaces:** Provedor legado só para leitura. Cadastros/verify/sync/test/publish novos com Twilio retornam código `PROVIDER_RETIRED`; rota de webhook legado retorna 410 sem executar SDK. Dispatcher bloqueia `PROVIDER_RETIRED` antes de I/O. Nenhum histórico recebe provedor OpenWA por atualização em massa.
 
-- [ ] Criar fixture legado diretamente no catálogo de teste em formato anterior à migração; verificar conversa/recibo legíveis, publicação pausada e outbox não transmitida. Assert: `assert.equal(providerCalls,0)` ao tentar criar/verificar/despachar Twilio depois do upgrade.
-- [ ] Rodar `rtk npm run test:integration -- twilio-retirement`; falhar enquanto caminhos ativos ainda existem.
-- [ ] Pausar publicações e cancelar somente trabalho ainda não transmitido Twilio, preservando tentativa/recibo incerto já existente. Remover importações/SDK e fluxos de tempo REST Twilio; não apagar dados anteriores nem reclassificar resultados. Adaptar testes antigos para provar aposentadoria e manter as verificações compartilhadas Meta/e-mail; revisar diff de remoções.
-- [ ] Rodar `rtk npm test`, suítes `twilio-retirement whatsapp-storage whatsapp-http whatsapp-lifecycle mail-http` e `rtk npm run typecheck`. Buscar `twilio` em código para explicar cada ocorrência restante de leitura/migração/410/documentação histórica.
-- [ ] Commit: `refactor(whatsapp): retire Twilio while preserving history`.
+- [x] Criar fixture legado diretamente no catálogo de teste em formato anterior à migração; verificar conversa/recibo legíveis, publicação pausada e outbox não transmitida. Assert: `assert.equal(providerCalls,0)` ao tentar criar/verificar/despachar Twilio depois do upgrade.
+- [x] Rodar `rtk npm run test:integration -- twilio-retirement`; falhar enquanto caminhos ativos ainda existem.
+- [x] Pausar publicações e cancelar somente trabalho ainda não transmitido Twilio, preservando tentativa/recibo incerto já existente. Remover importações/SDK e fluxos de tempo REST Twilio; não apagar dados anteriores nem reclassificar resultados. Adaptar testes antigos para provar aposentadoria e manter as verificações compartilhadas Meta/e-mail; revisar diff de remoções.
+- [x] Rodar `rtk npm test`, suítes `twilio-retirement whatsapp-storage whatsapp-http whatsapp-lifecycle mail-http` e `rtk npm run typecheck`. Buscar `twilio` em código para explicar cada ocorrência restante de leitura/migração/410/documentação histórica.
+- [x] Commit: `refactor(whatsapp): retire Twilio while preserving history`.
 
 ## Tarefa 12 — Validação final, operação e piloto acompanhado
 

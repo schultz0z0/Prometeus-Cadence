@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import type {TemplateStatus,TemplateView} from '../../../domain/whatsapp.ts';
 import {ChannelProviderError} from './contracts.ts';
-export const allowedApiHosts=new Set(['graph.facebook.com','api.twilio.com','messaging.twilio.com','content.twilio.com']);
+export const allowedApiHosts=new Set(['graph.facebook.com']);
 export function safeApiUrl(url:string,host?:string,path?:string):URL {
  const u=new URL(url);
  if(u.protocol!=='https:'||u.username||u.password||u.port||!allowedApiHosts.has(u.hostname)||(host&&u.hostname!==host)||(path&&u.pathname!==path))throw new ChannelProviderError('API_URL_REJECTED');return u;

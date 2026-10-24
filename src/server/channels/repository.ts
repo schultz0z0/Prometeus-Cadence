@@ -35,9 +35,9 @@ export function senderView(row:Record<string,any>):SenderView{return {id:row.id,
 export async function connectionView(c:PoolClient,row:Record<string,any>):Promise<ConnectionView>{
  if(row.channel==='EMAIL')throw new AppError(404,'Conexão WhatsApp não encontrada.');
  const senders=(await c.query('SELECT * FROM app.channel_sender WHERE connection_id=$1 ORDER BY id',[row.id])).rows.map(senderView);
- let callbackUrl:string|null=null,callbackStatusUrl:string|null=null;try{callbackUrl=channelCallbackUrl(row.provider,row.public_id);if(row.provider==='twilio')callbackStatusUrl=channelCallbackUrl('twilio',row.public_id,'status');}catch{}
+ let callbackUrl:string|null=null;const callbackStatusUrl=null;try{if(row.provider==='meta')callbackUrl=channelCallbackUrl('meta',row.public_id);}catch{}
  const expired=row.token_expires_at&&row.token_expires_at.getTime()<=Date.now();
- return {id:row.id,provider:row.provider,capabilities:whatsappCapabilities(row.provider),name:row.name,revision:Number(row.revision),state:expired&&row.state!=='disconnected'?'attention':row.state,externalAccountId:row.provider==='openwa'?null:row.external_account_id,hasSecrets:true,identifiers:row.provider==='openwa'?{}:row.identifiers,callbackUrl:row.provider==='openwa'?null:callbackUrl,callbackStatusUrl,...(row.provider==='openwa'?{}:{callbackPath:'/api/channel-webhooks/'+row.provider+'/'+row.public_id+(row.provider==='twilio'?'/messages':'')}),verification:{credentials:row.credentials_verified,challenge:row.challenge_verified,inbound:row.inbound_verified},senders:senders.map(s=>({...s,ready:s.ready&&!expired})),lastError:expired?'TOKEN_EXPIRED':row.last_error,tokenExpiresAt:row.token_expires_at?.toISOString()??null};
+ return {id:row.id,provider:row.provider,capabilities:whatsappCapabilities(row.provider),name:row.name,revision:Number(row.revision),state:expired&&row.state!=='disconnected'?'attention':row.state,externalAccountId:row.provider==='openwa'?null:row.external_account_id,hasSecrets:true,identifiers:row.provider==='openwa'?{}:row.identifiers,callbackUrl:row.provider==='openwa'?null:callbackUrl,callbackStatusUrl,...(row.provider==='meta'?{callbackPath:'/api/channel-webhooks/meta/'+row.public_id}:{}),verification:{credentials:row.credentials_verified,challenge:row.challenge_verified,inbound:row.inbound_verified},senders:senders.map(s=>({...s,ready:s.ready&&!expired})),lastError:expired?'TOKEN_EXPIRED':row.last_error,tokenExpiresAt:row.token_expires_at?.toISOString()??null};
 }
 export async function readConnections(p:Principal):Promise<ConnectionView[]>{
  return withWorkspaceTransaction(p,async c=>{
@@ -52,6 +52,7 @@ export async function readCredentialInTransaction(c:PoolClient,id:string,revisio
  return {credentials:decryptCredential(envelope,{workspaceId:row.workspace_id,connectionId:id,provider:row.provider,revision:rev}),revision:rev};
 }
 export async function saveConnection(p:Principal,input:unknown):Promise<ConnectionView>{
+ if(input&&typeof input==='object'&&'provider'in input&&input.provider==='twilio')throw new AppError(410,'Twilio foi aposentado. Use Meta ou OpenWA.','PROVIDER_RETIRED');
  const parsed=saveConnectionSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Configuração da conexão inválida.');const b=parsed.data;
  return withWorkspaceTransaction(p,async c=>{
   await requireChannelAdmin(c);
@@ -62,7 +63,7 @@ export async function saveConnection(p:Principal,input:unknown):Promise<Connecti
   if(existing&&existing.provider!==b.provider)throw new AppError(409,'Crie outra conexão para trocar de provedor.');
   const id=b.id??randomUUID(),revision=b.expectedRevision+1,credentials=existing?(await readCredentialInTransaction(c,id)).credentials:{verifyToken:randomBytes(32).toString('base64url')};
   for(const [key,value]of Object.entries(b.credentials))if(value.trim())credentials[key]=value;
-  const required=b.provider==='meta'?['accessToken','appSecret']:b.identifiers.authMode==='api-key'?['apiKeySid','apiKeySecret','authToken']:['authToken'];
+  const required=['accessToken','appSecret'];
   if(required.some(key=>!credentials[key]))throw new AppError(422,'Informe as credenciais obrigatórias.');
   const envelope=encryptCredential(credentials,{workspaceId:p.workspaceId,connectionId:id,provider:b.provider,revision});
   if(existing){

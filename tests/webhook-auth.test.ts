@@ -16,13 +16,6 @@ test('Meta authenticates raw bytes and asset scope before producing a normalized
  await assert.rejects(authenticateWebhook(metaReq('x'.repeat(1048577)),'public-identifier','meta',deps),{status:413});
  const challenge=await verifyMetaChallenge(new Request('http://internal/path?hub.mode=subscribe&hub.verify_token=fixture-verify&hub.challenge=123'),'public-identifier',{...deps,markChallenge:async()=>{}});assert.equal(challenge,'123');
 });
-test('Twilio signs the canonical external URL and every parameter; proxy headers cannot change validation',async()=>{
- process.env.CHANNEL_PUBLIC_BASE_URL='https://hooks.example';const account='AC'+'a'.repeat(32),canonical='https://hooks.example/api/channel-webhooks/twilio/public-identifier/messages';
- const params={AccountSid:account,MessageSid:'SM'+'b'.repeat(32),From:'whatsapp:+5541988888888',To:'whatsapp:+5541999999999',Body:'Olá',FutureField:'must be signed'};
- const signature=(url:string)=>createHmac('sha1','fixture-auth').update(url+Object.keys(params).sort().map(k=>k+params[k as keyof typeof params]).join('')).digest('base64');
- const context:IngressContext={...ctx,provider:'twilio',externalAccountId:account,identifiers:{accountSid:account,sender:'+5541999999999',authMode:'api-key'},senders:[{externalId:'XE'+'c'.repeat(32),address:'+5541999999999'}],credentialVersions:[{revision:1,credentials:{authToken:'fixture-auth'}}]};
- const req=(sig:string)=>new Request('http://internal/api/channel-webhooks/twilio/public-identifier/messages',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded','x-twilio-signature':sig,'x-forwarded-host':'evil.example'},body:new URLSearchParams(params)});
- const deps={lookup:async()=>context};const result=await authenticateWebhook(req(signature(canonical)),'public-identifier','twilio-messages',deps);assert.equal(result.events[0].kind,'inbound');assert.equal(result.events[0].occurredAt,null);
- await assert.rejects(authenticateWebhook(req(signature('https://evil.example/api/channel-webhooks/twilio/public-identifier/messages')),'public-identifier','twilio-messages',deps),{status:403});
- await assert.rejects(authenticateWebhook(req(signature(canonical)),'public-identifier','twilio-messages',{lookup:async()=>({...context,externalAccountId:'other'})}),{status:403});
+test('retired Twilio callbacks return 410 before credential lookup or SDK activity',async()=>{
+ let lookups=0;await assert.rejects(authenticateWebhook(new Request('https://hooks.example/legacy',{method:'POST'}),'public-identifier','twilio-messages',{lookup:async()=>{lookups++;return ctx;}}),{status:410,code:'PROVIDER_RETIRED'});assert.equal(lookups,0);
 });

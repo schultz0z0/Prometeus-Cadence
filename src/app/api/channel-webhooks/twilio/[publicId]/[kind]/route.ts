@@ -1,6 +1,3 @@
-import {webhookRequest} from '../../../../../../server/channels/webhooks.ts';
-export const runtime='nodejs';
-export async function POST(request:Request,context:{params:Promise<{publicId:string;kind:string}>}){
- const {publicId,kind}=await context.params;if(kind!=='messages'&&kind!=='status')return new Response(null,{status:404});
- return webhookRequest(request,publicId,kind==='messages'?'twilio-messages':'twilio-status');
-}
+// Historical URL retained as an explicit retirement response; no SDK, credential or body read.
+export function POST(){return new Response(null,{status:410,headers:{'cache-control':'no-store'}});}
+export const GET=POST;

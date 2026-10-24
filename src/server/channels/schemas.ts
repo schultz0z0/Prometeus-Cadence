@@ -1,9 +1,8 @@
 import {z} from 'zod';
-const secret=z.string().max(16384),id=z.string().regex(/^\d{1,40}$/),sid=(prefix:string)=>z.string().regex(new RegExp('^'+prefix+'[a-fA-F0-9]{32}$'));
+const secret=z.string().max(16384),id=z.string().regex(/^\d{1,40}$/);
 const common={requestId:z.uuid(),expectedRevision:z.number().int().min(0),id:z.uuid().optional(),name:z.string().trim().min(1).max(120)};
 export const saveConnectionSchema=z.discriminatedUnion('provider',[
  z.strictObject({...common,provider:z.literal('meta'),identifiers:z.strictObject({appId:id,wabaId:id,phoneNumberId:id}),credentials:z.strictObject({accessToken:secret,appSecret:secret})}),
- z.strictObject({...common,provider:z.literal('twilio'),identifiers:z.strictObject({accountSid:sid('AC'),sender:z.string().regex(/^\+[1-9]\d{6,14}$/),authMode:z.enum(['api-key','auth-token']),messagingServiceSid:sid('MG').optional()}),credentials:z.strictObject({apiKeySid:sid('SK').or(z.literal('')),apiKeySecret:secret,authToken:secret})}),
 ]);
 export type SaveConnectionInput=z.infer<typeof saveConnectionSchema>;
 export const senderLimitsSchema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(0),workspaceDailyLimit:z.number().int().min(1).max(100000),senderId:z.uuid(),senderDailyLimit:z.number().int().min(1).max(100000),senderNewConversationLimit:z.number().int().min(1).max(100000).optional()});

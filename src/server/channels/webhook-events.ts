@@ -37,17 +37,3 @@ export function normalizeMetaEvents(data:any,ctx:IngressContext):WebhookEvent[]{
  }
  return events;
 }
-export function normalizeTwilioEvents(params:Record<string,string>,ctx:IngressContext,statusOnly:boolean):WebhookEvent[]{
- if(params.AccountSid!==ctx.externalAccountId)throw new AppError(403,'Conta do callback divergente.');
- const address=statusOnly?params.From:params.To,sender=ctx.senders.find(s=>address==='whatsapp:'+s.address);
- if(!sender||address!=='whatsapp:'+ctx.identifiers.sender)throw new AppError(403,'Remetente do callback divergente.');
- const id=bounded(params.MessageSid);if(!id||!/^SM[a-fA-F0-9]{32}$/.test(id))throw new AppError(422,'Mensagem Twilio inválida.');
- if(statusOnly){
-  const status=bounded(params.MessageStatus,80);if(!status)throw new AppError(422,'Status Twilio inválido.');
-  return [{kind:'status',dedupKey:key(['status',id,status]),accountId:ctx.externalAccountId!,senderExternalId:sender.externalId,remoteId:id,status,errorCode:bounded(params.ErrorCode,80),occurredAt:null}];
- }
- const from=params.ExternalUserId||params.WaId||params.From?.replace(/^whatsapp:/,'');if(!bounded(from))throw new AppError(422,'Identidade Twilio inválida.');
- const phone=params.From?.startsWith('whatsapp:+')?params.From.slice(9):/^[1-9]\d{6,14}$/.test(params.WaId??'')?'+'+params.WaId:null;
- // Twilio's standard inbound form has no authoritative creation timestamp. The event processor resolves it by MessageSid.
- return [{kind:'inbound',dedupKey:key(['inbound',id]),accountId:ctx.externalAccountId!,senderExternalId:sender.externalId,occurredAt:null,remoteId:id,identity:{scope:'twilio:'+ctx.externalAccountId,externalId:from,phone:phone&&/^\+[1-9]\d{6,14}$/.test(phone)?phone:null},text:bounded(params.Body,4096),mediaKind:Number(params.NumMedia)>0?'attachment':null}];
-}

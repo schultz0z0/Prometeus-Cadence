@@ -10,12 +10,13 @@ import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {connectionRow,connectionView,requireChannelAdmin,readCredentialInTransaction,commandHash,priorCommand,completeCommand} from './repository.ts';
 import {encryptCredential} from './crypto.ts';
 import {createMetaAdapter} from './providers/meta.ts';
-import {createTwilioAdapter} from './providers/twilio.ts';
 import {createOpenwaAdapter} from './providers/openwa.ts';
 import type {ProviderAdapter,ProviderConfig} from './providers/contracts.ts';
-export const providerAdapter=(provider:string)=>{if(provider==='meta')return createMetaAdapter();if(provider==='openwa')return createOpenwaAdapter();if(provider==='twilio')return createTwilioAdapter();throw new AppError(422,'Provedor WhatsApp inválido.');};
+export const providerAdapter=(provider:string)=>{if(provider==='meta')return createMetaAdapter();if(provider==='openwa')return createOpenwaAdapter();if(provider==='twilio')throw new AppError(410,'Twilio foi aposentado. O histórico continua disponível.','PROVIDER_RETIRED');throw new AppError(422,'Provedor WhatsApp inválido.');};
 export async function configInTransaction(c:PoolClient,id:string,expectedRevision?:number):Promise<ProviderConfig>{
  await requireChannelAdmin(c);const row=await connectionRow(c,id);
+ if(row.provider==='twilio')throw new AppError(410,'Twilio foi aposentado.','PROVIDER_RETIRED');
+ if(row.provider==='openwa')throw new AppError(409,'Gerencie esta conexão pelo fluxo OpenWA.','OPENWA_MANAGED_CONNECTION');
  if(expectedRevision!==undefined&&Number(row.revision)!==expectedRevision)throw new AppError(409,'A conexão mudou. Revise novamente.');
  const secrets=await readCredentialInTransaction(c,id),senders=(await connectionView(c,row)).senders,templates=(await c.query('SELECT payload FROM app.channel_remote_template WHERE connection_id=$1',[id])).rows.map(r=>r.payload as TemplateView);
  return {provider:row.provider,connectionId:id,revision:Number(row.revision),identifiers:row.identifiers,credentials:secrets.credentials,sender:senders[0]??null,templates};
@@ -31,7 +32,7 @@ export async function verifyConnection(p:Principal,id:string,expectedRevision:nu
  });}catch(e){if(e&&typeof e==='object'&&'message'in e&&String(e.message).includes('CHANNEL_'))throw new AppError(409,'A conta ou o remetente já está em uso, ou a conexão mudou.');throw e;}
 }
 export async function readVerifyToken(p:Principal,id:string):Promise<{verifyToken:string}>{
- return withWorkspaceTransaction(p,async c=>{await requireChannelAdmin(c);return {verifyToken:(await readCredentialInTransaction(c,id)).credentials.verifyToken};});
+ return withWorkspaceTransaction(p,async c=>{await requireChannelAdmin(c);const row=await connectionRow(c,id);if(row.provider!=='meta')throw new AppError(410,'O token de verificação pertence à integração Meta.','PROVIDER_RETIRED');return {verifyToken:(await readCredentialInTransaction(c,id)).credentials.verifyToken};});
 }
 const disconnectSchema=z.strictObject({id:z.uuid(),expectedRevision:z.number().int().min(1),requestId:z.uuid()});
 export async function disconnectConnection(p:Principal,input:unknown):Promise<ConnectionView>{
@@ -39,6 +40,8 @@ export async function disconnectConnection(p:Principal,input:unknown):Promise<Co
  return withWorkspaceTransaction(p,async c=>{
   await requireChannelAdmin(c);await lockWorkspace(c);const hash=commandHash({action:'channel.disconnect',input:b}),old=await priorCommand<ConnectionView>(c,p,b.requestId,hash);if(old)return old;
   const row=await connectionRow(c,b.id,true);if(Number(row.revision)!==b.expectedRevision)throw new AppError(409,'A conexão mudou.');
+  if(row.provider==='twilio')throw new AppError(410,'Twilio foi aposentado.','PROVIDER_RETIRED');
+  if(row.provider==='openwa')throw new AppError(409,'Desconecte pelo fluxo OpenWA para revogar a sessão remota.','OPENWA_MANAGED_CONNECTION');
   if(row.channel==='EMAIL')throw new AppError(404,'Conexão WhatsApp não encontrada.');
   const secrets=await readCredentialInTransaction(c,b.id),revision=b.expectedRevision+1;
   const envelope=encryptCredential(secrets.credentials,{workspaceId:p.workspaceId,connectionId:b.id,provider:row.provider,revision});
