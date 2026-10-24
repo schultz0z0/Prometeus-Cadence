@@ -38,6 +38,6 @@ export function dispatchBlocker(ctx:Record<string,any>,now:string):string|null {
   const expected=v2?publication!.snapshot.recipients.find((r:any)=>r.leadId===ctx.enrollment.lead_id)?.steps[publication!.snapshot.cadence.steps[o.step_index]?.id]?.templateProof?.hash:publication?.snapshot.templateProofs[send.content.templateId]?.hash??o.proof.templateHash;
   if(!template||template.hash!==expected)return 'TEMPLATE_CHANGED';
  }
- const policy=evaluateSendPolicy({now,lastInboundAt:ctx.lastInboundAt??null,purpose:send.purpose,hasOptIn:ctx.consents.length>0,suppressed:ctx.suppressions.length>0,senderReady:s.ready,content:send.content,template});
+ const policy=evaluateSendPolicy({provider:c.provider,now,lastInboundAt:ctx.lastInboundAt??null,purpose:send.purpose,hasOptIn:ctx.consents.length>0,suppressed:ctx.suppressions.length>0,senderReady:s.ready,content:send.content,template});
  return policy.blockers[0]??null;
 }

@@ -1,6 +1,9 @@
 import type {SendPolicyInput,SendPolicyResult} from './whatsapp.ts';
+import {whatsappCapabilities} from './whatsapp-capabilities.ts';
 export function evaluateSendPolicy(input:SendPolicyInput):SendPolicyResult {
  const blockers:string[]=[];
+ const capabilities=whatsappCapabilities(input.provider);
+ if(!capabilities.connectable||!capabilities.supportsText)blockers.push('PROVIDER_RETIRED');
  const now=Date.parse(input.now),inbound=input.lastInboundAt?Date.parse(input.lastInboundAt):NaN;
  const open=Number.isFinite(now)&&Number.isFinite(inbound)&&inbound<=now&&now-inbound<86400000;
  if(!Number.isFinite(now))blockers.push('INVALID_CLOCK');
@@ -8,9 +11,10 @@ export function evaluateSendPolicy(input:SendPolicyInput):SendPolicyResult {
  if(input.suppressed)blockers.push('CONTACT_SUPPRESSED');
  if((input.purpose!=='service'||!open)&&!input.hasOptIn)blockers.push('OPT_IN_REQUIRED');
  if(input.content.kind==='text'){
-  if(!open)blockers.push('SERVICE_WINDOW_CLOSED');
+  if(!open&&capabilities.requiresServiceWindow)blockers.push('SERVICE_WINDOW_CLOSED');
   if(!input.content.text.trim()||input.content.text.length>4096||/\{\{[^{}]*\}\}/.test(input.content.text))blockers.push('INVALID_TEXT');
  }else{
+  if(!capabilities.supportsOfficialTemplates)blockers.push('TEMPLATE_UNSUPPORTED');
   const template=input.template,content=input.content;
   if(!template||template.id!==content.templateId||template.revision!==content.templateRevision||template.status!=='approved')blockers.push('TEMPLATE_UNAVAILABLE');
   if(template){

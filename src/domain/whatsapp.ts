@@ -8,7 +8,7 @@ export interface ConnectionView {
  callbackUrl?:string|null;lastError?:string|null;tokenExpiresAt?:string|null;
  identifiers?:Record<string,string>;callbackStatusUrl?:string|null;callbackPath?:string;
 }
-export interface SenderView {id:string;connectionId:string;provider:Provider;address:string|null;externalId:string;identityScope:string;revision:number;ready:boolean;dailyLimit:number|null}
+export interface SenderView {id:string;connectionId:string;provider:Provider;address:string|null;externalId:string;identityScope:string;revision:number;ready:boolean;dailyLimit:number|null;newConversationLimit?:number|null}
 export interface Identity {scope:string;externalId:string;phone:string|null}
 export interface TemplateParameter {component:'header'|'body'|'button';key:string;type:'text'|'currency'|'date_time'|'media';buttonIndex?:number}
 export interface TemplateComponent {type:'header'|'body'|'footer'|'button';text:string;buttonIndex?:number}
@@ -17,7 +17,7 @@ export interface TemplateView {id:string;connectionId:string;provider:Provider;r
 export type OutboundContent={kind:'text';text:string}|{kind:'template';templateId:string;templateRevision:number;variables:Record<string,string>};
 export interface ConsentInput {identityId:string;purpose:string;source:string;occurredAt:string;evidence:string}
 export type MessagePurpose='service'|'campaign'|'test';
-export interface SendPolicyInput {now:string;lastInboundAt:string|null;purpose:MessagePurpose;hasOptIn:boolean;suppressed:boolean;senderReady:boolean;content:OutboundContent;template:TemplateView|null}
+export interface SendPolicyInput {provider:Provider;now:string;lastInboundAt:string|null;purpose:MessagePurpose;hasOptIn:boolean;suppressed:boolean;senderReady:boolean;content:OutboundContent;template:TemplateView|null}
 export interface SendPolicyResult {allowed:boolean;blockers:string[]}
 export interface Review<T> {token:string;expiresAt:string;snapshot:T;blockers:string[]}
 export interface PreparedSend {connectionId:string;connectionRevision:number;senderId:string;identity:Identity;content:OutboundContent;purpose:MessagePurpose;traceId?:string}

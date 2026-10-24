@@ -46,7 +46,7 @@ export async function replyState(c:PoolClient,p:Principal,target:{conversationId
  const declared=testInput?.consent,declaredValid=!!declared&&Date.parse(declared.occurredAt)<=Date.now();
  const lastInboundAt=identity?(await c.query('SELECT last_inbound_at FROM app.channel_conversation WHERE sender_id=$1 AND identity_id=$2',[sender.id,identity.id])).rows[0]?.last_inbound_at?.toISOString()??null:null;
  const limits=(await c.query('SELECT * FROM app.messaging_limits')).rows[0],currentNow=new Date().toISOString();
- const eligibility=evaluateSendPolicy({now:currentNow,lastInboundAt,purpose,hasOptIn:consents.length>0||declaredValid,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready'&&(!conn.token_expires_at||conn.token_expires_at.getTime()>Date.now()),content,template});
+ const eligibility=evaluateSendPolicy({provider:conn.provider,now:currentNow,lastInboundAt,purpose,hasOptIn:consents.length>0||declaredValid,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready'&&(!conn.token_expires_at||conn.token_expires_at.getTime()>Date.now()),content,template});
  const blockers=[...eligibility.blockers];if(!limits||!sender.dailyLimit)blockers.push('EXPLICIT_LIMITS_REQUIRED');
  try{channelCallbackUrl(conn.provider,conn.public_id);}catch{blockers.push('PUBLIC_HTTPS_REQUIRED');}
  if(declared&&!declaredValid)blockers.push('INVALID_CONSENT_TIME');

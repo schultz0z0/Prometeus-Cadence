@@ -6,7 +6,7 @@ export const saveConnectionSchema=z.discriminatedUnion('provider',[
  z.strictObject({...common,provider:z.literal('twilio'),identifiers:z.strictObject({accountSid:sid('AC'),sender:z.string().regex(/^\+[1-9]\d{6,14}$/),authMode:z.enum(['api-key','auth-token']),messagingServiceSid:sid('MG').optional()}),credentials:z.strictObject({apiKeySid:sid('SK').or(z.literal('')),apiKeySecret:secret,authToken:secret})}),
 ]);
 export type SaveConnectionInput=z.infer<typeof saveConnectionSchema>;
-export const senderLimitsSchema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(0),workspaceDailyLimit:z.number().int().min(1).max(100000),senderId:z.uuid(),senderDailyLimit:z.number().int().min(1).max(100000)});
+export const senderLimitsSchema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(0),workspaceDailyLimit:z.number().int().min(1).max(100000),senderId:z.uuid(),senderDailyLimit:z.number().int().min(1).max(100000),senderNewConversationLimit:z.number().int().min(1).max(100000).optional()});
 export type SenderLimitsInput=z.infer<typeof senderLimitsSchema>;
 export const contentSchema=z.discriminatedUnion('kind',[
  z.strictObject({kind:z.literal('text'),text:z.string().min(1).max(4096)}),

@@ -71,7 +71,7 @@ export async function publicationState(c:PoolClient,p:Principal,input:z.infer<ty
     if(binding.kind==='template'&&Object.values(binding.variables).some(v=>v.trim()===step.body.trim()&&v.trim().length>50))blockers.push('TEMPLATE_VARIABLE_IS_MESSAGE:'+step.id);
    }
    let at=now;try{at=nextStepAt({anchorAt:anchor,delayDays:step.delayDays,now:anchor,timezone:cadence.settings.timezone,weekdays:cadence.settings.weekdays,sendTime:cadence.settings.sendTime,skipHolidays:cadence.settings.skipHolidays,holidayDates:null});anchor=at;}catch{blockers.push('SCHEDULE_UNAVAILABLE:'+step.id);}
-   const eligibility=evaluateSendPolicy({now:at,lastInboundAt,purpose:'campaign',hasOptIn:consents.length>0,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready',content,template});
+   const eligibility=evaluateSendPolicy({provider:conn.provider,now:at,lastInboundAt,purpose:'campaign',hasOptIn:consents.length>0,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready',content,template});
    for(const blocker of eligibility.blockers)blockers.push(leadId+':'+step.id+':'+blocker);
    snapshot.messagePreviews[leadId][step.id]=content.kind==='text'?content.text:template?templatePreview(template,content.variables):'Template indisponível';
   }

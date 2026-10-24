@@ -30,7 +30,7 @@ export async function connectionRow(c:PoolClient,id:string,lock=false){
  const row=(await c.query('SELECT * FROM app.channel_connection WHERE id=$1'+(lock?' FOR UPDATE':''),[id])).rows[0];
  if(!row)throw new AppError(404,'Conexão não encontrada.');return row;
 }
-export function senderView(row:Record<string,any>):SenderView{return {id:row.id,connectionId:row.connection_id,provider:row.provider,address:row.address,externalId:row.external_id,identityScope:row.identity_scope,revision:Number(row.revision),ready:row.ready,dailyLimit:row.daily_limit};}
+export function senderView(row:Record<string,any>):SenderView{return {id:row.id,connectionId:row.connection_id,provider:row.provider,address:row.address,externalId:row.external_id,identityScope:row.identity_scope,revision:Number(row.revision),ready:row.ready,dailyLimit:row.daily_limit,...(row.provider==='openwa'?{newConversationLimit:row.new_conversation_limit}:{} )};}
 export async function connectionView(c:PoolClient,row:Record<string,any>):Promise<ConnectionView>{
  if(row.channel==='EMAIL')throw new AppError(404,'Conexão WhatsApp não encontrada.');
  const senders=(await c.query('SELECT * FROM app.channel_sender WHERE connection_id=$1 ORDER BY id',[row.id])).rows.map(senderView);

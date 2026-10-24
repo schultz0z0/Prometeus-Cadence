@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {evaluateSendPolicy} from '../src/domain/whatsapp-policy.ts';
 import type {SendPolicyInput,TemplateView} from '../src/domain/whatsapp.ts';
 const template:TemplateView={id:'t1',connectionId:'c1',provider:'meta',remoteId:'remote1',name:'hello',language:'pt_BR',status:'approved',revision:1,hash:'hash1',parameters:[{component:'body',key:'body.1',type:'text'}],components:[{type:'body',text:'Olá {{1}}, podemos conversar?'}]};
-const base:SendPolicyInput={now:'2026-10-21T12:00:00.000Z',lastInboundAt:'2026-10-21T11:00:00.000Z',purpose:'service',hasOptIn:false,suppressed:false,senderReady:true,content:{kind:'text',text:'Olá'},template:null};
+const base:SendPolicyInput={provider:'meta',now:'2026-10-21T12:00:00.000Z',lastInboundAt:'2026-10-21T11:00:00.000Z',purpose:'service',hasOptIn:false,suppressed:false,senderReady:true,content:{kind:'text',text:'Olá'},template:null};
 test('exact_24h_is_closed and outbound receipt does not substitute for inbound',()=>{
  assert.equal(evaluateSendPolicy(base).allowed,true);
  assert.equal(evaluateSendPolicy({...base,lastInboundAt:'2026-10-20T12:00:00.000Z'}).allowed,false);
