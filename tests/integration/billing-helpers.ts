@@ -3,7 +3,7 @@ import {prospectingUser,testAdmin} from './prospecting-helpers.ts';
 import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 import {resetRateLimits} from './helpers.ts';
 export {testAdmin};
-export async function billingUser(){await resetRateLimits();return prospectingUser();}
+export async function billingUser(){await resetRateLimits();return prospectingUser({billing:false});}
 export async function beginTrial(p:import('../../src/domain/workspace.ts').Principal,key=randomUUID()){
  return withWorkspaceTransaction(p,async c=>(await c.query('SELECT app.billing_start_trial($1) AS result',[key])).rows[0].result);
 }

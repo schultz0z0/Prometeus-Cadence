@@ -10,6 +10,7 @@ import {saveEvidence} from './evidence.ts';
 export async function lockWorkspace(c:PoolClient){await c.query("SELECT revision FROM app.workspace_meta WHERE workspace_id=current_setting('app.workspace_id') FOR UPDATE");}
 export async function ingestPage(c:PoolClient,lease:JobLease,page:CandidatePage):Promise<IngestCounts>{
   await lockWorkspace(c);await assertJobLease(c,lease);
+  await c.query("SELECT set_config('app.billing_job_id',$1,true),set_config('app.billing_job_token',$2,true),set_config('app.billing_job_fence',$3,true)",[lease.jobId,lease.token,String(lease.fence)]);
   if(page.candidates.length>100||page.rawCount>100||page.rawCount<page.candidates.length||page.rawCount<0)throw new AppError(422,'Lote inválido.');
   const hash=hashValue(page),prior=(await c.query('SELECT * FROM app.prospecting_receipt WHERE job_id=$1 AND id=$2',[lease.jobId,page.receiptId])).rows[0];
   if(prior){if(prior.body_hash!==hash)throw new AppError(409,'Recibo já utilizado.');return prior.counts;}

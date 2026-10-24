@@ -8,6 +8,7 @@ import {hashValue} from './review.ts';
 import {assertAutomationAuthority} from '../automations/guard.ts';
 import {syncOccurrenceJob} from '../automations/assignments.ts';
 import {workerPool} from './worker-db.ts';
+import {assertExecution} from '../billing/entitlements.ts';
 export class UncertainStep extends Error{}
 export async function readLeasedJob(lease:JobLease){return withLeasedTransaction(lease,async c=>(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0]);}
 export async function finishJob(lease:JobLease,state:JobState,code?:string){
@@ -23,6 +24,7 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
     const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
     const old=(await c.query('SELECT * FROM app.prospecting_attempt WHERE id=$1',[operationId])).rows[0];
     if(old)return old;
+    await assertExecution(c);
     await assertAutomationAuthority(c,job,'dispatch');
     if(!prospectingConfig().enabled||job.checkpoint.execution?.version!==prospectingConfig().version)throw new AppError(409,'A configuração mudou. Revise antes de continuar.','PROFILE_CHANGED');
     await assertReserved(c,lease.jobId,units);
@@ -33,7 +35,7 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
   if(prior){await finishJob(lease,'needs_reconciliation','UNCERTAIN_STEP');throw new UncertainStep();}
   let result:T;
   try{
-    await withLeasedTransaction(lease,async c=>{const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];await assertAutomationAuthority(c,job,'dispatch',operationId);});
+    await withLeasedTransaction(lease,async c=>{await assertExecution(c);const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];await assertAutomationAuthority(c,job,'dispatch',operationId);});
     result=await call();
   }
   catch(error){

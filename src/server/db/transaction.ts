@@ -2,7 +2,7 @@ import "server-only";
 import type { PoolClient,Pool } from "pg";
 import type { Principal } from "../../domain/workspace.ts";
 import { getPools } from "./pool.ts";
-import { AppError } from "../errors.ts";
+import { AppError,translateError } from "../errors.ts";
 export async function withWorkspaceTransaction<T>(
   principal: Principal,
   fn: (client: PoolClient) => Promise<T>,
@@ -28,7 +28,7 @@ export async function withContextTransaction<T>(pool:Pool,principal:Principal,fn
     return result;
   } catch (e) {
     await client.query("ROLLBACK");
-    throw e;
+    throw translateError(e);
   } finally {
     client.release();
   }

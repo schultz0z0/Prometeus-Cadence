@@ -8,6 +8,7 @@ import {
   readWorkspaceSnapshot,
 } from "../../src/server/workspaces/commands.ts";
 import { verifiedUser, resetRateLimits } from "./helpers.ts";
+import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 after(async () => getPools().close());
 test("one bulk action and its job roll back together and retry once after a committed response is lost", async () => {
   await resetRateLimits();
@@ -63,7 +64,9 @@ async function workspace() {
     requestId: crypto.randomUUID(),
     name: "Commands test",
   });
-  return requirePrincipal(h);
+  const p=await requirePrincipal(h);
+  await withWorkspaceTransaction(p,c=>c.query('SELECT app.billing_start_trial($1)',[crypto.randomUUID()]));
+  return p;
 }
 const lead = (id: string, listId: string) => ({
   id,

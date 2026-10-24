@@ -3,6 +3,7 @@ import {verifiedUser,base} from './helpers.ts';
 import {identityAction} from '../../src/server/workspaces/service.ts';
 import {requirePrincipal} from '../../src/server/auth/principal.ts';
 import {getPools} from '../../src/server/db/pool.ts';
+import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 export function configureProspectingTest(){
   Object.assign(process.env,{
     PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',
@@ -11,11 +12,12 @@ export function configureProspectingTest(){
     APIFY_TOKEN:'fixture-not-a-live-token',APIFY_MAPS_ACTOR:'compass/crawler-google-places',APIFY_MAPS_BUILD:'fixture-build',APIFY_MAX_CHARGE_USD:'0.1',
   });
 }
-export async function prospectingUser(){
+export async function prospectingUser(options:{billing?:boolean}={}){
   const u=await verifiedUser();
   const headers=new Headers({cookie:u.cookie,origin:base});
   await identityAction(headers,{type:'create',requestId:randomUUID(),name:'Prospecting QA'});
   const p=await requirePrincipal(headers);
+  if(options.billing!==false)await withWorkspaceTransaction(p,c=>c.query('SELECT app.billing_start_trial($1)',[randomUUID()]));
   headers.set('x-cadence-workspace',p.workspaceId);
   return {...u,headers,p};
 }

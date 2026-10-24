@@ -2,6 +2,7 @@ import type {PoolClient} from 'pg';
 import type {Units,ProviderUsage} from '../../domain/prospecting.ts';
 import {AppError} from '../errors.ts';
 import {hashValue} from './review.ts';
+import {releaseCommercial} from '../billing/entitlements.ts';
 export async function reserveUsage(c:PoolClient,operation:{jobId:string;operationId:string;units:Units;caps:Units;globalCaps:Units}){
   try{await c.query('SELECT app.reserve_prospecting_usage($1,$2,$3,$4,$5)',[operation.jobId,operation.operationId,operation.units,operation.caps,operation.globalCaps]);}
   catch(e){if(e instanceof Error&&e.message==='USAGE_LIMIT')throw new AppError(429,'O orçamento de uso disponível não permite esta execução.','USAGE_LIMIT');throw e;}
@@ -24,6 +25,7 @@ export async function assertReserved(c:PoolClient,jobId:string,units:Units){
   }
 }
 export async function releaseUnused(c:PoolClient,jobId:string){
+  await releaseCommercial(c,'job:'+jobId);
   const rows=(await c.query("SELECT event,units FROM app.usage_ledger WHERE job_id=$1 AND event IN('reserve','release')",[jobId])).rows;
   const remaining:Record<string,number>={};
   for(const r of rows)for(const [key,value]of Object.entries(r.units as Units))remaining[key]=(remaining[key]??0)+(r.event==='reserve'?1:-1)*(value??0);
