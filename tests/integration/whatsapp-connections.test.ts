@@ -10,7 +10,7 @@ import {verifyMetaChallenge} from '../../src/server/channels/webhook-auth.ts';
 import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';
 import {whatsappUser,metaConnectionInput,testAdmin} from './whatsapp-helpers.ts';
 const fixtureAdapter=(phone:string='333333',waba:string='222222',appId:string='123456')=>createMetaAdapter(async url=>{
- const path=new URL(String(url)).pathname;const data=path.endsWith('debug_token')?{data:{is_valid:true,app_id:appId,scopes:['whatsapp_business_management','whatsapp_business_messaging']}}:path.endsWith('phone_numbers')?{data:[{id:phone,display_phone_number:'+5541999999999',code_verification_status:'VERIFIED'}]}:path.endsWith('message_templates')?{data:[{id:'444444',name:'hello',language:'pt_BR',status:'APPROVED',components:[{type:'BODY',text:'Olá {{1}}'}]}]}:{id:waba};return Response.json(data);
+ const path=new URL(String(url)).pathname;const data=path.endsWith('debug_token')?{data:{is_valid:true,app_id:appId,scopes:['whatsapp_business_management','whatsapp_business_messaging']}}:path.endsWith('phone_numbers')?{data:[{id:phone,display_phone_number:'+5541999999999',code_verification_status:'VERIFIED',status:'CONNECTED'}]}:path.endsWith('message_templates')?{data:[{id:'444444',name:'hello',language:'pt_BR',status:'APPROVED',components:[{type:'BODY',text:'Olá {{1}}'}]}]}:{id:waba};return Response.json(data);
 });
 after(async()=>{await getPools().close();await closeIngressPool();});
 test('verified assets become pending webhook; challenge is separate from actual inbound and sync is versioned',async()=>{

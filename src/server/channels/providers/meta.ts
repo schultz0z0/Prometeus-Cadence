@@ -3,10 +3,10 @@ import {ChannelProviderError,type ProviderAdapter,type ProviderConfig} from './c
 import {channelRequest,makeTemplate,requireOk,safeApiUrl,templateStatus} from './http.ts';
 const origin='https://graph.facebook.com/v26.0';
 function headers(c:ProviderConfig){return {authorization:'Bearer '+c.credentials.accessToken,'content-type':'application/json'};}
-async function list(c:ProviderConfig,path:string,fetcher:typeof fetch){
+async function list(c:ProviderConfig,path:string,fetcher:typeof fetch,fields?:string){
  const output:any[]=[];let after:string|undefined;
  for(let page=0;page<20;page++){
-  const u=new URL(origin+path);u.searchParams.set('limit','100');if(after)u.searchParams.set('after',after);
+  const u=new URL(origin+path);u.searchParams.set('limit','100');if(fields)u.searchParams.set('fields',fields);if(after)u.searchParams.set('after',after);
   const data=requireOk(await channelRequest(u.toString(),headers(c),{},fetcher));if(!Array.isArray(data.data))throw new ChannelProviderError('CATALOG_INVALID');output.push(...data.data);
   if(!data.paging?.next)return output;
   safeApiUrl(String(data.paging.next),'graph.facebook.com',u.pathname);const next=data.paging?.cursors?.after;
@@ -21,8 +21,11 @@ export function createMetaAdapter(fetcher:typeof fetch=fetch):ProviderAdapter{re
   const inspection=requireOk(await channelRequest(debug.toString(),{authorization:'Bearer '+c.identifiers.appId+'|'+c.credentials.appSecret},{},fetcher)).data;
   if(!inspection?.is_valid||String(inspection.app_id)!==c.identifiers.appId||!['whatsapp_business_management','whatsapp_business_messaging'].every(s=>inspection.scopes?.includes(s)))throw new ChannelProviderError('META_TOKEN_SCOPE_INVALID');
   const account=requireOk(await channelRequest(origin+'/'+c.identifiers.wabaId,headers(c),{},fetcher));if(String(account.id)!==c.identifiers.wabaId)throw new ChannelProviderError('META_WABA_MISMATCH');
-  const numbers=await list(c,'/'+c.identifiers.wabaId+'/phone_numbers',fetcher),number=numbers.find(n=>String(n.id)===c.identifiers.phoneNumberId);
-  if(!number||number.code_verification_status!=='VERIFIED')throw new ChannelProviderError('META_SENDER_UNAVAILABLE');
+  const numbers=await list(c,'/'+c.identifiers.wabaId+'/phone_numbers',fetcher,'id,display_phone_number,status,code_verification_status,account_mode'),number=numbers.find(n=>String(n.id)===c.identifiers.phoneNumberId);
+  // OTP verification and API connection status are separate. Meta test numbers
+  // can be LIVE + CONNECTED with code_verification_status NOT_VERIFIED.
+  // Require actual API availability, including for a production number.
+  if(!number||number.status!=='CONNECTED')throw new ChannelProviderError('META_SENDER_UNAVAILABLE');
   const phone='+'+String(number.display_phone_number??'').replace(/\D/g,'');if(!/^\+[1-9]\d{6,14}$/.test(phone))throw new ChannelProviderError('META_SENDER_INVALID');
   const expires=Number(inspection.expires_at);if(expires>0&&expires*1000<=Date.now())throw new ChannelProviderError('META_TOKEN_EXPIRED');
   return {externalAccountId:c.identifiers.wabaId,senders:[{externalId:String(number.id),address:phone,identityScope:'meta:'+c.identifiers.wabaId,capabilities:{phoneOutbound:true,opaqueOutbound:false}}],tokenExpiresAt:expires>0?new Date(expires*1000).toISOString():null};

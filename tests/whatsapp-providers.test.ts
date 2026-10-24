@@ -19,7 +19,7 @@ test('Meta verifies token scopes app WABA and sender before any sending; builds 
  const adapter=createMetaAdapter(async(url,init)=>{
   const u=new URL(String(url));calls.push(u.pathname);assert.equal(init?.redirect,'error');
   if(u.pathname.endsWith('/debug_token'))return json({data:{is_valid:true,app_id:'111',scopes:['whatsapp_business_management','whatsapp_business_messaging'],expires_at:0}});
-  if(u.pathname.endsWith('/phone_numbers'))return json({data:[{id:'333',display_phone_number:'+55 41 99999-9999',code_verification_status:'VERIFIED'}]});
+  if(u.pathname.endsWith('/phone_numbers'))return json({data:[{id:'333',display_phone_number:'+55 41 99999-9999',code_verification_status:'VERIFIED',status:'CONNECTED'}]});
   if(u.pathname.endsWith('/messages')){assert.equal(new Headers(init?.headers).get('authorization'),'Bearer fixture-token');assert.deepEqual(JSON.parse(String(init?.body)),{messaging_product:'whatsapp',to:'5541988888888',type:'text',text:{body:'Olá',preview_url:false}});return json({messaging_product:'whatsapp',messages:[{id:'wamid.fixture'}]});}
   return json({id:'222',name:'QA'});
  });
