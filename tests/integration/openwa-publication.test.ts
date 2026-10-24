@@ -5,6 +5,7 @@ import {recordLeadConsent,suppressIdentity} from '../../src/server/messaging/con
 import {prepareChannelTest,confirmChannelTest,prepareReply} from '../../src/server/messaging/replies.ts';import {materializeDueMessages} from '../../src/server/messaging/outbox.ts';import {claimDispatch} from '../../src/server/messaging/lease.ts';import {dispatchOne} from '../../src/server/messaging/dispatch.ts';
 import {handleChannelIngress} from '../../src/server/channels/openwa/events.ts';import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';import {readCredentialInTransaction} from '../../src/server/channels/repository.ts';
 import {getPools} from '../../src/server/db/pool.ts';import {closeDispatchPool} from '../../src/server/messaging/worker-db.ts';import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';
+import type {PublicationInputV2} from '../../src/domain/cadence-runtime.ts';
 after(async()=>{await Promise.all([getPools().close(),closeDispatchPool(),closeIngressPool()]);});
 async function fixture(t:any){
  const f=await publicationFixture(),own=await createOpenwaRecord(f.u.p,{requestId:randomUUID(),name:'Own fixture'}),gateway=openwaGatewayDouble();Object.assign(process.env,{OPENWA_API_ORIGIN:'http://127.0.0.1:2785',OPENWA_ADMIN_API_KEY:'fixture-admin-key'});delete process.env.CHANNEL_PUBLIC_BASE_URL;t.mock.method(globalThis,'fetch',gateway.fetch);
@@ -12,7 +13,7 @@ async function fixture(t:any){
  const sender=await testAdmin(async c=>(await c.query('SELECT * FROM app.channel_sender WHERE connection_id=$1',[own.connection.id])).rows[0]);
  await recordLeadConsent(f.u.p,{requestId:randomUUID(),leadId:f.lead.id,senderId:sender.id,phone:f.lead.phone,source:'fixture',occurredAt:new Date().toISOString(),evidence:'Authorized synthetic recipient for this own sender.'});
  const person=await testAdmin(async c=>(await c.query('SELECT * FROM app.channel_identity WHERE workspace_id=$1 AND scope=$2',[f.u.p.workspaceId,'openwa:'+own.connection.id])).rows[0]);
- const input={version:2 as const,cadenceId:f.cadence.id,expectedRevision:0,leadIds:[f.lead.id],steps:{first:{senderId:sender.id,content:{kind:'text' as const,text:'Olá {{nome}}'}},second:{senderId:sender.id,content:{kind:'text' as const,text:'Podemos conversar?'}}}};
+ const input:PublicationInputV2={version:2,cadenceId:f.cadence.id,expectedRevision:0,leadIds:[f.lead.id],steps:{first:{senderId:sender.id,content:{kind:'text',text:'Olá {{nome}}'}},second:{senderId:sender.id,content:{kind:'text',text:'Podemos conversar?'}}}};
  return {...f,own,gateway,ownSender:sender,person,ownInput:input};
 }
 test('authorized text cadence freezes OpenWA capability, resolves variables and stops after signed real inbound',async t=>{
