@@ -25,5 +25,46 @@ services:
       - '127.0.0.1:1125:1025'
       - '127.0.0.1:8125:8025'
     restart: unless-stopped
+  openwa:
+    profiles: [channels]
+    build:
+      context: ./third_party/openwa
+    environment:
+      NODE_ENV: production
+      PORT: '2785'
+      API_MASTER_KEY: ${OPENWA_ADMIN_API_KEY:?Run npm run env:init}
+      ENGINE_TYPE: whatsapp-web.js
+      WWEBJS_WEB_VERSION: 'off'
+      AUTO_START_SESSIONS: 'true'
+      DATABASE_TYPE: sqlite
+      DATABASE_NAME: /app/data/openwa.sqlite
+      SESSION_DATA_PATH: /app/data/sessions
+      LOG_LEVEL: warn
+      SEND_PACING_ENABLED: 'true'
+      SEND_PACING_WARMUP_SCHEDULE: ${OPENWA_PLATFORM_DAILY_CAP:-20}
+      SEND_PACING_COLD_DAILY_CAP: ${OPENWA_PLATFORM_NEW_CONVERSATION_CAP:-5}
+      SEND_PACING_BREAKER_THRESHOLD: '5'
+      SEND_PACING_BREAKER_COOLDOWN_MS: '900000'
+      WEBHOOK_SSRF_PROTECT: 'true'
+      SSRF_ALLOWED_HOSTS: channel-ingress
+      MCP_ENABLED: 'false'
+    ports:
+      - '127.0.0.1:${OPENWA_PORT:-2785}:2785'
+    volumes:
+      - openwa_data:/app/data
+    shm_size: 256mb
+    restart: unless-stopped
+  channel-ingress:
+    profiles: [channels]
+    build:
+      context: .
+      dockerfile: docker/channel-ingress.Dockerfile
+    environment:
+      NODE_ENV: production
+      INGRESS_DATABASE_URL: postgresql://cadence_ingress:${CADENCE_INGRESS_PASSWORD:?Run npm run env:init}@db:5432/${OPENWA_INGRESS_DATABASE:-prometeus_cadence}
+      CHANNEL_KEYRING_JSON: ${CHANNEL_KEYRING_JSON:?Run npm run env:init}
+      CHANNEL_ACTIVE_KEY_ID: ${CHANNEL_ACTIVE_KEY_ID:?Run npm run env:init}
+    restart: unless-stopped
 volumes:
   cadence_pgdata:
+  openwa_data:

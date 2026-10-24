@@ -62,11 +62,11 @@ Contratos compartilhados definidos na tarefa 1:
 
 **Interfaces:** Produzir os tipos acima; `whatsappCapabilities(provider:Provider):WhatsappCapabilities`; parsers `parseOpenwaSession(value:unknown)`, `parseOpenwaQr(value:unknown)`, `parseOpenwaSend(value:unknown)` e `parseOpenwaRemoteMessage(value:unknown):OpenwaRemoteMessage` com Zod e limites explícitos. Resposta de envio válida contém `messageId:string` e `timestamp:number` em segundos; sucesso não contém prova de entrega.
 
-- [ ] Escrever testes que recusem QR fora do formato PNG/data URL limitado, timestamp inválido e resposta HTTP sem ID; Meta exige janela/template, OpenWA aceita texto com política própria e Twilio não é conectável. Exemplo: `assert.equal(whatsappCapabilities('openwa').requiresServiceWindow,false)`.
-- [ ] Rodar `rtk proxy node --experimental-strip-types --test tests/openwa-contracts.test.ts`; observar falha por contratos ausentes.
-- [ ] Adicionar submódulo do repositório solicitado e fixar o SHA aprovado. Ler DTOs e emissão efetiva de eventos upstream, documentar propriedades e IDs usados, incluindo `message.failed` e `session.restriction`; sanitizar fixtures. Implementar parsers e capacidades sem instalar o gateway no processo Next.
-- [ ] Reexecutar o teste e `rtk npm run typecheck`; contratos passam e projeto compila. Verificar o SHA do gitlink e o aviso MIT.
-- [ ] Commit: `feat(openwa): pin gateway and define provider contracts`.
+- [x] Escrever testes que recusem QR fora do formato PNG/data URL limitado, timestamp inválido e resposta HTTP sem ID; Meta exige janela/template, OpenWA aceita texto com política própria e Twilio não é conectável. Exemplo: `assert.equal(whatsappCapabilities('openwa').requiresServiceWindow,false)`.
+- [x] Rodar `rtk proxy node --experimental-strip-types --test tests/openwa-contracts.test.ts`; observar falha por contratos ausentes.
+- [x] Adicionar submódulo do repositório solicitado e fixar o SHA aprovado. Ler DTOs e emissão efetiva de eventos upstream, documentar propriedades e IDs usados, incluindo `message.failed` e `session.restriction`; sanitizar fixtures. Implementar parsers e capacidades sem instalar o gateway no processo Next.
+- [x] Reexecutar o teste e `rtk npm run typecheck`; contratos passam e projeto compila. Verificar o SHA do gitlink e o aviso MIT.
+- [x] Commit: `feat(openwa): pin gateway and define provider contracts`.
 
 ## Tarefa 2 — Gateway e receiver privados, reproduzíveis
 
@@ -74,11 +74,11 @@ Contratos compartilhados definidos na tarefa 1:
 
 **Interfaces:** `openwa-control.mjs` expõe `start|status|stop`, limita-se aos serviços `openwa`/`channel-ingress` e não imprime ambiente/chaves. `channel-ingress.ts` cria servidor interno em `0.0.0.0:3214`, `/health` e recusa demais rotas até o handler da tarefa 5. Gateway em `127.0.0.1:2785`; callback canônico interno `http://channel-ingress:3214/api/channel-webhooks/openwa/<publicId>`.
 
-- [ ] Escrever teste executável com Compose renderizado em ambiente de teste e servidor HTTP real: volumes próprios, gateway em loopback, receiver sem `ports`, ausência de Docker socket, API sem chave recusada, `/login` e `/api/auth/get-session` no receiver devolvem 404. Assert: `assert.equal(response.status,404)` para rota fora da allowlist.
-- [ ] Rodar `rtk proxy node --experimental-strip-types --test tests/openwa-infrastructure.test.ts`; falhar por receiver/configuração ausentes.
-- [ ] Construir imagem upstream fixada; fixar base Node 24/digest verificado para receiver e só copiar fontes/dependências necessárias. Gerar `OPENWA_ADMIN_API_KEY` aleatória no env local e passar como `API_MASTER_KEY` ao gateway, sem ler/logar bootstrap. Definir `ENGINE_TYPE=whatsapp-web.js`, `WWEBJS_WEB_VERSION=off`, `AUTO_START_SESSIONS=true`, `SEND_PACING_ENABLED=true`, schedule constante `20`, cold cap `5`, breaker `5`/`900000ms`; `SSRF_ALLOWED_HOSTS=channel-ingress` e proteção ligada. Não habilitar plugins/MCP/administração Docker.
-- [ ] Rodar teste e `rtk proxy node scripts/openwa-control.mjs start`; conferir health dos dois serviços e persistência após reinício, sem sessão pareada. Comando só usa este projeto Compose. Logs da validação passam por filtro de segredos.
-- [ ] Commit: `feat(openwa): provision private gateway infrastructure`.
+- [x] Escrever teste executável com Compose renderizado em ambiente de teste e servidor HTTP real: volumes próprios, gateway em loopback, receiver sem `ports`, ausência de Docker socket, API sem chave recusada, `/login` e `/api/auth/get-session` no receiver devolvem 404. Assert: `assert.equal(response.status,404)` para rota fora da allowlist.
+- [x] Rodar `rtk proxy node --experimental-strip-types --test tests/openwa-infrastructure.test.ts`; falhar por receiver/configuração ausentes.
+- [x] Construir imagem upstream fixada; fixar base Node 24/digest verificado para receiver e só copiar fontes/dependências necessárias. Gerar `OPENWA_ADMIN_API_KEY` aleatória no env local e passar como `API_MASTER_KEY` ao gateway, sem ler/logar bootstrap. Definir `ENGINE_TYPE=whatsapp-web.js`, `WWEBJS_WEB_VERSION=off`, `AUTO_START_SESSIONS=true`, `SEND_PACING_ENABLED=true`, schedule constante `20`, cold cap `5`, breaker `5`/`900000ms`; `SSRF_ALLOWED_HOSTS=channel-ingress` e proteção ligada. Não habilitar plugins/MCP/administração Docker.
+- [x] Rodar teste e `rtk proxy node scripts/openwa-control.mjs start`; conferir health dos dois serviços e persistência após reinício, sem sessão pareada. Comando só usa este projeto Compose. Logs da validação passam por filtro de segredos.
+- [x] Commit: `feat(openwa): provision private gateway infrastructure`.
 
 ## Tarefa 3 — Armazenamento de sessão, operação durável e isolamento
 

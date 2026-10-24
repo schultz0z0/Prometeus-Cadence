@@ -1,0 +1,10 @@
+.git
+.env*
+.runtime
+.superpowers
+.next
+node_modules
+third_party
+docs
+tests
+*.log
