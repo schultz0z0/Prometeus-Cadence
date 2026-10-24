@@ -60,6 +60,9 @@ export async function runOpenwaMaintenanceTick(options:OpenwaTickOptions,deps:{c
     if(!q.remote_session_id||!operational)throw new OpenwaClientError('OPENWA_CREDENTIAL_MISSING');
     const session=await operational.readSession(q.remote_session_id);
     await finish(lease,{kind:'status',phase:['created','initializing'].includes(session.status)?'provisioning':session.status,phone:session.phone?'+'+session.phone:null,engineLoaded:session.engineLoaded,restricted:!!session.restriction});
+   }else if(q.stage==='expire_stop'){
+    if(q.remote_session_id)await(operational??admin).stopSession(q.remote_session_id);
+    await finish(lease,{kind:'expired'});
    }else if(q.stage==='logout'){
     let confirmed=!q.remote_session_id;
     if(q.remote_session_id){

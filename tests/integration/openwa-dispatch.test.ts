@@ -1,6 +1,6 @@
 import test,{after} from 'node:test';import assert from 'node:assert/strict';import {randomUUID,createHmac} from 'node:crypto';
 import {getPools} from '../../src/server/db/pool.ts';import {closeDispatchPool,dispatchPool} from '../../src/server/messaging/worker-db.ts';import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';
-import {openwaFixture,openwaGatewayDouble,testAdmin} from './openwa-helpers.ts';import {runOpenwaMaintenanceTick} from '../../src/server/channels/openwa/lifecycle.ts';
+import {openwaFixture,openwaGatewayDouble,testAdmin,completeOpenwaRecoveryFixture} from './openwa-helpers.ts';import {runOpenwaMaintenanceTick} from '../../src/server/channels/openwa/lifecycle.ts';
 import {saveSenderLimits} from '../../src/server/channels/limits.ts';import {claimDispatch,leaseArgs} from '../../src/server/messaging/lease.ts';import {dispatchOne} from '../../src/server/messaging/dispatch.ts';
 import {handleChannelIngress} from '../../src/server/channels/openwa/events.ts';import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';import {readCredentialInTransaction} from '../../src/server/channels/repository.ts';
 after(async()=>{await Promise.all([getPools().close(),closeDispatchPool(),closeIngressPool()]);});
@@ -11,7 +11,7 @@ async function ready(t:any,existing?:Awaited<ReturnType<typeof openwaFixture>>){
  const sender=await testAdmin(async c=>(await c.query('SELECT * FROM app.channel_sender WHERE connection_id=$1',[f.id])).rows[0]);
  const revision=await testAdmin(async c=>(await c.query('SELECT revision FROM app.messaging_limits WHERE workspace_id=$1',[f.u.p.workspaceId])).rows[0]?.revision??0);
  await saveSenderLimits(f.u.p,{requestId:randomUUID(),expectedRevision:Number(revision),workspaceDailyLimit:20,senderId:sender.id,senderDailyLimit:20,senderNewConversationLimit:5});
- const current=await testAdmin(async c=>(await c.query('SELECT * FROM app.channel_sender WHERE id=$1',[sender.id])).rows[0]);return {...f,sender:current,gateway,mock};
+ const current=await testAdmin(async c=>(await c.query('SELECT * FROM app.channel_sender WHERE id=$1',[sender.id])).rows[0]);await completeOpenwaRecoveryFixture(f.id);return {...f,sender:current,gateway,mock};
 }
 async function queued(f:Awaited<ReturnType<typeof ready>>){return testAdmin(async c=>{
  const ws=f.u.p.workspaceId,identity=randomUUID(),conv=randomUUID(),message=randomUUID(),phone='15550000002',scope='openwa:'+f.id;
@@ -20,7 +20,7 @@ async function queued(f:Awaited<ReturnType<typeof ready>>){return testAdmin(asyn
  await c.query('INSERT INTO app.channel_conversation(workspace_id,id,connection_id,sender_id,identity_id) VALUES($1,$2,$3,$4,$5)',[ws,conv,f.id,f.sender.id,identity]);
  await c.query("INSERT INTO app.channel_message(workspace_id,id,connection_id,sender_id,identity_id,conversation_id,direction,text,purpose) VALUES($1,$2,$3,$4,$5,$6,'outbound','Reviewed fixture','campaign')",[ws,message,f.id,f.sender.id,identity,conv]);
  const send={connectionId:f.id,connectionRevision:1,senderId:f.sender.id,identity:{scope,externalId:phone+'@c.us',phone:'+'+phone},purpose:'campaign',content:{kind:'text',text:'Reviewed fixture'}};
- await c.query("INSERT INTO app.message_outbox(workspace_id,message_id,connection_id,sender_id,identity_id,actor_id,authority_kind,prepared_send,proof) VALUES($1,$2,$3,$4,$5,$6,'admin',$7,$8)",[ws,message,f.id,f.sender.id,identity,f.u.p.userId,JSON.stringify(send),JSON.stringify({senderRevision:Number(f.sender.revision),replyEpoch:0})]);return message;
+ await c.query("INSERT INTO app.message_outbox(workspace_id,message_id,connection_id,sender_id,identity_id,actor_id,authority_kind,prepared_send,proof,next_at) VALUES($1,$2,$3,$4,$5,$6,'admin',$7,$8,clock_timestamp()-interval '1 second')",[ws,message,f.id,f.sender.id,identity,f.u.p.userId,JSON.stringify(send),JSON.stringify({senderRevision:Number(f.sender.revision),replyEpoch:0})]);return message;
 });}
 const stored=(id:string)=>testAdmin(async c=>(await c.query('SELECT state FROM app.channel_message WHERE id=$1',[id])).rows[0].state);
 test('OpenWA dispatch outside service window requires consent, uses private webhook, consumes atomic quota and never regresses early read',async t=>{

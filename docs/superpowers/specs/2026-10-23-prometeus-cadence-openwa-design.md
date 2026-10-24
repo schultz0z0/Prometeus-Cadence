@@ -103,4 +103,4 @@ Ver [estudo do OpenWA](../../research/2026-10-23-openwa-study.md). Referência u
 
 Instância externa por cliente, escolha dinâmica de motor, importação completa do WhatsApp, grupos/canais, anexos, gestão de infraestrutura pelo dashboard OpenWA e início do próximo marco. Não há garantia de banimento zero nem de que uma conta restrita pela Meta será liberada pelo uso de OpenWA. O piloto de envio Meta continua registrado com erro de entrega `130497`.
 
-Desenho aprovado. Implementação depende da revisão do [plano subsequente](../plans/2026-10-23-prometeus-cadence-openwa.md). As decisões de detalhes que não alterem estes contratos ficam com o implementador.
+Desenho e [plano de implementação](../plans/2026-10-23-prometeus-cadence-openwa.md) aprovados. Implementação e revisão independente realizadas; a homologação com telefone real continua acompanhada no [relatório de validação](../../validation/2026-10-23-openwa.md). As decisões de detalhes que não alterem estes contratos ficam com o implementador.

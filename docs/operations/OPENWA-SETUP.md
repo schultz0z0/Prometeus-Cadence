@@ -28,7 +28,7 @@ Para atualizar uma instalação existente, pare o runtime e o processo Next ante
 
 Em `/settings/whatsapp`, escolha **Conectar número próprio**, dê um nome, leia o aviso e marque a confirmação. O QR aparece no próprio app. No telefone, use **Aparelhos conectados → Conectar aparelho**. Apenas proprietário/admin pode obter QR ou gerenciar a conexão; mudar de workspace ou perder acesso retira a imagem.
 
-O QR existe somente em memória, com consultas sem cache. A tela consulta QR a cada três segundos na fase apropriada e estado a cada dez; o fluxo termina após dez minutos. Fechar a janela interrompe essas consultas. O pareamento real não é feito por testes automatizados.
+O QR existe somente em memória, com consultas sem cache. A tela consulta QR a cada três segundos na fase apropriada e estado a cada dez; o fluxo termina após dez minutos. Fechar a janela interrompe essas consultas. O servidor também encerra o motor de uma tentativa não pareada após dez minutos; é necessário Reconectar para recomeçar. O pareamento real não é feito por testes automatizados.
 
 Sessão pronta exige resposta autenticada da API, número conhecido, chave limitada e webhook registrado. Webhook de estado positivo sozinho não marca a conexão pronta. Restrição ou logout bloqueia novos envios imediatamente. **Reconectar** é uma ação explícita e troca a revisão/chave. **Desconectar** enfileira logout e revogação; falha em confirmar o desligamento remoto aparece como atenção. Nesse caso confira também Aparelhos conectados no telefone.
 
@@ -68,3 +68,5 @@ Atualizações do submódulo são deliberadas: ler diferenças de contrato/licen
 Memória ociosa observada sem telefone pareado no piloto de infraestrutura: aproximadamente 112 MiB no gateway e 28 MiB no receiver. Não representa o consumo do Chromium com sessão ativa; dimensionar e medir após pareamento.
 
 Twilio está aposentado, com webhook410 e histórico preservado. Meta oficial continua disponível como conexão separada; publicações não são convertidas automaticamente.
+
+O guard final de envio exige recuperação completa e atualizada em até45s e estado remoto conferido em até60s. Enquanto houver página pendente, falha ou retorno de queda longa, os envios aguardam. A primeira recuperação começa na proteção do webhook da revisão pareada, não na data de criação de uma conexão abandonada.

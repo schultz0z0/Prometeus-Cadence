@@ -15,7 +15,14 @@ test('retirement pauses legacy publications and cancels only untransmitted work 
  await assert.rejects(saveConnection(f.u.p,{provider:'twilio',name:'legacy'}),{code:'PROVIDER_RETIRED'});assert.equal((await webhookRequest(new Request('https://hooks.example/api/channel-webhooks/twilio/legacy/messages',{method:'POST'}),'legacy','twilio-messages')).status,410);
 });
 test('a surviving retired lease cannot reach an injected provider and direct SQL final gate refuses it',async()=>{
+ for(const entry of ['typescript','sql']){
  const f=await publicationFixture(),review=await preparePublication(f.u.p,f.input);await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100,f.u.p.workspaceId);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);
- await testAdmin(c=>c.query("UPDATE app.channel_connection SET provider='twilio' WHERE id=$1",[f.connection.id]));let providerCalls=0;await dispatchOne(lease,{adapter:{...f.adapter,sendOnce:async()=>{providerCalls++;return {kind:'uncertain',code:'UNEXPECTED'};}},now:()=>now});assert.equal(providerCalls,0);
+ await testAdmin(c=>c.query("UPDATE app.channel_connection SET provider='twilio' WHERE id=$1",[f.connection.id]));
+ if(entry==='typescript'){
+  let providerCalls=0;await dispatchOne(lease,{adapter:{...f.adapter,sendOnce:async()=>{providerCalls++;return {kind:'uncertain',code:'UNEXPECTED'};}},now:()=>now});assert.equal(providerCalls,0);
+  const row=await testAdmin(async c=>(await c.query('SELECT state,blocked_code FROM app.message_outbox WHERE message_id=$1',[lease.messageId])).rows[0]);assert.equal(row.state,'blocked');assert.equal(row.blocked_code,'PROVIDER_RETIRED');continue;
+ }
  const result=(await dispatchPool().query('SELECT app.begin_message_dispatch($1,$2,$3,$4,$5,$6,$7) AS value',[lease.workspaceId,lease.messageId,lease.attemptId,lease.token,lease.fence,{},now])).rows[0].value;assert.equal(result.allowed,false);assert.equal(result.code,'PROVIDER_RETIRED');
+ const replay=(await dispatchPool().query('SELECT app.begin_message_dispatch($1,$2,$3,$4,$5,$6,$7) AS value',[lease.workspaceId,lease.messageId,lease.attemptId,lease.token,lease.fence,{},now])).rows[0].value;assert.equal(replay.allowed,false);assert.equal(replay.code,'STALE_LEASE');
+ }
 });

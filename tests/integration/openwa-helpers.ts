@@ -2,6 +2,11 @@ import {randomUUID} from 'node:crypto';import {readFileSync} from 'node:fs';
 import {whatsappUser,testAdmin} from './whatsapp-helpers.ts';
 export {whatsappUser,testAdmin};
 export const openwaInput=()=>({requestId:randomUUID(),name:'QA own WhatsApp'});
+// Seed an already completed authenticated recovery for dispatch/publication fixtures.
+// Recovery protocol, stale checkpoints and incomplete pagination are tested separately.
+export async function completeOpenwaRecoveryFixture(connectionId:string,at=new Date().toISOString()){
+ await testAdmin(c=>c.query("INSERT INTO app.openwa_recovery(workspace_id,connection_id,revision,checkpoint,completed_at,next_at) SELECT workspace_id,connection_id,revision,$2::timestamptz-interval '2 seconds',clock_timestamp(),clock_timestamp()+interval '15 seconds' FROM app.openwa_connection WHERE connection_id=$1 ON CONFLICT(workspace_id,connection_id) DO UPDATE SET revision=EXCLUDED.revision,checkpoint=EXCLUDED.checkpoint,completed_at=EXCLUDED.completed_at,window_until=NULL,cursor=NULL,failures=0",[connectionId,at]));
+}
 export async function openwaFixture(){
  const u=await whatsappUser();const {createOpenwaRecord}=await import('../../src/server/channels/openwa/repository.ts');
  const input=openwaInput(),view=await createOpenwaRecord(u.p,input);

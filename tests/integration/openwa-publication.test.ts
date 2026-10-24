@@ -1,5 +1,5 @@
 import test,{after} from 'node:test';import assert from 'node:assert/strict';import {randomUUID,createHmac} from 'node:crypto';
-import {publicationFixture} from './messaging-helpers.ts';import {openwaGatewayDouble,testAdmin} from './openwa-helpers.ts';
+import {publicationFixture} from './messaging-helpers.ts';import {openwaGatewayDouble,testAdmin,completeOpenwaRecoveryFixture} from './openwa-helpers.ts';
 import {createOpenwaRecord} from '../../src/server/channels/openwa/repository.ts';import {runOpenwaMaintenanceTick} from '../../src/server/channels/openwa/lifecycle.ts';
 import {recordLeadConsent,suppressIdentity} from '../../src/server/messaging/consent.ts';import {preparePublication,confirmPublication,pausePublication} from '../../src/server/messaging/publication.ts';
 import {prepareChannelTest,confirmChannelTest,prepareReply} from '../../src/server/messaging/replies.ts';import {materializeDueMessages} from '../../src/server/messaging/outbox.ts';import {claimDispatch} from '../../src/server/messaging/lease.ts';import {dispatchOne} from '../../src/server/messaging/dispatch.ts';
@@ -21,7 +21,7 @@ test('authorized text cadence freezes OpenWA capability, resolves variables and 
  const review=await preparePublication(f.u.p,f.ownInput);assert.deepEqual(review.blockers,[]);assert.equal(review.snapshot.version,2);if(review.snapshot.version!==2)throw Error('version');
  const frozen=review.snapshot.recipients[0].steps.first;assert.equal(frozen.identityId,f.person.id);assert.equal('externalId'in frozen.identity?frozen.identity.externalId:'','5541988888888@c.us');assert.equal(frozen.sender.capabilities?.requiresServiceWindow,false);assert.equal(frozen.preview,'Olá Clínica QA');
  const pub=await confirmPublication(f.u.p,{...f.ownInput,requestId:randomUUID(),reviewToken:review.token,material:review.material});const now=new Date(f.now.getTime()+120000).toISOString();assert.equal(await materializeDueMessages(now,100,f.u.p.workspaceId),1);
- const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);let posts=0;const {createOpenwaAdapter}=await import('../../src/server/channels/providers/openwa.ts');
+ await completeOpenwaRecoveryFixture(f.own.connection.id,now);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);let posts=0;const {createOpenwaAdapter}=await import('../../src/server/channels/providers/openwa.ts');
  await dispatchOne(lease,{adapter:createOpenwaAdapter(async(_url,init)=>{posts++;assert.equal(JSON.parse(String(init?.body)).text,'Olá Clínica QA');return Response.json({messageId:'true_5541988888888@c.us_'+randomUUID(),timestamp:Math.floor(Date.now()/1000)},{status:201});}),now:()=>now});assert.equal(posts,1);
  const secret=(await withWorkspaceTransaction(f.u.p,c=>readCredentialInTransaction(c,f.own.connection.id))).credentials.webhookSecret,publicId=await testAdmin(async c=>(await c.query('SELECT public_id FROM app.channel_connection WHERE id=$1',[f.own.connection.id])).rows[0].public_id);
  const raw=JSON.stringify({event:'message.received',sessionId:f.gateway.session.id,timestamp:new Date().toISOString(),deliveryId:randomUUID(),idempotencyKey:randomUUID(),data:{id:'false_5541988888888@c.us_'+randomUUID(),chatId:'5541988888888@c.us',from:'5541988888888@c.us',to:'15550000001@c.us',body:'Sim, recebi.',type:'text',timestamp:Math.floor(Date.now()/1000),fromMe:false,isGroup:false}});
@@ -37,7 +37,7 @@ test('own test uses canonical JID and private callback; templates are rejected a
 });
 test('reviewed scope does not silently switch, while opt-out, pause and changed limits prevent OpenWA POST',async t=>{
  for(const mode of ['optout','pause','limits']){
-  const f=await fixture(t);assert.ok(f.person);const review=await preparePublication(f.u.p,f.ownInput),pub=await confirmPublication(f.u.p,{...f.ownInput,requestId:randomUUID(),reviewToken:review.token,material:review.material});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100,f.u.p.workspaceId);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);
+  const f=await fixture(t);assert.ok(f.person);const review=await preparePublication(f.u.p,f.ownInput),pub=await confirmPublication(f.u.p,{...f.ownInput,requestId:randomUUID(),reviewToken:review.token,material:review.material});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100,f.u.p.workspaceId);await completeOpenwaRecoveryFixture(f.own.connection.id,now);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);
   if(mode==='optout')await suppressIdentity(f.u.p,{requestId:randomUUID(),identityId:f.person.id,reason:'fixture'});
   if(mode==='pause')await pausePublication(f.u.p,{requestId:randomUUID(),publicationId:pub.id,expectedRevision:1});
   if(mode==='limits')await testAdmin(c=>c.query('UPDATE app.channel_sender SET daily_limit=19 WHERE id=$1',[f.ownSender.id]));

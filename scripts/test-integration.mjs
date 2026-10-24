@@ -20,6 +20,7 @@ const known = [
   "openwa-dispatch",
   "openwa-publication",
   "openwa-recovery",
+  "openwa-final-regressions",
   "twilio-retirement",
   "chatgpt-oauth",
   "mail-storage",

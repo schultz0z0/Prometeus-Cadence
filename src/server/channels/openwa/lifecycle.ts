@@ -13,6 +13,7 @@ export async function readOpenwaQr(p:Principal,id:string,revision:number):Promis
  const scope=()=>withWorkspaceTransaction(p,async c=>{
   await requireChannelAdmin(c);const row=await connectionRow(c,id),q=await openwaRow(c,id);
   if(row.provider!=='openwa'||Number(row.revision)!==revision||q.desired_state!=='connected')throw new AppError(409,'A conexão mudou. Abra o pareamento novamente.','OPENWA_CHANGED');
+  if(!q.pairing_completed&&q.pairing_deadline.getTime()<=Date.now())throw new AppError(409,'O tempo de pareamento terminou. Use Reconectar para iniciar outra tentativa.','OPENWA_PAIRING_EXPIRED');
   const available=q.phase==='qr_ready'&&q.webhook_registered&&q.remote_session_id&&q.api_key_id;
   const secrets=available?(await readCredentialInTransaction(c,id)).credentials:null;
   return {phase:q.phase,available,sessionId:q.remote_session_id,apiKey:secrets?.apiKey};
