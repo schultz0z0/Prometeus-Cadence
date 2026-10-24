@@ -1,6 +1,8 @@
 # Prometeus Cadence
 
-Reconstrução independente da interface e dos fluxos observados no CadenceFlow. **Marcos01–04 e implementação local05A: interface, identidade, PostgreSQL, prospecção, IA, automações e execução WhatsApp Meta/Twilio.** O aceite real dos canais depende das credenciais e do callback HTTPS de cada empresa. E-mail pertence ao marco05B.
+Reconstrução independente dos fluxos observados no CadenceFlow, com PostgreSQL, workspaces, prospecção/IA, automações, e-mail e WhatsApp. A conexão atual de WhatsApp oferece Meta oficial e número próprio via OpenWA gerenciado em Docker com QR no app. Twilio foi aposentado; histórico e resultados anteriores são preservados.
+
+Veja [configuração OpenWA](docs/operations/OPENWA-SETUP.md), [runtime contínuo](docs/operations/CONTINUOUS-RUNTIME.md) e [validação da mudança](docs/validation/2026-10-23-openwa.md). Pareamento no telefone e entrega real são aceites separados dos testes automatizados. O detalhamento de marcos anteriores abaixo registra o contexto histórico; a operação atual dos canais segue esses guias.
 
 ## Executar
 

@@ -208,4 +208,4 @@ Contrato SQL da manutenção: `app.claim_openwa_operation(p_now timestamptz)`, `
 - Cobertura: infra/licença (1–2), autorização/persistência (3–4), receiver/inbox (5), limites (6), despacho/ACK (7), cadências (8), UX/QR (9), continuidade (10), Twilio legado (11), regressão/piloto/transição (12).
 - Interfaces: DTOs são definidos na tarefa 1 e reusados no cliente/UI; worker consome a manutenção da tarefa 4; receiver consome o handler da tarefa 5. Nenhuma etapa depende de chaves fornecidas pelo usuário final.
 - Review Focus: cada um dos cinco riscos tem teste explícito na tarefa proprietária. Falha de telefone/Meta não será confundida com ausência de callback, aceite da API ou entrega real.
-- Execução: desenho aprovado; aprovação deste plano pendente. Manter execução nativa já escolhida. Não iniciar a implementação antes da revisão do usuário.
+- Execução: desenho e plano aprovados pelo usuário; execução nativa em andamento, com pareamento e teste real reservados ao final.
