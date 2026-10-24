@@ -18,6 +18,18 @@ export function createStripeAdapter(fetcher:typeof fetch=fetch,config=billingCon
  }
  return {
   request,
+  async ensurePrice(code:string){
+   const offer=getSku(code);if(!('cycle' in offer))throw Error('Plano inválido.');const lookup='prometeus-'+BILLING_VERSION+'-'+code;
+   const existing=await request('GET','/prices',{'lookup_keys[0]':lookup,active:'true',limit:'1'});let price=existing.data?.[0];
+   if(!price){const product=await request('POST','/products',{name:'Prometeus Cadence · '+offer.name,'metadata[catalog_version]':BILLING_VERSION},'billing:product:'+lookup);price=await request('POST','/prices',{product:stripeId(product.id,'prod'),lookup_key:lookup,currency:'brl',unit_amount:String(offer.amount),'recurring[interval]':'month'},'billing:price:'+lookup);}
+   if(price.unit_amount!==offer.amount||price.currency!=='brl'||price.recurring?.interval!=='month'||(price.recurring.interval_count??1)!==1)throw Error('Preço Stripe divergente do catálogo.');return stripeId(price.id,'price');
+  },
+  previewChange:(subscription:string,item:string,price:string,date:number)=>request('POST','/invoices/create_preview',{subscription:stripeId(subscription,'sub'),'subscription_details[items][0][id]':stripeId(item,'si'),'subscription_details[items][0][price]':stripeId(price,'price'),'subscription_details[items][0][quantity]':'1','subscription_details[proration_date]':String(date),'subscription_details[proration_behavior]':'always_invoice'},'billing:preview:'+subscription+':'+price+':'+date),
+  upgrade:(subscription:string,item:string,price:string,date:number,key:string)=>request('POST','/subscriptions/'+stripeId(subscription,'sub'),{'items[0][id]':stripeId(item,'si'),'items[0][price]':stripeId(price,'price'),'items[0][quantity]':'1',payment_behavior:'pending_if_incomplete',proration_behavior:'always_invoice',proration_date:String(date)},'billing:'+key+':upgrade'),
+  async downgrade(s:any,price:string,key:string){
+   const item=s.items.data[0],schedule=s.schedule?{id:typeof s.schedule==='string'?s.schedule:s.schedule.id}:await request('POST','/subscription_schedules',{from_subscription:stripeId(s.id,'sub'),'metadata[cadence_operation]':key},'billing:'+key+':schedule');
+   return request('POST','/subscription_schedules/'+stripeId(schedule.id,'sub_sched'),{end_behavior:'release',proration_behavior:'none','phases[0][start_date]':String(item.current_period_start),'phases[0][end_date]':String(item.current_period_end),'phases[0][items][0][price]':stripeId(item.price.id,'price'),'phases[0][items][0][quantity]':'1','phases[1][items][0][price]':stripeId(price,'price'),'phases[1][items][0][quantity]':'1','phases[1][duration][interval]':'month','phases[1][duration][interval_count]':'1','phases[1][proration_behavior]':'none'},'billing:'+key+':downgrade');
+  },
   createCustomer:(workspaceId:string,key:string,contact:{email:string|null;phone:string|null})=>request('POST','/customers',{'metadata[workspace_id]':workspaceId,...(contact.email?{email:contact.email}:{}),...(contact.phone?{phone:contact.phone}:{})},'billing:'+key+':customer'),
   async createCheckout(input:{customer:string;sku:string;workspaceId:string;operationId:string}){
    stripeId(input.customer,'cus');const sku=getSku(input.sku),subscription='cycle' in sku;
@@ -28,7 +40,10 @@ export function createStripeAdapter(fetcher:typeof fetch=fetch,config=billingCon
   },
   readCheckout:(id:string)=>request('GET','/checkout/sessions/'+stripeId(id,'cs'),{'expand[0]':'line_items','expand[1]':'subscription'}),
   readSubscription:(id:string)=>request('GET','/subscriptions/'+stripeId(id,'sub'),{'expand[0]':'latest_invoice','expand[1]':'items.data.price'}),
-  readInvoice:(id:string)=>request('GET','/invoices/'+stripeId(id,'in'),{'expand[0]':'lines.data'}),
+  readInvoice:(id:string)=>request('GET','/invoices/'+stripeId(id,'in'),{'expand[0]':'payments'}),
+  readPayment:(id:string)=>request('GET','/payment_intents/'+stripeId(id,'pi'),{'expand[0]':'latest_charge'}),
+  readCharge:(id:string)=>request('GET','/charges/'+stripeId(id,'ch')),
+  readDispute:(id:string)=>request('GET','/disputes/'+stripeId(id,'dp')),
   cancelSubscription:(id:string,key:string)=>request('POST','/subscriptions/'+stripeId(id,'sub'),{cancel_at_period_end:'true'},'billing:'+key+':cancel'),
   updateCustomer:(id:string,contact:{email:string|null;phone:string|null},key:string)=>request('POST','/customers/'+stripeId(id,'cus'),{email:contact.email??'',phone:contact.phone??''},'billing:'+key+':contact'),
   async paymentPortal(customer:string,key:string){const result=await request('POST','/billing_portal/sessions',{customer:stripeId(customer,'cus'),return_url:config.origin+'/settings/plan','flow_data[type]':'payment_method_update'},'billing:'+key+':portal');result.url=stripeUrl(result.url,'portal');return result;},

@@ -18,6 +18,7 @@ const known = [
   "billing-storage",
   "billing-entitlements",
   "billing-operations",
+  "billing-events",
   "openwa-storage",
   "openwa-connections",
   "openwa-ingress",

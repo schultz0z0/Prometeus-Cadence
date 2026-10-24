@@ -2,7 +2,7 @@ import 'server-only';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import type {Principal} from '../../domain/workspace.ts';
-import {BILLING_VERSION,getSku,type BillingReview} from '../../domain/billing.ts';
+import {BILLING_VERSION,getSku,getPlan,type BillingReview} from '../../domain/billing.ts';
 import {AppError} from '../errors.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from '../prospecting/review.ts';
 import {billingPool,billingTransaction,billingError} from './db.ts';
@@ -28,7 +28,18 @@ export async function prepareBilling(p:Principal,input:unknown,deps:{adapter?:St
   if(!a.subscription_id)throw new AppError(409,'É necessário ter uma assinatura para esta ação.');
   if(b.kind==='cancel'){sku=null;effects=['A renovação será cancelada.','O acesso permanece até o fim do período pago; dados e saldo comprado serão preservados.'];}
   else if(b.kind==='payment-method'){sku=null;effects=['Atualize a forma de pagamento no ambiente seguro do Stripe.'];}
-  else {throw new AppError(409,'A troca de plano está sendo preparada.');}
+  else {
+   if(!sku||!['essential','pro'].includes(sku)||sku===a.plan||b.kind!==(sku==='pro'?'upgrade':'downgrade'))throw new AppError(422,'Troca de plano inválida.');
+   if(a.state!=='active'||a.cancel_at_period_end||a.change_schedule_id)throw new AppError(409,'Regularize a assinatura antes de alterar o plano.');
+   const adapter=deps.adapter??createStripeAdapter(),sub=await adapter.readSubscription(a.subscription_id),item=sub.items?.data?.[0];
+   if(sub.customer!==a.customer_id||sub.status!=='active'||sub.pending_update||sub.schedule||sub.items?.data?.length!==1||item?.quantity!==1||item.price?.unit_amount!==getPlan(a.plan).amount)throw new AppError(409,'A assinatura mudou. Atualize o estado antes de trocar.');
+   const priceId=await adapter.ensurePrice(sku);change={priceId};
+   if(b.kind==='upgrade'){
+    const prorationDate=Math.floor(Date.now()/1000),preview=await adapter.previewChange(sub.id,item.id,priceId,prorationDate);
+    if(preview.currency!=='brl'||!Number.isSafeInteger(preview.amount_due)||preview.amount_due<=0)throw new AppError(409,'Não foi possível confirmar o valor da alteração.');
+    amount=preview.amount_due;change.prorationDate=prorationDate;effects=['Cobrança proporcional de teste, conforme esta prévia.','O plano e a diferença de franquia mudam somente após o pagamento.'];
+   }else effects=['O plano atual permanece até a próxima renovação.','O Essential será aplicado na renovação por R$ 397/mês. Dados e saldo comprado permanecem.'];
+  }
  }
  const core={kind:b.kind,sku,amount,currency:'brl' as const,revision:Number(a.revision),...change},now=Date.now();
  return {...core,effects,token:createReviewToken(proof(p,a,core),signing(),now),expiresAt:new Date(now+600000).toISOString()};
@@ -64,6 +75,19 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
    await adapter.cancelSubscription(o.account.subscription_id,o.id);await update('completed',{id:o.account.subscription_id});
   }else if(o.kind==='payment-method'){
    const result=await adapter.paymentPortal(customer,o.id);await update('completed',{id:result.id,result:{url:stripeUrl(result.url,'portal')}});
+  }else if(o.kind==='upgrade'||o.kind==='downgrade'){
+   const sub=await adapter.readSubscription(o.account.subscription_id),item=sub.items?.data?.[0];
+   if(sub.customer!==customer||sub.status!=='active'||sub.items?.data?.length!==1||item?.quantity!==1)throw new StripeFailure(false);
+   if(o.kind==='upgrade'){
+    // An acknowledged remote change is recovered by reading it, never by charging a second time.
+    if(item.price?.id!==o.proof.priceId){
+     if(item.price?.unit_amount!==getPlan(o.account.plan).amount)throw new StripeFailure(false);
+     const preview=await adapter.previewChange(sub.id,item.id,o.proof.priceId,o.proof.prorationDate);
+     if(preview.currency!=='brl'||preview.amount_due!==o.proof.amount)throw new StripeFailure(false);
+     await adapter.upgrade(sub.id,item.id,o.proof.priceId,o.proof.prorationDate,o.id);
+    }
+    await update('awaiting_payment',{id:sub.id});
+   }else {const schedule=await adapter.downgrade(sub,o.proof.priceId,o.id);await update('completed',{id:schedule.id});}
   }else throw new StripeFailure(false);
  }catch(error){
   try{await update(error instanceof StripeFailure&&!error.uncertain?'failed':'uncertain',{code:error instanceof StripeFailure&&!error.uncertain?'PROVIDER_REJECTED':'RECONCILIATION_REQUIRED'});}catch{}
