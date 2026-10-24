@@ -625,3 +625,6 @@
     border-color: var(--primary);
   }
 }
+.openwa-qr{display:grid;place-items:center;min-height:280px;border:1px solid var(--border,#e2e5ed);border-radius:12px;padding:16px;background:#fff;color:#172033;text-align:center;overflow:hidden}
+.openwa-qr img{display:block;width:min(280px,100%);height:auto;image-rendering:pixelated}
+.openwa-pairing{max-width:100%;overflow-wrap:anywhere}

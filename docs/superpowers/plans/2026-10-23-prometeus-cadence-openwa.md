@@ -160,11 +160,11 @@ Contrato SQL da manutenção: `app.claim_openwa_operation(p_now timestamptz)`, `
 
 **Interfaces:** Componentes consomem as ações/DTOs da tarefa 4. Cliente expõe `createOpenwa`, `openwaStatus`, `openwaQr`, `reconnectOpenwa`, `disconnectOpenwa`; cada mutação conserva o requestId em retry, conforme `createReviewedCommands` existente.
 
-- [ ] Escrever fluxo browser com API fixture: cards Meta e número próprio, aviso, abrir QR, expirar, parear, reconectar e desligar. Troca de workspace com fetch pendente não mostra QR antigo. Teste: `assert.equal(await oldWorkspaceQr.count(),0)`. Nunca capturar screenshot de QR/telefone real.
-- [ ] Rodar teste do cliente e QA contra versão anterior para registrar a falta do novo fluxo, antes de alterar a tela.
-- [ ] Implementar dois cards com ações diretas, modal acessível, QR em memória com `no-store` e sem `localStorage`. Poll de QR a cada 3s somente enquanto modal aberto em fase apropriada, até 10min; demais estados a cada 10s. Sem repetir comando start a cada poll. Exibir erro útil, quota da plataforma e limites 20/5; remover card de Twilio. Aviso explícito de risco e número dedicado; Meta também não promete imunidade a bloqueio.
-- [ ] Rodar teste/QA desktop e mobile com fixtures, keyboard/foco/modal, viewport 390px e rascunho preservado após refresh. Testar UI bloqueando valores acima do teto e formulário fechando ao revogar autorização. O script QA recebe `QA_PLAYWRIGHT_MODULE` e `QA_CHROME_PATH` para o tooling já disponível, sem caminhos pessoais fixados no repositório e sem considerar ausência do browser um passe. `rtk npm run typecheck` passa.
-- [ ] Commit: `feat(settings): connect own WhatsApp through managed QR`.
+- [x] Escrever fluxo browser com API fixture: cards Meta e número próprio, aviso, abrir QR, expirar, parear, reconectar e desligar. Troca de workspace com fetch pendente não mostra QR antigo. Teste: `assert.equal(await oldWorkspaceQr.count(),0)`. Nunca capturar screenshot de QR/telefone real.
+- [x] Rodar teste do cliente e QA contra versão anterior para registrar a falta do novo fluxo, antes de alterar a tela.
+- [x] Implementar dois cards com ações diretas, modal acessível, QR em memória com `no-store` e sem `localStorage`. Poll de QR a cada 3s somente enquanto modal aberto em fase apropriada, até 10min; demais estados a cada 10s. Sem repetir comando start a cada poll. Exibir erro útil, quota da plataforma e limites 20/5; remover card de Twilio. Aviso explícito de risco e número dedicado; Meta também não promete imunidade a bloqueio.
+- [x] Rodar teste/QA desktop e mobile com fixtures, keyboard/foco/modal, viewport 390px e rascunho preservado após refresh. Testar UI bloqueando valores acima do teto e formulário fechando ao revogar autorização. O script QA recebe `QA_PLAYWRIGHT_MODULE` e `QA_CHROME_PATH` para o tooling já disponível, sem caminhos pessoais fixados no repositório e sem considerar ausência do browser um passe. `rtk npm run typecheck` passa.
+- [x] Commit: `feat(settings): connect own WhatsApp through managed QR`.
 
 ## Tarefa 10 — Serviço contínuo de sessão e recuperação limitada
 

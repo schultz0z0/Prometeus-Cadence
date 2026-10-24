@@ -1,0 +1,39 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+const {QA_PLAYWRIGHT_MODULE,QA_CHROME_PATH,QA_SESSION_COOKIE,QA_WORKSPACE_ID,QA_ORIGIN}=process.env;
+if(!QA_PLAYWRIGHT_MODULE||!QA_CHROME_PATH||!QA_SESSION_COOKIE||!QA_WORKSPACE_ID||!QA_ORIGIN)throw Error('QA requires explicit browser tooling, local session and origin.');
+const origin=new URL(QA_ORIGIN);if(!['127.0.0.1','localhost'].includes(origin.hostname))throw Error('QA is local only');
+const {chromium}=await import(QA_PLAYWRIGHT_MODULE),browser=await chromium.launch({headless:true,executablePath:QA_CHROME_PATH});
+const cid='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';
+let created=false,phase='qr_ready',revision=1,expired=false,revoked=false,createCount=0;const writes=[];
+const caps={connectable:true,requiresServiceWindow:false,supportsOfficialTemplates:false,supportsText:true};
+const sender=()=>({id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',connectionId:cid,provider:'openwa',address:'+15550000001',externalId:'+15550000001',identityScope:'openwa:'+cid,revision,ready:phase==='ready',dailyLimit:20,newConversationLimit:5,capabilities:caps});
+const connection=()=>({id:cid,provider:'openwa',name:'QA own fixture',revision,state:phase==='ready'?'ready':phase==='disconnected'?'disconnected':'pending',externalAccountId:null,hasSecrets:true,verification:{credentials:phase==='ready',challenge:false,inbound:false},senders:phase==='ready'?[sender()]:[],identifiers:{},capabilities:caps});
+const view=()=>({connection:connection(),phase,phone:phase==='ready'?'+15550000001':null,lastCheckedAt:null,errorCode:null,platformDailyCap:20,platformNewConversationCap:5});
+try{
+ const context=await browser.newContext({viewport:{width:1440,height:1000}});await context.addCookies([{name:'better-auth.session_token',value:QA_SESSION_COOKIE,domain:origin.hostname,path:'/',httpOnly:true,sameSite:'Lax'}]);const page=await context.newPage(),errors=[];page.setDefaultTimeout(8000);page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/api/**',async route=>{
+  const req=route.request(),path=new URL(req.url()).pathname,body=req.postDataJSON();
+  if(path==='/api/channels')return route.fulfill({json:created?[connection()]:[]});
+  if(path==='/api/messaging/limits')return route.fulfill({json:{revision:1,workspaceDailyLimit:20,timezone:'America/Sao_Paulo',minIntervalSeconds:60,maxIntervalSeconds:180}});
+  if(path==='/api/channels/openwa'){assert.deepEqual(Object.keys(body).sort(),['expectedRevision','name','requestId']);created=true;createCount++;writes.push(path);return route.fulfill({json:view()});}
+  if(path.endsWith('/openwa-status'))return revoked?route.fulfill({status:403,json:{message:'Acesso revogado',code:'FORBIDDEN'}}):route.fulfill({json:view()});
+  if(path.endsWith('/openwa-qr'))return route.fulfill({json:{connectionId:cid,revision,phase,qrCode:expired?null:png,refreshAfterMs:3000}});
+  if(path.endsWith('/openwa-reconnect')){revision++;phase='qr_ready';expired=false;writes.push(path);return route.fulfill({json:view()});}
+  if(path.endsWith('/openwa-disconnect')){revision++;phase='disconnected';writes.push(path);return route.fulfill({json:view()});}
+  if(path.includes('/api/messaging/templates'))return route.fulfill({json:[]});
+  if(req.method()!=='GET')return route.abort();
+  // Background read-only workspace refresh is allowed; all channel I/O is synthetic.
+  return route.continue();
+ });
+ await page.goto(origin.origin+'/settings/whatsapp',{timeout:60000});await page.getByRole('button',{name:'Conectar número próprio',exact:true}).click();
+ const dialog=page.getByRole('dialog');await page.getByLabel('Nome da conexão').fill('QA own fixture');await page.keyboard.press('Shift+Tab');assert.equal(await page.evaluate(()=>!!document.activeElement?.closest('dialog')),true);assert.equal(await page.getByText(/risco de bloqueio/).count()>0,true);await page.getByLabel('Entendo o risco e vou usar um número dedicado').check();await page.getByRole('button',{name:'Gerar QR Code',exact:true}).click();
+ await page.getByAltText('QR Code para conectar o WhatsApp').waitFor();assert.equal(createCount,1);expired=true;await page.getByText('QR expirou. Aguardando atualização automática.').waitFor({timeout:15000});expired=false;await page.getByAltText('QR Code para conectar o WhatsApp').waitFor({timeout:15000});phase='ready';await dialog.getByText('WhatsApp conectado', {exact:true}).waitFor({timeout:15000});assert.equal(await page.getByAltText('QR Code para conectar o WhatsApp').count(),0);await dialog.getByRole('button',{name:'Concluir',exact:true}).click();
+ await page.getByRole('button',{name:'Atualizar estado',exact:true}).click();const limit=page.getByLabel('Máximo diário deste remetente');await limit.fill('21');assert.equal(await limit.evaluate(e=>e.checkValidity()),false);await limit.fill('20');await page.getByRole('button',{name:'Reconectar',exact:true}).click();await page.getByAltText('QR Code para conectar o WhatsApp').waitFor();await page.keyboard.press('Escape');assert.equal(await dialog.count(),0);
+ await page.getByRole('button',{name:'Reconectar',exact:true}).click();revoked=true;await page.getByRole('dialog').waitFor({state:'hidden',timeout:15000});assert.equal(await page.getByAltText('QR Code para conectar o WhatsApp').count(),0);revoked=false;
+ // Reload remounts a fresh authenticated client after the synthetic access loss.
+ phase='ready';await page.reload();await page.getByRole('button',{name:'Preparar teste',exact:true}).click();await page.getByLabel('Telefone autorizado · formato +55…').fill('+15550000002');await page.getByLabel('Mensagem',{exact:true}).fill('Draft survives a read-only refresh');await page.waitForTimeout(11000);assert.equal(await dialog.count(),1,'Draft modal disappeared; access blocked='+await page.getByText('O acesso ao workspace mudou',{exact:true}).count());assert.equal(await page.getByLabel('Mensagem',{exact:true}).inputValue(),'Draft survives a read-only refresh');await page.keyboard.press('Escape');
+ await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);await fs.mkdir('.runtime/openwa-qa',{recursive:true});await page.screenshot({path:'.runtime/openwa-qa/mobile.png',fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,JSON.stringify(await page.evaluate(()=>[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1).slice(0,8).map(e=>({tag:e.tagName,cls:e.className,width:e.getBoundingClientRect().width})))));
+ await page.getByRole('button',{name:'Desconectar',exact:true}).click();await page.getByRole('button',{name:'Confirmar desconexão',exact:true}).click();await page.getByText('Desconectado',{exact:true}).waitFor();assert.ok(writes.some(p=>p.endsWith('openwa-disconnect')));assert.equal(errors.length,0,errors.join('\n'));
+ console.log(JSON.stringify({passed:true,fixtureOnly:true,createdOnce:true,qrExpiry:true,paired:true,reconnect:true,revokedAccessClosesQr:true,draftPreserved:true,mobileOverflow:false,disconnected:true}));
+}finally{await browser.close();}
