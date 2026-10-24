@@ -14,6 +14,8 @@ Execute `rtk npm run env:init`, `rtk npm run db:up` e `rtk npm run db:migrate`. 
 
 Defina `CHANNEL_PUBLIC_BASE_URL=https://SEU-HOST` somente depois de preparar o ingresso público. É uma origem HTTPS sem caminho, usuário, senha, query ou fragmento. O app mostra o caminho local enquanto não houver origem pública; isso não significa que o webhook está pronto. A assinatura Twilio usa esta URL canônica, nunca headers de proxy para escolher a origem.
 
+Depois de alterar essa origem no `.env.local`, reinicie o servidor HTTP e os serviços permanentes com `rtk npm run runtime:stop` seguido de `rtk npm run runtime:start`. Os processos já em execução conservam o ambiente anterior; atualizar somente o servidor HTTP deixa o dispatcher com a configuração antiga. Um bloqueio `CREDENTIAL_OR_CALLBACK_UNAVAILABLE` anterior à transmissão não é uma rejeição da Meta. Preserve o histórico e confira a tentativa antes de preparar uma recuperação; resultados incertos ou já transmitidos não devem ser recolocados na fila automaticamente.
+
 ### Exposição HTTPS · preparação, ainda não aberta
 
 Destino local previsto: **127.0.0.1:3210**, com HTTPS terminado em um proxy sob seu controle. Rotas públicas necessárias: `GET/POST /api/channel-webhooks/meta/:publicId` e `POST /api/channel-webhooks/twilio/:publicId/messages|status`. Mantenha os demais serviços Docker ligados apenas ao loopback. Não publique PostgreSQL, SMTP, ferramentas de desenvolvimento ou endpoints de manutenção. Uma exposição do aplicativo inteiro também torna login/cadastro acessíveis e precisa de configuração de produção própria.
