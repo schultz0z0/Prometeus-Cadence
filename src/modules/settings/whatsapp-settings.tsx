@@ -11,6 +11,16 @@ import {WhatsappContentField} from './whatsapp-content-field';
 import {whatsappBlocker} from '@/client/whatsapp-copy';
 const stateNames:Record<ConnectionView['state'],string>={pending:'Credenciais por verificar',credentials_verified:'Credenciais verificadas',awaiting_webhook:'Aguardando webhook',ready:'Pronta',attention:'Requer atenção',disconnected:'Desconectada'};
 
+function VerifyToken({value,onHide}:{value:string;onHide:()=>void}){
+ const [feedback,setFeedback]=useState(''),[failed,setFailed]=useState(false);
+ async function copy(){
+  setFeedback('');setFailed(false);
+  try{await navigator.clipboard.writeText(value);setFeedback('Token copiado. Cole no campo de verificação da Meta.');}
+  catch{setFailed(true);setFeedback('O navegador não permitiu copiar. Clique no token, pressione Ctrl+A e depois Ctrl+C.');}
+ }
+ return <div className="stack"><Field label="Verify token · copie para o callback da Meta"><input type="text" readOnly value={value} autoComplete="off" autoCapitalize="none" spellCheck={false} onFocus={e=>e.target.select()}/></Field><div className="row wrap"><Button onClick={copy}>Copiar token</Button><Button onClick={onHide}>Ocultar token</Button></div>{feedback&&<p role={failed?'alert':'status'}>{feedback}</p>}</div>;
+}
+
 function TestMessage({connection,client,onClose}:{connection:ConnectionView;client:ChannelClient;onClose:()=>void}){
  const [senderId,setSender]=useState(connection.senders[0]?.id??''),[phone,setPhone]=useState(''),[content,setContent]=useState<OutboundContent>({kind:'text',text:''}),[templates,setTemplates]=useState<TemplateView[]>([]),[evidence,setEvidence]=useState(''),[when,setWhen]=useState(''),[review,setReview]=useState<TestSendReview|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[result,setResult]=useState('');
  useEffect(()=>{let active=true;client.templates(connection.id).then(v=>{if(active)setTemplates(v);}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[client,connection.id]);
@@ -57,7 +67,7 @@ export function WhatsappSettings({limitsOnly=false}:{limitsOnly?:boolean}){
  <Field label="URL de callback"><input readOnly value={c.callbackUrl??c.callbackPath??''}/></Field>{!c.callbackUrl&&<Notice>Falta configurar a URL HTTPS pública do servidor. O caminho acima não é uma URL pública pronta.</Notice>}
  {c.callbackStatusUrl&&<Field label="Callback de status · Twilio"><input readOnly value={c.callbackStatusUrl}/></Field>}
  {canManage&&!limitsOnly&&<><div className="row wrap"><Button disabled={busy} onClick={()=>setForm({provider:c.provider,connection:c})}>Editar credenciais</Button><Button disabled={busy||c.state==='disconnected'} onClick={()=>act(async()=>{await client.verify(c.id,c.revision);setNotice('Verificação de credenciais concluída. Configure e valide o webhook.');})}>Verificar credenciais</Button><Button disabled={busy||!c.verification.credentials} onClick={()=>act(async()=>{const t=await client.syncTemplates(c.id,c.revision);setNotice(t.length+' templates sincronizados.');})}>Sincronizar templates</Button>{c.provider==='meta'&&<Button disabled={busy} onClick={()=>act(async()=>setToken({id:c.id,value:(await client.getVerifyToken(c.id,c.revision)).verifyToken}))}>Revelar verify token</Button>}<Button disabled={busy} onClick={()=>setTest(c)}>Preparar teste</Button><Button disabled={busy||c.state==='disconnected'} onClick={()=>setDisconnect(c)}>Desconectar</Button></div>
- {token?.id===c.id&&<div className="stack"><Field label="Verify token · copie para o callback da Meta"><input type="password" readOnly value={token.value} autoComplete="off" onFocus={e=>e.target.select()}/></Field><Button onClick={()=>setToken(null)}>Ocultar token</Button></div>}
+ {token?.id===c.id&&<VerifyToken key={c.id} value={token.value} onHide={()=>setToken(null)}/>}
  </>}
  {c.senders.map(s=><div key={s.id}><p>Remetente: {s.address??s.externalId} · {s.ready?'pronto':'ativação pendente'} · {s.dailyLimit??'sem limite definido'}/dia</p>{canManage&&limits&&<LimitsForm key={s.id+':'+limits.revision} sender={s} limits={limits} client={client} onSaved={refresh}/>}</div>)}
  </section>)}
