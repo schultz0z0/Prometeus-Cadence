@@ -6,6 +6,7 @@ import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
 import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {requireChannelAdmin,commandHash,priorCommand,completeCommand} from '../channels/repository.ts';
+import {whatsappIdentityScope} from '../../domain/whatsapp-identity.ts';
 import {ensurePhoneIdentity} from './replies.ts';
 import {normalizeMailAddress} from '../../domain/mail-policy.ts';
 const consentSchema=z.strictObject({requestId:z.uuid(),identityId:z.uuid(),purpose:z.enum(['service','campaign','test']),source:z.string().trim().min(1).max(200),occurredAt:z.iso.datetime(),evidence:z.string().trim().min(1).max(4000)});
@@ -38,7 +39,7 @@ export async function recordLeadConsent(p:Principal,input:unknown):Promise<void>
   if(normalized!==b.phone)throw new AppError(409,'O telefone do lead mudou. Revise o consentimento.');
   const sender=(await c.query('SELECT s.*,c.external_account_id,c.credentials_verified FROM app.channel_sender s JOIN app.channel_connection c ON c.workspace_id=s.workspace_id AND c.id=s.connection_id WHERE s.id=$1',[b.senderId])).rows[0];
   if(!sender?.credentials_verified||!sender.external_account_id)throw new AppError(409,'Verifique a conexão antes de registrar o consentimento.');
-  const identity=await ensurePhoneIdentity(c,p,sender.provider+':'+sender.external_account_id,b.phone);
+  const identity=await ensurePhoneIdentity(c,p,whatsappIdentityScope(sender.provider,sender.connection_id,sender.external_account_id),b.phone);
   await c.query('INSERT INTO app.consent_evidence(workspace_id,id,identity_id,purpose,source,occurred_at,evidence,actor_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.workspaceId,randomUUID(),identity.id,'campaign',b.source,b.occurredAt,b.evidence,p.userId]);
   await completeCommand(c,p,b.requestId,hash,{recorded:true},'lead.consent');
  });

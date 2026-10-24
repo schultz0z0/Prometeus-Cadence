@@ -1,3 +1,4 @@
+import type {WhatsappCapabilities} from './whatsapp-capabilities.ts';
 export type Provider='meta'|'openwa'|'twilio';
 export type ConnectableProvider='meta'|'openwa';
 export type ConnectionState='pending'|'credentials_verified'|'awaiting_webhook'|'ready'|'attention'|'disconnected';
@@ -7,8 +8,9 @@ export interface ConnectionView {
  verification:{credentials:boolean;challenge:boolean;inbound:boolean};senders:SenderView[];
  callbackUrl?:string|null;lastError?:string|null;tokenExpiresAt?:string|null;
  identifiers?:Record<string,string>;callbackStatusUrl?:string|null;callbackPath?:string;
+ capabilities?:WhatsappCapabilities;
 }
-export interface SenderView {id:string;connectionId:string;provider:Provider;address:string|null;externalId:string;identityScope:string;revision:number;ready:boolean;dailyLimit:number|null;newConversationLimit?:number|null}
+export interface SenderView {id:string;connectionId:string;provider:Provider;address:string|null;externalId:string;identityScope:string;revision:number;ready:boolean;dailyLimit:number|null;newConversationLimit?:number|null;capabilities?:WhatsappCapabilities}
 export interface Identity {scope:string;externalId:string;phone:string|null}
 export interface TemplateParameter {component:'header'|'body'|'button';key:string;type:'text'|'currency'|'date_time'|'media';buttonIndex?:number}
 export interface TemplateComponent {type:'header'|'body'|'footer'|'button';text:string;buttonIndex?:number}
@@ -20,7 +22,7 @@ export type MessagePurpose='service'|'campaign'|'test';
 export interface SendPolicyInput {provider:Provider;now:string;lastInboundAt:string|null;purpose:MessagePurpose;hasOptIn:boolean;suppressed:boolean;senderReady:boolean;content:OutboundContent;template:TemplateView|null}
 export interface SendPolicyResult {allowed:boolean;blockers:string[]}
 export interface Review<T> {token:string;expiresAt:string;snapshot:T;blockers:string[]}
-export interface PreparedSend {connectionId:string;connectionRevision:number;senderId:string;identity:Identity;content:OutboundContent;purpose:MessagePurpose;traceId?:string}
+export interface PreparedSend {connectionId:string;connectionRevision:number;senderId:string;identity:Identity;content:OutboundContent;purpose:MessagePurpose;traceId?:string;provider?:Provider;capabilities?:WhatsappCapabilities}
 export type SendOutcome={kind:'accepted';remoteId:string;acceptedAt:string;evidence?:{accountId:string;from:string;to:string;status?:'sent'|'delivered'|'read'|'failed'|'unknown'}}|{kind:'not_accepted';code:string;retryable:boolean;retryAfterMs:number|null}|{kind:'uncertain';code:string};
 export interface Receipt {attemptId:string;outcome:SendOutcome;costUsd:number|null;costKind:'reported'|'unknown'}
 interface EventBase {dedupKey:string;accountId:string;senderExternalId:string|null;occurredAt:string|null}

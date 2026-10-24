@@ -9,6 +9,7 @@ import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {canonical} from '../prospecting/review.ts';
 import {saveConnectionSchema} from './schemas.ts';
 import {decryptCredential,encryptCredential} from './crypto.ts';
+import {whatsappCapabilities} from '../../domain/whatsapp-capabilities.ts';
 import {channelCallbackUrl} from './webhook-auth.ts';
 export async function requireChannelAdmin(c:PoolClient){
  const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;
@@ -30,13 +31,13 @@ export async function connectionRow(c:PoolClient,id:string,lock=false){
  const row=(await c.query('SELECT * FROM app.channel_connection WHERE id=$1'+(lock?' FOR UPDATE':''),[id])).rows[0];
  if(!row)throw new AppError(404,'Conexão não encontrada.');return row;
 }
-export function senderView(row:Record<string,any>):SenderView{return {id:row.id,connectionId:row.connection_id,provider:row.provider,address:row.address,externalId:row.external_id,identityScope:row.identity_scope,revision:Number(row.revision),ready:row.ready,dailyLimit:row.daily_limit,...(row.provider==='openwa'?{newConversationLimit:row.new_conversation_limit}:{} )};}
+export function senderView(row:Record<string,any>):SenderView{return {id:row.id,connectionId:row.connection_id,provider:row.provider,capabilities:whatsappCapabilities(row.provider),address:row.address,externalId:row.external_id,identityScope:row.identity_scope,revision:Number(row.revision),ready:row.ready,dailyLimit:row.daily_limit,...(row.provider==='openwa'?{newConversationLimit:row.new_conversation_limit}:{} )};}
 export async function connectionView(c:PoolClient,row:Record<string,any>):Promise<ConnectionView>{
  if(row.channel==='EMAIL')throw new AppError(404,'Conexão WhatsApp não encontrada.');
  const senders=(await c.query('SELECT * FROM app.channel_sender WHERE connection_id=$1 ORDER BY id',[row.id])).rows.map(senderView);
  let callbackUrl:string|null=null,callbackStatusUrl:string|null=null;try{callbackUrl=channelCallbackUrl(row.provider,row.public_id);if(row.provider==='twilio')callbackStatusUrl=channelCallbackUrl('twilio',row.public_id,'status');}catch{}
  const expired=row.token_expires_at&&row.token_expires_at.getTime()<=Date.now();
- return {id:row.id,provider:row.provider,name:row.name,revision:Number(row.revision),state:expired&&row.state!=='disconnected'?'attention':row.state,externalAccountId:row.provider==='openwa'?null:row.external_account_id,hasSecrets:true,identifiers:row.provider==='openwa'?{}:row.identifiers,callbackUrl:row.provider==='openwa'?null:callbackUrl,callbackStatusUrl,...(row.provider==='openwa'?{}:{callbackPath:'/api/channel-webhooks/'+row.provider+'/'+row.public_id+(row.provider==='twilio'?'/messages':'')}),verification:{credentials:row.credentials_verified,challenge:row.challenge_verified,inbound:row.inbound_verified},senders:senders.map(s=>({...s,ready:s.ready&&!expired})),lastError:expired?'TOKEN_EXPIRED':row.last_error,tokenExpiresAt:row.token_expires_at?.toISOString()??null};
+ return {id:row.id,provider:row.provider,capabilities:whatsappCapabilities(row.provider),name:row.name,revision:Number(row.revision),state:expired&&row.state!=='disconnected'?'attention':row.state,externalAccountId:row.provider==='openwa'?null:row.external_account_id,hasSecrets:true,identifiers:row.provider==='openwa'?{}:row.identifiers,callbackUrl:row.provider==='openwa'?null:callbackUrl,callbackStatusUrl,...(row.provider==='openwa'?{}:{callbackPath:'/api/channel-webhooks/'+row.provider+'/'+row.public_id+(row.provider==='twilio'?'/messages':'')}),verification:{credentials:row.credentials_verified,challenge:row.challenge_verified,inbound:row.inbound_verified},senders:senders.map(s=>({...s,ready:s.ready&&!expired})),lastError:expired?'TOKEN_EXPIRED':row.last_error,tokenExpiresAt:row.token_expires_at?.toISOString()??null};
 }
 export async function readConnections(p:Principal):Promise<ConnectionView[]>{
  return withWorkspaceTransaction(p,async c=>{

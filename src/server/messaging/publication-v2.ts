@@ -8,6 +8,7 @@ import type {PublicationInputV2,PublicationSnapshotV2,PublicationReviewV2,Public
 import type {TemplateView,OutboundContent} from '../../domain/whatsapp.ts';
 import {renderMessage,validateCadence} from '../../domain/cadence.ts';
 import {normalizeMailAddress,validateMailContent,validateRenderedMail,evaluateMailPolicy,renderMailBody} from '../../domain/mail-policy.ts';
+import {whatsappIdentityScope,whatsappPhoneExternalId} from '../../domain/whatsapp-identity.ts';
 import {evaluateSendPolicy} from '../../domain/whatsapp-policy.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {readApprovedContext} from '../context/repository.ts';
@@ -67,14 +68,14 @@ export async function publicationV2State(c:PoolClient,p:Principal,input:Publicat
     if(!snapshot.limits.channels.EMAIL)blockers.push('EMAIL_LIMIT_REQUIRED');
    }else{
     address=lead.phone?.trim().startsWith('+')?'+'+lead.phone.replace(/\D/g,''):'';if(!/^\+[1-9]\d{6,14}$/.test(address))blockers.push('VALID_PHONE_REQUIRED:'+leadId);
-    scope=conn.provider+':'+conn.external_account_id;
+    scope=whatsappIdentityScope(conn.provider,conn.id,conn.external_account_id);
     if(content.kind==='email')blockers.push('WHATSAPP_CONTENT_REQUIRED:'+step.id);
     else if(content.kind==='text'){content={kind:'text',text:renderMessage(content.text,lead).text};preview=content.text;}
     else{content={...content,variables:Object.fromEntries(Object.entries(content.variables).map(([k,v])=>[k,renderMessage(v,lead).text]))};template=(await c.query('SELECT payload FROM app.channel_remote_template WHERE connection_id=$1 AND id=$2',[conn.id,content.templateId])).rows[0]?.payload??null;
      if(template){preview=template.components.map(component=>component.text.replace(/\{\{\s*(\w+)\s*\}\}/g,(_m,key:string)=>content.kind==='template'?(content.variables[component.type+'.'+key]??'{{'+key+'}}'):'')).join('\n');if(!template.components.some(component=>component.type==='body'&&component.text.replace(/\{\{[^{}]+\}\}/g,'').trim().length>2))blockers.push('TEMPLATE_LITERAL_REQUIRED:'+step.id);if(binding.content.kind==='template'&&Object.values(binding.content.variables).some(v=>v.trim()===step.body.trim()&&v.trim().length>50))blockers.push('TEMPLATE_VARIABLE_IS_MESSAGE:'+step.id);}
     }
    }
-   const external=scope==='email'?address:address.slice(1),identities=(await c.query('SELECT * FROM app.channel_identity WHERE scope=$1 AND external_id=$2 ORDER BY id LIMIT 2',[scope,external])).rows,person=identities.length===1?identities[0]:null;
+   const external=scope==='email'?address:whatsappPhoneExternalId(scope,address),identities=(await c.query('SELECT * FROM app.channel_identity WHERE scope=$1 AND external_id=$2 ORDER BY id LIMIT 2',[scope,external])).rows,person=identities.length===1?identities[0]:null;
    const consents=person?(await c.query("SELECT id FROM app.consent_evidence WHERE identity_id=$1 AND purpose='campaign' AND occurred_at<=clock_timestamp() ORDER BY id",[person.id])).rows:[],suppressions=person?(await c.query("SELECT * FROM app.contact_suppression WHERE identity_id=$1 AND scope IN('all','campaign') ORDER BY scope",[person.id])).rows:[];
    if(!person)blockers.push('CONTACT_CONSENT_REQUIRED:'+leadId+':'+step.id);
    if(person&&cadence.settings.excludeReplied&&Number(person.reply_epoch)>0)blockers.push('LEAD_ALREADY_REPLIED:'+leadId);

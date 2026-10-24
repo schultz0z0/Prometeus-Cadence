@@ -148,11 +148,11 @@ Contrato SQL da manutenção: `app.claim_openwa_operation(p_now timestamptz)`, `
 
 **Interfaces:** Os DTOs de remetente/conexão incluem `capabilities:WhatsappCapabilities`; seleção de conteúdo recebe essas capacidades. `preparePublication` e `prepareReply` existentes congelam provedor/capacidades e mantêm os contratos de revisão atuais.
 
-- [ ] Criar cenário de lista/lead com autorização, texto com variável, conexão OpenWA pronta e agenda: preparar, confirmar, materializar, enviar com mock HTTP, receber resposta assinada e bloquear próximo follow-up. Assert: `assert.equal(remainingEnrollment.state,'stopped')`. Mesmo rascunho em Meta fora de janela exige template aprovado.
-- [ ] Rodar `rtk npm run test:integration -- openwa-publication`; observar falha por capacidades/política rígida atuais.
-- [ ] Permitir somente texto para OpenWA, incluindo revisão de variáveis resolvidas. Preservar templates/janela Meta, etapas mistas de e-mail, produto/contexto e snapshots. Nova conexão não assume publicações antigas; troca de remetente exige nova revisão. Identidades opacas sem telefone não recebem lead inventado nem são usadas para novo destinatário de campanha.
-- [ ] Rodar `openwa-publication multichannel-publication cadence-publication whatsapp-review-regressions`; testar publicação com duas identidades de mesmo telefone em provedores diferentes, opt-out entre revisão e despacho, pausa, mudança de limites e não migração silenciosa de publicações antigas.
-- [ ] Commit: `feat(openwa): support reviewed text cadences and inbox replies`.
+- [x] Criar cenário de lista/lead com autorização, texto com variável, conexão OpenWA pronta e agenda: preparar, confirmar, materializar, enviar com mock HTTP, receber resposta assinada e bloquear próximo follow-up. Assert: `assert.equal(remainingEnrollment.state,'stopped')`. Mesmo rascunho em Meta fora de janela exige template aprovado.
+- [x] Rodar `rtk npm run test:integration -- openwa-publication`; observar falha por capacidades/política rígida atuais.
+- [x] Permitir somente texto para OpenWA, incluindo revisão de variáveis resolvidas. Preservar templates/janela Meta, etapas mistas de e-mail, produto/contexto e snapshots. Nova conexão não assume publicações antigas; troca de remetente exige nova revisão. Identidades opacas sem telefone não recebem lead inventado nem são usadas para novo destinatário de campanha.
+- [x] Rodar `openwa-publication multichannel-publication cadence-publication whatsapp-review-regressions`; testar publicação com duas identidades de mesmo telefone em provedores diferentes, opt-out entre revisão e despacho, pausa, mudança de limites e não migração silenciosa de publicações antigas.
+- [x] Commit: `feat(openwa): support reviewed text cadences and inbox replies`.
 
 ## Tarefa 9 — Cards Meta/OpenWA e fluxo QR acessível
 

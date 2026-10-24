@@ -5,6 +5,7 @@ import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
 import type {Lead} from '../../domain/model.ts';
 import type {MessageView,PreparedSend,Review,TemplateView,OutboundContent} from '../../domain/whatsapp.ts';
+import {whatsappIdentityScope,whatsappPhoneExternalId} from '../../domain/whatsapp-identity.ts';
 import {evaluateSendPolicy} from '../../domain/whatsapp-policy.ts';
 import {renderMessage} from '../../domain/cadence.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
@@ -22,10 +23,10 @@ const confirmation={requestId:z.uuid(),reviewToken:z.string().max(8192)};
 const secret=()=>{if(!process.env.BETTER_AUTH_SECRET)throw Error('Review signing unavailable');return process.env.BETTER_AUTH_SECRET;};
 async function requireReplyMember(c:PoolClient){if(!(await c.query('SELECT app.current_role() AS role')).rows[0]?.role)throw new AppError(403,'Seu acesso ao workspace foi removido.');}
 export async function ensurePhoneIdentity(c:PoolClient,p:Principal,scope:string,phone:string){
- const exact=(await c.query('SELECT * FROM app.channel_identity WHERE scope=$1 AND (external_id=$2 OR phone=$3) ORDER BY id LIMIT 2',[scope,phone.slice(1),phone])).rows;
+ const exact=(await c.query('SELECT * FROM app.channel_identity WHERE scope=$1 AND (external_id=$2 OR phone=$3) ORDER BY id LIMIT 2',[scope,whatsappPhoneExternalId(scope,phone),phone])).rows;
  if(exact.length>1)throw new AppError(409,'Há mais de uma identidade para esse telefone. Revise o vínculo do contato.');if(exact[0])return exact[0];
- const id=randomUUID();await c.query('INSERT INTO app.channel_identity(workspace_id,id,scope,external_id,phone) VALUES($1,$2,$3,$4,$5) ON CONFLICT(workspace_id,scope,external_id) DO NOTHING',[p.workspaceId,id,scope,phone.slice(1),phone]);
- return (await c.query('SELECT * FROM app.channel_identity WHERE scope=$1 AND external_id=$2',[scope,phone.slice(1)])).rows[0];
+ const id=randomUUID();await c.query('INSERT INTO app.channel_identity(workspace_id,id,scope,external_id,phone) VALUES($1,$2,$3,$4,$5) ON CONFLICT(workspace_id,scope,external_id) DO NOTHING',[p.workspaceId,id,scope,whatsappPhoneExternalId(scope,phone),phone]);
+ return (await c.query('SELECT * FROM app.channel_identity WHERE scope=$1 AND external_id=$2',[scope,whatsappPhoneExternalId(scope,phone)])).rows[0];
 }
 export async function replyState(c:PoolClient,p:Principal,target:{conversationId:string}|{connectionId:string},input:z.infer<typeof replySchema>|z.infer<typeof channelTestSchema>){
  const test='connectionId'in target;if(test)await requireChannelAdmin(c);else await requireReplyMember(c);
@@ -33,8 +34,8 @@ export async function replyState(c:PoolClient,p:Principal,target:{conversationId
  const senderId=test?(input as z.infer<typeof channelTestSchema>).senderId:conversation.sender_id;
  const row=(await c.query('SELECT * FROM app.channel_sender WHERE id=$1',[senderId])).rows[0];if(!row)throw new AppError(404,'Remetente não encontrado.');
  const sender=senderView(row),conn=await connectionRow(c,sender.connectionId);if(test&&conn.id!==target.connectionId)throw new AppError(404,'Remetente não pertence à conexão.');
- const testInput=test?input as z.infer<typeof channelTestSchema>:null,scope=conn.provider+':'+conn.external_account_id;
- const identities=test?(await c.query('SELECT * FROM app.channel_identity WHERE scope=$1 AND (external_id=$2 OR phone=$3) ORDER BY id LIMIT 2',[scope,testInput!.phone.slice(1),testInput!.phone])).rows:[];
+ const testInput=test?input as z.infer<typeof channelTestSchema>:null,scope=whatsappIdentityScope(conn.provider,conn.id,conn.external_account_id);
+ const identities=test?(await c.query('SELECT * FROM app.channel_identity WHERE scope=$1 AND (external_id=$2 OR phone=$3) ORDER BY id LIMIT 2',[scope,whatsappPhoneExternalId(scope,testInput!.phone),testInput!.phone])).rows:[];
  if(identities.length>1)throw new AppError(409,'Revise as identidades desse telefone antes do teste.');
  const identity=test?identities[0]??null:(await c.query('SELECT * FROM app.channel_identity WHERE id=$1',[conversation.identity_id])).rows[0];
  const lead=conversation?.lead_id?(await c.query('SELECT payload FROM app.lead WHERE id=$1',[conversation.lead_id])).rows[0]?.payload as Lead:undefined;
@@ -48,10 +49,10 @@ export async function replyState(c:PoolClient,p:Principal,target:{conversationId
  const limits=(await c.query('SELECT * FROM app.messaging_limits')).rows[0],currentNow=new Date().toISOString();
  const eligibility=evaluateSendPolicy({provider:conn.provider,now:currentNow,lastInboundAt,purpose,hasOptIn:consents.length>0||declaredValid,suppressed:suppressions.length>0,senderReady:sender.ready&&conn.state==='ready'&&(!conn.token_expires_at||conn.token_expires_at.getTime()>Date.now()),content,template});
  const blockers=[...eligibility.blockers];if(!limits||!sender.dailyLimit)blockers.push('EXPLICIT_LIMITS_REQUIRED');
- try{channelCallbackUrl(conn.provider,conn.public_id);}catch{blockers.push('PUBLIC_HTTPS_REQUIRED');}
+ try{if(conn.provider!=='openwa')channelCallbackUrl(conn.provider,conn.public_id);}catch{blockers.push('PUBLIC_HTTPS_REQUIRED');}
  if(declared&&!declaredValid)blockers.push('INVALID_CONSENT_TIME');
- const identityView=identity?{scope:identity.scope,externalId:identity.external_id,phone:identity.phone}:{scope,externalId:testInput!.phone.slice(1),phone:testInput!.phone};
- const snapshot:PreparedSend={connectionId:conn.id,connectionRevision:Number(conn.revision),senderId:sender.id,identity:identityView,content,purpose};
+ const identityView=identity?{scope:identity.scope,externalId:identity.external_id,phone:identity.phone}:{scope,externalId:whatsappPhoneExternalId(scope,testInput!.phone),phone:testInput!.phone};
+ const snapshot:PreparedSend={provider:conn.provider,capabilities:sender.capabilities,connectionId:conn.id,connectionRevision:Number(conn.revision),senderId:sender.id,identity:identityView,content,purpose};
  let preview=content.kind==='text'?content.text:template?template.components.map(part=>part.text.replace(/\{\{\s*(\w+)\s*\}\}/g,(_match,key:string)=>content.kind==='template'?content.variables[part.type+'.'+key]??'{{'+key+'}}':'')).join('\n'):'Template indisponível';
  if(preview.length>4096)blockers.push('PREVIEW_TOO_LARGE');
  const proof={workspaceId:p.workspaceId,actorId:p.userId,target,input,snapshot,senderRevision:sender.revision,identity:identity??null,lastInboundAt,leadHash:lead?hashValue(lead):null,consents,suppressions,templateHash:template?.hash??null,limits:limits??null};
