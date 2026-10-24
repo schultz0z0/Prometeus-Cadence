@@ -10,6 +10,23 @@ import {verifiedMetaFixture,testAdmin} from './whatsapp-helpers.ts';
 import {base} from './helpers.ts';
 after(async()=>{await getPools().close();await closeIngressPool();});
 const request=(f:Awaited<ReturnType<typeof verifiedMetaFixture>>,path:string,body?:unknown)=>new Request(base+path,{method:body?'POST':'GET',headers:f.u.headers,body:body?JSON.stringify(body):undefined});
+
+test('removing a disconnected connection revokes local credentials and callbacks while retaining inbox history',async()=>{
+ const f=await verifiedMetaFixture();
+ assert.equal((await channelRequestHandler(request(f,'/api/channels/'+f.connection.id+'/archive',{requestId:randomUUID(),expectedRevision:1}),{id:f.connection.id,action:'archive'})).status,409);
+ await webhookRequest(f.request({messages:[{id:'archive-inbound-'+randomUUID(),from:'5541999998888',timestamp:String(Math.floor(Date.now()/1000)),type:'text',text:{body:'Keep this history'}}]}),f.publicId,'meta');
+ const before=await testAdmin(async c=>(await c.query('SELECT count(*)::int AS n FROM app.channel_message WHERE connection_id=$1',[f.connection.id])).rows[0].n);assert.equal(before,1);
+ const disconnected=await channelRequestHandler(request(f,'/api/channels/'+f.connection.id+'/disconnect',{requestId:randomUUID(),expectedRevision:1}),{id:f.connection.id,action:'disconnect'});assert.equal(disconnected.status,200);
+ const body={requestId:randomUUID(),expectedRevision:2},path='/api/channels/'+f.connection.id+'/archive',params={id:f.connection.id,action:'archive'};
+ const removed=await channelRequestHandler(request(f,path,body),params);assert.equal(removed.status,200);assert.deepEqual(await removed.json(),{archived:true});
+ assert.equal((await channelRequestHandler(request(f,path,body),params)).status,200);
+ const list=await(await channelRequestHandler(request(f,'/api/channels'),{})).json();assert.equal(list.some((c:any)=>c.id===f.connection.id),false);
+ assert.equal((await channelRequestHandler(request(f,'/api/channels/'+f.connection.id+'/verify-token',{requestId:randomUUID(),expectedRevision:3}),{id:f.connection.id,action:'verify-token'})).status,410);
+ const stored=await testAdmin(async c=>({messages:(await c.query('SELECT count(*)::int AS n FROM app.channel_message WHERE connection_id=$1',[f.connection.id])).rows[0].n,keys:(await c.query('SELECT count(*)::int AS n FROM app.channel_credential WHERE connection_id=$1',[f.connection.id])).rows[0].n}));assert.equal(stored.messages,before);assert.equal(stored.keys,0);
+ const {lookupIngress}=await import('../../src/server/channels/ingress-db.ts');assert.equal(await lookupIngress(f.publicId),null);
+ const {withWorkspaceTransaction}=await import('../../src/server/db/transaction.ts');await assert.rejects(withWorkspaceTransaction(f.u.p,c=>c.query("UPDATE app.channel_connection SET archived_at=NULL,state='ready' WHERE id=$1",[f.connection.id])),/CHANNEL_ARCHIVED/);
+ const foreign=await verifiedMetaFixture();assert.equal((await channelRequestHandler(request(foreign,path,{requestId:randomUUID(),expectedRevision:3}),params)).status,404);
+});
 test('HTTP origin session and workspace guards precede channel writes; connection readbacks contain no secrets',async()=>{
  const f=await verifiedMetaFixture(),path='/api/channels';
  const invalid=request(f,path,{name:'bad'});invalid.headers.set('origin','https://evil.example');assert.equal((await channelRequestHandler(invalid,{})).status,403);

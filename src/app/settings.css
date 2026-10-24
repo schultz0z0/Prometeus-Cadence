@@ -628,3 +628,14 @@
 .openwa-qr{display:grid;place-items:center;min-height:280px;border:1px solid var(--border,#e2e5ed);border-radius:12px;padding:16px;background:#fff;color:#172033;text-align:center;overflow:hidden}
 .openwa-qr img{display:block;width:min(280px,100%);height:auto;image-rendering:pixelated}
 .openwa-pairing{max-width:100%;overflow-wrap:anywhere}
+.whatsapp-provider-heading{display:flex;align-items:center;gap:12px}
+.whatsapp-provider-heading h2,.whatsapp-provider-heading p{margin:0}
+.whatsapp-provider-heading p{font-size:13px;margin-top:3px}
+.whatsapp-provider-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:9px;flex-shrink:0}
+.whatsapp-provider-icon.meta{color:#0866ff;background:#f4f8ff;border:1px solid #dce5ef}
+.whatsapp-provider-icon.own{color:#00a85a;background:#e9fbf0}
+.whatsapp-provider-benefits{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+.whatsapp-provider-benefits li{display:flex;align-items:flex-start;gap:8px}
+.whatsapp-provider-benefits svg{width:15px;height:15px;flex-shrink:0;margin-top:3px;color:#00a775}
+.whatsapp-provider-benefits .caution svg{color:var(--primary,#ff6b00)}
+.whatsapp-provider-cards{margin-top:22px}

@@ -29,7 +29,7 @@ export async function completeCommand(c:PoolClient,p:Principal,requestId:string,
 }
 export async function connectionRow(c:PoolClient,id:string,lock=false){
  const row=(await c.query('SELECT * FROM app.channel_connection WHERE id=$1'+(lock?' FOR UPDATE':''),[id])).rows[0];
- if(!row)throw new AppError(404,'Conexão não encontrada.');return row;
+ if(!row)throw new AppError(404,'Conexão não encontrada.');if(row.archived_at)throw new AppError(410,'Esta conexão foi removida. Crie outra para conectar novamente.','CHANNEL_ARCHIVED');return row;
 }
 export function senderView(row:Record<string,any>):SenderView{return {id:row.id,connectionId:row.connection_id,provider:row.provider,capabilities:whatsappCapabilities(row.provider),address:row.address,externalId:row.external_id,identityScope:row.identity_scope,revision:Number(row.revision),ready:row.ready,dailyLimit:row.daily_limit,...(row.provider==='openwa'?{newConversationLimit:row.new_conversation_limit}:{} )};}
 export async function connectionView(c:PoolClient,row:Record<string,any>):Promise<ConnectionView>{
@@ -41,7 +41,7 @@ export async function connectionView(c:PoolClient,row:Record<string,any>):Promis
 }
 export async function readConnections(p:Principal):Promise<ConnectionView[]>{
  return withWorkspaceTransaction(p,async c=>{
-  const rows=(await c.query("SELECT * FROM app.channel_connection WHERE channel='WHATSAPP' ORDER BY created_at,id")).rows;
+  const rows=(await c.query("SELECT * FROM app.channel_connection WHERE channel='WHATSAPP' AND archived_at IS NULL ORDER BY created_at,id")).rows;
   return Promise.all(rows.map(row=>connectionView(c,row)));
  });
 }

@@ -9,9 +9,10 @@ import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {AppError} from '../errors.ts';
 import {openwaAction} from './openwa/http.ts';
+import {archiveConnection} from './archive.ts';
 const actionSchema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(1)});
 export function channelRequestHandler(request:Request,params:Record<string,string>):Promise<Response>{return channelHttp(request,async(p,body)=>{
- const {id,action}=params;if(id==='openwa'||action?.startsWith('openwa-'))return openwaAction(p,request,body,id,action);if(!id){if(request.method==='GET')return readConnections(p);if(request.method==='POST')return saveConnection(p,body);}
+ const {id,action}=params;if(id&&action==='archive'&&request.method==='POST')return archiveConnection(p,id,body);if(id==='openwa'||action?.startsWith('openwa-'))return openwaAction(p,request,body,id,action);if(!id){if(request.method==='GET')return readConnections(p);if(request.method==='POST')return saveConnection(p,body);}
  if(id)await withWorkspaceTransaction(p,async c=>{const row=await connectionRow(c,id);if(row.provider==='twilio')throw new AppError(410,'Twilio foi aposentado.','PROVIDER_RETIRED');});
  if(request.method!=='POST')throw new AppError(405,'Método não permitido.');
  if(action==='test-prepare')return prepareChannelTest(p,id,body);

@@ -36,6 +36,7 @@ export function createChannelClient(options:WorkspaceTransportOptions){
   verify:(id:string,revision:number)=>action<ConnectionView>(id,'verify',revision),
   syncTemplates:(id:string,revision:number)=>action<TemplateView[]>(id,'sync-templates',revision),
   disconnect:(id:string,revision:number)=>action<ConnectionView>(id,'disconnect',revision),
+  archive:(id:string,revision:number)=>action<{archived:true}>(id,'archive',revision),
   getVerifyToken:(id:string,revision:number)=>action<{verifyToken:string}>(id,'verify-token',revision),
   templates:(id:string)=>api.request<TemplateView[]>('/api/messaging/templates?connectionId='+encodeURIComponent(id)),
   limits:()=>api.request<MessagingLimitsView>('/api/messaging/limits'),
