@@ -23,7 +23,7 @@ export async function priorCommand<T>(c:PoolClient,p:Principal,requestId:string,
  if(!old)return undefined;if(old.user_id!==p.userId||old.body_hash!==hash)throw new AppError(409,'Identificador já utilizado.');return old.result as T;
 }
 export async function completeCommand(c:PoolClient,p:Principal,requestId:string,hash:string,result:unknown,action:string){
- await c.query('INSERT INTO app.command_result(workspace_id,request_id,user_id,body_hash,result) VALUES($1,$2,$3,$4,$5)',[p.workspaceId,requestId,p.userId,hash,result]);
+ await c.query('INSERT INTO app.command_result(workspace_id,request_id,user_id,body_hash,result) VALUES($1,$2,$3,$4,$5)',[p.workspaceId,requestId,p.userId,hash,JSON.stringify(result)]);
  await c.query('INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,$3)',[p.workspaceId,p.userId,action]);
 }
 export async function connectionRow(c:PoolClient,id:string,lock=false){

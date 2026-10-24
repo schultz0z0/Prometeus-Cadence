@@ -17,6 +17,23 @@ test('HTTP origin session and workspace guards precede channel writes; connectio
  assert.equal((await channelRequestHandler(new Request(base+path),{})).status,401);
  const valid=await channelRequestHandler(request(f,path),{});assert.equal(valid.status,200);const text=await valid.text();assert.equal(text.includes('fixture-access-token'),false);assert.equal(text.includes('fixture-app-secret'),false);
 });
+
+test('template sync HTTP persists array results as JSON and replay returns the same catalog without another provider call',async t=>{
+ const f=await verifiedMetaFixture(),path='/api/channels/'+f.connection.id+'/sync-templates',params={id:f.connection.id,action:'sync-templates'};
+ let calls=0,empty=false;
+ t.mock.method(globalThis,'fetch',async(url:unknown,init?:RequestInit)=>{
+  const target=new URL(String(url));assert.equal(target.hostname,'graph.facebook.com');assert.ok(target.pathname.endsWith('/message_templates'));assert.equal(init?.method??'GET','GET');calls++;
+  return Response.json({data:empty?[]:[{id:'444444',name:'qa_order_confirmation',language:'en_US',status:'APPROVED',components:[{type:'BODY',text:'Hi {{1}}, your order is {{2}}.'}]}]});
+ });
+ const body={requestId:randomUUID(),expectedRevision:1};
+ const response=await channelRequestHandler(request(f,path,body),params);assert.equal(response.status,200);
+ const templates=await response.json();assert.equal(templates.length,1);assert.equal(templates[0].name,'qa_order_confirmation');assert.equal(templates[0].parameters.length,2);
+ const replay=await channelRequestHandler(request(f,path,body),params);assert.equal(replay.status,200);assert.deepEqual(await replay.json(),templates);assert.equal(calls,1);
+ const cached=await testAdmin(async c=>(await c.query('SELECT result FROM app.command_result WHERE workspace_id=$1 AND request_id=$2',[f.u.p.workspaceId,body.requestId])).rows[0].result);assert.deepEqual(cached,templates);
+ empty=true;const emptyBody={requestId:randomUUID(),expectedRevision:1};
+ const noTemplates=await channelRequestHandler(request(f,path,emptyBody),params);assert.equal(noTemplates.status,200);assert.deepEqual(await noTemplates.json(),[]);
+ const emptyReplay=await channelRequestHandler(request(f,path,emptyBody),params);assert.equal(emptyReplay.status,200);assert.deepEqual(await emptyReplay.json(),[]);assert.equal(calls,2);
+});
 test('manual reply prepare never sends; confirmed replay enqueues once and reading cannot hide a concurrent inbound',async()=>{
  const f=await verifiedMetaFixture();process.env.CHANNEL_PUBLIC_BASE_URL='https://hooks.example';
  const limit=await channelRequestHandler(request(f,'/api/channels/'+f.connection.id+'/limits',{requestId:randomUUID(),expectedRevision:0,workspaceDailyLimit:5,senderId:f.sender.id,senderDailyLimit:5}),{id:f.connection.id,action:'limits'});assert.equal(limit.status,200);
