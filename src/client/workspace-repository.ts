@@ -203,8 +203,8 @@ export function createWorkspaceRepository(
     upsertLead: async (lead) => {
       await send({ type: "lead.upsert", lead });
     },
-    importLeads: async (leads, list) => {
-      await send({ type: "leads.import", leads, ...(list ? { list } : {}) });
+    importLeads: async (leads, list, options) => {
+      await send({ type: "leads.import", leads, ...(list ? { list } : {}),...(options?{dedupScope:options.dedupScope}:{}) });
     },
     saveLeadBatch: async (leads, options) => {
       await send({ type: "leads.batch", leads, ...options });

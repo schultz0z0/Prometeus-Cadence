@@ -1,6 +1,7 @@
 import type { DemoState, ConfirmationResult } from "../domain/model.ts";
 import type { DemoRepository } from "../domain/repository.ts";
 import { createSeed } from "./seed.ts";
+import {deduplicateImports} from '../domain/import.ts';
 function freeze<T>(value: T): T {
   if (value && typeof value === "object") {
     Object.freeze(value);
@@ -81,11 +82,12 @@ export function createDemoRepository(
       });
       return result;
     },
-    importLeads(leads, list) {
+    importLeads(leads, list, options) {
       commit((s) => {
-        if (list && !s.lists.some((l) => l.id === list.id)) s.lists.push(list);
+        const accepted=deduplicateImports(leads,s.leads,options?.dedupScope??'workspace').leads;
+        if ((accepted.length||!leads.length)&&list && !s.lists.some((l) => l.id === list.id)) s.lists.push(list);
         const ids = new Set(s.leads.map((l) => l.id));
-        for (const lead of leads) {
+        for (const lead of accepted) {
           if (!ids.has(lead.id)) {
             s.leads.push(lead);
             ids.add(lead.id);

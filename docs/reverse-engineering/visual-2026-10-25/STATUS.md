@@ -1,10 +1,14 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-26 · Session: s06 · Phase:6 Entrada pública e forma lateral do assistente implementadas/testadas; paridade integral não aceita
+Updated: 2026-10-26 · Session: s07 · Phase:6 Contatos/importação/busca implementados e testados; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
-Consulte [REPORT.md](REPORT.md) para a consolidação atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
+Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s07:06B.1 operacional, mapeamento completo e campos personalizados, filtros/consultas privadas, deduplicação/quota, sugestões de IA apenas como rascunho.290 unitários/283 integrações;32 capturas mascaradas desktop/mobile, sem overflow local nos estados medidos. EV-269 e docs/validation/06-contacts-search.md.
+- Not covered s07: backend/estados pagos da referência, chamadas pagas reais de IA/fontes, implantação/carga pública; snapshot de autoria continua completo. Diferenças da revisão de importação e shell recente estão identificadas no relatório.
+- Next s07:06B.2 — qualificação, enriquecimento e recorrência.06A-H e06C.1 já entregues em seus relatórios; listas antigas abaixo preservam histórico, não reiniciam a fila.
 
 - Covered s06: cadastro com telefone/documentos próprios versionados, callbacks/convites/recuperação, gate social, painel do assistente e validações locais. Registro EV-268 e docs/validation/06-entry.md.265 unitários,266 integrações completas,19 focadas;36 verificações de rotas sem erro/overflow.
 - Not covered s06: OAuth remoto do Google não exercitado, conversa/contexto do assistente06F, documentos jurídicos definitivos de produção e estados bloqueados da referência. Nenhuma compra ou mensagem real externa.
@@ -23,6 +27,11 @@ Consulte [REPORT.md](REPORT.md) para a consolidação atual. As filas s02 abaixo
 - Decide: nenhuma decisão comercial reaberta; preservar trial7 dias, créditos pré-pagos, OpenWA gerenciado e billing aprovado. Sem100% e sem aceite do marco enquanto restar cobertura exigida.
 
 ## Next actions
+
+Fila vigente s07:
+1. Executar06B.2 reaproveitando jobs/reservas/scheduler existentes, com fonte/evidência/consumo real.
+2. Fechar os filtros de qualidade/enriquecimento com os módulos correspondentes; CRM segue07C.
+3. Continuar comparação por estado/viewport, sem converter bloqueios ou mocks em prova da referência.
 
 Fila vigente s05: fechar diferenças conhecidas de06A-V e06A-P; seguir06A-H e a ordem do roteiro revisado.06F é o dono do assistente/busca/ajudas;06G fecha o catálogo após os recursos se tornarem operacionais. Evitar recomeçar01–05 ou repetir a varredura inteira sem mudança.
 

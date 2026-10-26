@@ -90,6 +90,7 @@ export function LeadDialog({
               </Field>
             ))}
           </div>
+          <details className="stack"><summary>Outros dados do contato</summary><div className="field-grid">{([['companyName','Razão social'],['whatsapp','WhatsApp informado'],['address','Endereço'],['instagram','Instagram'],['facebook','Facebook'],['linkedin','LinkedIn'],['size','Porte'],['capital','Capital social'],['legalNature','Natureza jurídica'],['cnae','CNAE'],['openedAt','Data de abertura'],['rating','Avaliação (nota)'],['reviewCount','Nº de avaliações']] as const).map(([key,label])=><Field key={key} label={label}><input maxLength={2000} value={d[key]??''} onChange={e=>field(key,e.target.value)}/></Field>)}{Object.entries(d.customFields??{}).map(([key,value])=><Field key={key} label={key}><input maxLength={2000} value={value} onChange={e=>setD({...d,customFields:{...d.customFields,[key]:e.target.value}})}/></Field>)}</div><small>Dados informados ou importados; não representam verificação automática do contato.</small></details>
           <Field label="Qualificação">
             <select
               value={d.qualification}

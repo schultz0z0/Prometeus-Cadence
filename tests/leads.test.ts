@@ -19,7 +19,7 @@ test("filters by list status and case insensitive text with missing contacts", (
 });
 test("CSV parser preserves quoted commas and maps fields", () => {
   const p = parseContactImport(
-    'Empresa,Correio,Telefone\n"Atlas, Sul",contato@atlas.example,\nNorte,oi@norte.example,123',
+    'Empresa,Correio,Telefone\n"Atlas, Sul",contato@atlas.example,\nNorte,oi@norte.example,11999999999',
   );
   assert.equal(p.errors.length, 0);
   assert.equal(p.rows[0][0], "Atlas, Sul");

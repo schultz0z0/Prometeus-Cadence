@@ -82,7 +82,7 @@ export async function executeWorkspaceCommand(
         repo.upsertLead(command.lead);
         break;
       case "leads.import":
-        repo.importLeads(command.leads, command.list);
+        repo.importLeads(command.leads, command.list, {dedupScope:command.dedupScope??'workspace'});
         break;
       case "leads.batch":
         if (command.mode === "update")

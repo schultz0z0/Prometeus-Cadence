@@ -1,0 +1,25 @@
+{
+  "evidence_id": "ev_4e56dc08175545d9b3149dabe21c5a655c5d744cc1a8a493c7f14d9425ebcdbd",
+  "operation": "capture_browser_scenario",
+  "authority": "controlled-replay",
+  "confidence": "observed",
+  "browser": {
+    "mode": "launch",
+    "process_ownership": "provider-owned",
+    "cleanup": "terminated-owned-process",
+    "product": "Chromium",
+    "version": "155.0.8059.85"
+  },
+  "scenario_sha256": "4ac56520fcaec39894c14c047260819f8316161534bd75ba7433577fbb83d988",
+  "start_url": "https://app.cadenceflow.pro/leads/generator",
+  "final_url": "https://app.cadenceflow.pro/login",
+  "viewport": {
+    "width": 1920,
+    "height": 855,
+    "device_scale_factor": 1
+  },
+  "limitations": [
+    "Controlled public unauthenticated redirect/login only; authenticated import/source evidence captured separately with Playwright and RES.",
+    "No backend identity, purchases, provider execution or reference writes established."
+  ]
+}

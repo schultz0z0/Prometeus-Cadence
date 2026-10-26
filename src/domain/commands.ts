@@ -11,7 +11,7 @@ import type {
 } from "./model.ts";
 export type WorkspaceCommand =
   | { type: "lead.upsert"; lead: Lead }
-  | { type: "leads.import"; leads: Lead[]; list?: LeadList }
+  | { type: "leads.import"; leads: Lead[]; list?: LeadList; dedupScope?:'list'|'workspace' }
   | {
       type: "leads.batch";
       leads: Lead[];

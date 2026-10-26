@@ -15,7 +15,7 @@ export interface DemoRepository {
   getSnapshot(): DemoState;
   subscribe(listener: () => void): () => void;
   upsertLead(lead: Lead): void;
-  importLeads(leads: Lead[], list?: LeadList): void;
+  importLeads(leads: Lead[], list?: LeadList, options?:{dedupScope:'list'|'workspace'}): void;
   saveLeadBatch(
     leads: Lead[],
     options: { mode: "import" | "update"; list?: LeadList; job?: DemoJob },

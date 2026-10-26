@@ -67,3 +67,4 @@ id,date,session,route,shows,masked
 "EV-266","2026-10-26","s05","multiple","Read-only paired inventory of eleven screens plus two finite REA public-login scenarios","no personal values collected"
 "EV-267","2026-10-26","s05","/dashboard","Retained paired assistant composition and current local implementation; no prompt submitted","private screenshots not copied to KB"
 "EV-268","2026-10-26","s06","public entry and assistant","Registration implementation and scoped visual/functional validation; no blanket parity acceptance","yes; screenshots remain private"
+"EV-269","2026-10-26","s07","/contacts; /leads/import; /leads/generator","06B.1 implementation and scoped paired visual evidence; no blanket parity","yes"

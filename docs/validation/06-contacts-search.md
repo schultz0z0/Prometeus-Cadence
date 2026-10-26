@@ -1,0 +1,41 @@
+# 06B.1 — contatos, importação e busca
+
+26/10/2026. Branch `codex/contacts-search-06b1`, derivada de `d9ade56`. [Plano](../superpowers/plans/2026-10-26-prometeus-cadence-06b1-contacts-search.md) e [desenho](../superpowers/specs/2026-10-26-prometeus-cadence-06b1-design.md). Continuação nativa do roteiro aprovado; os executores de jobs, IA, quotas e fontes existentes foram reaproveitados.
+
+## Entrega
+
+- Importação CSV/TXT/TSV e manual em quatro formatos. Reconhecimento de aliases de CRM em português/inglês, delimitadores fora de aspas, campos multilinha, BOM, UTF-8, UTF-16 e fallback Windows-1252. Aspas mal posicionadas e larguras inconsistentes geram erro; não alteramos silenciosamente o texto para conseguir importá-lo.
+- Mapeamento por coluna de origem: 21 destinos canônicos, sobrenome auxiliar e campos personalizados. Nome completo derivado de nome/sobrenome preserva as colunas originais como ignoradas. O campo personalizado é dado do contato, não uma alteração de esquema compartilhada. Dados empresariais, sociais e personalizados persistem e aparecem no detalhe/edição.
+- Revisão do destino e deduplicação por lista/workspace. CNPJ, e-mail e telefone normalizados detectam repetidos, inclusive no próprio lote. Nome/site não autorizam mesclar contatos. Preview não cria lista; lote só de duplicados não cria lista vazia. A criação explícita de lista vazia utilizada pela autoria existente permanece compatível.
+- Servidor revalida associação, permissão, versão e quota na transação existente. Replay não duplica consumo; somente linhas novas aceitas consomem a franquia. Lotes de até500 contatos e arquivos de até5MB; limites do plano continuam autoritativos no servidor.
+- `GET /api/contacts` privado, `no-store`, parametrizado e sujeito a RLS. Páginas de20 itens, máximo100 por pedido, filtros combináveis, ordenação estável e total consistente com a página. Busca, lista, favorito, qualificação, contato disponível, origem, estado, data de criação, inscrição em cadência, resposta e opt-out usam estado real. Datas de criação são explicitamente UTC.
+- Opt-out resolve as identidades atuais de e-mail/telefone, incluindo cópias em outra lista e bloqueios anteriores à primeira conversa. O status de cadência mostra a inscrição real em vez de um rótulo fixo.
+- Respostas atrasadas de outra consulta/workspace/revisão não deixam linhas antigas acionáveis. Favoritar lê o contato atual antes de gravar, preservando alterações simultâneas de qualificação. Falha de leitura permite retry; transporte compartilhado tem deadline de15s e descarte/revogação.
+- Exportação autenticada usa os mesmos filtros, no máximo10mil linhas, e interrompe se revisão/total mudar ou se a paginação repetir/perder itens. Células potencialmente interpretadas como fórmulas são neutralizadas. Exclusão por e-mail tem revisão explícita, até500 contatos e as restrições reais de vínculos do banco.
+- Gerador mantém apenas filtros suportados pela fonte, incluindo variante por CNPJ específico. Sugestão de público/nicho usa `audience_plan`, revisão de custo e três hipóteses existentes. Aplicar uma opção só preenche o formulário editável; não confirma seleção, cria lista, agenda automação ou inicia extração. Busca confirmada continua no pipeline existente de reserva, job, ingestão e resultado persistido.
+
+## Referência e apresentação
+
+REA confirmou o limite público de autenticação em cenário finito, com encerramento do processo próprio. A sessão autenticada foi observada com Playwright e RES: contatos, menu de filtros, drawer de colunas, importação, formatos manuais, mapeamento, revisão e gerador, nos viewports1920×855 e390×844. A exploração foi limitada a navegação/estado transitório e parsing de CSV fictício; **nenhuma importação ou operação foi confirmada na referência**.
+
+Foram corrigidos o drawer de480px, densidade dos controles, disposição por coluna de origem, proporção das linhas, marcadores de mapeamento, opções de importação e composição do gerador. Capturas mascaradas e medições ficam em [evidence/06b1](evidence/06b1/visual.json); dados de sessão/credenciais não acompanham o commit.
+
+Classificação: interfaces comparadas nos estados indicados, implementação própria operacional testada; **não é aceite de paridade100%**. A referência capturada em contatos apresenta carregamento, enquanto a QA local contém dados fictícios: não constitui comparação do mesmo estado populado. A referência tem conta sem trial ativado; a QA local usa trial ativo de7 dias. A revisão de importação inclui controles próprios de deduplicação/consumo e difere em detalhes de composição. Mudanças transversais recentes da referência em ajuda/aprender e o fluxo conversacional seguem06F. Estados pagos/conectados e backend privado da referência continuam não observados por decisão do operador.
+
+## Verificação
+
+- Unitários: **290/290**, zero falhas. Incluem parser, identidades/deduplicação, campos personalizados, filtros estritos, exportação, revisão de leitura e validação de hipóteses.
+- Integração integral: **283/283**, zero falhas; PostgreSQL isolado, autenticação/RLS, associação revogada, quotas, replay/conflito, pipelines de geração/planejamento e os módulos anteriores. Recorte final de contatos:3/3.
+- Build de produção e TypeScript sequencial após o build. O último ajuste visual do mapeamento recebeu novo build e conferência dirigida, sem mudança de contratos de persistência.
+- Navegador real: importações manuais/CSV persistidas, filtros combinados, drawer/Escape, falha503 com recuperação e regressão de edição sob GET atrasado. Campos empresariais/personalizados permanecem visíveis após recarga. Desktop/mobile sem overflow nos casos estabilizados. IA no navegador usou respostas controladas explicitamente; não houve chamada paga de IA ou extração externa para esta validação. Os contratos de backend são cobertos pelas integrações com adaptadores controlados.
+- O último conjunto de capturas revelou overflow horizontal do menu de filtros em390px. A correção foi revalidada no build final em390×844,320×844 e390×568: menu dentro do viewport, rolagem interna quando necessária e filtro aplicado, sem injeção de CSS de teste. As32 capturas finais têm zero overflow local/erros JavaScript nos estados medidos.
+- Revisão independente única: dois achados importantes corrigidos com RED→GREEN (página antiga acionável e opt-out dependente de conversa). Parser de aspas mal posicionadas também recebeu regressão após reclassificação como importante. Sem crítico aberto.
+- Residual menor documentado: quando a resposta de IA inclui aliases concorrentes, a chave canônica prevalece. Hipóteses incompletas ou com filtros incompatíveis são rejeitadas. Normalizar aliases contraditórios permanece refinamento de contrato, sem ampliar a autoridade de aplicação do rascunho.
+
+## Produção, QA e continuidade
+
+Autorização, isolamento, validação, limites e concorrência foram tratados como contratos do produto público, conforme reforçado pelo usuário. A execução ocorreu em build de produção local e bancos de teste, não em uma implantação pública certificada. O snapshot legado de autoria continua completo: a nova consulta delimitada não elimina todo custo proporcional ao volume desse snapshot. Não se declara capacidade certificada de100mil contatos; operação, retenção, infraestrutura e teste de carga público permanecem08B.
+
+A identidade QA dedicada recebeu workspace próprio com trial gratuito local de7 dias, sem Stripe Checkout. Três contatos fictícios foram usados na persistência e removidos pelo fluxo real de exclusão revisada; workspace/lista vazios ficam como fixture. A sessão QA atual é revogada no encerramento e o workspace QA anterior restaurado. A assinatura original do operador é conferida contra o baseline; nenhuma mensagem externa ou cobrança foi criada. Prova em [closure.json](evidence/06b1/closure.json).
+
+**Próximo pacote:06B.2 — qualificação, enriquecimento e recorrência.** Completar módulos/decisores, evidência e qualidade do contato, cache/consumo único e configuração/agenda/recuperação de automações. Filtros de enriquecimento, CRM e verificação continuam indisponíveis enquanto os módulos correspondentes não produzem dados reais. Nenhuma etapa manual é necessária para encerrar esta homologação local.

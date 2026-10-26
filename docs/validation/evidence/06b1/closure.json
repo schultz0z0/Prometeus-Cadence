@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-26",
+  "originalBillingPreserved": true,
+  "removedQaContacts": 3,
+  "retainedEmptyQaWorkspace": true,
+  "retainedEmptyQaList": true,
+  "restoredPriorQaWorkspace": true,
+  "revokedCurrentQaSession": 1,
+  "localFreeTrialStarted": true,
+  "stripeCheckoutCreated": false,
+  "paidProviderCall": false,
+  "externalMessageSent": false,
+  "http": [
+    {
+      "path": "/api/contacts?pageSize=1",
+      "status": 200
+    },
+    {
+      "path": "/api/contacts?pageSize=101",
+      "status": 422
+    },
+    {
+      "path": "/api/contacts",
+      "status": 409
+    },
+    {
+      "path": "/api/contacts (anonymous)",
+      "status": 401
+    }
+  ]
+}

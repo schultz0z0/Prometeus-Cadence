@@ -140,4 +140,6 @@ O alvo “100%” só tem denominador útil com um inventário-alvo versionado. 
 
 **Atualização operacional26/10:**06C.1 concluído no escopo de [eventos/desempenho](../../validation/06-events-performance.md), com journal transacional privado, métricas limitadas por período, consultas coalescidas e preservação de rascunhos, testes de volume e orçamento local. A base inteira de contatos ainda usa o contrato de autoria legado; sua evolução acompanha06B.1/06C.2 sem truncamento silencioso.
 
-**Próxima entrega concreta:**06B.1 — contatos, importação, busca e execução até resultado persistido. Conversa/diagnósticos reais do assistente permanecem06F; estados não observados da referência continuam identificados e não são convertidos em aceite100%.
+**Atualização de contatos26/10:**06B.1 concluído no escopo de [contatos/importação/busca](../../validation/06-contacts-search.md), incluindo persistência/quota/deduplicação, consultas privadas e sugestão de IA apenas como rascunho.290unitários/283integrações e conferência desktop/mobile; limitações de referência e escala permanecem explícitas.
+
+**Próxima entrega concreta:**06B.2 — qualificação, enriquecimento e recorrência. Conversa/diagnósticos reais do assistente permanecem06F; estados não observados da referência continuam identificados e não são convertidos em aceite100%.
