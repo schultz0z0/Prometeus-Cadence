@@ -49,9 +49,11 @@ export function SourcePicker({
   onChange: (v: Source) => void;
   extra?: boolean;
 }) {
-  const opts = extra
+  const opts: (typeof sources[number] & {unavailable?:boolean})[] = extra
     ? [
-        ...sources,
+        sources[0], sources[1],
+        {...sources[2],label:'CNPJ por termo',description:'Busca por palavra-chave empresarial.',fields:'Busca por termo em preparação',unavailable:true},
+        {...sources[2],label:'CNPJ por CNAE'},
         {
           value: "QUALIFY" as const,
           label: "Qualificar lista",
@@ -68,6 +70,7 @@ export function SourcePicker({
           fields: "Organiza a próxima tentativa de contato",
           icon: "RefreshCw",
         },
+        sources[3],
       ]
     : sources;
   return (
@@ -80,9 +83,11 @@ export function SourcePicker({
         <button
           type="button"
           role="radio"
-          aria-checked={value === o.value}
-          key={o.value}
-          className={`source-option ${value === o.value ? "selected" : ""}`}
+          aria-checked={!o.unavailable && value === o.value}
+          disabled={o.unavailable}
+          title={o.unavailable?'Esta fonte ainda não está disponível':undefined}
+          key={o.label}
+          className={`source-option ${!o.unavailable && value === o.value ? "selected" : ""}`}
           onClick={() => onChange(o.value)}
         >
           <span className="source-icon">

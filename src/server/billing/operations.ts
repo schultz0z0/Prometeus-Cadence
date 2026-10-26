@@ -9,7 +9,7 @@ import {billingPool,billingTransaction,billingError} from './db.ts';
 import {billingConfig} from './config.ts';
 import {createStripeAdapter,StripeFailure,type StripeAdapter,stripeUrl} from './stripe.ts';
 import {operationView} from './repository.ts';
-const kinds=z.enum(['checkout','cancel','upgrade','downgrade','payment-method']);
+const kinds=z.enum(['checkout','cancel','resume','upgrade','downgrade','payment-method']);
 const inputSchema=z.strictObject({kind:kinds,sku:z.string().min(1).max(80).optional()});
 const reviewSchema=z.strictObject({kind:kinds,sku:z.string().max(80).nullable(),amount:z.number().int().nonnegative(),currency:z.literal('brl'),revision:z.number().int().nonnegative(),token:z.string().min(1).max(8192),expiresAt:z.string().max(40),effects:z.array(z.string().max(500)).max(8),prorationDate:z.number().int().optional(),priceId:z.string().max(200).optional()});
 const confirmSchema=z.strictObject({requestId:z.uuid(),review:reviewSchema});
@@ -27,6 +27,10 @@ export async function prepareBilling(p:Principal,input:unknown,deps:{adapter?:St
  }else{
   if(!a.subscription_id)throw new AppError(409,'É necessário ter uma assinatura para esta ação.');
   if(b.kind==='cancel'){sku=null;effects=['A renovação será cancelada.','O acesso permanece até o fim do período pago; dados e saldo comprado serão preservados.'];}
+  else if(b.kind==='resume'){
+   if(a.state!=='active'||!a.cancel_at_period_end||Date.parse(a.period_end)<=Date.now())throw new AppError(409,'A assinatura não possui uma renovação cancelada que possa ser retomada.');
+   sku=null;effects=['A renovação automática da assinatura atual será retomada.','Nenhuma cobrança imediata ou crédito adicional. A mensalidade volta a ser cobrada na próxima renovação.'];
+  }
   else if(b.kind==='payment-method'){sku=null;effects=['Atualize a forma de pagamento no ambiente seguro do Stripe.'];}
   else {
    if(!sku||!['essential','pro'].includes(sku)||sku===a.plan||b.kind!==(sku==='pro'?'upgrade':'downgrade'))throw new AppError(422,'Troca de plano inválida.');
@@ -75,6 +79,11 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
    await update('awaiting_payment',{id:session.id,result:{url:session.url}});
   }else if(o.kind==='cancel'){
    await adapter.cancelSubscription(o.account.subscription_id,o.id);await update('completed',{id:o.account.subscription_id});
+  }else if(o.kind==='resume'){
+   const sub=await adapter.readSubscription(o.account.subscription_id);
+   if(sub.customer!==customer||sub.status!=='active')throw new StripeFailure(false);
+   if(sub.cancel_at_period_end)await adapter.resumeSubscription(sub.id,o.id);
+   await update('completed',{id:sub.id});
   }else if(o.kind==='payment-method'){
    const result=await adapter.paymentPortal(customer,o.id);await update('completed',{id:result.id,result:{url:stripeUrl(result.url,'portal')}});
   }else if(o.kind==='contact'){

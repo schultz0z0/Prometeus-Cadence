@@ -9,6 +9,7 @@ import { CnpjFilters } from "@/modules/prospecting/cnpj-filters";
 import { Button, Field, PageHeader, Notice } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/icon";
 import {localDateAt,scheduleV2Schema} from '@/domain/schedule';
+import {TermLines} from './term-lines';
 import {ScheduleFields} from './schedule-fields';
 import {useIdentity} from '@/client/workspace-provider';
 export function ManualWizard({
@@ -88,7 +89,7 @@ export function ManualWizard({
     }
   }
   return (
-    <>
+    <div className="workflow-reference manual-automation-reference">
       <PageHeader
         title="Nova Automação"
         description="Configure sua automação de prospecção"
@@ -99,14 +100,15 @@ export function ManualWizard({
           <button
             role="tab"
             aria-selected={step === i}
+            aria-controls="automation-wizard-panel"
+            disabled={i>step}
             key={x}
             className={step === i ? "active" : ""}
             onClick={() => {
               if (i < step) setStep(i);
             }}
           >
-            {i < step ? "✓ " : ""}
-            {x}
+            <span>{i<step?<Icon name="Check" size={12}/>:i+1}</span>{x}
           </button>
         ))}
       </div>
@@ -114,11 +116,12 @@ export function ManualWizard({
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            if(!canAdvance||submitted)return;
             if (step === 4) save();
             else setStep(step + 1);
           }}
         >
-          <div className="panel panel-pad stack">
+          <div className="panel panel-pad stack" id="automation-wizard-panel" role="tabpanel" aria-label={names[step]}>
             {step === 0 ? (
               <>
                 <div>
@@ -137,7 +140,7 @@ export function ManualWizard({
                   />
                 </Field>
                 <Field label="Descrição (opcional)">
-                  <textarea
+                  <input
                     placeholder="Breve descrição do objetivo"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -165,32 +168,7 @@ export function ManualWizard({
                   </Notice>
                 ) : (
                   <>
-                    <Field
-                      label="Termos de busca *"
-                      help="Um termo por linha. Também pode colar uma lista."
-                    >
-                      <textarea
-                        required
-                        value={filters.term}
-                        placeholder="Ex.: restaurante japonês"
-                        onChange={(e) =>
-                          setFilters({ ...filters, term: e.target.value })
-                        }
-                      />
-                    </Field>
-                    <Field
-                      label="Localizações *"
-                      help="Uma cidade ou região por linha."
-                    >
-                      <textarea
-                        required={source !== "CNPJ"}
-                        value={filters.location}
-                        placeholder="Ex.: São Paulo, SP"
-                        onChange={(e) =>
-                          setFilters({ ...filters, location: e.target.value })
-                        }
-                      />
-                    </Field>
+                    <div className="wizard-term-grid"><TermLines label="Termos de busca" placeholder="Ex.: restaurante japonês" value={filters.term} onChange={term=>setFilters({...filters,term})}/><TermLines locations label="Localizações" placeholder="Ex.: São Paulo, SP" value={filters.location} onChange={location=>setFilters({...filters,location})}/></div>
                   </>
                 )}
               </>
@@ -320,10 +298,10 @@ export function ManualWizard({
             </Button>
           </div>
         </form>
-        <aside className="wizard-summary">
+        <aside className="wizard-summary" aria-label="Resumo da automação">
           <small>RESUMO</small>
           {[
-            [sourceLabels[source], name || "a definir"],
+            ['Fonte', sourceLabels[source]],
             ["Termos", filters.term || "a definir"],
             ["Filtros", `até ${limit} leads por execução`],
             [
@@ -334,13 +312,13 @@ export function ManualWizard({
             ],
             ["Agendamento", `${schedule.frequency} · ${schedule.time}`],
           ].map(([title, body], i) => (
-            <div className="summary-step" key={i}>
+            <button type="button" className={`summary-step ${step===i?'active':''}`} key={i} disabled={i>step} onClick={()=>setStep(i)} aria-current={step===i?'step':undefined}>
               <span>{i + 1}</span>
               <div>
                 <strong>{title}</strong>
                 <small>{body}</small>
               </div>
-            </div>
+            </button>
           ))}
           <p className="summary-foot">
             Diária de manhã dá tempo de a qualificação terminar antes do horário
@@ -348,6 +326,6 @@ export function ManualWizard({
           </p>
         </aside>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,6 +1,9 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useMessaging } from "@/client/workspace-provider";
+import type { MessageMetrics } from "@/domain/message-metrics";
+import type { PublicationView } from "@/domain/cadence-runtime";
 import { useRouter } from "next/navigation";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { buildDemoCadenceOptions } from "@/demo/cadence";
@@ -20,6 +23,10 @@ export function CadenceList() {
   const repo = useRepository();
   const run = useAction();
   const router = useRouter();
+  const messaging=useMessaging(),[metrics,setMetrics]=useState<MessageMetrics|null>(null),[cadenceMetrics,setCadenceMetrics]=useState<Record<string,MessageMetrics>>({}),[publications,setPublications]=useState<PublicationView[]>([]),[metricsError,setMetricsError]=useState('');
+  const [period,setPeriod]=useState(30),[order,setOrder]=useState('recent');
+  const cadenceIds=s.cadences.map(c=>c.id).join(',');
+  useEffect(()=>{let active=true;setMetrics(null);setCadenceMetrics({});setMetricsError('');if(messaging){messaging.metrics(period).then(value=>{if(active)setMetrics(value);}).catch(e=>{if(active)setMetricsError(e.message);});messaging.listPublications().then(value=>{if(active)setPublications(value);}).catch(e=>{if(active)setMetricsError(e.message);});void Promise.allSettled(cadenceIds.split(',').filter(Boolean).map(async id=>({id,metrics:await messaging.metrics(period,id)}))).then(results=>{if(active)setCadenceMetrics(Object.fromEntries(results.flatMap(result=>result.status==='fulfilled'?[[result.value.id,result.value.metrics]]:[])));});}return()=>{active=false;};},[messaging,period,cadenceIds]);
   const [create, setCreate] = useState(false);
   const [mode, setMode] = useState("");
   const [filter, setFilter] = useState("");
@@ -35,7 +42,7 @@ export function CadenceList() {
         .join(" ")
         .toLowerCase()
         .includes(query.toLowerCase()),
-  );
+  ).toSorted((a,b)=>order==='name'?a.name.localeCompare(b.name):order==='oldest'?a.createdAt.localeCompare(b.createdAt):b.createdAt.localeCompare(a.createdAt));
   async function useModel(index: number) {
     const opts = buildDemoCadenceOptions({
       listId: s.lists[0]?.id ?? "",
@@ -60,10 +67,10 @@ export function CadenceList() {
       router.push(`/cadences/${c.id}`);
   }
   return (
-    <>
+    <div className="workflow-reference cadence-list-reference">
       <PageHeader
         title="Cadências"
-        description={`${s.cadences.filter((c) => !c.archived).length} cadências · 0 ativas`}
+        description={`${s.cadences.filter((c) => !c.archived).length} cadências · ${messaging?publications.filter(p=>p.state==='active').length:s.cadences.filter(c=>c.status==='active').length} ativas`}
         actions={
           <Button variant="primary" icon="Plus" onClick={() => setCreate(true)}>
             Nova cadência
@@ -73,9 +80,9 @@ export function CadenceList() {
       <section className="panel cadence-today">
         <h3>Hoje</h3>
         {[
-          ["0", "JÁ SAÍRAM"],
-          ["0", "AINDA HOJE"],
-          ["0", "FICAM PRA DEPOIS"],
+          [metrics?String(metrics.today.email+metrics.today.whatsapp):'—', "JÁ SAÍRAM"],
+          [metrics?String(metrics.today.pending):'—', "AGUARDANDO HOJE"],
+          [metrics?String(metrics.today.replies):'—', "RESPOSTAS HOJE"],
         ].map(([n, t]) => (
           <div key={t}>
             <strong>{n}</strong>
@@ -86,6 +93,7 @@ export function CadenceList() {
           entender por quê
         </button>
       </section>
+      {metricsError&&<p role="alert" className="error-bar">Não foi possível atualizar todas as métricas: {metricsError}</p>}
       <div className="contacts-toolbar section-gap">
         <div className="row wrap">
           <input
@@ -112,6 +120,8 @@ export function CadenceList() {
               </option>
             ))}
           </select>
+          <select aria-label="Período das métricas" value={period} onChange={e=>setPeriod(Number(e.target.value))}>{[1,7,30,90].map(days=><option key={days} value={days}>Métricas: {days===1?'hoje':`${days} dias`}</option>)}</select>
+          <select aria-label="Ordenar cadências" value={order} onChange={e=>setOrder(e.target.value)}><option value="recent">Mais recentes</option><option value="oldest">Mais antigas</option><option value="name">Nome A–Z</option></select>
           <button
             className={`pill ${archived ? "selected" : ""}`}
             onClick={() => setArchived(!archived)}
@@ -133,23 +143,23 @@ export function CadenceList() {
       <div className="cadence-metrics">
         <section className="panel panel-pad">
           <small>Enviados</small>
-          <strong>0</strong>
-          <small>0 e-mail · 0 WhatsApp</small>
+          <strong>{metrics?.sent??'—'}</strong>
+          <small>{metrics?`${metrics.email} e-mail · ${metrics.whatsapp} WhatsApp`:'Métricas ainda não disponíveis'}</small>
         </section>
         <section className="panel panel-pad">
           <small>Respostas</small>
-          <strong>0</strong>
-          <small>nenhuma mensagem enviada</small>
+          <strong>{metrics?.replies??'—'}</strong>
+          <small>últimos {period} dias</small>
         </section>
         <section className="panel panel-pad">
           <small>Abertura de e-mail</small>
           <strong>—</strong>
-          <small>sem envios rastreados</small>
+          <small>rastreamento indisponível</small>
         </section>
         <section className="panel panel-pad">
           <small>Hoje</small>
-          <strong>0</strong>
-          <small>nenhuma régua rodou ainda</small>
+          <strong>{metrics?metrics.today.email+metrics.today.whatsapp:'—'}</strong>
+          <small>envios registrados hoje</small>
         </section>
       </div>
       {list.length ? (
@@ -190,14 +200,14 @@ export function CadenceList() {
                     <td>
                       {s.leads.filter((l) => l.listId === c.listId).length}
                     </td>
-                    <td>0</td>
-                    <td>0</td>
+                    <td>{cadenceMetrics[c.id]?.sent??'—'}</td>
+                    <td>{cadenceMetrics[c.id]?.replies??'—'}</td>
                     <td>—</td>
-                    <td>0</td>
+                    <td>{cadenceMetrics[c.id]?cadenceMetrics[c.id].today.email+cadenceMetrics[c.id].today.whatsapp:'—'}</td>
                     <td>
                       <div className="row">
-                        <Button variant="soft" onClick={() => setGate(true)}>
-                          Ativar
+                        <Button variant="soft" onClick={() => messaging?router.push(`/cadences/${c.id}?tab=publication`):setGate(true)}>
+                          {publications.some(p=>p.cadenceId===c.id&&p.state==='active')?'Ver publicação':'Ativar'}
                         </Button>
                         <Link
                           className="icon-btn"
@@ -230,15 +240,16 @@ export function CadenceList() {
             </table>
           </div>
         ) : (
-          <div className="template-grid">
+          <div className="cadence-card-grid">
             {list.map((c) => (
               <section className="panel panel-pad" key={c.id}>
-                <Badge>Rascunho</Badge>
-                <h3 className="section-gap">{c.name}</h3>
+                <div className="row between"><Badge>{c.status==='draft'?'Rascunho':c.status==='paused'?'Pausada':c.status==='active'?'Ativa':'Concluída'}</Badge><Icon name="Workflow" size={18}/></div>
+                <h3 className="section-gap"><Link href={`/cadences/${c.id}`}>{c.name}</Link></h3>
                 <p className="muted">
                   {c.steps.length} etapas ·{" "}
                   {s.leads.filter((l) => l.listId === c.listId).length} leads
                 </p>
+                <p className="cadence-card-list">{s.lists.find(l=>l.id===c.listId)?.name??'Sem lista vinculada'}</p>
                 <div className="section-gap">
                   <LinkButton href={`/cadences/${c.id}`} icon="Pencil">
                     Editar sequência
@@ -385,6 +396,6 @@ export function CadenceList() {
           </div>
         </Modal>
       )}
-    </>
+    </div>
   );
 }

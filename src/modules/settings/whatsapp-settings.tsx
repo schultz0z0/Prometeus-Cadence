@@ -56,11 +56,11 @@ export function WhatsappSettings({limitsOnly=false}:{limitsOnly?:boolean}){
  async function refresh(){if(!client)return;const [c,l]=await Promise.all([client.list(),client.limits()]);setConnections(c);setLimits(l);}
  useEffect(()=>{let active=true;setManage(null);setConnections(null);setLimits(null);setToken(null);setOwn(false);setDisconnect(null);setForm(null);setTest(null);setError('');if(client)Promise.all([client.list(),client.limits()]).then(([c,l])=>{if(active){setConnections(c);setLimits(l);}}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[client]);
  async function act(fn:()=>Promise<void>){if(busy)return;setBusy(true);setError('');setNotice('');try{await fn();await refresh();}catch(e){setError(e instanceof Error?e.message:'Não foi possível concluir.');}finally{setBusy(false);}}
- const title=limitsOnly?'Limites de disparo':'WhatsApp';
+ const title='WhatsApp';
  const statusLabel=(provider:'meta'|'openwa')=>{const rows=connections?.filter(c=>c.provider===provider)??[],ready=rows.find(c=>c.state==='ready');if(ready)return 'Conectado'+(ready.senders[0]?.address?' · '+ready.senders[0].address:'');return rows.some(c=>c.state!=='disconnected')?'Aguardando conexão':'Não conectado';};
  const openProvider=(provider:'meta'|'openwa')=>{if(connections?.some(c=>c.provider===provider)){setManage(provider);return;}if(provider==='openwa')setOwn(true);else setForm({provider:'meta'});};
  useLiveRefresh(async signal=>{if(!client||busy||form||own||test||disconnect)return;const c=await client.list();if(!signal.aborted)setConnections(c);},10000,!!client,client);
- if(!client)return <><h1>{title}</h1><Notice>Demonstração visual. Conexões reais exigem uma conta autenticada no workspace.</Notice></>;
+ if(!client)return <>{limitsOnly?<h2>{title}</h2>:<h1>{title}</h1>}<Notice>Demonstração visual. Conexões reais exigem uma conta autenticada no workspace.</Notice></>;
  return <><div className="row between wrap"><div><h1>{title}</h1><p className="subtitle">{limitsOnly?'Defina o ritmo dos envios.':'Por qual número as cadências mandam mensagem.'}</p></div></div>
  {error&&<p role="alert" className="error-bar">{error}</p>}{notice&&<p role="status">{notice}</p>}
  {connections===null?<p role="status">Consultando conexões…</p>:<>

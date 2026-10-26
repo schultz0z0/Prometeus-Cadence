@@ -71,7 +71,7 @@ function DemoAudienceWizard() {
     }
   }
   return (
-    <>
+    <div className="workflow-reference ai-workflow-reference audience-ai-reference">
       <PageHeader
         title={result ? "Pronto" : "Nova automação com IA"}
         description={
@@ -391,6 +391,6 @@ function DemoAudienceWizard() {
           </form>
         </Modal>
       )}
-    </>
+    </div>
   );
 }

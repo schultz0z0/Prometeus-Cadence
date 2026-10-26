@@ -30,6 +30,7 @@ export default async function AppLayout({
     await requireIdentity(h);
     principal = await requirePrincipal(h);
   } catch (e) {
+    if (e instanceof AppError && e.code === 'REGISTRATION_REQUIRED') redirect('/onboarding/profile');
     if (e instanceof AppError && e.status === 401) redirect("/login");
     if (e instanceof AppError && e.status === 403)
       redirect("/onboarding/workspace");

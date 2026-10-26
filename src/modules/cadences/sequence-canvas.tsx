@@ -90,11 +90,10 @@ export function SequenceCanvas({
             </span>
             <span>
               <strong>
-                {s.lists.find((l) => l.id === cadence.listId)?.name ||
-                  "Escolha uma lista"}
+                Lead entra na lista
               </strong>
               <small>
-                {count} leads · Seg–Sex · {cadence.settings.sendTime}
+                {s.lists.find((l)=>l.id===cadence.listId)?.name||'Escolha a lista nas configurações'} · {count} leads
               </small>
             </span>
           </button>
@@ -147,7 +146,7 @@ export function SequenceCanvas({
                 </button>
               )}
               <div className="flow-connector short" />
-              <button
+              <div className="message-node-row"><button
                 className={`message-node ${st.channel.toLowerCase()}`}
                 onClick={() => setEditing(st.id)}
               >
@@ -174,8 +173,8 @@ export function SequenceCanvas({
                   </small>
                   <p>{st.body || "Escrever mensagem…"}</p>
                 </span>
-                <Icon name="Sparkles" className="orange" size={13} />
               </button>
+              <IconButton icon="MoreVertical" label={`Ações da etapa ${i+1}`} onClick={()=>setEditing(st.id)}/></div>
             </div>
           ))}
           <div className="flow-connector">
@@ -257,6 +256,7 @@ export function SequenceCanvas({
           pending={!!pending}
           onSave={update}
           onMove={move}
+          onNavigate={(target,edited)=>{const destination=cadence.steps[target];if(!destination)return;onChange({...cadence,steps:cadence.steps.map(st=>st.id===edited.id?edited:st)});setEditing(destination.id);}}
           onDelete={() =>
             pending ? (setPending(null), setEditing(null)) : setRemove(true)
           }

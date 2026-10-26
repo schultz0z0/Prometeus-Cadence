@@ -1,0 +1,198 @@
+/* Import after the global reference baseline. Scoped to workflow screens. */
+.workflow-reference { min-width:0; }
+.workflow-reference .page-heading { align-items:flex-start; margin-bottom:24px; }
+.workflow-reference .page-heading h1 { font-family:"Exo 2",sans-serif; font-size:1.5rem; line-height:1.875rem; font-weight:700; }
+.workflow-reference .page-heading .subtitle { margin:4px 0 0; font-size:0.875rem; line-height:1.25rem; }
+.workflow-reference .panel { border-radius:12px; }
+.workflow-reference .panel-pad { padding:20px; }
+.workflow-reference .btn { border-radius:8px; min-height:36px; padding:0 16px; gap:8px; font-size:0.875rem; line-height:1.25rem; }
+.workflow-reference .field { gap:8px; min-width:0; }
+.workflow-reference .field > span { font-size:0.875rem; line-height:1.25rem; font-weight:500; }
+.workflow-reference .field input,.workflow-reference .field select,.workflow-reference .field textarea { width:100%; border-radius:8px; padding:10px 12px; font-size:1rem; line-height:1.5rem; }
+.workflow-reference .field small { font-size:0.75rem; line-height:1.125rem; }
+.workflow-reference .field-grid { gap:16px; }
+.workflow-reference .form-actions { margin-top:20px; padding-top:0; border:0; }
+.automation-reference .page-heading { margin-bottom:24px; }
+.automation-reference .automation-toolbar { gap:8px; margin-bottom:12px; }
+.automation-reference .automation-toolbar input,.automation-reference .automation-toolbar select { height:36px; min-height:36px; padding-top:6px; padding-bottom:6px; font-size:0.875rem; line-height:1.25rem; border-radius:8px; }
+.automation-reference .automation-toolbar select { width:172px; }
+.automation-reference .automation-toolbar .btn { font-size:0.75rem; padding:0 12px; white-space:nowrap; }
+.automation-reference .automation-toolbar + .row { gap:12px; }
+.automation-reference .automation-toolbar + .row > small { color:var(--muted); font-size:0.625rem; letter-spacing:.04em; }
+.automation-reference .automation-toolbar + .row .pill { height:26px; min-height:26px; padding:0 10px; font-size:0.75rem; }
+.automation-reference .filter-layout { grid-template-columns:236px minmax(0,1fr); gap:16px; margin-top:16px; }
+.automation-reference .filter-stack { gap:0; border:1px solid var(--border); border-radius:12px; align-self:start; background:var(--surface); }
+.automation-reference .filter-panel { border:0; border-radius:0; padding:16px 12px; background:transparent; }
+.automation-reference .filter-panel + .filter-panel { border-top:1px solid var(--border); }
+.automation-reference .filter-panel h4 { margin:0 0 12px; font-size:0.625rem; line-height:1rem; color:var(--muted); letter-spacing:.04em; }
+.automation-reference .filter-panel label { min-height:30px; padding:4px 0; gap:8px; font-size:0.75rem; line-height:1.25rem; }
+.automation-reference .filter-panel label > span:not(.dot) { min-width:0; overflow-wrap:anywhere; }
+.automation-reference .filter-panel label small { font-size:0.6875rem; color:var(--muted); }
+.automation-reference .automation-group { margin-bottom:12px; overflow:visible; }
+.automation-reference .automation-group-head { width:100%; height:38px; padding:8px 16px; border-radius:11px 11px 0 0; background:var(--hover); font-size:0.75rem; line-height:1.25rem; text-align:left; }
+.automation-reference .automation-group-head > svg:last-child { margin-left:auto; }
+.automation-reference .automation-row { display:grid; grid-template-columns:minmax(220px,1fr) auto 28px; gap:6px 12px; min-height:78px; padding:12px 16px; }
+.automation-reference .automation-row + .automation-row { border-top:1px solid var(--border); }
+.automation-reference .automation-name { width:auto; min-width:0; grid-column:1; }
+.automation-reference .automation-name > div { flex-wrap:nowrap; }
+.automation-reference .automation-name button { text-align:left; min-width:0; }
+.automation-reference .automation-name strong { font-size:0.875rem; line-height:1.25rem; font-weight:500; }
+.automation-reference .automation-name > p { margin:3px 0 0 18px; font-size:0.6875rem; line-height:1rem; max-height:none; }
+.automation-reference .automation-name .badge { font-size:0.625rem; line-height:1rem; padding:0 6px; }
+.automation-reference .automation-tags { grid-column:1; grid-row:2; margin-left:18px; gap:5px; }
+.automation-reference .automation-tags .badge { font-size:0.625rem; line-height:1rem; padding:0 5px; }
+.automation-reference .automation-row > .icon-btn { grid-column:3; grid-row:1 / 3; width:28px; height:28px; }
+.automation-reference .automation-row > .automation-last,.automation-reference .automation-row > .btn { grid-row:1 / 3; }
+.automation-reference .compact-runtime { display:flex; flex-direction:row; align-items:center; gap:8px; grid-column:2; grid-row:1 / 3; position:relative; flex:none; }
+.automation-reference .compact-runtime > .btn { min-height:32px; padding:0 10px; font-size:0.75rem; line-height:1rem; }
+.automation-reference .compact-runtime .automation-last { font-size:0.6875rem; max-width:150px; color:var(--muted); }
+.automation-runtime-details > summary { cursor:pointer; }
+.compact-runtime .automation-runtime-details > summary { display:grid; place-items:center; width:28px; height:28px; overflow:hidden; font-size:0; list-style:none; border-radius:6px; }
+.compact-runtime .automation-runtime-details > summary::after { content:'⋯'; font-size:1.25rem; line-height:1.25rem; }
+.compact-runtime .automation-runtime-details > summary::-webkit-details-marker { display:none; }
+.compact-runtime .automation-runtime-details[open] > div { position:absolute; z-index:20; width:min(340px,75vw); top:36px; right:0; padding:16px; border:1px solid var(--border); border-radius:10px; background:var(--surface); box-shadow:var(--shadow); }
+.compact-runtime > [role="alert"] { max-width:240px; font-size:0.75rem; }
+.manual-automation-reference .workspace-form { grid-template-columns:minmax(0,1fr) 296px; gap:20px; }
+.manual-automation-reference .manual-tabs { justify-content:space-between; border:0; margin:0 0 24px; padding:0; position:relative; }
+.manual-automation-reference .manual-tabs::before { position:absolute; content:''; left:0; right:0; top:16px; border-top:1px solid var(--border); }
+.manual-automation-reference .manual-tabs button { display:flex; align-items:center; gap:8px; position:relative; z-index:1; padding:6px 10px; font-size:0.75rem; line-height:1.25rem; border:1px solid var(--border); border-radius:8px; background:var(--background); }
+.manual-automation-reference .manual-tabs button.active { color:var(--primary); border-color:var(--primary); background:var(--primary-subtle); }
+.manual-automation-reference .manual-tabs button > span { display:grid; place-items:center; min-width:16px; font-size:0.6875rem; }
+.manual-automation-reference .workspace-form > form > .panel { padding:24px; gap:20px; }
+.manual-automation-reference .workspace-form h2 { font-family:"Exo 2",sans-serif; font-size:1.25rem; line-height:1.75rem; }
+.manual-automation-reference .workspace-form .subtitle { margin:4px 0 0; font-size:0.875rem; line-height:1.25rem; }
+.manual-automation-reference .field input,.manual-automation-reference .field select { min-height:38px; padding:8px 12px; font-size:0.875rem; line-height:1.25rem; }
+.manual-automation-reference .wizard-source .source-picker { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.manual-automation-reference .wizard-source .source-option { min-height:92px; padding:16px; border-radius:10px; }
+.manual-automation-reference .source-option strong { font-size:0.875rem; line-height:1.25rem; }
+.manual-automation-reference .source-option p { font-size:0.75rem; line-height:1.125rem; }
+.manual-automation-reference .source-option small { font-size:0.625rem; line-height:0.9375rem; }
+.manual-automation-reference .source-icon { width:28px; height:28px; }
+.manual-automation-reference .form-actions { justify-content:space-between; margin-top:16px; }
+.manual-automation-reference .wizard-summary { padding:16px; top:20px; }
+.manual-automation-reference .wizard-summary > small { font-size:0.625rem; line-height:1rem; }
+.manual-automation-reference .summary-step { width:100%; margin:4px 0 0; padding:8px; min-height:47px; text-align:left; border-radius:8px; }
+.manual-automation-reference .summary-step.active { background:var(--primary-subtle); color:var(--primary); }
+.manual-automation-reference .summary-step strong { font-size:0.75rem; line-height:1rem; }
+.manual-automation-reference .summary-step small { margin-top:2px; font-size:0.6875rem; line-height:1rem; color:var(--muted); overflow-wrap:anywhere; }
+.manual-automation-reference .summary-foot { margin-top:16px; font-size:0.75rem; line-height:1.125rem; }
+.ai-workflow-reference .back-link { font-size:0.75rem; line-height:1rem; margin-bottom:6px; }
+.ai-workflow-reference .steps { margin:24px 0; justify-content:space-between; }
+.ai-workflow-reference .steps > div { padding:6px 10px; min-height:32px; font-size:0.75rem; line-height:1.25rem; border-radius:8px; background:var(--background); }
+.ai-workflow-reference .workspace-form { grid-template-columns:minmax(0,1fr) 352px; gap:24px; align-items:start; }
+.ai-workflow-main { display:flex; flex-direction:column; gap:20px; min-width:0; }
+.ai-workflow-main > .panel { margin:0; gap:12px; }
+.ai-workflow-reference h2 { margin:0; font-family:"Exo 2",sans-serif; font-size:1.125rem; line-height:1.5rem; font-weight:600; }
+.ai-workflow-reference .ai-workflow-aside,.ai-workflow-reference .aside-info { align-self:start; position:sticky; top:20px; padding:20px; background:var(--surface); }
+.ai-workflow-reference aside h3 { font-family:"Exo 2",sans-serif; font-size:1rem; line-height:1.25rem; font-weight:600; margin:0 0 8px; }
+.ai-workflow-reference aside p { font-size:0.875rem; line-height:1.375rem; color:var(--secondary); margin:0; }
+.ai-workflow-reference aside strong { color:var(--text); font-weight:600; }
+.ai-workflow-reference aside footer { border-top:1px solid var(--border); padding-top:16px; margin-top:8px; color:var(--muted); font-size:0.75rem; line-height:1.25rem; }
+.ai-workflow-reference .pill { min-height:34px; padding:6px 12px; border-radius:8px; font-size:0.875rem; line-height:1.25rem; }
+.ai-workflow-reference .field-label { margin:0 0 8px; font-size:0.75rem; line-height:1.125rem; }
+.ai-workflow-reference .objective-grid { gap:8px; }
+.ai-workflow-reference .objective-option { min-height:66px; padding:10px 12px; border-radius:8px; }
+.ai-workflow-reference .objective-option strong { font-size:0.875rem; line-height:1.25rem; font-weight:500; }
+.ai-workflow-reference .objective-option small { font-size:0.75rem; line-height:1.125rem; margin-top:2px; }
+.ai-workflow-reference .form-actions { margin:0; justify-content:flex-end; }
+.audience-description-layout { display:grid; grid-template-columns:minmax(0,1fr) 240px; gap:16px; }
+.audience-description-layout .field > span { font-size:0.75rem; }
+.audience-description-layout textarea { min-height:86px; resize:vertical; }
+.audience-examples { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.audience-examples > small { margin:0; font-size:0.625rem; color:var(--muted); }
+.audience-examples .pill { min-height:26px; font-size:0.75rem; line-height:1rem; padding:4px 10px; text-align:left; border-radius:8px; }
+.ai-approved-context { font-size:0.875rem; line-height:1.25rem; }
+.ai-approved-context p { color:var(--secondary); margin:4px 0; }
+.ai-approved-context small { color:var(--muted); font-size:0.6875rem; }
+.cadence-list-reference .contacts-toolbar { margin-top:16px; margin-bottom:16px; }
+.cadence-list-reference .contacts-toolbar .row:first-child { flex:1; }
+.cadence-list-reference .search-field { flex:1; min-width:200px; max-width:420px; }
+.cadence-list-reference .contacts-toolbar input,.cadence-list-reference .contacts-toolbar select { height:36px; min-height:36px; font-size:0.875rem; line-height:1.25rem; padding:6px 12px; border-radius:8px; }
+.cadence-list-reference .cadence-today { padding:12px 16px; gap:32px; }
+.cadence-list-reference .cadence-today h3 { font-size:0.875rem; }
+.cadence-list-reference .cadence-today small { font-size:0.625rem; }
+.cadence-list-reference .cadence-metrics { gap:12px; margin:16px 0; }
+.cadence-list-reference .cadence-metrics .panel { padding:16px; min-height:110px; }
+.cadence-list-reference .cadence-metrics strong { font-family:"Exo 2",sans-serif; font-size:1.5rem; line-height:1.875rem; margin:6px 0; }
+.cadence-list-reference .cadence-metrics small { font-size:0.75rem; line-height:1.125rem; }
+.cadence-card-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.cadence-card-grid > .panel { min-height:208px; padding:16px; display:flex; flex-direction:column; gap:8px; }
+.cadence-card-grid .badge { font-size:0.625rem; }
+.cadence-card-grid h3 { margin:0; font-size:0.875rem; line-height:1.25rem; }
+.cadence-card-grid p { margin:0; font-size:0.75rem; line-height:1.125rem; color:var(--muted); }
+.cadence-card-grid .section-gap:last-child { margin-top:auto; padding-top:8px; }
+.cadence-editor-reference .cadence-header { border-radius:12px; }
+.cadence-editor-reference .cadence-title-row { min-height:60px; padding:12px; gap:8px; }
+.cadence-editor-reference .cadence-name-input { font-family:"Exo 2",sans-serif !important; font-size:1.125rem !important; line-height:1.75rem !important; font-weight:600 !important; }
+.cadence-editor-reference .cadence-title-row .btn { min-height:36px; }
+.cadence-editor-reference .cadence-title-row .badge,.cadence-editor-reference .cadence-title-row small { font-size:0.6875rem; line-height:1rem; }
+.cadence-editor-reference .editor-tabs { min-height:42px; padding:0 8px; gap:4px; }
+.cadence-editor-reference .editor-tabs > button { min-height:40px; padding:10px 16px; font-size:0.875rem; line-height:1.25rem; }
+.cadence-editor-reference .canvas-region { height:clamp(400px,calc(100dvh - 255px),900px); margin-top:12px; border-radius:12px; }
+.cadence-editor-reference .sequence-canvas { padding:32px 24px 56px; }
+.cadence-editor-reference .flow-entry { min-height:59px; padding:10px 12px; border-radius:10px; }
+.cadence-editor-reference .flow-entry strong { font-size:0.875rem; line-height:1.25rem; }
+.cadence-editor-reference .flow-entry small { font-size:0.6875rem; line-height:1rem; }
+.cadence-editor-reference .message-node { min-height:59px; border-radius:10px; }
+.cadence-editor-reference .message-node-row { position:relative; }
+.cadence-editor-reference .message-node-row .message-node { padding-right:40px; }
+.cadence-editor-reference .message-node-row > .icon-btn { position:absolute; right:8px; top:12px; width:24px; height:24px; }
+.cadence-editor-reference .flow-exit { min-height:38px; font-size:0.875rem; padding:8px 16px; }
+.cadence-editor-reference .sequence-estimate { margin-top:12px; padding:12px 16px; }
+.cadence-editor-reference .sequence-estimate > summary { cursor:pointer; color:var(--secondary); font-size:0.75rem; line-height:1.25rem; }
+.cadence-editor-reference .settings-form { max-width:none; margin-top:12px; padding:20px; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+.cadence-settings-nav { display:flex; justify-content:center; gap:6px; flex-wrap:wrap; padding-bottom:12px; }
+.cadence-settings-nav button { padding:5px 10px; font-size:0.75rem; line-height:1rem; border-radius:8px; background:var(--hover); }
+.cadence-settings-nav button:hover { color:var(--primary); background:var(--primary-subtle); }
+.cadence-editor-reference .settings-form > section { border:0; border-top:1px solid var(--border); border-radius:0; padding:24px 0 0; margin-top:24px; box-shadow:none; scroll-margin-top:80px; }
+.cadence-editor-reference .settings-form h2 { font-size:1.125rem; line-height:1.5rem; }
+.cadence-editor-reference .settings-form .field { max-width:448px; }
+.cadence-editor-reference .settings-form .chip { min-width:48px; min-height:40px; padding:8px 12px; border-radius:8px; font-size:0.875rem; }
+.cadence-editor-reference .settings-form .toggle-row { padding:12px 0; }
+.cadence-editor-reference .settings-form .toggle-row strong { font-size:0.875rem; line-height:1.25rem; }
+.cadence-editor-reference .settings-form .toggle-row small { font-size:0.75rem; line-height:1.125rem; }
+@media(max-width:1400px) {
+  .automation-reference .automation-row { grid-template-columns:minmax(200px,1fr) auto 28px; }
+  .automation-reference .compact-runtime .automation-last { display:none; }
+  .manual-automation-reference .wizard-source .source-picker { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .cadence-card-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .cadence-editor-reference .cadence-title-row { flex-wrap:wrap; }
+}
+@media(max-width:1023px) {
+  .ai-workflow-reference .workspace-form,.manual-automation-reference .workspace-form { grid-template-columns:minmax(0,1fr); }
+  .ai-workflow-reference .ai-workflow-aside,.ai-workflow-reference .aside-info,.manual-automation-reference .wizard-summary { position:static; }
+  .automation-reference .filter-layout { grid-template-columns:200px minmax(0,1fr); }
+  .automation-reference .automation-row { grid-template-columns:minmax(0,1fr) 28px; }
+  .automation-reference .automation-row > .icon-btn { grid-column:2; grid-row:1; }
+  .automation-reference .compact-runtime { grid-column:1 / 3; grid-row:3; justify-content:flex-end; }
+  .cadence-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:767px) {
+  .workflow-reference .page-heading { gap:12px; flex-wrap:wrap; }
+  .automation-reference .automation-toolbar { flex-wrap:wrap; }
+  .automation-reference .automation-toolbar > .input-icon { flex-basis:100%; }
+  .automation-reference .filter-layout { grid-template-columns:1fr; }
+  .automation-reference .filter-stack { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .automation-reference .automation-name > div { flex-wrap:wrap; }
+  .manual-automation-reference .manual-tabs { gap:6px; overflow-x:auto; justify-content:flex-start; }
+  .manual-automation-reference .manual-tabs button { flex:none; }
+  .manual-automation-reference .wizard-source .source-picker,.audience-description-layout,.ai-workflow-reference .objective-grid,.ai-workflow-reference .field-grid { grid-template-columns:1fr; }
+  .cadence-card-grid { grid-template-columns:1fr; }
+  .cadence-list-reference .cadence-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .cadence-list-reference .cadence-today { flex-wrap:wrap; gap:12px 24px; }
+  .cadence-editor-reference .cadence-title-row > .row { width:100%; }
+  .cadence-editor-reference .cadence-title-row .btn { flex:1; font-size:0.75rem; padding:0 8px; }
+  .cadence-editor-reference .editor-tabs { overflow-x:auto; flex-wrap:nowrap; }
+  .cadence-editor-reference .editor-tabs > button { flex:none; }
+  .cadence-editor-reference .sequence-flow { min-width:300px; }
+  .cadence-editor-reference .settings-form { padding:16px; }
+}
+
+.manual-automation-reference .wizard-source .source-option{display:grid;grid-template-columns:32px minmax(0,1fr);gap:4px 12px;min-height:118px;text-align:left}.manual-automation-reference .wizard-source .source-option>.source-icon{grid-row:1/4;align-self:start}.manual-automation-reference .wizard-source .source-option strong,.manual-automation-reference .wizard-source .source-option p,.manual-automation-reference .wizard-source .source-option small{grid-column:2}.manual-automation-reference .wizard-source .source-option .radio-indicator{display:none}.manual-automation-reference .wizard-source .source-option:last-child{border-style:dashed}.manual-automation-reference .manual-tabs button{border:0;border-radius:20px;background:var(--hover);color:var(--muted)}.manual-automation-reference .manual-tabs button.active{background:var(--primary);color:white}.cadence-editor-reference .minimap{display:none}.cadence-editor-reference .cadence-name-input::placeholder{color:var(--muted)}
+
+.wizard-term-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.wizard-term-card{border:1px solid var(--border);border-radius:16px;padding:16px;min-width:0}.wizard-term-card .field{gap:8px}.wizard-term-input{display:flex;align-items:center;gap:8px}.wizard-term-input>svg{display:none}.wizard-term-input>.btn{width:32px;min-width:32px;height:38px;min-height:38px;padding:0;justify-content:center}.wizard-term-input>input{min-width:0;flex:1}.wizard-term-values{display:flex;flex-wrap:wrap;gap:6px;min-height:32px;padding:8px 0}.wizard-term-values>span{display:inline-flex;align-items:center;gap:5px;font-size:0.75rem;border-radius:20px;background:var(--hover);padding:3px 8px;max-width:100%;overflow-wrap:anywhere}.wizard-term-values button{display:grid;place-items:center;color:var(--muted);flex:none}.wizard-term-actions{border-top:1px solid var(--border);padding-top:8px;display:flex;flex-wrap:wrap;gap:8px}.wizard-term-actions>.btn{min-height:28px;padding:4px 10px;font-size:0.75rem;line-height:1rem;border:0;background:var(--hover);gap:6px}.wizard-term-actions>.btn>svg{width:14px;height:14px}.manual-automation-reference .manual-tabs button[aria-selected=false]:not(:disabled){color:#059669;background:#ecfdf5}
+@media(max-width:1000px){.wizard-term-grid{grid-template-columns:1fr}}
+
+.ai-workflow-reference .steps{gap:0;position:relative;isolation:isolate}.ai-workflow-reference .steps:before{content:'';position:absolute;left:20px;right:20px;top:50%;height:1px;background:var(--border);z-index:-1}.ai-workflow-reference .steps>div{background:var(--background);color:var(--muted);border:1px solid var(--border)}.ai-workflow-reference .steps>div.active{background:var(--primary);color:#fff;border-color:var(--primary)}.ai-workflow-reference .steps>div.active span{color:#fff;background:transparent}
+
+.ai-workflow-reference .steps>div.current{background:var(--primary);color:#fff;border-color:var(--primary)}.ai-workflow-reference .steps>div.current span{color:#fff;background:transparent}

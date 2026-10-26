@@ -1,0 +1,115 @@
+.prospecting-reference{color:#111827;font-size:0.875rem;line-height:1.25rem}
+.prospecting-reference .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.prospecting-reference h1,.prospecting-reference h2,.prospecting-reference h3{font-family:"Exo 2",Manrope,sans-serif;letter-spacing:normal;color:#111827;margin:0}
+.prospecting-reference h1{font-size:1.5rem;font-weight:700;line-height:1.875rem}
+.prospecting-reference h2{font-size:1rem;font-weight:600;line-height:1.5rem}
+.prospecting-reference h3{font-size:0.875rem;font-weight:600;line-height:1.25rem}
+.prospecting-reference .page-heading{margin-bottom:24px}
+.prospecting-reference .subtitle{color:#4b5563;font-size:0.875rem;line-height:1.25rem;margin-top:4px;max-width:100%}
+.prospecting-reference .btn{min-height:38px;border-radius:8px;padding:8px 12px;gap:8px;font-size:0.875rem;line-height:1.25rem;font-weight:500}
+.prospecting-reference .btn.primary{background:#ff6b00;border-color:#ff6b00;color:#fff}
+.prospecting-reference .btn:disabled{opacity:.5;cursor:not-allowed}
+.prospecting-reference a:not(.btn){color:#ff6b00}
+.prospecting-panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px}
+.prospecting-reference .field{display:flex;flex-direction:column;gap:6px;margin:0}
+.prospecting-reference .field>span,.prospecting-field-label{font-size:0.875rem;font-weight:500;line-height:1.25rem;color:#374151}
+.prospecting-reference .field input:not([type=checkbox]),.prospecting-reference .field select,.prospecting-reference .field textarea,.prospecting-reference .search-field{background:#fff;border:1px solid #d1d5db;border-radius:8px;min-height:42px;padding:10px 12px;color:#111827;font:400 0.875rem/1.25rem Manrope,system-ui,sans-serif;width:100%}
+.prospecting-reference .field textarea{resize:vertical}
+.prospecting-reference .field small{font-size:0.75rem;line-height:1.125rem;color:#6b7280}
+.prospecting-reference input[type=checkbox]{accent-color:#ff6b00}
+.prospecting-reference .notice{font-size:0.8125rem;line-height:1.25rem}
+.prospecting-reference .form-actions{margin-top:8px;gap:8px}
+.prospecting-inline-help{margin:0 0 16px;color:#4b5563}
+.prospecting-inline-help a{font-weight:500}
+.prospecting-once{display:flex;align-items:center;gap:8px;padding:7px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;font-size:0.75rem;line-height:1.125rem;margin-bottom:20px;color:#6b7280;flex-wrap:wrap}
+.prospecting-once>svg{color:#ff6b00;flex-shrink:0}
+.prospecting-once a{font-weight:500}
+.prospecting-once strong{font-weight:500;color:#4b5563}
+.prospecting-generation-form{display:grid;gap:16px}
+.prospecting-generation-fields{padding:24px;border-radius:12px;display:grid;gap:20px}
+.prospecting-generation-fields>.prospecting-field-label{margin-bottom:-8px}
+.prospecting-generation-fields .source-picker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0}
+.prospecting-generation-fields .source-option{min-height:110px;padding:16px;border:1px solid #e5e7eb;border-radius:12px;display:grid;grid-template-columns:32px minmax(0,1fr);gap:4px 12px;text-align:left;background:#fff;position:relative}
+.prospecting-generation-fields .source-option.selected{border-color:#ff6b00;background:#fff8f2;box-shadow:none}
+.prospecting-generation-fields .source-icon{grid-row:1/4;align-self:start;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;color:#ff6b00;background:#fff0e5}
+.prospecting-generation-fields .source-option strong{font-size:0.875rem;font-weight:600;line-height:1.25rem;padding-right:18px}
+.prospecting-generation-fields .source-option p{margin:0;font-size:0.75rem;line-height:1rem;color:#6b7280}
+.prospecting-generation-fields .source-option small{font-size:0.6875rem;line-height:1rem;color:#9ca3af}
+.prospecting-generation-fields .radio-indicator{position:absolute;right:12px;top:16px;width:16px;height:16px;border-radius:50%;border:1px solid #d1d5db;background:white;display:grid;place-items:center}
+.prospecting-generation-fields .source-option.selected .radio-indicator{background:#ff6b00;border-color:#ff6b00;color:white}
+.prospecting-generation-fields .source-option:nth-child(4){border-style:dashed}
+.prospecting-destination>input{height:46px;border:1px solid #e5e7eb;border-radius:8px;padding:10px 16px;font:400 1rem/1.5rem Manrope,sans-serif;width:100%;min-width:0}
+.prospecting-search-options{font-size:0.75rem;color:var(--secondary)}
+.prospecting-search-options>summary{cursor:pointer;margin-bottom:12px}
+.prospecting-narrow{width:100%;max-width:448px}
+.prospecting-destination,.prospecting-search-fields{display:grid;gap:12px}
+.prospecting-search-fields{gap:24px}
+.prospecting-generation-fields .field input:not([type=checkbox]),.prospecting-generation-fields .field select{min-height:46px;border-color:#e5e7eb;padding:10px 16px;font-size:1rem;line-height:1.5rem}
+.prospecting-generation-fields .field .prospecting-limit{width:128px}
+.prospecting-segment{display:flex;align-items:center;gap:8px}
+.prospecting-segment>.btn{flex:1;justify-content:center;white-space:normal}
+.prospecting-segment>.btn[aria-pressed=true]{background:#fff8f2;border-color:#ff6b00;color:#ff6b00}
+.prospecting-capability-note{font-size:0.75rem;line-height:1.125rem;color:#6b7280;background:#f9fafb;border-radius:8px;padding:12px 16px;margin:0}
+.prospecting-generation-footer{border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.prospecting-generation-footer>p{display:flex;align-items:flex-start;gap:8px;font-size:0.75rem;line-height:1.125rem;color:#6b7280;margin:0;max-width:850px}
+.prospecting-generation-footer>p svg{color:#ff6b00;flex-shrink:0}
+.prospecting-generation-footer>.btn{flex-shrink:0;min-height:44px;padding:10px 24px}
+.prospecting-provider-details{margin-top:24px;color:#6b7280;font-size:0.75rem;line-height:1.125rem}
+.prospecting-provider-details summary{cursor:pointer;padding:8px 0}
+.prospecting-provider-details>.panel{margin:8px 0 12px;font-size:0.75rem}
+.prospecting-qualifier .prospecting-once{margin-bottom:24px}
+.prospecting-qualification-steps{display:grid;gap:24px}
+.prospecting-qualification-steps>.prospecting-panel{display:grid;gap:20px}
+.prospecting-numbered-heading{display:flex;align-items:center;gap:12px}
+.prospecting-numbered-heading>span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#fff0e5;color:#ff6b00;font-family:Manrope,sans-serif;font-size:0.875rem;font-weight:500;flex-shrink:0}
+.prospecting-contact-search .search-field{flex:1;max-width:448px;min-width:140px}
+.prospecting-contact-search small{margin-left:auto;font-size:0.75rem;color:#6b7280}
+.prospecting-contact-table{border:1px solid #e5e7eb;border-radius:12px;max-height:460px;overflow:auto}
+.prospecting-reference .data-table{font-size:0.875rem}
+.prospecting-reference .data-table th{font:500 0.6875rem/1rem Manrope,sans-serif;color:#6b7280;background:#f9fafb;white-space:nowrap}
+.prospecting-reference .data-table td,.prospecting-reference .data-table th{padding:12px 16px}
+.prospecting-reference .data-table td{color:#4b5563}
+.prospecting-contact-table th:first-child{width:40px}
+.prospecting-qualifier .modules-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0}
+.prospecting-qualifier .modules-grid>label{border:1px solid #e5e7eb;border-radius:12px;padding:16px;display:flex;gap:12px;align-items:flex-start;background:#fff}
+.prospecting-qualifier .modules-grid>label:has(input:checked){border-color:#ffb981;background:#fffaf6}
+.prospecting-qualifier .modules-grid input{margin-top:3px}
+.prospecting-qualifier .modules-grid strong{font-size:0.875rem;line-height:1.25rem;font-weight:500;color:#111827}
+.prospecting-qualifier .modules-grid p{font-size:0.75rem;line-height:1.125rem;color:#6b7280;margin:4px 0 0}
+.prospecting-import-steps{list-style:none;display:flex;align-items:center;gap:24px;padding:0;margin:0 0 12px;flex-wrap:wrap}
+.prospecting-import-steps li{display:flex;align-items:center;gap:8px;color:#9ca3af;font-size:0.75rem;line-height:1.25rem}
+.prospecting-import-steps li span{width:24px;height:24px;display:grid;place-items:center;border:1px solid #e5e7eb;border-radius:50%;background:#fff}
+.prospecting-import-steps li.active{color:#ff6b00;font-weight:500}
+.prospecting-import-steps li.active span{background:#fff0e5;border-color:#ff6b00}
+.prospecting-import-steps li.done{color:#374151}
+.prospecting-import-quota{display:flex;gap:8px;align-items:center;margin-bottom:20px;color:#6b7280;font-size:0.75rem;line-height:1.125rem;flex-wrap:wrap}
+.prospecting-import-quota svg{color:#ff6b00;flex-shrink:0}
+.prospecting-import-quota small{margin-left:auto;color:#9ca3af}
+.prospecting-import-tabs{display:inline-flex;gap:4px;padding:4px;background:#f3f4f6;border-radius:8px;margin-bottom:20px}
+.prospecting-import-tabs .btn{border:0;background:transparent;min-height:32px;padding:6px 12px;color:#6b7280;border-radius:6px}
+.prospecting-import-tabs .btn[aria-pressed=true]{background:#fff;color:#111827;box-shadow:0 1px 3px #0000000d}
+.prospecting-import-source{min-height:490px;display:grid;align-content:start;gap:12px}
+.prospecting-dropzone{border:2px dashed #e5e7eb;border-radius:16px;padding:56px 32px;min-height:234px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;position:relative}
+.prospecting-dropzone>svg{color:#9ca3af}
+.prospecting-dropzone>button{font:500 0.875rem/1.25rem Manrope,sans-serif;color:#374151;background:transparent;padding:0;border:0;cursor:pointer}
+.prospecting-dropzone small{color:#9ca3af;font-size:0.75rem;line-height:1.125rem}
+.prospecting-dropzone.dragging{background:#fff8f2;border-color:#ff6b00}
+.prospecting-dropzone>.prospecting-file-input{position:absolute;width:1px!important;min-width:0!important;max-width:1px!important;height:1px!important;min-height:0!important;padding:0!important;border:0!important;clip-path:inset(50%);overflow:hidden;bottom:1px;left:50%}
+.prospecting-dropzone:focus-within{outline:2px solid #ff6b00;outline-offset:2px}
+.prospecting-download-template{display:inline-flex;align-items:center;gap:6px;font-size:0.75rem;line-height:1rem;justify-self:start}
+.prospecting-import-tip{margin:0;font-size:0.75rem;line-height:1.125rem;color:#6b7280}
+.prospecting-import-columns-help{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px 16px;font-size:0.75rem;line-height:1.125rem;color:#6b7280;margin-top:4px}
+.prospecting-import-columns-help summary{font-weight:500;cursor:pointer;color:#4b5563}
+.prospecting-import-columns-help p{margin:8px 0 0}
+.prospecting-import-source>p{margin:0;color:#6b7280;font-size:0.875rem;line-height:1.25rem}
+.prospecting-import-source>small{color:#6b7280;font-size:0.75rem}
+.prospecting-import-mapping{display:grid;gap:20px}
+.prospecting-import-mapping>p{font-size:0.875rem;line-height:1.25rem;color:#6b7280;margin:0}
+.prospecting-import-mapping-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.prospecting-import-count{font-size:0.875rem;color:#374151;padding:12px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px}
+.prospecting-import-count strong{color:#ff6b00}
+.prospecting-import-count span{color:#6b7280}
+.prospecting-import-mapping .table-scroll{border:1px solid #e5e7eb;border-radius:12px}
+.prospecting-import-mapping>small{color:#9ca3af;font-size:0.75rem}
+@media(max-width:1100px){.prospecting-generation-fields .source-picker{grid-template-columns:repeat(2,minmax(0,1fr))}.prospecting-generation-fields .source-option:nth-child(4){grid-column:auto;grid-template-columns:32px minmax(0,1fr);min-height:110px;align-items:start}.prospecting-generation-fields .source-option:nth-child(4) .source-icon{grid-row:1/4;align-self:start}.prospecting-generation-fields .source-option:nth-child(4) strong{grid-row:auto}.prospecting-generation-fields .source-option:nth-child(4) small{grid-column:2}.prospecting-generation-fields .source-option:nth-child(4) p{padding:0}.prospecting-generation-footer{align-items:flex-start}.prospecting-import-mapping-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.prospecting-generation-fields .source-picker,.prospecting-qualifier .modules-grid,.prospecting-import-mapping-grid{grid-template-columns:1fr}.prospecting-generation-fields{padding:16px}.prospecting-generation-footer{flex-direction:column}.prospecting-generation-footer>.btn{width:100%;justify-content:center}.prospecting-narrow{max-width:100%}.prospecting-import-steps{gap:12px}.prospecting-import-steps li{gap:4px;font-size:0.6875rem}.prospecting-import-quota small{margin-left:0}.prospecting-dropzone{padding:40px 16px}.prospecting-panel{padding:16px}.prospecting-contact-search small{margin-left:0}.prospecting-segment{flex-wrap:wrap}.prospecting-import-tabs{max-width:100%;flex-wrap:wrap}}

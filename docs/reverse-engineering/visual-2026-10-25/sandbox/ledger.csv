@@ -1,0 +1,5 @@
+id,time,class,action,object,location,object_id,before,undo,status,note
+L-001,2026-10-25,A2,toggle,QA workspaces,localhost,session-scoped,Agência Prometeus,select original workspace,restored,Restored original workspace after read-only fixture inventory; no draft or contact was created
+L-002,2026-10-25,A2,toggle,QA Marco03 fixtures,localhost,session-scoped,Agência Prometeus,select original workspace,restored,Original Agência Prometeus workspace restored through UI after validation
+L-003,2026-10-25,A2,create,cadence draft,QA Marco03 fixtures,f2e017ff-6237-4ed1-86f8-2e9728bc1ecf,absent,archive fixture through UI,fixture,Archived in QA Marco03 through UI; no delete action exists; never published or sent
+L-004,2026-10-26,A2,create,two entry QA users and empty workspaces,localhost isolated QA identities,private entry-e2e logs v1 and v2,absent,revoke QA sessions,fixture,Entry workflow before and after final release; retained empty QA workspaces; billing inactive and no trial or subscription; accepted versions persisted; no external message; original operator workspace unchanged

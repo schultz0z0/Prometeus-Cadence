@@ -1,0 +1,36 @@
+{
+  "verifiedAt": "2026-10-26T14:16:39.974Z",
+  "sandboxOnly": true,
+  "originalWorkspaceUnchanged": true,
+  "qaSubscriptions": [
+    {
+      "status": "canceled"
+    },
+    {
+      "status": "canceled"
+    }
+  ],
+  "signedNativeEvents": 44,
+  "unfinishedEvents": 0,
+  "resumeWithoutNewInvoice": true,
+  "packGrants": [
+    {
+      "unit": "extractions",
+      "quantity": 2000,
+      "revoked": false
+    },
+    {
+      "unit": "imports",
+      "quantity": 5000,
+      "revoked": false
+    }
+  ],
+  "canceledExecutionDenied": true,
+  "expiredCheckoutGrantedCredits": false,
+  "clockGlobalUnchanged": true,
+  "cardProofPresent": true,
+  "fixturesRetainedForAudit": true,
+  "qaSessionsRevoked": 1,
+  "secondaryTrialEndedByFixtureTeardown": true,
+  "noLiveCharge": true
+}

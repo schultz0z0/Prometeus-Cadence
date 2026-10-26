@@ -1,32 +1,38 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { useDemo, useRepository, useNotify, useAction } from "@/demo/provider";
+import { useDemo, useNotify } from "@/demo/provider";
 import { calculateMetrics } from "@/domain/metrics";
 import { Icon } from "@/components/ui/icon";
 import {
   Badge,
-  Button,
   IconButton,
-  LinkButton,
   PageHeader,
 } from "@/components/ui/primitives";
 import { PeriodSelector } from "@/components/ui/period-selector";
 import { LineChart } from "@/components/charts/line-chart";
-import { Tour } from "@/components/onboarding/tour";
+import { DashboardOnboarding } from "@/components/onboarding/checklist";
 import {useMessageMetrics} from '@/client/use-message-metrics';
 import {useWorkspaceRefresh} from '@/client/workspace-provider';
+function dailyLeadCounts(leads: { createdAt: string }[], days: number, timezone: string) {
+  const format = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" });
+  const counts = new Map<string, number>();
+  for (let offset = days - 1; offset >= 0; offset--) counts.set(format.format(new Date(Date.now() - offset * 86_400_000)), 0);
+  for (const lead of leads) {
+    const date = new Date(lead.createdAt);
+    if (!Number.isFinite(date.getTime())) continue;
+    const day = format.format(date);
+    if (counts.has(day)) counts.set(day, counts.get(day)! + 1);
+  }
+  return [...counts.values()];
+}
 export function Dashboard() {
   const state = useDemo();
-  const repo = useRepository();
   const notify = useNotify();
-  const run = useAction();
   const m = calculateMetrics(state);
   const [period, setPeriod] = useState("30 dias");
   const {metrics:messages,error:metricsError,live}=useMessageMetrics(period),refresh=useWorkspaceRefresh();
   const metric=(value:number|undefined)=>value===undefined?(live?'…':'0'):String(value);
-  const [tour, setTour] = useState(false);
-  const list = state.lists[0];
   const stats = [
     ["Leads novos", String(m.total), "base: " + m.total, "Users", "orange"],
     [
@@ -42,7 +48,8 @@ export function Dashboard() {
     ["Opt-outs", metric(messages?.optouts), "no período", "XCircle", "orange"],
   ];
   return (
-    <>
+    <div className="reference-dashboard">
+      <DashboardOnboarding />
       <PageHeader
         title="Dashboard"
         description="Visão geral da sua prospecção"
@@ -60,123 +67,6 @@ export function Dashboard() {
         }
       />
       {metricsError&&<p role="status">Indicadores de mensagens: {metricsError}</p>}
-      {!state.preferences.onboardingHidden && (
-        <section className="panel setup-panel">
-          <div className="setup-heading">
-            <div>
-              <h3>
-                {state.lists.length
-                  ? "Sua prospecção está tomando forma."
-                  : "Seu workspace está pronto. Comece sua prospecção."}
-              </h3>
-              <div className="created-chips">
-                <span>{list ? "Criado:" : "Próximo passo:"}</span>
-                <Badge>
-                  <Icon name="Users" size={12} />
-                  {list?.name ?? "Sua primeira lista"} · {m.total}
-                </Badge>
-                <Link href="/cadences">
-                  <Badge>
-                    <Icon name="Workflow" size={12} />
-                    {state.cadences.length} cadências
-                  </Badge>
-                </Link>
-                <Link href="/automations">
-                  <Badge>
-                    <Icon name="Bot" size={12} />
-                    {state.automations.length} automações · prontas
-                  </Badge>
-                </Link>
-              </div>
-            </div>
-            <div className="row">
-              <Button icon="Compass" onClick={() => setTour(true)}>
-                Como tudo se liga
-              </Button>
-              <button
-                className="text-button muted"
-                onClick={async () =>
-                  await run(() =>
-                    repo.updatePreferences({ onboardingHidden: true }),
-                  )
-                }
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-          <div className="setup-body">
-            <div className="setup-steps">
-              <div className="setup-step">
-                <span className="number-circle">1</span>
-                <div className="grow">
-                  <strong>Revisar o contexto da empresa</strong>
-                  <p>
-                    Confira o que você vende e para quem. É o que orienta suas
-                    mensagens.
-                  </p>
-                </div>
-                <LinkButton href="/settings/context" variant="primary">
-                  Revisar contexto
-                </LinkButton>
-              </div>
-              <div className="setup-step">
-                <span className="number-circle">2</span>
-                <div className="grow">
-                  <strong>Conectar o WhatsApp</strong>
-                  <p>
-                    Os canais serão conectados na próxima etapa de integração.
-                  </p>
-                  <p className="spaced-note">
-                    Depois, conecte também{" "}
-                    <Link href="/settings/email">e-mail</Link> e{" "}
-                    <Link href="/linkedin/dashboard">LinkedIn</Link>: a mesma
-                    cadência vira multicanal, sem refazer nada.
-                  </p>
-                </div>
-              </div>
-              <div className="setup-step">
-                <span className="number-circle inactive">3</span>
-                <div className="grow">
-                  <strong>Ligar a cadência</strong>
-                  <p>
-                    A primeira mensagem sai no próximo horário de envio. Para
-                    sozinha pra quem responder.
-                  </p>
-                </div>
-                <LinkButton
-                  href={
-                    state.cadences[0]
-                      ? `/cadences/${state.cadences[0].id}`
-                      : "/cadences/new"
-                  }
-                  icon="Eye"
-                >
-                  {state.cadences.length
-                    ? "Revisar cadência"
-                    : "Criar cadência"}
-                </LinkButton>
-              </div>
-            </div>
-            <div className="setup-side">
-              <small>
-                PRIMEIROS PASSOS ·{" "}
-                {Number(!!state.companyProfile.approvedAt) +
-                  Number(!!state.lists.length) +
-                  Number(!!state.cadences.length)}{" "}
-                DE 6
-              </small>
-              <div className="progress-track">
-                <i style={{ width: "50%" }} />
-              </div>
-              <Link href="/first-steps">
-                <Icon name="Compass" size={15} /> Continue de onde parou{" "}
-                <Icon name="ArrowRight" size={13} />
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
       <div className="stats-grid">
         {stats.map(([label, value, sub, icon, color]) => (
           <div key={label} className="stat-card panel">
@@ -239,7 +129,7 @@ export function Dashboard() {
             </h3>
             <small>{period} · base do workspace</small>
           </div>
-          <LineChart values={[0, 0, 0, 0, 0, 0, 0, 0, 0, m.total]} />
+          <LineChart values={dailyLeadCounts(state.leads, period === "Hoje" ? 1 : period === "7 dias" ? 7 : period === "90 dias" ? 90 : 30, state.preferences.timezone)} />
         </section>
         <section className="panel panel-pad">
           <h3 className="row">
@@ -312,25 +202,25 @@ export function Dashboard() {
               <small>EXECUÇÕES</small>
             </div>
             <div>
-              <strong>0</strong>
+              <strong>{state.jobs.reduce((total, job) => total + job.billableUsage, 0)}</strong>
               <small>CRÉDITOS USADOS</small>
             </div>
           </div>
-          <p className="muted">Nenhuma integração externa executada.</p>
+          <p className="muted">Resumo das simulações locais. Consulte Execuções para acompanhar os trabalhos dos provedores.</p>
         </section>
         <section className="panel panel-pad">
           <h3>Leads nas cadências</h3>
           <small>no workspace</small>
           <div className="funnel-bars">
             <div className="row between">
-              <span>Aguardando início</span>
+              <span>Qualificados na base</span>
               <strong>{m.qualified}</strong>
             </div>
             <div className="funnel-track">
               <i style={{ width: "100%", background: "var(--primary)" }} />
             </div>
           </div>
-          <p className="muted">0 cadências ativas · 0 rodaram hoje</p>
+          <p className="muted">{state.cadences.filter(cadence => !cadence.archived && cadence.status === "active").length} cadências ativas · histórico em Execuções</p>
           <Link className="orange small-link" href="/cadences">
             Ver cadências →
           </Link>
@@ -363,7 +253,6 @@ export function Dashboard() {
           )}
         </div>
       </section>
-      {tour && <Tour onClose={() => setTour(false)} />}
-    </>
+    </div>
   );
 }

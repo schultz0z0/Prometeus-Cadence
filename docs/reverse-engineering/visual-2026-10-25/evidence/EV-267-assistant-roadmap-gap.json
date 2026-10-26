@@ -1,0 +1,18 @@
+{
+  "reviewedOn": "2026-10-26",
+  "purpose": "Classify a retained visual and functional gap for roadmap ownership",
+  "reference": {
+    "route": "https://app.cadenceflow.pro/dashboard",
+    "artifact": "output/playwright/visual-audit/reference-desktop-overlay-assistant.png",
+    "captureSession": "s02/s03",
+    "observed": ["Right-side conversation panel", "Question composer", "Account-context suggestion", "Help/support destinations"]
+  },
+  "local": {
+    "route": "http://127.0.0.1:3210/dashboard",
+    "artifact": "output/playwright/visual-audit/local-desktop-overlay-assistant.png",
+    "implementationRead": "src/components/shell/app-shell.tsx",
+    "observed": ["Central modal", "Three navigation shortcuts", "No conversational composer or assistant executor in that component"]
+  },
+  "owners": ["06A-V visual closure", "06F transversal experience and assistant"],
+  "limits": ["No assistant message was submitted to the reference", "Screenshot composition does not prove the quality, model or backend implementation of reference answers", "Private browser artifacts remain outside the handoff documentation"]
+}

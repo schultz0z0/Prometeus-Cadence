@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ReferenceEmptyArt } from "@/components/ui/reference-empty-art";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import type { Template } from "@/domain/model";
 import { renderStepPreview } from "@/domain/cadence";
@@ -35,6 +36,8 @@ export function TemplateLibrary() {
   const [remove, setRemove] = useState<Template | null>(null);
   const [lastRemoved, setLastRemoved] = useState<Template | null>(null);
   const [previewList, setPreviewList] = useState("");
+  const [tagInput,setTagInput]=useState('');
+  useEffect(()=>setTagInput(''),[editing?.id]);
   const filtered = s.templates.filter(
     (t) =>
       (channel === "Todos" ||
@@ -44,7 +47,7 @@ export function TemplateLibrary() {
   const sample = s.leads.find((l) => !previewList || l.listId === previewList);
   const preview = editing && sample ? renderStepPreview(editing, sample) : null;
   return (
-    <>
+    <div className="templates-reference">
       <PageHeader
         title="Meus templates"
         description={
@@ -119,6 +122,7 @@ export function TemplateLibrary() {
           </button>
         </div>
       )}
+      {!filtered.length && <div className="template-reference-art"><ReferenceEmptyArt kind="templates"/></div>}
       {filtered.length ? (
         <div className={view === "Cards" ? "template-grid" : "template-list"}>
           {filtered.map((t) => (
@@ -157,7 +161,7 @@ export function TemplateLibrary() {
       ) : (
         <EmptyState
           icon="FileText"
-          title="Nenhum template criado"
+          title="Crie seu primeiro template"
           description="Salve seus melhores textos e reutilize nas cadências."
         >
           <Button
@@ -178,6 +182,7 @@ export function TemplateLibrary() {
           </Button>
         </EmptyState>
       )}
+      {!s.templates.length && <div className="template-reference-teaching">{[["Escreva uma vez","E-mail ou WhatsApp, com variáveis como o nome da empresa."],["Use nas cadências","Reutilize seus melhores textos nos passos de cada cadência."],["WhatsApp Oficial","A primeira mensagem precisa ser um template aprovado pela Meta."]].map(([title,text])=><section className="panel" key={title}><h3>{title}</h3><p>{text}</p></section>)}</div>}
       {editing && (
         <Modal
           wide
@@ -188,7 +193,7 @@ export function TemplateLibrary() {
           }
           onClose={() => setEditing(null)}
         >
-          <form
+          <form className="template-reference-form"
             onSubmit={async (e) => {
               e.preventDefault();
               if (
@@ -200,10 +205,11 @@ export function TemplateLibrary() {
                 setEditing(null);
             }}
           >
-            <div className="field-grid">
+            <div className="template-reference-fields"><div className="field-grid">
               <Field label="Nome *">
                 <input
                   autoFocus
+                  placeholder="Ex: Follow-up 1"
                   required
                   value={editing.name}
                   onChange={(e) =>
@@ -228,20 +234,13 @@ export function TemplateLibrary() {
             </div>
             <div className="stack section-gap">
               <Field label="Tags (opcional)">
-                <input
-                  value={editing.tags.join(", ")}
-                  placeholder="follow-up, prospecção…"
-                  onChange={(e) =>
-                    setEditing({
-                      ...editing,
-                      tags: e.target.value.split(",").map((x) => x.trim()),
-                    })
-                  }
-                />
+                <span className="template-reference-tags"><input value={tagInput} placeholder="Ex: follow-up, prospecção, onboarding" onChange={e=>setTagInput(e.target.value)}/><Button type="button" onClick={()=>{setEditing({...editing,tags:[...new Set([...editing.tags,...tagInput.split(',').map(x=>x.trim()).filter(Boolean)])]});setTagInput('');}}>Adicionar</Button></span>
+                {!!editing.tags.length&&<span className="row wrap">{editing.tags.map(tag=><button type="button" className="token-button" key={tag} onClick={()=>setEditing({...editing,tags:editing.tags.filter(x=>x!==tag)})}>{tag} ×</button>)}</span>}
               </Field>
               {editing.channel === "EMAIL" && (
                 <Field label="Assunto">
                   <input
+                    placeholder="Ex: {{nome}}, posso te ajudar?"
                     value={editing.subject ?? ""}
                     onChange={(e) =>
                       setEditing({ ...editing, subject: e.target.value })
@@ -251,6 +250,7 @@ export function TemplateLibrary() {
               )}
               <Field label="Corpo *">
                 <textarea
+                  placeholder="Olá {{nome}}, tudo bem? Vi que vocês são de {{cidade}} e podem…"
                   rows={6}
                   required
                   value={editing.body}
@@ -277,7 +277,7 @@ export function TemplateLibrary() {
                   </button>
                 ))}
               </div>
-              <div className="panel panel-pad">
+              <aside className="panel panel-pad template-reference-preview">
                 <h3>Como vai chegar</h3>
                 <select
                   className="section-gap"
@@ -303,14 +303,14 @@ export function TemplateLibrary() {
                     Variáveis sem valor: {preview.unresolved.join(", ")}
                   </Notice>
                 ) : null}
-              </div>
+              </aside>
             </div>
-            <div className="form-actions">
+            </div><div className="form-actions">
               <Button type="button" onClick={() => setEditing(null)}>
                 Cancelar
               </Button>
               <Button variant="primary" type="submit">
-                Salvar template
+                {s.templates.some(t=>t.id===editing.id)?'Salvar template':'Criar template'}
               </Button>
             </div>
           </form>
@@ -337,6 +337,6 @@ export function TemplateLibrary() {
           </div>
         </Modal>
       )}
-    </>
+    </div>
   );
 }

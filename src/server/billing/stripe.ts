@@ -27,11 +27,23 @@ export function createStripeAdapter(fetcher:typeof fetch=fetch,config=billingCon
   previewChange:(subscription:string,item:string,price:string,date:number)=>request('POST','/invoices/create_preview',{subscription:stripeId(subscription,'sub'),'subscription_details[items][0][id]':stripeId(item,'si'),'subscription_details[items][0][price]':stripeId(price,'price'),'subscription_details[items][0][quantity]':'1','subscription_details[proration_date]':String(date),'subscription_details[proration_behavior]':'always_invoice'},'billing:preview:'+subscription+':'+price+':'+date),
   upgrade:(subscription:string,item:string,price:string,date:number,key:string)=>request('POST','/subscriptions/'+stripeId(subscription,'sub'),{'items[0][id]':stripeId(item,'si'),'items[0][price]':stripeId(price,'price'),'items[0][quantity]':'1',payment_behavior:'pending_if_incomplete',proration_behavior:'always_invoice',proration_date:String(date)},'billing:'+key+':upgrade'),
   async downgrade(s:any,price:string,key:string){
-   const item=s.items.data[0],schedule=s.schedule?{id:typeof s.schedule==='string'?s.schedule:s.schedule.id}:await request('POST','/subscription_schedules',{from_subscription:stripeId(s.id,'sub'),'metadata[cadence_operation]':key},'billing:'+key+':schedule');
-   const current=await request('GET','/subscription_schedules/'+stripeId(schedule.id,'sub_sched')),phases=current.phases,priceId=(v:any)=>typeof v==='string'?v:v?.id;
+   // Stripe forbids metadata with from_subscription. Repeating this creation
+   // key recovers our exact schedule after a lost response, even when s.schedule
+   // is already populated; a foreign attached schedule cannot be adopted.
+   const item=s.items.data[0],priceId=(v:any)=>typeof v==='string'?v:v?.id,attached=s.schedule?stripeId(priceId(s.schedule),'sub_sched'):null;
+   let current=attached?await request('GET','/subscription_schedules/'+attached):null,schedule={id:attached};
+   if(current?.metadata?.cadence_operation&&current.metadata.cadence_operation!==key)throw new StripeFailure(false);
+   // Already marked schedules can be read directly; unmarked schedules still
+   // need the original idempotent creation response to prove ownership.
+   if(!current||current.metadata?.cadence_operation!==key){
+    schedule=await request('POST','/subscription_schedules',{from_subscription:stripeId(s.id,'sub')},'billing:'+key+':schedule');
+    if(attached&&schedule.id!==attached)throw new StripeFailure(false);
+    current=await request('GET','/subscription_schedules/'+stripeId(schedule.id,'sub_sched'));
+   }
+   const phases=current.phases;
    const sameItems=(phase:any,expected:string)=>phase?.items?.length===1&&phase.items[0].quantity===1&&priceId(phase.items[0].price)===expected;
-   if(current.metadata?.cadence_operation!==key||priceId(current.subscription)!==s.id||current.status!=='active'||current.end_behavior!=='release'||current.current_phase?.start_date!==item.current_period_start||current.current_phase?.end_date!==item.current_period_end||!Array.isArray(phases)||phases.length<1||phases.length>2||phases[0].start_date!==item.current_period_start||phases[0].end_date!==item.current_period_end||!sameItems(phases[0],item.price.id)||(phases.length===2&&(phases[1].start_date!==item.current_period_end||!sameItems(phases[1],price))))throw new StripeFailure(false);
-   return request('POST','/subscription_schedules/'+stripeId(schedule.id,'sub_sched'),{end_behavior:'release',proration_behavior:'none','phases[0][start_date]':String(item.current_period_start),'phases[0][end_date]':String(item.current_period_end),'phases[0][items][0][price]':stripeId(item.price.id,'price'),'phases[0][items][0][quantity]':'1','phases[1][items][0][price]':stripeId(price,'price'),'phases[1][items][0][quantity]':'1','phases[1][duration][interval]':'month','phases[1][duration][interval_count]':'1','phases[1][proration_behavior]':'none'},'billing:'+key+':downgrade');
+   if((s.schedule&&priceId(s.schedule)!==schedule.id)||(current.metadata?.cadence_operation&&current.metadata.cadence_operation!==key)||priceId(current.subscription)!==s.id||current.status!=='active'||current.end_behavior!=='release'||current.current_phase?.start_date!==item.current_period_start||current.current_phase?.end_date!==item.current_period_end||!Array.isArray(phases)||phases.length<1||phases.length>2||phases[0].start_date!==item.current_period_start||phases[0].end_date!==item.current_period_end||!sameItems(phases[0],item.price.id)||(phases.length===2&&(current.metadata?.cadence_operation!==key||phases[1].start_date!==item.current_period_end||!sameItems(phases[1],price))))throw new StripeFailure(false);
+   return request('POST','/subscription_schedules/'+stripeId(schedule.id,'sub_sched'),{'metadata[cadence_operation]':key,end_behavior:'release',proration_behavior:'none','phases[0][start_date]':String(item.current_period_start),'phases[0][end_date]':String(item.current_period_end),'phases[0][items][0][price]':stripeId(item.price.id,'price'),'phases[0][items][0][quantity]':'1','phases[1][items][0][price]':stripeId(price,'price'),'phases[1][items][0][quantity]':'1','phases[1][duration][interval]':'month','phases[1][duration][interval_count]':'1','phases[1][proration_behavior]':'none'},'billing:'+key+':downgrade');
   },
   createCustomer:(workspaceId:string,key:string,contact:{email:string|null;phone:string|null})=>request('POST','/customers',{'metadata[workspace_id]':workspaceId,...(contact.email?{email:contact.email}:{}),...(contact.phone?{phone:contact.phone}:{})},'billing:'+key+':customer'),
   async createCheckout(input:{customer:string;sku:string;workspaceId:string;operationId:string}){
@@ -48,6 +60,7 @@ export function createStripeAdapter(fetcher:typeof fetch=fetch,config=billingCon
   readCharge:(id:string)=>request('GET','/charges/'+stripeId(id,'ch')),
   readDispute:(id:string)=>request('GET','/disputes/'+stripeId(id,'dp')),
   cancelSubscription:(id:string,key:string)=>request('POST','/subscriptions/'+stripeId(id,'sub'),{cancel_at_period_end:'true'},'billing:'+key+':cancel'),
+  resumeSubscription:(id:string,key:string)=>request('POST','/subscriptions/'+stripeId(id,'sub'),{cancel_at_period_end:'false'},'billing:'+key+':resume'),
   updateCustomer:(id:string,contact:{email:string|null;phone:string|null},key:string)=>request('POST','/customers/'+stripeId(id,'cus'),{email:contact.email??'',phone:contact.phone??''},'billing:'+key+':contact'),
   async paymentPortal(customer:string,key:string){const result=await request('POST','/billing_portal/sessions',{customer:stripeId(customer,'cus'),return_url:config.origin+'/settings/plan','flow_data[type]':'payment_method_update'},'billing:'+key+':portal');result.url=stripeUrl(result.url,'portal');return result;},
  };

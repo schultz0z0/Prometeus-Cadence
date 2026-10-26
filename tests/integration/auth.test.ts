@@ -11,6 +11,7 @@ import {
   uniqueEmail,
   verifiedUser,
   resetRateLimits,
+  registration,
 } from "./helpers.ts";
 after(async () => {
   await getPools().close();
@@ -19,6 +20,7 @@ test("email verification is required and session cookie is HttpOnly", async () =
   await resetRateLimits();
   const email = uniqueEmail();
   const signup = await requestAuth("sign-up/email", {
+    registration,
     name: "Identity Test",
     email,
     password,
@@ -124,6 +126,7 @@ test("duplicate normalized email, expired sessions and expired reset links are r
   await resetRateLimits();
   const user = await verifiedUser();
   await requestAuth("sign-up/email", {
+    registration,
     name: "Duplicate",
     email: user.email.toUpperCase(),
     password,

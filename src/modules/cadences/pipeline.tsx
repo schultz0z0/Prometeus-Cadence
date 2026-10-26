@@ -1,25 +1,27 @@
 "use client";
 import Link from "next/link";
+import { ReferenceEmptyArt } from "@/components/ui/reference-empty-art";
 import { useState } from "react";
 import { useDemo } from "@/demo/provider";
 import { eligibleCadenceLeads } from "@/domain/cadence";
 import { Badge, PageHeader, EmptyState } from "@/components/ui/primitives";
 export function Pipeline() {
   const s = useDemo();
+  const [query,setQuery]=useState("");
   const [id, setId] = useState("");
   const [status, setStatus] = useState("");
   const [qualification, setQualification] = useState("");
   const c = s.cadences.find((c) => c.id === id);
   const leads = (c ? eligibleCadenceLeads(c, s.leads) : []).filter(
-    (l) => !qualification || l.qualification === qualification,
+    (l) => (!qualification || l.qualification === qualification) && [l.name,l.email,l.phone,l.city,l.state].filter(Boolean).join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase()),
   );
   return (
-    <>
+    <div className="pipeline-reference">
       <PageHeader
         title="Pipeline"
         description="Leads em cada etapa da cadência"
       />
-      <div className="row wrap pipeline-filters">
+      <div className="row wrap pipeline-filters"><input type="search" aria-label="Buscar no pipeline" placeholder="Buscar por nome, e-mail, telefone, cidade…" value={query} onChange={e=>setQuery(e.target.value)}/>
         <select
           aria-label="Cadência"
           value={id}
@@ -89,12 +91,8 @@ export function Pipeline() {
           ))}
         </div>
       ) : (
-        <EmptyState
-          icon="Columns3"
-          title="Selecione uma cadência"
-          description="Escolha uma cadência no seletor acima para ver o pipeline."
-        />
+        <section className="pipeline-reference-empty"><ReferenceEmptyArt/><h2>Escolha uma cadência</h2><p>Use o seletor acima. O pipeline mostra em que passo da cadência<br/> está cada lead, como um quadro.</p></section>
       )}
-    </>
+    </div>
   );
 }

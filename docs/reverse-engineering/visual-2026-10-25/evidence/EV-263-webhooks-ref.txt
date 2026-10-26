@@ -1,0 +1,39 @@
+CONTA
+
+Conta
+Contexto de IA
+Notificações
+Membros
+Segurança
+MCP
+Meu plano
+
+ENVIO
+
+Contas de e-mail
+WhatsApp
+Limites de disparo
+
+DADOS
+
+Contatos duplicados
+Privacidade
+
+INTEGRAÇÕES
+
+CRM e apps
+Webhooks e API
+Como funciona esta área
+Webhooks e API
+
+Envie eventos do CadenceFlow para outros sistemas em tempo real. Conectar número de WhatsApp é em WhatsApp.
+
+Webhooks de saída
+
+Um POST com o lead a cada evento, em até 10 destinos.
+
+Novo webhook
+
+Nenhum webhook
+
+Crie um pra avisar seu CRM, n8n ou Zapier quando um lead entrar, for qualificado ou responder.

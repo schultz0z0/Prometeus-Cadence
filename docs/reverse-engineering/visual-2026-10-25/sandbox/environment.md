@@ -1,0 +1,47 @@
+# Environment
+
+| Item | Value |
+|---|---|
+| Level | L4: referência observacional, sem escrita. |
+| Reference | https://app.cadenceflow.pro nas capturas salvas. |
+| Browser tool | Capturas produzidas pelo agente principal. Este inventário documental não operou browser. |
+| Browser profile | Perfil já selecionado; nome/identificador não registrados nesta documentação. |
+| Account | Conta da referência já selecionada; dados pessoais dispensáveis ao inventário. Nenhuma conta nova criada. |
+| Plan and trial end | Não validado nesta sessão documental. Menu/CTA não comprova entitlement. |
+| Window size | JSONs inspecionados: 1920×855, DPR1. Conferir campos de cada nova captura. |
+| Local repository | D:/Projetos SaaS/Projetos Pessoais/Prometeus Cadence; alterações preexistentes preservadas. |
+| Local runtime | Capturas/verificações do agente principal em andamento; este inventário não iniciou servidor. |
+
+## Location check
+
+| Identifier | Expected value |
+|---|---|
+| Reference origin | https://app.cadenceflow.pro |
+| Route | Igual ao url e estado declarado na evidência. |
+| Sandbox breadcrumb / ID | Sem sandbox de escrita autorizado. |
+| Write boundary | Não salvar, comprar, ativar, enviar, conectar ou alterar a referência. |
+
+## Preflight
+
+| Check | Result | Date |
+|---|---|---|
+| Evidence source | JSONs inspecionados do disco; url e viewport delimitam observação. | 2026-10-25 |
+| Members, automations, webhooks, integrations and sync | Não inventariados para mutação; toda escrita na referência fora de escopo. | 2026-10-25 |
+| Plan and trial | Não iniciado/alterado; Prometeus mantém7 dias. | 2026-10-25 |
+| Personal data | Capturas devem ser mascaradas. Esta documentação usa rótulos/estrutura/estilos; não afirma revisão de arquivos ainda não inspecionados. | 2026-10-25 |
+| Local baseline |35 page.tsx,26 sob grupo autenticado; não equivale à quantidade de telas/estados. | 2026-10-25 |
+| Ledger | Cabeçalho sem linhas; nenhuma mutação da referência registrada. | 2026-10-25 |
+
+## Baseline counts
+
+Sem fixtures criadas ou registros para restaurar na referência. Visita/leitura de DOM não comprova persistência, entrega ou integração. Operações reais locais exigem dados/permissões/evidências próprios.
+
+## Atualização s04 —26/10/2026
+
+Referência autenticada em perfil Playwright próprio durante s02/s03; sessão pública separada usada apenas para leitura do cadastro em s04 e encerrada após voltar à escolha de plano. Nenhum formulário submetido. O operador excluiu a observação dos estados bloqueados por plano/conexão. Capturas desktop1920×855 e mobile390×844/DPR1; verificações adicionais320px.
+
+Prometeus: alterações locais autorizadas; fixture de cadência criada exclusivamente no QA Marco03 e arquivada viaUI, nunca publicada. Workspace Agência Prometeus restaurado. Ledger0aberto. Arquivos privados de browser e screenshots ficam nas pastas locais ignoradas; a evidência resumida não contém credenciais.
+
+## Atualização s05 —26/10/2026
+
+Revisão de planejamento:11 telas por origem visitadas em1920×855, sem submissões, mais cenários REA temporários do login público em1280×800. Os dois processos próprios do REA terminaram, conforme cleanup. Fonte autenticada em perfil Playwright próprio e local retornaram ao dashboard. Nenhuma nova fixture, preferência, conta, integração, compra ou mensagem criada; ledger sem novas linhas. O usuário esclareceu que não exige backend privado idêntico, mantendo a exigência de implementação própria funcional/testada.

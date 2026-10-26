@@ -1,0 +1,23 @@
+"use client";
+import { useMessageMetrics } from "@/client/use-message-metrics";
+import { Badge, Button, EmptyState, Notice } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/icon";
+import { validateCadence } from "@/domain/cadence";
+import type { Cadence, Lead } from "@/domain/model";
+export function CadenceHealth({cadence,leads,listName,onReview}: {cadence:Cadence;leads:Lead[];listName:string;onReview:()=>void}) {
+ const count=leads.length,percent=(n:number)=>count?Math.round(100*n/count):0;
+ const generic=/^(contato|comercial|atendimento|info|vendas)@/i,finance=/^(financeiro|nfe|fiscal|cobranca)@/i;
+ const groups=[{label:'nome@empresa',n:leads.filter(l=>l.email&&!generic.test(l.email)&&!finance.test(l.email)).length,color:'#00a781'},{label:'contato@/comercial@',n:leads.filter(l=>l.email&&generic.test(l.email)).length,color:'#ff6b00'},{label:'financeiro@/nfe@',n:leads.filter(l=>l.email&&finance.test(l.email)).length,color:'#d39d00'},{label:'sem e-mail',n:leads.filter(l=>!l.email).length,color:'#cbd5e1'}];
+ const issues=validateCadence(cadence),channels=[...new Set(cadence.steps.map(s=>s.channel))];
+ return <div className="cadence-health-reference"><section className="panel cadence-health-status"><header><Icon name="Shield" size={20}/><div><strong>Revise antes de ativar</strong><p>Confira os remetentes e a seleção de leads na publicação.</p></div><Button icon="RefreshCw" onClick={onReview}>Conferir publicação</Button></header><div><Icon name="Info" size={17}/><span>A conexão, os limites e os destinatários são validados antes de colocar mensagens na fila.</span></div></section>
+ <h3>Canais desta régua</h3><div className="cadence-health-channels">{channels.map(channel=><section className="panel" key={channel}><div className="row"><Icon name={channel==='EMAIL'?'Mail':channel==='WHATSAPP'?'MessageSquare':'Linkedin'} size={16}/>{channel==='EMAIL'?'E-mail':channel==='WHATSAPP'?'WhatsApp':'LinkedIn'}</div><Badge>{channel==='LINKEDIN'?'Disponível apenas no rascunho':'Validar na publicação'}</Badge></section>)}</div>
+ <div className="cadence-health-grid"><div><h3>A lista</h3><section className="panel cadence-health-quality"><div className="row wrap"><Icon name="Users" size={17}/><strong>Qualidade da lista</strong><small>{count} leads · {listName}</small></div><div className="cadence-quality-track" aria-hidden="true">{groups.map(g=><i key={g.label} style={{width:percent(g.n)+'%',background:g.color}}/>)}</div><div className="row wrap cadence-quality-legend">{groups.map(g=><span key={g.label}><i style={{background:g.color}}/>{g.label} <b>{percent(g.n)}%</b></span>)}<span>Com telefone <b>{percent(leads.filter(l=>!!l.phone).length)}%</b></span></div><p>Distribuição dos dados cadastrados. Não comprova que o endereço recebe e-mail ou que o telefone tem WhatsApp.</p></section></div><div><h3>Pontos de atenção na régua</h3><section className="panel cadence-health-issues"><Icon name={issues.length?'AlertCircle':'CheckCircle2'} size={17}/><div>{issues.length?issues.map((x,i)=><p key={i}>{x.message}</p>):<p>Nenhum campo obrigatório pendente no rascunho. Confira a publicação antes de ativar.</p>}</div></section></div></div></div>;
+}
+export function CadenceReport({id}: {id:string}) {
+ const {metrics,error,live}=useMessageMetrics('30 dias',id);
+ if(!live)return <Notice>Entre em um workspace para consultar os eventos desta cadência.</Notice>;
+ if(error)return <Notice>{error}</Notice>;
+ if(!metrics)return <section className="cadence-report-reference" role="status">Carregando relatório…</section>;
+ if(!metrics.sent&&!metrics.replies&&!metrics.failed&&!metrics.pending)return <div className="cadence-report-reference"><EmptyState icon="ChartNoAxesColumn" title="O relatório nasce com o primeiro disparo" description="Assim que os primeiros envios saírem, aqui aparecem as mensagens enviadas, as respostas e as falhas registradas."/></div>;
+ return <div className="cadence-report-reference"><div className="cadence-report-stats">{[['Enviados',metrics.sent],['Respostas',metrics.replies],['Falhas',metrics.failed],['Na fila',metrics.pending]].map(([label,value])=><section className="panel" key={label}><span>{label}</span><strong>{value}</strong><small>Últimos 30 dias</small></section>)}</div><section className="panel cadence-report-history"><h3>Envios e respostas por dia</h3><div className="table-scroll"><table className="data-table"><thead><tr><th>Data</th><th>Enviados</th><th>Respostas</th></tr></thead><tbody>{metrics.series.map(day=><tr key={day.date}><td>{day.date}</td><td>{day.sent}</td><td>{day.replies}</td></tr>)}</tbody></table></div></section></div>;
+}

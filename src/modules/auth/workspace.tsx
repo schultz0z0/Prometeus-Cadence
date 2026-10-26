@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button, Field } from "@/components/ui/primitives";
+import {authClient} from '@/lib/auth-client';
+import {entryDestination,signupDestination} from '@/domain/registration';
 export async function identityPost(
   body: unknown,
   expectedWorkspaceId?: string,
@@ -28,21 +30,29 @@ export function WorkspaceSetup({ invitationId }: { invitationId?: string }) {
   const [workspaces, setWorkspaces] = useState<{ id: string; name: string }[]>(
     [],
   );
+  const [loading,setLoading]=useState(true);
   useEffect(() => {
     fetch("/api/identity", { cache: "no-store" })
       .then(async (r) => {
-        if (r.status === 401) location.assign("/login");
-        if (r.ok) setWorkspaces((await r.json()).workspaces);
+        const next=invitationId?'/accept-invitation?id='+encodeURIComponent(invitationId):entryDestination(location.pathname+location.search);
+        if (r.status === 401) {location.assign('/login?next='+encodeURIComponent(next));return;}
+        const data=await r.json();
+        if (!r.ok) throw Error(data.message??'Não foi possível carregar sua conta.');
+        if(data.registrationRequired){location.assign('/onboarding/profile?next='+encodeURIComponent(next));return;}
+        setWorkspaces(data.workspaces);
       })
-      .catch(() => setError("Não foi possível carregar sua conta."));
-  }, []);
+      .catch(e => setError(e instanceof Error?e.message:"Não foi possível carregar sua conta."))
+      .finally(()=>setLoading(false));
+  }, [invitationId]);
   async function act(body: unknown) {
     if (busy) return;
     setBusy(true);
     setError("");
     try {
       await identityPost(body);
-      location.assign("/dashboard");
+      const query=new URLSearchParams(location.search),plan=query.get('signupPlan'),mode=query.get('signupMode');
+      const intended=signupDestination(plan,mode);
+      location.assign(!invitationId&&intended.includes('?')?'/settings/plan'+intended.slice(intended.indexOf('?')):'/dashboard');
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha de conexão.");
     } finally {
@@ -50,7 +60,7 @@ export function WorkspaceSetup({ invitationId }: { invitationId?: string }) {
     }
   }
   return (
-    <main className="auth-content" style={{ minHeight: "100svh" }}>
+    <main className="auth-content entry-workspace" style={{ minHeight: "100svh" }}>
       <div className="auth-box">
         <Link href="/">◈ Prometeus Cadence</Link>
         <h2>{invitationId ? "Aceitar convite" : "Seu workspace"}</h2>
@@ -64,10 +74,11 @@ export function WorkspaceSetup({ invitationId }: { invitationId?: string }) {
             {error}
           </p>
         )}
+        {loading&&<p role="status">Carregando sua conta…</p>}
         {invitationId ? (
           <Button
             variant="primary"
-            disabled={busy}
+            disabled={busy||loading}
             onClick={() => act({ type: "accept", invitationId })}
           >
             {busy ? "Aguarde…" : "Aceitar convite"}
@@ -90,7 +101,7 @@ export function WorkspaceSetup({ invitationId }: { invitationId?: string }) {
                   placeholder="Sua empresa"
                 />
               </Field>
-              <Button variant="primary" disabled={busy}>
+              <Button variant="primary" disabled={busy||loading}>
                 {busy ? "Criando…" : "Criar workspace →"}
               </Button>
             </form>
@@ -100,7 +111,7 @@ export function WorkspaceSetup({ invitationId }: { invitationId?: string }) {
                 {workspaces.map((w) => (
                   <Button
                     key={w.id}
-                    disabled={busy}
+                    disabled={busy||loading}
                     onClick={() => act({ type: "switch", workspaceId: w.id })}
                   >
                     {w.name} →
@@ -111,7 +122,7 @@ export function WorkspaceSetup({ invitationId }: { invitationId?: string }) {
           </>
         )}
         <p>
-          <Link href="/login">Entrar com outra conta</Link>
+          <button type="button" disabled={busy} onClick={async()=>{setBusy(true);try{const result=await authClient.signOut();if(result.error)throw Error('Não foi possível encerrar a sessão.');location.assign('/login'+(invitationId?'?next='+encodeURIComponent('/accept-invitation?id='+encodeURIComponent(invitationId)):''));}catch(e){setError(e instanceof Error?e.message:'Falha de conexão.');setBusy(false);}}}>Entrar com outra conta</button>
         </p>
       </div>
     </main>

@@ -1,0 +1,10 @@
+:root[data-theme=dark] .linkedin-reference,:root[data-theme=dark] .linkedin-reference h1,:root[data-theme=dark] .linkedin-reference h2,:root[data-theme=dark] .linkedin-reference h3,:root[data-theme=dark] .li-enrichment li strong{color:var(--text)}
+:root[data-theme=dark] .li-panel,:root[data-theme=dark] .li-info-strip,:root[data-theme=dark] .li-template-help>div,:root[data-theme=dark] .li-campaign-form input:not([type=checkbox]),:root[data-theme=dark] .li-campaign-form textarea,:root[data-theme=dark] .li-campaign-form select,:root[data-theme=dark] .li-audience-choice button,:root[data-theme=dark] .li-toolbar select,:root[data-theme=dark] .li-toolbar input{background:var(--surface);border-color:var(--border);color:var(--text)}
+:root[data-theme=dark] .linkedin-reference p,:root[data-theme=dark] .li-prerequisites li,:root[data-theme=dark] .li-enrichment li,:root[data-theme=dark] .li-checkboxes legend{color:var(--secondary)}
+:root[data-theme=dark] .li-prerequisites li,:root[data-theme=dark] .li-suggestions button,:root[data-theme=dark] .li-projection .li-three-grid>div{border-color:var(--border);box-shadow:none;background:var(--surface)}
+:root[data-theme=dark] .li-prerequisites .li-next,:root[data-theme=dark] .li-checkboxes label,:root[data-theme=dark] .li-draft-notice{background:var(--primary-subtle);border-color:#724426;color:var(--text)}
+:root[data-theme=dark] .li-waiting,:root[data-theme=dark] .li-list-empty{background:var(--surface)}
+:root[data-theme=dark] .li-templates-empty,:root[data-theme=dark] .pipeline-reference-empty,:root[data-theme=dark] .template-reference-art,:root[data-theme=dark] .templates-reference:has(.template-reference-art)>.empty-state{background:#1b293f;border-color:#2e4264}
+:root[data-theme=dark] .li-cadence-empty{background:transparent}
+:root[data-theme=dark] .registration-choice-grid>button[aria-pressed=true]{background:var(--primary-subtle)}
+:root[data-theme=dark] .sdr-reference{color:var(--text)}

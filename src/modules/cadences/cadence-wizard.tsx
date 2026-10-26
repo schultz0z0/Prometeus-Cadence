@@ -95,7 +95,7 @@ function DemoCadenceWizard({
       router.push(`/cadences/${chosen.id}`);
   }
   return (
-    <>
+    <div className="workflow-reference ai-workflow-reference cadence-ai-reference">
       <PageHeader
         title="Nova cadência com IA"
         description="Diga o objetivo e a lista. A IA escreve três opções; você escolhe e ajusta."
@@ -451,6 +451,6 @@ function DemoCadenceWizard({
           </aside>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

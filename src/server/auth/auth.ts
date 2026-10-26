@@ -1,5 +1,7 @@
 import "server-only";
 import { betterAuth } from "better-auth";
+import { APIError } from 'better-auth/api';
+import { validateRegistration } from '../../domain/registration.ts';
 import { organization } from "better-auth/plugins";
 import {
   adminAc,
@@ -22,6 +24,22 @@ export function authOptions(pool: Pool) {
     basePath: "/api/auth",
     trustedOrigins: [baseURL],
     logger: { disabled: true },
+    user: { additionalFields: {
+      phoneNumber: { type: 'string' as const, required: false, input: false, returned: false },
+      termsVersion: { type: 'string' as const, required: false, input: false, returned: false },
+      privacyVersion: { type: 'string' as const, required: false, input: false, returned: false },
+      legalAcceptedAt: { type: 'date' as const, required: false, input: false, returned: false },
+      registrationRequired: { type: 'boolean' as const, required: false, input: false, defaultValue: false },
+    } },
+    databaseHooks: { user: { create: { before: async (
+      user: Record<string, unknown>, context: {path?: string;body?: Record<string,unknown>} | null,
+    ) => {
+      if(context?.path==='/sign-up/email') {
+        try { return {data:{...user,...validateRegistration(context.body?.registration),legalAcceptedAt:new Date(),registrationRequired:false}}; }
+        catch(e) { throw new APIError('BAD_REQUEST',{message:e instanceof Error?e.message:'Cadastro inválido.'}); }
+      }
+      return {data:{...user,registrationRequired:true}};
+    } } } },
     socialProviders:
       process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
         ? {
@@ -118,6 +136,10 @@ export function getAuth() {
 }
 export async function handleAuthRequest(request: Request) {
   const base = process.env.BETTER_AUTH_URL ?? "http://127.0.0.1:3210";
+  const contentType=request.headers.get('content-type')?.split(';')[0].trim().toLowerCase();
+  let authPath:string;
+  try{authPath=decodeURIComponent(new URL(request.url).pathname).replace(/\/+$/,'');}
+  catch{return Response.json({message:'Requisição inválida.'},{status:422});}
   // Organization tables/ACL are provided by the plugin. Product mutations go
   // through the stricter business service, including owner invariants and audit.
   if (new URL(request.url).pathname.startsWith("/api/auth/organization/"))
@@ -132,12 +154,22 @@ export async function handleAuthRequest(request: Request) {
   ) {
     return Response.json({ message: "Origem não permitida." }, { status: 403 });
   }
+  // This application exposes JSON signup only. Reject other formats before
+  // duplicate handling, including legacy form submissions accepted upstream.
+  if(request.method==='POST'&&authPath==='/api/auth/sign-up/email'&&contentType!=='application/json')
+    return Response.json({message:'Use JSON para criar a conta.'},{status:415,headers:{'cache-control':'no-store'}});
   if (
     request.method === "POST" &&
-    request.headers.get("content-type")?.includes("application/json")
+    contentType==='application/json'
   ) {
     try {
       const body = await request.clone().json();
+      // Validate before Better Auth's duplicate-account branch as well as in the
+      // creation hook. Otherwise invalid metadata could reveal whether an email exists.
+      if(authPath==='/api/auth/sign-up/email'){
+        try{validateRegistration(body.registration);}
+        catch(e){return Response.json({message:e instanceof Error?e.message:'Cadastro inválido.'},{status:400,headers:{'cache-control':'no-store'}});}
+      }
       for (const field of [
         "callbackURL",
         "redirectTo",

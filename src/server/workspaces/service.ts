@@ -68,6 +68,7 @@ export async function identitySnapshot(headers: Headers) {
         ).rows
       : [];
   return {
+    registrationRequired: user.registrationRequired === true,
     user: { id: user.id, name: user.name, email: user.email },
     activeWorkspaceId: active?.id ?? null,
     workspaces,
@@ -83,6 +84,7 @@ export async function identityAction(
   if (!parsed.success) throw new AppError(422, "Dados de workspace inválidos.");
   const action = parsed.data;
   const { user, session } = await requireIdentity(headers);
+  if(user.registrationRequired) throw new AppError(403,'Complete seu cadastro para continuar.','REGISTRATION_REQUIRED');
   const client = await getPools().authPool.connect();
   let invitationMail: { email: string; id: string; name: string } | undefined;
   try {

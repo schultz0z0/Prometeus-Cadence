@@ -25,7 +25,8 @@ async function fixture(){
   if(init?.method==='POST'){
    mutations.push({path,form});
    if(path.endsWith('/create_preview'))return Response.json({id:'upcoming_fixture',currency:'brl',amount_due:25000});
-   if(path.endsWith('/'+subid)){sub.pending_update={expires_at:now+3600};return Response.json(sub);}
+   if(path.endsWith('/billing_portal/sessions'))return Response.json({id:'bps_fixture',url:'https://billing.stripe.com/p/fixture'});
+   if(path.endsWith('/'+subid)){if(form.has('cancel_at_period_end'))sub.cancel_at_period_end=form.get('cancel_at_period_end')==='true';else sub.pending_update={expires_at:now+3600};return Response.json(sub);}
    if(path.endsWith('/subscription_schedules'))return Response.json({id:'sub_sched_fixture'});
    if(path.endsWith('/sub_sched_fixture'))return Response.json({id:'sub_sched_fixture'});
    throw Error('Unexpected POST '+path);
@@ -53,6 +54,25 @@ test('unpaid invoice and forged webhook cannot grant access; paid renewal grants
  const v=await readBilling(f.u.p);assert.equal(v.status,'active');assert.equal(v.balances.find(x=>x.unit==='extractions')?.plan,5000);
  const grants=await testAdmin(c=>c.query("SELECT count(*)::int AS n FROM app.billing_grant WHERE workspace_id=$1 AND source='plan' AND unit='extractions'",[f.u.p.workspaceId]));assert.equal(grants.rows[0].n,1);
  f.sub.cancel_at_period_end=true;await deliver(f,'customer.subscription.updated',{id:f.subid,customer:f.customer});assert.equal((await readBilling(f.u.p)).cancelAtPeriodEnd,true);assert.equal((await readBilling(f.u.p)).status,'active');
+});
+test('scheduled cancellation can be resumed through a reviewed operation without charging or granting twice',async()=>{
+ const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});
+ await assert.rejects(prepareBilling(f.u.p,{kind:'resume'},{adapter:f.adapter}),/renovação|assinatura|inválida/i);
+ f.sub.cancel_at_period_end=true;await deliver(f,'customer.subscription.updated',{id:f.subid,customer:f.customer});
+ const review=await prepareBilling(f.u.p,{kind:'resume'},{adapter:f.adapter});assert.equal(review.amount,0);
+ const requestId=randomUUID(),operation=await confirmBilling(f.u.p,{requestId,review},{adapter:f.adapter});assert.equal(operation.state,'completed');
+ await confirmBilling(f.u.p,{requestId,review},{adapter:f.adapter});
+ assert.equal(f.mutations.filter(x=>x.form.get('cancel_at_period_end')==='false').length,1);
+ f.sub.cancel_at_period_end=false;await deliver(f,'customer.subscription.updated',{id:f.subid,customer:f.customer});
+ const v=await readBilling(f.u.p);assert.equal(v.cancelAtPeriodEnd,false);assert.equal(v.status,'active');assert.equal(v.balances.find(b=>b.unit==='extractions')?.plan,5000);
+});
+test('past-due accounts can open payment recovery without receiving unpaid renewal credits',async()=>{
+ const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});
+ f.sub.status='past_due';f.invoice.status='open';f.invoice.amount_paid=0;f.invoice.amount_remaining=39700;
+ await deliver(f,'invoice.payment_failed',{id:f.invoice.id,customer:f.customer});assert.equal((await readBilling(f.u.p)).status,'past_due');
+ const review=await prepareBilling(f.u.p,{kind:'payment-method'},{adapter:f.adapter});
+ const operation=await confirmBilling(f.u.p,{requestId:randomUUID(),review},{adapter:f.adapter});assert.equal(operation.state,'completed');assert.equal(operation.url,'https://billing.stripe.com/p/fixture');
+ assert.equal(f.mutations.filter(m=>m.path.endsWith('/billing_portal/sessions')).length,1);
 });
 test('prepaid checkout requires a verified paid session and grants only once',async()=>{
  const f=await fixture();await beginTrial(f.u.p);const op=randomUUID(),session='cs_test_fixture';

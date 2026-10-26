@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-26",
+  "session": "s06",
+  "scope": ["06A-P public entry", "06A-V known assistant geometry"],
+  "authority": "User authorized execution and preparation of own legal documents",
+  "referenceActions": ["Anonymous registration steps without submission or acceptance", "Authenticated assistant opening/closing only", "Viewport resizing"],
+  "referenceStates": {"registrationWidths": [1920,390,320], "assistantWidths": [1920,390]},
+  "implementation": {
+    "registration": "Operational tested: canonical phone, protected versioned acceptance, verification, workspace and plan intention, recovery/reset and invitation destination",
+    "legal": "Own homologation texts; v2 current, v1 retained; no competitor legal text copied",
+    "social": "Actual creation hook and verified completion gate tested; remote Google OAuth not exercised",
+    "assistant": "Floating 460x620 panel, bounded to viewport; navigation shortcuts operational; conversational executor remains06F"
+  },
+  "validation": {
+    "unit": {"passed":265,"failed":0},
+    "integrationFull": {"passed":266,"failed":0},
+    "integrationFinalFocused": {"passed":19,"failed":0},
+    "publicRouteChecks": {"count":36,"widths":[1920,390,320],"pageErrors":0,"horizontalOverflow":0},
+    "assistant": ["Escape closes", "Focus returns", "Rerender preserves focus", "Typography cycle restored", "Real plan link"],
+    "localE2E": ["Registration and legal popup preserve draft", "Captured verification mail", "Workspace and intent", "Reset and used token rejection", "Invitation preserved and invalid invitation denied", "Switch account revokes session"],
+    "billingFixture": {"state":"inactive","trialStarted":false,"subscriptionCreated":false},
+    "review": "Independent scoped review plus correction follow-up: focus issue fixed, hook/unverified-session coverage added, content-type and synthetic-response enumeration reproduced and fixed with final19-test focused suite"
+  },
+  "artifacts": {
+    "maskedScreenshots": "output/playwright/entry-06ap/",
+    "privateLogs": ".runtime/entry-*.log",
+    "handoff": "docs/validation/06-entry.md"
+  },
+  "limits": [
+    "No blanket100% product or backend parity acceptance",
+    "Own homologation legal content awaits full legal identity/governance for commercial production",
+    "7-day trial, no automatic charge, prepaid packs and own branding remain explicit divergences",
+    "Google is unavailable until provider configuration; no fake successful connection",
+    "Contextual assistant suggestions and conversational execution remain06F",
+    "No real external email/message, integration authorization or purchase was performed"
+  ],
+  "next": "06A-H existing financial lifecycle in Stripe sandbox"
+}

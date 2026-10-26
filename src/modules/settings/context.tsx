@@ -33,28 +33,25 @@ export function CompanyContext() {
     setP({ ...p, [key]: v, approvedAt: null });
   }
   return (
-    <>
+    <div className="settings-reference context-reference">
       <div className="row between wrap">
         <div>
           <h1>Contexto de IA</h1>
           <p className="subtitle">
-            O que a IA sabe da sua empresa quando escreve mensagens, escolhe
-            leads e monta cadências.
+            O que a IA sabe da sua empresa quando escreve mensagens, escolhe leads, monta cadências e treina o agente. Lemos o seu site, você revisa e aprova.
           </p>
         </div>
-        <Badge tone={p.approvedAt ? "green" : "orange"}>
-          {p.approvedAt ? "Perfil aprovado" : "Rascunho"}
-        </Badge>
       </div>
       <div className="row wrap context-used">
         <small>Usado em:</small>
         <Badge>cadências</Badge>
         <Badge>agente SDR</Badge>
         <Badge>qualificação</Badge>
+        <span className="context-approval-date">{p.approvedAt?`Aprovado em ${new Date(p.approvedAt).toLocaleDateString('pt-BR')}`:'Rascunho'}</span>
       </div>
       <div className="company-context-layout">
         <aside className="company-context-nav">
-          <div className="row">
+          <div className="context-company-card"><div className="row">
             <span className="avatar">{p.name.slice(0, 1)}</span>
             <div>
               <strong>{p.name}</strong>
@@ -77,28 +74,20 @@ export function CompanyContext() {
             >
               Reler
             </Button>}
-          </div>
-          <small className="section-note">PERFIL DA EMPRESA</small>
+          </div></div>
+          <div className="context-knowledge-nav"><small className="section-note">PERFIL DA EMPRESA</small>
           <button
             className="context-nav-active"
             onClick={() => setOpen("overview")}
+            aria-current={open==='overview'?'true':undefined}
           >
             Quem é a empresa{" "}
             <Badge tone={p.approvedAt ? "green" : "neutral"}>
               {p.approvedAt ? "Aprovado" : "Rascunho"}
             </Badge>
           </button>
-          <small className="section-note">PRODUTOS E SERVIÇOS</small>
-          <p className="secondary-text small-note">
-            Os produtos abaixo podem ser revisados no perfil.
-          </p>
-          <Button
-            variant="ghost"
-            icon="Plus"
-            onClick={() => setOpen("overview")}
-          >
-            Editar produtos e serviços
-          </Button>
+          </div>
+          {identity&&<div className="context-products"><ProductProfiles domain={p.domain} companyRevision={s.companyProfile.version}/></div>}
         </aside>
         <section>
           <Notice>
@@ -108,11 +97,13 @@ export function CompanyContext() {
             <button
               className="context-accordion-head"
               onClick={() => setOpen(open === "overview" ? "" : "overview")}
+              aria-expanded={open==='overview'}
             >
               <span>
                 <strong>Visão geral</strong>
                 <small>O que a empresa faz, pra quem e como cobra</small>
               </span>
+              <span className="context-field-count">{[p.domain,p.name,p.offer,p.products].filter(value=>value.trim()).length} de 4</span>
               <Icon
                 name={open === "overview" ? "ChevronUp" : "ChevronDown"}
                 size={17}
@@ -122,6 +113,7 @@ export function CompanyContext() {
               <div className="context-accordion-body stack">
                 <Field label="Domínio da empresa">
                   <input
+                    readOnly
                     value={p.domain}
                     onChange={(e) => set("domain", e.target.value)}
                   />
@@ -134,17 +126,17 @@ export function CompanyContext() {
                 </Field>
                 <Field label="Oferta (visão geral)">
                   <textarea
-                    rows={6}
+                    rows={3}
                     value={p.offer}
                     onChange={(e) => set("offer", e.target.value)}
                   />
                 </Field>
                 <Field
                   label="Produtos e serviços em destaque"
-                  help="Um por linha: nome e descrição."
+                  help="Um por linha: Nome | uma linha de descrição."
                 >
                   <textarea
-                    rows={5}
+                    rows={7}
                     value={p.products}
                     onChange={(e) => set("products", e.target.value)}
                   />
@@ -157,11 +149,13 @@ export function CompanyContext() {
               <button
                 className="context-accordion-head"
                 onClick={() => setOpen(open === key ? "" : key)}
+                aria-expanded={open===key}
               >
                 <span>
                   <strong>{title}</strong>
                   <small>{description}</small>
                 </span>
+                <span className="context-field-count">{String(p[key]??'').trim()?1:0} de 1</span>
                 <Icon
                   name={open === key ? "ChevronUp" : "ChevronDown"}
                   size={17}
@@ -182,7 +176,6 @@ export function CompanyContext() {
           ))}
         </section>
       </div>
-      {identity&&<ProductProfiles domain={p.domain} companyRevision={s.companyProfile.version}/>}
       <div className="context-save-bar">
         <small>
           Versão {s.companyProfile.version} ·{" "}
@@ -226,6 +219,6 @@ export function CompanyContext() {
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -35,9 +35,14 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
   const [manual, setManual] = useState(false);
   const [importing, setImporting] = useState(false);
   const [columns, setColumns] = useState(false);
-  const [hidden, setHidden] = useState<string[]>([]);
+  const [hidden, setHidden] = useState<string[]>(["source","created"]);
   const [sort, setSort] = useState<"name" | "city" | "newest">("newest");
   const [favorite, setFavorite] = useState(false);
+  const [filterMenu,setFilterMenu]=useState(false);
+  const [filterKind,setFilterKind]=useState('');
+  const [contactFilter,setContactFilter]=useState('');
+  const [stateFilter,setStateFilter]=useState('');
+  const [sourceFilter,setSourceFilter]=useState('');
   const [page, setPage] = useState(1);
   const [more, setMore] = useState(false);
   const [bulk, setBulk] = useState(false);
@@ -47,7 +52,7 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
     qualification: status,
     onlyFavorites: favorite,
     sort,
-  });
+  }).filter(l=>(!contactFilter||(contactFilter==='email'?!!l.email:contactFilter==='phone'?!!l.phone:!l.email&&!l.phone))&&(!stateFilter||l.state===stateFilter)&&(!sourceFilter||l.source===sourceFilter));
   const rows = filtered.slice((page - 1) * 20, page * 20);
   const toggle = (id: string) =>
     setSelection((x) =>
@@ -77,12 +82,11 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
     URL.revokeObjectURL(url);
   }
   return (
-    <>
+    <div className="contacts-reference">
       <PageHeader
-        title="Leads"
+        title={<><span>Leads</span><small className="count-label">{s.leads.length}</small></>}
         actions={
           <>
-            <span className="muted count-label">{s.leads.length}</span>
             <div className="dropdown-wrap">
               <Button
                 variant="primary"
@@ -185,6 +189,7 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
       />
       <div className="contacts-toolbar">
         <div className="row wrap">
+          <div className="dropdown-wrap contacts-filter-menu"><Button icon="ListFilter" aria-expanded={filterMenu} onClick={()=>setFilterMenu(!filterMenu)}>Adicionar filtro</Button>{filterMenu&&<div className="dropdown">{['Status','Cadência','Contato disponível','Resposta','Origem','Enriquecimento','Estado','Criado em','Favoritos','CRM','E-mail verificado','Opt-out'].map(t=><button key={t} disabled={!['Status','Contato disponível','Origem','Estado','Favoritos'].includes(t)} onClick={()=>{if(t==='Favoritos'){setFavorite(!favorite);setPage(1);}else setFilterKind(t);setFilterMenu(false);}}>{t}</button>)}</div>}</div>
           <select
             aria-label="Lista de contatos"
             value={list}
@@ -200,7 +205,7 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
               </option>
             ))}
           </select>
-          <select
+          {filterKind==='Status'&&<select
             aria-label="Filtrar qualificação"
             value={status}
             onChange={(e) => {
@@ -208,13 +213,17 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
               setPage(1);
             }}
           >
-            <option value="">Adicionar filtro · Status</option>
+            <option value="">Status · Todos</option>
             {Object.entries(qualificationLabels).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
               </option>
             ))}
-          </select>
+          </select>}
+          {filterKind==='Contato disponível'&&<select aria-label="Contato disponível" value={contactFilter} onChange={e=>{setContactFilter(e.target.value);setPage(1);}}><option value="">Qualquer contato</option><option value="email">Com e-mail</option><option value="phone">Com telefone</option><option value="none">Sem e-mail e telefone</option></select>}
+          {filterKind==='Origem'&&<select aria-label="Origem" value={sourceFilter} onChange={e=>{setSourceFilter(e.target.value);setPage(1);}}><option value="">Todas as origens</option>{[...new Set(s.leads.map(l=>l.source))].map(x=><option key={x}>{x}</option>)}</select>}
+          {filterKind==='Estado'&&<select aria-label="Estado" value={stateFilter} onChange={e=>{setStateFilter(e.target.value);setPage(1);}}><option value="">Todos os estados</option>{[...new Set(s.leads.map(l=>l.state).filter(Boolean))].map(x=><option key={x}>{x}</option>)}</select>}
+          {(status||contactFilter||stateFilter||sourceFilter||favorite)&&<Button variant="ghost" icon="X" onClick={()=>{setStatus('');setContactFilter('');setStateFilter('');setSourceFilter('');setFavorite(false);setFilterKind('');setPage(1);}}>Limpar filtros</Button>}
         </div>
         <div className="row">
           <div className="input-icon">
@@ -291,6 +300,8 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
                   </button>
                 </th>
               )}
+              {visible("source")&&<th>ORIGEM</th>}
+              {visible("created")&&<th>CRIADO EM</th>}
               <th />
             </tr>
           </thead>
@@ -375,6 +386,8 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
                     {[l.city, l.state].filter(Boolean).join(", ") || "—"}
                   </td>
                 )}
+                {visible("source")&&<td>{l.source}</td>}
+                {visible("created")&&<td>{new Date(l.createdAt).toLocaleDateString('pt-BR')}</td>}
                 <td>
                   <Link
                     href={`/leads/${l.id}`}
@@ -422,11 +435,14 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
       {columns && (
         <Modal title="Colunas da tabela" onClose={() => setColumns(false)}>
           <div className="stack">
+            <label className="row"><input type="checkbox" checked disabled/>Nome <small className="muted">Sempre visível</small></label>
             {[
               ["contact", "Contato"],
               ["status", "Status"],
               ["cadence", "Cadência"],
               ["city", "Cidade / UF"],
+              ["source", "Origem"],
+              ["created", "Criado em"],
             ].map(([key, label]) => (
               <label className="row" key={key}>
                 <input
@@ -443,6 +459,7 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
                 {label}
               </label>
             ))}
+            <Button variant="ghost" onClick={()=>setHidden(['source','created'])}>Restaurar colunas padrão</Button>
           </div>
         </Modal>
       )}
@@ -520,6 +537,6 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
           </Field>
         </Modal>
       )}
-    </>
+    </div>
   );
 }

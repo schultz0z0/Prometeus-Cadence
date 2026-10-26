@@ -7,9 +7,9 @@ import {
   Button,
   Field,
   Notice,
-  Modal,
   Badge,
 } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/icon";
 const labels: Record<string, string> = {
   owner: "Proprietário",
   admin: "Administrador",
@@ -18,7 +18,6 @@ const labels: Record<string, string> = {
 export function Members() {
   const initial = useIdentity();
   const [data, setData] = useState<IdentityView | null>(initial);
-  const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("operator");
   const [busy, setBusy] = useState(false);
@@ -42,25 +41,25 @@ export function Members() {
     return ok;
   }
   return (
-    <>
-      <div className="row between">
-        <h1>Membros</h1>
-        <Button
-          icon="Plus"
-          disabled={!data || me === "operator" || busy}
-          onClick={() => setShow(true)}
-        >
-          Convidar membro
-        </Button>
-      </div>
+    <div className="settings-reference members-reference">
+      <h1>Membros</h1>
       <p className="subtitle">
-        Quem tem acesso ao workspace e o que cada pessoa pode fazer.
+        Pessoas do seu time que operam esta conta. Entram com o próprio login e trabalham nos seus leads e cadências.
       </p>
+      <section className="settings-reference-panel">
+        <header className="settings-reference-panel-head"><span className="settings-reference-symbol"><Icon name="Users" size={20}/></span><div><h2>Convidar</h2><p>A pessoa recebe um e-mail com o link de acesso, válido por 48 horas.</p></div></header>
+        <form className="settings-reference-panel-body members-invite-form" onSubmit={async e=>{e.preventDefault();if(await act({type:"invite",email,role}))setEmail("");}}>
+          <Field label="E-mail"><input type="email" placeholder="colega@empresa.com.br" required disabled={!data||me==="operator"||busy} value={email} onChange={e=>setEmail(e.target.value)}/></Field>
+          {me==="owner"&&<Field label="Papel"><select value={role} disabled={busy} onChange={e=>setRole(e.target.value)}><option value="operator">Operador</option><option value="admin">Administrador</option></select></Field>}
+          <Button icon="Plus" variant="primary" disabled={!data||me==="operator"||busy||!email.trim()}>{busy?"Convidando…":"Convidar"}</Button>
+        </form>
+      </section>
+      <section className="settings-reference-panel"><header className="settings-reference-panel-head"><span className="settings-reference-symbol"><Icon name="Users" size={20}/></span><div><h2>Quem tem acesso</h2><p>Membros e permissões do workspace.</p></div></header><div className="settings-reference-panel-body">
       {!data ? (
         <Notice>Convites estão disponíveis no modo autenticado.</Notice>
       ) : (
         <>
-          <div className="panel section-gap">
+          <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
@@ -122,7 +121,7 @@ export function Members() {
                 <span>
                   {i.email} · {labels[i.role]}
                 </span>
-                <Badge>Pendente · 48 horas</Badge>
+                <Badge>Pendente · até {new Date(i.expiresAt).toLocaleDateString("pt-BR")}</Badge>
               </div>
             ))
           ) : (
@@ -133,42 +132,7 @@ export function Members() {
           </Notice>
         </>
       )}
-      {show && (
-        <Modal title="Convidar membro" onClose={() => setShow(false)}>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              if (await act({ type: "invite", email, role })) {
-                setShow(false);
-                setEmail("");
-              }
-            }}
-          >
-            <Field label="E-mail do convidado">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Field>
-            <Field label="Papel">
-              <select value={role} onChange={(e) => setRole(e.target.value)}>
-                <option value="operator">Operador</option>
-                {me === "owner" && <option value="admin">Administrador</option>}
-              </select>
-            </Field>
-            <div className="form-actions">
-              <Button type="button" onClick={() => setShow(false)}>
-                Cancelar
-              </Button>
-              <Button variant="primary" disabled={busy}>
-                Enviar convite local
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      )}
-    </>
+      </div></section>
+    </div>
   );
 }

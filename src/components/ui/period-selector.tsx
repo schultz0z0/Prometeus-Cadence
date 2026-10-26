@@ -4,15 +4,17 @@ import { Button, Field, Modal } from "./primitives";
 export function PeriodSelector({
   value,
   onChange,
+  extended = false,
 }: {
   value: string;
   onChange: (v: string) => void;
+  extended?: boolean;
 }) {
   const [custom, setCustom] = useState(false);
   return (
     <>
       <div className="period-selector">
-        {["Hoje", "7 dias", "30 dias", "90 dias", "Personalizado"].map((v) => (
+        {(extended?["Hoje", "7 dias", "15 dias", "30 dias", "60 dias", "90 dias", "Personalizado"]:["Hoje", "7 dias", "30 dias", "90 dias", "Personalizado"]).map((v) => (
           <button
             key={v}
             className={value === v ? "selected" : ""}

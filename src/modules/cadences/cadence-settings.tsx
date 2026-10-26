@@ -3,6 +3,7 @@ import { useDemo } from "@/demo/provider";
 import type { Cadence, Qualification } from "@/domain/model";
 import { qualificationLabels } from "@/domain/model";
 import { Field, Toggle, Notice } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/icon";
 export function CadenceSettings({
   cadence,
   onChange,
@@ -16,8 +17,9 @@ export function CadenceSettings({
     onChange({ ...cadence, settings: { ...cfg, ...values } });
   return (
     <div className="settings-form">
-      <section className="panel panel-pad stack">
-        <h2>Básico</h2>
+      <nav className="cadence-settings-nav" aria-label="Seções das configurações">{[['info','Informações'],['schedule','Agendamento'],['providers','Provedores'],['pauses','Gatilhos de Pausa']].map(([id,label])=><button type="button" key={id} onClick={()=>document.getElementById(`cadence-settings-${id}`)?.scrollIntoView({behavior:'smooth',block:'start'})}>{label}</button>)}</nav>
+      <section className="panel panel-pad stack" id="cadence-settings-info">
+        <h2><Icon name="Send" size={17}/>Básico</h2>
         <Field label="Nome da cadência">
           <input
             value={cadence.name}
@@ -29,6 +31,7 @@ export function CadenceSettings({
             value={cadence.listId}
             onChange={(e) => onChange({ ...cadence, listId: e.target.value })}
           >
+            <option value="">Selecione uma lista</option>
             {s.lists.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.name} ({s.leads.filter((x) => x.listId === l.id).length}{" "}
@@ -63,8 +66,8 @@ export function CadenceSettings({
           </small>
         </div>
       </section>
-      <section className="panel panel-pad section-gap stack">
-        <h2>Agendamento</h2>
+      <section className="panel panel-pad section-gap stack" id="cadence-settings-schedule">
+        <h2><Icon name="Clock" size={17}/>Agendamento</h2>
         <div className="field-grid">
           <Field label="Hora">
             <input
@@ -173,19 +176,19 @@ export function CadenceSettings({
           </Field>
         )}
       </section>
-      <section className="panel panel-pad section-gap">
-        <h2>WhatsApp</h2>
+      <section className="panel panel-pad section-gap" id="cadence-settings-providers">
+        <h2><Icon name="MessageSquare" size={17}/>Canais de envio</h2>
         <p className="secondary-text section-gap">
           Por qual conexão saem as etapas desta régua.
         </p>
         <div className="section-gap">
           <Notice>
-            Selecione um remetente real e vincule os templates na seção Publicação e envio. E-mail e LinkedIn permanecem apenas em rascunho neste marco.
+            Selecione remetentes reais e vincule o conteúdo de cada canal na aba Publicação. As etapas de LinkedIn permanecem somente em rascunho.
           </Notice>
         </div>
       </section>
-      <section className="panel panel-pad section-gap stack">
-        <h2>Pausas automáticas</h2>
+      <section className="panel panel-pad section-gap stack" id="cadence-settings-pauses">
+        <h2><Icon name="Shield" size={17}/>Pausas automáticas</h2>
         <Notice>Distribuir envios, budget percentual, só e-mail corporativo, outro contato e reengajamento ainda não são suportados para publicação. Opções antigas podem ser desligadas; o servidor bloqueia publicações enquanto permanecerem ativas.</Notice>
         <p className="secondary-text">Quando a régua para sozinha.</p>
         <Toggle

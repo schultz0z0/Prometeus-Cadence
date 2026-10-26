@@ -4,6 +4,12 @@ import { authClient } from "@/lib/auth-client";
 import { useIdentity } from "@/client/workspace-provider";
 import { useAction } from "@/demo/provider";
 import { Button, Field, Notice, Badge } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/icon";
+import { EyeOff, KeyRound, Monitor, ShieldCheck } from "lucide-react";
+function PasswordField({label,value,onChange,autoComplete,minLength}:{label:string;value:string;onChange:(value:string)=>void;autoComplete:string;minLength?:number}) {
+  const [visible,setVisible]=useState(false);
+  return <Field label={label}><span className="settings-password-field"><input type={visible?"text":"password"} autoComplete={autoComplete} required minLength={minLength} maxLength={128} value={value} onChange={e=>onChange(e.target.value)}/><button type="button" aria-label={visible?"Ocultar senha":"Mostrar senha"} aria-pressed={visible} onClick={()=>setVisible(!visible)}>{visible?<EyeOff size={16}/>:<Icon name="Eye" size={16}/>}</button></span></Field>;
+}
 interface Session {
   id: string;
   createdAt: string;
@@ -18,6 +24,7 @@ export function Security() {
   const [sessions, setSessions] = useState<Session[]>([]),
     [currentPassword, setCurrent] = useState(""),
     [newPassword, setNew] = useState(""),
+    [confirmation, setConfirmation] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   async function load() {
@@ -29,9 +36,9 @@ export function Security() {
     if (identity) void load().catch((e) => setError(e.message));
   }, [identity]);
   return (
-    <>
+    <div className="settings-reference security-reference">
       <h1>Segurança</h1>
-      <p className="subtitle">Senha e dispositivos da sua conta.</p>
+      <p className="subtitle">Senha, autenticador e os dispositivos que acessam a sua conta</p>
       {!identity ? (
         <Notice>
           A segurança de conta está disponível no modo autenticado.
@@ -39,10 +46,10 @@ export function Security() {
       ) : (
         <>
           <form
-            className="settings-section"
+            className="settings-reference-panel"
             onSubmit={async (e) => {
               e.preventDefault();
-              if (busy) return;
+              if (busy || newPassword !== confirmation) return;
               setBusy(true);
               if (
                 await run(async () => {
@@ -61,42 +68,31 @@ export function Security() {
               ) {
                 setCurrent("");
                 setNew("");
+                setConfirmation("");
               }
               setBusy(false);
             }}
           >
-            <h2>Trocar senha</h2>
-            <Field label="Senha atual">
-              <input
-                type="password"
-                autoComplete="current-password"
-                required
-                value={currentPassword}
-                onChange={(e) => setCurrent(e.target.value)}
-              />
-            </Field>
-            <Field label="Nova senha" help="Pelo menos 12 caracteres.">
-              <input
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={12}
-                maxLength={128}
-                value={newPassword}
-                onChange={(e) => setNew(e.target.value)}
-              />
-            </Field>
+            <header className="settings-reference-panel-head"><span className="settings-reference-symbol"><KeyRound size={20}/></span><div><h2>Senha</h2><p>Mínimo de 12 caracteres. Depois de trocar, as outras sessões são encerradas.</p></div></header>
+            <div className="settings-reference-panel-body"><div className="settings-reference-grid security-password-grid">
+              <PasswordField label="Senha atual" value={currentPassword} onChange={setCurrent} autoComplete="current-password"/>
+              <PasswordField label="Nova senha" value={newPassword} onChange={setNew} autoComplete="new-password" minLength={12}/>
+              <PasswordField label="Confirmar nova senha" value={confirmation} onChange={setConfirmation} autoComplete="new-password" minLength={12}/>
+            </div>
+            {confirmation&&confirmation!==newPassword&&<p role="status" className="settings-reference-footnote">As novas senhas precisam ser iguais.</p>}
             <div className="form-actions">
-              <Button variant="primary" disabled={busy}>
-                Alterar senha
+              <Button variant="primary" icon="Lock" disabled={busy||!currentPassword||newPassword.length<12||confirmation!==newPassword}>
+                Trocar senha
               </Button>
             </div>
+            </div>
           </form>
-          <h2>Sessões ativas</h2>
+          <section className="settings-reference-panel"><header className="settings-reference-panel-head"><span className="settings-reference-symbol"><ShieldCheck size={20}/></span><div><h2>Autenticador (2FA)</h2><p>Google Authenticator, 1Password, Authy ou similar.</p></div><Badge>Indisponível</Badge></header><div className="settings-reference-panel-body row between wrap"><p>A configuração do autenticador ainda não está disponível neste ambiente.</p><Button variant="primary" disabled>Ativar autenticador</Button></div></section>
+          <section className="settings-reference-panel"><header className="settings-reference-panel-head"><span className="settings-reference-symbol"><Monitor size={20}/></span><div><h2>Dispositivos conectados</h2><p>Sessões ativas da sua conta. Encerre as que você não reconhecer.</p></div></header><div className="settings-reference-panel-body">
           {error && <p role="alert">{error}</p>}
-          <div className="panel">
+          <div className="settings-session-list">
             {sessions.map((s) => (
-              <div key={s.id} className="panel-pad row between">
+              <div key={s.id} className="settings-session-row row between wrap">
                 <div>
                   <strong>
                     {s.current ? "Este dispositivo" : "Outro dispositivo"}
@@ -137,8 +133,9 @@ export function Security() {
               </div>
             ))}
           </div>
+          </div></section>
         </>
       )}
-    </>
+    </div>
   );
 }

@@ -20,6 +20,7 @@ import {
 import { SequenceCanvas } from "./sequence-canvas";
 import { CadenceSettings } from "./cadence-settings";
 import {CadencePublication} from './cadence-publication-review';
+import {CadenceHealth,CadenceReport} from './cadence-insights';
 export function CadenceEditor({ id }: { id: string }) {
   const s = useDemo();
   const repo = useRepository();
@@ -31,15 +32,16 @@ export function CadenceEditor({ id }: { id: string }) {
       ? structuredClone(original)
       : {
           id: id === "new" ? crypto.randomUUID() : id,
-          name: "Nova cadência",
-          listId: s.lists[0]?.id ?? "",
+          name: "",
+          listId: "",
           status: "draft",
           createdAt: new Date().toISOString(),
           settings: defaultCadenceSettings(),
-          steps: [],
+          steps: [{id:crypto.randomUUID(),channel:'EMAIL',delayDays:1,body:'',subject:'',stopOnReply:true}],
         },
   );
   const [tab, setTab] = useState("Sequência");
+  useEffect(()=>{if(id!=='new'&&new URLSearchParams(location.search).get('tab')==='publication')setTab('Publicação');},[id]);
   const [dirty, setDirty] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
   const [optimize, setOptimize] = useState(false);
@@ -80,7 +82,7 @@ export function CadenceEditor({ id }: { id: string }) {
       </EmptyState>
     );
   return (
-    <>
+    <div className="workflow-reference cadence-editor-reference" data-existing={id!=='new'}>
       <section className="panel cadence-header" data-workspace-editing={dirty}>
         <div className="cadence-title-row">
           <Link
@@ -94,14 +96,15 @@ export function CadenceEditor({ id }: { id: string }) {
             <input
               aria-label="Nome da cadência"
               className="cadence-name-input"
+              placeholder="Nome da cadência"
               value={c.name}
               onChange={(e) => change({ ...c, name: e.target.value })}
             />
             <div className="row">
-              <Badge>Rascunho</Badge>
+              {id !== 'new' && <Badge>Rascunho</Badge>}
               <small>
                 · {c.steps.length} etapas ·{" "}
-                {s.lists.find((l) => l.id === c.listId)?.name}
+                {s.lists.find((l) => l.id === c.listId)?.name ?? 'sem lista'}
               </small>
               {dirty && <Badge tone="orange">Alterações não salvas</Badge>}
             </div>
@@ -118,7 +121,7 @@ export function CadenceEditor({ id }: { id: string }) {
               Salvar rascunho
             </Button>
             <Button variant="primary" icon="Save" onClick={save}>
-              Salvar alterações
+              {id === 'new' ? 'Criar cadência' : 'Salvar alterações'}
             </Button>
           </div>
         </div>
@@ -133,7 +136,8 @@ export function CadenceEditor({ id }: { id: string }) {
             ["Saúde", "ChartNoAxesColumn", ""],
             ["Relatório", "ChartNoAxesColumn", ""],
             ["Configurações", "Settings", ""],
-          ].map(([name, icon, count]) => (
+            ...(id!=='new'?[["Publicação", "Send", ""]]:[]),
+          ].filter(([name])=>id!=='new'||['Sequência','Configurações'].includes(name)).map(([name, icon, count]) => (
             <button
               role="tab"
               aria-selected={tab === name}
@@ -148,7 +152,6 @@ export function CadenceEditor({ id }: { id: string }) {
           ))}
         </div>
       </section>
-      <CadencePublication cadence={c} dirty={dirty||id==='new'}/>
       {issues.length > 0 && (
         <div className="section-gap">
           <Notice tone="error">
@@ -160,7 +163,12 @@ export function CadenceEditor({ id }: { id: string }) {
       )}
       {tab === "Sequência" ? (
         <>
-          <section className="panel sequence-estimate">
+          <SequenceCanvas
+            cadence={c}
+            onChange={change}
+            onSettings={() => setTab("Configurações")}
+          />
+          <details className="panel sequence-estimate"><summary>Com essa configuração · {leads.length} leads elegíveis no rascunho</summary>
             <div className="row between">
               <h3 className="row">
                 <Icon name="Sparkles" size={17} className="orange" />
@@ -175,12 +183,7 @@ export function CadenceEditor({ id }: { id: string }) {
             <small>
               A publicação revisada aparece acima. Entregas e respostas dependem dos eventos reais do provedor.
             </small>
-          </section>
-          <SequenceCanvas
-            cadence={c}
-            onChange={change}
-            onSettings={() => setTab("Configurações")}
-          />
+          </details>
         </>
       ) : tab === "Configurações" ? (
         <>
@@ -191,7 +194,7 @@ export function CadenceEditor({ id }: { id: string }) {
             </Button>
           </div>
         </>
-      ) : tab === "Leads" ? (
+      ) : tab === "Publicação" ? null : tab === "Leads" ? (
         <section className="panel table-scroll section-gap">
           <table className="data-table">
             <thead>
@@ -229,25 +232,8 @@ export function CadenceEditor({ id }: { id: string }) {
             />
           )}
         </section>
-      ) : (
-        <section className="panel section-gap">
-          <EmptyState
-            icon={tab === "Saúde" ? "Shield" : "ChartNoAxesColumn"}
-            title={
-              tab === "Saúde"
-                ? "A cadência ainda não enviou"
-                : "Nenhuma execução registrada"
-            }
-            description={
-              tab === "Saúde"
-                ? "Conecte os canais para acompanhar entrega, falhas e reputação."
-                : "O relatório será preenchido por eventos reais de envio e resposta."
-            }
-          >
-            <LinkButton href="/settings/whatsapp">Conectar um canal</LinkButton>
-          </EmptyState>
-        </section>
-      )}
+      ) : tab === 'Saúde' ? <CadenceHealth cadence={c} leads={leads} listName={s.lists.find(l=>l.id===c.listId)?.name??'Sem lista vinculada'} onReview={()=>setTab('Publicação')}/> : <CadenceReport id={c.id}/>}
+      {id!=='new'&&<div hidden={tab!=='Publicação'}><CadencePublication cadence={c} dirty={dirty}/></div>}
       {optimize && (
         <Modal title="Revisão da sequência" onClose={() => setOptimize(false)}>
           <Notice>
@@ -271,6 +257,6 @@ export function CadenceEditor({ id }: { id: string }) {
           </Button>
         </Modal>
       )}
-    </>
+    </div>
   );
 }

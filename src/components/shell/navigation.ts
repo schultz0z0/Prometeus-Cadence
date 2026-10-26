@@ -39,7 +39,11 @@ export const navigation: NavigationItem[] = [
       },
       { label: "Campanhas", href: "/linkedin/campaigns", icon: "Send" },
       { label: "Pessoas", href: "/linkedin/people", icon: "Users" },
+      { label: "Pipeline", href: "/linkedin/pipeline", icon: "Columns3" },
+      { label: "Enriquecimento", href: "/linkedin/enrichment", icon: "UserRoundSearch" },
       { label: "Aprovações", href: "/linkedin/approvals", icon: "CheckCheck" },
+      { label: "Cadências", href: "/linkedin/cadences", icon: "Send" },
+      { label: "Templates", href: "/linkedin/templates", icon: "FileText" },
     ],
   },
   {
@@ -59,6 +63,11 @@ export const allPages = navigation.flatMap(
   (n) => n.children ?? [{ label: n.label, href: n.href!, icon: n.icon }],
 );
 export function pageTitle(path: string) {
+  if (path.startsWith('/reports/')) return 'Relatórios';
+  if (path.startsWith('/executions/')) return 'Execuções';
+  if (path === '/inbox' || path.startsWith('/messages/')) return 'Mensagens';
+  if (path === "/leads/import") return "Importar leads";
+  if (path === "/linkedin/campaigns/new") return "Nova campanha";
   if (
     path.startsWith("/leads/") &&
     !["generator", "enrich", "qualifier"].some((x) => path.endsWith(x))

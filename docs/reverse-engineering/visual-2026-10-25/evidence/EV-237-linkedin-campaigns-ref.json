@@ -1,0 +1,112 @@
+{
+  "controls": [
+    {
+      "bg": "rgb(255, 107, 0)",
+      "border": "rgb(255, 255, 255)",
+      "color": "rgb(255, 255, 255)",
+      "disabled": false,
+      "font": "Manrope, \"Manrope Fallback\", system-ui, -apple-system, sans-serif",
+      "gap": "8px",
+      "h": 36,
+      "label": "Nova campanha",
+      "line": "20px",
+      "padding": "8px 16px",
+      "radius": "8px",
+      "role": null,
+      "size": "14px",
+      "tag": "BUTTON",
+      "type": "button",
+      "w": 160,
+      "weight": "500",
+      "x": 1728,
+      "y": 116
+    },
+    {
+      "bg": "rgb(255, 107, 0)",
+      "border": "rgb(255, 255, 255)",
+      "color": "rgb(255, 255, 255)",
+      "disabled": false,
+      "font": "Manrope, \"Manrope Fallback\", system-ui, -apple-system, sans-serif",
+      "gap": "8px",
+      "h": 36,
+      "label": "Criar a primeira",
+      "line": "20px",
+      "padding": "8px 16px",
+      "radius": "8px",
+      "role": null,
+      "size": "14px",
+      "tag": "BUTTON",
+      "type": "button",
+      "w": 155,
+      "weight": "500",
+      "x": 1012,
+      "y": 383
+    }
+  ],
+  "headings": [
+    {
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "rgb(17, 24, 39)",
+      "color": "rgb(17, 24, 39)",
+      "font": "\"Exo 2\", \"Exo 2 Fallback\", sans-serif",
+      "gap": "normal",
+      "h": 30,
+      "label": "Campanhas de convite",
+      "line": "30px",
+      "padding": "0px",
+      "radius": "0px",
+      "role": null,
+      "size": "24px",
+      "tag": "H1",
+      "w": 250,
+      "weight": "700",
+      "x": 292,
+      "y": 116
+    },
+    {
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "rgb(17, 24, 39)",
+      "color": "rgb(17, 24, 39)",
+      "font": "\"Exo 2\", \"Exo 2 Fallback\", sans-serif",
+      "gap": "normal",
+      "h": 24,
+      "label": "Nenhuma campanha ainda",
+      "line": "24px",
+      "padding": "0px",
+      "radius": "0px",
+      "role": null,
+      "size": "16px",
+      "tag": "H2",
+      "w": 1530,
+      "weight": "600",
+      "x": 325,
+      "y": 275
+    }
+  ],
+  "panels": [
+    {
+      "bg": "rgb(255, 255, 255)",
+      "border": "rgb(229, 231, 235)",
+      "color": "rgb(17, 24, 39)",
+      "font": "Manrope, \"Manrope Fallback\", system-ui, -apple-system, sans-serif",
+      "gap": "normal",
+      "h": 262,
+      "line": "24px",
+      "padding": "32px",
+      "radius": "16px",
+      "role": null,
+      "size": "16px",
+      "tag": "DIV",
+      "w": 1596,
+      "weight": "400",
+      "x": 292,
+      "y": 190
+    }
+  ],
+  "url": "https://app.cadenceflow.pro/linkedin/campaigns",
+  "viewport": {
+    "dpr": 1,
+    "h": 855,
+    "w": 1920
+  }
+}

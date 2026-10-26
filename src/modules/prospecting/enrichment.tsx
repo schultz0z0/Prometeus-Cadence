@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useDemo } from "@/demo/provider";
+import {useIdentity} from "@/client/workspace-provider";
+import {useShellBilling} from "@/client/use-shell-billing";
+import {Icon} from "@/components/ui/icon";
 import {
   Badge,
   Button,
@@ -12,34 +15,35 @@ import {
 } from "@/components/ui/primitives";
 export function Enrichment() {
   const s = useDemo();
+  const identity=useIdentity(),billing=useShellBilling(identity?.activeWorkspaceId??null),balance=billing?.balances.find(b=>b.unit==='enrichment');
   const [selected, setSelected] = useState("");
   const [cap, setCap] = useState(5);
   const eligible = s.leads.filter(
     (l) => l.cnpj && l.qualification === "qualified",
   );
   return (
-    <>
+    <div className="enrichment-reference">
       <PageHeader
         title="Enriquecer decisores"
         description="Do CNPJ da empresa até o contato do sócio administrador, numa lista de pessoas pronta para cadência."
-        actions={<Badge>Demonstração · nenhum crédito disponível</Badge>}
+        actions={<Badge>Integração em preparação</Badge>}
       />
-      <div className="enrichment-stats">
+      <div className="enrichment-stats"><section className="panel panel-pad"><Icon name="Coins" size={22}/><div><strong>{balance?(balance.plan+balance.purchased).toLocaleString('pt-BR'):'—'}</strong> créditos disponíveis<p className="muted">Enriquecimento em preparação</p></div></section>
         <section className="panel panel-pad">
-          <strong>{eligible.length} empresas elegíveis</strong>
-          <p className="muted">qualificadas, com CNPJ</p>
+          <Icon name="Building2" size={22}/><div><strong>{eligible.length}</strong> empresas elegíveis
+          <p className="muted">qualificadas, com CNPJ</p></div>
         </section>
         <section className="panel panel-pad">
-          <strong>0 já enriquecidas</strong>
-          <p className="muted">nenhuma integração executada</p>
+          <Icon name="CircleCheck" size={22}/><div><strong>—</strong> já enriquecidas
+          <p className="muted">Integração ainda indisponível</p></div>
         </section>
       </div>
-      <section className="panel section-gap">
+      <div className="enrichment-layout"><section className="panel section-gap">
         <div className="panel-heading">
           <div>
             <h3>Escolha a lista</h3>
             <small>
-              O preview é gratuito. Nenhum dado é consultado nesta versão local.
+              Confira as empresas elegíveis presentes na sua base. O provedor de enriquecimento ainda não está integrado.
             </small>
           </div>
         </div>
@@ -81,7 +85,7 @@ export function Enrichment() {
           <li>Receba os decisores em uma nova lista.</li>
         </ol>
       </section>
-      {selected && (
+      </div>{selected && (
         <Modal
           title="Preview de enriquecimento"
           onClose={() => setSelected("")}
@@ -113,6 +117,6 @@ export function Enrichment() {
           </div>
         </Modal>
       )}
-    </>
+    </div>
   );
 }

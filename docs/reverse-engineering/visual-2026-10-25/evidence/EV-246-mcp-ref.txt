@@ -1,0 +1,90 @@
+CONTA
+
+Conta
+Contexto de IA
+Notificações
+Membros
+Segurança
+MCP
+Meu plano
+
+ENVIO
+
+Contas de e-mail
+WhatsApp
+Limites de disparo
+
+DADOS
+
+Contatos duplicados
+Privacidade
+
+INTEGRAÇÕES
+
+CRM e apps
+Webhooks e API
+Como funciona esta área
+MCP
+
+Opere o CadenceFlow de dentro do Claude ou do ChatGPT, por linguagem natural
+
+Como funciona, em 2 minutos
+
+Do conector instalado ao primeiro pedido feito pela conversa.
+
+Ver o vídeo
+Claude e ChatGPT
+
+Criar cadências, qualificar leads, extrair da base CNPJ e ler métricas sem sair da conversa.
+
+Incluído no seu plano
+
+URL DO CONECTOR
+
+https://mcp.cadenceflow.pro/mcp
+
+Copiar
+
+LOGIN NO CONECTOR
+
+Abre uma tela do CadenceFlow: confira login e conta e clique em Permitir acesso (autenticação OAuth).
+
+Onde adicionar
+
+Claude
+
+Personalização → Conectores → Adicionar → Adicionar conector personalizado. Funciona no plano gratuito.
+
+ChatGPT
+
+Plugins → Adicionar → Adicionar servidor MCP personalizado, autenticação OAuth → Criar como plugin. Funciona no plano gratuito.
+
+Já tinha tentado conectar antes e deu erro? Remova o conector e adicione de novo, liberar o acesso não reconecta um conector que já existia.
+
+Comece por aqui: pedidos prontos
+
+Cole no Claude ou no ChatGPT e troque o que está entre colchetes. Nada é ligado sem você ver antes.
+
+Configurar a conta do zero
+
+Copiar
+
+Configura minha conta do CadenceFlow do zero. Eu vendo [o que você vende] para [quem decide a compra]. Monta uma lista de até 100 empresas de [segmento] em [cidade ou estado] pela Base CNPJ, qualifica com IA lendo o site de cada uma, e escreve uma cadência de 3 mensagens de [WhatsApp ou e-mail] nos dias 1, 3 e 7, com tom pessoal, como se eu mesmo tivesse escrito. Me mostra tudo antes de ligar.
+
+Reescrever uma cadência com tom humano
+
+Copiar
+
+Revisa a cadência "[nome da cadência]" e reescreve as mensagens pra parecerem escritas por uma pessoa: curtas, primeiro nome, uma ideia por mensagem, uma pergunta no fim, sem caixa alta, sem promessa de resultado. Mantém as variáveis que já existem e me mostra antes e depois.
+
+Leads novos toda semana, sozinho
+
+Copiar
+
+Cria uma automação que toda segunda-feira busca 50 novas empresas de [segmento] em [região], qualifica com IA e coloca as qualificadas na cadência "[nome da cadência]". Respeita o limite do meu plano.
+
+O que responder pra quem respondeu
+
+Copiar
+
+Quais leads responderam nos últimos 7 dias? Pra cada um, resume o que a pessoa disse e sugere uma resposta curta no meu tom.

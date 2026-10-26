@@ -1,0 +1,203 @@
+{
+  "date": "2026-10-26",
+  "viewports": [
+    "1920×855 DPR1",
+    "390×844 DPR1"
+  ],
+  "routes": 50,
+  "visits": 100,
+  "pageErrors": [],
+  "routeFailures": [],
+  "overflow": [],
+  "overlayCases": 28,
+  "overlayFailures": [],
+  "registration": [
+    {
+      "width": 320,
+      "overflow": false,
+      "selectionRetained": true,
+      "nameRetained": true,
+      "submitted": false
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "selectionRetained": true,
+      "nameRetained": true,
+      "submitted": false
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "selectionRetained": true,
+      "nameRetained": true,
+      "submitted": false
+    },
+    {
+      "width": 1920,
+      "overflow": false,
+      "selectionRetained": true,
+      "nameRetained": true,
+      "submitted": false
+    }
+  ],
+  "editor": {
+    "emptyValidation": true,
+    "tokenRendering": true,
+    "cursorInsertion": true,
+    "plainTextPaste": true,
+    "nativeUndo": true,
+    "lineBreakPreserved": true,
+    "serverSaved": false,
+    "published": false
+  },
+  "linebreaks": {
+    "enter": true,
+    "emptyFirstLine": true,
+    "shiftEnter": true,
+    "serverSaved": false
+  },
+  "notObserved": "Reference states gated by plan/connections; no purchase, trial activation or outbound operation performed",
+  "notAnApproval": "Counts prove these checks only; no blanket 100% visual or operational parity approval",
+  "finalLayout": {
+    "checks": 21,
+    "failures": [],
+    "results": [
+      {
+        "width": 1920,
+        "route": "/settings/apps/meetflow",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 1920,
+        "route": "/settings/apps/funnelsflow",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 1920,
+        "route": "/reports/funnel",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 1920,
+        "route": "/reports/negocios",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 1920,
+        "route": "/executions",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 1920,
+        "route": "/leads/qualifier",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 1920,
+        "route": "/leads/generator",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 390,
+        "route": "/settings/apps/meetflow",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 390,
+        "route": "/settings/apps/funnelsflow",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 390,
+        "route": "/reports/funnel",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 390,
+        "route": "/reports/negocios",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 390,
+        "route": "/executions",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 390,
+        "route": "/leads/qualifier",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 390,
+        "route": "/leads/generator",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 320,
+        "route": "/settings/apps/meetflow",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 320,
+        "route": "/settings/apps/funnelsflow",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 320,
+        "route": "/reports/funnel",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 320,
+        "route": "/reports/negocios",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 320,
+        "route": "/executions",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 320,
+        "route": "/leads/qualifier",
+        "overflow": false,
+        "specific": true
+      },
+      {
+        "width": 320,
+        "route": "/leads/generator",
+        "overflow": false,
+        "specific": true
+      }
+    ]
+  },
+  "build": {
+    "log": ".runtime/visual-final-shell-build.log",
+    "exitCode": 0
+  },
+  "tests": {
+    "log": ".runtime/visual-final-layout-tests.log",
+    "passed": 262,
+    "failed": 0
+  }
+}

@@ -1,0 +1,37 @@
+CONTA
+
+Conta
+Contexto de IA
+Notificações
+Membros
+Segurança
+MCP
+Meu plano
+
+ENVIO
+
+Contas de e-mail
+WhatsApp
+Limites de disparo
+
+DADOS
+
+Contatos duplicados
+Privacidade
+
+INTEGRAÇÕES
+
+CRM e apps
+Webhooks e API
+Como funciona esta área
+Contatos duplicados
+
+A importação e o Gerador já não criam duplicado: um contato achado de novo é atualizado, não repetido. Esta faxina é para o que entrou antes disso.
+
+Procurar duplicados
+
+Só fundimos por CNPJ, e-mail e telefone. Nome+cidade e site ficam de fora: empresas diferentes compartilham os dois, e fundir não é pular — é apagar um registro.
+
+Fusões recentes
+
+Cada fusão guarda o contato apagado inteiro. Desfazer o traz de volta com as conversas e notas.

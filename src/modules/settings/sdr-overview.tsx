@@ -1,0 +1,20 @@
+"use client";
+import {Icon} from '@/components/ui/icon';
+import {Button,LinkButton} from '@/components/ui/primitives';
+
+const capabilities=[
+ ['MessageSquare','Conversa nos seus canais','Atendimento por e-mail, WhatsApp e LinkedIn, no histórico de cada contato.'],
+ ['UserRoundCheck','Qualificação orientada pelo seu roteiro','Perguntas, critérios e encaminhamento para a pessoa responsável.'],
+ ['Calendar','Agenda e contexto comercial','Disponibilidade de atendimento e histórico para o próximo passo.'],
+ ['Headphones','Passagem para a equipe','Regras para interromper a automação e continuar com atendimento humano.'],
+];
+const stages=[['QUALIFICAÇÃO','Entender a necessidade e reunir as informações previstas no roteiro.'],['AGENDAMENTO','Propor o próximo passo conforme o horário de atendimento.'],['REUNIÃO','Organizar os dados da conversa para a equipe comercial.'],['TRANSFERÊNCIA','Encaminhar assuntos que precisam de uma pessoa.'],['SEM INTERESSE','Respeitar a decisão do contato e encerrar a abordagem.'],['ACOMPANHAMENTO','Planejar um retorno dentro das regras da operação.']];
+export function SdrOverview(){return <div className="sdr-reference">
+ <header className="sdr-intro"><span className="sdr-pill"><Icon name="Headphones" size={15}/>Agente SDR · em preparação</span><h1>Um agente de IA para responder, qualificar e agendar</h1><p>A cadência faz o primeiro contato. O agente foi planejado para continuar a conversa e ajudar sua equipe no atendimento.</p></header>
+ <section className="sdr-conversation" aria-label="Exemplo ilustrativo de atendimento"><header><span className="sdr-chat-icon"><Icon name="Headphones" size={19}/></span><div><strong>Exemplo de atendimento</strong><small>Demonstração ilustrativa · sem envio de mensagens</small></div><span className="sdr-pill">QUALIFICAÇÃO</span></header><div className="sdr-chat-messages"><p>Olá! Gostaria de conhecer o serviço.</p><p>Claro! Qual é a necessidade da sua equipe hoje?</p><p>Queremos organizar melhor o atendimento comercial.</p><p>Podemos conversar sobre isso em uma demonstração?</p><div className="sdr-chat-result"><Icon name="CalendarCheck" size={18}/><div><strong>Próximo passo organizado</strong><small>Exemplo de encaminhamento para a equipe</small></div></div></div></section>
+ <section className="sdr-availability"><h2>Agente SDR no Prometeus</h2><div><span><Icon name="Check" size={15}/>Conversas com contexto</span><span><Icon name="Check" size={15}/>Qualificação e encaminhamento</span><span><Icon name="Check" size={15}/>Controle da sua equipe</span></div><Button variant="primary" disabled>Em preparação</Button><p>O módulo ainda não está operacional e não é vendido como adicional nesta etapa.</p></section>
+ <div className="sdr-capability-grid">{capabilities.map(([icon,title,body])=><article key={title}><Icon name={icon} size={24}/><h3>{title}</h3><p>{body}</p></article>)}</div>
+ <section className="sdr-stages"><h2>Etapas previstas do atendimento</h2><div>{stages.map(([title,body])=><article key={title}><strong><Icon name="Sparkles" size={13}/>{title}</strong><p>{body}</p></article>)}</div></section>
+ <section className="sdr-setup"><h2><Icon name="Wrench" size={20}/>Preparação do agente</h2><p>O contexto da empresa e os limites de atuação orientam o atendimento. Você revisará as configurações antes de qualquer ativação.</p><ul>{['Identidade, oferta e tom de voz','Perguntas e critérios de qualificação','Canais disponíveis para atendimento','Condições para passar a conversa à equipe'].map(t=><li key={t}><Icon name="Check" size={15}/>{t}</li>)}</ul><LinkButton href="/settings/context">Revisar contexto da empresa</LinkButton></section>
+ <section className="sdr-setup"><h2>Operação com supervisão</h2><div className="sdr-checklist">{['Revisão das instruções de atendimento','Limites de horário e frequência','Histórico e contexto por conversa','Interrupção e transferência para uma pessoa','Respeito ao pedido de não receber mensagens','Revisão antes da ativação'].map(t=><p key={t}><Icon name="Check" size={15}/>{t}</p>)}</div><small>Disponibilidade e regras finais serão apresentadas com a entrega do módulo.</small></section>
+ </div>;}

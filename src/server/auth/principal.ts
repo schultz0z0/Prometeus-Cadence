@@ -25,6 +25,7 @@ export async function requireIdentity(headers: Headers) {
 }
 export async function requirePrincipal(headers: Headers): Promise<Principal> {
   const { user, session } = await requireIdentity(headers);
+  if(user.registrationRequired) throw new AppError(403,'Complete seu cadastro para continuar.','REGISTRATION_REQUIRED');
   const workspaceId = session.activeOrganizationId;
   if (!workspaceId) throw new AppError(403, "Escolha um workspace.");
   const { rows } = await getPools().authPool.query(

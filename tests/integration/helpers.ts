@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { getAuth, handleAuthRequest } from "../../src/server/auth/auth.ts";
 import { getPools } from "../../src/server/db/pool.ts";
+import {LEGAL_VERSION} from '../../src/domain/legal-documents.ts';
 export const base = process.env.BETTER_AUTH_URL!;
 export const password = "Local-test-password-489!";
+export const registration = {phone:'(21) 97323-1943',accepted:true,termsVersion:LEGAL_VERSION,privacyVersion:LEGAL_VERSION};
 export const uniqueEmail = () => `test-${randomUUID()}@cadence.example`;
 export async function requestAuth(
   path: string,
@@ -46,6 +48,7 @@ export async function mailLink(email: string, fragment: string) {
 export async function verifiedUser() {
   const email = uniqueEmail();
   const signup = await requestAuth("sign-up/email", {
+    registration,
     name: "Test User",
     email,
     password,

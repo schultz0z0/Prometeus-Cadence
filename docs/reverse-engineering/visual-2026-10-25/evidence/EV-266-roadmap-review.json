@@ -1,0 +1,847 @@
+{
+  "date": "2026-10-26",
+  "purpose": "Roadmap review: read-only initial state inventory, not backend equivalence proof",
+  "source": {
+    "origin": "https://app.cadenceflow.pro",
+    "readOnly": true,
+    "results": [
+      {
+        "route": "/settings/plan",
+        "landed": "/settings/plan",
+        "headings": [
+          "Plano Essential",
+          "Uso do plano"
+        ],
+        "enabled": [
+          "Como funciona esta área",
+          "Meu plano",
+          "Cobrança",
+          "Planos e pacotes",
+          "Começar o teste grátis",
+          "ou testar o Pro"
+        ],
+        "disabled": [],
+        "inputTypes": []
+      },
+      {
+        "route": "/settings/security",
+        "landed": "/settings/security",
+        "headings": [
+          "Segurança",
+          "Senha",
+          "Autenticador (2FA)",
+          "Dispositivos confiáveis"
+        ],
+        "enabled": [
+          "Como funciona esta área",
+          "Mostrar senha",
+          "Mostrar senha",
+          "Mostrar senha",
+          "Ativar autenticador",
+          "Sair dos outros",
+          "Remover"
+        ],
+        "disabled": [
+          {
+            "tag": "BUTTON",
+            "label": "Trocar senha"
+          }
+        ],
+        "inputTypes": [
+          {
+            "type": "password",
+            "label": "Senha atual"
+          },
+          {
+            "type": "password",
+            "label": "Nova senha"
+          },
+          {
+            "type": "password",
+            "label": "Confirmar nova senha"
+          }
+        ]
+      },
+      {
+        "route": "/settings/privacy",
+        "landed": "/settings/privacy",
+        "headings": [
+          "Privacidade dos dados",
+          "Apagar o texto de mensagens antigas"
+        ],
+        "enabled": [
+          "Como funciona esta área",
+          ""
+        ],
+        "disabled": [
+          {
+            "tag": "BUTTON",
+            "label": "Salvar"
+          }
+        ],
+        "inputTypes": []
+      },
+      {
+        "route": "/settings/dados",
+        "landed": "/settings/dados",
+        "headings": [
+          "Contatos duplicados",
+          "Fusões recentes"
+        ],
+        "enabled": [
+          "Como funciona esta área",
+          "Procurar duplicados"
+        ],
+        "disabled": [],
+        "inputTypes": []
+      },
+      {
+        "route": "/settings/mcp",
+        "landed": "/settings/mcp",
+        "headings": [
+          "MCP",
+          "Como funciona, em 2 minutos",
+          "Claude e ChatGPT",
+          "Quem tem acesso",
+          "Comece por aqui: pedidos prontos"
+        ],
+        "enabled": [
+          "Como funciona esta área",
+          "Ver o vídeo",
+          "Copiar",
+          "Copiar",
+          "Copiar",
+          "Copiar",
+          "Copiar"
+        ],
+        "disabled": [],
+        "inputTypes": []
+      },
+      {
+        "route": "/settings/apps",
+        "landed": "/settings/apps",
+        "headings": [
+          "CRM e apps",
+          "FunnelsFlow CRM",
+          "Google Planilhas",
+          "Apollo",
+          "MeetFlow",
+          "Outro sistema?"
+        ],
+        "enabled": [
+          "Como funciona esta área",
+          "Conectar",
+          "Criar conta grátis no FunnelsFlow",
+          "Conectar",
+          "Conectar",
+          "Conhecer"
+        ],
+        "disabled": [],
+        "inputTypes": []
+      },
+      {
+        "route": "/leads/generator",
+        "landed": "/leads/generator",
+        "headings": [
+          "Gerador de leads"
+        ],
+        "enabled": [
+          "Google MapsEmpresas com endereço: comércio local e serviços por cidade ou região.Traz: nome, te",
+          "Busca na webQualquer nicho que você descreva; a IA monta a busca e filtra o que não é empresa.T",
+          "Base CNPJReceita Federal: 120 milhões de empresas por CNAE, porte, estado e mais.Traz: razão so",
+          "ApolloConectarPessoas por cargo, setor, tamanho e local no banco do Apollo, e as listas que voc",
+          "Criar nova",
+          "Usar existente",
+          "Sugerir com IA",
+          "Iniciar geração"
+        ],
+        "disabled": [],
+        "inputTypes": [
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "number",
+            "label": ""
+          }
+        ]
+      },
+      {
+        "route": "/leads/qualifier",
+        "landed": "/leads/qualifier",
+        "headings": [
+          "Qualificador de Leads",
+          "Selecionar Lista de Leads"
+        ],
+        "enabled": [
+          "Histórico"
+        ],
+        "disabled": [],
+        "inputTypes": []
+      },
+      {
+        "route": "/cadences/new",
+        "landed": "/cadences/new",
+        "headings": [],
+        "enabled": [
+          "Voltar",
+          "Otimizar",
+          "Salvar rascunho",
+          "Criar cadência",
+          "Sequência1",
+          "Configurações",
+          "Lead entra na listaEscolha a lista nas configurações",
+          "Adicionar etapa aqui",
+          "Ações da etapa",
+          "Adicionar etapa aqui",
+          "Saída",
+          "Prévia",
+          "Diminuir zoom",
+          "Aumentar zoom",
+          "Zoom 100%"
+        ],
+        "disabled": [],
+        "inputTypes": [
+          {
+            "type": "text",
+            "label": "Nome da cadência"
+          },
+          {
+            "type": "number",
+            "label": "Dias de espera antes da etapa 1"
+          }
+        ]
+      },
+      {
+        "route": "/linkedin/campaigns/new",
+        "landed": "/linkedin/campaigns/new",
+        "headings": [
+          "Nova campanha",
+          "Como você vai chamar esta prospecção",
+          "Quem você quer alcançar",
+          "O que a pessoa vai ler no convite",
+          "Em que ritmo os convites saem",
+          "Para onde vão os que aceitarem"
+        ],
+        "enabled": [
+          "Por filtrosCargo, setor e localização. Encontra quem se parece com o cliente ideal, mas a pesso",
+          "Por engajamento em postQuem curtiu ou comentou um post. Já demonstrou interesse num assunto, e ",
+          "Montar filtros",
+          "Colar link do LinkedIn",
+          "CEO",
+          "Sócio",
+          "Fundador",
+          "Proprietário",
+          "Diretor",
+          "Diretor Comercial",
+          "Head de Vendas",
+          "Gerente Comercial",
+          "Diretor de Marketing",
+          "Gerente de Marketing",
+          "Head de Marketing",
+          "Diretor de TI",
+          "Brasil",
+          "São Paulo",
+          "Rio de Janeiro",
+          "Minas Gerais",
+          "Paraná",
+          "Santa Catarina",
+          "Rio Grande do Sul",
+          "São Paulo e Região",
+          "Argentina",
+          "México",
+          "Portugal",
+          "Estados Unidos",
+          "Software",
+          "Marketing e publicidade",
+          "Serviços financeiros",
+          "Educação",
+          "Varejo",
+          "Logística e cadeia de suprimentos",
+          "Indústria",
+          "Serviços e consultoria de TI",
+          "Hospitais e atendimento médico",
+          "Construção",
+          "Explorar público",
+          "Outra prova (para usar em outro ângulo)",
+          "{nome}",
+          "{empresa}",
+          "{cargo}",
+          "{setor}",
+          "{prova}",
+          "trecho da IA",
+          "Usar a nota sugerida (sem pedido, só o motivo pra conectar)",
+          ""
+        ],
+        "disabled": [
+          {
+            "tag": "BUTTON",
+            "label": "Montar filtros com IA"
+          },
+          {
+            "tag": "BUTTON",
+            "label": "Salvar como rascunho"
+          }
+        ],
+        "inputTypes": [
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "textarea",
+            "label": ""
+          },
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "checkbox",
+            "label": "2º grau, amigo de amigoVocês têm conexões em comum, e o LinkedIn mostr"
+          },
+          {
+            "type": "checkbox",
+            "label": "3º grau, fora da sua redeNenhuma conexão em comum. Amplia muito o públ"
+          },
+          {
+            "type": "checkbox",
+            "label": "Descartar antes do convite quem não for decisorNuma fila real de 60 le"
+          },
+          {
+            "type": "text",
+            "label": ""
+          },
+          {
+            "type": "textarea",
+            "label": ""
+          },
+          {
+            "type": "number",
+            "label": ""
+          },
+          {
+            "type": "number",
+            "label": ""
+          },
+          {
+            "type": "checkbox",
+            "label": "Permitir aquecimento socialVisitar o perfil e curtir um post antes do "
+          }
+        ]
+      },
+      {
+        "route": "/sdr",
+        "landed": "/sdr",
+        "headings": [
+          "Um agente de IA que responde, qualifica e marca a reunião",
+          "O Agente SDR vem no plano Pro",
+          "Responde em e-mail, WhatsApp e LinkedIn",
+          "Qualifica e dá nota",
+          "Agenda e registra no CRM",
+          "Passa para o seu time na hora certa",
+          "O agente em ação",
+          "Você monta o agente em minutos, com a IA",
+          "Tudo que vem junto:"
+        ],
+        "enabled": [],
+        "disabled": [],
+        "inputTypes": []
+      }
+    ]
+  },
+  "local": {
+    "origin": "http://127.0.0.1:3210",
+    "readOnly": true,
+    "results": [
+      {
+        "route": "/settings/plan",
+        "landed": "/settings/plan",
+        "headings": [
+          "Plano e cobrança",
+          "Plano Essential",
+          "Uso do plano",
+          "Créditos adicionais"
+        ],
+        "enabled": [
+          "Como funciona esta área",
+          "Meu plano",
+          "Cobrança",
+          "Planos e pacotes",
+          "Ver planos e adicionais",
+          "Ver pacotes adicionais"
+        ],
+        "disabled": [],
+        "inputTypes": []
+      },
+      {
+        "route": "/settings/security",
+        "landed": "/settings/security",
+        "headings": [
+          "Segurança",
+          "Senha",
+          "Autenticador (2FA)",
+          "Dispositivos conectados"
+        ],
+        "enabled": [
+          "Como funciona esta área",
+          "Mostrar senha",
+          "Mostrar senha",
+          "Mostrar senha",
+          "Encerrar"
+        ],
+        "disabled": [
+          {
+            "tag": "BUTTON",
+            "label": "Trocar senha"
+          },
+          {
+            "tag": "BUTTON",
+            "label": "Ativar autenticador"
+          }
+        ],
+        "inputTypes": [
+          {
+            "type": "password",
+            "label": "Senha atual"
+          },
+          {
+            "type": "password",
+            "label": "Nova senha"
+          },
+          {
+            "type": "password",
+            "label": "Confirmar nova senha"
+          }
+        ]
+      },
+      {
+        "route": "/settings/privacy",
+        "landed": "/settings/privacy",
+        "headings": [
+          "Privacidade dos dados",
+          "Apagar o texto de mensagens antigas"
+        ],
+        "enabled": [
+          "Como funciona esta área"
+        ],
+        "disabled": [
+          {
+            "tag": "INPUT",
+            "label": ""
+          },
+          {
+            "tag": "BUTTON",
+            "label": "Salvar"
+          }
+        ],
+        "inputTypes": [
+          {
+            "type": "checkbox",
+            "label": "Excluir automaticamente mensagens antigasDesligado: o histórico perman"
+          }
+        ]
+      },
+      {
+        "route": "/settings/dados",
+        "landed": "/settings/dados",
+        "headings": [
+          "Contatos duplicados",
+          "Contatos duplicados",
+          "Fusões recentes"
+        ],
+        "enabled": [
+          "Como funciona esta área",
+          "Procurar duplicados"
+        ],
+        "disabled": [],
+        "inputTypes": []
+      },
+      {
+        "route": "/settings/mcp",
+        "landed": "/settings/mcp",
+        "headings": [
+          "MCP",
+          "Como funciona, em 2 minutos",
+          "Claude e ChatGPT",
+          "Claude",
+          "ChatGPT",
+          "Comece por aqui: pedidos prontos"
+        ],
+        "enabled": [
+          "Como funciona esta área"
+        ],
+        "disabled": [
+          {
+            "tag": "BUTTON",
+            "label": "Ver o vídeo"
+          },
+          {
+            "tag": "INPUT",
+            "label": "Conector em preparação"
+          }
+        ],
+        "inputTypes": [
+          {
+            "type": "text",
+            "label": "URL DO CONECTOR"
+          }
+        ]
+      },
+      {
+        "route": "/settings/apps",
+        "landed": "/settings/apps",
+        "headings": [
+          "CRM e apps",
+          "FunnelsFlow CRM",
+          "Google Planilhas",
+          "Apollo",
+          "MeetFlow",
+          "Outro sistema?"
+        ],
+        "enabled": [
+          "Como funciona esta área"
+        ],
+        "disabled": [],
+        "inputTypes": []
+      },
+      {
+        "route": "/leads/generator",
+        "landed": "/leads/generator",
+        "headings": [
+          "Gerador de leads"
+        ],
+        "enabled": [
+          "Google MapsEmpresas com endereço: comércio local e serviços por cidade ou região.Traz: nome, te",
+          "Busca na webBusca pública por nicho e localização, com resultados para revisar e qualificar.Tra",
+          "Base CNPJConsulta empresarial por CNAE, cidade e estado, conforme o provedor conectado.Traz: ra",
+          "ApolloEmpresas por palavra-chave e localização no banco do Apollo.Conecte a sua conta em Config",
+          "Criar nova",
+          "Usar existente",
+          "Revisar busca"
+        ],
+        "disabled": [
+          {
+            "tag": "INPUT",
+            "label": "Descrever público para sugestão de IA"
+          },
+          {
+            "tag": "BUTTON",
+            "label": "Sugerir com IA"
+          }
+        ],
+        "inputTypes": [
+          {
+            "type": "text",
+            "label": "Nome da lista"
+          },
+          {
+            "type": "text",
+            "label": "Descrever público para sugestão de IA"
+          },
+          {
+            "type": "text",
+            "label": "Nicho da busca"
+          },
+          {
+            "type": "text",
+            "label": "Localização"
+          },
+          {
+            "type": "number",
+            "label": "Máximo de candidatosDe 1 a 500. A fonte pode retornar menos empresas o"
+          }
+        ]
+      },
+      {
+        "route": "/leads/qualifier",
+        "landed": "/leads/qualifier",
+        "headings": [
+          "Qualificador de Leads",
+          "1Selecionar Lista de Leads"
+        ],
+        "enabled": [],
+        "disabled": [],
+        "inputTypes": []
+      },
+      {
+        "route": "/cadences/new",
+        "landed": "/cadences/new",
+        "headings": [],
+        "enabled": [
+          "Otimizar",
+          "Salvar rascunho",
+          "Criar cadência",
+          "Sequência1",
+          "Configurações",
+          "Lead entra na listaEscolha a lista nas configurações · 0 leads",
+          "Adicionar etapa antes da 1",
+          "1 · E-MAILEscrever mensagem…",
+          "Ações da etapa 1",
+          "Adicionar etapa no final",
+          "Saída",
+          "Prévia",
+          "Diminuir zoom",
+          "Aumentar zoom",
+          "Zoom 100%"
+        ],
+        "disabled": [],
+        "inputTypes": [
+          {
+            "type": "text",
+            "label": "Nome da cadência"
+          },
+          {
+            "type": "number",
+            "label": "Dias de espera antes da etapa 1"
+          }
+        ]
+      },
+      {
+        "route": "/linkedin/campaigns/new",
+        "landed": "/linkedin/campaigns/new",
+        "headings": [
+          "Nova campanha",
+          "1Como você vai chamar esta prospecção",
+          "2Quem você quer alcançar",
+          "3O que a pessoa vai ler no convite",
+          "4Em que ritmo os convites saem",
+          "5Para onde vão os que aceitarem"
+        ],
+        "enabled": [
+          "Por filtrosCargo, setor e localização. Encontra quem se parece com o cliente ideal.",
+          "Por engajamento em postQuem curtiu ou comentou um post. O assunto vira a abertura da conversa.",
+          "Montar filtros",
+          "Colar link do LinkedIn",
+          "CEO",
+          "Sócio",
+          "Fundador",
+          "Proprietário",
+          "Diretor",
+          "Diretor Comercial",
+          "Head de Vendas",
+          "Gerente Comercial",
+          "Diretor de Marketing",
+          "Gerente de Marketing",
+          "Head de Marketing",
+          "Diretor de TI",
+          "Brasil",
+          "São Paulo",
+          "Rio de Janeiro",
+          "Minas Gerais",
+          "Paraná",
+          "Santa Catarina",
+          "Rio Grande do Sul",
+          "São Paulo e Região",
+          "Argentina",
+          "México",
+          "Portugal",
+          "Estados Unidos",
+          "Software",
+          "Marketing e publicidade",
+          "Serviços financeiros",
+          "Educação",
+          "Varejo",
+          "Logística e cadeia de suprimentos",
+          "Indústria",
+          "Serviços e consultoria de TI",
+          "Hospitais e atendimento médico",
+          "Construção",
+          "Explorar público",
+          "Outra prova (para usar em outro ângulo)",
+          "{nome}",
+          "{empresa}",
+          "{cargo}",
+          "{setor}",
+          "{prova}",
+          "trecho da IA",
+          "Usar a nota sugerida (sem pedido, só o motivo pra conectar)"
+        ],
+        "disabled": [
+          {
+            "tag": "BUTTON",
+            "label": "Montar filtros com IA"
+          },
+          {
+            "tag": "BUTTON",
+            "label": "Revisar rascunho local"
+          }
+        ],
+        "inputTypes": [
+          {
+            "type": "text",
+            "label": "Nome da campanha"
+          },
+          {
+            "type": "textarea",
+            "label": "Descreva quem você quer alcançar"
+          },
+          {
+            "type": "text",
+            "label": "Cargos"
+          },
+          {
+            "type": "text",
+            "label": "Localização"
+          },
+          {
+            "type": "text",
+            "label": "Setor"
+          },
+          {
+            "type": "text",
+            "label": "Palavra-chave no perfil (opcional)A palavra precisa aparecer no perfil"
+          },
+          {
+            "type": "checkbox",
+            "label": "2º grau, amigo de amigo"
+          },
+          {
+            "type": "checkbox",
+            "label": "3º grau, fora da sua rede"
+          },
+          {
+            "type": "checkbox",
+            "label": "Descartar antes do convite quem não for decisorA triagem precisa da in"
+          },
+          {
+            "type": "text",
+            "label": "Suas provas (o que a ficha {prova} escreve)"
+          },
+          {
+            "type": "textarea",
+            "label": "Texto do convite · 0 / 300"
+          },
+          {
+            "type": "number",
+            "label": "Convites por diaÉ o alvo da campanha, não uma promessa de envio."
+          },
+          {
+            "type": "number",
+            "label": "Expirar convite depois de (dias)Retirar um convite não devolve a cota "
+          },
+          {
+            "type": "checkbox",
+            "label": "Permitir aquecimento socialVisitar o perfil e curtir um post antes do "
+          },
+          {
+            "type": "checkbox",
+            "label": "Enriquecer sozinho quem aceitarRoda depois do aceite, antes da cadênci"
+          }
+        ]
+      },
+      {
+        "route": "/sdr",
+        "landed": "/sdr",
+        "headings": [
+          "Um agente de IA para responder, qualificar e agendar",
+          "Agente SDR no Prometeus",
+          "Conversa nos seus canais",
+          "Qualificação orientada pelo seu roteiro",
+          "Agenda e contexto comercial",
+          "Passagem para a equipe",
+          "Etapas previstas do atendimento",
+          "Preparação do agente",
+          "Operação com supervisão"
+        ],
+        "enabled": [],
+        "disabled": [
+          {
+            "tag": "BUTTON",
+            "label": "Em preparação"
+          }
+        ],
+        "inputTypes": []
+      }
+    ]
+  },
+  "rea": [
+    {
+      "kind": "reference",
+      "evidence_id": "ev_7f78bab919aa23b838985f15f49cbd266bcf9a73595dc68c8f7a05e2a4033cbd",
+      "operation": "capture_browser_scenario",
+      "confidence": "observed",
+      "authority": "controlled-replay",
+      "browser": {
+        "mode": "launch",
+        "process_ownership": "provider-owned",
+        "cleanup": "terminated-owned-process",
+        "product": "Chromium",
+        "version": "155.0.8059.85"
+      },
+      "completeness": {
+        "status": "complete",
+        "equality_eligible": true,
+        "missing_sections": [],
+        "truncated_sections": []
+      },
+      "limitations": [
+        "Artifact identity is unavailable for this observation.",
+        "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+        "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+        "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+        "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+        "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+        "Storage values are hashed only after declared-secret redaction.",
+        "Browser host platform and architecture were not observed."
+      ],
+      "scope": "Public login only; controlled wait for visible email input; no form submission"
+    },
+    {
+      "kind": "local",
+      "evidence_id": "ev_d74e3c9706758866bd9ad863fb12a9194e17d7ef309a9af1f7abce7ee63ef7b3",
+      "operation": "capture_browser_scenario",
+      "confidence": "observed",
+      "authority": "controlled-replay",
+      "browser": {
+        "mode": "launch",
+        "process_ownership": "provider-owned",
+        "cleanup": "terminated-owned-process",
+        "product": "Chromium",
+        "version": "155.0.8059.85"
+      },
+      "completeness": {
+        "status": "complete",
+        "equality_eligible": true,
+        "missing_sections": [],
+        "truncated_sections": []
+      },
+      "limitations": [
+        "Artifact identity is unavailable for this observation.",
+        "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+        "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+        "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+        "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+        "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+        "Storage values are hashed only after declared-secret redaction.",
+        "Browser host platform and architecture were not observed."
+      ],
+      "scope": "Public login only; controlled wait for visible email input; no form submission"
+    }
+  ]
+}

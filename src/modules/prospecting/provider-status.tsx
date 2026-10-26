@@ -13,6 +13,6 @@ export function ProviderStatus({compact=false}:{compact?:boolean}){
   return <section className={`panel panel-pad ${compact?'':'section-gap'}`} aria-label="Status dos provedores"><div className="row between wrap"><h3>Provedores de prospecção</h3><Badge tone={status.enabled?'green':'neutral'}>{status.enabled?'Execuções habilitadas':'Execuções externas desabilitadas'}</Badge></div>
     <div className="row wrap section-gap">{Object.entries(status.sources).map(([name,s])=><Badge key={name} tone={s.configured?'green':'neutral'}>{name} · {s.configured?'configuração encontrada':'configuração pendente'}</Badge>)}</div>
     <p className="secondary-text section-gap">{ai?.route?`IA: ${ai.route.effectiveMode==='hybrid'?'JEV + ':''}${ai.route.conventional.provider} · ${ai.route.conventional.model}`:ai?.blockers.join(' ')} · <a href="/settings/ai">Configurar provedores de IA</a></p>
-    {!compact&&<><Notice>Configuração encontrada não confirma saldo ou uma chamada bem-sucedida. Apollo busca empresas e pode consumir créditos; o Codex local usa a sessão ChatGPT do CLI. As execuções precisam do worker ativo.</Notice></>}
+    {!compact&&<><Notice>Configuração encontrada não confirma saldo ou uma chamada bem-sucedida. Apollo busca empresas e pode consumir créditos. Confira o provedor e o modelo selecionados em Provedores de IA. As execuções precisam do worker ativo.</Notice></>}
   </section>;
 }

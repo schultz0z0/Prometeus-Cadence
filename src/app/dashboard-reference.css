@@ -1,0 +1,103 @@
+.reference-onboarding { margin-bottom: 24px; }
+.reference-onboarding > h2 { font-size: 1.5rem; line-height: 1.875rem; font-weight: 700; margin: 0 0 8px; }
+.reference-onboarding-subtitle { color: var(--secondary); font-size: 0.875rem; line-height: 1.25rem; margin: 0 0 18px; }
+.reference-onboarding-progress { position: relative; margin: 0 0 24px; }
+.reference-progress-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: var(--secondary); font-size: 0.8125rem; }
+.reference-onboarding .reference-progress-label { position: absolute; top: -42px; right: 0; }
+.reference-onboarding .reference-progress-label > span:first-child { display: none; }
+.reference-progress-track { height: 6px; overflow: hidden; border-radius: 999px; background: var(--hover); }
+.reference-progress-track > i { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width 180ms ease-out; }
+.reference-progress-note { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; padding: 7px 12px; border-radius: 8px; background: #e9eff8; color: #173553; font-size: 0.8125rem; line-height: 1.125rem; }
+.reference-onboarding-groups { display: grid; gap: 12px; }
+.reference-onboarding-group { overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.reference-onboarding-group > h3 { margin: 0; }
+.reference-onboarding-group > h3 > button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 16px 20px; text-align: left; font-size: 0.9375rem; line-height: 1.375rem; font-weight: 600; color: var(--text); }
+.reference-group-title { display: flex; align-items: center; gap: 10px; flex: 1; }
+.reference-group-count { padding: 1px 8px; border: 1px solid #ced8e6; border-radius: 999px; background: #eff3f9; color: #31435c; font-size: 0.6875rem; line-height: 1rem; font-weight: 500; white-space: nowrap; }
+.reference-group-check { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 50%; background: #059669; color: white; }
+.reference-checklist-step { display: flex; align-items: center; gap: 16px; min-height: 84px; padding: 14px 20px; border-top: 1px solid var(--border); }
+.reference-onboarding-group .reference-checklist-step:first-child:not(.completed) { background: #fff8f2; }
+.reference-step-marker { display: grid; place-items: center; flex: 0 0 20px; width: 20px; height: 20px; border: 1px solid #c5cbd4; border-radius: 6px; color: var(--secondary); font-size: 0.75rem; line-height: 1.125rem; }
+.completed .reference-step-marker { border-color: #059669; border-radius: 50%; background: #059669; color: white; }
+.reference-step-copy { flex: 1; min-width: 0; }
+.reference-step-copy > h3 { margin: 0; font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; }
+.reference-step-copy > p { margin: 3px 0 0; color: var(--secondary); font-size: 0.8125rem; line-height: 1.25rem; }
+.reference-step-copy > small { color: var(--muted); font-size: 0.6875rem; }
+.reference-step-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+.reference-step-actions > .btn { min-height: 32px; padding: 5px 12px; font-size: 0.75rem; line-height: 1.25rem; border-radius: 8px; white-space: nowrap; }
+.reference-inline-help { display: inline-flex; align-items: center; gap: 4px; padding: 0; margin-top: 5px; color: var(--secondary); font-size: 0.75rem; line-height: 1rem; }
+.reference-onboarding-warning { margin: 12px 0; color: var(--secondary); font-size: 0.8125rem; }
+.reference-onboarding-warning button { text-decoration: underline; }
+.reference-onboarding-help { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 24px; }
+.reference-help-card { display: flex; flex-direction: column; min-height: 401px; padding: 12px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.reference-help-art { position: relative; display: grid; place-items: center; height: 250px; min-height: 210px; overflow: hidden; border-radius: 12px; background: #fff3e9; isolation: isolate; }
+.reference-help-art.guide, .reference-help-art.team { background: #e9effa; }
+.reference-art-orbit { position: absolute; width: 210px; height: 210px; border: 22px solid #162f52; border-radius: 50%; transform: rotate(-20deg) scaleY(.7); }
+.reference-art-orbit::after { position: absolute; inset: 0 -32px; content: ""; border: 20px solid #ff6b00; border-radius: 50%; transform: rotate(55deg); }
+.reference-art-symbol { z-index: 1; display: grid; place-items: center; width: 108px; height: 108px; color: #183553; background: #fff; border: 1px solid #dce3ec; border-radius: 24px; box-shadow: 0 8px 20px #17355312; transform: rotate(-8deg); }
+.reference-help-art.guide .reference-art-symbol { transform: rotate(8deg); }
+.reference-art-mini { position: absolute; z-index: 2; top: 150px; left: calc(50% + 42px); display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: var(--primary); color: white; transform: rotate(10deg); }
+.reference-help-copy { flex: 1; padding: 16px 4px 12px; }
+.reference-help-copy > h3 { margin: 0 0 5px; font-size: 1rem; line-height: 1.375rem; font-weight: 600; }
+.reference-help-copy > p { margin: 0; color: var(--secondary); font-size: 0.8125rem; line-height: 1.25rem; }
+.reference-help-card > .btn { width: 100%; min-height: 36px; font-size: 0.8125rem; }
+.reference-onboarding-hide { display: flex; justify-content: flex-end; margin-top: 20px; }
+.reference-onboarding-hide > button { padding: 0; color: var(--secondary); font-size: 0.75rem; line-height: 1rem; text-decoration: underline; text-underline-offset: 3px; }
+.reference-guide-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.reference-guide-list h3 { margin-bottom: 10px; font-size: 0.9375rem; }
+.reference-guide-list button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 0; border-bottom: 1px solid var(--border); text-align: left; color: var(--secondary); font-size: 0.8125rem; }
+.reference-first-steps > h1 { margin-bottom: 8px; }
+.reference-first-steps > .subtitle { max-width: 960px; margin-bottom: 24px; }
+.reference-first-steps > .reference-onboarding-progress { max-width: 1260px; }
+.reference-first-steps-layout { display: grid; grid-template-columns: minmax(0, 1fr) 274px; gap: 36px; }
+.reference-first-steps-list { overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.reference-first-steps-list > .reference-checklist-step { min-height: 75px; }
+.reference-first-steps-list > .reference-checklist-step:first-child { border-top: 0; }
+.reference-first-steps-list .reference-checklist-step.completed { min-height: 65px; }
+.reference-first-steps-list .reference-step-marker { border-radius: 50%; }
+.reference-first-steps-list .reference-step-copy > h3 { font-size: 0.875rem; }
+.reference-first-steps-list .reference-checklist-step.completed .reference-step-copy > p { display: none; }
+.reference-first-steps-list .optional h3 small { margin-left: 8px; color: var(--muted); font-weight: 400; font-size: 0.75rem; }
+.reference-first-steps-list .optional > .btn { flex-shrink: 0; font-size: 0.75rem; }
+.reference-first-steps-aside { align-self: start; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.reference-first-steps-aside > h3 { font-size: 0.9375rem; margin-bottom: 8px; }
+.reference-first-steps-aside > p { color: var(--secondary); font-size: 0.8125rem; line-height: 1.3125rem; margin-bottom: 16px; }
+.reference-first-steps-aside > .btn { width: 100%; font-size: 0.75rem; }
+.reference-next-level-label { color: var(--muted); font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; margin: 28px 0 12px; }
+.reference-next-level { display: flex; align-items: flex-start; gap: 14px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.reference-next-level > div { flex: 1; }
+.reference-next-level h3 { font-size: 0.875rem; margin-bottom: 6px; }
+.reference-next-level p { color: var(--secondary); font-size: 0.8125rem; margin-bottom: 12px; }
+.reference-next-level a { color: var(--primary); font-size: 0.75rem; }
+.reference-next-level > .btn { flex-shrink: 0; }
+.reference-screen-tours { margin-top: 32px; }
+.reference-screen-tours > h2 { font-size: 1.25rem; margin-bottom: 6px; }
+.reference-screen-tours > p { font-size: 0.8125rem; color: var(--secondary); margin-bottom: 18px; }
+.reference-screen-tours > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.reference-screen-tours article { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.reference-screen-tours article > svg { color: var(--primary); flex-shrink: 0; }
+.reference-screen-tours article > div { flex: 1; }
+.reference-screen-tours h3 { font-size: 0.8125rem; line-height: 1.25rem; margin-bottom: 3px; }
+.reference-screen-tours article p { font-size: 0.75rem; line-height: 1.125rem; color: var(--secondary); }
+.reference-screen-tours article .btn { min-height: 32px; font-size: 0.75rem; padding: 5px 10px; }
+[data-theme="dark"] .reference-progress-note { background: #1d3046; color: #c4d7ef; }
+[data-theme="dark"] .reference-group-count { background: #1d3046; border-color: #384b63; color: #c4d7ef; }
+[data-theme="dark"] .reference-onboarding-group .reference-checklist-step:first-child:not(.completed) { background: #35281f; }
+@media (max-width: 1100px) {
+  .reference-first-steps-layout { grid-template-columns: minmax(0, 1fr); }
+  .reference-first-steps-aside { display: none; }
+  .reference-screen-tours > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reference-help-art { height: 200px; min-height: 180px; }
+  .reference-help-card { min-height: 350px; }
+  .reference-help-art .reference-art-orbit { transform: rotate(-20deg) scale(.8, .6); }
+}
+@media (max-width: 700px) {
+  .reference-onboarding .reference-progress-label { position: static; margin-bottom: 8px; }
+  .reference-onboarding-help, .reference-guide-list, .reference-screen-tours > div { grid-template-columns: 1fr; }
+  .reference-checklist-step { flex-wrap: wrap; gap: 10px; padding: 16px; }
+  .reference-step-copy { flex-basis: calc(100% - 34px); }
+  .reference-step-actions { margin-left: 30px; flex-wrap: wrap; }
+  .reference-progress-note { font-size: 0.75rem; }
+  .reference-next-level { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .reference-progress-track > i { transition: none; } }

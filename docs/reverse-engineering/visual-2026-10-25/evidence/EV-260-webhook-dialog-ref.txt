@@ -1,0 +1,43 @@
+Novo webhook
+
+Um POST JSON por evento. Com segredo, o cabeçalho X-Webhook-Signature traz o HMAC SHA-256 do corpo.
+
+Nome
+URL
+
+Precisa ser um endereço público em HTTPS ou HTTP.
+
+Segredo
+
+Assina cada entrega, pro sistema que recebe confirmar que o POST veio do CadenceFlow. Se você já tem um do outro lado, cole aqui.
+
+Eventos
+
+lead.created
+Lead entrou na base
+lead.qualified
+Lead qualificado pela IA
+lead.connected
+Lead respondeu
+Resposta por e-mail
+Resposta por WhatsApp
+
+Agente de IA
+
+O que o agente resolveu na conversa. O POST traz o lead, o agente, o canal, o resumo, o que o lead respondeu, a reunião (quando há) e o negócio no CRM (quando há). Cada envio tem um idempotencyKey pra você ignorar repetição.
+
+agent.qualified
+O agente de IA qualificou o lead
+agent.meeting_booked
+O agente de IA marcou uma reunião
+agent.handoff
+O agente passou a conversa para a equipe
+agent.disqualified
+O agente descartou o lead ou o lead pediu para parar
+
+Listas
+
+Todas as listas
+Listas específicas
+Cancelar
+Criar webhook

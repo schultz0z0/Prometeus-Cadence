@@ -1,0 +1,53 @@
+{
+  "controls": [
+    {
+      "bg": "rgb(255, 107, 0)",
+      "border": "rgb(255, 255, 255)",
+      "color": "rgb(255, 255, 255)",
+      "disabled": false,
+      "font": "Manrope, \"Manrope Fallback\", system-ui, -apple-system, sans-serif",
+      "gap": "8px",
+      "h": 40,
+      "label": "Conectar WhatsApp",
+      "line": "24px",
+      "padding": "8px 16px",
+      "radius": "8px",
+      "role": null,
+      "size": "16px",
+      "tag": "A",
+      "type": null,
+      "w": 208,
+      "weight": "500",
+      "x": 986,
+      "y": 540
+    }
+  ],
+  "headings": [
+    {
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "rgb(17, 24, 39)",
+      "color": "rgb(17, 24, 39)",
+      "font": "\"Exo 2\", \"Exo 2 Fallback\", sans-serif",
+      "gap": "normal",
+      "h": 28,
+      "label": "WhatsApp não configurado",
+      "line": "28px",
+      "padding": "0px",
+      "radius": "0px",
+      "role": null,
+      "size": "20px",
+      "tag": "H2",
+      "w": 257,
+      "weight": "700",
+      "x": 962,
+      "y": 432
+    }
+  ],
+  "panels": [],
+  "url": "https://app.cadenceflow.pro/messages/whatsapp",
+  "viewport": {
+    "dpr": 1,
+    "h": 855,
+    "w": 1920
+  }
+}

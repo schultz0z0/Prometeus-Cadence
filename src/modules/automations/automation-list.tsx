@@ -31,7 +31,7 @@ export function AutomationList() {
   const refreshRuntime=useCallback(async()=>{if(client){const rows=await client.list();setRuntimes(Object.fromEntries(rows.map(r=>[r.definition.id,r.runtime])));setRuntimeError('');}},[client]);
   useEffect(()=>{void refreshRuntime().catch(e=>setRuntimeError(e.message));},[refreshRuntime]);
   useLiveRefresh(async signal=>{if(!client)return;const rows=await client.list();if(!signal.aborted){setRuntimes(Object.fromEntries(rows.map(r=>[r.definition.id,r.runtime])));setRuntimeError('');}},15000,!!client,client);
-  const automations=client?s.automations.map(a=>({...a,status:runtimes[a.id]?.status==='active'?'active' as const:runtimes[a.id]?.status==='blocked'?'error' as const:'paused' as const})):s.automations;
+  const automations=client?s.automations.map(a=>({...a,status:!runtimes[a.id]?a.status:runtimes[a.id].status==='active'?'active' as const:runtimes[a.id].status==='blocked'?'error' as const:'paused' as const})):s.automations;
   const [create, setCreate] = useState(false);
   const [query, setQuery] = useState("");
   const [source, setSource] = useState("");
@@ -40,14 +40,16 @@ export function AutomationList() {
   const [execute, setExecute] = useState(false);
   const [order, setOrder] = useState("recent");
   const [comfortable, setComfortable] = useState(true);
+  const [groupBy,setGroupBy]=useState('source'),[collapsed,setCollapsed]=useState<string[]>([]),[listFilter,setListFilter]=useState('');
   const [frequency, setFrequency] = useState<"daily" | "">("");
   const [module, setModule] = useState("");
   const filtered = filterAutomations(automations, { frequency, module })
     .filter(
       (a) =>
         (!source || a.source === source) &&
-        (!status || a.status === status) &&
-        [a.name, a.description, s.lists.find((l) => l.id === a.listId)?.name]
+        (!status || (status==='never'?a.status==='active'&&!runtimes[a.id]?.lastRunAt:a.status === status)) &&
+        (!listFilter||a.listId===listFilter)&&
+        [a.name, a.description, ...Object.values(a.filters),s.lists.find((l) => l.id === a.listId)?.name]
           .join(" ")
           .toLowerCase()
           .includes(query.toLowerCase()),
@@ -55,12 +57,15 @@ export function AutomationList() {
     .toSorted((a, b) =>
       order === "name"
         ? a.name.localeCompare(b.name)
+        : order==='oldest'?a.createdAt.localeCompare(b.createdAt)
         : b.createdAt.localeCompare(a.createdAt),
     );
-  const groups = Array.from(new Set(filtered.map((a) => a.source)));
+  const groupKey=(a:Automation)=>groupBy==='source'?a.source:groupBy==='status'?a.status:groupBy==='frequency'?a.schedule.frequency:'all';
+  const groupLabel=(group:string)=>groupBy==='source'?sourceLabels[group as Source]:groupBy==='status'?({active:'Ligada',paused:'Pausada',draft:'Rascunho',error:'Com erro'}[group]??group):groupBy==='frequency'?({daily:'Diária',weekly:'Semanal',biweekly:'Quinzenal',monthly:'Mensal',once:'Única',custom:'Personalizada'}[group]??group):'Todas as automações';
+  const groups = Array.from(new Set(filtered.map(groupKey)));
   const sourceOpts = Array.from(new Set(s.automations.map((a) => a.source)));
   return (
-    <>
+    <div className="workflow-reference automation-reference">
       <PageHeader
         title="Automações"
         description={`${s.automations.length} automações · ${automations.filter((a) => a.status === "active").length} ligadas`}
@@ -82,16 +87,11 @@ export function AutomationList() {
           />
         </div>
         <select
-          aria-label="Fonte"
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
+          aria-label="Agrupar por"
+          value={groupBy}
+          onChange={(e) => {setGroupBy(e.target.value);setCollapsed([]);}}
         >
-          <option value="">Por fonte</option>
-          {sourceOpts.map((x) => (
-            <option key={x} value={x}>
-              {sourceLabels[x]}
-            </option>
-          ))}
+          <option value="source">Agrupar por fonte</option><option value="status">Por estado</option><option value="frequency">Por frequência</option><option value="none">Sem agrupamento</option>
         </select>
         <select
           aria-label="Ordenação"
@@ -100,6 +100,7 @@ export function AutomationList() {
         >
           <option value="recent">Última criação</option>
           <option value="name">Nome A–Z</option>
+          <option value="oldest">Mais antigas</option>
         </select>
         <Button icon="Columns3" onClick={() => setComfortable(!comfortable)}>
           {comfortable ? "Confortável" : "Compacta"}
@@ -115,6 +116,7 @@ export function AutomationList() {
             setQuery("");
             setFrequency("");
             setModule("");
+            setListFilter('');
           }}
         >
           Todas
@@ -126,6 +128,7 @@ export function AutomationList() {
             <h4>ESTADO</h4>
             {[
               ["active", "Ligada"],
+              ["never", "Ligada, nunca rodou"],
               ["paused", "Pausada"],
               ["draft", "Rascunho"],
               ["error", "Com erro"],
@@ -139,7 +142,7 @@ export function AutomationList() {
                 <span className="dot" />
                 {label}
                 <small>
-                  {automations.filter((a) => a.status === k).length}
+                  {automations.filter((a) => k==='never'?a.status==='active'&&!runtimes[a.id]?.lastRunAt:a.status === k).length}
                 </small>
               </label>
             ))}
@@ -190,24 +193,26 @@ export function AutomationList() {
                   />
                   <Icon name="Sparkles" size={14} />
                   {m}
+                  <small>{automations.filter(a=>a.modules.includes(m)).length}</small>
                 </label>
               ),
             )}
           </section>
+          <section className="panel filter-panel"><h4>LISTA</h4>{s.lists.map(list=><label key={list.id}><input type="checkbox" checked={listFilter===list.id} onChange={()=>setListFilter(listFilter===list.id?'':list.id)}/><span>{list.name}</span><small>{automations.filter(a=>a.listId===list.id).length}</small></label>)}</section>
         </aside>
         <div>
           {groups.map((group) => (
             <section className="panel automation-group" key={group}>
-              <div className="automation-group-head">
+              <button type="button" className="automation-group-head" aria-expanded={!collapsed.includes(group)} onClick={()=>setCollapsed(value=>value.includes(group)?value.filter(x=>x!==group):[...value,group])}>
                 <span className="dot orange" />
-                {sourceLabels[group]}
+                {groupLabel(group)}
                 <small>
-                  {filtered.filter((a) => a.source === group).length}
+                  {filtered.filter((a) => groupKey(a) === group).length}
                 </small>
-                <Icon name="ChevronDown" size={14} className="muted" />
-              </div>
-              {filtered
-                .filter((a) => a.source === group)
+                <Icon name={collapsed.includes(group)?"ChevronRight":"ChevronDown"} size={14} className="muted" />
+              </button>
+              {!collapsed.includes(group)&&filtered
+                .filter((a) => groupKey(a) === group)
                 .map((a) => (
                   <div
                     key={a.id}
@@ -239,10 +244,10 @@ export function AutomationList() {
                     <div className="automation-tags">
                       <Badge tone="orange">
                         <Icon
-                          name={group === "QUALIFY" ? "ListChecks" : "Database"}
+                          name={a.source === "QUALIFY" ? "ListChecks" : "Database"}
                           size={12}
                         />
-                        {sourceLabels[group]}
+                        {sourceLabels[a.source]}
                       </Badge>
                       <Icon name="ArrowRight" size={12} className="muted" />
                       <Badge>
@@ -264,7 +269,7 @@ export function AutomationList() {
                         · {a.schedule.time}
                       </Badge>
                     </div>
-                    {client?<RuntimeControls id={a.id} runtime={runtimes[a.id]} onChange={refreshRuntime}/>:<><span className="automation-last">nunca rodou</span><Button
+                    {client?<RuntimeControls compact id={a.id} runtime={runtimes[a.id]} onChange={refreshRuntime}/>:<><span className="automation-last">nunca rodou</span><Button
                       variant="soft"
                       icon="Play"
                       onClick={() => setExecute(true)}
@@ -377,6 +382,6 @@ export function AutomationList() {
           </form>
         </Modal>
       )}
-    </>
+    </div>
   );
 }
