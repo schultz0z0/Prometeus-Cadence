@@ -27,7 +27,12 @@ test('two schedulers materialize the latest missed window once and recover commi
  await Promise.all([runSchedulerOnce(qa(p.workspaceId)),runSchedulerOnce(qa(p.workspaceId))]);
  const first=await listAutomationOccurrences(p,id);assert.equal(first.items.length,1);assert.ok(first.items[0].jobId);assert.ok(first.items[0].skippedWindows>=4);
  assert.equal((await readAutomationRuntime(p,id)).lastRunAt,null);
- const beforeClaim=Date.now(),claim=await claimJob(randomUUID(),p.workspaceId);assert.ok(claim);const actual=(await readAutomationRuntime(p,id)).lastRunAt;assert.ok(actual&&Date.parse(actual)>=beforeClaim);assert.notEqual(actual,first.items[0].scheduledAt);
+ // The claim is timestamped by PostgreSQL; the Windows and container clocks can
+ // differ by milliseconds. Compare within that same clock and persisted job.
+ const beforeClaim=await testAdmin(async c=>(await c.query('SELECT clock_timestamp() AS stamp')).rows[0].stamp.getTime());
+ const claim=await claimJob(randomUUID(),p.workspaceId);assert.ok(claim);assert.equal(claim.jobId,first.items[0].jobId);
+ const actual=(await readAutomationRuntime(p,id)).lastRunAt;assert.ok(actual&&Date.parse(actual)>=beforeClaim);assert.notEqual(actual,first.items[0].scheduledAt);
+ const jobStarted=await testAdmin(async c=>(await c.query('SELECT started_at FROM app.prospecting_job WHERE id=$1',[claim.jobId])).rows[0].started_at.toISOString());assert.equal(actual,jobStarted);
  assert.ok((await readAutomationRuntime(p,id)).nextRunAt!>new Date().toISOString());
  await runSchedulerOnce(qa(p.workspaceId));const replay=await listAutomationOccurrences(p,id);assert.equal(replay.items.length,1);assert.equal(replay.items[0].jobId,first.items[0].jobId);assert.equal(replay.items[0].state,'running');
  await testAdmin(c=>c.query("UPDATE app.prospecting_job SET state='needs_reconciliation' WHERE id=$1",[first.items[0].jobId]));

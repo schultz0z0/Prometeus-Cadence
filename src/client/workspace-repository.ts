@@ -66,7 +66,9 @@ export function createWorkspaceRepository(
       { requestId: string; expectedRevision?: number }
     >();
   const emit = () => listeners.forEach((f) => f());
+  const controller=new AbortController();let refreshing:Promise<void>|null=null;
   function invalidate(message: string) {
+    controller.abort();
     generation++;
     access = { kind: "blocked", message };
     snapshot = {
@@ -82,18 +84,28 @@ export function createWorkspaceRepository(
     if (disposed) throw Error("O workspace foi alterado.");
     if (access.kind === "blocked") throw Error(access.message);
     if (next.revision < snapshot.revision) return;
-    if (external && next.revision > snapshot.revision && (pending.size>0||(options.hasEdits?.()??true)))
+    if (external && next.revision > snapshot.revision && (pending.size>0||(options.hasEdits?.()??true))){
       access = {
         kind: "conflict",
         message:
           "Há alterações de outra aba. Preserve seu texto e recarregue os dados antes de revisar e salvar.",
       };
+      if(JSON.stringify(next.capabilities)!==JSON.stringify(snapshot.capabilities))snapshot={...snapshot,capabilities:next.capabilities};
+      emit();return;
+    }
     snapshot = next;
     emit();
   }
-  async function refresh() {
+  function refresh():Promise<void> {
+    if(disposed)return Promise.resolve();
+    if(access.kind==='blocked')return Promise.reject(Error(access.message));
+    if(refreshing)return refreshing;
+    refreshing=readFresh();const active=refreshing;const clear=()=>{if(refreshing===active)refreshing=null;};void active.then(clear,clear);return active;
+  }
+  async function readFresh() {
     const r = await transport("/api/workspace/snapshot", {
       cache: "no-store",
+      signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)]),
       headers: { "x-cadence-workspace": snapshot.workspaceId,"if-none-match":workspaceTag(snapshot.workspaceId,snapshot.revision,snapshot.capabilities) },
     });
     if(r.status===304||disposed)return;
@@ -241,6 +253,7 @@ export function createWorkspaceRepository(
     refresh,
     invalidateAccess: invalidate,
     dispose() {
+      controller.abort();
       disposed = true;
       listeners.clear();
     },

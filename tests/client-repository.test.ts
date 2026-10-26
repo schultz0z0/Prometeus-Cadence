@@ -188,7 +188,7 @@ test("an uncertain retry keeps its original revision after another tab commits",
   assert.equal(requests[0].expectedRevision, requests[1].expectedRevision);
   assert.equal(requests[1].expectedRevision, 0);
 });
-test("conflict refreshes base without blind retry; disposed workspace ignores late responses", async () => {
+test("conflict retains the editing base and blocks blind retry; disposed workspace ignores late responses", async () => {
   let writes = 0;
   const repo = createWorkspaceRepository(initial(), async (_url, init) => {
     if (init?.method === "POST") {
@@ -199,7 +199,10 @@ test("conflict refreshes base without blind retry; disposed workspace ignores la
   });
   await assert.rejects(repo.deleteTemplate("t"));
   assert.equal(writes, 1);
-  assert.equal(repo.snapshot().revision, 4);
+  assert.equal(repo.snapshot().revision, 0);
+  assert.equal(repo.access().kind,'conflict');
+  await assert.rejects(repo.deleteTemplate('another'));
+  assert.equal(writes,1);
   let release!: (r: Response) => void;
   const other = createWorkspaceRepository(
     initial(),

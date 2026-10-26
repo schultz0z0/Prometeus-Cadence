@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-26",
+  "originalBillingPreserved": true,
+  "qaPreferenceRestored": true,
+  "qaSessionRevoked": 1,
+  "createdWorkspace": false,
+  "trialActivated": false,
+  "realMessageSent": false,
+  "liveChargeCreated": false,
+  "migrations": [
+    "076-operation-events.sql",
+    "077-metrics-period-index.sql",
+    "078-operation-billing-periods.sql",
+    "079-metrics-materialized-time.sql"
+  ],
+  "http": [
+    {
+      "path": "/api/operations/events?limit=1",
+      "status": 200
+    },
+    {
+      "path": "/api/operations/events?limit=101",
+      "status": 422
+    },
+    {
+      "path": "/api/operations/events",
+      "status": 409
+    },
+    {
+      "path": "/api/messaging/metrics?days=30",
+      "status": 200
+    }
+  ]
+}

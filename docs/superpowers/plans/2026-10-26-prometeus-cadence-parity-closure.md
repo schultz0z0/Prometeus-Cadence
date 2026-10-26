@@ -138,4 +138,6 @@ O alvo “100%” só tem denominador útil com um inventário-alvo versionado. 
 
 **Atualização financeira26/10:**06A-H concluído no escopo de [homologação financeira](../../validation/06-billing-homologation.md): efeitos externos próprios em sandbox, regressões, UI desktop/mobile e limpeza QA. A assinatura original foi preservada; nenhum efeito live.
 
-**Próxima entrega concreta:**06C.1 — eventos e desempenho, medindo navegação/APIs e fechando atualização contínua e preservação de rascunhos antes dos consumidores de métricas. Conversa/diagnósticos reais do assistente permanecem06F; estados não observados da referência continuam identificados e não são convertidos em aceite100%.
+**Atualização operacional26/10:**06C.1 concluído no escopo de [eventos/desempenho](../../validation/06-events-performance.md), com journal transacional privado, métricas limitadas por período, consultas coalescidas e preservação de rascunhos, testes de volume e orçamento local. A base inteira de contatos ainda usa o contrato de autoria legado; sua evolução acompanha06B.1/06C.2 sem truncamento silencioso.
+
+**Próxima entrega concreta:**06B.1 — contatos, importação, busca e execução até resultado persistido. Conversa/diagnósticos reais do assistente permanecem06F; estados não observados da referência continuam identificados e não são convertidos em aceite100%.

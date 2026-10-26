@@ -1,0 +1,179 @@
+{
+  "date": "2026-10-26",
+  "environment": "local production build, loopback, warmed",
+  "before": {
+    "navigation": [
+      {
+        "route": "/dashboard",
+        "status": 200,
+        "loadMs": 239
+      },
+      {
+        "route": "/contacts",
+        "status": 200,
+        "loadMs": 330
+      },
+      {
+        "route": "/cadences",
+        "status": 200,
+        "loadMs": 182
+      },
+      {
+        "route": "/messages/email",
+        "status": 200,
+        "loadMs": 215
+      },
+      {
+        "route": "/settings/account",
+        "status": 200,
+        "loadMs": 210
+      }
+    ],
+    "api": [
+      {
+        "path": "/api/workspace/snapshot",
+        "samples": 10,
+        "p95Ms": 22,
+        "minMs": 16,
+        "maxBytes": 1809
+      },
+      {
+        "path": "/api/messaging/metrics?days=30",
+        "samples": 10,
+        "p95Ms": 24,
+        "minMs": 12,
+        "maxBytes": 385
+      },
+      {
+        "path": "/api/billing",
+        "samples": 10,
+        "p95Ms": 52,
+        "minMs": 14,
+        "maxBytes": 1819
+      }
+    ],
+    "fiveConcurrentSnapshots": [
+      {
+        "ms": 66,
+        "status": 200
+      },
+      {
+        "ms": 65,
+        "status": 200
+      },
+      {
+        "ms": 70,
+        "status": 200
+      },
+      {
+        "ms": 71,
+        "status": 200
+      },
+      {
+        "ms": 69,
+        "status": 200
+      }
+    ],
+    "fixture": "existing small operator workspace, read-only"
+  },
+  "after": {
+    "navigation": [
+      {
+        "route": "/dashboard",
+        "status": 200,
+        "loadMs": 161
+      },
+      {
+        "route": "/contacts",
+        "status": 200,
+        "loadMs": 324
+      },
+      {
+        "route": "/cadences",
+        "status": 200,
+        "loadMs": 129
+      },
+      {
+        "route": "/messages/email",
+        "status": 200,
+        "loadMs": 132
+      },
+      {
+        "route": "/settings/account",
+        "status": 200,
+        "loadMs": 122
+      }
+    ],
+    "api": [
+      {
+        "path": "/api/workspace/snapshot",
+        "samples": 10,
+        "p95Ms": 49,
+        "minMs": 19,
+        "maxBytes": 825
+      },
+      {
+        "path": "/api/messaging/metrics?days=30",
+        "samples": 10,
+        "p95Ms": 28,
+        "minMs": 11,
+        "maxBytes": 320
+      },
+      {
+        "path": "/api/billing",
+        "samples": 10,
+        "p95Ms": 23,
+        "minMs": 15,
+        "maxBytes": 1481
+      },
+      {
+        "path": "/api/operations/events?limit=100",
+        "samples": 10,
+        "p95Ms": 15,
+        "minMs": 10,
+        "maxBytes": 136
+      }
+    ],
+    "fiveConcurrentSnapshots": [
+      {
+        "ms": 36,
+        "status": 200
+      },
+      {
+        "ms": 34,
+        "status": 200
+      },
+      {
+        "ms": 37,
+        "status": 200
+      },
+      {
+        "ms": 36,
+        "status": 200
+      },
+      {
+        "ms": 33,
+        "status": 200
+      }
+    ],
+    "fixture": "existing small QA workspace; not identical to baseline data"
+  },
+  "comparisonLimit": "Different workspaces/data volumes: do not interpret before/after as a measured percentage speedup.",
+  "budgets": {
+    "apiP95Ms": 250,
+    "navigationMs": 1500
+  },
+  "ui": {
+    "externalRefreshPreservedDraft": true,
+    "fixtureRestored": true,
+    "offlinePaused": true,
+    "networkResumed": true,
+    "recoveryObservedAt": 1793029125710,
+    "mobile": {
+      "client": 390,
+      "scroll": 390
+    },
+    "pageErrors": 0,
+    "realMessageSent": false
+  }
+}
