@@ -1,5 +1,7 @@
 # Prometeus Cadence — especificação proposta
 
+**Histórico de20/10 preservado.** Para escopo e contratos vigentes até a entrega pública, ler o [PRD consolidado em27/10](2026-10-27-prometeus-cadence-complete-prd.md), os [contratos técnicos](2026-10-27-prometeus-cadence-technical-contracts.md) e o [índice de planos por pacote](../plans/2026-10-27-prometeus-cadence-master-plan.md). Decisões posteriores aprovadas, como trial7dias, consumo pré-pago, OpenWA e infraestruturaApify/LLM central, prevalecem sobre propostas antigas deste arquivo. Os estados de implementação abaixo descrevem aquela data, não o progresso atual.
+
 Data: 20/10/2026. Estado: **especificação aprovada; marco 01 implementado e validado; marco 02 em planejamento com PostgreSQL/Docker escolhido pelo usuário**.
 
 Aprovação recebida: “Aprovar a especificação e seguir ao plano”, seguida de aprovação do plano 01 e execução nativa. O método é preservado para continuidade; cada novo plano detalhado tem revisão própria antes do código.

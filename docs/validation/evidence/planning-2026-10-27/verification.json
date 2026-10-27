@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-27",
+  "kind": "documentation-only",
+  "packages": 26,
+  "requirements": 26,
+  "areaSpecs": 8,
+  "documents": 37,
+  "dependencyCycle": false,
+  "errors": [],
+  "warnings": [],
+  "productTestsRun": false
+}

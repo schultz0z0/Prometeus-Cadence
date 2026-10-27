@@ -1,5 +1,7 @@
 # Fechamento de paridade — revisão de26/10/2026
 
+**Complemento aprovado em27/10/2026:** a [auditoria de escopo final](../specs/2026-10-27-prometeus-cadence-scope-audit.md) acrescenta06B.3/06B.4/06B.5 e06IA-H, refina07A/07B e define06B.3 como próximo pacote. As descrições e o diagrama abaixo registram a revisão histórica de26/10; nas partes alteradas prevalecem o complemento e a sequência vigente do [roteiro geral](2026-10-20-prometeus-cadence-roadmap.md). A atualização cobre o desenvolvimento completo01–08, encerrando em08B; os subpacotes06 não substituem07/08 e não há09 definido.
+
 **Aprovação:** o usuário aprovou expressamente esta atualização dos marcos em26/10/2026. Próximo pacote: fechamento das diferenças conhecidas de06A-V e execução de06A-P; depois06A-H. A aprovação do roteiro não constitui aceite de implementação dos módulos pendentes.
 
 ## Objetivo e critério atualizado

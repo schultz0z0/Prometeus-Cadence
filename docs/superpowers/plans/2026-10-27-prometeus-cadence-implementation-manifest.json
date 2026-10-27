@@ -1,0 +1,1072 @@
+{
+  "version": 1,
+  "date": "2026-10-27",
+  "scope": "approved-product-baseline; detailed-implementation-planned-not-executed",
+  "next": "06B.3",
+  "end": "08B",
+  "packages": [
+    {
+      "id": "06A-V",
+      "title": "Fechamento visual contínuo e diferenças residuais",
+      "requirements": [
+        "R24"
+      ],
+      "dependencies": [],
+      "conditional": false,
+      "continuous": true,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06av-visual-closure.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-release-design.md",
+      "create": [
+        "scripts/lib/visual-coverage.ts",
+        "scripts/audit-visual-coverage.mjs",
+        "tests/fixtures/visual-coverage.json"
+      ],
+      "modify": [
+        "docs/reverse-engineering/visual-2026-10-25/inventory/coverage.md",
+        "docs/reverse-engineering/visual-2026-10-25/design/gaps.md",
+        "src/app/visual-detail-refinements.css",
+        "src/modules/settings/context.tsx"
+      ],
+      "unit": "tests/06av-visual-closure.test.ts",
+      "integration": "tests/integration/06av-visual-closure.test.ts",
+      "evidence": "docs/validation/06av-visual-closure.md",
+      "routes": [
+        "inventário completo routes.md",
+        "/settings/context",
+        "todas abas/popups por pacote"
+      ]
+    },
+    {
+      "id": "06B.3",
+      "title": "Investigação da empresa e redes",
+      "requirements": [
+        "R02",
+        "R03",
+        "R05"
+      ],
+      "dependencies": [
+        "06IA",
+        "06B.1",
+        "06B.2"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06b3-company-research.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-research-design.md",
+      "create": [
+        "src/domain/company-research.ts",
+        "src/server/research/company.ts",
+        "src/server/research/source-registry.ts",
+        "src/server/research/http.ts",
+        "src/client/research-client.ts",
+        "src/app/api/research/route.ts",
+        "src/app/api/research/[id]/route.ts",
+        "src/app/api/research/[id]/[action]/route.ts",
+        "db/migrations/083-company-research.sql"
+      ],
+      "modify": [
+        "src/server/prospecting/providers/profiles.ts",
+        "src/server/prospecting/worker.ts",
+        "src/server/prospecting/extraction/fetch-page.ts",
+        "src/domain/operation-events.ts",
+        "src/modules/prospecting/server-generator.tsx",
+        "src/modules/contacts/lead-detail.tsx"
+      ],
+      "unit": "tests/06b3-company-research.test.ts",
+      "integration": "tests/integration/06b3-company-research.test.ts",
+      "evidence": "docs/validation/06b3-company-research.md",
+      "routes": [
+        "/leads/generator?source=MAPS",
+        "/leads/generator?source=WEB",
+        "/contacts",
+        "/leads/[id]",
+        "/executions/[id]"
+      ]
+    },
+    {
+      "id": "06B.4",
+      "title": "Identidade empresarial e tomadores de decisão",
+      "requirements": [
+        "R04",
+        "R05"
+      ],
+      "dependencies": [
+        "06B.3"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06b4-company-people.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-research-design.md",
+      "create": [
+        "src/domain/company-people.ts",
+        "src/server/research/identity.ts",
+        "src/server/research/people.ts",
+        "src/server/research/people-http.ts",
+        "src/app/api/research/[id]/people/route.ts",
+        "db/migrations/084-company-people.sql"
+      ],
+      "modify": [
+        "src/domain/enrichment.ts",
+        "src/server/prospecting/enrichment.ts",
+        "src/server/prospecting/ai/decisors.ts",
+        "src/server/prospecting/contact-enrichment.ts",
+        "src/modules/prospecting/enrichment.tsx",
+        "src/modules/contacts/lead-detail.tsx"
+      ],
+      "unit": "tests/06b4-company-people.test.ts",
+      "integration": "tests/integration/06b4-company-people.test.ts",
+      "evidence": "docs/validation/06b4-company-people.md",
+      "routes": [
+        "/leads/enrich",
+        "/leads/[id]",
+        "/contacts",
+        "/linkedin/enrichment"
+      ]
+    },
+    {
+      "id": "06D.1",
+      "title": "Autoria, variantes, anexos e publicação",
+      "requirements": [
+        "R07",
+        "R08"
+      ],
+      "dependencies": [
+        "06B.4",
+        "05"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06d1-message-authoring.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-messaging-design.md",
+      "create": [
+        "src/domain/message-authoring.ts",
+        "src/server/messaging/content.ts",
+        "src/server/messaging/attachments.ts",
+        "src/server/files/blob-store.ts",
+        "src/server/files/local-store.ts",
+        "src/app/api/message-content/route.ts",
+        "src/app/api/message-files/route.ts",
+        "src/app/api/message-files/[id]/route.ts",
+        "db/migrations/085-message-content.sql"
+      ],
+      "modify": [
+        "src/domain/model.ts",
+        "src/domain/cadence.ts",
+        "src/server/planning/contracts.ts",
+        "src/server/messaging/publication-v2.ts",
+        "src/server/messaging/outbox.ts",
+        "src/modules/cadences/step-editor.tsx",
+        "src/modules/cadences/template-library.tsx",
+        "src/modules/cadences/cadence-publication-v2.tsx"
+      ],
+      "unit": "tests/06d1-message-authoring.test.ts",
+      "integration": "tests/integration/06d1-message-authoring.test.ts",
+      "evidence": "docs/validation/06d1-message-authoring.md",
+      "routes": [
+        "/cadences/new",
+        "/cadences/[id]",
+        "/templates",
+        "/automations/new/ai"
+      ]
+    },
+    {
+      "id": "06D.2",
+      "title": "Canais, inbox e homologação de entrega",
+      "requirements": [
+        "R09"
+      ],
+      "dependencies": [
+        "06D.1"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06d2-channel-operation.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-messaging-design.md",
+      "create": [
+        "src/domain/channel-evidence.ts",
+        "src/server/messaging/pilot.ts",
+        "src/server/messaging/delivery-evidence.ts",
+        "db/migrations/086-message-operation.sql"
+      ],
+      "modify": [
+        "src/server/messaging/inbox.ts",
+        "src/server/messaging/replies.ts",
+        "src/server/messaging/email-replies.ts",
+        "src/server/messaging/receipts.ts",
+        "src/server/messaging/metrics.ts",
+        "src/server/channels/archive.ts",
+        "src/server/mail/threading.ts",
+        "src/modules/messages/whatsapp-inbox.tsx",
+        "src/modules/messages/email-inbox.tsx",
+        "src/modules/settings/whatsapp-settings.tsx"
+      ],
+      "unit": "tests/06d2-channel-operation.test.ts",
+      "integration": "tests/integration/06d2-channel-operation.test.ts",
+      "evidence": "docs/validation/06d2-channel-operation.md",
+      "routes": [
+        "/settings/whatsapp",
+        "/settings/email",
+        "/messages/whatsapp",
+        "/messages/email",
+        "/cadences/[id]"
+      ]
+    },
+    {
+      "id": "06B.5",
+      "title": "Jornada integrada de prospecção e cadência",
+      "requirements": [
+        "R05",
+        "R07"
+      ],
+      "dependencies": [
+        "06B.3",
+        "06B.4",
+        "06D.1",
+        "06D.2"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06b5-prospecting-journey.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-research-design.md",
+      "create": [
+        "src/domain/prospecting-journey.ts",
+        "src/server/research/journey.ts",
+        "src/app/api/prospecting/journeys/route.ts",
+        "src/app/api/prospecting/journeys/[id]/[action]/route.ts",
+        "src/modules/prospecting/research-journey.tsx",
+        "db/migrations/087-prospecting-journey.sql"
+      ],
+      "modify": [
+        "src/server/planning/confirmation.ts",
+        "src/server/prospecting/job-store.ts",
+        "src/server/automations/scheduler.ts",
+        "src/client/prospecting-client.ts",
+        "src/modules/automations/server-audience-wizard.tsx",
+        "src/modules/planning/cadence-proposals.tsx"
+      ],
+      "unit": "tests/06b5-prospecting-journey.test.ts",
+      "integration": "tests/integration/06b5-prospecting-journey.test.ts",
+      "evidence": "docs/validation/06b5-prospecting-journey.md",
+      "routes": [
+        "/leads/generator",
+        "/automations/new/ai",
+        "/executions/[id]",
+        "/contacts",
+        "/cadences/new"
+      ]
+    },
+    {
+      "id": "06IA-H",
+      "title": "Homologação das fontes e inteligência",
+      "requirements": [
+        "R06"
+      ],
+      "dependencies": [
+        "06B.5",
+        "06IA"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06iah-intelligence-homologation.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-research-design.md",
+      "create": [
+        "src/domain/research-evaluation.ts",
+        "src/server/research/evaluation.ts",
+        "scripts/evaluate-research.ts",
+        "tests/fixtures/research-evaluation.json",
+        "db/migrations/088-research-evaluations.sql"
+      ],
+      "modify": [
+        "scripts/evaluate-prospecting.mjs",
+        "src/domain/ai-skills.ts",
+        "src/server/prospecting/ai/decisors.ts",
+        "src/server/prospecting/ai/jev.ts"
+      ],
+      "unit": "tests/06iah-intelligence-homologation.test.ts",
+      "integration": "tests/integration/06iah-intelligence-homologation.test.ts",
+      "evidence": "docs/validation/06iah-intelligence-homologation.md",
+      "routes": [
+        "/settings/ai",
+        "/settings/context",
+        "/leads/enrich"
+      ]
+    },
+    {
+      "id": "06C.2",
+      "title": "Dashboard, relatórios e execuções reconciliados",
+      "requirements": [
+        "R10"
+      ],
+      "dependencies": [
+        "06D.2",
+        "06B.5",
+        "06C.1"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06c2-reconciled-reports.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-operations-design.md",
+      "create": [
+        "src/domain/reporting.ts",
+        "src/server/operations/reports.ts",
+        "src/server/operations/projections.ts",
+        "src/app/api/reports/route.ts",
+        "src/app/api/reports/[id]/route.ts",
+        "src/client/report-client.ts",
+        "db/migrations/089-report-projections.sql"
+      ],
+      "modify": [
+        "src/server/messaging/metrics.ts",
+        "src/server/operations/repository.ts",
+        "src/modules/dashboard/dashboard.tsx",
+        "src/modules/reports/reports.tsx",
+        "src/modules/cadences/cadence-insights.tsx",
+        "src/modules/automations/runtime-history.tsx"
+      ],
+      "unit": "tests/06c2-reconciled-reports.test.ts",
+      "integration": "tests/integration/06c2-reconciled-reports.test.ts",
+      "evidence": "docs/validation/06c2-reconciled-reports.md",
+      "routes": [
+        "/dashboard",
+        "/reports",
+        "/reports/[tab]",
+        "/executions",
+        "/executions/[id]",
+        "/cadences/[id]"
+      ]
+    },
+    {
+      "id": "06C.3",
+      "title": "Notificações, preferências e resumos",
+      "requirements": [
+        "R11"
+      ],
+      "dependencies": [
+        "06C.2"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06c3-notifications.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-operations-design.md",
+      "create": [
+        "src/domain/notifications.ts",
+        "src/server/notifications/service.ts",
+        "src/server/notifications/worker.ts",
+        "src/app/api/notifications/route.ts",
+        "src/app/api/notifications/[id]/[action]/route.ts",
+        "src/client/notification-client.ts",
+        "db/migrations/090-notifications.sql"
+      ],
+      "modify": [
+        "src/modules/settings/reference-settings.tsx",
+        "src/components/shell/account-controls.tsx",
+        "src/components/shell/app-shell.tsx",
+        "scripts/runtime-supervisor.ts",
+        "src/server/auth/mail.ts"
+      ],
+      "unit": "tests/06c3-notifications.test.ts",
+      "integration": "tests/integration/06c3-notifications.test.ts",
+      "evidence": "docs/validation/06c3-notifications.md",
+      "routes": [
+        "/settings/notifications",
+        "/settings/account",
+        "/dashboard"
+      ]
+    },
+    {
+      "id": "06E.1",
+      "title": "Autenticador, sessões e administração de membros",
+      "requirements": [
+        "R01",
+        "R12"
+      ],
+      "dependencies": [
+        "02",
+        "06A-P",
+        "06A-H"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06e1-security-members.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-operations-design.md",
+      "create": [
+        "src/domain/security-policy.ts",
+        "src/server/auth/two-factor-policy.ts",
+        "src/app/api/security/two-factor/[action]/route.ts",
+        "db/migrations/091-security-members.sql"
+      ],
+      "modify": [
+        "src/server/auth/auth.ts",
+        "src/lib/auth-client.ts",
+        "src/server/auth/security.ts",
+        "src/server/workspaces/service.ts",
+        "src/modules/settings/security.tsx",
+        "src/modules/settings/members.tsx",
+        "src/modules/auth/form.tsx"
+      ],
+      "unit": "tests/06e1-security-members.test.ts",
+      "integration": "tests/integration/06e1-security-members.test.ts",
+      "evidence": "docs/validation/06e1-security-members.md",
+      "routes": [
+        "/settings/security",
+        "/settings/seats",
+        "/accept-invitation",
+        "/login",
+        "/reset-password"
+      ]
+    },
+    {
+      "id": "06E.2",
+      "title": "Duplicados, fusão, privacidade e ciclo dos dados",
+      "requirements": [
+        "R13"
+      ],
+      "dependencies": [
+        "06E.1",
+        "06B.4"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06e2-data-lifecycle.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-operations-design.md",
+      "create": [
+        "src/domain/data-lifecycle.ts",
+        "src/server/privacy/service.ts",
+        "src/server/privacy/merge.ts",
+        "src/server/privacy/worker.ts",
+        "src/app/api/data-lifecycle/route.ts",
+        "src/app/api/data-lifecycle/[id]/[action]/route.ts",
+        "db/migrations/092-data-lifecycle.sql"
+      ],
+      "modify": [
+        "src/modules/settings/reference-settings.tsx",
+        "src/server/contacts/repository.ts",
+        "src/server/prospecting/evidence.ts",
+        "src/server/contacts/http.ts",
+        "src/server/messaging/inbox.ts",
+        "src/server/planning/evidence.ts"
+      ],
+      "unit": "tests/06e2-data-lifecycle.test.ts",
+      "integration": "tests/integration/06e2-data-lifecycle.test.ts",
+      "evidence": "docs/validation/06e2-data-lifecycle.md",
+      "routes": [
+        "/settings/dados",
+        "/settings/privacy",
+        "/contacts",
+        "/leads/[id]"
+      ]
+    },
+    {
+      "id": "06F",
+      "title": "Assistente, busca, onboarding e ajuda",
+      "requirements": [
+        "R14"
+      ],
+      "dependencies": [
+        "06C.3",
+        "06E.2",
+        "06IA"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06f-assistant-experience.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-operations-design.md",
+      "create": [
+        "src/domain/assistant-actions.ts",
+        "src/server/assistant/service.ts",
+        "src/server/assistant/commands.ts",
+        "src/server/search/service.ts",
+        "src/app/api/assistant/route.ts",
+        "src/app/api/assistant/[id]/[action]/route.ts",
+        "src/app/api/search/route.ts",
+        "src/client/assistant-client.ts",
+        "db/migrations/093-assistant-experience.sql"
+      ],
+      "modify": [
+        "src/components/shell/assistant-panel.tsx",
+        "src/components/shell/app-shell.tsx",
+        "src/components/onboarding/progress.ts",
+        "src/components/onboarding/tour.tsx",
+        "src/components/onboarding/checklist.tsx",
+        "src/domain/ai-skills.ts"
+      ],
+      "unit": "tests/06f-assistant-experience.test.ts",
+      "integration": "tests/integration/06f-assistant-experience.test.ts",
+      "evidence": "docs/validation/06f-assistant-experience.md",
+      "routes": [
+        "shell:assistant",
+        "shell:search",
+        "/first-steps",
+        "/settings/context",
+        "ajudas por rota"
+      ]
+    },
+    {
+      "id": "07C.1",
+      "title": "API, eventos e webhooks de saída",
+      "requirements": [
+        "R15"
+      ],
+      "dependencies": [
+        "06E.2",
+        "06C.2"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07c1-api-webhooks.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-integrations-design.md",
+      "create": [
+        "src/domain/integration-delivery.ts",
+        "src/server/integrations/api-auth.ts",
+        "src/server/integrations/webhooks.ts",
+        "src/server/integrations/outbox.ts",
+        "src/server/integrations/worker.ts",
+        "src/server/integrations/http.ts",
+        "src/app/api/integrations/route.ts",
+        "src/app/api/integrations/[id]/[action]/route.ts",
+        "src/app/api/v1/leads/route.ts",
+        "src/app/api/v1/events/route.ts",
+        "db/migrations/094-integrations-outbox.sql"
+      ],
+      "modify": [
+        "src/modules/settings/reference-settings.tsx",
+        "src/server/operations/repository.ts",
+        "src/server/prospecting/extraction/public-url.ts",
+        "scripts/runtime-supervisor.ts"
+      ],
+      "unit": "tests/07c1-api-webhooks.test.ts",
+      "integration": "tests/integration/07c1-api-webhooks.test.ts",
+      "evidence": "docs/validation/07c1-api-webhooks.md",
+      "routes": [
+        "/settings/webhooks",
+        "/settings/apps",
+        "/executions/[id]"
+      ]
+    },
+    {
+      "id": "07C.2",
+      "title": "Conectores de cliente e agenda/CRM",
+      "requirements": [
+        "R16"
+      ],
+      "dependencies": [
+        "07C.1"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07c2-customer-connectors.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-integrations-design.md",
+      "create": [
+        "src/domain/connector-capabilities.ts",
+        "src/server/integrations/connectors/contracts.ts",
+        "src/server/integrations/connectors/sheets.ts",
+        "src/server/integrations/connectors/crm.ts",
+        "src/server/integrations/connectors/apollo.ts",
+        "src/server/integrations/connectors/calendar.ts",
+        "src/server/integrations/connectors/meetings.ts",
+        "src/server/integrations/connections.ts",
+        "src/app/api/integration-oauth/[provider]/callback/route.ts",
+        "src/app/api/integrations/[id]/sync/route.ts",
+        "src/app/api/integrations/credentials/route.ts",
+        "db/migrations/095-customer-connectors.sql"
+      ],
+      "modify": [
+        "src/modules/settings/reference-integrations.tsx",
+        "src/modules/settings/meetflow-preview.tsx",
+        "src/server/prospecting/providers/apollo.ts",
+        "src/server/prospecting/config.ts",
+        "src/server/channels/crypto.ts",
+        "src/app/api/integrations/route.ts",
+        "src/server/integrations/http.ts"
+      ],
+      "unit": "tests/07c2-customer-connectors.test.ts",
+      "integration": "tests/integration/07c2-customer-connectors.test.ts",
+      "evidence": "docs/validation/07c2-customer-connectors.md",
+      "routes": [
+        "/settings/apps",
+        "/settings/apps/google-sheets",
+        "/settings/apps/funnelsflow",
+        "/settings/apps/apollo",
+        "/settings/apps/meetflow"
+      ]
+    },
+    {
+      "id": "07A.0",
+      "title": "Viabilidade e capacidades do LinkedIn",
+      "requirements": [
+        "R18"
+      ],
+      "dependencies": [
+        "06IA",
+        "06E.1"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07a0-linkedin-feasibility.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-linkedin-design.md",
+      "create": [
+        "src/domain/linkedin-capabilities.ts",
+        "src/server/linkedin/capabilities.ts",
+        "src/server/linkedin/provider-contract.ts",
+        "src/server/linkedin/admin.ts",
+        "db/migrations/096-linkedin-capabilities.sql"
+      ],
+      "modify": [
+        "src/server/auth/permissions.ts",
+        "src/modules/settings/linkedin-sdr.tsx"
+      ],
+      "unit": "tests/07a0-linkedin-feasibility.test.ts",
+      "integration": "tests/integration/07a0-linkedin-feasibility.test.ts",
+      "evidence": "docs/validation/07a0-linkedin-feasibility.md",
+      "routes": [
+        "/linkedin/dashboard",
+        "/linkedin/campaigns/new",
+        "/linkedin/approvals"
+      ]
+    },
+    {
+      "id": "07A.1",
+      "title": "Conexão, saúde e sincronização LinkedIn",
+      "requirements": [
+        "R18"
+      ],
+      "dependencies": [
+        "07A.0",
+        "07C.2"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07a1-linkedin-connection.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-linkedin-design.md",
+      "create": [
+        "src/domain/linkedin-connection.ts",
+        "src/server/linkedin/connections.ts",
+        "src/server/linkedin/sync.ts",
+        "src/server/linkedin/http.ts",
+        "src/app/api/linkedin/[resource]/route.ts",
+        "src/app/api/linkedin/[resource]/[id]/[action]/route.ts",
+        "src/app/api/linkedin/oauth/callback/route.ts",
+        "src/client/linkedin-client.ts",
+        "db/migrations/097-linkedin-connections.sql"
+      ],
+      "modify": [
+        "src/modules/settings/linkedin-sdr.tsx",
+        "scripts/runtime-supervisor.ts"
+      ],
+      "unit": "tests/07a1-linkedin-connection.test.ts",
+      "integration": "tests/integration/07a1-linkedin-connection.test.ts",
+      "evidence": "docs/validation/07a1-linkedin-connection.md",
+      "routes": [
+        "/linkedin/dashboard",
+        "/linkedin/campaigns",
+        "/linkedin/people"
+      ]
+    },
+    {
+      "id": "07A.2",
+      "title": "Públicos, campanhas, convites e aceites LinkedIn",
+      "requirements": [
+        "R18"
+      ],
+      "dependencies": [
+        "07A.1",
+        "06B.5"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07a2-linkedin-campaigns.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-linkedin-design.md",
+      "create": [
+        "src/domain/linkedin-campaign.ts",
+        "src/server/linkedin/campaigns.ts",
+        "src/server/linkedin/audience.ts",
+        "src/server/linkedin/invites.ts",
+        "src/modules/linkedin/campaign-editor.tsx",
+        "src/modules/linkedin/campaign-list.tsx",
+        "db/migrations/098-linkedin-campaigns.sql"
+      ],
+      "modify": [
+        "src/modules/settings/linkedin-sdr.tsx",
+        "src/server/linkedin/http.ts",
+        "src/domain/operation-events.ts"
+      ],
+      "unit": "tests/07a2-linkedin-campaigns.test.ts",
+      "integration": "tests/integration/07a2-linkedin-campaigns.test.ts",
+      "evidence": "docs/validation/07a2-linkedin-campaigns.md",
+      "routes": [
+        "/linkedin/campaigns",
+        "/linkedin/campaigns/new",
+        "/linkedin/dashboard"
+      ]
+    },
+    {
+      "id": "07A.3",
+      "title": "Pessoas, pipeline, mensagens e aprovações LinkedIn",
+      "requirements": [
+        "R18"
+      ],
+      "dependencies": [
+        "07A.2",
+        "06D.2",
+        "06B.4"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07a3-linkedin-conversations.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-linkedin-design.md",
+      "create": [
+        "src/domain/linkedin-message-action.ts",
+        "src/server/linkedin/people.ts",
+        "src/server/linkedin/conversations.ts",
+        "src/server/linkedin/approvals.ts",
+        "src/modules/linkedin/people.tsx",
+        "src/modules/linkedin/pipeline.tsx",
+        "src/modules/linkedin/approvals.tsx",
+        "src/modules/linkedin/conversations.tsx",
+        "db/migrations/099-linkedin-conversations.sql"
+      ],
+      "modify": [
+        "src/modules/settings/linkedin-sdr.tsx",
+        "src/server/linkedin/http.ts",
+        "src/server/messaging/consent.ts",
+        "src/modules/cadences/template-library.tsx"
+      ],
+      "unit": "tests/07a3-linkedin-conversations.test.ts",
+      "integration": "tests/integration/07a3-linkedin-conversations.test.ts",
+      "evidence": "docs/validation/07a3-linkedin-conversations.md",
+      "routes": [
+        "/linkedin/people",
+        "/linkedin/pipeline",
+        "/linkedin/enrichment",
+        "/linkedin/approvals",
+        "/linkedin/cadences",
+        "/linkedin/templates"
+      ]
+    },
+    {
+      "id": "07C.3",
+      "title": "MCP autenticado e comandos revisados",
+      "requirements": [
+        "R17"
+      ],
+      "dependencies": [
+        "07C.1",
+        "06F",
+        "06E.1"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07c3-mcp.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-integrations-design.md",
+      "create": [
+        "src/domain/mcp-authorization.ts",
+        "src/server/mcp/service.ts",
+        "src/server/mcp/authorization.ts",
+        "src/server/mcp/tools.ts",
+        "src/app/api/mcp/route.ts",
+        "src/app/api/mcp/oauth/[action]/route.ts",
+        "src/app/.well-known/oauth-protected-resource/route.ts",
+        "src/app/.well-known/oauth-authorization-server/route.ts",
+        "db/migrations/100-mcp-authorization.sql"
+      ],
+      "modify": [
+        "src/modules/settings/reference-settings.tsx",
+        "src/server/assistant/commands.ts"
+      ],
+      "unit": "tests/07c3-mcp.test.ts",
+      "integration": "tests/integration/07c3-mcp.test.ts",
+      "evidence": "docs/validation/07c3-mcp.md",
+      "routes": [
+        "/settings/mcp",
+        "/settings/security",
+        "shell:assistant"
+      ]
+    },
+    {
+      "id": "07D",
+      "title": "Descoberta condicional de scoring e Hot Now",
+      "requirements": [
+        "R23"
+      ],
+      "dependencies": [
+        "06C.2",
+        "06B.5"
+      ],
+      "conditional": true,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07d-scoring-discovery.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-commercial-design.md",
+      "create": [
+        "src/domain/scoring-policy.ts",
+        "src/server/scoring/discovery.ts",
+        "src/server/scoring/service.ts",
+        "src/app/api/scoring/route.ts",
+        "db/migrations/101-scoring-projection.sql"
+      ],
+      "modify": [
+        "src/modules/dashboard/dashboard.tsx",
+        "src/modules/contacts/contacts-table.tsx",
+        "src/server/operations/projections.ts"
+      ],
+      "unit": "tests/07d-scoring-discovery.test.ts",
+      "integration": "tests/integration/07d-scoring-discovery.test.ts",
+      "evidence": "docs/validation/07d-scoring-discovery.md",
+      "routes": [
+        "/dashboard",
+        "/contacts",
+        "/reports"
+      ]
+    },
+    {
+      "id": "07B.1",
+      "title": "Configuração e ativação do agente SDR",
+      "requirements": [
+        "R19"
+      ],
+      "dependencies": [
+        "06F",
+        "07C.2",
+        "07A.3",
+        "07C.3"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07b1-sdr-configuration.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-sdr-design.md",
+      "create": [
+        "src/domain/sdr-policy.ts",
+        "src/server/sdr/configuration.ts",
+        "src/server/sdr/knowledge.ts",
+        "src/server/sdr/http.ts",
+        "src/app/api/sdr/[resource]/route.ts",
+        "src/app/api/sdr/[resource]/[id]/[action]/route.ts",
+        "src/modules/sdr/agent-settings.tsx",
+        "src/client/sdr-client.ts",
+        "db/migrations/102-sdr-configuration.sql"
+      ],
+      "modify": [
+        "src/modules/settings/sdr-overview.tsx",
+        "src/domain/ai-skills.ts"
+      ],
+      "unit": "tests/07b1-sdr-configuration.test.ts",
+      "integration": "tests/integration/07b1-sdr-configuration.test.ts",
+      "evidence": "docs/validation/07b1-sdr-configuration.md",
+      "routes": [
+        "/sdr",
+        "/settings/context",
+        "/settings/whatsapp"
+      ]
+    },
+    {
+      "id": "07B.2",
+      "title": "Atendimento, memória e intervenção humana SDR",
+      "requirements": [
+        "R20"
+      ],
+      "dependencies": [
+        "07B.1",
+        "06D.2"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07b2-sdr-conversation.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-sdr-design.md",
+      "create": [
+        "src/domain/sdr-turn.ts",
+        "src/server/sdr/worker.ts",
+        "src/server/sdr/conversation.ts",
+        "src/server/sdr/actions.ts",
+        "src/server/sdr/prompts.ts",
+        "src/modules/sdr/conversation-controls.tsx",
+        "src/domain/sdr-actions.ts",
+        "db/migrations/103-sdr-conversation.sql"
+      ],
+      "modify": [
+        "src/server/messaging/inbox.ts",
+        "src/server/messaging/replies.ts",
+        "src/server/messaging/dispatch.ts",
+        "scripts/runtime-supervisor.ts",
+        "src/domain/ai-skills.ts",
+        "src/server/sdr/http.ts",
+        "src/server/billing/entitlements.ts"
+      ],
+      "unit": "tests/07b2-sdr-conversation.test.ts",
+      "integration": "tests/integration/07b2-sdr-conversation.test.ts",
+      "evidence": "docs/validation/07b2-sdr-conversation.md",
+      "routes": [
+        "/sdr",
+        "/messages/whatsapp",
+        "/messages/email",
+        "/linkedin/approvals"
+      ]
+    },
+    {
+      "id": "07B.3",
+      "title": "Agenda, CRM, acompanhamento e piloto SDR",
+      "requirements": [
+        "R21"
+      ],
+      "dependencies": [
+        "07B.2",
+        "07C.2",
+        "06C.3"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-07b3-sdr-actions-pilot.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-sdr-design.md",
+      "create": [
+        "src/domain/sdr-business-action.ts",
+        "src/server/sdr/business-actions.ts",
+        "src/server/sdr/followup.ts",
+        "src/server/sdr/pilot.ts",
+        "scripts/smoke-sdr.ts",
+        "db/migrations/104-sdr-business-actions.sql"
+      ],
+      "modify": [
+        "src/server/integrations/connectors/calendar.ts",
+        "src/server/integrations/connectors/crm.ts",
+        "src/server/sdr/worker.ts",
+        "src/modules/sdr/conversation-controls.tsx",
+        "src/server/sdr/http.ts"
+      ],
+      "unit": "tests/07b3-sdr-actions-pilot.test.ts",
+      "integration": "tests/integration/07b3-sdr-actions-pilot.test.ts",
+      "evidence": "docs/validation/07b3-sdr-actions-pilot.md",
+      "routes": [
+        "/sdr",
+        "/messages/whatsapp",
+        "/settings/apps",
+        "/reports"
+      ]
+    },
+    {
+      "id": "06G",
+      "title": "Catálogo completo, anual, cupom e capacidade",
+      "requirements": [
+        "R22"
+      ],
+      "dependencies": [
+        "06A-H",
+        "07A.3",
+        "07B.3"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06g-commercial-catalog.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-commercial-design.md",
+      "create": [
+        "src/domain/capacity-policy.ts",
+        "src/server/billing/catalog.ts",
+        "src/server/billing/capacity.ts",
+        "src/modules/settings/capacity-review.tsx",
+        "db/migrations/105-commercial-capacity.sql"
+      ],
+      "modify": [
+        "src/domain/billing.ts",
+        "src/server/billing/operations.ts",
+        "src/server/billing/stripe.ts",
+        "src/server/billing/events.ts",
+        "src/server/billing/entitlements.ts",
+        "src/modules/settings/billing-catalog.tsx",
+        "src/modules/settings/plan.tsx",
+        "src/server/billing/http.ts"
+      ],
+      "unit": "tests/06g-commercial-catalog.test.ts",
+      "integration": "tests/integration/06g-commercial-catalog.test.ts",
+      "evidence": "docs/validation/06g-commercial-catalog.md",
+      "routes": [
+        "/settings/plan:meu-plano",
+        "/settings/plan:cobranca",
+        "/settings/plan:planos-pacotes"
+      ]
+    },
+    {
+      "id": "08A",
+      "title": "Regressão integral de jornadas e UI/UX",
+      "requirements": [
+        "R24",
+        "R01",
+        "R07",
+        "R09",
+        "R18",
+        "R21"
+      ],
+      "dependencies": [
+        "06G",
+        "07B.3",
+        "07C.3",
+        "06A-V"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-08a-final-regression.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-release-design.md",
+      "create": [
+        "scripts/lib/release-coverage.ts",
+        "scripts/audit-release-coverage.mjs",
+        "tests/manual/full-journeys.mjs",
+        "docs/validation/08-release-matrix.json"
+      ],
+      "modify": [
+        "scripts/smoke-routes.mjs",
+        "docs/reverse-engineering/visual-2026-10-25/inventory/coverage.md"
+      ],
+      "unit": "tests/08a-final-regression.test.ts",
+      "integration": "tests/integration/08a-final-regression.test.ts",
+      "evidence": "docs/validation/08a-final-regression.md",
+      "routes": [
+        "todas rotas do inventário",
+        "todasabas/menus/popups/fluxos",
+        "desktop/tablet/mobile"
+      ]
+    },
+    {
+      "id": "08B",
+      "title": "Homologação e operação de produção pública",
+      "requirements": [
+        "R25",
+        "R26",
+        "R01"
+      ],
+      "dependencies": [
+        "08A"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-08b-public-production.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-release-design.md",
+      "create": [
+        "scripts/lib/release-readiness.ts",
+        "scripts/verify-release-readiness.mjs",
+        "scripts/backup-database.mjs",
+        "scripts/restore-database.mjs",
+        "scripts/load-production-profile.mjs",
+        "docs/runbooks/public-production.md",
+        "docs/runbooks/disaster-recovery.md",
+        "docker/production/compose.yml"
+      ],
+      "modify": [
+        "scripts/runtime-control.mjs",
+        "scripts/runtime-supervisor.ts",
+        "src/server/auth/auth.ts",
+        "src/server/auth/mail.ts",
+        "src/server/billing/config.ts",
+        "src/server/billing/signature.ts",
+        "src/server/prospecting/config.ts",
+        "src/server/db/config.ts"
+      ],
+      "unit": "tests/08b-public-production.test.ts",
+      "integration": "tests/integration/08b-public-production.test.ts",
+      "evidence": "docs/validation/08b-public-production.md",
+      "routes": [
+        "/login",
+        "/register",
+        "/dashboard",
+        "/settings/plan",
+        "/settings/ai",
+        "todas jornadas públicas de08A"
+      ]
+    }
+  ]
+}

@@ -2,9 +2,24 @@
 
 Especificação aprovada: `docs/superpowers/specs/2026-10-20-prometeus-cadence-design.md`.
 
-O produto exige vários subsistemas. O plano executável abaixo cobre a primeira entrega independente; os seguintes serão detalhados sobre interfaces e decisões verificadas, sem prometer integrações a partir de mocks.
+O roteiro abaixo cobre o produto completo. Os pacotes restantes têm planos executáveis no [índice mestre de27/10](2026-10-27-prometeus-cadence-master-plan.md), alinhados ao PRD e aos contratos técnicos, sem prometer integrações a partir de mocks.
 
-**Revisão vigente:26/10/2026.** O alvo é a réplica visual, dos fluxos e das funcionalidades de produto; o usuário não exige comprovar uma implementação interna idêntica ao backend privado da referência. A implementação própria continua sujeita a testes reais. Regras não observadas recebem contrato explícito e classificação, sem bloquear todo o roteiro nem serem apresentadas como verificadas no concorrente. Detalhamento, sequência e critérios em [Fechamento de paridade](2026-10-26-prometeus-cadence-parity-closure.md).
+**Revisão vigente:27/10/2026.** O alvo é a réplica visual, dos fluxos e das funcionalidades de produto; o usuário não exige comprovar uma implementação interna idêntica ao backend privado da referência. A implementação própria continua sujeita a testes reais. Regras não observadas recebem contrato explícito e classificação, sem bloquear todo o roteiro nem serem apresentadas como verificadas no concorrente. Detalhamento e critérios em [Fechamento de paridade](2026-10-26-prometeus-cadence-parity-closure.md), complementado pela [extensão de escopo aprovada em27/10](../specs/2026-10-27-prometeus-cadence-scope-audit.md). Esta última prevalece nas subdivisões e prioridades alteradas.
+
+## Como ler a numeração do desenvolvimento completo
+
+**Documentação integral solicitada em27/10:** [PRD consolidado](../specs/2026-10-27-prometeus-cadence-complete-prd.md), [contratos técnicos compartilhados](../specs/2026-10-27-prometeus-cadence-technical-contracts.md) e [índice mestre com26planos por pacote](2026-10-27-prometeus-cadence-master-plan.md). O índice liga requisitos, desenhos de8áreas, arquivos, interfaces, migrações, tarefas, testes, UI/UX e entradas externas até08B. Esta etapa escreve/valida documentos; não implementa os pacotes pendentes. Planos históricos já entregues permanecem referenciados, sem serem reescritos como trabalho novo.
+
+As famílias continuam sendo **01 a08**. Letras e sufixos dividem uma família em entregas menores:06B.3 é o terceiro pacote da área06B, dentro do marco06. Os IDs preservam o histórico e não são a ordem cronológica obrigatória.06B/06D não substituem07/08. **Não há marco09 definido no roteiro vigente; o encerramento previsto é08B.**
+
+| Família | Papel no desenvolvimento completo |
+|---|---|
+| **01–05** | Base de interface, identidade, prospecção/IA, automações e canais; aceites históricos preservados, complementos tratados nos pacotes seguintes. |
+| **06** | Fechamento do produto principal: prospecção completa, inteligência/fontes, cadências, dashboard, segurança, experiência e catálogo comercial. Parte já entregue e parte pendente, conforme relatórios. |
+| **07** | LinkedIn, integrações/API/MCP eSDR;07D é descoberta condicional. OSDR é o último módulo funcional novo, após suas dependências. |
+| **08** | Regressão integral visual/funcional e preparação/homologação de produção pública. |
+
+A fidelidade visual/UX e a operação real são aceites de cada pacote, não trabalho adiado integralmente para08. Os planos executáveis futuros serão detalhados por pacote; a aprovação do roteiro completo não equivale a implementação concluída.
 
 | Marco | Entrega independente | Dependência | Aceite |
 | --- | --- | --- | --- |
@@ -18,21 +33,24 @@ O produto exige vários subsistemas. O plano executável abaixo cobre a primeira
 | 06A-V | Fechamento das diferenças visuais conhecidas de todas as áreas e porta visual de cada marco | Inventário observado e06A | Comparação por tela/estado/viewport, incluindo assistente lateral, popups, geometria e responsive; contagem de visitas não equivale a aceite visual |
 | 06A-P · novo | Entrada pública, cadastro e ativação | 02 e06A-V | Telefone/documentos próprios com contrato real; cadastro/verificação/workspace/plano, senha, convites e retornos/erros; sem ativação automática |
 | 06A-H · novo | Homologação do ciclo financeiro já implementado | 06A e sandbox próprio | Pacotes, pagamento, alteração, renovação/falha, cancelamento e retomada suportada; efeitos únicos, eventos duplicados/fora de ordem; sem cobrança live |
-| 06B | Contatos, fontes, qualificação, enriquecimento e fechamento dos wizards de automação | 03–04 + unidades comerciais do06A |06B.1 base/importação/busca/IA;06B.2 módulos/decisores/cache/crédito/recorrência; fluxo até resultado persistido e recuperação |
+| 06B | Contatos, fontes, investigação, qualificação e jornada completa de prospecção | 03–04 + unidades comerciais do06A;06IA;06D para fechar06B.5 |06B.1 base/importação/busca/IA e06B.2 qualificação/enriquecimento nos aceites históricos;06B.3 empresa/site/redes/contatos comerciais;06B.4 CNPJ/sócios/gestores/perfis/contatos atribuídos;06B.5 orquestração/revisão/sugestão de cadência, recuperação e consumo sem duplicação |
 | 06IA · novo | Administração central e inteligência adaptativa de IA | 06B.2 e contexto privado da empresa | Apify/LLM configurados exclusivamente pelo administrador do SaaS; cliente não fornece chaves nem escolhe a infraestrutura. Instruções versionadas por tarefa + contexto/público-alvo do workspace + pedido atual; JEV/LLM, abstenção, fontes, isolamento, consumo e avaliações verificáveis |
+| 06IA-H | Homologação da inteligência e das fontes ampliadas | 06IA,06B.3/4/5 e contratos de06D | Cenários controlados de pertinência/cobertura/atribuição/homônimos, custos/tempo, dados reais dos Actors e avaliações LLM/JEV; critérios definidos antes do piloto, orçamento e isolamento comprovados; não repetir infraestrutura já aceita |
 | 06C | Eventos, desempenho, dashboard, relatórios, execuções e notificações | 03–06A; projeções consomem eventos de06B/06D |06C.1 eventos/latência/atualização contínua;06C.2 projeções reconciliadas;06C.3 feed/som/avisos/resumos reais; nenhum dado demonstrativo apresentado como operação |
 | 06D | Autoria, publicação, canais e inbox | 05,06B e OpenWA |06D.1 modelos/variantes/anexos/rascunho/agenda;06D.2 entrega/resposta/opt-out e telemetria suportada; reinício sem duplicação e piloto próprio autorizado |
 | 06E | Segurança, privacidade e ciclo de dados/membros | 02,06A-P e06A |06E.1 TOTP/dispositivos/convites/permissões;06E.2 mesclagem/retenção/exportação/exclusão reais, conteúdo removido fora da IA, isolamento |
 | 06F · novo | Experiência transversal, assistente, busca, onboarding e ajudas | 03B–04,06C e comandos dos módulos disponíveis | Painel conversacional com contexto/permissão, propostas revisadas, busca no escopo observado, tours/checklist e destinos reais; aparência e operação verificadas separadamente |
-| 07A | LinkedIn completo em dois pacotes | 06A,06B,06D,06E e prova do adaptador |07A.1 conexão/público/convites/aceites;07A.2 pessoas/pipeline/enriquecimento/cadência pós-aceite/aprovações e limites |
-| 07B | SDR configurável e depois operacional | 06D,06E,06F e operações reais de07C.1/07C.2 |07B.1 configuração/propostas/revisão;07B.2 conversa/agenda/CRM/follow-up/quotas/parada/handoff em contas próprias; não depende de provar o backend original |
+| 07A | LinkedIn: viabilidade e três pacotes de operação | 06A,06B,06D,06E e capacidades comprovadas em07A.0 |07A.0 viabilidade/permissões;07A.1 conexão/saúde/sincronização;07A.2 público/campanhas/convites/aceites;07A.3 conversas/pipeline/cadências/aprovações e limites; ações indisponíveis bloqueadas e contratos próprios explícitos |
+| 07B | SDR em três pacotes, último módulo funcional novo | 06D,06E,06F e operações reais de07C.1/07C.2; demais módulos novos antes do fechamento |07B.1 configuração/conhecimento/horários/regras;07B.2 conversa/memória/qualificação/limites/handoff;07B.3 agenda/CRM/follow-up e piloto em contas próprias; não depende de provar o backend original |
 | 07C | Integrações, API/eventos, agenda e MCP em três pacotes | 02,06E e eventos/comandos do domínio |07C.1 API/outbox/webhooks/contratos de agenda e CRM;07C.2 adaptadores por workspace e fluxos externos;07C.3 MCP com escopos/confirmação/revogação |
 | 06G · novo | Catálogo comercial completo e capacidade adicional | 06A-H e aceite dos recursos vendidos;07A/07B quando incluídos | Anual/cupom conforme catálogo-alvo, caixas/números/assentos com vigência e quotas; consumo pré-pago preservado; módulos pendentes continuam fora de venda |
 | 07D | Descoberta e eventual entrega de Lead Scoring / Hot Now | Eventos de 06C/07B e confirmação da oferta atual | A documentação pública usa planos antigos; confirmar primeiro. Depois, eventos, decay, tiers e replay com fixture |
 | 08A | Regressão final visual e funcional do inventário-alvo já exigida em cada marco | 06A–07C, incluindo06F/06G;07D conforme descoberta | Jornadas entre módulos, desktop/tablet/mobile, todos os estados catalogados, foco/teclado/tema/texto; contratos próprios testados e limites de observação explícitos |
 | 08B | Operação e produção | 08A + contas próprias habilitadas | Backup/restauração, observabilidade, orçamento de latência, recuperação de provedores, isolamento, deploy/rollback e teste real autorizado |
 
-Os IDs preservam o histórico, não impõem a ordem numérica de execução. Ordem recomendada:06A-V→06A-P→06A-H→06C.1→06B→06IA→06D→06C.2/06C.3→06E→06F→07C.1/07C.2→07A→07B→07C.3→06G→08A→08B.07D é condicional. Preparar contratos independentes antes é permitido; dependências de segurança, autorização e operação real não são removidas. O SDR usa agenda/CRM já operacionais, não apenas interfaces ou tipos preparados.
+**Sequência restante aprovada em27/10:**06B.3→06B.4→06D.1→06D.2→06B.5→06IA-H→06C.2/06C.3→06E.1/06E.2→06F→07C.1/07C.2→07A.1/07A.2/07A.3→07C.3→07B.1/07B.2/07B.3→06G→08A→08B. A viabilidade07A.0 será antecipada antes de comprometer a implementação operacional07A. Se07D for confirmado, encaixar sua entrega antes doSDR com as dependências satisfeitas; se depender de eventosSDR, usar contrato/fixtures antes e revalidar com eventos reais depois. Não prometer07D obrigatório sem confirmação.
+
+06A-V continua porta de qualidade de todas as entregas e suas diferenças conhecidas precisam de fechamento; não é um aceite integral já obtido. Os aceites existentes de06A-P/06A-H/06C.1/06B.1/06B.2/06IA permanecem históricos, sem refazer essas entregas. Preparar contratos independentes antes é permitido; segurança, autorização e operação real continuam requisitos de todos os pacotes. OSDR usa agenda/CRM já operacionais, não apenas interfaces ou tipos preparados.06G fecha a oferta comercial depois do aceite dos recursos vendidos.
 
 ## Revisão por auditoria de 24/10/2026
 
@@ -118,3 +136,13 @@ O requisito histórico acima foi implementado no escopo de [administração e in
 ## Barreira07A confirmada por documentação pública
 
 Captar dados públicos via Apify e conectar uma identidade via OAuth oficial são capacidades diferentes. As APIs oficiais de convites/mensagens LinkedIn exigem habilitação específica; mensagens têm restrições de ação afirmativa do usuário e não autorizam automaticamente cadências agendadas. Antes de implementar envios, provar os escopos/capacidades concedidos e bloquear o que não for suportado. Fontes e limites em [barreiras](../../reverse-engineering/visual-2026-10-25/clone/barriers.md).
+
+## Atualização aprovada27/10/2026 — escopo final e prioridade vigente
+
+O operador aprovou integralmente a [auditoria e proposta de subdivisão](../specs/2026-10-27-prometeus-cadence-scope-audit.md), incluindo novas fontes Apify quando justificadas, cadeia de investigação empresarial/pessoal, jornada integrada, homologação de inteligência/fontes e divisões LinkedIn/SDR. A próxima entrega passa a ser **06B.3 — investigação da empresa e redes**, seguida de06B.4. Isso substitui as indicações históricas de “próximo06D.1” acima; não declara os novos pacotes implementados.
+
+Separação de produto obrigatória: pesquisa noLinkedIn como fonte pode integrar a prospecção principal; o móduloLinkedIn opera a identidade/campanhas do cliente conforme permissões comprovadas; oSDR atende conversas apenas quando configurado/autorizado. Propostas de cadência não enviam mensagens, e receber resposta interrompe a cadência sem ativar automaticamente oSDR.
+
+Cada integração terá classificação central/admin ou conta/canal do cliente. Cada superfície da UI/UX deve ligar tela/estado/controle à ação permitida, operação real, persistência, evento/métrica, feedback e teste/evidência. Incluir popups, mobile, progresso, resultado parcial, erro, limite e recuperação; nenhuma opção pode existir apenas na apresentação. Custos globais e quotas porworkspace coexistem; fonte/contato incerto não vira fato confirmado. São critérios de cada pacote e da regressão final.
+
+A numeração preservada identifica famílias/áreas, não uma sequência estritamente crescente. O escopo completo segue06→07→08 nas grandes etapas, com dependências entre subpacotes; **08B encerra a preparação/homologação de produção pública prevista. Não há marco09 aprovado ou definido.**
