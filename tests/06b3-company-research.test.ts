@@ -15,6 +15,7 @@ test('a public social profile needs independent company corroboration',()=>{
  assert.equal(research.matchCompanySource({companyDomain:'clinica.example',candidateDomain:'https://www.instagram.com/clinica',corroborated:false}),'review');
  assert.equal(research.matchCompanySource({companyDomain:'clinica.example',candidateDomain:'https://www.instagram.com/clinica',corroborated:true}),'matched');
  assert.equal(research.matchCompanySource({companyDomain:'clinica.example',candidateDomain:'javascript:alert(1)',corroborated:true}),'review');
+ assert.equal(research.matchCompanySource({companyDomain:'https://www.instagram.com/clinica',candidateDomain:'https://www.instagram.com/outra',corroborated:false}),'review');
 });
 test('research rejects empty or duplicate batches and unbounded collection before execution',()=>{
  assert.throws(()=>research.parseCompanyResearchInput({leadIds:[],sourceKinds:['website'],maxPagesPerCompany:3}));
@@ -48,4 +49,8 @@ test('an exact corporate registry attestation can corroborate a company without 
 test('social backlinks are evidence only and cannot expand the crawl to unrelated hosts',()=>{
  const result=parsePage('<a href="https://clinica.example">Site oficial</a><a href="https://ad.example">Ad</a>','https://www.instagram.com/clinica');
  assert.deepEqual(result.links,[]);assert.ok(result.externalLinks.includes('https://clinica.example/'));
+});
+test('registry receipt URLs are provenance and can never replace the company website',()=>{
+ const facts=research.extractCompanyFacts({id:'lead1',name:'Empresa sem site'},[{id:'reg',url:'https://api.apify.com/v2/datasets/fixture/items',text:'CNPJ da empresa e contato comercial: contato@empresa.example',hash:'reg',fetchedAt:'2026-10-27T12:00:00Z',truncated:false,sourceKind:'registry',corroborated:true}]);
+ assert.ok(facts.some(f=>f.field==='email'));assert.equal(facts.some(f=>f.field==='site'),false);
 });

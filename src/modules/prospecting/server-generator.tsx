@@ -5,6 +5,7 @@ import {useProspecting} from '@/client/workspace-provider';
 import {useDemo} from '@/demo/provider';
 import type {GenerationSource,Review,JobInput} from '@/domain/prospecting';
 import {Button,Field,PageHeader,LinkButton,Notice} from '@/components/ui/primitives';
+import {ResearchStart} from '@/modules/research/company-research';
 import {SourcePicker} from './source-picker';
 import {JobReview} from './job-review';
 import {ProviderStatus} from './provider-status';
@@ -15,6 +16,7 @@ export function ServerGenerator({initialSource='MAPS'}:{initialSource?:string}){
   const client=useProspecting()!,state=useDemo();
   const [source,setSource]=useState<GenerationSource>(['MAPS','WEB','CNPJ','APOLLO'].includes(initialSource)?initialSource as GenerationSource:'MAPS');
   const [mode,setMode]=useState('new'),[name,setName]=useState(''),[listId,setListId]=useState(state.lists[0]?.id??''),[term,setTerm]=useState(''),[location,setLocation]=useState(''),[cnae,setCnae]=useState(''),[region,setRegion]=useState(''),[cnpj,setCnpj]=useState(''),[description,setDescription]=useState(''),[suggesting,setSuggesting]=useState(false);
+  const [research,setResearch]=useState(false);
   const [limit,setLimit]=useState(10),[scope,setScope]=useState<'list'|'workspace'>('workspace'),[review,setReview]=useState<Review|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
   async function prepare(){setBusy(true);setError('');try{
     const filters=generationFilters({source,term,location,cnae,region,cnpj});
@@ -41,6 +43,8 @@ export function ServerGenerator({initialSource='MAPS'}:{initialSource?:string}){
       <footer className="prospecting-panel prospecting-generation-footer"><p><Icon name="Shield" size={17}/>Os novos leads entram pendentes. Revise o consumo antes de confirmar; uma busca não envia mensagens nem ativa cadências.</p><Button variant="primary" type="submit" icon="Search" disabled={busy}>{busy?'Preparando revisão…':'Revisar busca'}</Button></footer><details className="prospecting-search-options"><summary>Opções da busca</summary><Field label="Evitar duplicados"><select value={scope} onChange={e=>setScope(e.target.value as typeof scope)}><option value="workspace">Em todo o workspace</option><option value="list">Somente na lista de destino</option></select></Field></details>
       {error&&<p className="error-bar" role="alert">{error}</p>}
     </form><details className="prospecting-provider-details"><summary>Status das integrações e histórico</summary><ProviderStatus compact/><LinkButton href="/executions" icon="Clock">Histórico de execuções</LinkButton></details>
+    <div className="research-generator-entry"><p>Já tem empresas na sua lista? Investigue o site, redes públicas e contatos comerciais.</p><Button icon="Globe" disabled={!state.leads.length} onClick={()=>setResearch(true)}>Investigar empresas da lista</Button></div>
+    {research&&<ResearchStart onClose={()=>setResearch(false)}/>}
     {suggesting&&<NicheSuggestions description={description} onClose={()=>setSuggesting(false)} onApply={draft=>{setSource(draft.source);setTerm(draft.term);setLocation(draft.location);setCnae(draft.cnae);setRegion(draft.region);setCnpj(draft.cnpj);setLimit(draft.limit);if(mode==='new')setName(draft.name);setReview(null);setSuggesting(false);}}/>}
     {review&&<JobReview review={review} onClose={()=>setReview(null)} onConfirm={async()=>{const job=await client.confirm(review);window.location.assign('/executions/'+job.id);}}/>}
   </div>;

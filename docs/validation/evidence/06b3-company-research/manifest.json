@@ -1,0 +1,991 @@
+{
+  "date": "2026-10-27",
+  "scope": "06B.3 local controlled UI",
+  "files": [
+    {
+      "label": "generator-MAPS",
+      "file": "local-1920-generator-MAPS.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Gerador de leads",
+          "x": 292,
+          "y": 116,
+          "w": 706,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Provedores de prospecção",
+          "x": 313,
+          "y": 1233,
+          "w": 177,
+          "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "67790a6594739c2324b766de5785b059f6cba86eaa0dbb59de840fbf0d02518f",
+      "masked": true
+    },
+    {
+      "label": "generator-WEB",
+      "file": "local-1920-generator-WEB.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Gerador de leads",
+          "x": 292,
+          "y": 116,
+          "w": 706,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Provedores de prospecção",
+          "x": 313,
+          "y": 1233,
+          "w": 177,
+          "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "fb67de24898e449ed7106860cdec866729dfa7586c742e23273067d034e40f48",
+      "masked": true
+    },
+    {
+      "label": "contacts",
+      "file": "local-1920-contacts.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Leads2",
+          "x": 292,
+          "y": 116,
+          "w": 91,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "4b88e0e251a820953837673c651afa74c68ffd733424957c031a293de7336bbb",
+      "masked": true
+    },
+    {
+      "label": "lead",
+      "file": "local-1920-lead.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 328,
+          "y": 116,
+          "w": 192,
+          "font": "700 20px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 313,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 313,
+          "y": 546,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 313,
+          "y": 728,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 313,
+          "y": 914,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 847,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 1380,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "165894e40663c8163ae12fa3cd02ca2dd9f19bb0eb1e6c912b1ab1a2423b0131",
+      "masked": true
+    },
+    {
+      "label": "research-dialog",
+      "file": "local-1920-research-dialog.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 560,
+          "height": 660.6875,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 328,
+          "y": 116,
+          "w": 192,
+          "font": "700 20px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 313,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 313,
+          "y": 546,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 313,
+          "y": 728,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigar empresa",
+          "x": 698,
+          "y": 118,
+          "w": 399,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 313,
+          "y": 914,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 847,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 1380,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "ce0d386c741154063f9adf16249183f1b0373e5a55985492c37f055a1f2b7ce9",
+      "masked": true
+    },
+    {
+      "label": "research-review",
+      "file": "local-1920-research-review.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 560,
+          "height": 607.84375,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 328,
+          "y": 116,
+          "w": 192,
+          "font": "700 20px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 313,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 313,
+          "y": 546,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 313,
+          "y": 728,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Revisar investigação",
+          "x": 698,
+          "y": 145,
+          "w": 399,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 313,
+          "y": 914,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 847,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 1380,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "2957d84b2125eb22f6e254765d241caf183a6aa535cb5cf6995f8e632d635680",
+      "masked": true
+    },
+    {
+      "label": "execution-partial",
+      "file": "local-1920-execution-partial.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Investigação da empresa",
+          "x": 292,
+          "y": 143,
+          "w": 283,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 313,
+          "y": 289,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 313,
+          "y": 551,
+          "w": 1539,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Fatos e fontes da investigação",
+          "x": 313,
+          "y": 692,
+          "w": 287,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "e6f115d401627e459d9f4906be3dad3dc65b59f44728d059093ed74ff9edf925",
+      "masked": true
+    },
+    {
+      "label": "generator-MAPS",
+      "file": "local-390-generator-MAPS.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Gerador de leads",
+          "x": 16,
+          "y": 123,
+          "w": 343,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Provedores de prospecção",
+          "x": 33,
+          "y": 2042,
+          "w": 177,
+          "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "dd6734c1b16e6cba3b3d7862a57a934c08ae4f41bae20cbceef5ca654117ceac",
+      "masked": true
+    },
+    {
+      "label": "generator-WEB",
+      "file": "local-390-generator-WEB.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Gerador de leads",
+          "x": 16,
+          "y": 123,
+          "w": 343,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Provedores de prospecção",
+          "x": 33,
+          "y": 2042,
+          "w": 177,
+          "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "59a7723365035356a3eac165ec60b843e4b00c6382d0d9424a0b77242bc353fb",
+      "masked": true
+    },
+    {
+      "label": "contacts",
+      "file": "local-390-contacts.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Leads2",
+          "x": 16,
+          "y": 123,
+          "w": 91,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "5513cb3ba1a512b7aa3390f1ac1639811e1d66fbaa83335e22447294b73fd88a",
+      "masked": true
+    },
+    {
+      "label": "lead",
+      "file": "local-390-lead.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": 123,
+          "w": 169,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": 379,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 609,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 791,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 1019,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 1188,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 1418,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "de9a9cc1482015b57b288278e318fa37905fb548eb735986c2eea5db9f3d0b89",
+      "masked": true
+    },
+    {
+      "label": "research-dialog",
+      "file": "local-390-research-dialog.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 341,
+          "height": 771.328125,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": -376,
+          "w": 169,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": -135,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 95,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 277,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigar empresa",
+          "x": 36,
+          "y": 55,
+          "w": 249,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 505,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 674,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 904,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "4257423b1e94a333982e9536562e70e2974a35512913eaa2136f4764782f6c6c",
+      "masked": true
+    },
+    {
+      "label": "research-review",
+      "file": "local-390-research-review.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 341,
+          "height": 766.6875,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": -404,
+          "w": 169,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": -163,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 67,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 249,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Revisar investigação",
+          "x": 36,
+          "y": 58,
+          "w": 249,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 477,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 646,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 876,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "91b42ba5c99fb71d2a765c8abc988d726a4008858f8ca26d30fdc25b8cd55402",
+      "masked": true
+    },
+    {
+      "label": "execution-partial",
+      "file": "local-390-execution-partial.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Investigação da empresa",
+          "x": 16,
+          "y": 150,
+          "w": 283,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": 390,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": 742,
+          "w": 309,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Fatos e fontes da investigação",
+          "x": 33,
+          "y": 916,
+          "w": 258,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "51d2112eb84516f6c78d44eae618dc063bbe6c373b89406b499f9f5a2b409285",
+      "masked": true
+    },
+    {
+      "label": "generator-MAPS",
+      "file": "local-320-generator-MAPS.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Gerador de leads",
+          "x": 16,
+          "y": 123,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Provedores de prospecção",
+          "x": 0,
+          "y": 2158,
+          "w": 172,
+          "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "aab2ab2923c099a956609486c38d671323ef46eda177c50b5af065b49a8ce191",
+      "masked": true
+    },
+    {
+      "label": "generator-WEB",
+      "file": "local-320-generator-WEB.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Gerador de leads",
+          "x": 16,
+          "y": 123,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Provedores de prospecção",
+          "x": 33,
+          "y": 2158,
+          "w": 177,
+          "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "f13f74eed789ff21bd6af452390a2db768deb96144ec96e329097ad28522ae66",
+      "masked": true
+    },
+    {
+      "label": "contacts",
+      "file": "local-320-contacts.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Leads2",
+          "x": 16,
+          "y": 123,
+          "w": 91,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "7e886b04794d6d4beb4cb673659e579e37217c1f642751bf8eaaf69b1de4e76e",
+      "masked": true
+    },
+    {
+      "label": "lead",
+      "file": "local-320-lead.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": 123,
+          "w": 106,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": 461,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 691,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 873,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 1101,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 1291,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 1521,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "847d46339857006eba41a117b985cd16cc8e23239fd8b637a46a2e2314cb70bd",
+      "masked": true
+    },
+    {
+      "label": "research-dialog",
+      "file": "local-320-research-dialog.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 271,
+          "height": 796,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": -458,
+          "w": 106,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": -135,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 95,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 277,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigar empresa",
+          "x": 36,
+          "y": 43,
+          "w": 164,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 505,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 695,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 925,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "6ad3c26fd99be244cdea8700488a95b27cf0750defbb7fbf00101f0d7d2f6457",
+      "masked": true
+    },
+    {
+      "label": "research-review",
+      "file": "local-320-research-review.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 271,
+          "height": 796,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": -479,
+          "w": 106,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": -156,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 74,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 256,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Revisar investigação",
+          "x": 36,
+          "y": 43,
+          "w": 164,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 484,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 674,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 904,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "9f256f31fa8d35c5793b807dc8ef0d39f3561e96d81baff2f86dede4815f1b96",
+      "masked": true
+    },
+    {
+      "label": "execution-partial",
+      "file": "local-320-execution-partial.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Investigação da empresa",
+          "x": 16,
+          "y": 150,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": 441,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": 837,
+          "w": 239,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Fatos e fontes da investigação",
+          "x": 33,
+          "y": 1035,
+          "w": 239,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "59c524e2f23dc1e2b24b3f950a8ea1eb4d3801310ce66cb6c06e44fb2d52ca1a",
+      "masked": true
+    },
+    {
+      "label": "application-review-390",
+      "file": "application-review-390.png",
+      "overflow": false,
+      "sha256": "152386c4a62a49817885a0b5b8d7e22a5c9cb1fe8a781fc75671f366196f225e",
+      "masked": true
+    },
+    {
+      "label": "application-success-390",
+      "file": "application-success-390.png",
+      "overflow": false,
+      "sha256": "a230436a3147d1cc10b6f78f463dd49c0bb937ff9e3bcf27adbf135aaeadaffa",
+      "masked": true
+    },
+    {
+      "label": "lead-after-application-390",
+      "file": "lead-after-application-390.png",
+      "overflow": false,
+      "sha256": "4163d998d4f948b928b710c1f5f1efeebf58ec7085208e6787774bf553c15854",
+      "masked": true
+    },
+    {
+      "label": "lead-empty-390",
+      "file": "lead-empty-390.png",
+      "overflow": false,
+      "sha256": "76fd341749e6fa89397d2fb94922930e46292bb372535cac32ac0891d313e807",
+      "masked": true
+    },
+    {
+      "label": "research-error-draft-390",
+      "file": "research-error-draft-390.png",
+      "overflow": false,
+      "sha256": "4e63c1da473405a082f290fa7044b77f3cb9b582633359a808e97f033152d751",
+      "masked": true
+    },
+    {
+      "label": "research-recovered-390",
+      "file": "research-recovered-390.png",
+      "overflow": false,
+      "sha256": "25aeeb844c8d6b0305b100d261861a672faa0346b65a8aa80217fdee36270c5d",
+      "masked": true
+    }
+  ],
+  "errors": [],
+  "applicationPersisted": true,
+  "draftRetained": true,
+  "reference": "Historical RES/REA captures 06B.1; fresh authenticated reference unavailable; new research states unobserved"
+}

@@ -21,6 +21,7 @@ import {fetchPublicPage} from '../prospecting/extraction/fetch-page.ts';
 import {extractCnpjs} from '../prospecting/extraction/contacts.ts';
 import {normalizeCnpj} from '../prospecting/normalize.ts';
 import {researchSourceRegistry,researchSourceWarnings} from './source-registry.ts';
+import {ProviderError} from '../prospecting/providers/transport.ts';
 
 const confirmation=z.strictObject({input:companyResearchInputSchema,token:z.string().min(1).max(8192),requestId:z.uuid()});
 const application=z.strictObject({caseId:z.string().min(1).max(120),factIds:z.array(z.string().min(1).max(120)).min(1).max(100).refine(v=>new Set(v).size===v.length),expectedRevision:z.number().int().nonnegative()});
@@ -107,12 +108,16 @@ export async function runCompanyResearch(lease:JobLease,deps:ResearchAdapters={}
   for(const companyCase of cases){
    signal.throwIfAborted();const lead=companyCase.basis as Lead,options=request.companyResearch,registry=researchSourceRegistry(),missing:string[]=[],pages:ResearchPage[]=[];
    let site=lead.site;
+   const lookup=async(module:'website'|'registry')=>{
+    try{return await sourceResult(lease,job,lead,module,{apify:deps.apify,signal});}
+    catch(error){if(error instanceof AppError||error instanceof UncertainStep||error instanceof ProviderError&&error.uncertain||signal.aborted)throw error;missing.push(module==='registry'?'CONSULTA_CADASTRAL_INDISPONIVEL':'BUSCA_SITE_INDISPONIVEL');return{};}
+   };
    if(!site&&options.sourceKinds.some(k=>k==='website'||k==='social')){
-    if(registry.webSearch.available){const candidate=await sourceResult(lease,job,lead,'website',{apify:deps.apify,signal});if(candidate===null)return;site=candidate.site;pages.push(...(candidate.evidence??[]).slice(0,1).map(e=>({...e,sourceKind:'website' as const})));if(!site)missing.push('SITE_NAO_ENCONTRADO');}
+    if(registry.webSearch.available){const candidate=await lookup('website');if(candidate===null)return;site=candidate.site;pages.push(...(candidate.evidence??[]).slice(0,1).map(e=>({...e,sourceKind:'website' as const})));if(!site)missing.push('SITE_NAO_ENCONTRADO');}
     else missing.push('BUSCA_SITE_INDISPONIVEL');
    }
    if(options.sourceKinds.includes('registry')){
-    if(registry.registry.available&&lead.cnpj){const candidate=await sourceResult(lease,job,lead,'registry',{apify:deps.apify,signal});if(candidate===null)return;if(candidate.cnpj&&normalizeCnpj(candidate.cnpj)!==normalizeCnpj(lead.cnpj))missing.push('CADASTRO_DIVERGENTE');else pages.push(...(candidate.evidence??[]).slice(0,1).map(e=>({...e,sourceKind:'registry' as const})));}
+    if(registry.registry.available&&lead.cnpj){const candidate=await lookup('registry');if(candidate===null)return;if(candidate.cnpj&&normalizeCnpj(candidate.cnpj)!==normalizeCnpj(lead.cnpj))missing.push('CADASTRO_DIVERGENTE');else pages.push(...(candidate.evidence??[]).slice(0,1).map(e=>({...e,sourceKind:'registry' as const})));}
     else missing.push(lead.cnpj?'CONSULTA_CADASTRAL_INDISPONIVEL':'CNPJ_NAO_INFORMADO');
    }
    const queue:{url:string;kind:ResearchKind}[]=site&&options.sourceKinds.some(k=>k==='website'||k==='social')?[{url:site,kind:'website'}]:[],seen=new Set<string>();

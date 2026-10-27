@@ -12,6 +12,7 @@ import {runWorkerOnce} from '../../src/server/prospecting/worker.ts';
 import type {ResearchPage} from '../../src/domain/company-research.ts';
 import {researchRequest} from '../../src/server/research/http.ts';
 import {base} from './helpers.ts';
+import {ProviderError} from '../../src/server/prospecting/providers/transport.ts';
 configureProspectingTest();beforeEach(resetRateLimits);after(async()=>{await workerPool().end();await closeProspectingPools();});
 
 test('research storage is private and application users cannot forge worker facts',async()=>{
@@ -60,6 +61,7 @@ test('unrelated domains cannot be applied and worker cannot publish after member
  const revoked=await fixture(),s=await start(revoked),otherLease=await grantTestLease(revoked.p,s.job.id);
  await assert.rejects(runCompanyResearch(otherLease,{collect:async()=>{await testAdmin(c=>c.query('DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',[revoked.p.workspaceId,revoked.p.userId]));return[page()];}}));
  assert.equal(await testAdmin(async c=>(await c.query('SELECT count(*)::int AS n FROM app.research_fact WHERE workspace_id=$1',[revoked.p.workspaceId])).rows[0].n),0);
+ assert.ok(await testAdmin(async c=>(await c.query('SELECT count(*)::int AS n FROM app.prospecting_attempt WHERE workspace_id=$1',[revoked.p.workspaceId])).rows[0].n)>0);
 });
 test('research review and application reject changed source data, cross-tenant IDs and selection conflicts',async()=>{
  const f=await fixture(),{job}=await start(f),lease=await grantTestLease(f.p,job.id);
@@ -111,4 +113,26 @@ test('HTTP boundaries enforce authentication workspace origin role and reviewed 
  const other=await fixture(),cross={...body,input:other.input,requestId:randomUUID()};assert.equal((await researchRequest(req(cross))).status,404);
  await testAdmin(c=>c.query('UPDATE auth.member SET role=\'viewer\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));
  assert.equal((await researchRequest(req({action:'prepare',input:f.input}))).status,403);
+});
+test('a known registry failure retains independently collected company website facts',async()=>{
+ const oldActor=process.env.APIFY_CNPJ_ACTOR,oldBuild=process.env.APIFY_CNPJ_BUILD;
+ try{
+  process.env.APIFY_CNPJ_ACTOR='bigdavidson/brazil-cnpj-companies';process.env.APIFY_CNPJ_BUILD='fixture';
+  const f=await fixture(),snapshot=await readWorkspaceSnapshot(f.p);
+  await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...snapshot.data.leads[0],cnpj:'11444777000161'}}});
+  const input={...f.input,sourceKinds:['website','registry']},review=await prepareCompanyResearch(f.p,input),job=await confirmCompanyResearch(f.p,{input,token:review.token,requestId:randomUUID()});
+  await runCompanyResearch(await grantTestLease(f.p,job.id),{collect:async()=>[page()],apify:{start:async()=>{throw new ProviderError('REMOTE_FAILED');},poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}}});
+  const result=await readCompanyResearch(f.p,job.id);assert.equal(result.state,'partial');assert.ok(result.facts.some(f=>f.field==='email'));
+ }finally{if(oldActor===undefined)delete process.env.APIFY_CNPJ_ACTOR;else process.env.APIFY_CNPJ_ACTOR=oldActor;if(oldBuild===undefined)delete process.env.APIFY_CNPJ_BUILD;else process.env.APIFY_CNPJ_BUILD=oldBuild;}
+});
+test('a company without a website uses the enabled public search without silently asserting identity',async()=>{
+ const oldActor=process.env.APIFY_WEB_ACTOR,oldBuild=process.env.APIFY_WEB_BUILD;
+ try{
+  process.env.APIFY_WEB_ACTOR='apify/google-search-scraper';process.env.APIFY_WEB_BUILD='fixture';
+  const f=await fixture(),snapshot=await readWorkspaceSnapshot(f.p),{site:_site,...lead}=snapshot.data.leads[0];
+  await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead}});
+  const input={...f.input,sourceKinds:['website']},review=await prepareCompanyResearch(f.p,input),job=await confirmCompanyResearch(f.p,{input,token:review.token,requestId:randomUUID()});let calls=0;
+  await runCompanyResearch(await grantTestLease(f.p,job.id),{collect:async()=>[page()],apify:{start:async ctx=>{calls++;return{kind:'inline',page:{receiptId:'fixture',candidates:[{name:lead.name,source:'WEB',sourceRef:'fixture',site:'https://clinica.example'}],exhausted:true,nextCursor:null,rawCount:1,rejected:[],usage:{provider:'apify',operationId:ctx.operationId,units:{apifyRuns:1},costUsd:null,costKind:'unknown'}}};},poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}}});
+  const result=await readCompanyResearch(f.p,job.id);assert.equal(calls,1);assert.equal(result.state,'partial');assert.ok(result.facts.length);assert.ok(result.facts.every(f=>f.attribution==='uncertain'));
+ }finally{if(oldActor===undefined)delete process.env.APIFY_WEB_ACTOR;else process.env.APIFY_WEB_ACTOR=oldActor;if(oldBuild===undefined)delete process.env.APIFY_WEB_BUILD;else process.env.APIFY_WEB_BUILD=oldBuild;}
 });

@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-27",
+  "removedOwnedFakeContacts": 2,
+  "retainedOwnedEmptyQaListForJobForeignKey": true,
+  "retainedSyntheticTerminalJob": true,
+  "realApplicationPersisted": true,
+  "appliedFields": 1,
+  "sourceFailuresPreservedAsPartial": true,
+  "externalActorCalls": 0,
+  "externalLlmCalls": 0,
+  "collectionFixtureCalls": 2,
+  "paidSpendUsd": 0,
+  "externalMessages": 0,
+  "activeQaJobs": 0,
+  "initialQaSessionHadNoWorkspace": true,
+  "qaSessionRevoked": true,
+  "originalOperatorUntouched": true
+}
