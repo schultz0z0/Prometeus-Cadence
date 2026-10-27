@@ -24,7 +24,7 @@ const adapters=(useful:boolean)=>({
  decisors:async(_ctx:any,input:any)=>({value:{people:useful?[{name:'Ana Silva',role:'diretora comercial',email:'ana.silva@example.com',phone:'21988887777',evidenceId:input.evidence.find((e:any)=>e.text===text).id,quote:text}]:[]},usage:usage()})
 });
 async function fixture(){
- const {p}=await prospectingUser(),listId=randomUUID(),leadId=randomUUID();await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:0,command:{type:'leads.import',list:{id:listId,name:'[RE] Enriquecer'},leads:[{id:leadId,listId,name:'Empresa Exemplo',cnpj:'12345678000190',site:'https://empresa.example',email:'contato@empresa.example',phone:'+5521999999999',source:'MANUAL',qualification:'qualified',createdAt:new Date().toISOString()}]}});
+ const {p}=await prospectingUser({platformAi:true}),listId=randomUUID(),leadId=randomUUID();await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:0,command:{type:'leads.import',list:{id:listId,name:'[RE] Enriquecer'},leads:[{id:leadId,listId,name:'Empresa Exemplo',cnpj:'12345678000190',site:'https://empresa.example',email:'contato@empresa.example',phone:'+5521999999999',source:'MANUAL',qualification:'qualified',createdAt:new Date().toISOString()}]}});
  await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});
  const input={kind:'qualification',listId,leadIds:[leadId],modules:['decisors'],summaryPolicy:'all',escalation:'off',enrichment:{maxCredits:1,destinationName:'[RE] Decisores'}};
  const review=await prepareJob(p,input);assert.deepEqual(review.blockers,[]);return{p,input,review,leadId};

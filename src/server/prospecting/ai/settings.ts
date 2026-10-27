@@ -7,9 +7,10 @@ import {withWorkspaceTransaction} from '../../db/transaction.ts';
 import {AppError} from '../../errors.ts';
 import {lockWorkspace} from '../ingestion.ts';
 import {hashValue} from '../review.ts';
+import {isPlatformAiAdmin,platformAiWorkspace} from './platform.ts';
 const schema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(0),policy:z.strictObject({mode:z.enum(['auto','conventional-only','hybrid-required']),conventionalProvider:z.enum(['codex-local','chatgpt-oauth','openai','gemini']).nullable(),jevEnabled:z.boolean()})});
-export async function requireAiAdmin(c:PoolClient){const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;if(!['owner','admin'].includes(role))throw new AppError(403,'Somente administradores podem configurar ou testar provedores de IA.');}
-export async function readAiPolicy(c:PoolClient):Promise<AiPolicy>{const r=(await c.query("SELECT * FROM app.ai_policy WHERE workspace_id=current_setting('app.workspace_id')")).rows[0];return r?{revision:Number(r.revision),mode:r.mode,conventionalProvider:r.conventional_provider,jevEnabled:r.jev_enabled}:{...defaultAiPolicy};}
+export async function requireAiAdmin(c:PoolClient){if(!await isPlatformAiAdmin(c))throw new AppError(403,'Somente a administração da plataforma pode configurar ou testar provedores de IA.','PLATFORM_ADMIN_REQUIRED');}
+export async function readAiPolicy(c:PoolClient):Promise<AiPolicy>{return (await c.query('SELECT app.platform_ai_policy($1) AS policy',[platformAiWorkspace()])).rows[0]?.policy??{...defaultAiPolicy};}
 export async function saveAiPolicy(p:Principal,input:unknown):Promise<AiPolicy>{
  const parsed=schema.safeParse(input);if(!parsed.success)throw new AppError(422,'Configuração de IA inválida.');const b=parsed.data;
  return withWorkspaceTransaction(p,async c=>{

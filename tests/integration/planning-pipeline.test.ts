@@ -1,3 +1,4 @@
+import {configurePlatformAiTest} from './platform-ai-helpers.ts';
 import {seedOAuthFixture} from './oauth-fixture.ts';
 import {conventionalUnit} from '../../src/server/prospecting/ai/json.ts';
 import test,{after,beforeEach} from 'node:test';
@@ -25,7 +26,7 @@ const context:PlanningInput={kind:'planning',task:'context_read',domain:'example
 async function setup(provider:'codex-local'|'chatgpt-oauth'|'openai'|'gemini'='openai'){
  const fixture=await createPlanningFixture();Object.assign(process.env,{CODEX_LOCAL_ENABLED:'true',CODEX_BINARY:process.execPath,CODEX_MODEL:'fixture',CODEX_TEST_WORKSPACE_IDS:fixture.p.workspaceId,OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',GEMINI_API_KEY:'fixture',GEMINI_MODEL:'fixture',OPENROUTER_API_KEY:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({codexCalls:10,openaiCalls:10,geminiCalls:10,jevCalls:10}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({codexCalls:100000,openaiCalls:100000,geminiCalls:100000,jevCalls:100000})});
  if(provider==='chatgpt-oauth')seedOAuthFixture(fixture.p.workspaceId);
- await saveAiPolicy(fixture.p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:provider,jevEnabled:false}});return fixture;
+ await configurePlatformAiTest(fixture.p);await saveAiPolicy(fixture.p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:provider,jevEnabled:false}});return fixture;
 }
 function fakeGenerate(counter:{calls:number}){return async(ctx:any,input:any)=>{counter.calls++;const payload=input.request.task==='context_read'?{task:'context_read' as const,fields:{offer:{value:'Clínicas',quote:'Atendemos clínicas.',evidenceIds:['page_1']}}}:{task:'audience_plan' as const,...audienceResult()};return {proposal:{...payload,contractVersion:'planning-v1' as const,jobId:ctx.jobId,base:input.base,evidenceIds:input.sources.map((s:any)=>s.id),recommendedOptionId:null} as PlanningProposal,usage:{provider:ctx.route.provider==='codex-local'?'codex':ctx.route.provider,operationId:ctx.operationId,units:{[conventionalUnit(ctx.route.provider)]:1},costUsd:null,costKind:'unknown' as const}};};}
 const diagnose=async()=>({available:true,authenticated:true,authMode:'chatgpt' as const,version:'fixture',code:null});

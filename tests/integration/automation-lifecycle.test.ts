@@ -1,3 +1,4 @@
+import {configurePlatformAiTest} from './platform-ai-helpers.ts';
 import test,{after,beforeEach} from 'node:test';
 import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';
 import {createPlanningFixture} from './planning-helpers.ts';
@@ -20,7 +21,7 @@ beforeEach(resetRateLimits);after(closeProspectingPools);
 test('offline lifecycle uses actual reviews worker journal scheduler and leaves qualification proposals unapplied',async()=>{
  const {p}=await createPlanningFixture(),signal=new AbortController().signal;
  Object.assign(process.env,{AUTOMATIONS_SCHEDULER_ENABLED:'true',PROSPECTING_GLOBAL_CONCURRENCY:'32',OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({openaiCalls:20,candidates:100,apifyRuns:10}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({openaiCalls:100000,candidates:100000,apifyRuns:10000})});
- await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});
+ await configurePlatformAiTest(p);await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});
  let generations=0,decisions=0,searches=0;
  const collect=async()=>planningSources().map(s=>({id:s.id,url:s.url!,text:s.text,hash:s.hash,fetchedAt:s.obtainedAt,truncated:false}));
  const planningGenerate=async(ctx:any,data:any)=>{generations++;const request=data.request,payload=request.task==='context_read'?{task:'context_read',fields:{offer:{value:'Automação de agenda.',quote:'Automação de agenda.',evidenceIds:['page_1']},idealCustomer:{value:'Clínicas',quote:'Atendemos clínicas.',evidenceIds:['page_1']}}}:request.task==='audience_plan'?{task:'audience_plan',...audienceResult()}:{task:'cadence_options',...cadenceResult()};return {proposal:{...payload,contractVersion:'planning-v1',jobId:ctx.jobId,base:data.base,evidenceIds:data.sources.map((s:any)=>s.id),recommendedOptionId:null} as any,usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown' as const}};};

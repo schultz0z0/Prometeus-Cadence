@@ -1,3 +1,4 @@
+import {configurePlatformAiTest} from './platform-ai-helpers.ts';
 import test,{after,beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
@@ -17,7 +18,7 @@ import {scheduleV2Schema,localDateAt} from '../../src/domain/schedule.ts';
 beforeEach(resetRateLimits);after(closeProspectingPools);
 async function setup(){
  const {p}=await createPlanningFixture();Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:'{"openaiCalls":20}',PROSPECTING_GLOBAL_DAILY_UNITS:'{"openaiCalls":100000}'});
- await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});return p;
+ await configurePlatformAiTest(p);await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});return p;
 }
 async function complete(p:Principal,input:PlanningInput){
  const review=await preparePlanning(p,input),job=await confirmPlanning(p,{requestId:randomUUID(),input,reviewToken:review.token});

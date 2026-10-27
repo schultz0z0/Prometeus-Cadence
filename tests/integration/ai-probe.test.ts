@@ -4,7 +4,7 @@ import {configureProspectingTest,prospectingUser,countRows,testAdmin,grantTestLe
 import {workerPool} from '../../src/server/prospecting/worker-db.ts';import {runQualification} from '../../src/server/prospecting/qualification.ts';import {getJob,listJobItems} from '../../src/server/prospecting/service.ts';import {applyJobResults} from '../../src/server/prospecting/application.ts';
 import {aiRequest} from '../../src/server/prospecting/ai/http.ts';import {base} from './helpers.ts';
 configureProspectingTest();beforeEach(resetRateLimits);after(async()=>{await workerPool().end();await closeProspectingPools();});
-async function setup(){const a=await prospectingUser();Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({openaiCalls:2}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({openaiCalls:100000})});await saveAiPolicy(a.p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'hybrid-required',conventionalProvider:'openai',jevEnabled:true}});return a;}
+async function setup(){const a=await prospectingUser({platformAi:true});Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({openaiCalls:2}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({openaiCalls:100000})});await saveAiPolicy(a.p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'hybrid-required',conventionalProvider:'openai',jevEnabled:true}});return a;}
 test('prepare is pure and concurrent probe confirmations atomically create one synthetic job and reserve',async()=>{
  const{p}=await setup();assert.ok((await getAiSettings(p)).blockers.length);
  const r=await prepareAiTest(p);assert.deepEqual(r.blockers,[]);assert.equal(r.usage.length,1);assert.equal(r.usage[0].unit,'openaiCalls');
@@ -22,7 +22,7 @@ test('changed policy, insufficient budget and downgraded operator reject without
  const one=await prepareAiTest(p),job=await confirmAiTest(p,{requestId:randomUUID(),draft:one.draft,reviewToken:one.token});
  const two=await prepareAiTest(p);await confirmAiTest(p,{requestId:randomUUID(),draft:two.draft,reviewToken:two.token});
  const three=await prepareAiTest(p);await assert.rejects(()=>confirmAiTest(p,{requestId:randomUUID(),draft:three.draft,reviewToken:three.token}),{status:429});assert.equal(await countRows('list',p.workspaceId),2);
- await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[p.workspaceId,p.userId]));assert.equal((await getAiSettings(p)).canManage,false);await assert.rejects(()=>prepareAiTest(p),{status:403});
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[p.workspaceId,p.userId]));await assert.rejects(()=>getAiSettings(p),{status:403});await assert.rejects(()=>prepareAiTest(p),{status:403});
 });
 test('AI HTTP gates origin, active workspace and operator diagnostics without spawning a process',async()=>{
  const a=await setup(),b=await prospectingUser();const headers=new Headers(a.headers);headers.set('x-cadence-workspace',b.p.workspaceId);
@@ -30,7 +30,7 @@ test('AI HTTP gates origin, active workspace and operator diagnostics without sp
  headers.set('x-cadence-workspace',a.p.workspaceId);headers.set('origin','https://foreign.example');assert.equal((await aiRequest(new Request(base+'/api/prospecting/ai/diagnostics',{method:'POST',headers}),'diagnostics')).status,403);
  await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[a.p.workspaceId,a.p.userId]));
  assert.equal((await aiRequest(new Request(base+'/api/prospecting/ai/diagnostics',{method:'POST',headers:a.headers}),'diagnostics')).status,403);
- const result=await aiRequest(new Request(base+'/api/prospecting/ai/policy',{headers:a.headers}),'policy');assert.equal(result.status,200);const text=await result.text();assert.ok(!text.includes('configFingerprint'));assert.ok(!text.includes('OPENAI_API_KEY'));
+ const result=await aiRequest(new Request(base+'/api/prospecting/ai/policy',{headers:a.headers}),'policy');assert.equal(result.status,403);const text=await result.text();assert.ok(!text.includes('configFingerprint'));assert.ok(!text.includes('OPENAI_API_KEY'));
 });
 
 test('probe honors persisted workspace caps, consumed allowance and policy changes before confirmation',async()=>{

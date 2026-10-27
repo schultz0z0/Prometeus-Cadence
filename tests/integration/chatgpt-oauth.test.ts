@@ -17,7 +17,7 @@ import {prospectingUser,configureProspectingTest,closeProspectingPools,testAdmin
 configureProspectingTest();after(closeProspectingPools);
 async function fixture(){
  const root=await mkdtemp(join(tmpdir(),'chatgpt-flow-')),store=createOAuthStore(root),{privateKey,publicKey}=await generateKeyPair('RS256'),key=await exportJWK(publicKey);key.kid='qa';
- const p=(await prospectingUser()).p;let nonce='',refreshes=0,revokes=0;
+ const p=(await prospectingUser({platformAi:true})).p;let nonce='',refreshes=0,revokes=0;
  const fetcher:typeof fetch=async(url,init)=>{
   if(String(url).endsWith('/models'))return Response.json({models:[{slug:'fixture-model',display_name:'Fixture Model',visibility:'list'},{slug:'hidden',display_name:'Hidden',visibility:'hide'}]});
   if(String(url).endsWith('/revoke')){revokes++;return new Response(null,{status:200});}
@@ -78,7 +78,7 @@ test('interrupted token rotation requires reconnection instead of repeating the 
  }finally{await rm(f.root,{recursive:true,force:true});}
 });
 test('OAuth HTTP rejects foreign origins and workspaces, operators and invalid callback state without leaking secrets',async()=>{
- const {p,headers}=await prospectingUser(),base=process.env.BETTER_AUTH_URL!;
+ const {p,headers}=await prospectingUser({platformAi:true}),base=process.env.BETTER_AUTH_URL!;
  const request=(changes:Record<string,string>)=>{const h=new Headers(headers);h.set('content-type','application/json');for(const[k,v]of Object.entries(changes))h.set(k,v);return new Request(base+'/api/prospecting/ai/oauth/start',{method:'POST',headers:h,body:JSON.stringify({expectedRevision:0})});};
  assert.equal((await chatgptOAuthHttp(request({origin:'https://foreign.example'}),'start')).status,403);
  assert.equal((await chatgptOAuthHttp(request({'x-cadence-workspace':'foreign'}),'start')).status,409);

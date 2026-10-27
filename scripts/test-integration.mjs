@@ -15,6 +15,7 @@ for (const prefix of ["MIGRATOR", "AUTH", "APP", "WORKER", "INGRESS", "DISPATCH"
 process.env.NODE_ENV = "test";
 process.env.CADENCE_INTEGRATION = "1";
 const known = [
+  "platform-ai",
   "reengagement",
   "enrichment",
   "qualification-options",

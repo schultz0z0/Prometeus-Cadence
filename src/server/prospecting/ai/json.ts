@@ -9,6 +9,7 @@ import {geminiJson} from './gemini.ts';
 import {oauthStore} from '../../ai-oauth/store.ts';
 import {oauthAccessToken} from '../../ai-oauth/session.ts';
 import {chatgptJson} from '../../ai-oauth/protocol.ts';
+import {platformAiWorkspace} from './platform.ts';
 export const conventionalUnit=(p:ConventionalRoute['provider']):Unit=>p==='codex-local'||p==='chatgpt-oauth'?'codexCalls':p==='openai'?'openaiCalls':'geminiCalls';
 export interface ConventionalContext{operationId:string;workspaceId:string;signal:AbortSignal;route:ConventionalRoute;acquireSlot?:()=>Promise<boolean>;releaseSlot?:()=>Promise<void>}
 export type JsonDependencies={fetcher?:Fetch;runCodex?:CodexRun;oauthSession?:typeof oauthAccessToken};
@@ -19,8 +20,8 @@ export function assertConventionalConfiguration(ctx:ConventionalContext){
 export async function ensureOAuthCompanion(workspaceId:string,route:ConventionalRoute,signal:AbortSignal=new AbortController().signal,fetcher?:Fetch,session=oauthAccessToken){
  if(route.provider!=='chatgpt-oauth')return null;
  const ctx={workspaceId,route,signal,operationId:'oauth-session'};assertConventionalConfiguration(ctx);
- const row=oauthStore.read(workspaceId);if(!row)throw new ProviderError('AI_CONFIGURATION_CHANGED');
- const token=await session(workspaceId,row.revision,{fetcher});
+ const scope=platformAiWorkspace(),row=scope?oauthStore.read(scope):null;if(!scope||!row)throw new ProviderError('AI_CONFIGURATION_CHANGED');
+ const token=await session(scope,row.revision,{fetcher});
  assertConventionalConfiguration(ctx);signal.throwIfAborted();return token;
 }
 export async function runConventionalJson<T>(ctx:ConventionalContext,request:{prompt:string;schema:unknown;maxOutputTokens:number;parse:(raw:unknown)=>T},deps:JsonDependencies={}):Promise<{value:T;usage:ProviderUsage}>{

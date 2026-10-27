@@ -5,7 +5,7 @@ import {suggestedQualification} from '../src/server/prospecting/ai/policy.ts';
 import {diagnoseCodex} from '../src/server/prospecting/ai/diagnostics.ts';
 const evidence=[{id:'e1',url:'https://example.com/',text:'Clínica odontológica com consultas.',fetchedAt:new Date().toISOString(),hash:'h',truncated:false}];
 for(const provider of ['codex-local','openai','gemini'] as const)for(const task of ['qualify','summary','second_opinion'] as const)test(provider+' executes '+task+' as a validated factual proposal',async()=>{
- const saved={...process.env};Object.assign(process.env,{PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',BETTER_AUTH_URL:'http://127.0.0.1:3210',CODEX_LOCAL_ENABLED:'true',CODEX_BINARY:process.execPath,CODEX_MODEL:'fixture',CODEX_TEST_WORKSPACE_IDS:'w',OPENAI_API_KEY:'private-fixture',OPENAI_MODEL:'fixture',GEMINI_API_KEY:'private-fixture',GEMINI_MODEL:'fixture'});
+ const saved={...process.env};Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'w',PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',BETTER_AUTH_URL:'http://127.0.0.1:3210',CODEX_LOCAL_ENABLED:'true',CODEX_BINARY:process.execPath,CODEX_MODEL:'fixture',CODEX_TEST_WORKSPACE_IDS:'w',OPENAI_API_KEY:'private-fixture',OPENAI_MODEL:'fixture',GEMINI_API_KEY:'private-fixture',GEMINI_MODEL:'fixture'});
  try{let calls=0;const route=conventionalConfig('w').conventional[provider].route,payload=task==='qualify'?{verdict:'fits',reason:'Clínica com consultas.',evidenceIds:['e1']}:{summary:'Clínica odontológica.',evidenceIds:['e1']};
  const result=await runConventional({workspaceId:'w',operationId:'op',signal:new AbortController().signal,route,acquireSlot:async()=>true,releaseSlot:async()=>{}},{task,criteria:'Clínicas',evidence,facts:{}},{
  fetcher:async(url,init)=>{calls++;const body=JSON.parse(init!.body as string);assert.equal(String(url).includes('private-fixture'),false);assert.equal(body.tools,undefined);
@@ -17,7 +17,7 @@ for(const provider of ['codex-local','openai','gemini'] as const)for(const task 
  }finally{for(const k of Object.keys(process.env))if(!(k in saved))delete process.env[k];Object.assign(process.env,saved);}
 });
 test('no evidence abstains without a call and malformed or refused output never falls back',async()=>{
- const saved={...process.env};Object.assign(process.env,{PROSPECTING_ENABLED:'true',OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});
+ const saved={...process.env};Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'w',PROSPECTING_ENABLED:'true',OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});
  try{const route=conventionalConfig('w').conventional.openai.route,ctx={workspaceId:'w',operationId:'op',signal:new AbortController().signal,route};let calls=0;
  const empty=await runConventional(ctx,{task:'qualify',criteria:'x',facts:{},evidence:[]},{fetcher:async()=>{calls++;throw Error();}});assert.equal(calls,0);assert.equal(empty.task==='qualify'&&empty.decision.verdict,'insufficient_evidence');
  for(const output of [[{type:'message',content:[{type:'refusal',refusal:'No'}]}],[{type:'function_call',name:'shell'}],[{type:'message',content:[{type:'output_text',text:'{}'}]}],[{type:'message',content:[{type:'output_text',text:JSON.stringify({verdict:'fits',reason:'x',evidenceIds:['foreign']})}]}]]){
@@ -40,7 +40,7 @@ test('Codex accepts the inspected desktop CLI version and rejects unknown versio
  }finally{for(const k of Object.keys(process.env))if(!(k in saved))delete process.env[k];Object.assign(process.env,saved);}
 });
 test('Gemini blocked truncated or tool responses remain uncertain and network loss is never retried',async()=>{
- const saved={...process.env};Object.assign(process.env,{PROSPECTING_ENABLED:'true',GEMINI_API_KEY:'fixture',GEMINI_MODEL:'fixture'});
+ const saved={...process.env};Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'w',PROSPECTING_ENABLED:'true',GEMINI_API_KEY:'fixture',GEMINI_MODEL:'fixture'});
  try{const ctx={workspaceId:'w',operationId:'op',signal:new AbortController().signal,route:conventionalConfig('w').conventional.gemini.route};
  for(const payload of [{promptFeedback:{blockReason:'SAFETY'}},{candidates:[{finishReason:'MAX_TOKENS',content:{parts:[{text:'{}'}]}}]},{candidates:[{finishReason:'STOP',content:{parts:[{functionCall:{name:'shell'}}]}}]}]){let calls=0;await assert.rejects(()=>runConventional(ctx,{task:'summary',criteria:'x',evidence},{fetcher:async()=>{calls++;return Response.json(payload);}}),(e:any)=>e.uncertain===true);assert.equal(calls,1);}
  let calls=0;await assert.rejects(()=>runConventional(ctx,{task:'summary',criteria:'x',evidence},{fetcher:async()=>{calls++;throw Error('network');}}),(e:any)=>e.uncertain===true);assert.equal(calls,1);

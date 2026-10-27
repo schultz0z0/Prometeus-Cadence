@@ -11,7 +11,7 @@ import {audienceResult,cadenceResult,planningSources} from './planning-fixtures.
 import type {PlanningInput} from '../src/domain/planning.ts';
 test('ChatGPT OAuth alone executes qualification, summary and all planning tasks with no CLI or paid fallback',async()=>{
  const saved={...process.env},workspaceId='qa-oauth-'+randomUUID();
- Object.assign(process.env,{PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',BETTER_AUTH_URL:'http://127.0.0.1:3210',CODEX_LOCAL_ENABLED:'false',CHANNEL_ACTIVE_KEY_ID:'qa',CHANNEL_KEYRING_JSON:JSON.stringify({qa:randomBytes(32).toString('base64')})});
+ Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:workspaceId,PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',BETTER_AUTH_URL:'http://127.0.0.1:3210',CODEX_LOCAL_ENABLED:'false',CHANNEL_ACTIVE_KEY_ID:'qa',CHANNEL_KEYRING_JSON:JSON.stringify({qa:randomBytes(32).toString('base64')})});
  try{
   const row={...oauthStore.initial(workspaceId),state:'connected' as const,revision:1,model:'qa-model',clientId:'qa-client',subject:'qa-sub',expiresAt:Date.now()+3600000};oauthStore.save(workspaceId,row,{accessToken:'qa-oauth-access',refreshToken:'qa-refresh'});
   const route=conventionalConfig(workspaceId).conventional['chatgpt-oauth'].route,ctx={workspaceId,operationId:'qa-op',signal:new AbortController().signal,route};

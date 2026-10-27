@@ -25,9 +25,9 @@ for(const provider of ['codex-local','chatgpt-oauth','openai','gemini'] as const
   });
 }
 test('conventional configuration requires explicit provider credentials and binds the selected model without leaking keys',()=>{
-  const keys=['OPENAI_API_KEY','OPENAI_MODEL','GEMINI_API_KEY','GEMINI_MODEL'];const saved=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
+  const keys=['PLATFORM_AI_WORKSPACE_ID','OPENAI_API_KEY','OPENAI_MODEL','GEMINI_API_KEY','GEMINI_MODEL'];const saved=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
   try{
-    Object.assign(process.env,{OPENAI_API_KEY:'private-fixture-key',OPENAI_MODEL:'fixture-model',GEMINI_API_KEY:'',GEMINI_MODEL:''});
+    Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'workspace',OPENAI_API_KEY:'private-fixture-key',OPENAI_MODEL:'fixture-model',GEMINI_API_KEY:'',GEMINI_MODEL:''});
     const a=conventionalConfig('workspace');assert.equal(a.conventional.openai.configured,true);assert.equal(a.conventional.gemini.configured,false);assert.ok(!JSON.stringify(a).includes('private-fixture-key'));
     process.env.OPENAI_MODEL='different-model';assert.notEqual(conventionalConfig('workspace').conventional.openai.route.configFingerprint,a.conventional.openai.route.configFingerprint);
   }finally{for(const[k,v]of Object.entries(saved))if(v===undefined)delete process.env[k];else process.env[k]=v;}

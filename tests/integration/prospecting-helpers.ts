@@ -12,13 +12,14 @@ export function configureProspectingTest(){
     APIFY_TOKEN:'fixture-not-a-live-token',APIFY_MAPS_ACTOR:'compass/crawler-google-places',APIFY_MAPS_BUILD:'fixture-build',APIFY_MAX_CHARGE_USD:'0.1',
   });
 }
-export async function prospectingUser(options:{billing?:boolean}={}){
+export async function prospectingUser(options:{billing?:boolean;platformAi?:boolean}={}){
   const u=await verifiedUser();
   const headers=new Headers({cookie:u.cookie,origin:base});
   await identityAction(headers,{type:'create',requestId:randomUUID(),name:'Prospecting QA'});
   const p=await requirePrincipal(headers);
   if(options.billing!==false)await withWorkspaceTransaction(p,c=>c.query('SELECT app.billing_start_trial($1)',[randomUUID()]));
   headers.set('x-cadence-workspace',p.workspaceId);
+  if(options.platformAi){const {configurePlatformAiTest}=await import('./platform-ai-helpers.ts');await configurePlatformAiTest(p);}
   return {...u,headers,p};
 }
 export const generationInput=()=>({kind:'generation' as const,source:'MAPS' as const,destination:{mode:'new' as const,name:'QA Maps'},filters:{term:'dentistas',location:'São Paulo'},limit:5,dedupScope:'workspace' as const});
@@ -31,6 +32,7 @@ export async function countRows(table:string,workspaceId:string){
 }
 export async function closeProspectingPools(){await getPools().close();}
 export async function seedHybridPolicy(p:import('../../src/domain/workspace.ts').Principal,jobId:string){
+ const {configurePlatformAiTest}=await import('./platform-ai-helpers.ts');await configurePlatformAiTest(p);
  Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});
  const {saveAiPolicy}=await import('../../src/server/prospecting/ai/settings.ts'),{conventionalConfig}=await import('../../src/server/prospecting/ai/config.ts');
  await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'auto',conventionalProvider:'openai',jevEnabled:true}});

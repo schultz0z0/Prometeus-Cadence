@@ -39,9 +39,9 @@ test('Codex invocation uses only feature switches supported by the pinned runtim
 });
 
 test('Codex validates cited JSON output and releases its cross-process slot after failure',async()=>{
-  const keys=['PROSPECTING_ENABLED','CADENCE_RUNTIME_MODE','BETTER_AUTH_URL','CODEX_LOCAL_ENABLED','CODEX_BINARY','CODEX_MODEL','CODEX_TEST_WORKSPACE_IDS'];
+  const keys=['PLATFORM_AI_WORKSPACE_ID','PROSPECTING_ENABLED','CADENCE_RUNTIME_MODE','BETTER_AUTH_URL','CODEX_LOCAL_ENABLED','CODEX_BINARY','CODEX_MODEL','CODEX_TEST_WORKSPACE_IDS'];
   const saved=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
-  Object.assign(process.env,{PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',BETTER_AUTH_URL:'http://127.0.0.1:3210',CODEX_LOCAL_ENABLED:'true',CODEX_BINARY:process.execPath,CODEX_MODEL:'test-model',CODEX_TEST_WORKSPACE_IDS:'w'});
+  Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'w',PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',BETTER_AUTH_URL:'http://127.0.0.1:3210',CODEX_LOCAL_ENABLED:'true',CODEX_BINARY:process.execPath,CODEX_MODEL:'test-model',CODEX_TEST_WORKSPACE_IDS:'w'});
   let releases=0;
   const context={operationId:'op',workspaceId:'w',signal:ctx.signal,acquireSlot:async()=>true,releaseSlot:async()=>{releases++;}};
   try{
