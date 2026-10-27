@@ -92,6 +92,8 @@ export interface CadenceStep {
   body: string;
   aiInstructions?: string;
   stopOnReply: boolean;
+  attachmentIds?: string[];
+  variantB?: {body:string;subject?:string;attachmentIds?:string[]};
 }
 export interface CadenceSettings {
   timezone: string;
