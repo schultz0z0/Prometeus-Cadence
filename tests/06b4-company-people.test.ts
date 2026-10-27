@@ -35,3 +35,7 @@ test('former roles are retained as uncertain and never become an applicable curr
  const source={...evidence,quote:'Clínica Exemplo. Ana Exemplo, ex-diretora comercial. Contato pessoal de Ana Exemplo: ana@example.com.'};
  const people=reviewCompanyPeople({company:{id:'lead',name:'Clínica Exemplo'},identity:{caseId:'case',cnpj:'11444777000161',legalName:'Clínica Exemplo',state:'resolved',evidence:[source]},sources:[source],partners:[],proposed:{people:[{name:'Ana Exemplo',role:'ex-diretora comercial',email:'ana@example.com',evidenceId:source.id,quote:source.quote}]}});assert.equal(people[0].current,'uncertain');assert.ok(people[0].contacts.every(c=>c.attribution!=='personal'));
 });
+test('a colleague LinkedIn URL in the same company passage cannot be attributed to this person',()=>{
+ const source={...evidence,quote:evidence.quote+' LinkedIn de Ana Exemplo: https://www.linkedin.com/in/ana-exemplo/. LinkedIn de Bruno Exemplo: https://www.linkedin.com/in/bruno-exemplo/'};
+ const people=reviewCompanyPeople({company:{id:'lead',name:'Clínica Exemplo'},identity:{caseId:'case',cnpj:'11444777000161',legalName:'Clínica Exemplo',state:'resolved',evidence:[source]},sources:[source],partners:[],proposed:{people:[{name:'Ana Exemplo',role:'diretora comercial',email:'ana@example.com',linkedin:'https://www.linkedin.com/in/bruno-exemplo/',evidenceId:source.id,quote:source.quote}]}});assert.equal(people[0].contacts.find(c=>c.kind==='linkedin')?.attribution,'unresolved');assert.equal(people[0].contacts.find(c=>c.kind==='email')?.attribution,'personal');
+});

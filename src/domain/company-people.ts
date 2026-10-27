@@ -40,7 +40,11 @@ export function reviewCompanyPeople(input:{company:Pick<Lead,'id'|'name'>&Partia
    const literal=kind==='phone'?(p.quote.match(/(?:\+?55\s*)?\(?\d{2}\)?[\s.-]*\d{4,5}[\s.-]*\d{4}/g)??[]).some(n=>normalizePersonalPhone(n)===value):p.quote.toLowerCase().includes(raw.toLowerCase());if(!literal)continue;
    const corporate=kind==='email'?(value===input.company.email?.toLowerCase()||/^(contato|comercial|atendimento|info|suporte|sac|vendas|financeiro|hello|sales|contact|office)([.+_-]|@)/.test(value)):kind==='phone'?normalizePersonalPhone(input.company.phone)===value:false;
    let attributed=false;try{attributed=kind!=='linkedin'&&validateDecisorEvidence({people:[{name:p.name,role:p.role,evidenceId:e.id,quote:p.quote,[kind]:raw}]},evidence,input.company).length>0;}catch{}
-   if(kind==='linkedin')attributed=/^https:\/\/(?:www\.)?linkedin\.com\/in\/[^/]+/.test(value)&&quote.includes(name);
+   if(kind==='linkedin'){
+    const profile=researchUrl(value),source=researchUrl(e.url),at=quote.indexOf(fold(raw)),before=at<0?'':quote.slice(Math.max(0,at-220),at),sameProfile=profile&&source&&profile.hostname.replace(/^www\./,'')===source.hostname.replace(/^www\./,'')&&profile.pathname.replace(/\/$/,'')===source.pathname.replace(/\/$/,'');
+    const owner=before.replace(/[\s:—(\-]+$/g,'');
+    attributed=/^https:\/\/(?:www\.)?linkedin\.com\/in\/[^/]+/.test(value)&&!!(sameProfile||owner.endsWith('linkedin de '+name)||owner.endsWith('perfil de '+name)||owner.endsWith('perfil pessoal de '+name));
+   }
    contacts.push({kind,value,attribution:classifyPersonContact({attributed:currentSupported&&attributed,corporate,hasSource:true}),evidence:[ref]});
   }
   out.set(key,{id:key,name:p.name,role:p.role,relationship:prior?.relationship??'manager',contacts,current:currentSupported?'supported':'uncertain',evidence:prior?[...prior.evidence,ref]:[ref]});
