@@ -1,7 +1,7 @@
 CREATE TABLE app.research_company_identity(
  workspace_id text NOT NULL,case_id text NOT NULL,job_id text NOT NULL,lead_id text NOT NULL,identity_key text NOT NULL,contract text NOT NULL,
  cnpj text,legal_name text,state text NOT NULL CHECK(state IN('resolved','conflict','missing')),evidence jsonb NOT NULL,
- expires_at timestamptz NOT NULL,created_at timestamptz NOT NULL DEFAULT clock_timestamp(),cache_from text,
+ expires_at timestamptz NOT NULL,created_at timestamptz NOT NULL DEFAULT clock_timestamp(),cache_from text,assessment jsonb,
  PRIMARY KEY(workspace_id,case_id),UNIQUE(workspace_id,case_id,identity_key),
  FOREIGN KEY(workspace_id,case_id) REFERENCES app.research_case(workspace_id,id) ON DELETE CASCADE,
  FOREIGN KEY(workspace_id,job_id,lead_id) REFERENCES app.research_case(workspace_id,job_id,lead_id) ON DELETE CASCADE,
@@ -18,7 +18,7 @@ CREATE TABLE app.research_person_company(
  workspace_id text NOT NULL,case_id text NOT NULL,person_id text NOT NULL,relationship text NOT NULL CHECK(relationship IN('partner','manager','unknown')),
  current_state text NOT NULL CHECK(current_state IN('supported','uncertain')),applied_lead_id text,applied_payload jsonb,applied_list_id text,
  PRIMARY KEY(workspace_id,case_id,person_id),FOREIGN KEY(workspace_id,case_id,person_id) REFERENCES app.research_person(workspace_id,case_id,id) ON DELETE CASCADE,
- FOREIGN KEY(workspace_id,applied_lead_id) REFERENCES app.lead(workspace_id,id) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED
+ FOREIGN KEY(workspace_id,applied_lead_id) REFERENCES app.lead(workspace_id,id) ON DELETE SET NULL(applied_lead_id) DEFERRABLE INITIALLY DEFERRED
 );
 CREATE TABLE app.research_person_contact(
  workspace_id text NOT NULL,case_id text NOT NULL,person_id text NOT NULL,kind text NOT NULL CHECK(kind IN('email','phone','linkedin')),value text NOT NULL CHECK(length(value) BETWEEN 1 AND 500),
@@ -30,7 +30,9 @@ CREATE FUNCTION app.company_people_lease(p_ws text,p_case text) RETURNS boolean 
  SELECT 1 FROM app.research_case r JOIN app.prospecting_job j ON j.workspace_id=r.workspace_id AND j.id=r.job_id
  WHERE r.workspace_id=p_ws AND r.id=p_case AND j.input->>'companyPeople'='true' AND j.input->'modules'='["decisors"]'::jsonb AND j.input ? 'enrichment'
  AND j.actor_id=current_setting('app.user_id',true) AND j.lease_token=current_setting('app.research_token',true) AND j.fence::text=current_setting('app.research_fence',true)
- AND j.lease_until>clock_timestamp() AND j.state IN('running','waiting_provider'));
+ AND j.lease_until>clock_timestamp() AND j.state IN('running','waiting_provider')
+ AND EXISTS(SELECT 1 FROM app.lead l WHERE l.workspace_id=r.workspace_id AND l.id=r.lead_id AND l.payload=r.basis)
+ AND COALESCE((SELECT cv.version FROM app.context_version cv WHERE cv.workspace_id=p_ws AND cv.payload->>'approvedAt' IS NOT NULL ORDER BY cv.version DESC LIMIT 1),0)=COALESCE((j.checkpoint->'context'->>'version')::integer,0));
 $$;
 REVOKE ALL ON FUNCTION app.company_people_lease(text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app.company_people_lease(text,text) TO cadence_worker;
@@ -76,7 +78,7 @@ BEGIN
  IF NEW.kind='generation' THEN PERFORM app.billing_reserve('job:'||NEW.id,CASE WHEN NEW.source='APOLLO' THEN 'imports' ELSE 'extractions' END,(NEW.input->>'limit')::integer);
  ELSIF NEW.kind='qualification' AND NEW.input ? 'enrichment' THEN
   IF NEW.input->>'companyPeople'='true' THEN
-   needed:=least(jsonb_array_length(NEW.input->'leadIds'),(NEW.input->'enrichment'->>'maxCredits')::integer);
+   SELECT count(*) INTO needed FROM jsonb_array_elements(NEW.checkpoint->'enrichment'->'groups') g WHERE g->>'cacheId' IS NULL;
   ELSE
    SELECT count(DISTINCT regexp_replace(upper(l.payload->>'cnpj'),'[^A-Z0-9]','','g')) INTO needed FROM app.lead l WHERE l.workspace_id=NEW.workspace_id AND l.list_id=NEW.list_id AND NEW.input->'leadIds' ? l.id AND l.payload->>'qualification'='qualified' AND NOT EXISTS(SELECT 1 FROM app.enrichment_resolution r WHERE r.workspace_id=l.workspace_id AND r.cnpj=regexp_replace(upper(l.payload->>'cnpj'),'[^A-Z0-9]','','g') AND r.contract=NEW.checkpoint->'enrichment'->>'contract' AND r.expires_at>clock_timestamp());
   END IF;
@@ -103,7 +105,7 @@ BEGIN
  IF basis IS DISTINCT FROM j.checkpoint->'bases'->p_lead OR COALESCE((SELECT version FROM app.context_version WHERE workspace_id=ws AND payload->>'approvedAt' IS NOT NULL ORDER BY version DESC LIMIT 1),0)<>COALESCE((j.checkpoint->'context'->>'version')::integer,0) THEN RAISE EXCEPTION 'RESEARCH_SOURCE_CHANGED';END IF;
  IF r.state='resolved' AND NOT app.people_evidence_valid(ws,p_job,p_lead,r.evidence) THEN RAISE EXCEPTION 'RESEARCH_EVIDENCE_CHANGED';END IF;
  IF EXISTS(SELECT 1 FROM app.research_person_contact c JOIN app.research_person_company pc USING(workspace_id,case_id,person_id) WHERE c.workspace_id=ws AND c.case_id=r.case_id AND c.kind IN('email','phone') AND c.attribution='personal' AND pc.current_state='supported') AND r.state='resolved' THEN
-  PERFORM app.billing_consume('people:'||r.contract||':'||r.identity_key,'enrichment',1,'job:'||p_job);
+  IF NOT EXISTS(SELECT 1 FROM app.billing_consumption WHERE workspace_id=ws AND key='people:'||r.contract||':'||r.identity_key AND unit='enrichment') THEN PERFORM app.billing_consume('people:'||r.contract||':'||r.identity_key,'enrichment',1,'job:'||p_job);END IF;
  END IF;
  UPDATE app.research_case SET state=CASE WHEN jsonb_array_length(p_missing)>0 THEN 'partial' ELSE 'completed' END,missing=p_missing WHERE workspace_id=ws AND job_id=p_job AND lead_id=p_lead;
 END $$;
@@ -129,7 +131,7 @@ BEGIN
  PERFORM app.billing_require_execution(ws);PERFORM 1 FROM app.workspace_meta WHERE workspace_id=ws FOR UPDATE;
  SELECT * INTO j FROM app.prospecting_job WHERE workspace_id=ws AND id=p_job FOR UPDATE;
  IF NOT FOUND OR j.input->>'companyPeople' IS DISTINCT FROM 'true' OR j.state NOT IN('completed','partial') OR j.revision<>p_revision THEN RAISE EXCEPTION 'RESEARCH_REVIEW_CHANGED';END IF;
- IF COALESCE((SELECT version FROM app.context_version WHERE workspace_id=ws AND payload->>'approvedAt' IS NOT NULL ORDER BY version DESC LIMIT 1),0)<>COALESCE((j.checkpoint->'context'->>'version')::integer,0) THEN RAISE EXCEPTION 'RESEARCH_CONTEXT_CHANGED';END IF;
+ IF COALESCE((SELECT cv.version FROM app.context_version cv WHERE cv.workspace_id=ws AND cv.payload->>'approvedAt' IS NOT NULL ORDER BY cv.version DESC LIMIT 1),0)<>COALESCE((j.checkpoint->'context'->>'version')::integer,0) THEN RAISE EXCEPTION 'RESEARCH_CONTEXT_CHANGED';END IF;
  IF (SELECT count(DISTINCT p.id) FROM app.research_person p JOIN app.research_company_identity ci USING(workspace_id,case_id) JOIN app.research_person_company pc ON pc.workspace_id=p.workspace_id AND pc.case_id=p.case_id AND pc.person_id=p.id WHERE p.workspace_id=ws AND ci.job_id=p_job AND p.id=ANY(p_people) AND pc.applied_lead_id IS NULL AND pc.current_state='supported' AND ci.state='resolved')<>cardinality(p_people) THEN RAISE EXCEPTION 'RESEARCH_SELECTION_CHANGED';END IF;
  target:=j.checkpoint->>'outputListId';
  FOR r IN SELECT p.*,ci.lead_id FROM app.research_person p JOIN app.research_company_identity ci USING(workspace_id,case_id) WHERE p.workspace_id=ws AND ci.job_id=p_job AND p.id=ANY(p_people) ORDER BY p.id LOOP

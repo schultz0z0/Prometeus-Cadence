@@ -57,6 +57,7 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
         else if(job.kind==='planning'){
           state=(await c.query('SELECT 1 FROM app.planning_proposal WHERE job_id=$1',[id])).rowCount?'partial':'failed';
         }
+        else if(job.input?.companyPeople){state=(await c.query('SELECT 1 FROM app.research_person p JOIN app.research_company_identity ci USING(workspace_id,case_id) WHERE ci.job_id=$1 LIMIT 1',[id])).rowCount?'partial':'failed';}
         else if(job.input?.companyResearch){state=(await c.query('SELECT 1 FROM app.research_fact WHERE job_id=$1 LIMIT 1',[id])).rowCount?'partial':'failed';}
         else if(job.input?.enrichment){state=(await c.query("SELECT 1 FROM app.prospecting_item WHERE job_id=$1 AND jsonb_array_length(COALESCE(payload->'enrichment'->'people','[]'::jsonb))>0 LIMIT 1",[id])).rowCount?'partial':'failed';}
         else{

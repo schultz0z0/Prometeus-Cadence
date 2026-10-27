@@ -1,0 +1,91 @@
+import test,{after,beforeEach} from 'node:test';import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';
+import {configureProspectingTest,prospectingUser,grantTestLease,closeProspectingPools,testAdmin} from './prospecting-helpers.ts';
+import {resetRateLimits,base} from './helpers.ts';import {workerPool} from '../../src/server/prospecting/worker-db.ts';
+import {executeWorkspaceCommand,readWorkspaceSnapshot} from '../../src/server/workspaces/commands.ts';
+import {prepareJob,confirmJob,getJob,cancelJob} from '../../src/server/prospecting/service.ts';
+import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
+import {saveAiPolicy} from '../../src/server/prospecting/ai/settings.ts';
+import {resolveCompanyPeople,readCompanyPeople,preparePeopleApplication,confirmPeopleApplication} from '../../src/server/research/people.ts';
+import {peopleRequest} from '../../src/server/research/people-http.ts';
+import {withLeasedTransaction} from '../../src/server/prospecting/worker-db.ts';
+import {runWorkerOnce} from '../../src/server/prospecting/worker.ts';
+import {reconcileJob} from '../../src/server/prospecting/reconciliation.ts';
+import {ProviderError} from '../../src/server/prospecting/providers/transport.ts';
+import {readContactEnrichment} from '../../src/server/prospecting/contact-enrichment.ts';
+import {readContacts} from '../../src/server/contacts/repository.ts';
+configureProspectingTest();Object.assign(process.env,{APIFY_CNPJ_ACTOR:'bigdavidson/brazil-cnpj-companies',APIFY_CNPJ_BUILD:'fixture-build',APIFY_WEB_ACTOR:'apify/google-search-scraper',APIFY_WEB_BUILD:'fixture-build',OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({apifyRuns:100,openaiCalls:100,candidates:1000}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({apifyRuns:1000,openaiCalls:1000,candidates:100000})});
+beforeEach(resetRateLimits);after(async()=>{await workerPool().end();await closeProspectingPools();});
+const text='Empresa Exemplo CNPJ 11.444.777/0001-61. Ana Silva, diretora comercial. Contato pessoal de Ana Silva: ana.silva@example.com.';
+const page={id:'page',url:'https://empresa.example/equipe',text,hash:'page',fetchedAt:'2026-10-27T12:00:00Z',truncated:false};
+const registryText='Empresa Exemplo CNPJ 11.444.777/0001-61. Bruno Exemplo, sócio administrador.';
+const adapters=()=>({collect:async()=>page,apify:{start:async(ctx:any,input:any)=>({kind:'inline' as const,page:{receiptId:'lookup',candidates:[{name:'Empresa Exemplo',source:input.source,sourceRef:'11444777000161',cnpj:'11444777000161',site:'https://empresa.example',facts:{decisionMakers:input.source==='CNPJ'?[{name:'Bruno Exemplo',role:'sócio administrador'}]:[]},evidence:[{...page,text:input.source==='CNPJ'?registryText:text}]}],nextCursor:null,exhausted:true,rawCount:1,rejected:[],usage:{provider:'apify',operationId:ctx.operationId,units:{apifyRuns:1},costUsd:null,costKind:'unknown' as const}}}),poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}},generate:async(_ctx:any,input:any)=>({value:{people:[{name:'Ana Silva',role:'diretora comercial',email:'ana.silva@example.com',evidenceId:input.evidence.find((e:any)=>e.text===text).id,quote:text}]},usage:{provider:'openai',operationId:'fixture',units:{openaiCalls:1},costUsd:null,costKind:'unknown' as const}})});
+async function fixture(){const user=await prospectingUser({platformAi:true}),listId=randomUUID(),leadId=randomUUID();await executeWorkspaceCommand(user.p,{requestId:randomUUID(),expectedRevision:0,command:{type:'leads.import',list:{id:listId,name:'[RE] Pessoas'},leads:[{id:leadId,listId,name:'Empresa Exemplo',site:'https://empresa.example',source:'MANUAL',qualification:'pending',createdAt:new Date().toISOString()}]}});await saveAiPolicy(user.p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});return{...user,leadId,input:{kind:'qualification',listId,leadIds:[leadId],modules:['decisors'],summaryPolicy:'all',escalation:'off',companyPeople:true,enrichment:{maxCredits:1,destinationName:'[RE] Decisores'}}};}
+async function start(f:Awaited<ReturnType<typeof fixture>>){const review=await prepareJob(f.p,f.input);assert.deepEqual(review.blockers,[]);return confirmJob(f.p,{input:f.input,reviewToken:review.token,requestId:randomUUID()});}
+async function run(f:Awaited<ReturnType<typeof fixture>>,deps:import('../../src/domain/company-people.ts').PeopleAdapters=adapters()){const job=await start(f),lease=await grantTestLease(f.p,job.id);await resolveCompanyPeople(lease,deps);const result=await readCompanyPeople(f.p,job.id);assert.ok(['completed','partial'].includes(result.state),JSON.stringify((await getJob(f.p,job.id)).error));return{job,result};}
+const consumed=async(p:any)=>withWorkspaceTransaction(p,async c=>Number((await c.query("SELECT COALESCE(sum(quantity),0) n FROM app.billing_consumption WHERE unit='enrichment'")).rows[0].n));
+test('missing CNPJ is investigated; manager and shareholder remain distinct, with reviewed idempotent delivery',async()=>{
+ const f=await fixture(),{job,result}=await run(f);assert.equal(result.identity.state,'resolved');assert.equal(result.identity.cnpj,'11444777000161');assert.equal(result.people.length,2);
+ const manager=result.people.find(p=>p.name==='Ana Silva')!,partner=result.people.find(p=>p.name==='Bruno Exemplo')!;assert.equal(manager.relationship,'manager');assert.equal(partner.relationship,'partner');assert.deepEqual(partner.contacts,[]);assert.equal(await consumed(f.p),1);
+ assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,1);assert.equal((await readContactEnrichment(f.p,f.leadId))?.people[0].name,'Ana Silva');
+ const input={caseId:job.id,personIds:[manager.id],expectedRevision:result.revision},review=await preparePeopleApplication(f.p,input),body={input,token:review.token,requestId:randomUUID()};assert.deepEqual(await confirmPeopleApplication(f.p,body),{applied:1});assert.deepEqual(await confirmPeopleApplication(f.p,body),{applied:1});assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,2);
+ const snapshot=await readWorkspaceSnapshot(f.p),person=snapshot.data.leads.find(l=>l.id!==f.leadId)!;assert.equal((await readContactEnrichment(f.p,person.id))?.people[0].email,'ana.silva@example.com');assert.equal((await readContacts(f.p,{page:1,pageSize:20,enriched:'yes'})).total,2);
+ await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...person,email:'changed@example.com'}}});assert.equal(await readContactEnrichment(f.p,person.id),null);
+ await assert.rejects(preparePeopleApplication(f.p,{caseId:job.id,personIds:[partner.id],expectedRevision:(await readCompanyPeople(f.p,job.id)).revision}));
+});
+test('conflicting full CNPJs never authorize a useful contact or a commercial charge',async()=>{
+ const f=await fixture(),deps=adapters();deps.collect=async()=>({...page,text:text+' Outra filial CNPJ 11.222.333/0001-81.'});const {result}=await run(f,deps);assert.equal(result.identity.state,'conflict');assert.ok(result.people.every(p=>p.current==='uncertain'));assert.equal(await consumed(f.p),0);
+});
+test('private cache reuses the complete evidence without calls or duplicate charge and cannot cross tenants',async()=>{
+ const f=await fixture();await run(f);const job=await start(f);await resolveCompanyPeople(await grantTestLease(f.p,job.id),{collect:async()=>{throw Error('Cache must not fetch');},generate:async()=>{throw Error('Cache must not infer');},apify:{...adapters().apify,start:async()=>{throw Error('Cache must not start');}}});const result=await readCompanyPeople(f.p,job.id);assert.equal(result.people.length,2);assert.equal(await consumed(f.p),1);
+ const other=await fixture();await assert.rejects(readCompanyPeople(other.p,job.id),/encontrad/);const review=await prepareJob(other.p,other.input);assert.equal(review.enrichmentPreview?.cached,0);
+});
+test('changed lead, context, removed source and revocation prevent application and publication',async()=>{
+ const f=await fixture(),{job,result}=await run(f),manager=result.people.find(p=>p.contacts.some(c=>c.attribution==='personal'))!,input={caseId:job.id,personIds:[manager.id],expectedRevision:result.revision},review=await preparePeopleApplication(f.p,input);
+ await testAdmin(c=>c.query("DELETE FROM app.research_source WHERE workspace_id=$1 AND job_id=$2",[f.p.workspaceId,job.id]));await assert.rejects(confirmPeopleApplication(f.p,{input,token:review.token,requestId:randomUUID()}));await assert.rejects(withWorkspaceTransaction(f.p,c=>c.query('SELECT app.apply_company_people($1,$2,$3)',[job.id,[manager.id],result.revision])));
+ const g=await fixture(),j=await start(g),deps=adapters();deps.generate=async(c,i)=>{const r=await adapters().generate(c,i);await testAdmin(db=>db.query('DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',[g.p.workspaceId,g.p.userId]));return r;};await assert.rejects(resolveCompanyPeople(await grantTestLease(g.p,j.id),deps));assert.equal(await testAdmin(async c=>(await c.query('SELECT count(*)::int n FROM app.research_person WHERE workspace_id=$1',[g.p.workspaceId])).rows[0].n),0);
+});
+test('HTTP rejects anonymous, foreign, invalid, stale and prohibited operations',async()=>{
+ const f=await fixture(),{job,result}=await run(f),req=(body?:unknown,headers:any=f.headers)=>new Request(base+'/api/research/'+job.id+'/people',{method:body?'POST':'GET',headers,...(body?{body:JSON.stringify(body)}:{})});
+ assert.ok([401,403].includes((await peopleRequest(req(undefined,{}),job.id)).status));assert.equal((await peopleRequest(req({action:'prepare-apply',personIds:[],expectedRevision:0}),job.id)).status,422);
+ const person=result.people.find(p=>p.contacts.length)!;assert.equal((await peopleRequest(req({action:'prepare-apply',personIds:[person.id],expectedRevision:result.revision+1}),job.id)).status,409);
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=\'viewer\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));assert.equal((await peopleRequest(req({action:'prepare-apply',personIds:[person.id],expectedRevision:result.revision}),job.id)).status,403);
+});
+test('changed source and approved company context invalidate the frozen application, including direct SQL',async()=>{
+ for(const changed of ['source','context']){
+  const f=await fixture(),{job,result}=await run(f),person=result.people.find(p=>p.contacts.length)!,input={caseId:job.id,personIds:[person.id],expectedRevision:result.revision},review=await preparePeopleApplication(f.p,input);
+  if(changed==='source'){const s=await readWorkspaceSnapshot(f.p);await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'lead.upsert',lead:{...s.data.leads[0],name:'Outra empresa'}}});}
+  else await testAdmin(c=>c.query("INSERT INTO app.context_version(workspace_id,version,payload) VALUES($1,1,$2)",[f.p.workspaceId,{version:1,approvedAt:new Date().toISOString()}]));
+  await assert.rejects(confirmPeopleApplication(f.p,{input,token:review.token,requestId:randomUUID()}));await assert.rejects(withWorkspaceTransaction(f.p,c=>c.query('SELECT app.apply_company_people($1,$2,$3)',[job.id,[person.id],result.revision])));assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,1);
+ }
+});
+test('normal dispatch handles people mode and expired promised cache cannot start a new paid lookup',async()=>{
+ process.env.PROSPECTING_GLOBAL_CONCURRENCY='32';
+ const f=await fixture(),job=await start(f),deps=adapters();await runWorkerOnce({people:deps},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ assert.equal((await getJob(f.p,job.id)).state,'completed');assert.equal((await readCompanyPeople(f.p,job.id)).people.length,2);
+ const g=await fixture();await run(g);const cached=await start(g);await testAdmin(c=>c.query("UPDATE app.research_company_identity SET expires_at=clock_timestamp()-interval '1 second' WHERE workspace_id=$1",[g.p.workspaceId]));let calls=0;
+ await resolveCompanyPeople(await grantTestLease(g.p,cached.id),{...deps,collect:async()=>{calls++;return page;},apify:{...deps.apify,start:async(c,i)=>{calls++;return deps.apify.start(c,i);}},generate:async(c,i)=>{calls++;return deps.generate(c,i);}});assert.equal(calls,0);assert.ok((await readCompanyPeople(g.p,cached.id)).missing.includes('CACHE_EXPIRADO'));assert.equal(await consumed(g.p),1);
+});
+test('uncertain inference remains reconcilable; no commercial contact is published or automatically retried',async()=>{
+ const f=await fixture(),job=await start(f),deps=adapters();let calls=0;
+ await resolveCompanyPeople(await grantTestLease(f.p,job.id),{...deps,generate:async()=>{calls++;throw new ProviderError('LOST_RESPONSE',0,true);}});assert.equal((await getJob(f.p,job.id)).state,'needs_reconciliation');await reconcileJob(f.p,job.id,{resultUnavailable:true});assert.equal((await getJob(f.p,job.id)).state,'failed');assert.equal(calls,1);assert.equal(await consumed(f.p),0);assert.equal((await readCompanyPeople(f.p,job.id)).people.length,0);
+});
+test('cancellation and revoked entitlement during I/O cannot publish; client SQL cannot forge people',async()=>{
+ const f=await fixture(),job=await start(f),deps=adapters();deps.collect=async()=>{await cancelJob(f.p,job.id);return page;};await resolveCompanyPeople(await grantTestLease(f.p,job.id),deps);assert.equal((await getJob(f.p,job.id)).state,'cancelled');assert.equal((await readCompanyPeople(f.p,job.id)).people.length,0);
+ const g=await fixture(),j=await start(g),revoked=adapters();revoked.generate=async(c,i)=>{const r=await adapters().generate(c,i);await testAdmin(db=>db.query("UPDATE app.billing_account SET period_end=clock_timestamp()-interval '1 second' WHERE workspace_id=$1",[g.p.workspaceId]));return r;};await resolveCompanyPeople(await grantTestLease(g.p,j.id),revoked);assert.equal((await readCompanyPeople(g.p,j.id)).people.length,0);assert.equal(await consumed(g.p),0);
+ await assert.rejects(withWorkspaceTransaction(f.p,c=>c.query('INSERT INTO app.research_person(workspace_id,case_id,id,name,role,evidence) VALUES($1,$2,\'forged\',\'Nome Falso\',\'diretor\',\'[]\')',[f.p.workspaceId,'missing'])),/permission denied/);
+});
+test('hybrid route executes one JEV assessment; conventional-only never calls it and the cache contract changes',async()=>{
+ const f=await fixture();let assessments=0;await run(f,{...adapters(),decide:async()=>{assessments++;throw Error('Must not call');}});assert.equal(assessments,0);
+ const beforeW=process.env.PROSPECTING_WORKSPACE_DAILY_UNITS,beforeG=process.env.PROSPECTING_GLOBAL_DAILY_UNITS,beforeKey=process.env.OPENROUTER_API_KEY;
+ try{process.env.OPENROUTER_API_KEY='fixture';process.env.JEV_MODEL='typesafe/jev-1.13';process.env.PROSPECTING_WORKSPACE_DAILY_UNITS=JSON.stringify({apifyRuns:100,openaiCalls:100,jevCalls:100});process.env.PROSPECTING_GLOBAL_DAILY_UNITS=JSON.stringify({apifyRuns:1000,openaiCalls:1000,jevCalls:1000});await saveAiPolicy(f.p,{requestId:randomUUID(),expectedRevision:1,policy:{mode:'auto',conventionalProvider:'openai',jevEnabled:true}});
+  const {conventionalConfig}=await import('../../src/server/prospecting/ai/config.ts'),route=conventionalConfig(f.p.workspaceId).conventional.openai.route,seed=await testAdmin(async c=>(await c.query('SELECT id FROM app.prospecting_job WHERE workspace_id=$1 LIMIT 1',[f.p.workspaceId])).rows[0].id);
+  await testAdmin(c=>c.query("INSERT INTO app.ai_connection_check(workspace_id,job_id,operation_id,provider,model,config_fingerprint,contract_version,outcome) VALUES($1,$2,$3,$4,$5,$6,$7,'success')",[f.p.workspaceId,seed,randomUUID(),route.provider,route.model,route.configFingerprint,route.contractVersion]));
+  const review=await prepareJob(f.p,f.input);assert.equal(review.enrichmentPreview?.cached,0);
+  const {result}=await run(f,{...adapters(),decide:async()=>{assessments++;return{model:'typesafe/jev-1.13',verdict:'fits',confidence:null,probabilities:{},criteria:{},evidenceIds:[],usage:{provider:'openrouter',operationId:'fixture',units:{jevCalls:1},costUsd:null,costKind:'unknown'}};}});assert.equal(result.people.length,2);assert.equal(assessments,1);
+ }finally{process.env.PROSPECTING_WORKSPACE_DAILY_UNITS=beforeW;process.env.PROSPECTING_GLOBAL_DAILY_UNITS=beforeG;if(beforeKey===undefined)delete process.env.OPENROUTER_API_KEY;else process.env.OPENROUTER_API_KEY=beforeKey;}
+});
+test('changed context during collection cannot publish and cache stays free with zero remaining credits and provider units',async()=>{
+ const f=await fixture(),job=await start(f),deps=adapters();deps.collect=async()=>{await testAdmin(c=>c.query('INSERT INTO app.context_version(workspace_id,version,payload) VALUES($1,1,$2)',[f.p.workspaceId,{version:1,approvedAt:new Date().toISOString()}]));return page;};await resolveCompanyPeople(await grantTestLease(f.p,job.id),deps);assert.equal((await readCompanyPeople(f.p,job.id)).people.length,0);
+ const g=await fixture();await run(g);await testAdmin(c=>c.query("UPDATE app.billing_grant SET quantity=spent+held WHERE workspace_id=$1 AND unit='enrichment'",[g.p.workspaceId]));const oldW=process.env.PROSPECTING_WORKSPACE_DAILY_UNITS,oldG=process.env.PROSPECTING_GLOBAL_DAILY_UNITS;
+ try{process.env.PROSPECTING_WORKSPACE_DAILY_UNITS='{}';process.env.PROSPECTING_GLOBAL_DAILY_UNITS='{}';const review=await prepareJob(g.p,g.input);assert.deepEqual(review.blockers,[]);assert.equal(review.enrichmentPreview?.cached,1);const j=await confirmJob(g.p,{input:g.input,reviewToken:review.token,requestId:randomUUID()});await resolveCompanyPeople(await grantTestLease(g.p,j.id),{collect:async()=>{throw Error('Cache');},generate:async()=>{throw Error('Cache');}});assert.equal((await readCompanyPeople(g.p,j.id)).people.length,2);assert.equal(await consumed(g.p),1);}finally{process.env.PROSPECTING_WORKSPACE_DAILY_UNITS=oldW;process.env.PROSPECTING_GLOBAL_DAILY_UNITS=oldG;}
+});

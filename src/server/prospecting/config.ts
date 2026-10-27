@@ -37,7 +37,7 @@ export function estimateUsage(input:JobInput,route?:AiRoute|null,plannedFresh?:n
   }else{
     const n=input.leadIds.length;
     if(input.companyResearch){const calls=(input.companyResearch.sourceKinds.some(s=>s==='website'||s==='social')&&prospectingConfig().ready.WEB?1:0)+(input.companyResearch.sourceKinds.includes('registry')&&prospectingConfig().ready.CNPJ?1:0);if(calls)add('apify','apifyRuns',n*calls);return result;}
-    if(input.enrichment){const fresh=plannedFresh??Math.min(n,input.enrichment.maxCredits);if(fresh>0){add('apify','apifyRuns',fresh*3);if(route){add(route.conventional.provider,conventionalUnit(route.conventional.provider),fresh);if(route.decisionProvider==='jev')add('openrouter','jevCalls',fresh);}}return result;}
+    if(input.enrichment){const fresh=plannedFresh??Math.min(n,input.enrichment.maxCredits);if(fresh>0){const config=prospectingConfig(),calls=input.companyPeople?(config.ready.WEB?2:0)+(config.ready.CNPJ?1:0):3;if(calls)add('apify','apifyRuns',fresh*calls);if(route){add(route.conventional.provider,conventionalUnit(route.conventional.provider),fresh);if(route.decisionProvider==='jev')add('openrouter','jevCalls',fresh);}}return result;}
     if(input.modules.includes('qualify')){if(!route||route.decisionProvider==='jev')add('openrouter','jevCalls',n);else add(route.conventional.provider,conventionalUnit(route.conventional.provider),n);}
     const calls=(input.modules.includes('summary')?n:0)+(input.escalation==='ambiguous'&&input.modules.includes('qualify')&&(!route||route.decisionProvider==='jev')?n:0);
     if(calls)add(route?.conventional.provider??'codex',route?conventionalUnit(route.conventional.provider):'codexCalls',calls);
@@ -56,7 +56,7 @@ export function requirements(config:ProspectingConfig,input:JobInput,workspaceId
     if(input.source!=='APOLLO')try{actorInput(providerProfile(input.source,config.profiles[input.source]),input);}catch{blockers.push(input.source==='CNPJ'?'O perfil ou os filtros cadastrais não estão disponíveis. Informe um CNAE ou CNPJ suportado.':'O perfil de busca ainda não está disponível. Configure um Actor/build verificado.');}
   }
   if(input.kind==='qualification'){
-    if(input.enrichment&&(!config.ready.CNPJ||!config.ready.WEB))blockers.push('Configure os perfis CNPJ e WEB da Apify antes de enriquecer.');
+    if(input.enrichment&&!input.companyPeople&&(!config.ready.CNPJ||!config.ready.WEB))blockers.push('Configure os perfis CNPJ e WEB da Apify antes de enriquecer.');
 
 
     if(input.modules.includes('registry')&&!config.ready.CNPJ)blockers.push('Configure a consulta cadastral.');

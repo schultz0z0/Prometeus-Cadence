@@ -10,13 +10,13 @@ export interface CompanyPerson{id:string;name:string;role:string;relationship:'p
 export interface PeopleApplication{caseId:string;personIds:string[];expectedRevision:number}
 export interface PeopleCaseView{id:string;revision:number;state:string;selectedLeadId?:string;companies:{leadId:string;name:string;state:string;missing:string[]}[];identity:CompanyIdentity;people:CompanyPerson[];missing:string[]}
 export interface IdentityCandidate{cnpj:string;legalName:string;corroborated:boolean;evidence:EvidenceRef[]}
-export interface PeopleAdapters{signal?:AbortSignal;apify?:import('../server/prospecting/providers/types.ts').SourceAdapter;generate?:import('../server/prospecting/ai/decisors.ts').DecisorGenerator;collect?:(url:string,signal:AbortSignal)=>Promise<import('./prospecting.ts').Evidence|null>}
+export interface PeopleAdapters{signal?:AbortSignal;apify?:import('../server/prospecting/providers/types.ts').SourceAdapter;generate?:import('../server/prospecting/ai/decisors.ts').DecisorGenerator;decide?:typeof import('../server/prospecting/ai/jev.ts').decide;collect?:(url:string,signal:AbortSignal)=>Promise<import('./prospecting.ts').Evidence|null>}
 export function classifyPersonContact(input:{attributed:boolean;corporate:boolean;hasSource:boolean}):PersonContact['attribution']{return !input.hasSource?'unresolved':input.corporate?'corporate':input.attributed?'personal':'unresolved';}
 const fold=(v:string)=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 export function sanitizePeopleSource(text:string){return text.replace(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g,'[CPF removido]').replace(/\bCPF\s*[:\-]?\s*\d{11}\b/gi,'[CPF removido]').replace(/\b\d{1,3}\s+anos\b/gi,'[idade removida]').slice(0,12000);}
 export function resolveIdentityCandidates(caseId:string,company:Partial<Lead>,candidates:IdentityCandidate[]):CompanyIdentity{
- const valid=candidates.filter(c=>c.corroborated&&c.evidence.length&&c.evidence.every(e=>researchUrl(e.url)&&e.quote.trim())),unique=new Map(valid.map(c=>[c.cnpj,c]));
- const selected=unique.size===1?[...unique.values()][0]:null,known=company.cnpj?.replace(/\D/g,'');
+ const valid=candidates.filter(c=>/^[A-Z0-9]{12}[0-9]{2}$/.test(c.cnpj)&&c.corroborated&&c.evidence.length&&c.evidence.every(e=>researchUrl(e.url)&&e.quote.trim())),unique=new Map(valid.map(c=>[c.cnpj,c]));
+ const selected=unique.size===1?[...unique.values()][0]:null,known=company.cnpj?.replace(/[^A-Z0-9]/gi,'').toUpperCase();
  const conflict=unique.size>1||!!(selected&&known&&known!==selected.cnpj);
  return{caseId,state:conflict?'conflict':selected?'resolved':'missing',cnpj:!conflict&&selected?selected.cnpj:null,legalName:!conflict&&selected?selected.legalName:null,evidence:valid.flatMap(c=>c.evidence).slice(0,10)};
 }
@@ -24,7 +24,7 @@ const proposal=z.object({people:z.array(z.object({name:z.string().trim().min(5).
 export function reviewCompanyPeople(input:{company:Pick<Lead,'id'|'name'>&Partial<Lead>;identity:CompanyIdentity;sources:EvidenceRef[];partners:{name:string;role:string;evidence:EvidenceRef}[];proposed:unknown}):CompanyPerson[]{
  const out=new Map<string,CompanyPerson>(),supported=input.identity.state==='resolved';
  for(const p of input.partners.slice(0,50)){
-  if(!researchUrl(p.evidence.url)||!p.evidence.quote.includes(p.name)||p.name.trim().split(/\s+/).length<2)continue;
+  if(!input.sources.some(e=>e.id===p.evidence.id&&e.hash===p.evidence.hash&&e.url===p.evidence.url&&e.quote.includes(p.evidence.quote))||!researchUrl(p.evidence.url)||!p.evidence.quote.includes(p.name)||!p.evidence.quote.includes(p.role)||p.name.trim().split(/\s+/).length<2)continue;
   const key=fold(p.name);out.set(key,{id:key,name:p.name,role:p.role,relationship:'partner',contacts:[],current:supported?'supported':'uncertain',evidence:[p.evidence]});
  }
  const parsed=proposal.safeParse(input.proposed);if(!parsed.success)return [...out.values()];

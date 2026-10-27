@@ -19,6 +19,7 @@ import {readConnectionCheck} from './ai/connection.ts';
 import {resolveAiRoute,aiRouteView,type AiRoute} from '../../domain/ai-routing.ts';
 import {readApprovedContext} from '../context/repository.ts';
 import {qualificationFingerprint} from '../../domain/qualification-policy.ts';
+import {peopleCheckpoint} from '../research/identity.ts';
 import {enrichmentCheckpoint} from './enrichment-context.ts';
 import {processedQualifications} from './processed.ts';
 const secret=()=>{const s=process.env.BETTER_AUTH_SECRET;if(!s)throw Error('Review signing is not configured');return s;};
@@ -52,7 +53,7 @@ async function reviewState(c:PoolClient,p:Principal,input:ProspectingInput){
     if(input.modules.includes('qualify')&&!context?.approvedAt)blockers.push('Revise e aprove o contexto da empresa antes de qualificar com IA.');
   }
   const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);
-  const enrichment=input.kind==='qualification'?await enrichmentCheckpoint(c,input,bases,config,aiRoute):null;
+  const enrichment=input.kind==='qualification'?input.companyPeople?await peopleCheckpoint(c,input,bases,config,aiRoute,context):await enrichmentCheckpoint(c,input,bases,config,aiRoute):null;
   blockers.push(...requirements(config,input,p.workspaceId,aiRoute,enrichment?.reserveCredits));
   const profileVersion=hashValue({config:config.version,policy:policy??null,contextVersion:context?.version??0,aiRoute,...(enrichment?{enrichment}: {})});
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};

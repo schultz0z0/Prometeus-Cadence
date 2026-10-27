@@ -42,23 +42,25 @@ async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,dep
     });
   });
 }
-export async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string}={}):Promise<Partial<Candidate>|null>{
+export async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string}={}):Promise<Partial<Candidate>|null>{const result=await sourceResults(lease,job,lead,module,deps,options);return result===null?null:result[0]??{};}
+export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string;limit?:number}={}):Promise<Candidate[]|null>{
   const source=module==='registry'?'CNPJ':'WEB',step=module+':'+lead.id+(options.suffix?':'+options.suffix:'');
   const ctx=providerContext(job,source,hashValue({job:lease.jobId,step}),deps.signal??new AbortController().signal),adapter=deps.apify??new ApifyAdapter();
   if(options.partners)ctx.profile.partners=true;
-  const input:Extract<JobInput,{kind:'generation'}>={kind:'generation',source,destination:{mode:'existing',listId:lead.listId},filters:module==='registry'?{term:lead.name,cnpj:lead.cnpj!}:{term:lead.name,location:[lead.city,lead.state].filter(Boolean).join(', ')||'Brasil'},limit:1,dedupScope:'workspace'};
+  const limit=Math.min(5,Math.max(1,options.limit??1));
+  const input:Extract<JobInput,{kind:'generation'}>={kind:'generation',source,destination:{mode:'existing',listId:lead.listId},filters:module==='registry'?{term:lead.name,cnpj:lead.cnpj!}:{term:lead.name,location:[lead.city,lead.state].filter(Boolean).join(', ')||'Brasil'},limit,dedupScope:'workspace'};
   const started=await performStep(lease,step,'apify',{apifyRuns:1},()=>adapter.start(ctx,input),r=>({provider:'apify',operationId:ctx.operationId,units:r.kind==='uncertain'?{}:{apifyRuns:1},costUsd:null,costKind:'unknown'}));
   if(started.kind==='uncertain'){await finishJob(lease,'needs_reconciliation','START_UNCERTAIN');return null;}
-  if(started.kind==='inline')return started.page.candidates[0]??{};
+  if(started.kind==='inline')return started.page.candidates.slice(0,limit);
   const remote=await adapter.poll(ctx,started.run);if(['failed','cancelled'].includes(remote.status))throw new ProviderError('REMOTE_FAILED');
   if(remote.status!=='succeeded')return null;
   // Registry datasets may include free notice rows before the requested company.
   // Keep dataset paging distinct from the one-company lookup limit.
   let cursor:string|null=null;
   for(let page=0;page<20;page++){
-    const result=await adapter.readPage(ctx,remote.run,cursor,module==='registry'?100:1);
-    if(result.candidates.length)return result.candidates[0];
-    if(result.exhausted||!result.nextCursor)return{};
+    const result=await adapter.readPage(ctx,remote.run,cursor,module==='registry'?100:limit);
+    if(result.candidates.length)return result.candidates.slice(0,limit);
+    if(result.exhausted||!result.nextCursor)return[];
     cursor=result.nextCursor;
   }
   throw new ProviderError('LOOKUP_PAGE_LIMIT');
