@@ -6,10 +6,13 @@ import {AppError,errorResponse} from '../errors.ts';
 import {gmailCallbackUrl} from '../mail/callback-url.ts';
 import {requireLocalOAuth} from './session.ts';
 import {oauthView,startOAuth,finishOAuth,selectOAuthModel,disconnectOAuth} from './service.ts';
+import {withWorkspaceTransaction} from '../db/transaction.ts';
+import {requireAiAdmin} from '../prospecting/ai/settings.ts';
 const revision={expectedRevision:z.number().int().nonnegative()};
 export async function chatgptOAuthHttp(request:Request,action:string){
  try{
   const p=await authorizeProspectingRequest(request);
+  await withWorkspaceTransaction(p,requireAiAdmin);
   if(action==='status'&&request.method==='GET')return Response.json(oauthView(p.workspaceId),{headers:{'cache-control':'no-store'}});
   if(request.method!=='POST')throw new AppError(405,'Método não permitido.');
   if(!['start','model','disconnect'].includes(action))throw new AppError(404,'Ação inexistente.');

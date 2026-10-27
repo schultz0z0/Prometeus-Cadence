@@ -5,6 +5,9 @@ import { getPools } from "../db/pool.ts";
 import { requireIdentity, requirePrincipal } from "../auth/principal.ts";
 import { AppError } from "../errors.ts";
 import { sendLocalMail } from "../auth/mail.ts";
+import {withWorkspaceTransaction} from '../db/transaction.ts';
+import {isPlatformAiAdmin} from '../prospecting/ai/platform.ts';
+import type {Role} from '../../domain/workspace.ts';
 const id = z.string().min(1).max(120),
   role = z.enum(["admin", "operator"]);
 const actionSchema = z.discriminatedUnion("type", [
@@ -68,6 +71,7 @@ export async function identitySnapshot(headers: Headers) {
         ).rows
       : [];
   return {
+    platformAiAdmin: active && !user.registrationRequired ? await withWorkspaceTransaction({userId:user.id,workspaceId:active.id,role:active.role as Role,sessionId:session.id},isPlatformAiAdmin) : false,
     registrationRequired: user.registrationRequired === true,
     user: { id: user.id, name: user.name, email: user.email },
     activeWorkspaceId: active?.id ?? null,

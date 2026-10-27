@@ -1,7 +1,10 @@
 import test,{after,beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import {createPlanningFixture,planningStorageJob} from './planning-helpers.ts';
+import {createPlanningFixture,planningStorageJob as emptyStorageJob} from './planning-helpers.ts';
+import {configurePlatformAiTest} from './platform-ai-helpers.ts';
+import {saveAiPolicy} from '../../src/server/prospecting/ai/settings.ts';
+import {conventionalConfig} from '../../src/server/prospecting/ai/config.ts';
 import {grantTestLease,closeProspectingPools,testAdmin,countRows} from './prospecting-helpers.ts';
 import {resetRateLimits} from './helpers.ts';
 import {withWorkspaceTransaction,withContextTransaction} from '../../src/server/db/transaction.ts';
@@ -13,6 +16,11 @@ import type {JobLease} from '../../src/domain/prospecting.ts';
 import type {PlanningProposal} from '../../src/domain/planning.ts';
 beforeEach(resetRateLimits);after(closeProspectingPools);
 const worker=<T>(lease:JobLease,fn:Parameters<typeof withWorkspaceTransaction<T>>[1])=>withContextTransaction(workerPool(),{workspaceId:lease.workspaceId,userId:lease.actorId,role:'operator',sessionId:'worker'},fn);
+async function planningStorageJob(p:Parameters<typeof emptyStorageJob>[0]){
+ await configurePlatformAiTest(p);Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});
+ const policy=await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}}),job=await emptyStorageJob(p);
+ await testAdmin(c=>c.query('UPDATE app.prospecting_job SET checkpoint=$2 WHERE id=$1',[job.id,{execution:{aiRoute:{policyRevision:policy.revision,mode:'conventional-only',effectiveMode:'conventional',decisionProvider:'openai',conventional:conventionalConfig(p.workspaceId).conventional.openai.route}}}]));return job;
+}
 function proposal(jobId:string):PlanningProposal{return {task:'context_read',contractVersion:'planning-v1',jobId,base:{contextVersion:0,productVersion:null,workspaceRevision:0},evidenceIds:['page_1'],recommendedOptionId:null,fields:{offer:{value:'Clínicas',quote:'Atendemos clínicas.',evidenceIds:['page_1']}}};}
 
 test('planning persists without domain objects and legacy jobs still require a list',async()=>{

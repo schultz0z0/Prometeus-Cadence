@@ -4,6 +4,7 @@ import {identityAction} from '../../src/server/workspaces/service.ts';
 import {requirePrincipal} from '../../src/server/auth/principal.ts';
 import {getPools} from '../../src/server/db/pool.ts';
 import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
+import {configurePlatformAiTest} from './platform-ai-helpers.ts';
 export function configureProspectingTest(){
   Object.assign(process.env,{
     PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',
@@ -19,7 +20,7 @@ export async function prospectingUser(options:{billing?:boolean;platformAi?:bool
   const p=await requirePrincipal(headers);
   if(options.billing!==false)await withWorkspaceTransaction(p,c=>c.query('SELECT app.billing_start_trial($1)',[randomUUID()]));
   headers.set('x-cadence-workspace',p.workspaceId);
-  if(options.platformAi){const {configurePlatformAiTest}=await import('./platform-ai-helpers.ts');await configurePlatformAiTest(p);}
+  if(options.platformAi)await configurePlatformAiTest(p);
   return {...u,headers,p};
 }
 export const generationInput=()=>({kind:'generation' as const,source:'MAPS' as const,destination:{mode:'new' as const,name:'QA Maps'},filters:{term:'dentistas',location:'São Paulo'},limit:5,dedupScope:'workspace' as const});
@@ -32,7 +33,7 @@ export async function countRows(table:string,workspaceId:string){
 }
 export async function closeProspectingPools(){await getPools().close();}
 export async function seedHybridPolicy(p:import('../../src/domain/workspace.ts').Principal,jobId:string){
- const {configurePlatformAiTest}=await import('./platform-ai-helpers.ts');await configurePlatformAiTest(p);
+ await configurePlatformAiTest(p);
  Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});
  const {saveAiPolicy}=await import('../../src/server/prospecting/ai/settings.ts'),{conventionalConfig}=await import('../../src/server/prospecting/ai/config.ts');
  await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'auto',conventionalProvider:'openai',jevEnabled:true}});

@@ -12,10 +12,10 @@ export function validConnectionCheck(route:ConventionalRoute,check:ConnectionChe
 }
 export function resolveAiRoute(policy:AiPolicy,runtime:AiRuntime,check:ConnectionCheck|null,now=Date.now()):{route:AiRoute|null;blockers:string[]}{
  const p=policy.conventionalProvider,entry=p?runtime.conventional[p]:null;
- if(!entry?.configured)return{route:null,blockers:['Conecte e selecione uma LLM convencional para executar IA.']};
+ if(!entry?.configured)return{route:null,blockers:['A IA da plataforma está indisponível. Entre em contato com o suporte.']};
  const hybrid=policy.mode!=='conventional-only'&&policy.jevEnabled&&runtime.jevReady;
  if(policy.mode==='hybrid-required'&&!hybrid)return{route:null,blockers:['O modo híbrido obrigatório exige o JEV habilitado e configurado.']};
- if(hybrid&&!validConnectionCheck(entry.route,check,now))return{route:null,blockers:['Teste a LLM convencional nesta configuração antes de usar o JEV. O teste vale por 24 horas.']};
+ if(hybrid&&!validConnectionCheck(entry.route,check,now))return{route:null,blockers:['A validação da IA da plataforma está pendente ou venceu. O administrador precisa renovar o teste antes do uso híbrido.']};
  return{route:{policyRevision:policy.revision,mode:policy.mode,effectiveMode:hybrid?'hybrid':'conventional',conventional:entry.route,decisionProvider:hybrid?'jev':p!},blockers:[]};
 }
 export function aiRouteView(route:AiRoute):AiRouteView{const{configFingerprint:_,...conventional}=route.conventional;return{...route,conventional};}

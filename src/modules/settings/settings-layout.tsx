@@ -25,7 +25,7 @@ import {
   Modal,
 } from "@/components/ui/primitives";
 export function SettingsLayout({ section = "account" }: { section?: string }) {
-  const [help,setHelp]=useState(false);
+  const [help,setHelp]=useState(false),identity=useIdentity();
   const [area,subpage] = section.split("/");
   return (
     <div
@@ -35,7 +35,7 @@ export function SettingsLayout({ section = "account" }: { section?: string }) {
         {settingsGroups.map((g) => (
           <div key={g.title}>
             <h4>{g.title}</h4>
-            {g.items.map(([label, path]) => (
+            {g.items.filter(([,path])=>path!=='ai'||identity?.platformAiAdmin).map(([label, path]) => (
               <Link
                 key={path}
                 className={area === path ? "active" : ""}
@@ -52,7 +52,7 @@ export function SettingsLayout({ section = "account" }: { section?: string }) {
         {section === "account" ? (
           <Account />
         ) : section === "ai" ? (
-          <AiSettings />
+          identity?.platformAiAdmin ? <AiSettings /> : <Notice>A infraestrutura de IA é gerenciada pela plataforma. Personalize as informações da sua empresa em Contexto de IA.</Notice>
         ) : section === "context" ? (
           <CompanyContext />
         ) : ["email", "whatsapp", "dispatch-limits"].includes(section) ? (

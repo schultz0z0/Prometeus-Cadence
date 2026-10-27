@@ -21,6 +21,7 @@
     "openwa:stop": "node scripts/openwa-control.mjs stop",
     "db:up": "docker compose --env-file .env.local up -d --wait",
     "db:migrate": "node scripts/db-migrate.mjs",
+    "ai:provision": "node scripts/provision-platform-ai.mjs",
     "test:integration": "node scripts/test-integration.mjs",
     "worker": "node --conditions=react-server --experimental-strip-types scripts/prospecting-worker.ts",
     "scheduler": "node --conditions=react-server --experimental-strip-types scripts/automation-scheduler.ts",

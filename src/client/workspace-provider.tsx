@@ -20,6 +20,7 @@ import {createMessagingClient,type MessagingClient} from './messaging-client';
 import {createMailClient,type MailClient} from './mail-client';
 import {useLiveRefresh} from './use-live-refresh';
 export interface IdentityView {
+  platformAiAdmin?: boolean;
   user: { id: string; name: string; email: string };
   activeWorkspaceId: string | null;
   workspaces: { id: string; name: string; role: string }[];

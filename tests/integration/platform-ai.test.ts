@@ -2,9 +2,12 @@ import test,{after,beforeEach} from 'node:test';import assert from 'node:assert/
 import {prospectingUser,configureProspectingTest,testAdmin,closeProspectingPools} from './prospecting-helpers.ts';
 import {saveAiPolicy,readAiPolicy} from '../../src/server/prospecting/ai/settings.ts';import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 import {getAiSettings} from '../../src/server/prospecting/ai/probe.ts';
+import {aiRequest} from '../../src/server/prospecting/ai/http.ts';import {chatgptOAuthHttp} from '../../src/server/ai-oauth/http.ts';
+import {identitySnapshot} from '../../src/server/workspaces/service.ts';
+import {resetRateLimits} from './helpers.ts';
 import {configurePlatformAiTest} from './platform-ai-helpers.ts';import {prepareJob,confirmJob} from '../../src/server/prospecting/service.ts';import {generationInput} from './prospecting-helpers.ts';import {readConnectionCheck} from '../../src/server/prospecting/ai/connection.ts';import {conventionalConfig} from '../../src/server/prospecting/ai/config.ts';import {oauthStore} from '../../src/server/ai-oauth/store.ts';
 configureProspectingTest();after(closeProspectingPools);
-beforeEach(async()=>{delete process.env.PLATFORM_AI_WORKSPACE_ID;delete process.env.PLATFORM_AI_ADMIN_USER_IDS;});
+beforeEach(async()=>{await resetRateLimits();delete process.env.PLATFORM_AI_WORKSPACE_ID;delete process.env.PLATFORM_AI_ADMIN_USER_IDS;});
 const policy={mode:'conventional-only' as const,conventionalProvider:'openai' as const,jevEnabled:false};
 test('a customer workspace owner cannot configure infrastructure or self-enroll as platform admin',async()=>{
  const a=await prospectingUser();await assert.rejects(()=>saveAiPolicy(a.p,{requestId:randomUUID(),expectedRevision:0,policy}),{status:403});
@@ -14,12 +17,15 @@ test('a customer workspace owner cannot configure infrastructure or self-enroll 
 test('only explicitly designated platform administrators manage one shared policy and current role revocation wins',async()=>{
  const admin=await prospectingUser(),customer=await prospectingUser();
  await configurePlatformAiTest(admin.p);
+ assert.equal((await identitySnapshot(admin.headers)).platformAiAdmin,true);
+ assert.equal((await identitySnapshot(customer.headers)).platformAiAdmin,false);
  const body={requestId:randomUUID(),expectedRevision:0,policy};const saved=await saveAiPolicy(admin.p,body);assert.equal(saved.revision,1);
  assert.deepEqual(await withWorkspaceTransaction(customer.p,readAiPolicy),saved);
  await assert.rejects(()=>saveAiPolicy(customer.p,{requestId:randomUUID(),expectedRevision:1,policy}),{status:403});
  await assert.rejects(()=>withWorkspaceTransaction(customer.p,c=>c.query('UPDATE app.platform_ai_control SET admin_user_ids=$1',[[customer.p.userId]])));
  await assert.rejects(()=>getAiSettings(customer.p),{status:403});assert.equal((await getAiSettings(admin.p)).canManage,true);
  await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[admin.p.workspaceId,admin.p.userId]));
+ assert.equal((await identitySnapshot(admin.headers)).platformAiAdmin,false);
  await assert.rejects(()=>saveAiPolicy(admin.p,{requestId:randomUUID(),expectedRevision:1,policy}),{status:403});
 });
 test('customers inherit the central attestation; an uncertain central probe shadows success and tenant checks cannot replace it',async()=>{
@@ -40,4 +46,11 @@ test('shared OAuth runtime reads only the configured control connection rather t
 test('changing the designated infrastructure namespace invalidates an otherwise identical credential route',async()=>{
  Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'control-a',OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});const old=conventionalConfig('customer').conventional.openai.route;
  process.env.PLATFORM_AI_WORKSPACE_ID='control-b';assert.notEqual(conventionalConfig('customer').conventional.openai.route.configFingerprint,old.configFingerprint);
+});
+test('every infrastructure HTTP surface rejects a customer owner without returning provider-account data',async()=>{
+ const admin=await prospectingUser({platformAi:true}),customer=await prospectingUser(),base=process.env.BETTER_AUTH_URL!;
+ for(const [action,method] of [['policy','GET'],['policy','POST'],['prepare-test','POST'],['confirm-test','POST'],['diagnostics','POST']] as const){
+  const r=await aiRequest(new Request(base+'/api/prospecting/ai/'+action,{method,headers:customer.headers,...(method==='POST'?{body:'{}'}:{})}),action as any);assert.equal(r.status,403,action);assert.ok(!(await r.text()).includes('fixture-model'));
+ }
+ const r=await chatgptOAuthHttp(new Request(base+'/api/prospecting/ai/oauth/status',{headers:customer.headers}),'status');assert.equal(r.status,403);assert.ok(!(await r.text()).includes('email'));
 });
