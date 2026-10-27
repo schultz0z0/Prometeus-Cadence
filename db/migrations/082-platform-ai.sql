@@ -57,3 +57,11 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION app.platform_ai_check(text,text,text,text,text,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app.platform_ai_check(text,text,text,text,text,text) TO cadence_app,cadence_worker;
+
+-- Preserve all channel/lease/contact checks, replacing only the obsolete
+-- per-customer AI revision in the existing dispatcher scope.
+DO $$ DECLARE definition text;needle text:='SELECT COALESCE((SELECT revision FROM app.ai_policy WHERE workspace_id=p_ws),0) INTO ai_revision;';BEGIN
+ SELECT pg_get_functiondef('app.message_dispatch_scope_legacy(text,text)'::regprocedure) INTO definition;
+ IF strpos(definition,needle)=0 THEN RAISE EXCEPTION 'Unsupported dispatcher AI revision definition';END IF;
+ EXECUTE replace(definition,needle,'SELECT COALESCE((SELECT platform_policy.revision FROM app.platform_ai_control platform_control JOIN app.ai_policy platform_policy ON platform_policy.workspace_id=platform_control.workspace_id WHERE platform_control.singleton),0) INTO ai_revision;');
+END $$;

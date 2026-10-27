@@ -1,14 +1,15 @@
 import type {Evidence,ProviderUsage} from '../../../domain/prospecting.ts';
 import type {ConventionalContext} from './json.ts';import {runConventionalJson} from './json.ts';
-export interface DecisorDiscoveryInput{company:{name:string;companyName?:string;cnpj?:string};knownNames:string[];evidence:Evidence[]}
+import {buildAiSkill,AI_SKILLS_VERSION} from '../../../domain/ai-skills.ts';
+export interface DecisorDiscoveryInput{company:{name:string;companyName?:string;cnpj?:string};knownNames:string[];evidence:Evidence[];context?:unknown;product?:unknown;request?:unknown}
 export type DecisorGenerator=(ctx:ConventionalContext,input:DecisorDiscoveryInput)=>Promise<{value:unknown;usage:ProviderUsage}>;
 // Shared by the review/cache contract and the actual request. Changing interpretation
 // instructions invalidates cached resolutions, without tying them to quota settings.
-export const ENRICHMENT_CONTRACT='decisors-public-evidence-v2';
+export const ENRICHMENT_CONTRACT='decisors-public-evidence-v3:'+AI_SKILLS_VERSION;
 export const decisorRequest=(input:DecisorDiscoveryInput)=>({
  maxOutputTokens:4096,
  schema:{type:'object',additionalProperties:false,required:['people'],properties:{people:{type:'array',maxItems:10,items:{type:'object',additionalProperties:false,required:['name','role','evidenceId','quote'],properties:{name:{type:'string'},role:{type:'string'},email:{type:'string'},phone:{type:'string'},linkedin:{type:'string'},evidenceId:{type:'string'},quote:{type:'string'}}}}}},
- prompt:JSON.stringify({contract:ENRICHMENT_CONTRACT,task:'Extract decision makers and explicitly attributed publicly published contact details.',sourceGuide:{
+ prompt:JSON.stringify({contract:ENRICHMENT_CONTRACT,skill:buildAiSkill('decisors',{company:input.context,product:input.product,request:input.request??{targetCompany:input.company,knownNames:input.knownNames}}),task:'Extract decision makers and explicitly attributed publicly published contact details.',sourceGuide:{
   registry:'CNPJ/QSA identifies a legal entity and shareholder name/role. Company registry phone is corporate, not personal. A QSA name alone is not a resolved contact. Null/absent email means unknown. Never infer phone ownership or WhatsApp activity.',
   website:'Company website pages may establish person, current company and role. A footer/company contact is generic. Only a literal passage attributing a published email or phone to this person supports personal contact; retain URL and evidenceId.',
   linkedin:'Public search snippets/profile pages are candidates, not identity proof. Check homonym names against company and decision-making role. Keep the exact /in/ profile URL. Do not guess email/phone, treat an inferred email as verified, or use missing/private fields.',

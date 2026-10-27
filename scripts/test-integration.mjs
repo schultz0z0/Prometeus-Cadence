@@ -16,6 +16,8 @@ process.env.NODE_ENV = "test";
 process.env.CADENCE_INTEGRATION = "1";
 const known = [
   "platform-ai",
+  "platform-ai-context",
+  "platform-ai-dispatch",
   "reengagement",
   "enrichment",
   "qualification-options",

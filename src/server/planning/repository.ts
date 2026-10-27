@@ -8,11 +8,13 @@ import {AppError} from '../errors.ts';
 import {hashValue} from '../prospecting/review.ts';
 import {planningWriteLease} from './evidence.ts';
 import {validatePlanningResult} from './contracts.ts';
+import {assertAiRouteCurrent} from '../prospecting/ai/route-guard.ts';
 export async function savePlanningProposal(c:PoolClient,lease:JobLease,proposal:PlanningProposal):Promise<void>{
  await planningWriteLease(c,lease);
  const hash=hashValue(proposal),old=(await c.query('SELECT body_hash FROM app.planning_proposal WHERE job_id=$1',[lease.jobId])).rows[0];
  if(old){if(old.body_hash!==hash)throw new AppError(409,'Uma proposta diferente já foi registrada.');return;}
- const job=(await c.query('SELECT input FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
+ const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
+ await assertAiRouteCurrent(c,job);
  const sources:PlanningEvidence[]=(await c.query('SELECT payload FROM app.planning_evidence WHERE job_id=$1',[lease.jobId])).rows.map(r=>r.payload);
  const {task,contractVersion,jobId,base,evidenceIds,recommendedOptionId,...content}=proposal;
  const value=task==='message_preview'?{...content,evidenceIds}:content;

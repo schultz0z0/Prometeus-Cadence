@@ -47,14 +47,14 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
    const slot=(release:boolean)=>withLeasedTransaction(lease,async c=>Boolean((await c.query('SELECT app.codex_prospecting_slot($1,$2,$3,$4) AS ok',[lease.jobId,lease.token,lease.fence,release])).rows[0].ok));
    const result=await performStep(lease,step,route.provider==='codex-local'?'codex':route.provider,{[conventionalUnit(route.provider)]:1},async()=>{
     await withLeasedTransaction(lease,c=>assertAiRouteCurrent(c,job,operationId));
-    const generated=await(deps.decisors??generateDecisors)({workspaceId:lease.workspaceId,operationId,signal:deps.signal??new AbortController().signal,route,acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{company:lead,knownNames:names,evidence});
+    const generated=await(deps.decisors??generateDecisors)({workspaceId:lease.workspaceId,operationId,signal:deps.signal??new AbortController().signal,route,acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{company:lead,knownNames:names,evidence,context:job.checkpoint.context,product:job.checkpoint.product,request:{targetCompany:lead.name,cnpj:group.cnpj}});
     try{return {people:validateDecisorEvidence(generated.value,evidence,lead,names,registry.phone?[registry.phone]:[]),usage:generated.usage,invalid:false};}
     catch{return {people:[] as Decisor[],usage:generated.usage,invalid:true};}
    },r=>r.usage);if(result.invalid)throw new ProviderError('INVALID_DECISOR_RESULT');people=result.people;
    if(job.checkpoint.execution.aiRoute.decisionProvider==='jev'){
     assessment=await performStep(lease,'decisor-assessment:'+group.leadId,'openrouter',{jevCalls:1},async()=>{
      await preflight(lease,job,deps,true);
-     return (deps.decide??decide)({operationId:hashValue({job:lease.jobId,step:'decisor-assessment:'+group.leadId}),signal:deps.signal??new AbortController().signal,credential:process.env.OPENROUTER_API_KEY??''},{intent:'contact-evidence',criteria:'Assess explicit personal contact attribution to the named decision maker at this company. Registry/QSA names alone, generic company contacts and guessed emails are insufficient. Report conflicts; never claim delivery or WhatsApp verification.',facts:{company:lead.name,cnpj:group.cnpj,people},evidence});
+     return (deps.decide??decide)({operationId:hashValue({job:lease.jobId,step:'decisor-assessment:'+group.leadId}),signal:deps.signal??new AbortController().signal,credential:process.env.OPENROUTER_API_KEY??''},{company:job.checkpoint.context,product:job.checkpoint.product,request:{targetCompany:lead.name,cnpj:group.cnpj},intent:'contact-evidence',criteria:'Assess explicit personal contact attribution to the named decision maker at this company. Registry/QSA names alone, generic company contacts and guessed emails are insufficient. Report conflicts; never claim delivery or WhatsApp verification.',facts:{company:lead.name,cnpj:group.cnpj,people},evidence});
     },r=>r.usage);
    }
   }

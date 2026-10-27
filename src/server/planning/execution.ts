@@ -90,7 +90,7 @@ export async function runPlanning(lease:JobLease,deps:PlanningExecutionAdapters=
    const step='planning:rank',operationId=hashValue({job:lease.jobId,step});
    await performStep(lease,step,'openrouter',{jevCalls:1},async()=>{
     await preflight(lease,job,deps);
-    return(deps.rank??rankPlanningOptions)({operationId,signal,credential:process.env.OPENROUTER_API_KEY??''},{task:input.task as 'audience_plan'|'cadence_options',options:proposal.options,criteria:JSON.stringify({request:input,context:job.checkpoint.context,product:job.checkpoint.product}).slice(0,12000)});
+    return(deps.rank??rankPlanningOptions)({operationId,signal,credential:process.env.OPENROUTER_API_KEY??''},{task:input.task as 'audience_plan'|'cadence_options',options:proposal.options,company:job.checkpoint.context,product:job.checkpoint.product,request:input,criteria:JSON.stringify({request:input,context:job.checkpoint.context,product:job.checkpoint.product}).slice(0,12000)});
    },r=>r.usage);
   }
   await finishJob(lease,'completed');
