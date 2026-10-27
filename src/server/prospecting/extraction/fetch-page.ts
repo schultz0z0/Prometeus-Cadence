@@ -25,7 +25,7 @@ export const requestPinned:PageRequest=(approved,signal)=>new Promise((resolve,r
     response.on('end',()=>resolve({status:response.statusCode??0,headers:Object.fromEntries(Object.entries(response.headers).map(([k,v])=>[k,Array.isArray(v)?v.join(','):v])),body:Buffer.concat(chunks)}));
   });request.on('error',reject);request.end();
 });
-export async function fetchPublicPage(value:string,options:{signal:AbortSignal;resolve?:ResolveDns;request?:PageRequest}):Promise<Evidence&{links:string[]}>{
+export async function fetchPublicPage(value:string,options:{signal:AbortSignal;resolve?:ResolveDns;request?:PageRequest}):Promise<Evidence&{links:string[];socialLinks:string[];externalLinks:string[]}>{
   const signal=AbortSignal.any([options.signal,AbortSignal.timeout(10000)]);let url=value;
   for(let redirects=0;redirects<=3;redirects++){
     signal.throwIfAborted();const approved=await abortable(approvePublicUrl(url,options.resolve??resolvePublicDns),signal);
@@ -43,8 +43,8 @@ export async function fetchPublicPage(value:string,options:{signal:AbortSignal;r
       if(!decode)throw Error('PAGE_ENCODING');body=decode(body,{maxOutputLength:maxBytes});
     }
     const parsed=parsePage(body.toString('utf8'),approved.url.toString());
-    const full=(parsed.contactText?'Contatos publicados: '+parsed.contactText+'\n':'')+parsed.text,text=full.slice(0,12000);
-    return{id:randomUUID(),url:approved.url.toString(),fetchedAt:new Date().toISOString(),text,hash:createHash('sha256').update(text).digest('hex'),truncated:full.length>12000,links:parsed.links};
+    const full=(parsed.contactText?'Contatos publicados: '+parsed.contactText+'\n':'')+(parsed.socialLinks.length?'Links públicos: '+parsed.socialLinks.join(' ')+'\n':'')+parsed.text,text=full.slice(0,12000);
+    return{id:randomUUID(),url:approved.url.toString(),fetchedAt:new Date().toISOString(),text,hash:createHash('sha256').update(text).digest('hex'),truncated:full.length>12000,links:parsed.links,socialLinks:parsed.socialLinks,externalLinks:parsed.externalLinks};
   }throw Error('REDIRECT_LIMIT');
 }
 export async function fetchEvidencePack(url:string,options:{signal:AbortSignal;resolve?:ResolveDns;request?:PageRequest},deep=false){

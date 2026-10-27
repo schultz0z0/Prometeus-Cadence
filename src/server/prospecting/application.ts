@@ -21,6 +21,7 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
     const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1 FOR UPDATE',[jobId])).rows[0];
     if(!job)throw new AppError(404,'Execução não encontrada.');
     if(job.checkpoint.purpose==='ai-connection-test')throw new AppError(409,'Teste de conexão não pode alterar contatos.');
+    if(job.input.companyResearch)throw new AppError(409,'Revise e aplique os fatos pela investigação da empresa.');
     if(job.input.enrichment){
       if(!['completed','partial'].includes(job.state))throw new AppError(409,'Aguarde o término do enriquecimento.');
       const result=(await c.query('SELECT app.apply_enrichment($1,$2::text[]) AS result',[jobId,itemIds])).rows[0].result;

@@ -12,10 +12,10 @@ export type CompanyResearchInput=z.infer<typeof companyResearchInputSchema>;
 export type ResearchOptions=z.infer<typeof researchOptionsSchema>;
 export type ResearchKind=ResearchOptions['sourceKinds'][number];
 export type ResearchField='email'|'phone'|'site'|'summary'|'instagram'|'facebook'|'linkedin'|'address'|'companyName';
-export interface ResearchPage extends Evidence{links?:string[];socialLinks?:string[];corroborated?:boolean;sourceKind?:ResearchKind}
+export interface ResearchPage extends Evidence{links?:string[];externalLinks?:string[];socialLinks?:string[];corroborated?:boolean;sourceKind?:ResearchKind}
 export interface ResearchFact{id:string;leadId:string;field:ResearchField;value:string;evidence:EvidenceRef[];attribution:'company'|'uncertain';applied?:boolean}
 export interface ResearchSourceView{id:string;leadId:string;url:string;fetchedAt:string;hash:string;sourceKind:ResearchKind;attribution:'company'|'uncertain'}
-export interface ResearchCaseView{id:string;revision:number;state:JobState;facts:ResearchFact[];missing:string[];sources:ResearchSourceView[];companies:{leadId:string;name:string;state:string;missing:string[]}[];usage?:UsageEstimate[]}
+export interface ResearchCaseView{id:string;revision:number;state:JobState;facts:ResearchFact[];missing:string[];sources:ResearchSourceView[];selectedLeadId?:string;totalCompanies:number;companies:{leadId:string;name:string;state:string;missing:string[]}[];usage?:UsageEstimate[]}
 export interface ResearchApplication{caseId:string;factIds:string[];expectedRevision:number}
 export interface ResearchAdapters{signal?:AbortSignal;collect?:(source:ResearchKind,urls:string[],signal:AbortSignal)=>Promise<ResearchPage[]>;apify?:import('../server/prospecting/providers/types.ts').SourceAdapter}
 export function parseCompanyResearchInput(value:unknown):CompanyResearchInput{return companyResearchInputSchema.parse(value);}
@@ -26,8 +26,8 @@ export function researchUrl(value:string):URL|null{
 function host(value:string){return researchUrl(value)?.hostname.toLowerCase().replace(/^www\./,'')??'';}
 export function matchCompanySource(input:{companyDomain:string;candidateDomain:string;corroborated:boolean}):'matched'|'review'{
  const company=host(input.companyDomain),candidate=host(input.candidateDomain);
- if(!candidate||!company)return'review';
- return candidate===company||candidate.endsWith('.'+company)||input.corroborated?'matched':'review';
+ if(!candidate)return'review';if(input.corroborated)return'matched';if(!company)return'review';
+ return candidate===company||candidate.endsWith('.'+company)?'matched':'review';
 }
 export function socialField(value:string):'instagram'|'facebook'|'linkedin'|null{
  const u=researchUrl(value);if(!u)return null;const h=u.hostname.replace(/^www\./,'');

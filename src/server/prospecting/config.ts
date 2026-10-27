@@ -5,6 +5,7 @@ import type {GenerationSource,JobInput,Units,UsageEstimate} from '../../domain/p
 import {hashValue} from './review.ts';
 import {providerProfile,actorInput,providerContractVersion} from './providers/profiles.ts';
 import type {AiRoute} from '../../domain/ai-routing.ts';
+import {researchContractVersion} from '../../domain/company-research.ts';
 const conventionalUnit=(p:string):import('../../domain/prospecting.ts').Unit=>(p==='codex-local'||p==='chatgpt-oauth')?'codexCalls':p==='openai'?'openaiCalls':'geminiCalls';
 const unitCaps=z.strictObject({candidates:z.number().int().min(0).max(1e9).default(0),apifyRuns:z.number().int().min(0).max(1e9).default(0),apolloPages:z.number().int().min(0).max(1e9).default(0),jevCalls:z.number().int().min(0).max(1e9).default(0),codexCalls:z.number().int().min(0).max(1e9).default(0),openaiCalls:z.number().int().min(0).max(1e9).default(0),geminiCalls:z.number().int().min(0).max(1e9).default(0)});
 export function parseCaps(value:string|undefined){try{return unitCaps.parse(JSON.parse(value??'{}'));}catch{return unitCaps.parse({});}}
@@ -18,7 +19,7 @@ export function prospectingConfig(){
   for(const key of ['MAPS','WEB','CNPJ'] as const)ready[key]=!!e.APIFY_TOKEN&&!!profiles[key].actor&&!!profiles[key].build&&Number(e.APIFY_MAX_CHARGE_USD)>0;
   const codexWorkspaces=(e.CODEX_TEST_WORKSPACE_IDS??'').split(',').map(x=>x.trim()).filter(Boolean);
   const enabled=e.PROSPECTING_ENABLED==='true';
-  const version=hashValue({providerContractVersion,enabled,profiles,ready,caps,globalCaps,apifyMax:e.APIFY_MAX_CHARGE_USD,apolloMax:e.APOLLO_MAX_PAGES,jev:e.JEV_MODEL??'typesafe/jev-1.13',jevReady:!!e.OPENROUTER_API_KEY,codexEnabled,codexWorkspaces,codexModel:e.CODEX_MODEL,credentials:hashValue([e.APIFY_TOKEN??'',e.APOLLO_API_KEY??'',e.OPENROUTER_API_KEY??''])});
+  const version=hashValue({providerContractVersion,researchContractVersion,enabled,profiles,ready,caps,globalCaps,apifyMax:e.APIFY_MAX_CHARGE_USD,apolloMax:e.APOLLO_MAX_PAGES,jev:e.JEV_MODEL??'typesafe/jev-1.13',jevReady:!!e.OPENROUTER_API_KEY,codexEnabled,codexWorkspaces,codexModel:e.CODEX_MODEL,credentials:hashValue([e.APIFY_TOKEN??'',e.APOLLO_API_KEY??'',e.OPENROUTER_API_KEY??''])});
   return {enabled,profiles,ready,caps,globalCaps,version,codexEnabled,codexWorkspaces,jevReady:!!e.OPENROUTER_API_KEY&&(e.JEV_MODEL??'typesafe/jev-1.13')==='typesafe/jev-1.13'};
 }
 export type ProspectingConfig=ReturnType<typeof prospectingConfig>;
@@ -35,6 +36,7 @@ export function estimateUsage(input:JobInput,route?:AiRoute|null,plannedFresh?:n
     }
   }else{
     const n=input.leadIds.length;
+    if(input.companyResearch){const calls=(input.companyResearch.sourceKinds.some(s=>s==='website'||s==='social')&&prospectingConfig().ready.WEB?1:0)+(input.companyResearch.sourceKinds.includes('registry')&&prospectingConfig().ready.CNPJ?1:0);if(calls)add('apify','apifyRuns',n*calls);return result;}
     if(input.enrichment){const fresh=plannedFresh??Math.min(n,input.enrichment.maxCredits);if(fresh>0){add('apify','apifyRuns',fresh*3);if(route){add(route.conventional.provider,conventionalUnit(route.conventional.provider),fresh);if(route.decisionProvider==='jev')add('openrouter','jevCalls',fresh);}}return result;}
     if(input.modules.includes('qualify')){if(!route||route.decisionProvider==='jev')add('openrouter','jevCalls',n);else add(route.conventional.provider,conventionalUnit(route.conventional.provider),n);}
     const calls=(input.modules.includes('summary')?n:0)+(input.escalation==='ambiguous'&&input.modules.includes('qualify')&&(!route||route.decisionProvider==='jev')?n:0);

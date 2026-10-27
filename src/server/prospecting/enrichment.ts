@@ -68,7 +68,7 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
   await record(lease,job,group,{cnpj:group.cnpj,people:resolution.row.people,cacheId:resolution.row.id,cached:resolution.cached,charged:!resolution.cached&&people.length>0,resolvedAt:new Date(resolution.row.resolved_at).toISOString(),...(resolution.row.assessment?{assessment:resolution.row.assessment}:{})});
  }catch(error){await handleStepFailure(lease,error);}
 }
-async function cancelRemoteRuns(lease:JobLease,job:any,deps:QualificationAdapters){
+export async function cancelRemoteRuns(lease:JobLease,job:any,deps:QualificationAdapters){
  const starts=await withLeasedTransaction(lease,async c=>(await c.query("SELECT step,payload FROM app.prospecting_attempt WHERE job_id=$1 AND provider='apify' AND state='completed' AND payload->'result'->'run'->>'runId' IS NOT NULL",[lease.jobId])).rows);
  let pending=false;const adapter=deps.apify??new ApifyAdapter();
  for(const start of starts){
