@@ -1,5 +1,6 @@
 {
   "date": "2026-10-27",
+  "stage": "post-review final build",
   "scope": "06B.3 local controlled UI",
   "files": [
     {
@@ -18,9 +19,9 @@
         },
         {
           "text": "Provedores de prospecção",
-          "x": 313,
+          "x": 0,
           "y": 1233,
-          "w": 177,
+          "w": 172,
           "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
         }
       ],
@@ -67,7 +68,7 @@
           "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
         }
       ],
-      "sha256": "4b88e0e251a820953837673c651afa74c68ffd733424957c031a293de7336bbb",
+      "sha256": "4ef60c5dc4187a05da7294236e41560ed6baddfb0ad71da50a79978e41ed7b07",
       "masked": true
     },
     {
@@ -127,7 +128,7 @@
           "font": "600 14px / 20px \"Exo 2\", sans-serif"
         }
       ],
-      "sha256": "165894e40663c8163ae12fa3cd02ca2dd9f19bb0eb1e6c912b1ab1a2423b0131",
+      "sha256": "742edf5e78f1676c37a06a8863a5ad3b6cd1acdceba14d06a61278cc03dfe576",
       "masked": true
     },
     {
@@ -200,7 +201,7 @@
           "font": "600 14px / 20px \"Exo 2\", sans-serif"
         }
       ],
-      "sha256": "ce0d386c741154063f9adf16249183f1b0373e5a55985492c37f055a1f2b7ce9",
+      "sha256": "9833a287573b9669be8dbfa2380e0aaf54ea95503f81fa63fd18e552b723eef2",
       "masked": true
     },
     {
@@ -273,7 +274,7 @@
           "font": "600 14px / 20px \"Exo 2\", sans-serif"
         }
       ],
-      "sha256": "2957d84b2125eb22f6e254765d241caf183a6aa535cb5cf6995f8e632d635680",
+      "sha256": "b2298e7aff30c6f0f8b61c481e236954c92b68a4d66e2b5bf82ad3213e1ba057",
       "masked": true
     },
     {
@@ -312,7 +313,7 @@
           "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
         }
       ],
-      "sha256": "e6f115d401627e459d9f4906be3dad3dc65b59f44728d059093ed74ff9edf925",
+      "sha256": "4fdbb6252e85ba9365f942d02e1e278d52b1dd55ec8140319473966bab6d341b",
       "masked": true
     },
     {
@@ -380,7 +381,7 @@
           "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
         }
       ],
-      "sha256": "5513cb3ba1a512b7aa3390f1ac1639811e1d66fbaa83335e22447294b73fd88a",
+      "sha256": "d08305f4c0518d863a9476d9c4e9a77cec21e7b5efb5ac0f70a577c1f800d4c9",
       "masked": true
     },
     {
@@ -440,7 +441,7 @@
           "font": "600 14px / 20px \"Exo 2\", sans-serif"
         }
       ],
-      "sha256": "de9a9cc1482015b57b288278e318fa37905fb548eb735986c2eea5db9f3d0b89",
+      "sha256": "cf2ed370b1002b89bfd998064adf68775690c4a001177e4045c076a779402a9a",
       "masked": true
     },
     {
@@ -513,7 +514,7 @@
           "font": "600 14px / 20px \"Exo 2\", sans-serif"
         }
       ],
-      "sha256": "4257423b1e94a333982e9536562e70e2974a35512913eaa2136f4764782f6c6c",
+      "sha256": "1d3d4f427e70b8f23fdcc4e70871900e8a1e43b3500afc33790763be951a3da1",
       "masked": true
     },
     {
@@ -586,7 +587,7 @@
           "font": "600 14px / 20px \"Exo 2\", sans-serif"
         }
       ],
-      "sha256": "91b42ba5c99fb71d2a765c8abc988d726a4008858f8ca26d30fdc25b8cd55402",
+      "sha256": "b31ea241240e747aa74668ab9828971694fd270546b81cec6ca9215bb1a337d8",
       "masked": true
     },
     {
@@ -625,7 +626,7 @@
           "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
         }
       ],
-      "sha256": "51d2112eb84516f6c78d44eae618dc063bbe6c373b89406b499f9f5a2b409285",
+      "sha256": "6d2088006c3d625111286c7de124c0bbcc188fa5beb15ec4a32f6cd9e214e3ca",
       "masked": true
     },
     {
@@ -644,9 +645,9 @@
         },
         {
           "text": "Provedores de prospecção",
-          "x": 0,
+          "x": 33,
           "y": 2158,
-          "w": 172,
+          "w": 177,
           "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
         }
       ],
@@ -693,7 +694,7 @@
           "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
         }
       ],
-      "sha256": "7e886b04794d6d4beb4cb673659e579e37217c1f642751bf8eaaf69b1de4e76e",
+      "sha256": "8f5f847722922e15e94ec28082ece26d5a8beceec207072f4d512434e6ca9578",
       "masked": true
     },
     {
@@ -753,7 +754,7 @@
           "font": "600 14px / 20px \"Exo 2\", sans-serif"
         }
       ],
-      "sha256": "847d46339857006eba41a117b985cd16cc8e23239fd8b637a46a2e2314cb70bd",
+      "sha256": "4adb232f9a49a62e6ff50892f979db8909a4fdd79053aba4b31e67e7d36144d9",
       "masked": true
     },
     {
@@ -826,7 +827,7 @@
           "font": "600 14px / 20px \"Exo 2\", sans-serif"
         }
       ],
-      "sha256": "6ad3c26fd99be244cdea8700488a95b27cf0750defbb7fbf00101f0d7d2f6457",
+      "sha256": "1eec21a5200a1e5fcaae4799189805de4fe001eec904d62e9ed6c9ba1df3a554",
       "masked": true
     },
     {
@@ -899,7 +900,7 @@
           "font": "600 14px / 20px \"Exo 2\", sans-serif"
         }
       ],
-      "sha256": "9f256f31fa8d35c5793b807dc8ef0d39f3561e96d81baff2f86dede4815f1b96",
+      "sha256": "988e46f2b980a2b5496ccca016fc8e98aa18244e26c4a09c076e51fe7ddfdcf0",
       "masked": true
     },
     {
@@ -938,54 +939,55 @@
           "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
         }
       ],
-      "sha256": "59c524e2f23dc1e2b24b3f950a8ea1eb4d3801310ce66cb6c06e44fb2d52ca1a",
+      "sha256": "74a37086f9b85f18d8df94d73333448b3b020e47aa93d5c65542b8fced897294",
       "masked": true
     },
     {
       "label": "application-review-390",
       "file": "application-review-390.png",
       "overflow": false,
-      "sha256": "152386c4a62a49817885a0b5b8d7e22a5c9cb1fe8a781fc75671f366196f225e",
+      "sha256": "5f3201971682ccc2739e371490b20ce67c8e963ded0ff32a5afef9c7aaf60e29",
       "masked": true
     },
     {
       "label": "application-success-390",
       "file": "application-success-390.png",
       "overflow": false,
-      "sha256": "a230436a3147d1cc10b6f78f463dd49c0bb937ff9e3bcf27adbf135aaeadaffa",
+      "sha256": "369a5897951e6016433fb8c4860439cbe65955a9b21f4964987533f030f1fd2d",
       "masked": true
     },
     {
       "label": "lead-after-application-390",
       "file": "lead-after-application-390.png",
       "overflow": false,
-      "sha256": "4163d998d4f948b928b710c1f5f1efeebf58ec7085208e6787774bf553c15854",
+      "sha256": "ce94fb162578c8e62f4fe25fb4fb4fc65f679e47c9c6b68016aaf13bd8bb41df",
       "masked": true
     },
     {
       "label": "lead-empty-390",
       "file": "lead-empty-390.png",
       "overflow": false,
-      "sha256": "76fd341749e6fa89397d2fb94922930e46292bb372535cac32ac0891d313e807",
+      "sha256": "75af0c1de214f5f8ad179b7b8fdb6aa5544bacb06b031b32de40bb7ce9c357de",
       "masked": true
     },
     {
       "label": "research-error-draft-390",
       "file": "research-error-draft-390.png",
       "overflow": false,
-      "sha256": "4e63c1da473405a082f290fa7044b77f3cb9b582633359a808e97f033152d751",
+      "sha256": "c406b9868cc4e597df2ac1264a3ddd4ae2b623dce9b2faa2b4f93df7f40b1152",
       "masked": true
     },
     {
       "label": "research-recovered-390",
       "file": "research-recovered-390.png",
       "overflow": false,
-      "sha256": "25aeeb844c8d6b0305b100d261861a672faa0346b65a8aa80217fdee36270c5d",
+      "sha256": "1b28a9165e9c9adca15135c1f96dff732845d77c8baf7d8ad723b537fe245e95",
       "masked": true
     }
   ],
   "errors": [],
   "applicationPersisted": true,
   "draftRetained": true,
+  "uncorroboratedSocialProfileDisabled": true,
   "reference": "Historical RES/REA captures 06B.1; fresh authenticated reference unavailable; new research states unobserved"
 }

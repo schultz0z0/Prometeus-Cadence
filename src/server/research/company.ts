@@ -20,6 +20,7 @@ import {prospectingConfig} from '../prospecting/config.ts';
 import {fetchPublicPage} from '../prospecting/extraction/fetch-page.ts';
 import {extractCnpjs} from '../prospecting/extraction/contacts.ts';
 import {normalizeCnpj} from '../prospecting/normalize.ts';
+import {assertExecution} from '../billing/entitlements.ts';
 import {researchSourceRegistry,researchSourceWarnings} from './source-registry.ts';
 import {ProviderError} from '../prospecting/providers/transport.ts';
 
@@ -48,7 +49,7 @@ export async function confirmCompanyResearch(p:Principal,value:unknown):Promise<
 async function readResearch(c:PoolClient,id:string,query:{leadId?:string;factIds?:string[]}={}):Promise<ResearchCaseView>{
  const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[id])).rows[0];
  if(!job?.input?.companyResearch)throw new AppError(404,'Investigação não encontrada.');
- const companies=(await c.query('SELECT lead_id,name,state,missing FROM app.research_case WHERE job_id=$1 ORDER BY lead_id',[id])).rows.map(r=>({leadId:r.lead_id,name:r.name,state:r.state,missing:r.missing as string[]}));
+ const companies=(await c.query('SELECT lead_id,name,state,missing FROM app.research_case WHERE job_id=$1 ORDER BY lead_id',[id])).rows.map(r=>({leadId:r.lead_id,name:r.name,state:r.state==='pending'&&!['queued','running','waiting_provider','cancelling','needs_reconciliation'].includes(job.state)?'unavailable':r.state,missing:r.state==='pending'&&!['queued','running','waiting_provider','cancelling','needs_reconciliation'].includes(job.state)?[...r.missing,'RESULTADO_INDISPONIVEL']:r.missing as string[]}));
  const selectedLeadId=query.leadId??companies[0]?.leadId;if(query.leadId&&!companies.some(r=>r.leadId===query.leadId))throw new AppError(404,'Empresa não encontrada nesta investigação.');
  const facts=(await c.query('SELECT * FROM app.research_fact WHERE job_id=$1 AND (CASE WHEN $3::text[] IS NULL THEN lead_id=$2 ELSE id=ANY($3::text[]) END) ORDER BY lead_id,field,id LIMIT 100',[id,selectedLeadId??'',query.factIds??null])).rows.map(r=>({id:r.id,leadId:r.lead_id,field:r.field,value:r.value,evidence:r.evidence,attribution:r.attribution,applied:r.applied}));
  const sources=(await c.query('SELECT id,lead_id,url,fetched_at,hash,source_kind,attribution FROM app.research_source WHERE job_id=$1 AND lead_id=$2 ORDER BY id LIMIT 10',[id,selectedLeadId??''])).rows.map(r=>({id:r.id,leadId:r.lead_id,url:r.url,fetchedAt:new Date(r.fetched_at).toISOString(),hash:r.hash,sourceKind:r.source_kind,attribution:r.attribution}));
@@ -64,10 +65,11 @@ async function applicationState(c:PoolClient,p:Principal,raw:ResearchApplication
  if(!['completed','partial'].includes(result.state)||result.revision!==raw.expectedRevision)throw new AppError(409,'A investigação mudou. Revise os resultados novamente.');
  const selected=result.facts.filter(f=>raw.factIds.includes(f.id));
  if(selected.length!==raw.factIds.length||selected.some(f=>f.applied||f.attribution!=='company'))throw new AppError(409,'Selecione fatos disponíveis com vínculo comprovado à empresa.');
+ const applied=(await c.query('SELECT lead_id,field,value FROM app.research_fact WHERE job_id=$1 AND applied',[raw.caseId])).rows;
  const fields=new Set<string>();for(const f of selected){const key=f.leadId+':'+f.field;if(fields.has(key))throw new AppError(409,'Escolha apenas um valor por campo e contato.');fields.add(key);}
  const companies=(await c.query('SELECT r.lead_id,r.basis,l.payload FROM app.research_case r JOIN app.lead l ON l.workspace_id=r.workspace_id AND l.id=r.lead_id WHERE r.job_id=$1 AND r.lead_id=ANY($2::text[])',[raw.caseId,[...new Set(selected.map(f=>f.leadId))]])).rows;
  if(companies.length!==new Set(selected.map(f=>f.leadId)).size)throw new AppError(409,'Um contato foi removido. Revise novamente.');
- for(const company of companies){const keys=['name','companyName','site','cnpj','address','city','state',...selected.filter(f=>f.leadId===company.lead_id).map(f=>f.field)];if(keys.some(k=>hashValue(company.basis[k]??null)!==hashValue(company.payload[k]??null)))throw new AppError(409,'Os dados do contato mudaram. Prepare uma nova investigação.','RESEARCH_SOURCE_CHANGED');}
+ for(const company of companies){const keys=['name','companyName','site','cnpj','address','city','state',...selected.filter(f=>f.leadId===company.lead_id).map(f=>f.field)];if(keys.some(k=>hashValue(company.basis[k]??null)!==hashValue(company.payload[k]??null)&&!applied.some(f=>f.lead_id===company.lead_id&&f.field===k&&f.value===company.payload[k])))throw new AppError(409,'Os dados do contato mudaram. Prepare uma nova investigação.','RESEARCH_SOURCE_CHANGED');}
  return{proof:{action:'research.apply',workspaceId:p.workspaceId,userId:p.userId,input:raw,facts:selected},selected};
 }
 export async function prepareResearchApplication(p:Principal,value:unknown):Promise<Reviewed<ResearchApplication>>{
@@ -85,6 +87,8 @@ export async function confirmResearchApplication(p:Principal,value:unknown):Prom
  });
 }
 async function researchTransaction<T>(lease:JobLease,fn:(c:PoolClient)=>Promise<T>){return withLeasedTransaction(lease,async c=>{
+ if(!['owner','admin','operator'].includes((await c.query('SELECT app.current_role() AS role')).rows[0].role))throw new AppError(403,'A permissão para investigar mudou.');
+ await assertExecution(c);
  const job=(await c.query('SELECT checkpoint,input,state FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
  if(!job.input.companyResearch||job.checkpoint.execution?.version!==prospectingConfig().version)throw new AppError(409,'A configuração da investigação mudou.','PROFILE_CHANGED');
  await c.query("SELECT set_config('app.research_token',$1,true),set_config('app.research_fence',$2,true)",[lease.token,String(lease.fence)]);return fn(c);
@@ -93,23 +97,29 @@ function pageQuote(page:ResearchPage){return page.text.slice(0,12000);}
 function supportsCompany(lead:Lead,page:ResearchPage,kind:ResearchKind){
  if(kind==='registry')return !!lead.cnpj&&extractCnpjs([page]).includes(normalizeCnpj(lead.cnpj)??'');
  if(matchCompanySource({companyDomain:lead.site??'',candidateDomain:page.url,corroborated:false})==='matched')return true;
- if(kind==='social'&&lead.site){const domain=researchUrl(lead.site)?.hostname.replace(/^www\./,'');return !!domain&&(page.externalLinks??page.links??[]).some(link=>researchUrl(link)?.hostname.replace(/^www\./,'')===domain);}
+ if(kind==='social'&&lead.site)return(page.externalLinks??page.links??[]).some(link=>matchCompanySource({companyDomain:lead.site!,candidateDomain:link,corroborated:false})==='matched');
  return false;
 }
 const defaultCollect=async(_kind:ResearchKind,urls:string[],signal:AbortSignal):Promise<ResearchPage[]>=>[await fetchPublicPage(urls[0],{signal})];
+async function failedResearchStep(lease:JobLease,step:string){return withLeasedTransaction(lease,async c=>!!(await c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND step=$2 AND state='failed'",[lease.jobId,step])).rowCount);}
 
+async function cancelResearch(lease:JobLease,job:any,deps:ResearchAdapters){
+ const unknown=await withLeasedTransaction(lease,async c=>!!(await c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') LIMIT 1",[lease.jobId])).rowCount);
+ if(unknown){await finishJob(lease,'needs_reconciliation','CANCEL_UNCERTAIN');return;}
+ if(await cancelRemoteRuns(lease,job,{apify:deps.apify,signal:deps.signal}))await finishJob(lease,'cancelled');
+}
 export async function runCompanyResearch(lease:JobLease,deps:ResearchAdapters={}):Promise<void>{
  const job=await readLeasedJob(lease),request=job.input as Extract<ProspectingInput,{kind:'qualification'}>;
  if(!request.companyResearch)throw new AppError(409,'Modo de investigação indisponível.');
  const signal=deps.signal??new AbortController().signal;
  try{
-  if(job.state==='cancelling'){if(await cancelRemoteRuns(lease,job,{apify:deps.apify,signal}))await finishJob(lease,'cancelled');return;}
+  if(job.state==='cancelling'){await cancelResearch(lease,job,{...deps,signal});return;}
   const cases=await researchTransaction(lease,async c=>(await c.query("SELECT * FROM app.research_case WHERE job_id=$1 AND state='pending' ORDER BY lead_id LIMIT 1",[lease.jobId])).rows);
   for(const companyCase of cases){
    signal.throwIfAborted();const lead=companyCase.basis as Lead,options=request.companyResearch,registry=researchSourceRegistry(),missing:string[]=[],pages:ResearchPage[]=[];
    let site=lead.site;
    const lookup=async(module:'website'|'registry')=>{
-    try{return await sourceResult(lease,job,lead,module,{apify:deps.apify,signal});}
+    try{if(await failedResearchStep(lease,module+':'+lead.id))throw new ProviderError('SOURCE_UNAVAILABLE');return await sourceResult(lease,job,lead,module,{apify:deps.apify,signal});}
     catch(error){if(error instanceof AppError||error instanceof UncertainStep||error instanceof ProviderError&&error.uncertain||signal.aborted)throw error;missing.push(module==='registry'?'CONSULTA_CADASTRAL_INDISPONIVEL':'BUSCA_SITE_INDISPONIVEL');return{};}
    };
    if(!site&&options.sourceKinds.some(k=>k==='website'||k==='social')){
@@ -125,6 +135,7 @@ export async function runCompanyResearch(lease:JobLease,deps:ResearchAdapters={}
    while(queue.length&&fetched<options.maxPagesPerCompany){
     const entry=queue.shift()!,url=researchUrl(entry.url);if(!url||seen.has(url.toString())){if(!url)missing.push('FONTE_PUBLICA_INVALIDA');continue;}seen.add(url.toString());fetched++;
     let collected:ResearchPage[];
+    if(await failedResearchStep(lease,'research-page:'+lead.id+':'+hashValue(url.toString()))){missing.push(entry.kind==='social'?'REDE_SOCIAL_INDISPONIVEL':'PAGINA_INDISPONIVEL');continue;}
     try{collected=await performStep(lease,'research-page:'+lead.id+':'+hashValue(url.toString()),'public-web',{},async()=>{
       const result=await(deps.collect??defaultCollect)(entry.kind,[url.toString()],signal);
       return result.slice(0,1).map(p=>({...p,text:pageQuote(p),hash:hashValue(pageQuote(p)),sourceKind:entry.kind}));
@@ -146,7 +157,7 @@ export async function runCompanyResearch(lease:JobLease,deps:ResearchAdapters={}
    await researchTransaction(lease,async c=>{
     const current=(await c.query('SELECT payload FROM app.lead WHERE id=$1',[lead.id])).rows[0]?.payload;
     if(!current||hashValue(researchLeadBasis(current))!==hashValue(researchLeadBasis(lead)))throw new AppError(409,'Os dados do contato mudaram durante a investigação.','RESEARCH_SOURCE_CHANGED');
-    for(const page of bounded){const attribution=matchCompanySource({companyDomain:lead.site??'',candidateDomain:page.url,corroborated:page.corroborated===true})==='matched'?'company':'uncertain';await c.query('INSERT INTO app.research_source(workspace_id,job_id,id,lead_id,url,text,hash,fetched_at,source_kind,attribution,links) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT DO NOTHING',[lease.workspaceId,lease.jobId,page.id,lead.id,page.url,page.text,page.hash,page.fetchedAt,page.sourceKind??'website',attribution,JSON.stringify(page.links??[])]);}
+    for(const page of bounded){const attribution=matchCompanySource({companyDomain:lead.site??'',candidateDomain:page.url,corroborated:page.corroborated===true})==='matched'?'company':'uncertain';await c.query('INSERT INTO app.research_source(workspace_id,job_id,id,lead_id,url,text,hash,fetched_at,source_kind,attribution,links) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT DO NOTHING',[lease.workspaceId,lease.jobId,page.id,lead.id,page.url,page.text,page.hash,page.fetchedAt,page.sourceKind??'website',attribution,JSON.stringify([...(page.links??[]),...(page.externalLinks??[])].slice(0,100))]);}
     for(const fact of facts)await c.query('INSERT INTO app.research_fact(workspace_id,job_id,id,lead_id,field,value,evidence,attribution) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT DO NOTHING',[lease.workspaceId,lease.jobId,fact.id,lead.id,fact.field,fact.value,JSON.stringify(fact.evidence),fact.attribution]);
     await c.query('UPDATE app.research_case SET state=$3,missing=$4 WHERE job_id=$1 AND lead_id=$2',[lease.jobId,lead.id,missing.length?'partial':'completed',JSON.stringify([...new Set(missing)])]);
     await c.query("UPDATE app.prospecting_job SET revision=revision+1,updated_at=clock_timestamp(),counts=jsonb_build_object('found',(SELECT count(*) FROM app.research_case WHERE job_id=$1 AND state<>'pending'),'pending',(SELECT count(*) FROM app.research_fact WHERE job_id=$1 AND attribution='company' AND NOT applied),'inserted',0,'duplicates',0,'rejected',(SELECT count(*) FROM app.research_case WHERE job_id=$1 AND state='partial')) WHERE id=$1",[lease.jobId]);
@@ -156,9 +167,10 @@ export async function runCompanyResearch(lease:JobLease,deps:ResearchAdapters={}
   const partial=await researchTransaction(lease,async c=>!!(await c.query("SELECT 1 FROM app.research_case WHERE job_id=$1 AND state='partial' LIMIT 1",[lease.jobId])).rowCount);
   await finishJob(lease,partial?'partial':'completed');
  }catch(e){
+  if(e instanceof UncertainStep)return;
   if(e instanceof AppError&&e.status===403)throw e;
   const current=await readLeasedJob(lease);
-  if(current.state==='cancelling'){if(await cancelRemoteRuns(lease,current,{apify:deps.apify,signal}))await finishJob(lease,'cancelled');return;}
+  if(current.state==='cancelling'){await cancelResearch(lease,current,{...deps,signal});return;}
   await handleStepFailure(lease,e);
  }
 }

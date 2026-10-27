@@ -54,3 +54,12 @@ test('registry receipt URLs are provenance and can never replace the company web
  const facts=research.extractCompanyFacts({id:'lead1',name:'Empresa sem site'},[{id:'reg',url:'https://api.apify.com/v2/datasets/fixture/items',text:'CNPJ da empresa e contato comercial: contato@empresa.example',hash:'reg',fetchedAt:'2026-10-27T12:00:00Z',truncated:false,sourceKind:'registry',corroborated:true}]);
  assert.ok(facts.some(f=>f.field==='email'));assert.equal(facts.some(f=>f.field==='site'),false);
 });
+test('an agency social link on a company website stays uncertain until the profile corroborates the company',()=>{
+ const url='https://www.instagram.com/agencia',page={id:'site',url:'https://clinica.example',text:'Site desenvolvido por Agência: '+url,hash:'s',fetchedAt:'2026-10-27T12:00:00Z',truncated:false,socialLinks:[url]};
+ const company={id:'lead',name:'Clínica',site:'https://clinica.example'},candidate=research.extractCompanyFacts(company,[page]).find(f=>f.field==='instagram');assert.equal(candidate?.attribution,'uncertain');
+ const proven=research.extractCompanyFacts(company,[page,{...page,id:'profile',url,text:'Clínica Exemplo. Site https://clinica.example',socialLinks:[],sourceKind:'social',corroborated:true}]).find(f=>f.field==='instagram');assert.equal(proven?.attribution,'company');
+});
+test('company profiles used as sites never lose the identifying path',()=>{
+ const url='https://www.instagram.com/clinica/';const facts=research.extractCompanyFacts({id:'lead',name:'Clínica',site:url},[{id:'profile',url,text:'Clínica Exemplo',hash:'p',fetchedAt:'2026-10-27T12:00:00Z',truncated:false,sourceKind:'website'}]);
+ assert.equal(facts.find(f=>f.field==='site')?.value,url);
+});

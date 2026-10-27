@@ -11,8 +11,14 @@
   "collectionFixtureCalls": 2,
   "paidSpendUsd": 0,
   "externalMessages": 0,
+  "channels": 0,
   "activeQaJobs": 0,
-  "initialQaSessionHadNoWorkspace": true,
   "qaSessionRevoked": true,
-  "originalOperatorUntouched": true
+  "originalOperatorUntouched": true,
+  "initialQaSessionHadNoWorkspace": true,
+  "rounds": 2,
+  "totalRemovedOwnedFakeContacts": 4,
+  "totalAppliedQaFields": 2,
+  "retainedOwnedEmptyQaLists": 2,
+  "retainedSyntheticTerminalJobs": 2
 }

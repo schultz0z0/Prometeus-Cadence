@@ -1,10 +1,14 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-27 · Session: s09 · Phase:6 Administração central e contexto privado implementados; paridade integral não aceita
+Updated: 2026-10-27 · Session: s10 · Phase:6 Investigação empresarial implementada; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s10:06B.3 com fatos/fontes privados, revisão/aplicação, parcial e recuperação; 319 unitários/337 integrações,27 capturas pós-revisão e cinco correções importantes. EV-272; zero chamadas pagas/envios. Próximo06B.4.
+- Not covered s10: estados inacessíveis da referência, fonte autenticada nova, acurácia live e produção pública. Um menor de seleção inicial do contato no lote permanece documentado, com seletor nominal disponível.
+
 
 - Covered s09:06IA infraestrutura exclusiva do administrador e instruções versionadas/contexto privado; verificações API/SQL e navegador em1920/390/320. Revisão independente com3correções importantes. Evidência EV-271 e relatório de validação06-platform-ai.md com resultados de liberação.
 - Not covered s09: acurácia probabilística live; OAuth comercial hospedado; carga/retenção pública; diferenças preexistentes de campos/feedback/ícones na tela de contexto, sem aceite100%.

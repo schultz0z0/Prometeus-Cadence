@@ -53,3 +53,7 @@ Referência L4: Playwright autenticado com guard de métodos nãoGET, localStora
 ## Atualização s09 —27/10/2026
 
 Referência L4: contexto em1920/390/320, sem POST e dashboard/viewport restaurados. Local: identidade QA existente com permissão administrativa temporária estritamente registrada em L-007, depois removida; registro protegido e workspace QA restaurados e sessão revogada. Nenhuma sonda confirmada; nenhum contato/canal/credencial/política/assinatura alterado por QA. Migração082 e provisionamento do proprietário existente são a alteração permanente autorizada da infraestrutura, preservando OAuth e política anteriores. Capturas mascaradas em ../../../validation/evidence/06ia/; diferenças de contexto e limites de paridade registrados em EV-271.
+
+## Atualização s10 —27/10/2026
+
+Referência somente por evidência histórica; zero escrita. QA dedicada local: duas rodadas, quatro contatos fictícios removidos, duas aplicações persistidas; sessões revogadas, listas vazias/histórico sintético terminal retidos só na QA por FK. L-008/L-009 encerradas como fixture, sem linhas abertas. Sem Actor/LLM pagos ou mensagens externas. Browser próprio encerrado. Migrações083/083a e runtime atualizado no localhost.

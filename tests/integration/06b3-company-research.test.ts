@@ -13,6 +13,9 @@ import type {ResearchPage} from '../../src/domain/company-research.ts';
 import {researchRequest} from '../../src/server/research/http.ts';
 import {base} from './helpers.ts';
 import {ProviderError} from '../../src/server/prospecting/providers/transport.ts';
+import {reconcileJob} from '../../src/server/prospecting/reconciliation.ts';
+import {withLeasedTransaction} from '../../src/server/prospecting/worker-db.ts';
+import {hashValue} from '../../src/server/prospecting/review.ts';
 configureProspectingTest();beforeEach(resetRateLimits);after(async()=>{await workerPool().end();await closeProspectingPools();});
 
 test('research storage is private and application users cannot forge worker facts',async()=>{
@@ -135,4 +138,35 @@ test('a company without a website uses the enabled public search without silentl
   await runCompanyResearch(await grantTestLease(f.p,job.id),{collect:async()=>[page()],apify:{start:async ctx=>{calls++;return{kind:'inline',page:{receiptId:'fixture',candidates:[{name:lead.name,source:'WEB',sourceRef:'fixture',site:'https://clinica.example'}],exhausted:true,nextCursor:null,rawCount:1,rejected:[],usage:{provider:'apify',operationId:ctx.operationId,units:{apifyRuns:1},costUsd:null,costKind:'unknown'}}};},poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}}});
   const result=await readCompanyResearch(f.p,job.id);assert.equal(calls,1);assert.equal(result.state,'partial');assert.ok(result.facts.length);assert.ok(result.facts.every(f=>f.attribution==='uncertain'));
  }finally{if(oldActor===undefined)delete process.env.APIFY_WEB_ACTOR;else process.env.APIFY_WEB_ACTOR=oldActor;if(oldBuild===undefined)delete process.env.APIFY_WEB_BUILD;else process.env.APIFY_WEB_BUILD=oldBuild;}
+});
+async function uncertainAttempt(f:Awaited<ReturnType<typeof fixture>>,jobId:string,lease:Awaited<ReturnType<typeof grantTestLease>>){
+ const step='website:'+f.leadId,id=hashValue({job:jobId,step});await withLeasedTransaction(lease,c=>c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES($1,$2,$3,'apify',$4,'uncertain',$5)",[f.p.workspaceId,jobId,id,step,{reservedUnits:{}}]));return id;
+}
+test('uncertain starts remain reconcilable during cancellation and unavailable results terminate without requeue',async()=>{
+ const f=await fixture(),{job}=await start(f),lease=await grantTestLease(f.p,job.id),operationId=await uncertainAttempt(f,job.id,lease);
+ await cancelJob(f.p,job.id);await runCompanyResearch(lease);assert.equal((await readCompanyResearch(f.p,job.id)).state,'needs_reconciliation');
+ const reconciled=await reconcileJob(f.p,job.id,{operationId,resultUnavailable:true});assert.ok(['failed','partial'].includes(reconciled.state));
+ assert.equal((await readCompanyResearch(f.p,job.id)).companies[0].state,'unavailable');
+ assert.equal(await runWorkerOnce({research:{collect:async()=>{throw Error('Must not restart');}}},{signal:new AbortController().signal,workspaceId:f.p.workspaceId}),false);
+});
+test('publication and worker SQL writes revalidate execution entitlement after a received page',async()=>{
+ const f=await fixture(),{job}=await start(f),lease=await grantTestLease(f.p,job.id);
+ await runCompanyResearch(lease,{collect:async()=>{await testAdmin(c=>c.query("UPDATE app.billing_account SET period_end=clock_timestamp()-interval '1 second' WHERE workspace_id=$1",[f.p.workspaceId]));return[page()];}});
+ assert.equal((await readCompanyResearch(f.p,job.id)).facts.length,0);
+ assert.ok(await testAdmin(async c=>(await c.query("SELECT count(*)::int n FROM app.prospecting_attempt WHERE job_id=$1 AND state='completed'",[job.id])).rows[0].n)>0);
+ const g=await fixture(),s=await start(g),l=await grantTestLease(g.p,s.job.id);await testAdmin(c=>c.query("UPDATE app.billing_account SET period_end=clock_timestamp()-interval '1 second' WHERE workspace_id=$1",[g.p.workspaceId]));
+ await assert.rejects(withLeasedTransaction(l,async c=>{await c.query("SELECT set_config('app.research_token',$1,true),set_config('app.research_fence',$2,true)",[l.token,String(l.fence)]);return c.query("INSERT INTO app.research_source(workspace_id,job_id,id,lead_id,url,text,hash,fetched_at,source_kind,attribution) VALUES($1,$2,'forged',$3,'https://clinica.example','x','x',clock_timestamp(),'website','company')",[g.p.workspaceId,s.job.id,g.leadId]);}),{code:'BILLING_REQUIRED'});
+});
+test('sequential reviewed applications accept this case own site normalization but still reject later manual edits',async()=>{
+ const f=await fixture(),s=await readWorkspaceSnapshot(f.p);await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'lead.upsert',lead:{...s.data.leads[0],site:'https://clinica.example/'}}});
+ const {job}=await start(f);await runCompanyResearch(await grantTestLease(f.p,job.id),{collect:async()=>[page()]});let result=await readCompanyResearch(f.p,job.id);
+ const apply=async(field:string)=>{const fact=result.facts.find(f=>f.field===field)!,input={caseId:job.id,factIds:[fact.id],expectedRevision:result.revision},review=await prepareResearchApplication(f.p,input);await confirmResearchApplication(f.p,{input,token:review.token,requestId:randomUUID()});result=await readCompanyResearch(f.p,job.id);};
+ await apply('site');await apply('email');assert.equal((await readWorkspaceSnapshot(f.p)).data.leads[0].email,'contato@clinica.example');
+ const snapshot=await readWorkspaceSnapshot(f.p);await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...snapshot.data.leads[0],site:'https://manual.example'}}});
+ await assert.rejects(apply('phone'),/mudaram/);
+});
+test('a known failed collection checkpoint is not retried or stranded as an unselectable uncertainty',async()=>{
+ const f=await fixture(),{job}=await start(f),lease=await grantTestLease(f.p,job.id),step='research-page:'+f.leadId+':'+hashValue('https://clinica.example/'),operation=hashValue({job:job.id,step});
+ await withLeasedTransaction(lease,c=>c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES($1,$2,$3,'public-web',$4,'failed',$5)",[f.p.workspaceId,job.id,operation,step,{reservedUnits:{}}]));let calls=0;
+ await runCompanyResearch(lease,{collect:async()=>{calls++;return[page()];}});assert.equal(calls,0);assert.equal((await readCompanyResearch(f.p,job.id)).state,'partial');
 });

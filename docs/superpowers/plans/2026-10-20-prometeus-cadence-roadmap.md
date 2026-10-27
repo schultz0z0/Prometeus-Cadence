@@ -146,3 +146,7 @@ Separação de produto obrigatória: pesquisa noLinkedIn como fonte pode integra
 Cada integração terá classificação central/admin ou conta/canal do cliente. Cada superfície da UI/UX deve ligar tela/estado/controle à ação permitida, operação real, persistência, evento/métrica, feedback e teste/evidência. Incluir popups, mobile, progresso, resultado parcial, erro, limite e recuperação; nenhuma opção pode existir apenas na apresentação. Custos globais e quotas porworkspace coexistem; fonte/contato incerto não vira fato confirmado. São critérios de cada pacote e da regressão final.
 
 A numeração preservada identifica famílias/áreas, não uma sequência estritamente crescente. O escopo completo segue06→07→08 nas grandes etapas, com dependências entre subpacotes; **08B encerra a preparação/homologação de produção pública prevista. Não há marco09 aprovado ou definido.**
+
+### Continuidade27/10/2026 —06B.3 entregue
+
+Investigação empresarial pública, fatos por campo/fontes, revisão/aplicação, isolamento, checkpoints e parcial implementados em [06B.3](../../validation/06b3-company-research.md). 319 unitários/337 integrações, build/tipos e27 capturas pós-revisão em1920/390/320. Cinco achados importantes corrigidos; um menor de seleção inicial do contato no lote permanece documentado com dono06B.5. Próximo: **06B.4 — identidade empresarial e tomadores de decisão**. Fontes autenticadas/qualidade live, jornada automática e produção pública mantêm os gates aprovados; nenhuma alegação de100% de estados não observados.

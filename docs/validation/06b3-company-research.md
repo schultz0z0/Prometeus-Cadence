@@ -1,6 +1,6 @@
 # 06B.3 — Investigação da empresa e redes
 
-Data: 27/10/2026. Implementação própria do contrato aprovado; revisão independente final em andamento. Não é aceite de paridade integral nem de produção pública.
+Data: 27/10/2026. Implementação própria do contrato aprovado; revisão independente e correções verificadas. Aceite local/controlado do pacote. Não é aceite de paridade integral nem de produção pública.
 
 ## Entrega
 
@@ -26,11 +26,11 @@ Data: 27/10/2026. Implementação própria do contrato aprovado; revisão indepe
 | SSRF | Proteções existentes de DNS público e redirects mantidas; a suíte completa exercita localhost, redes privadas e rebinding |
 | Browser | Seleção → revisão → aplicação → reload manteve um campo atualizado; erro 503 simulado preservou limite e fontes do rascunho |
 
-Verificações executadas antes da revisão final: 317/317 unitários; 332/332 integrações na execução completa, seguida de 13/13 focados incluindo cobertura adicional do fallback sem site; build, TypeScript e `git diff --check` aprovados. Testes usam banco efêmero `_test`; não usam saldo Apify/LLM real. A cobertura adicional sem site passou sobre o serviço já existente, sem exigir outra alteração.
+Verificações finais após correções: 319/319 unitários; 337/337 integrações completas; 17/17 focados de pesquisa e 14/14 de domínio/cliente; build, TypeScript e `git diff --check` aprovados. Testes usam banco efêmero `_test`; não usam saldo Apify/LLM real. A cobertura adicional sem site passou sobre o serviço já existente, sem exigir outra alteração.
 
 ## UI/UX e referência
 
-Manifesto e capturas mascaradas em [evidências](evidence/06b3-company-research/manifest.json). Foram conferidos gerador MAPS/WEB, contatos, detalhe, popup, revisão e execução em 1920×855, 390×844 e 320×844. São 21 capturas de layout e 6 da jornada de aplicação/erro/recuperação; nenhum overflow horizontal ou erro de JavaScript nos estados medidos. O foco da troca para revisão foi corrigido e novamente medido dentro do diálogo nos três tamanhos; Escape fecha o popup.
+Manifesto e capturas mascaradas em [evidências](evidence/06b3-company-research/manifest.json). Foram conferidos gerador MAPS/WEB, contatos, detalhe, popup, revisão e execução em 1920×855, 390×844 e 320×844. Após as correções, foram repetidas 21 capturas de layout e 6 da jornada de aplicação/erro/recuperação; nenhum overflow horizontal ou erro de JavaScript nos estados medidos. O foco da troca para revisão foi corrigido e novamente medido dentro do diálogo nos três tamanhos; Escape fecha o popup.
 
 Comparação histórica: [gerador desktop da referência](evidence/06b1/reference-1920-generator.png) e [mobile](evidence/06b1/reference-390-generator.png), acervo RES/REA já existente. A composição principal foi preservada. Permanecem diferenças anteriores de ícones, microcopy, branding e controles adicionais da implementação própria, além das divergências aprovadas (7 dias, créditos pré-pagos, OpenWA). A nova interação de investigação e os estados pagos da referência não foram observados; não se afirma uma réplica visual verificada desses estados. O conector Chrome retornou `Target closed`; nenhuma sessão da referência foi alterada. REA não tinha observações retidas nesta sessão; sua evidência histórica foi reaproveitada, sem atribuir novas capturas ao MCP.
 
@@ -42,9 +42,9 @@ Telefone publicado não significa WhatsApp ativo, consentimento ou contato pesso
 
 ## Encerramento de QA e runtime
 
-[Prova de limpeza](evidence/06b3-company-research/closure.json): dois contatos fictícios próprios removidos, sessão QA revogada, nenhuma execução QA ativa. Uma lista vazia e o histórico sintético terminal permanecem só na identidade QA dedicada por causa da FK do job; não houve alteração da conta do operador, assinatura, canais ou política central. A sessão QA recém-aberta não tinha workspace inicial; encerrou sem sessão ativa, em vez de selecionar um workspace arbitrário.
+[Prova de limpeza](evidence/06b3-company-research/closure.json): quatro contatos fictícios próprios removidos em duas rodadas, sessões QA revogadas, nenhuma execução QA ativa. Duas listas vazias e os históricos sintéticos terminais permanecem só na identidade QA dedicada por causa da FK do job; não houve alteração da conta do operador, assinatura, canais ou política central. A sessão QA recém-aberta não tinha workspace inicial; encerrou sem sessão ativa, em vez de selecionar um workspace arbitrário.
 
-Migração 083 aplicada no banco local sem modificar migrações anteriores. Servidor localhost 3210 e seis lanes contínuas reiniciados ocultos; health 200, processos vivos e zero falhas na verificação realizada.
+Migrações 083 e 083a aplicadas no banco local sem modificar migrações anteriores. Servidor localhost 3210 e seis lanes contínuas reiniciados ocultos; health 200, processos vivos e zero falhas na verificação realizada.
 
 ## Decisões de execução
 
@@ -55,4 +55,13 @@ Migração 083 aplicada no banco local sem modificar migrações anteriores. Ser
 5. Consulta de uma empresa por vez e um contato por turno; custo: lotes grandes exigem mais turnos do scheduler, preservando resposta limitada e equidade.
 6. Nova interação usa primitives medidas e registra estados não observados da referência; custo: evidência futura pode exigir alinhamento adicional.
 
-Revisão independente e eventuais correções serão registradas abaixo antes do aceite final.
+7. Listas vazias e históricos sintéticos retidos na QA por FK imutável; custo: limpeza histórica posterior requer arquivamento explícito.
+8. Migração complementar083a preserva o checksum083 e a reserva084; custo: ferramentas posteriores precisam reconhecer o sufixo antes da liberação externa.
+
+## Revisão e aceite
+
+[Revisão independente](06b3-company-research-review.md): cinco achados importantes corrigidos em uma única rodada RED→GREEN, sem nova revisão. Reconciliar resultado indisponível encerra a pesquisa; coleta sem elegibilidade não publica; perfil social sem corroboração permanece incerto; site mantém o caminho de perfis; aplicações sequenciais respeitam valores já aprovados pelo caso e recusam edições humanas divergentes. A segunda rodada de browser confirmou Instagram incerto desabilitado, aplicação persistente, erro/recuperação, foco e as três larguras novamente.
+
+Menor adiado: link com `?leadId` abre a primeira empresa do lote; o seletor nominal permite escolher a correta. Dono do polimento: jornada06B.5. Os seis limites que o revisor deixou fora do julgamento e seus custos estão na revisão vinculada; não são requisitos silenciosamente aceitos.
+
+06B.3 concluído no contrato próprio local/controlado. Próximo pacote vigente: **06B.4 — identidade empresarial e tomadores de decisão**. Não foi iniciado neste trabalho.

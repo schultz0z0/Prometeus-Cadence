@@ -23,11 +23,12 @@ export function parseCompanyResearchInput(value:unknown):CompanyResearchInput{re
 export function researchUrl(value:string):URL|null{
  try{const u=new URL(/^https?:\/\//i.test(value)?value:`https://${value}`);if(!/^https?:$/.test(u.protocol)||u.username||u.password||!u.hostname.includes('.')||/(^|\.)(localhost|local|internal|test)$/i.test(u.hostname)||/^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(u.hostname)||/^172\.(1[6-9]|2\d|3[01])\./.test(u.hostname)||u.hostname.includes(':')||u.port&&!['80','443'].includes(u.port))return null;u.hash='';return u;}catch{return null;}
 }
+const sharedProfileHosts=['instagram.com','facebook.com','m.facebook.com','linkedin.com','twitter.com','x.com','youtube.com'];
 function host(value:string){return researchUrl(value)?.hostname.toLowerCase().replace(/^www\./,'')??'';}
 export function matchCompanySource(input:{companyDomain:string;candidateDomain:string;corroborated:boolean}):'matched'|'review'{
  const company=host(input.companyDomain),candidate=host(input.candidateDomain);
  if(!candidate)return'review';if(input.corroborated)return'matched';if(!company)return'review';
- if(['instagram.com','facebook.com','m.facebook.com','linkedin.com','twitter.com','x.com','youtube.com'].includes(company)){
+ if(sharedProfileHosts.includes(company)){
   const base=researchUrl(input.companyDomain)!,target=researchUrl(input.candidateDomain)!;
   const path=base.pathname.replace(/\/$/,'');
   return path&&candidate===company&&(target.pathname.replace(/\/$/,'')===path||target.pathname.startsWith(path+'/'))?'matched':'review';
@@ -46,15 +47,19 @@ export function extractCompanyFacts(company:Pick<Lead,'id'|'name'>&Partial<Lead>
  for(const page of pages.slice(0,10)){
   if(!researchUrl(page.url)||!page.text.trim())continue;
   const attribution=matchCompanySource({companyDomain:company.site??'',candidateDomain:page.url,corroborated:page.corroborated===true})==='matched'?'company':'uncertain';
-  const put=(field:ResearchField,value:string,quote=page.text.slice(0,1200))=>{
-   if(!value||!quote||!page.text.includes(quote))return;const key=field+'|'+value+'|'+attribution;if(seen.has(key))return;seen.add(key);
-   facts.push({id:'',leadId:company.id,field,value,evidence:[{id:page.id,url:page.url,fetchedAt:page.fetchedAt,quote,hash:page.hash,sourceVersion:researchContractVersion}],attribution});
+  const put=(field:ResearchField,value:string,quote=page.text.slice(0,1200),factAttribution:ResearchFact['attribution']=attribution)=>{
+   if(!value||!quote||!page.text.includes(quote))return;const key=field+'|'+value+'|'+factAttribution;if(seen.has(key))return;seen.add(key);
+   facts.push({id:'',leadId:company.id,field,value,evidence:[{id:page.id,url:page.url,fetchedAt:page.fetchedAt,quote,hash:page.hash,sourceVersion:researchContractVersion}],attribution:factAttribution});
   };
   const snippet=(needle:string)=>{const at=page.text.toLowerCase().indexOf(needle.toLowerCase());return page.text.slice(Math.max(0,at-120),Math.max(0,at-120)+1200);};
   const contacts=extractContacts([page]);for(const email of contacts.emails.slice(0,3))put('email',email,snippet(email));
   for(const raw of contacts.phones.slice(0,3)){const digits=raw.replace(/\D/g,'');if(!/^(?:55)?\d{10,11}$/.test(digits))continue;const phone='+'+(digits.startsWith('55')&&digits.length>=12?digits:'55'+digits);const literal=(page.text.match(/(?:\+55\s*)?\(?\d{2}\)?[\s.-]*\d{4,5}[\s.-]*\d{4}/g)??[]).find(v=>v.replace(/\D/g,'').endsWith(digits.replace(/^55(?=\d{10,11}$)/,'')));if(literal)put('phone',phone,snippet(literal));}
-  if(attribution==='company'&&page.sourceKind!=='social'&&page.sourceKind!=='registry'){put('site',researchUrl(page.url)!.origin);if(!facts.some(f=>f.field==='summary'&&f.attribution==='company'))put('summary',page.text.slice(0,1200));}
-  for(const value of page.socialLinks??[]){const field=socialField(value);if(field&&page.text.includes(value))put(field,researchUrl(value)!.toString(),snippet(value));}
+  if(attribution==='company'&&page.sourceKind!=='social'&&page.sourceKind!=='registry'){put('site',sharedProfileHosts.includes(host(page.url))?researchUrl(page.url)!.toString():researchUrl(page.url)!.origin);if(!facts.some(f=>f.field==='summary'&&f.attribution==='company'))put('summary',page.text.slice(0,1200));}
+  for(const value of page.socialLinks??[]){const field=socialField(value);if(field&&page.text.includes(value)){
+    const profile=pages.find(p=>p.sourceKind==='social'&&p.corroborated===true&&matchCompanySource({companyDomain:value,candidateDomain:p.url,corroborated:false})==='matched');
+    put(field,researchUrl(value)!.toString(),snippet(value),attribution==='company'&&profile?'company':'uncertain');
+    const fact=facts.at(-1);if(profile&&fact?.field===field&&fact.value===researchUrl(value)!.toString()&&profile.text.trim())fact.evidence.push({id:profile.id,url:profile.url,fetchedAt:profile.fetchedAt,quote:profile.text.slice(0,1200),hash:profile.hash,sourceVersion:researchContractVersion});
+   }}
  }
  return facts.slice(0,50);
 }

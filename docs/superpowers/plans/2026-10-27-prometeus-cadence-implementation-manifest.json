@@ -1,8 +1,8 @@
 {
   "version": 1,
   "date": "2026-10-27",
-  "scope": "approved-product-baseline; detailed-implementation-planned-not-executed",
-  "next": "06B.3",
+  "scope": "approved-product-baseline;06B.3-completed-local-controlled;remaining-packages-planned",
+  "next": "06B.4",
   "end": "08B",
   "packages": [
     {
@@ -81,7 +81,14 @@
         "/contacts",
         "/leads/[id]",
         "/executions/[id]"
-      ]
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-10-27",
+      "followUpMigrations": [
+        "db/migrations/083a-company-research-review.sql"
+      ],
+      "review": "docs/validation/06b3-company-research-review.md",
+      "deferredMinorOwner": "06B.5"
     },
     {
       "id": "06B.4",

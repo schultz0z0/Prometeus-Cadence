@@ -71,3 +71,4 @@ id,date,session,route,shows,masked
 
 "EV-270","2026-10-26","s08","/leads/enrich; /leads/qualifier; /automations/new","06B.2 implementation; guarded reference and local persisted QA; no blanket parity","yes; session data excluded"
 "EV-271","2026-10-27","s09","/settings/context; /settings/ai; /settings/mcp; /leads/qualifier","06IA central administration and private context; real local permissions and read-only reference; no whole-product parity","yes; no credentials or personal field values"
+"EV-272","2026-10-27","s10","/leads/generator; /contacts; /leads/:id; /executions/:id","06B.3 controlled implementation and27 post-review masked captures; historical reference; no blanket parity","yes; no credentials"
