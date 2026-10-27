@@ -1,5 +1,6 @@
 import type {CompanyResearchInput,ResearchApplication,ResearchCaseView} from '../domain/company-research.ts';
 import type {Reviewed} from '../domain/reviewed-operation.ts';
+import type {PeopleApplication,PeopleCaseView} from '../domain/company-people.ts';
 import {createWorkspaceTransport,type WorkspaceTransportOptions} from './workspace-transport.ts';
 export function createResearchClient(options:WorkspaceTransportOptions){
  const transport=createWorkspaceTransport(options),ids=new Map<string,string>(),flights=new Map<string,Promise<unknown>>();
@@ -12,6 +13,10 @@ export function createResearchClient(options:WorkspaceTransportOptions){
  }
  return{
   latest:(leadId:string)=>request<ResearchCaseView|null>('?leadId='+encodeURIComponent(leadId)),
+  latestPeople:(leadId:string)=>request<PeopleCaseView|null>('/people?leadId='+encodeURIComponent(leadId)),
+  people:(id:string,leadId?:string)=>request<PeopleCaseView>('/'+encodeURIComponent(id)+'/people'+(leadId?'?leadId='+encodeURIComponent(leadId):'')),
+  preparePeople:(input:PeopleApplication)=>request<Reviewed<PeopleApplication>>('/'+encodeURIComponent(input.caseId)+'/people',{action:'prepare-apply',personIds:input.personIds,expectedRevision:input.expectedRevision}),
+  applyPeople:(review:Reviewed<PeopleApplication>)=>commit<{applied:number}>('/'+encodeURIComponent(review.input.caseId)+'/people',{action:'confirm-apply',personIds:review.input.personIds,expectedRevision:review.input.expectedRevision,token:review.token},'people:'+review.token),
   get:(id:string,leadId?:string)=>request<ResearchCaseView>('/'+encodeURIComponent(id)+(leadId?'?leadId='+encodeURIComponent(leadId):'')),
   prepare:(input:CompanyResearchInput)=>request<Reviewed<CompanyResearchInput>&{usage:{provider:string;units:Record<string,number>}[]}>('',{action:'prepare',input}),
   confirm(review:Reviewed<CompanyResearchInput>){return commit<ResearchCaseView>('',{action:'confirm',input:review.input,token:review.token},'confirm:'+review.token);},

@@ -33,7 +33,7 @@ export function reviewCompanyPeople(input:{company:Pick<Lead,'id'|'name'>&Partia
   if(!e||!researchUrl(e.url)||!e.quote.includes(p.quote)||!quote.includes(name)||!quote.includes(role)||name.split(' ').length<2||!/(socio|fundador|diretor|presidente|gerente|propriet|administr|\bceo\b|\bowner\b|\bfounder\b|\bhead\b|\bpartner\b)/.test(role))continue;
   // A name from QSA alone cannot corroborate employment on a different profile.
   if(![input.company.name,input.company.companyName,input.identity.legalName].some(n=>n&&fold(n).length>=4&&quote.includes(fold(n))))continue;
-  const ref={...e,quote:p.quote},key=fold(p.name),prior=out.get(key),contacts:PersonContact[]=[];
+  const ref={...e,quote:p.quote},key=fold(p.name),prior=out.get(key),contacts:PersonContact[]=[],currentSupported=supported&&!/(^|\b)(ex[ -]|former\b|antig[oa]\b)/.test(role);
   const evidence=[{...e,text:e.quote,truncated:false}];
   for(const kind of ['email','phone','linkedin'] as const){
    const raw=p[kind];if(!raw)continue;const value=kind==='phone'?normalizePersonalPhone(raw):kind==='email'?raw.toLowerCase():researchUrl(raw)?.toString();if(!value)continue;
@@ -41,9 +41,9 @@ export function reviewCompanyPeople(input:{company:Pick<Lead,'id'|'name'>&Partia
    const corporate=kind==='email'?(value===input.company.email?.toLowerCase()||/^(contato|comercial|atendimento|info|suporte|sac|vendas|financeiro|hello|sales|contact|office)([.+_-]|@)/.test(value)):kind==='phone'?normalizePersonalPhone(input.company.phone)===value:false;
    let attributed=false;try{attributed=kind!=='linkedin'&&validateDecisorEvidence({people:[{name:p.name,role:p.role,evidenceId:e.id,quote:p.quote,[kind]:raw}]},evidence,input.company).length>0;}catch{}
    if(kind==='linkedin')attributed=/^https:\/\/(?:www\.)?linkedin\.com\/in\/[^/]+/.test(value)&&quote.includes(name);
-   contacts.push({kind,value,attribution:classifyPersonContact({attributed:supported&&attributed,corporate,hasSource:true}),evidence:[ref]});
+   contacts.push({kind,value,attribution:classifyPersonContact({attributed:currentSupported&&attributed,corporate,hasSource:true}),evidence:[ref]});
   }
-  out.set(key,{id:key,name:p.name,role:p.role,relationship:prior?.relationship??'manager',contacts,current:supported?'supported':'uncertain',evidence:prior?[...prior.evidence,ref]:[ref]});
+  out.set(key,{id:key,name:p.name,role:p.role,relationship:prior?.relationship??'manager',contacts,current:currentSupported?'supported':'uncertain',evidence:prior?[...prior.evidence,ref]:[ref]});
  }
  return [...out.values()].slice(0,50);
 }

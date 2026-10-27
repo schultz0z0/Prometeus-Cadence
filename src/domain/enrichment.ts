@@ -8,6 +8,7 @@ export function enrichmentBatch(leads:readonly {id:string;cnpj?:string;listId:st
  const unique=new Map<string,string>();for(const lead of [...leads].sort((a,b)=>a.id.localeCompare(b.id))){if(lead.listId!==listId||lead.qualification!=='qualified'||!lead.cnpj)continue;const cnpj=lead.cnpj.replace(/[^a-z0-9]/gi,'').toUpperCase();if(!unique.has(cnpj))unique.set(cnpj,lead.id);}
  const ids=[...unique.values()];return{total:ids.length,leadIds:ids.slice(Math.max(0,page)*100,Math.max(0,page)*100+100)};
 }
+export function companyPeopleBatch(leads:readonly {id:string;listId:string}[],listId:string,page:number){const ids=leads.filter(l=>l.listId===listId).map(l=>l.id).sort();return{total:ids.length,leadIds:ids.slice(Math.max(0,page)*100,Math.max(0,page)*100+100)};}
 const personSchema=z.strictObject({name:z.string().trim().min(5).max(200),role:z.string().trim().min(2).max(150),email:z.string().trim().max(254).optional(),phone:z.string().trim().max(40).optional(),linkedin:z.string().url().max(500).optional(),evidenceId:z.string().min(1).max(120),quote:z.string().min(10).max(1200)});
 const schema=z.strictObject({people:z.array(personSchema).max(10)});
 const fold=(v:string)=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();

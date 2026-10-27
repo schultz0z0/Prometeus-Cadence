@@ -8,6 +8,7 @@ import {ReconciliationReview} from './reconciliation-review';
 import {JobResults} from './job-results';
 import {jobStateLabels} from './job-history';
 import {PlanningJobProgress} from '@/modules/planning/planning-job-progress';
+import {PeopleResults} from '@/modules/research/company-people';
 import {ResearchResults} from '@/modules/research/company-research';
 import {RetainedResults} from './retained-results';
 const activeStates=['queued','running','waiting_provider','cancelling'];
@@ -41,7 +42,7 @@ export function JobProgress({id}:{id:string}){
       {job.listId&&<a className="btn" href={'/contacts?list='+encodeURIComponent(job.listId)}>Abrir lista atualizada →</a>}
     </section>
     <section className="panel panel-pad section-gap"><h3>Uso registrado</h3>{job.usage?.length?job.usage.map(u=><p className="secondary-text section-gap" key={u.operationId}>{u.provider} · {Object.entries(u.units).map(([unit,count])=>`${count} ${unit}`).join(', ')} · {u.costUsd===null?'custo monetário desconhecido':`US$ ${u.costUsd} (${u.costKind})`}</p>):<p className="muted section-gap">Ainda não há consumo registrado. Operações incertas podem continuar com reserva retida.</p>}</section>
-    <RetainedResults job={job}/>{job.research?<ResearchResults id={job.id} revision={job.revision}/>:<JobResults job={job}/>}
+    <RetainedResults job={job}/>{job.companyPeople?<PeopleResults id={job.id} revision={job.revision}/>:job.research?<ResearchResults id={job.id} revision={job.revision}/>:<JobResults job={job}/>}
     {reconcile&&<ReconciliationReview job={job} onClose={()=>setReconcile(false)} onDone={()=>{setReconcile(false);refresh();}}/>}
   </>;
 }

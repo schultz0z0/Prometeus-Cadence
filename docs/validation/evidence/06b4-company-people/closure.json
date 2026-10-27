@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-27",
+  "removedOwnedFakeContacts": 3,
+  "retainedOwnedEmptyQaLists": 2,
+  "retainedSyntheticTerminalJobs": 1,
+  "fixtureSeed": "SQL synthetic UI; provider execution and billing proven separately in ephemeral integration database",
+  "realReviewedApplicationPersisted": true,
+  "appliedPeople": 1,
+  "cacheAndConflictTestedInIntegration": true,
+  "paidApifyCalls": 0,
+  "paidLlmCalls": 0,
+  "paidSpendUsd": 0,
+  "outboundMessages": 0,
+  "channels": 0,
+  "activeQaJobs": 0,
+  "qaSessionsRevoked": true,
+  "initialQaWorkspaceAbsent": true,
+  "originalOperatorUntouched": true,
+  "productionLimitsUnchanged": true
+}

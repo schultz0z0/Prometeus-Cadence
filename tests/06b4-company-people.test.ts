@@ -31,3 +31,7 @@ test('source preparation redacts CPF and age without inventing a phone or changi
 test('a detached registry quote cannot create a supported shareholder',()=>{
  const result=reviewCompanyPeople({company:{id:'lead',name:'Clínica Exemplo'},identity:{caseId:'case',cnpj:'11444777000161',legalName:'Clínica Exemplo',state:'resolved',evidence:[evidence]},sources:[evidence],partners:[{name:'Bruno Exemplo',role:'Sócio administrador',evidence:{...evidence,id:'invented',quote:'Clínica Exemplo. Bruno Exemplo, Sócio administrador.'}}],proposed:{people:[]}});assert.deepEqual(result,[]);
 });
+test('former roles are retained as uncertain and never become an applicable current personal contact',()=>{
+ const source={...evidence,quote:'Clínica Exemplo. Ana Exemplo, ex-diretora comercial. Contato pessoal de Ana Exemplo: ana@example.com.'};
+ const people=reviewCompanyPeople({company:{id:'lead',name:'Clínica Exemplo'},identity:{caseId:'case',cnpj:'11444777000161',legalName:'Clínica Exemplo',state:'resolved',evidence:[source]},sources:[source],partners:[],proposed:{people:[{name:'Ana Exemplo',role:'ex-diretora comercial',email:'ana@example.com',evidenceId:source.id,quote:source.quote}]}});assert.equal(people[0].current,'uncertain');assert.ok(people[0].contacts.every(c=>c.attribution!=='personal'));
+});

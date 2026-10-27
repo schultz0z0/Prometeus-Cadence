@@ -58,7 +58,7 @@ async function readResearch(c:PoolClient,id:string,query:{leadId?:string;factIds
 export function readCompanyResearch(p:Principal,id:string,query:{leadId?:string}={}):Promise<ResearchCaseView>{return withWorkspaceTransaction(p,c=>readResearch(c,id,query));}
 export async function latestCompanyResearch(p:Principal,leadId:string):Promise<ResearchCaseView|null>{return withWorkspaceTransaction(p,async c=>{
  if(!(await c.query('SELECT 1 FROM app.lead WHERE id=$1',[leadId])).rowCount)throw new AppError(404,'Contato não encontrado.');
- const row=(await c.query('SELECT job_id FROM app.research_case WHERE lead_id=$1 ORDER BY created_at DESC,job_id DESC LIMIT 1',[leadId])).rows[0];return row?readResearch(c,row.job_id,{leadId}):null;
+ const row=(await c.query("SELECT r.job_id FROM app.research_case r JOIN app.prospecting_job j ON j.workspace_id=r.workspace_id AND j.id=r.job_id WHERE r.lead_id=$1 AND j.input ? 'companyResearch' ORDER BY r.created_at DESC,r.job_id DESC LIMIT 1",[leadId])).rows[0];return row?readResearch(c,row.job_id,{leadId}):null;
 });}
 async function applicationState(c:PoolClient,p:Principal,raw:ResearchApplication){
  await authorize(c,p);const result=await readResearch(c,raw.caseId,{factIds:raw.factIds});

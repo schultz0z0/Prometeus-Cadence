@@ -1,0 +1,1618 @@
+{
+  "date": "2026-10-27",
+  "mode": "dedicated local QA; synthetic UI fixtures; reviewed application real",
+  "reference": "existing RES/REA evidence 06b2; paid reference states not observed",
+  "network": {
+    "paidApifyCalls": 0,
+    "paidLlmCalls": 0,
+    "outboundMessages": 0
+  },
+  "captures": [
+    {
+      "label": "enrichment",
+      "file": "screens/local-1920-enrichment.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecer decisores",
+          "x": 292,
+          "y": 116,
+          "w": 717,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Escolha a lista",
+          "x": 313,
+          "y": 298,
+          "w": 375,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "298be2ef6df78804b8537fe21a6f34ad1192832e1053eb3baffdce765e2ab781"
+    },
+    {
+      "label": "preview",
+      "file": "screens/local-1920-preview.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 560,
+          "height": 497,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "Enriquecer decisores",
+          "x": 292,
+          "y": 116,
+          "w": 717,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Escolha a lista",
+          "x": 313,
+          "y": 298,
+          "w": 375,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Preview de enriquecimento",
+          "x": 705,
+          "y": 200,
+          "w": 258,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        }
+      ],
+      "sha256": "34588fce92fa11342eb791bd303d1a5dd0c10c3ea410a088e58763a05b4e18c2"
+    },
+    {
+      "label": "execution-review",
+      "file": "screens/local-1920-execution-review.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 560,
+          "height": 807,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "Enriquecer decisores",
+          "x": 292,
+          "y": 116,
+          "w": 717,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Escolha a lista",
+          "x": 313,
+          "y": 298,
+          "w": 375,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Revisar enriquecimento",
+          "x": 705,
+          "y": 45,
+          "w": 226,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "2 empresas · 0 em cache",
+          "x": 726,
+          "y": 272,
+          "w": 453,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Reserva máxima de uso",
+          "x": 726,
+          "y": 584,
+          "w": 453,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "cceda5995bc2a052ae4d98b351e9e6f6a68587ab7b2a24e59ce8fdd1a7961a6f"
+    },
+    {
+      "label": "contacts",
+      "file": "screens/local-1920-contacts.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Leads2",
+          "x": 292,
+          "y": 116,
+          "w": 91,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "5e47fadd32d9791abc2e1f3edf315e13501540d4d19f811158f04b51d8b60a3e"
+    },
+    {
+      "label": "lead",
+      "file": "screens/local-1920-lead.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 328,
+          "y": 116,
+          "w": 192,
+          "font": "700 20px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 313,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 313,
+          "y": 546,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Sócios e gestores",
+          "x": 313,
+          "y": 728,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 313,
+          "y": 914,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 313,
+          "y": 1100,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 847,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 1380,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "88159e99462652e88a8872575fd8c4a3655a0534df4becde48c8026eb69a73cc"
+    },
+    {
+      "label": "people-dialog",
+      "file": "screens/local-1920-people-dialog.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 560,
+          "height": 593,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 328,
+          "y": 116,
+          "w": 192,
+          "font": "700 20px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 313,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 313,
+          "y": 546,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Sócios e gestores",
+          "x": 313,
+          "y": 728,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigar sócios e gestores",
+          "x": 698,
+          "y": 152,
+          "w": 267,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 313,
+          "y": 914,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 313,
+          "y": 1100,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 847,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 1380,
+          "y": 316,
+          "w": 472,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "f940ba67d42b0bf12feb17ad9aa6c068f9e967cf98ed00cd5eeaaee9358421ee"
+    },
+    {
+      "label": "people-results",
+      "file": "screens/local-1920-people-results.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 292,
+          "y": 143,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 313,
+          "y": 289,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 313,
+          "y": 551,
+          "w": 1539,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 313,
+          "y": 692,
+          "w": 310,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 330,
+          "y": 848,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "c8e95a3e18c2e0e2c2bdd738768cc2e4c20cc4c649347c9535f32a450a723d77"
+    },
+    {
+      "label": "people-review",
+      "file": "screens/local-1920-people-review.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 560,
+          "height": 435,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 292,
+          "y": -546,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 313,
+          "y": -400,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 313,
+          "y": -138,
+          "w": 1539,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 313,
+          "y": 3,
+          "w": 310,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 330,
+          "y": 159,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Revisar criação de contatos",
+          "x": 698,
+          "y": 231,
+          "w": 263,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        }
+      ],
+      "sha256": "57cf240c0be4699a447b6059d6025e6b3d140fbd722928e7ff309adabe946339"
+    },
+    {
+      "label": "identity-conflict",
+      "file": "screens/local-1920-identity-conflict.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 292,
+          "y": 143,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 313,
+          "y": 289,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 313,
+          "y": 551,
+          "w": 1539,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 313,
+          "y": 692,
+          "w": 310,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 330,
+          "y": 848,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "03bd9ed4f0767c772683f010017c1e20b07bbc1d897ac83fbe7839fcd94e7f43"
+    },
+    {
+      "label": "linkedin-enrichment",
+      "file": "screens/local-1920-linkedin-enrichment.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento",
+          "x": 292,
+          "y": 116,
+          "w": 546,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Automático, em toda campanha",
+          "x": 313,
+          "y": 215,
+          "w": 1554,
+          "font": "500 14px / 20px Manrope, sans-serif"
+        },
+        {
+          "text": "Opcional, você escolhe, por lista",
+          "x": 313,
+          "y": 413,
+          "w": 1554,
+          "font": "500 14px / 20px Manrope, sans-serif"
+        },
+        {
+          "text": "Suas listas do LinkedIn",
+          "x": 313,
+          "y": 633,
+          "w": 1554,
+          "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "ccacba5f9eaf16f81a3d583ccd699eccfa7cfd392f11de7c995901143fb5d071"
+    },
+    {
+      "label": "enrichment",
+      "file": "screens/local-390-enrichment.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecer decisores",
+          "x": 16,
+          "y": 123,
+          "w": 343,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Escolha a lista",
+          "x": 37,
+          "y": 544,
+          "w": 301,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "3d0f9565f9090623bbb04e59200e452146bc070ee9a3381aca490d2b0e01bc98"
+    },
+    {
+      "label": "preview",
+      "file": "screens/local-390-preview.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 341,
+          "height": 548,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "Enriquecer decisores",
+          "x": 16,
+          "y": -424,
+          "w": 343,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Escolha a lista",
+          "x": 37,
+          "y": -3,
+          "w": 301,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Preview de enriquecimento",
+          "x": 36,
+          "y": 167,
+          "w": 249,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        }
+      ],
+      "sha256": "067e9de8b3564504cdcc8ab7cfb3b2119b8355e44d7e3cbba24df43ab7554ce6"
+    },
+    {
+      "label": "execution-review",
+      "file": "screens/local-390-execution-review.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 341,
+          "height": 796,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "Enriquecer decisores",
+          "x": 16,
+          "y": -424,
+          "w": 343,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Escolha a lista",
+          "x": 37,
+          "y": -3,
+          "w": 301,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Revisar enriquecimento",
+          "x": 36,
+          "y": 43,
+          "w": 226,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "2 empresas · 0 em cache",
+          "x": 53,
+          "y": 323,
+          "w": 254,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Reserva máxima de uso",
+          "x": 53,
+          "y": 688,
+          "w": 254,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "e219172bfaf5c207745a4ba8771bfd1d1c1034a4f96a7b3c490b799b80ae964e"
+    },
+    {
+      "label": "contacts",
+      "file": "screens/local-390-contacts.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Leads2",
+          "x": 16,
+          "y": 123,
+          "w": 91,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "6bd9fb5d91aba2c7c0d83f3d79fb4b291bd96eddb078ae675d4e504037d37c93"
+    },
+    {
+      "label": "lead",
+      "file": "screens/local-390-lead.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": 123,
+          "w": 169,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": 379,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 609,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Sócios e gestores",
+          "x": 37,
+          "y": 791,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 1019,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 1225,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 1549,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 1779,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "f60050ffefd1cd2ada5846fd4f50f8ceb438dde24d3d8a2fa2501607933a969a"
+    },
+    {
+      "label": "people-dialog",
+      "file": "screens/local-390-people-dialog.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 341,
+          "height": 644,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": -355,
+          "w": 169,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": -114,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 116,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Sócios e gestores",
+          "x": 37,
+          "y": 298,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigar sócios e gestores",
+          "x": 36,
+          "y": 119,
+          "w": 249,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 526,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 732,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 1056,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 1286,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "68f5ddb0046d11e03021aab2c4f4853ca3bc4ef15211395ab456118781d4173b"
+    },
+    {
+      "label": "people-results",
+      "file": "screens/local-390-people-results.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": 150,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": 390,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": 742,
+          "w": 309,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": 916,
+          "w": 279,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": 1115,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "e4272ae7412618c192836d053cfc15a953344693a9f11efe7a56c38939b80169"
+    },
+    {
+      "label": "people-review",
+      "file": "screens/local-390-people-review.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 337,
+          "height": 488,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": -950,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": -710,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": -358,
+          "w": 309,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": -184,
+          "w": 279,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": 15,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Revisar criação de contatos",
+          "x": 38,
+          "y": 197,
+          "w": 237,
+          "font": "600 18px / 28px Manrope, sans-serif"
+        }
+      ],
+      "sha256": "f8eb6516ebc0fe0cf3900c42637f655c116e4c897aa88e8f9ac1359c925a2cd3"
+    },
+    {
+      "label": "identity-conflict",
+      "file": "screens/local-390-identity-conflict.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": -856,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": -616,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": -264,
+          "w": 309,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": -90,
+          "w": 279,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": 109,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "cd02a884e7ad603af89f52099f9ee96bbebd069f4a62603883cd06f0b5256fcd"
+    },
+    {
+      "label": "linkedin-enrichment",
+      "file": "screens/local-390-linkedin-enrichment.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento",
+          "x": 16,
+          "y": 123,
+          "w": 343,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Automático, em toda campanha",
+          "x": 37,
+          "y": 256,
+          "w": 301,
+          "font": "500 14px / 20px Manrope, sans-serif"
+        },
+        {
+          "text": "Opcional, você escolhe, por lista",
+          "x": 37,
+          "y": 530,
+          "w": 301,
+          "font": "500 14px / 20px Manrope, sans-serif"
+        },
+        {
+          "text": "Suas listas do LinkedIn",
+          "x": 37,
+          "y": 978,
+          "w": 301,
+          "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "9b0ecbe50d86a937cf9ae95b0a10c8f3cafb34c47338f5de5b2cab0424d309b2"
+    },
+    {
+      "label": "enrichment",
+      "file": "screens/local-320-enrichment.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecer decisores",
+          "x": 16,
+          "y": 123,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Escolha a lista",
+          "x": 37,
+          "y": 560,
+          "w": 231,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "013e6976f6fe12cd171ec7a57982288ea8af5ae137c19a3ae63cbe5f71ed2db7"
+    },
+    {
+      "label": "preview",
+      "file": "screens/local-320-preview.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 271,
+          "height": 614,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "Enriquecer decisores",
+          "x": 16,
+          "y": -440,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Escolha a lista",
+          "x": 37,
+          "y": -3,
+          "w": 231,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Preview de enriquecimento",
+          "x": 36,
+          "y": 134,
+          "w": 179,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        }
+      ],
+      "sha256": "1e98209576d2ae676ca9bdac9e2b967c65422ce791de8199b10f0c0ba62b3fc5"
+    },
+    {
+      "label": "execution-review",
+      "file": "screens/local-320-execution-review.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 271,
+          "height": 796,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "Enriquecer decisores",
+          "x": 16,
+          "y": -440,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Escolha a lista",
+          "x": 37,
+          "y": -3,
+          "w": 231,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Revisar enriquecimento",
+          "x": 36,
+          "y": 43,
+          "w": 164,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "2 empresas · 0 em cache",
+          "x": 53,
+          "y": 389,
+          "w": 184,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Reserva máxima de uso",
+          "x": 53,
+          "y": 877,
+          "w": 184,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "5d94358ac3f57eea60740f50ca47cdff28acf330a22a9d6b00bcef16370a519c"
+    },
+    {
+      "label": "contacts",
+      "file": "screens/local-320-contacts.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Leads2",
+          "x": 16,
+          "y": 123,
+          "w": 91,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "88f1e95b74121f8135b830f882f49af4c2d1593a3ee6a0f8936a80bb87cb975b"
+    },
+    {
+      "label": "lead",
+      "file": "screens/local-320-lead.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": 123,
+          "w": 106,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": 440,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 670,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Sócios e gestores",
+          "x": 37,
+          "y": 852,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 1102,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 1330,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 1653,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 1883,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "14e3878bbc5bbd05bb209bad77fd2e9923b8a0903c51b3b2148ac5a05da4c14a"
+    },
+    {
+      "label": "people-dialog",
+      "file": "screens/local-320-people-dialog.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 271,
+          "height": 708,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "[RE] Clínica Exemplo",
+          "x": 46,
+          "y": -449,
+          "w": 106,
+          "font": "700 18px / 28px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Contato",
+          "x": 37,
+          "y": -147,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Localização",
+          "x": 37,
+          "y": 83,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Sócios e gestores",
+          "x": 37,
+          "y": 265,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Investigar sócios e gestores",
+          "x": 36,
+          "y": 87,
+          "w": 179,
+          "font": "600 20px / 28px Manrope, sans-serif"
+        },
+        {
+          "text": "Investigação da empresa",
+          "x": 37,
+          "y": 515,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Enriquecimento",
+          "x": 37,
+          "y": 743,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Dados Empresariais",
+          "x": 37,
+          "y": 1066,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        },
+        {
+          "text": "Resumo & Status",
+          "x": 37,
+          "y": 1296,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", sans-serif"
+        }
+      ],
+      "sha256": "a37be0e4bb38a153355c84231a60802ccfd4aea85dd5edae268de82ed4bd9aa3"
+    },
+    {
+      "label": "people-results",
+      "file": "screens/local-320-people-results.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": 150,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": 441,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": 870,
+          "w": 239,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": 1068,
+          "w": 239,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": 1294,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "d4e45f5cf2c1fb7fd0b7fe1f7a747a1574d55f5629ac52dd191ec52ff898b9e2"
+    },
+    {
+      "label": "people-review",
+      "file": "screens/local-320-people-review.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [
+        {
+          "width": 267,
+          "height": 600,
+          "focusInside": true
+        }
+      ],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": -1318,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": -1027,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": -598,
+          "w": 239,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": -400,
+          "w": 239,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": -174,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Revisar criação de contatos",
+          "x": 38,
+          "y": 141,
+          "w": 175,
+          "font": "600 18px / 28px Manrope, sans-serif"
+        }
+      ],
+      "sha256": "fa00f79be24a7d0bd7bc35801e99cbe74a26b9f970889aabff386c9e1eac3541"
+    },
+    {
+      "label": "identity-conflict",
+      "file": "screens/local-320-identity-conflict.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": -1123,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": -832,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": -403,
+          "w": 239,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": -205,
+          "w": 239,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": 21,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "677e565675e61c6a4cbc8e9e57a297f7feaf3c19c6f0cec849264a0033a94d50"
+    },
+    {
+      "label": "linkedin-enrichment",
+      "file": "screens/local-320-linkedin-enrichment.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento",
+          "x": 16,
+          "y": 123,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Automático, em toda campanha",
+          "x": 37,
+          "y": 276,
+          "w": 231,
+          "font": "500 14px / 20px Manrope, sans-serif"
+        },
+        {
+          "text": "Opcional, você escolhe, por lista",
+          "x": 37,
+          "y": 590,
+          "w": 231,
+          "font": "500 14px / 20px Manrope, sans-serif"
+        },
+        {
+          "text": "Suas listas do LinkedIn",
+          "x": 37,
+          "y": 1158,
+          "w": 231,
+          "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "613c2f7d8b3e30ac8d3c242c9823c0862730a181be60e763249a9c8ebb8397c5"
+    },
+    {
+      "label": "error-keeps-selection",
+      "file": "screens/local-390-error-keeps-selection.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": -746,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": -506,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": -154,
+          "w": 309,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": 20,
+          "w": 279,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": 288,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "2d91612c9e67825889768ee1c98437704e3eecafb6be8136febf1ad3f0a08cd4"
+    },
+    {
+      "label": "applied",
+      "file": "screens/local-390-applied.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": -998,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": -758,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": -406,
+          "w": 309,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": -232,
+          "w": 279,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": 15,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "f6f4de97e604e19320a48e9e8e1ec156a92453a7c4fbd6d9562dc30dd0ff1655"
+    },
+    {
+      "label": "applied-reload",
+      "file": "screens/local-390-applied-reload.png",
+      "width": 390,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": 150,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": 390,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": 803,
+          "w": 309,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": 977,
+          "w": 279,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": 1175,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "6b3107dee3e85eb9b83711ec908a8934453888a15d43305e38c5b3ba3fd9e351"
+    },
+    {
+      "label": "applied-desktop",
+      "file": "screens/local-1920-applied-desktop.png",
+      "width": 1920,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 292,
+          "y": 143,
+          "w": 327,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 313,
+          "y": 289,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 313,
+          "y": 612,
+          "w": 1539,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 313,
+          "y": 753,
+          "w": 310,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 330,
+          "y": 909,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "ca673acbee02feed419afabc922ed0aecf8d8d9bdbddcd8ca5e1b530d0d7c5b7"
+    },
+    {
+      "label": "applied-small",
+      "file": "screens/local-320-applied-small.png",
+      "width": 320,
+      "overflow": false,
+      "dialogs": [],
+      "headings": [
+        {
+          "text": "Enriquecimento de decisores",
+          "x": 16,
+          "y": 150,
+          "w": 273,
+          "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Progresso",
+          "x": 33,
+          "y": 441,
+          "w": 97,
+          "font": "700 20px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Uso registrado",
+          "x": 33,
+          "y": 931,
+          "w": 239,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Empresa e tomadores de decisão",
+          "x": 33,
+          "y": 1129,
+          "w": 239,
+          "font": "700 18px / 28px \"Exo 2\", Manrope, sans-serif"
+        },
+        {
+          "text": "Identidade da empresa",
+          "x": 46,
+          "y": 1355,
+          "w": 173,
+          "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+        }
+      ],
+      "sha256": "e1b88a9639e599cce5d7994a4d08260ed5b058d95723c8d15e13984b7ad1024c"
+    }
+  ],
+  "errors": []
+}

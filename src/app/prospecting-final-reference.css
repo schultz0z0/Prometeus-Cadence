@@ -23,6 +23,7 @@
 .research-fact{padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
 .research-value,.research-fact a,.research-fact blockquote{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
 .research-value{margin:12px 0}.research-fact details{font-size:13px;color:var(--muted)}.research-fact summary{cursor:pointer}.research-fact blockquote{margin:12px 0;padding-left:14px;border-left:2px solid var(--border);max-height:180px;overflow:auto}.research-results .row{gap:12px}
+.people-contact{display:grid;gap:6px;padding:12px 0;border-bottom:1px solid var(--border)}.people-contact .research-value{margin:0}.people-results>.research-fact{margin:16px 0}.people-results .research-fact>p{margin:12px 0}.people-results .research-fact-choice strong{overflow-wrap:anywhere;min-width:0}
 @media(max-width:640px){.research-generator-entry{align-items:stretch;flex-direction:column}.research-results h2{font-size:18px}.research-fact{padding:12px}.research-fact-choice .badge{margin-left:26px}.research-dialog .row>.btn{flex:1}.research-results .field{max-width:100%}}
 
 .research-options label{flex-wrap:nowrap;align-items:flex-start}.research-options label input{margin-top:3px}
