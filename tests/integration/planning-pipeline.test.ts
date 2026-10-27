@@ -71,6 +71,18 @@ test('lost conventional planning result retains reservation and can settle witho
  const waiting=await getJob(p,job.id);assert.equal(waiting.state,'needs_reconciliation');
  const result=await reconcileJob(p,job.id,{operationId:waiting.unresolvedAttempts![0].id,resultUnavailable:true});assert.equal(result.state,'failed');assert.equal(calls,1);assert.equal((await getJob(p,job.id)).usage?.[0].units.openaiCalls,1);
 });
+test('a central policy change during JEV ranking retains the receipt but never publishes its recommendation to a customer',async()=>{
+ const customer=await createPlanningFixture(),admin=await setup(),seed=await planningStorageJob(admin.p),route=conventionalConfig(admin.p.workspaceId).conventional.openai.route;
+ await testAdmin(c=>c.query("INSERT INTO app.ai_connection_check(workspace_id,job_id,operation_id,provider,model,config_fingerprint,contract_version,outcome) VALUES($1,$2,$3,$4,$5,$6,$7,'success')",[admin.p.workspaceId,seed.id,randomUUID(),route.provider,route.model,route.configFingerprint,route.contractVersion]));
+ const policy={mode:'auto' as const,conventionalProvider:'openai' as const,jevEnabled:true};await saveAiPolicy(admin.p,{requestId:randomUUID(),expectedRevision:1,policy});
+ const review=await preparePlanning(customer.p,audience),job=await confirmPlanning(customer.p,{requestId:randomUUID(),input:audience,reviewToken:review.token}),counter={calls:0};let ranks=0;
+ await runPlanning(await grantTestLease(customer.p,job.id),{generate:fakeGenerate(counter),rank:async ctx=>{
+  ranks++;await saveAiPolicy(admin.p,{requestId:randomUUID(),expectedRevision:2,policy});
+  return {recommendedOptionId:'option_2',confidence:null,usage:{provider:'openrouter',operationId:ctx.operationId,units:{jevCalls:1},costUsd:null,costKind:'unknown'}};
+ }});
+ const result=await getPlanning(customer.p,job.id);assert.equal(result.job.state,'partial');assert.equal(result.proposal?.recommendedOptionId,null);assert.equal(ranks,1);assert.equal(counter.calls,1);
+ assert.equal(result.job.usage?.find(u=>u.provider==='openrouter')?.units.jevCalls,1);
+});
 test('configuration change invalidates analysis and a policy changed during inference preserves received usage',async()=>{
  const {p}=await setup(),r=await preparePlanning(p,audience);
  await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:1,policy:{mode:'conventional-only',conventionalProvider:'gemini',jevEnabled:false}});

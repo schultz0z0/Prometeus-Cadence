@@ -1,0 +1,240 @@
+{
+  "customer": {
+    "results": [
+      {
+        "width": 1920,
+        "route": "/settings/context",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 1920,
+        "route": "/settings/ai",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 1920,
+        "route": "/settings/mcp",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 1920,
+        "route": "/leads/qualifier",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 390,
+        "route": "/settings/context",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 390,
+        "route": "/settings/ai",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 390,
+        "route": "/settings/mcp",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 390,
+        "route": "/leads/qualifier",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 320,
+        "route": "/settings/context",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 320,
+        "route": "/settings/ai",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 320,
+        "route": "/settings/mcp",
+        "overflow": false,
+        "providerMenu": false
+      },
+      {
+        "width": 320,
+        "route": "/leads/qualifier",
+        "overflow": false,
+        "providerMenu": false
+      }
+    ],
+    "pageerrors": []
+  },
+  "administration": {
+    "results": [
+      {
+        "width": 1920,
+        "adminMenu": true,
+        "dirtyProtected": true,
+        "reviewCancelled": true,
+        "overflow": false
+      },
+      {
+        "width": 390,
+        "adminMenu": true,
+        "dirtyProtected": true,
+        "reviewCancelled": true,
+        "overflow": false
+      },
+      {
+        "width": 320,
+        "adminMenu": true,
+        "dirtyProtected": true,
+        "reviewCancelled": true,
+        "overflow": false
+      }
+    ],
+    "errorRecovered": true,
+    "pageerrors": []
+  },
+  "contextReference": {
+    "reference": true,
+    "result": [
+      {
+        "width": 1920,
+        "main": {
+          "x": 260,
+          "width": 1654
+        },
+        "headings": [
+          {
+            "x": 532,
+            "y": 116,
+            "width": 672,
+            "height": 30,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "overflow": false
+      },
+      {
+        "width": 390,
+        "main": {
+          "x": 0,
+          "width": 384
+        },
+        "headings": [
+          {
+            "x": 16,
+            "y": 214,
+            "width": 352,
+            "height": 30,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "overflow": false
+      },
+      {
+        "width": 320,
+        "main": {
+          "x": 0,
+          "width": 314
+        },
+        "headings": [
+          {
+            "x": 16,
+            "y": 214,
+            "width": 282,
+            "height": 30,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "overflow": true
+      }
+    ]
+  },
+  "contextLocal": {
+    "reference": false,
+    "result": [
+      {
+        "width": 1920,
+        "main": {
+          "x": 260,
+          "width": 1660
+        },
+        "headings": [
+          {
+            "x": 532,
+            "y": 116,
+            "width": 900,
+            "height": 30,
+            "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "x": 548,
+            "y": 525,
+            "width": 288,
+            "height": 15,
+            "font": "600 10px / 15px Manrope, sans-serif"
+          }
+        ],
+        "overflow": false
+      },
+      {
+        "width": 390,
+        "main": {
+          "x": 0,
+          "width": 390
+        },
+        "headings": [
+          {
+            "x": 16,
+            "y": 198.078125,
+            "width": 358,
+            "height": 30,
+            "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "x": 32,
+            "y": 653.078125,
+            "width": 326,
+            "height": 15,
+            "font": "600 10px / 15px Manrope, sans-serif"
+          }
+        ],
+        "overflow": false
+      },
+      {
+        "width": 320,
+        "main": {
+          "x": 0,
+          "width": 320
+        },
+        "headings": [
+          {
+            "x": 16,
+            "y": 198.078125,
+            "width": 288,
+            "height": 30,
+            "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "x": 32,
+            "y": 701.078125,
+            "width": 256,
+            "height": 15,
+            "font": "600 10px / 15px Manrope, sans-serif"
+          }
+        ],
+        "overflow": false
+      }
+    ]
+  },
+  "scope": "Actual local QA identity; customer rechecked after release build; no paid confirmation; read-only reference; differing approval states, not full visual parity"
+}

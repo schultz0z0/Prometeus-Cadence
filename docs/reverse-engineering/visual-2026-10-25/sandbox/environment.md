@@ -49,3 +49,7 @@ Revisão de planejamento:11 telas por origem visitadas em1920×855, sem submiss�
 ## Atualização s08 —26/10/2026
 
 Referência L4: Playwright autenticado com guard de métodos nãoGET, localStorage restaurado e dashboard final. REA público390×844 confirmou login e encerrou processo próprio. Produção da referência não alterada. Local: identidade QA dedicada, workspace/lista vazios de06B.1 reutilizados;2empresas +1decisor fictícios e a lista de saída nova removidos, política e workspace anterior restaurados, sessão revogada. Histórico sintético concluído permanece apenas na QA. Prova em ../../../validation/evidence/06b2/closure.json. Nenhum provedor pago, checkout ou mensagem externa. Build local3210 e seis lanes contínuas reiniciados ocultos.
+
+## Atualização s09 —27/10/2026
+
+Referência L4: contexto em1920/390/320, sem POST e dashboard/viewport restaurados. Local: identidade QA existente com permissão administrativa temporária estritamente registrada em L-007, depois removida; registro protegido e workspace QA restaurados e sessão revogada. Nenhuma sonda confirmada; nenhum contato/canal/credencial/política/assinatura alterado por QA. Migração082 e provisionamento do proprietário existente são a alteração permanente autorizada da infraestrutura, preservando OAuth e política anteriores. Capturas mascaradas em ../../../validation/evidence/06ia/; diferenças de contexto e limites de paridade registrados em EV-271.

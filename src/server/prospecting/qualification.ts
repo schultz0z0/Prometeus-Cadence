@@ -25,6 +25,7 @@ import type {AiRoute} from '../../domain/ai-routing.ts';
 import {syncOccurrenceJob} from '../automations/assignments.ts';
 import {qualificationSkipReason,assessEmail} from '../../domain/qualification-policy.ts';
 import {runEnrichment} from './enrichment.ts';
+import {buildAiSkill} from '../../domain/ai-skills.ts';
 import type {DecisorGenerator} from './ai/decisors.ts';
 export interface QualificationAdapters{
   signal?:AbortSignal;apify?:SourceAdapter;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
@@ -111,14 +112,15 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
         }else{
           const context=job.checkpoint.context as CompanyProfile|null,criteria=JSON.stringify({offer:context?.offer,idealCustomer:context?.idealCustomer,products:context?.products,pains:context?.pains,customCriteria:job.checkpoint.automation?.qualificationCriteria,product:job.checkpoint.product,language:input.options?.language??'pt-BR'});
           const aiRoute=job.checkpoint.execution?.aiRoute as AiRoute|undefined;
-          const cacheKey=hashValue({aiRoute,contract:'jev-decisions-v1',model:'typesafe/jev-1.13',criteria,evidence:evidence.map(e=>e.hash),facts:{name:lead.name,cnpj:lead.cnpj}});
+          const skill=buildAiSkill('qualify',{company:context,product:job.checkpoint.product,request:{criteria:job.checkpoint.automation?.qualificationCriteria,modules:input.modules},language:input.options?.language});
+          const cacheKey=hashValue({aiRoute,skill,contract:'jev-decisions-v1',model:'typesafe/jev-1.13',criteria,evidence:evidence.map(e=>e.hash),facts:{name:lead.name,cnpj:lead.cnpj}});
           if(module==='qualify'&&aiRoute?.decisionProvider!=='jev'&&aiRoute){
             const classified=await conventionalStep(lease,job,leadId,'qualify',criteria,evidence,deps);
             if(classified.task!=='qualify')throw Error('INVALID_TASK');result.decision=classified.decision;result.usage=classified.decision.usage;result.proposed={qualification:suggestedQualification(classified.decision),reason:classified.reason};result.reasons=['UNCALIBRATED_SUGGESTION','CONVENTIONAL_EVIDENCE_REVIEW'];
           }else if(module==='qualify'){
             const cached=await withLeasedTransaction(lease,async c=>(await c.query('SELECT payload FROM app.prospecting_cache WHERE key=$1 AND created_at>now()-interval \'1 day\'',[cacheKey])).rows[0]?.payload as Decision|undefined);
             const decision=cached?{...cached,evidenceIds:evidence.map(e=>e.id),usage:{...cached.usage,operationId:hashValue({job:lease.jobId,leadId,module}),units:{},costUsd:null,costKind:'unknown' as const}}:await performStep(lease,module+':'+leadId,'openrouter',{jevCalls:1},async()=>{await preflight(lease,job,deps,true);return (deps.decide??decide)({operationId:hashValue({job:lease.jobId,leadId,module}),signal:deps.signal??new AbortController().signal,credential:process.env.OPENROUTER_API_KEY??''},{criteria,evidence,facts:{name:lead.name,cnpj:lead.cnpj},company:context,product:job.checkpoint.product,request:{criteria:job.checkpoint.automation?.qualificationCriteria,modules:input.modules},language:input.options?.language});},r=>r.usage);
-            if(!cached)await withLeasedTransaction(lease,c=>c.query("INSERT INTO app.prospecting_cache VALUES(current_setting('app.workspace_id'),$1,$2,now()) ON CONFLICT(workspace_id,key) DO UPDATE SET payload=EXCLUDED.payload,created_at=now()",[cacheKey,decision]));
+            if(!cached)await withLeasedTransaction(lease,async c=>{await assertAiRouteCurrent(c,job);await c.query("INSERT INTO app.prospecting_cache VALUES(current_setting('app.workspace_id'),$1,$2,now()) ON CONFLICT(workspace_id,key) DO UPDATE SET payload=EXCLUDED.payload,created_at=now()",[cacheKey,decision]);});
             result.decision=decision;result.proposed={qualification:suggestedQualification(decision)};result.reasons=['UNCALIBRATED_SUGGESTION','CONFIDENCE_IS_NOT_ACCURACY'];
             if(input.escalation==='ambiguous'&&suggestedQualification(decision)!=='pending'&&decision.confidence!==null&&decision.confidence<0.7){
               const opinion=await generateStep(lease,job,leadId,'second_opinion',criteria,evidence,deps);result.proposed.reason=opinion.summary;result.reasons.push('SECOND_OPINION_REVIEW_REQUIRED');
@@ -137,6 +139,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       const rows=(await c.query('SELECT payload FROM app.prospecting_item WHERE job_id=$1',[lease.jobId])).rows;
       const failed=rows.some(r=>r.payload.results.some((m:ModuleResult)=>m.status==='failed'));
       if(job.checkpoint.purpose==='ai-connection-test'&&!failed&&rows.some(r=>r.payload.results.some((m:ModuleResult)=>m.module==='summary'&&m.status==='pending_review'&&m.proposed.summary))){
+        await assertAiRouteCurrent(c,job);
         // Use the durable attempt start conservatively, never the resume time.
         const attempt=(await c.query("SELECT created_at FROM app.prospecting_attempt WHERE job_id=$1 AND step=$2 AND state='completed'",[lease.jobId,'summary:'+input.leadIds[0]])).rows[0];
         if(attempt)await recordConnectionCheck(c,lease,{operationId:lease.jobId+':probe',route:job.checkpoint.execution.aiRoute.conventional,outcome:'success',checkedAt:new Date(attempt.created_at).toISOString()});

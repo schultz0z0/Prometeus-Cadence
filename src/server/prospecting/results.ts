@@ -6,11 +6,15 @@ import {settleUsage} from './usage.ts';
 import {randomUUID} from 'node:crypto';
 import {hashValue} from './review.ts';
 import {qualificationFingerprint} from '../../domain/qualification-policy.ts';
+import {assertAiRouteCurrent} from './ai/route-guard.ts';
 export async function recordModuleResult(c:PoolClient,lease:JobLease,leadId:string,result:ModuleResult){
   await lockWorkspace(c);await assertJobLease(c,lease);
   const prior=(await c.query('SELECT * FROM app.prospecting_item WHERE job_id=$1 AND lead_id=$2 FOR UPDATE',[lease.jobId,leadId])).rows[0];
   const results:ModuleResult[]=prior?.payload.results??[];
   if(results.some(r=>r.module===result.module))return;
+  if(['qualify','summary'].includes(result.module)&&result.status==='pending_review'){
+   const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];await assertAiRouteCurrent(c,job);
+  }
   if(result.usage)await settleUsage(c,lease.jobId,result.usage);
   const name=(await c.query('SELECT payload->>\'name\' AS name FROM app.lead WHERE id=$1',[leadId])).rows[0]?.name;
   if(!name)throw Error('LEAD_NOT_FOUND');

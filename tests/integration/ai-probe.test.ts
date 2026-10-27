@@ -57,3 +57,13 @@ test('late probe finalization retains the inference timestamp and cannot refresh
  await runQualification(lease,deps);assert.equal(calls,1);
  const settings=await getAiSettings(p);assert.equal(settings.lastCheck?.outcome,'success');assert.ok(Date.parse(settings.lastCheck!.checkedAt)<Date.now()-86400000);assert.ok(settings.blockers.length);
 });
+for(const revokeAt of ['before-call','before-call-role','during-call','before-attestation'] as const)test('platform admin revocation fences probe '+revokeAt+' without a global success attestation',async()=>{
+ const{p}=await setup(),r=await prepareAiTest(p),job=await confirmAiTest(p,{requestId:randomUUID(),draft:r.draft,reviewToken:r.token}),lease=await grantTestLease(p,job.id);let calls=0;
+ const revoke=()=>revokeAt==='before-call-role'?testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[p.workspaceId,p.userId])):testAdmin(c=>c.query('UPDATE app.platform_ai_control SET admin_user_ids=$1',[[randomUUID()]]));
+ const deps={conventional:async(ctx:any,input:any)=>{calls++;if(revokeAt==='during-call')await revoke();return{task:'summary' as const,generation:{model:'fixture',summary:'Synthetic.',evidenceIds:input.evidence.map((e:any)=>e.id),usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown' as const}}};}};
+ if(revokeAt.startsWith('before-call'))await revoke();await runQualification(lease,deps);
+ if(revokeAt==='before-attestation'){await revoke();await runQualification(lease,deps);}
+ assert.equal(calls,revokeAt.startsWith('before-call')?0:1);assert.equal((await getJob(p,job.id)).state,revokeAt==='before-attestation'?'partial':'failed');
+ assert.equal(await testAdmin(async c=>(await c.query("SELECT count(*)::int n FROM app.ai_connection_check WHERE workspace_id=$1 AND outcome='success'",[p.workspaceId])).rows[0].n),0);
+ if(calls)assert.equal((await getJob(p,job.id)).usage?.[0].units.openaiCalls,1);
+});

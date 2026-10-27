@@ -92,6 +92,10 @@ export async function runPlanning(lease:JobLease,deps:PlanningExecutionAdapters=
     await preflight(lease,job,deps);
     return(deps.rank??rankPlanningOptions)({operationId,signal,credential:process.env.OPENROUTER_API_KEY??''},{task:input.task as 'audience_plan'|'cadence_options',options:proposal.options,company:job.checkpoint.context,product:job.checkpoint.product,request:input,criteria:JSON.stringify({request:input,context:job.checkpoint.context,product:job.checkpoint.product}).slice(0,12000)});
    },r=>r.usage);
+   await withLeasedTransaction(lease,async c=>{
+    await assertAiRouteCurrent(c,job);
+    await c.query("UPDATE app.prospecting_job SET checkpoint=jsonb_set(checkpoint,'{planning,acceptedRankOperation}',to_jsonb($2::text),true) WHERE id=$1",[lease.jobId,operationId]);
+   });
   }
   await finishJob(lease,'completed');
  }catch(error){

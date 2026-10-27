@@ -54,10 +54,21 @@ for(const provider of ['openai','chatgpt-oauth'] as const)test(provider+' hybrid
  await testAdmin(c=>c.query("UPDATE app.ai_connection_check SET checked_at=now()-interval '24 hours' WHERE workspace_id=$1",[p.workspaceId]));let calls=0;
  await runQualification(await grantTestLease(p,q.id),{collect,decide:async()=>{calls++;throw Error();}});assert.equal(calls,0);assert.equal((await getJob(p,q.id)).error?.code,'AI_COMPANION_UNAVAILABLE');
 });
-test('policy changed during inference preserves the committed result and consumption but blocks later dispatch',async()=>{
+test('policy changed during inference preserves the receipt and consumption but cannot publish a pending-review qualification',async()=>{
  const{p,input}=await setup('openai'),r=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:r.token}),lease=await grantTestLease(p,q.id);let calls=0;
  const deps={collect,conventional:async(ctx:any,input:any)=>{calls++;await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:1,policy:{mode:'conventional-only',conventionalProvider:'gemini',jevEnabled:false}});return{task:'qualify' as const,reason:'Clinic',decision:{provider:'openai' as const,model:'fixture',verdict:'fits' as const,confidence:null,criteria:{},probabilities:{},evidenceIds:input.evidence.map((e:any)=>e.id),usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown' as const}}};}};
- await runQualification(lease,deps);assert.equal((await getJob(p,q.id)).usage?.[0].units.openaiCalls,1);await runQualification(lease,deps);assert.equal(calls,1);assert.equal((await getJob(p,q.id)).state,'partial');
+ await runQualification(lease,deps);assert.equal((await getJob(p,q.id)).usage?.[0].units.openaiCalls,1);assert.equal(calls,1);assert.equal((await getJob(p,q.id)).state,'failed');assert.equal((await listJobItems(p,q.id)).items.length,0);
+});
+test('JEV qualification cache cannot relabel a decision after approved company context changes outside the legacy criteria subset',async()=>{
+ const{p,input}=await setup('openai',['qualify']),r=await prepareJob(p,input),seed=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:r.token}),route=conventionalConfig(p.workspaceId).conventional.openai.route;
+ process.env.OPENROUTER_API_KEY='fixture';await testAdmin(c=>c.query("INSERT INTO app.ai_connection_check(workspace_id,job_id,operation_id,provider,model,config_fingerprint,contract_version,outcome) VALUES($1,$2,'cache-context-test',$3,$4,$5,$6,'success')",[p.workspaceId,seed.id,route.provider,route.model,route.configFingerprint,route.contractVersion]));
+ await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:1,policy:{mode:'auto',conventionalProvider:'openai',jevEnabled:true}});let calls=0;
+ const deps={collect,decide:async(ctx:any,request:any)=>{calls++;return{model:'typesafe/jev-1.13',verdict:'fits' as const,confidence:null,probabilities:{},criteria:{quality:1,coverage:1},evidenceIds:request.evidence.map((e:any)=>e.id),usage:{provider:'openrouter',operationId:ctx.operationId,units:{jevCalls:1},costUsd:null,costKind:'unknown' as const}};}};
+ for(let index=0;index<2;index++){
+  if(index){const s=await readWorkspaceSnapshot(p);await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'context.approve',profile:{...s.data.companyProfile,differentiators:'Somente atende clínicas com diagnóstico por imagem'}}});}
+  const review=await prepareJob(p,input),job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),lease=await grantTestLease(p,job.id);await runQualification(lease,deps);await runQualification(lease,deps);
+ }
+ assert.equal(calls,2);
 });
 
 for(const change of ['policy','revocation','expiry'] as const)test('hybrid revalidates authority after Codex diagnosis: '+change,async()=>{

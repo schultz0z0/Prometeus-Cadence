@@ -1,0 +1,27 @@
+[
+  {
+    "file": "06ia-admin-1920.png",
+    "sha256": "f805cc81badc22312d1df0bc42d6e92119875daf566251131f67b3bc495f8572",
+    "masked": true
+  },
+  {
+    "file": "06ia-admin-review-390.png",
+    "sha256": "c0eccdf0d99e6ff824451b945ac3ac9ad1d78f87614d27222d3879454e127769",
+    "masked": true
+  },
+  {
+    "file": "06ia-customer-390-ai.png",
+    "sha256": "782f42c189679404e3c0711c3d5fef54f74cf19e10c0108d0e217ce13466b9b5",
+    "masked": true
+  },
+  {
+    "file": "06ia-reference-context-390.png",
+    "sha256": "ca2c7a259a20109c61fff13162e33f8124fa1da64bdb55f92e79a5651c5275de",
+    "masked": true
+  },
+  {
+    "file": "06ia-local-context-390.png",
+    "sha256": "575748e3e87905d655ee57114f8e920dcc91e40168f3e0b7c809d76d38ea3e44",
+    "masked": true
+  }
+]

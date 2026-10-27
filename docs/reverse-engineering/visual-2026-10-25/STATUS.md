@@ -1,10 +1,14 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-26 · Session: s08 · Phase:6 Qualificação/enriquecimento/recorrência implementados e testados; paridade integral não aceita
+Updated: 2026-10-27 · Session: s09 · Phase:6 Administração central e contexto privado implementados; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s09:06IA infraestrutura exclusiva do administrador e instruções versionadas/contexto privado; verificações API/SQL e navegador em1920/390/320. Revisão independente com3correções importantes. Evidência EV-271 e relatório de validação06-platform-ai.md com resultados de liberação.
+- Not covered s09: acurácia probabilística live; OAuth comercial hospedado; carga/retenção pública; diferenças preexistentes de campos/feedback/ícones na tela de contexto, sem aceite100%.
+- Liberação s09:320/320 integrações,305/305 unitários,41/41 focados das correções, build/tipos aprovados e seis lanes saudáveis.06IA concluído no escopo local/controlado; próximo06D.1. Não refazer marcos anteriores nem oferecer infraestrutura de IA por cliente.
 
 - Covered s08:06B.2 operacional no contrato próprio;302unitários/306integrações, build/typecheck, aplicação real/evidência/filtros e desktop/mobile320/390/1920. EV-270 e relatório06B.2. QA removida, sessão revogada, serviços recuperados.
 - Not covered s08: fornecedor pago real, acurácia/alcance, transações pagas da referência, produção pública e todos os estados visuais. A administração de IA ainda é por workspace no runtime atual.

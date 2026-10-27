@@ -26,7 +26,7 @@ export async function readPlanningProposal(p:Principal,jobId:string):Promise<Pla
  const row=(await c.query('SELECT payload FROM app.planning_proposal WHERE job_id=$1',[jobId])).rows[0];
  if(!row)throw new AppError(404,'Proposta não encontrada.');
  const proposal=row.payload as PlanningProposal;
- const assessment=(await c.query("SELECT payload FROM app.prospecting_attempt WHERE job_id=$1 AND step='planning:rank' AND state='completed'",[jobId])).rows[0]?.payload?.result;
+ const assessment=(await c.query("SELECT a.payload FROM app.prospecting_attempt a JOIN app.prospecting_job j ON j.workspace_id=a.workspace_id AND j.id=a.job_id WHERE a.job_id=$1 AND a.step='planning:rank' AND a.state='completed' AND j.checkpoint->'planning'->>'acceptedRankOperation'=a.id",[jobId])).rows[0]?.payload?.result;
  const recommendedOptionId=assessment?.recommendedOptionId;
  if(recommendedOptionId&&'options' in proposal&&proposal.options.some(o=>o.id===recommendedOptionId))return {...proposal,recommendedOptionId};
  return proposal;

@@ -111,6 +111,10 @@ Apify/LLM são infraestrutura geral administrada pelo dono do SaaS. Proprietári
 
 As instruções gerais de IA serão versionadas por tarefa, com contexto/público-alvo privado da empresa e solicitação atual (ex.: clínicas odontológicas no Rio de Janeiro) como parâmetros de cada execução. O06IA precisa testar contexto ausente/conflitante, interpretação dos contratos Apify, isolamento, prompt injection, custo, abstenção e qualidade com casos verificáveis. JEV recebe um contrato de avaliação estruturado; não se pressupõe carregador nativo de skills. Não criar uma skill instalável do Codex em substituição a esse recurso do produto. O usuário determinou encerrar06B.2 antes dessa nova entrega.
 
+### Continuidade27/10/2026 —06IA entregue
+
+O requisito histórico acima foi implementado no escopo de [administração e inteligência central](../../validation/06-platform-ai.md): designação protegida de administradores, política/OAuth/atestação centrais, instruções internas versionadas e contexto/consumo privados.320integrações/305unitários, build/tipos e desktop/mobile validados; revisão independente com3correções verificadas. Cadastro de cliente não permite administrar provedores. Limites: sem piloto pago de acurácia, sem certificação OAuth comercial/carga pública e sem alegação de paridade integral; diferenças do contexto registradas em EV-271. Próximo pacote: **06D.1 — autoria, variantes/anexos, rascunho e agenda**.06D.2 e demais dependências permanecem na ordem existente; nenhuma compra/envio ou novo marco iniciado por esta validação.
+
 ## Barreira07A confirmada por documentação pública
 
 Captar dados públicos via Apify e conectar uma identidade via OAuth oficial são capacidades diferentes. As APIs oficiais de convites/mensagens LinkedIn exigem habilitação específica; mensagens têm restrições de ação afirmativa do usuário e não autorizam automaticamente cadências agendadas. Antes de implementar envios, provar os escopos/capacidades concedidos e bloquear o que não for suportado. Fontes e limites em [barreiras](../../reverse-engineering/visual-2026-10-25/clone/barriers.md).

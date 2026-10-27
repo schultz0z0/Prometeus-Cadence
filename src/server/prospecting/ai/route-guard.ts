@@ -1,9 +1,10 @@
 import type {PoolClient} from 'pg';
 import type {AiRoute} from '../../../domain/ai-routing.ts';
 import {validConnectionCheck} from '../../../domain/ai-routing.ts';
-import {conventionalConfig} from './config.ts';import {readAiPolicy} from './settings.ts';import {readConnectionCheck} from './connection.ts';import {AppError} from '../../errors.ts';
+import {conventionalConfig} from './config.ts';import {readAiPolicy,requireAiAdmin} from './settings.ts';import {readConnectionCheck} from './connection.ts';import {AppError} from '../../errors.ts';
 import {assertAutomationAuthority} from '../../automations/guard.ts';
 export async function assertAiRouteCurrent(c:PoolClient,job:any,freshOperationId?:string){
+ if(job.checkpoint.purpose==='ai-connection-test')await requireAiAdmin(c);
  await assertAutomationAuthority(c,job,'dispatch',freshOperationId);
  const route=job.checkpoint.execution?.aiRoute as AiRoute|undefined,runtime=conventionalConfig(job.workspace_id);
  if(!route)throw new AppError(409,'Esta execução de IA é anterior ao roteamento. Prepare uma nova revisão.','AI_ROUTE_LEGACY');

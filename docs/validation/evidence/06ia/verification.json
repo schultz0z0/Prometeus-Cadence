@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-27",
+  "unit": {
+    "total": 305,
+    "passed": 305,
+    "failed": 0,
+    "logSha256": "db42fbf358ad5b75049301a281fe95b2a8cb974761fb68633dcc624b9dc8fd1f"
+  },
+  "integration": {
+    "total": 320,
+    "passed": 320,
+    "failed": 0,
+    "logSha256": "d02ccd27e72f7104a3ab333fec2be31996636c479d29b9728b3031da26811822"
+  },
+  "focusedReviewFixes": {
+    "total": 41,
+    "passed": 41,
+    "failed": 0,
+    "logSha256": "c943953e3bd30a3e680668db6c51044c122890fcbcbf96995708ad76e98c34a4"
+  },
+  "productionBuild": true,
+  "postBuildTypecheck": true,
+  "runtime": {
+    "running": true,
+    "lanes": {
+      "dispatch": {
+        "alive": true,
+        "failures": 0,
+        "lastSuccess": "2026-10-27T03:21:29.708Z"
+      },
+      "sync": {
+        "alive": true,
+        "failures": 0,
+        "lastSuccess": "2026-10-27T03:21:26.901Z"
+      },
+      "jobs": {
+        "alive": true,
+        "failures": 0,
+        "lastSuccess": "2026-10-27T03:21:28.604Z"
+      },
+      "scheduler": {
+        "alive": true,
+        "failures": 0,
+        "lastSuccess": "2026-10-27T03:21:28.387Z"
+      },
+      "channels": {
+        "alive": true,
+        "failures": 0,
+        "lastSuccess": "2026-10-27T03:21:25.659Z"
+      },
+      "billing": {
+        "alive": true,
+        "failures": 0,
+        "lastSuccess": "2026-10-27T03:21:25.596Z"
+      }
+    }
+  },
+  "localPort": 3210,
+  "independentReview": {
+    "important": 3,
+    "critical": 0,
+    "minor": 0,
+    "importantFixed": 3,
+    "reproductionsFailedBeforeFix": true,
+    "reviewRepeated": false
+  },
+  "livePaidProviderCalls": 0,
+  "externalMessages": 0,
+  "referenceWrites": 0,
+  "parity100": false
+}
