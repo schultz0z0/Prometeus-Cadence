@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-27",
+  "scope": "06B.4 local-controlled",
+  "contract": "company-people-v2",
+  "suites": {
+    "unit": {
+      "passed": 330,
+      "sha256": "072448b483d78f11f90362c399df76d82957aebfdbc6ecbc9880a949be8c9d2b"
+    },
+    "integration": {
+      "passed": 354,
+      "sha256": "9e59405de54199c91305916b75fd0c909338870c430c9e658401c37fcc20be62"
+    },
+    "focused": {
+      "passed": 17,
+      "sha256": "eef300a39e2bb31beb6b09ce1f6b9b41978342176782b7a01becadd619fc34b1"
+    }
+  },
+  "build": "passed",
+  "types": "passed",
+  "review": {
+    "freshReviews": 1,
+    "critical": 0,
+    "important": 5,
+    "fixed": 5,
+    "minor": 0,
+    "correctionPasses": 1,
+    "reReview": false
+  },
+  "browser": {
+    "initialCaptures": 35,
+    "postreviewCaptures": 6,
+    "viewports": [
+      "1920x855",
+      "390x844",
+      "320x844"
+    ],
+    "horizontalOverflows": 0,
+    "pageErrors": 0
+  },
+  "runtime": {
+    "localhost": 200,
+    "lanes": 6,
+    "alive": true,
+    "failures": 0
+  },
+  "publicProductionAccepted": false,
+  "paidProviderCalls": 0
+}

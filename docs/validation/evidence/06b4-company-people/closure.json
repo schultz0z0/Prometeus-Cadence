@@ -16,5 +16,11 @@
   "qaSessionsRevoked": true,
   "initialQaWorkspaceAbsent": true,
   "originalOperatorUntouched": true,
-  "productionLimitsUnchanged": true
+  "productionLimitsUnchanged": true,
+  "postreviewReadOnlySmoke": {
+    "qaSessionsRevoked": true,
+    "createdContacts": 0,
+    "providerCalls": 0,
+    "outboundMessages": 0
+  }
 }

@@ -1614,5 +1614,55 @@
       "sha256": "e1b88a9639e599cce5d7994a4d08260ed5b058d95723c8d15e13984b7ad1024c"
     }
   ],
-  "errors": []
+  "errors": [],
+  "postreview": {
+    "mode": "read-only dedicated QA, empty lists; release build",
+    "captures": [
+      {
+        "width": 1920,
+        "route": "/leads/enrich",
+        "file": "screens/postreview-1920-enrich.png",
+        "overflow": false,
+        "sha256": "2123dd47c0ec351cf91e0c7648df5e864ff4b962bc53d36e61d93005d31e3eda"
+      },
+      {
+        "width": 1920,
+        "route": "/linkedin/enrichment",
+        "file": "screens/postreview-1920-linkedin.png",
+        "overflow": false,
+        "sha256": "2220a68c6f2d7495a8843807999e05a8ce32f5d92491be24490fdb8f0668ee5d"
+      },
+      {
+        "width": 390,
+        "route": "/leads/enrich",
+        "file": "screens/postreview-390-enrich.png",
+        "overflow": false,
+        "sha256": "53efa8c8f8f8477b9346ca864e2ab34d131b57cefc2bfa48e673bba82842f55b"
+      },
+      {
+        "width": 390,
+        "route": "/linkedin/enrichment",
+        "file": "screens/postreview-390-linkedin.png",
+        "overflow": false,
+        "sha256": "c04a8e68bf42042079d72ea5f5c6f34e2c6b3873093a30579bbc73877efced3e"
+      },
+      {
+        "width": 320,
+        "route": "/leads/enrich",
+        "file": "screens/postreview-320-enrich.png",
+        "overflow": false,
+        "sha256": "c43f47bae1ee992c6dcf5fa5368da796d1ff8590214b9441af64c82ed7eba149"
+      },
+      {
+        "width": 320,
+        "route": "/linkedin/enrichment",
+        "file": "screens/postreview-320-linkedin.png",
+        "overflow": false,
+        "sha256": "430b30026cac4d0a062a85879cbc6a784f1ba0eed0e64120786bac6f6c23b453"
+      }
+    ],
+    "pageErrors": [],
+    "createdContacts": 0,
+    "providerCalls": 0
+  }
 }

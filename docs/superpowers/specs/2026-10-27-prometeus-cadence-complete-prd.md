@@ -81,7 +81,7 @@ Além do caso feliz: dois clientes concorrentes, papel revogado durante I/O, rev
 
 ## Sequência, estabilidade do escopo e mudança
 
-O [índice de execução](../plans/2026-10-27-prometeus-cadence-master-plan.md) fixa sequência, dependências, planos por pacote e aceites históricos. Famílias 01–08 preservadas; encerramento 08B, sem 09 definido.06B.3 foi concluído no escopo local/controlado;06B.4 é a próxima implementação. A aprovação da baseline não transforma itens pendentes em entregues.
+O [índice de execução](../plans/2026-10-27-prometeus-cadence-master-plan.md) fixa sequência, dependências, planos por pacote e aceites históricos. Famílias 01–08 preservadas; encerramento 08B, sem 09 definido.06B.4 foi concluído no escopo local/controlado;06D.1 é a próxima implementação. A aprovação da baseline não transforma itens pendentes em entregues.
 
 Alteração de caminho técnico para preservar o requisito entra em decisão registrada: capacidade perdida, evidência, alternativa, impacto em UX/custo/prazo e teste de equivalência. Alterar resultado vendido, direitos/custo recorrente ou fluxo principal requer decisão do operador. Não reabrir o escopo a cada pacote. Parâmetros de implantação/credenciais são entradas operacionais, não requisitos indefinidos.
 

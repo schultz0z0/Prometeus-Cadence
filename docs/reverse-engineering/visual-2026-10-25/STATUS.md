@@ -1,10 +1,15 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-27 · Session: s10 · Phase:6 Investigação empresarial implementada; paridade integral não aceita
+Updated: 2026-10-27 · Session: s11 · Phase:6 Identidade/pessoas implementadas; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s11:06B.4 com identidade/CNPJ/QSA/gestores, fontes e contatos atribuídos, cache privado v2 e entrega revisada; 330 unitários/354 integrações/17 focadas,35 capturas de jornada+6 smoke pós-revisão, cinco correções importantes, runtime200/seis lanes saudáveis. EV-273 e [aceite](../../validation/06b4-company-people.md).
+- Not covered s11: acurácia/cobertura live, estados pagos/conectados da referência, carga/produção pública. Nenhum achado menor nesta revisão; próximos pacotes preservados.
+- Next s11:06D.1 — autoria, variantes, anexos e publicação. Não reiniciar famílias concluídas nem declarar paridade integral.
+
 
 - Covered s10:06B.3 com fatos/fontes privados, revisão/aplicação, parcial e recuperação; 319 unitários/337 integrações,27 capturas pós-revisão e cinco correções importantes. EV-272; zero chamadas pagas/envios. Próximo06B.4.
 - Not covered s10: estados inacessíveis da referência, fonte autenticada nova, acurácia live e produção pública. Um menor de seleção inicial do contato no lote permanece documentado, com seletor nominal disponível.
@@ -39,6 +44,8 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 - Decide: nenhuma decisão comercial reaberta; preservar trial7 dias, créditos pré-pagos, OpenWA gerenciado e billing aprovado. Sem100% e sem aceite do marco enquanto restar cobertura exigida.
 
 ## Next actions
+
+Fila vigente s11: executar06D.1 após o aceite06B.4. Filas abaixo são históricas; pilotos e gates externos continuam nos respectivos pacotes.
 
 Fila vigente s08:
 1. Executar06IA com distinção administrador da plataforma versus dono do workspace cliente; credenciais centrais e contexto isolado.

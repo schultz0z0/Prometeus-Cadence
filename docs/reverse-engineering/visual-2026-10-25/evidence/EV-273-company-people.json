@@ -1,0 +1,50 @@
+{
+  "id": "EV-273",
+  "date": "2026-10-27",
+  "session": "s11",
+  "scope": "06B.4 implementation and scoped visual/functional evidence",
+  "reference": "Historical RES/REA enrichment captures from06B.2; no new reference writes; paid result states not observed",
+  "local": {
+    "routes": [
+      "/leads/enrich",
+      "/leads/:id",
+      "/contacts",
+      "/executions/:id",
+      "/linkedin/enrichment"
+    ],
+    "viewports": [
+      "1920x855",
+      "390x844",
+      "320x844"
+    ],
+    "captures": 35,
+    "horizontalOverflows": 0,
+    "dialogFocusFailures": 0,
+    "pageErrors": 0,
+    "reviewedApplicationPersisted": true,
+    "fixtureMode": "SQL synthetic UI only; service execution and billing tested separately in ephemeral integration database",
+    "productionQuotaRaised": false,
+    "paidProviderCalls": 0,
+    "outboundMessages": 0,
+    "postreviewReadOnlyCaptures": 6
+  },
+  "validation": "../../../validation/06b4-company-people.md",
+  "manifest": "../../../validation/evidence/06b4-company-people/manifest.json",
+  "cleanup": "../../../validation/evidence/06b4-company-people/closure.json",
+  "unknowns": [
+    "Paid and inaccessible reference states",
+    "Live provider personal-contact coverage/accuracy",
+    "Public production load and rollout"
+  ],
+  "acceptance": "06B.4 local-controlled accepted; reference/private backend and public production not accepted",
+  "tests": {
+    "unit": 330,
+    "integration": 354,
+    "focused": 17
+  },
+  "review": {
+    "important": 5,
+    "fixed": 5,
+    "minor": 0
+  }
+}

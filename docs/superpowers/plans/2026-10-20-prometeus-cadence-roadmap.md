@@ -150,3 +150,7 @@ A numeração preservada identifica famílias/áreas, não uma sequência estrit
 ### Continuidade27/10/2026 —06B.3 entregue
 
 Investigação empresarial pública, fatos por campo/fontes, revisão/aplicação, isolamento, checkpoints e parcial implementados em [06B.3](../../validation/06b3-company-research.md). 319 unitários/337 integrações, build/tipos e27 capturas pós-revisão em1920/390/320. Cinco achados importantes corrigidos; um menor de seleção inicial do contato no lote permanece documentado com dono06B.5. Próximo: **06B.4 — identidade empresarial e tomadores de decisão**. Fontes autenticadas/qualidade live, jornada automática e produção pública mantêm os gates aprovados; nenhuma alegação de100% de estados não observados.
+
+## Continuidade vigente —27/10/2026 · conclusão06B.4
+
+Identidade empresarial e tomadores de decisão concluído no contrato próprio local/controlado: 330 unitários/354 integrações,17 focados,35 capturas de jornada+6 de smoke pós-revisão, cinco correções importantes e runtime restaurado. [Aceite](../../validation/06b4-company-people.md). A ordem técnica vigente está no [índice geral](2026-10-27-prometeus-cadence-master-plan.md); próximo06D.1, sem reiniciar marcos anteriores. Piloto live06IA-H, referência inacessível e produção pública mantêm gates próprios.

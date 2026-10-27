@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06B.3 implementado e validado no escopo local/controlado. Próxima implementação: **06B.4**.
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06B.4 implementado e validado no escopo local/controlado. Próxima implementação: **06D.1**.
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -18,7 +18,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 |---|---|---|---|---|
 | 06A-V | Fechamento visual contínuo e diferenças residuais | contínuo | [tarefas](2026-10-27-prometeus-cadence-06av-visual-closure.md) | Planejado; porta contínua |
 | 06B.3 | Investigação da empresa e redes | 06IA, 06B.1, 06B.2 | [tarefas](2026-10-27-prometeus-cadence-06b3-company-research.md) | Concluído local/controlado; [aceite06B.3](../../validation/06b3-company-research.md) |
-| 06B.4 | Identidade empresarial e tomadores de decisão | 06B.3 | [tarefas](2026-10-27-prometeus-cadence-06b4-company-people.md) | Planejado; não executado |
+| 06B.4 | Identidade empresarial e tomadores de decisão | 06B.3 | [tarefas](2026-10-27-prometeus-cadence-06b4-company-people.md) | Concluído local/controlado; [aceite06B.4](../../validation/06b4-company-people.md) |
 | 06D.1 | Autoria, variantes, anexos e publicação | 06B.4, 05 | [tarefas](2026-10-27-prometeus-cadence-06d1-message-authoring.md) | Planejado; não executado |
 | 06D.2 | Canais, inbox e homologação de entrega | 06D.1 | [tarefas](2026-10-27-prometeus-cadence-06d2-channel-operation.md) | Planejado; não executado |
 | 06B.5 | Jornada integrada de prospecção e cadência | 06B.3, 06B.4, 06D.1, 06D.2 | [tarefas](2026-10-27-prometeus-cadence-06b5-prospecting-journey.md) | Planejado; não executado |

@@ -57,3 +57,7 @@ Referência L4: contexto em1920/390/320, sem POST e dashboard/viewport restaurad
 ## Atualização s10 —27/10/2026
 
 Referência somente por evidência histórica; zero escrita. QA dedicada local: duas rodadas, quatro contatos fictícios removidos, duas aplicações persistidas; sessões revogadas, listas vazias/histórico sintético terminal retidos só na QA por FK. L-008/L-009 encerradas como fixture, sem linhas abertas. Sem Actor/LLM pagos ou mensagens externas. Browser próprio encerrado. Migrações083/083a e runtime atualizado no localhost.
+
+## Atualização s11 —27/10/2026
+
+Referência histórica L4; nenhuma escrita ou nova conexão. Local: identidade QA dedicada existente, duas empresas/pessoas sintéticas inseridas por SQL só para UI após a quota real recusar chamadas; execução e cobrança validadas em banco efêmero separado. Aplicação revisada de um contato persistida no browser. Três contatos próprios removidos, todas as sessões QA revogadas, duas listas vazias e um job sintético terminal retidos. L-010fixture;0linhas abertas. Limites/política central, conta do operador e integrações preservados.35capturas mascaradas em ../../../validation/evidence/06b4-company-people/.
