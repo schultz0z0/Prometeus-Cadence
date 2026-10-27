@@ -30,8 +30,12 @@ export function validateDecisorEvidence(raw:unknown,evidence:Evidence[],company:
   const publishedPhone=numbers.find(n=>normalizePersonalPhone(n)===phone);
   const contactAt=email?quote.indexOf(email):publishedPhone?quote.indexOf(fold(publishedPhone)):-1;
   if(contactAt>=0&&Math.abs(contactAt-quote.indexOf(name))>350)continue;
-  const attribution=quote.slice(Math.max(0,contactAt-220),contactAt);
-  if(!attribution.includes(name)||!/(contato pessoal|contato direto|personal contact|direct contact|e-?mail (pessoal )?de|telefone (pessoal )?de|celular (pessoal )?de)/.test(attribution))continue;
+  const ownsContact=(at:number)=>{
+   const before=quote.slice(Math.max(0,at-220),at);
+   const owners=[...before.matchAll(/\b(?:contato pessoal|contato direto|personal contact|direct contact|e-?mail(?: pessoal)?|telefone(?: pessoal)?|celular(?: pessoal)?)\s+(?:de|do|da|of)\s+([^:;]+?)\s*:/g)];
+   return owners.at(-1)?.[1].trim()===name;
+  };
+  if(email&&!ownsContact(quote.indexOf(email))||phone&&publishedPhone&&!ownsContact(quote.indexOf(fold(publishedPhone))))continue;
   if(p.phone&&publishedPhone){const beforePhone=quote.slice(Math.max(0,quote.indexOf(fold(publishedPhone))-70),quote.indexOf(fold(publishedPhone)));if(/(?:telefone|phone|contato|celular)\s*(?:geral|corporativo|da empresa|da equipe)|(?:central|recepcao|atendimento)\s*[:\-]/.test(beforePhone))continue;}
   let linkedin:string|undefined;if(p.linkedin){try{const u=new URL(p.linkedin);if(u.protocol!=='https:'||!/(^|\.)linkedin\.com$/.test(u.hostname)||!u.pathname.startsWith('/in/')||!e.text.includes(p.linkedin))continue;linkedin=u.toString();}catch{continue;}}
   const key=personalContactKey(p);if(seen.has(key))continue;seen.add(key);

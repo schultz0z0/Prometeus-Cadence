@@ -43,13 +43,13 @@ async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,dep
   });
 }
 export async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string}={}):Promise<Partial<Candidate>|null>{const result=await sourceResults(lease,job,lead,module,deps,options);return result===null?null:result[0]??{};}
-export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string;limit?:number}={}):Promise<Candidate[]|null>{
+export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string;limit?:number;beforeStart?:(operationId:string)=>Promise<void>}={}):Promise<Candidate[]|null>{
   const source=module==='registry'?'CNPJ':'WEB',step=module+':'+lead.id+(options.suffix?':'+options.suffix:'');
   const ctx=providerContext(job,source,hashValue({job:lease.jobId,step}),deps.signal??new AbortController().signal),adapter=deps.apify??new ApifyAdapter();
   if(options.partners)ctx.profile.partners=true;
   const limit=Math.min(5,Math.max(1,options.limit??1));
   const input:Extract<JobInput,{kind:'generation'}>={kind:'generation',source,destination:{mode:'existing',listId:lead.listId},filters:module==='registry'?{term:lead.name,cnpj:lead.cnpj!}:{term:lead.name,location:[lead.city,lead.state].filter(Boolean).join(', ')||'Brasil'},limit,dedupScope:'workspace'};
-  const started=await performStep(lease,step,'apify',{apifyRuns:1},()=>adapter.start(ctx,input),r=>({provider:'apify',operationId:ctx.operationId,units:r.kind==='uncertain'?{}:{apifyRuns:1},costUsd:null,costKind:'unknown'}));
+  const started=await performStep(lease,step,'apify',{apifyRuns:1},async()=>{await options.beforeStart?.(ctx.operationId);return adapter.start(ctx,input);},r=>({provider:'apify',operationId:ctx.operationId,units:r.kind==='uncertain'?{}:{apifyRuns:1},costUsd:null,costKind:'unknown'}));
   if(started.kind==='uncertain'){await finishJob(lease,'needs_reconciliation','START_UNCERTAIN');return null;}
   if(started.kind==='inline')return started.page.candidates.slice(0,limit);
   const remote=await adapter.poll(ctx,started.run);if(['failed','cancelled'].includes(remote.status))throw new ProviderError('REMOTE_FAILED');

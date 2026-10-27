@@ -3,7 +3,7 @@ import type {EvidenceRef} from './reviewed-operation.ts';
 import type {Lead} from './model.ts';
 import {normalizePersonalPhone,validateDecisorEvidence} from './enrichment.ts';
 import {researchUrl} from './company-research.ts';
-export const peopleContractVersion='company-people-v1';
+export const peopleContractVersion='company-people-v2';
 export interface CompanyIdentity{caseId:string;cnpj:string|null;legalName:string|null;state:'resolved'|'conflict'|'missing';evidence:EvidenceRef[]}
 export interface PersonContact{kind:'email'|'phone'|'linkedin';value:string;attribution:'personal'|'corporate'|'unresolved';evidence:EvidenceRef[]}
 export interface CompanyPerson{id:string;name:string;role:string;relationship:'partner'|'manager'|'unknown';contacts:PersonContact[];current:'supported'|'uncertain';evidence:EvidenceRef[];applied?:boolean}
@@ -13,6 +13,12 @@ export interface IdentityCandidate{cnpj:string;legalName:string;corroborated:boo
 export interface PeopleAdapters{signal?:AbortSignal;apify?:import('../server/prospecting/providers/types.ts').SourceAdapter;generate?:import('../server/prospecting/ai/decisors.ts').DecisorGenerator;decide?:typeof import('../server/prospecting/ai/jev.ts').decide;collect?:(url:string,signal:AbortSignal)=>Promise<import('./prospecting.ts').Evidence|null>}
 export function classifyPersonContact(input:{attributed:boolean;corporate:boolean;hasSource:boolean}):PersonContact['attribution']{return !input.hasSource?'unresolved':input.corporate?'corporate':input.attributed?'personal':'unresolved';}
 const fold=(v:string)=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+function historicalRole(quote:string,name:string,role:string){
+ if(/(^|\b)(ex[ -]|former\b|antig[oa]\b)/.test(role))return true;
+ const at=quote.indexOf(name),after=quote.slice(at+name.length),roleAt=after.indexOf(role);
+ // Read the qualifier from the cited person's role, not the model's shortened label.
+ return roleAt>=0&&/\b(?:ex[ -]|former\s+|antig[oa]\s+|foi\s+(?:a\s+|o\s+)?|atuou como\s+)$/.test(after.slice(0,roleAt));
+}
 export function sanitizePeopleSource(text:string){return text.replace(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g,'[CPF removido]').replace(/\bCPF\s*[:\-]?\s*\d{11}\b/gi,'[CPF removido]').replace(/\b\d{1,3}\s+anos\b/gi,'[idade removida]').slice(0,12000);}
 export function resolveIdentityCandidates(caseId:string,company:Partial<Lead>,candidates:IdentityCandidate[]):CompanyIdentity{
  const valid=candidates.filter(c=>/^[A-Z0-9]{12}[0-9]{2}$/.test(c.cnpj)&&c.corroborated&&c.evidence.length&&c.evidence.every(e=>researchUrl(e.url)&&e.quote.trim())),unique=new Map(valid.map(c=>[c.cnpj,c]));
@@ -33,7 +39,7 @@ export function reviewCompanyPeople(input:{company:Pick<Lead,'id'|'name'>&Partia
   if(!e||!researchUrl(e.url)||!e.quote.includes(p.quote)||!quote.includes(name)||!quote.includes(role)||name.split(' ').length<2||!/(socio|fundador|diretor|presidente|gerente|propriet|administr|\bceo\b|\bowner\b|\bfounder\b|\bhead\b|\bpartner\b)/.test(role))continue;
   // A name from QSA alone cannot corroborate employment on a different profile.
   if(![input.company.name,input.company.companyName,input.identity.legalName].some(n=>n&&fold(n).length>=4&&quote.includes(fold(n))))continue;
-  const ref={...e,quote:p.quote},key=fold(p.name),prior=out.get(key),contacts:PersonContact[]=[],currentSupported=supported&&!/(^|\b)(ex[ -]|former\b|antig[oa]\b)/.test(role);
+  const ref={...e,quote:p.quote},key=fold(p.name),prior=out.get(key),contacts:PersonContact[]=[],currentSupported=supported&&!historicalRole(quote,name,role);
   const evidence=[{...e,text:e.quote,truncated:false}];
   for(const kind of ['email','phone','linkedin'] as const){
    const raw=p[kind];if(!raw)continue;const value=kind==='phone'?normalizePersonalPhone(raw):kind==='email'?raw.toLowerCase():researchUrl(raw)?.toString();if(!value)continue;

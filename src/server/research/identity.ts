@@ -15,6 +15,7 @@ import {AppError} from '../errors.ts';
 export function companyPeopleKey(lead:Lead){const {id:_id,listId:_list,...basis}=researchLeadBasis(lead);return hashValue(basis);}
 export async function reusablePeople(c:PoolClient,key:string,contract:string){return (await c.query(`SELECT i.* FROM app.research_company_identity i JOIN app.research_case r ON r.workspace_id=i.workspace_id AND r.id=i.case_id
  WHERE i.identity_key=$1 AND i.contract=$2 AND i.expires_at>clock_timestamp() AND r.state<>'pending'
+ AND NOT r.missing ?| ARRAY['LIMITE_DO_LOTE','CACHE_EXPIRADO']
  AND (i.state<>'resolved' OR app.people_evidence_valid(i.workspace_id,i.job_id,i.lead_id,i.evidence))
  AND NOT EXISTS(SELECT 1 FROM app.research_person p WHERE p.workspace_id=i.workspace_id AND p.case_id=i.case_id AND NOT app.people_evidence_valid(i.workspace_id,i.job_id,i.lead_id,p.evidence))
  AND NOT EXISTS(SELECT 1 FROM app.research_person_contact pc WHERE pc.workspace_id=i.workspace_id AND pc.case_id=i.case_id AND NOT app.people_evidence_valid(i.workspace_id,i.job_id,i.lead_id,pc.evidence))
