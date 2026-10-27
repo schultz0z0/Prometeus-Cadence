@@ -29,3 +29,7 @@ Valores: todo, partial, done, blocked, n/a. Esta matriz acompanha evidência dem
 | Responsive/dark/keyboard/failure | todo | todo | todo | partial | todo | n/a | todo | n/a | todo | Necessário por família; desktop base não aceita variações |
 
 Network/Persistence blocked significa que o escopo L4 não produziu evidência de transações autenticadas/persistidas na referência. Não impede correções locais autorizadas; impede afirmar paridade operacional total.
+
+## Atualização s08
+
+[obs EV-270] Qualificação/enriquecimento, preview/revisão/resultados próprios/detalhe/filtro e reengajamento implementados e testados conforme relatório06B.2. As linhas históricas da tabela permanecem parciais:8 capturas observacionais de referência e29 capturas locais finais não cobrem todas as variantes da família. Preview remoto e avanço do wizard não aceitos devido ao limite L4/carregamento. Backend próprio tem302unitários/306integrações e aplicação real QA. Capacidade/permissão oficial LinkedIn continua07A; configuração central e inteligência adaptativa passam a06IA.

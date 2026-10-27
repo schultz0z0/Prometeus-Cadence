@@ -2,7 +2,7 @@ import type {RemoteRun,RemoteState,CandidatePage} from '../../../domain/prospect
 import type {Fetch,ProviderContext,GenerationInput,SourceAdapter,StartResult} from './types.ts';
 import {ProviderError,providerJson} from './transport.ts';
 import {actorInput} from './profiles.ts';
-import {normalizeCandidate} from '../normalize.ts';
+import {normalizeCandidate,normalizeDecisionMakers} from '../normalize.ts';
 import {hashValue} from '../review.ts';
 const api='https://api.apify.com/v2';
 const id=(value:unknown)=>{if(typeof value!=='string'||!/^[-\w]{1,100}$/.test(value))throw new ProviderError('INVALID_REMOTE_ID');return value;};
@@ -48,7 +48,8 @@ export class ApifyAdapter implements SourceAdapter{
     const candidates=[],rejected=[];
     for(const r of rows.slice(0,limit))try{
       const candidate=normalizeCandidate(ctx.profile.source==='WEB'?{...r,id:r.url,site:r.url}:r,ctx.profile.source);
-      const text=JSON.stringify({source:ctx.profile.source,sourceRef:candidate.sourceRef,name:candidate.name,cnpj:candidate.cnpj,city:candidate.city,state:candidate.state,site:candidate.site,phone:candidate.phone,email:candidate.email,description:typeof r.description==='string'?r.description.slice(0,4000):undefined}).slice(0,6000);
+      if(ctx.profile.source==='CNPJ'&&ctx.profile.partners)candidate.facts={decisionMakers:normalizeDecisionMakers(r.qsa)};
+      const text=JSON.stringify({source:ctx.profile.source,sourceRef:candidate.sourceRef,name:candidate.name,cnpj:candidate.cnpj,city:candidate.city,state:candidate.state,site:candidate.site,phone:candidate.phone,email:candidate.email,...(candidate.facts?{decisionMakers:candidate.facts.decisionMakers}:{}),description:typeof r.description==='string'?r.description.slice(0,4000):undefined}).slice(0,6000);
       let url=`https://api.apify.com/v2/datasets/${id(run.datasetId)}/items?offset=${offset}`;
       if(ctx.profile.source==='WEB')try{const pageUrl=new URL(r.url);if(['http:','https:'].includes(pageUrl.protocol)&&!pageUrl.username&&!pageUrl.password)url=pageUrl.toString();}catch{}
       candidate.evidence=[{id:hashValue({receipt:run.runId,ref:candidate.sourceRef}),url,text,hash:hashValue(text),fetchedAt:new Date().toISOString(),truncated:typeof r.description==='string'&&r.description.length>4000}];

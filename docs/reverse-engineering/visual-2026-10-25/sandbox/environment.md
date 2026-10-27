@@ -45,3 +45,7 @@ Prometeus: alterações locais autorizadas; fixture de cadência criada exclusiv
 ## Atualização s05 —26/10/2026
 
 Revisão de planejamento:11 telas por origem visitadas em1920×855, sem submissões, mais cenários REA temporários do login público em1280×800. Os dois processos próprios do REA terminaram, conforme cleanup. Fonte autenticada em perfil Playwright próprio e local retornaram ao dashboard. Nenhuma nova fixture, preferência, conta, integração, compra ou mensagem criada; ledger sem novas linhas. O usuário esclareceu que não exige backend privado idêntico, mantendo a exigência de implementação própria funcional/testada.
+
+## Atualização s08 —26/10/2026
+
+Referência L4: Playwright autenticado com guard de métodos nãoGET, localStorage restaurado e dashboard final. REA público390×844 confirmou login e encerrou processo próprio. Produção da referência não alterada. Local: identidade QA dedicada, workspace/lista vazios de06B.1 reutilizados;2empresas +1decisor fictícios e a lista de saída nova removidos, política e workspace anterior restaurados, sessão revogada. Histórico sintético concluído permanece apenas na QA. Prova em ../../../validation/evidence/06b2/closure.json. Nenhum provedor pago, checkout ou mensagem externa. Build local3210 e seis lanes contínuas reiniciados ocultos.

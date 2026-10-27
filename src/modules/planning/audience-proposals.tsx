@@ -8,7 +8,7 @@ import {useProspecting} from '@/client/workspace-provider';
 import type {ProviderCapabilities} from '@/domain/prospecting';
 export type AudienceEdits=Omit<AudienceOption,'id'|'description'|'marketSize'>;
 export function audienceEdits(option:AudienceOption):AudienceEdits{const {id,description,marketSize,...edits}=option;return structuredClone(edits);}
-const moduleLabels:Record<ModuleId,string>={email:'Extrair e-mails',phone:'Extrair telefones',website:'Descobrir site',summary:'Resumo com IA',deep:'Ler páginas adicionais',validateEmail:'Verificar domínio de e-mail',registry:'Consultar cadastro',qualify:'Qualificação por IA'};
+const moduleLabels:Record<Exclude<ModuleId,'decisors'>,string>={email:'Extrair e-mails',phone:'Extrair telefones',website:'Descobrir site',summary:'Resumo com IA',deep:'Ler páginas adicionais',validateEmail:'Verificar domínio de e-mail',registry:'Consultar cadastro',qualify:'Qualificação por IA'};
 const filterLabels:Record<string,string>={term:'Público ou atividade',location:'Localização',cnae:'CNAE',cnpj:'CNPJ',states:'Estados',city:'Cidade',industry:'Setor',minEmployees:'Mínimo de funcionários',maxEmployees:'Máximo de funcionários',openedAfter:'Abertura a partir de',openedBefore:'Abertura até',size:'Porte',state:'Estado'};
 export function AudienceProposals({options,recommended,disabled,onSelect}:{options:AudienceOption[];recommended:string|null;disabled:boolean;onSelect:(option:AudienceOption)=>void}){
  const client=useProspecting(),[capabilities,setCapabilities]=useState<ProviderCapabilities|null>(null);

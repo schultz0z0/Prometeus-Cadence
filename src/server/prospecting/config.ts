@@ -22,7 +22,7 @@ export function prospectingConfig(){
   return {enabled,profiles,ready,caps,globalCaps,version,codexEnabled,codexWorkspaces,jevReady:!!e.OPENROUTER_API_KEY&&(e.JEV_MODEL??'typesafe/jev-1.13')==='typesafe/jev-1.13'};
 }
 export type ProspectingConfig=ReturnType<typeof prospectingConfig>;
-export function estimateUsage(input:JobInput,route?:AiRoute|null):UsageEstimate[]{
+export function estimateUsage(input:JobInput,route?:AiRoute|null,plannedFresh?:number):UsageEstimate[]{
   const result:UsageEstimate[]=[];
   const add=(provider:string,unit:UsageEstimate['unit'],maxUnits:number)=>result.push({provider,unit,maxUnits,estimatedUsd:null,pricingSource:null});
   if(input.kind==='generation'){
@@ -35,6 +35,7 @@ export function estimateUsage(input:JobInput,route?:AiRoute|null):UsageEstimate[
     }
   }else{
     const n=input.leadIds.length;
+    if(input.enrichment){const fresh=plannedFresh??Math.min(n,input.enrichment.maxCredits);if(fresh>0){add('apify','apifyRuns',fresh*3);if(route){add(route.conventional.provider,conventionalUnit(route.conventional.provider),fresh);if(route.decisionProvider==='jev')add('openrouter','jevCalls',fresh);}}return result;}
     if(input.modules.includes('qualify')){if(!route||route.decisionProvider==='jev')add('openrouter','jevCalls',n);else add(route.conventional.provider,conventionalUnit(route.conventional.provider),n);}
     const calls=(input.modules.includes('summary')?n:0)+(input.escalation==='ambiguous'&&input.modules.includes('qualify')&&(!route||route.decisionProvider==='jev')?n:0);
     if(calls)add(route?.conventional.provider??'codex',route?conventionalUnit(route.conventional.provider):'codexCalls',calls);
@@ -44,7 +45,7 @@ export function estimateUsage(input:JobInput,route?:AiRoute|null):UsageEstimate[
   return result;
 }
 export const usageUnits=(usage:UsageEstimate[]):Units=>Object.fromEntries(usage.map(u=>u.unit).map(k=>[k,usage.filter(u=>u.unit===k).reduce((n,u)=>n+u.maxUnits,0)]));
-export function requirements(config:ProspectingConfig,input:JobInput,workspaceId:string,route?:AiRoute|null){
+export function requirements(config:ProspectingConfig,input:JobInput,workspaceId:string,route?:AiRoute|null,plannedFresh?:number){
   const blockers:string[]=[];
   if(!config.enabled)blockers.push('As execuções externas ainda não foram habilitadas neste ambiente.');
   if(input.kind==='generation'&&!config.ready[input.source])blockers.push('Configure a credencial e o perfil da fonte antes de executar.');
@@ -53,11 +54,12 @@ export function requirements(config:ProspectingConfig,input:JobInput,workspaceId
     if(input.source!=='APOLLO')try{actorInput(providerProfile(input.source,config.profiles[input.source]),input);}catch{blockers.push(input.source==='CNPJ'?'O perfil ou os filtros cadastrais não estão disponíveis. Informe um CNAE ou CNPJ suportado.':'O perfil de busca ainda não está disponível. Configure um Actor/build verificado.');}
   }
   if(input.kind==='qualification'){
+    if(input.enrichment&&(!config.ready.CNPJ||!config.ready.WEB))blockers.push('Configure os perfis CNPJ e WEB da Apify antes de enriquecer.');
 
 
     if(input.modules.includes('registry')&&!config.ready.CNPJ)blockers.push('Configure a consulta cadastral.');
     if(input.modules.includes('website')&&!config.ready.WEB)blockers.push('Configure a busca de sites.');
   }
-  for(const u of estimateUsage(input,route))if(u.maxUnits>(config.caps[u.unit]??0)||u.maxUnits>(config.globalCaps[u.unit]??0))blockers.push(`O limite de ${u.unit} não permite esta execução.`);
+  for(const u of estimateUsage(input,route,plannedFresh))if(u.maxUnits>(config.caps[u.unit]??0)||u.maxUnits>(config.globalCaps[u.unit]??0))blockers.push(`O limite de ${u.unit} não permite esta execução.`);
   return blockers;
 }

@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-26",
+  "originalBillingPreserved": true,
+  "controlledWorker": {
+    "actorCalls": 2,
+    "traditionalCalls": 1,
+    "liveProviderCalls": 0
+  },
+  "realApplicationPersisted": true,
+  "personalContactsDelivered": 1,
+  "contactEvidenceAfterReload": true,
+  "enrichedFilter": {
+    "yes": 2,
+    "no": 1
+  },
+  "removedQaContacts": 3,
+  "removedNewOutputList": true,
+  "retainedPriorEmptyQaWorkspaceAndList": true,
+  "retainedSyntheticCompletedJobAndUsage": true,
+  "qaPolicyRestored": true,
+  "activeQaJobs": 0,
+  "priorQaWorkspaceRestored": true,
+  "currentQaSessionRevoked": true,
+  "stripeCheckoutCreated": false,
+  "externalMessageSent": false
+}

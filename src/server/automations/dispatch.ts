@@ -10,6 +10,8 @@ import {insertReviewedJob} from '../prospecting/job-store.ts';
 import {estimateUsage} from '../prospecting/config.ts';
 import {authorizationInTransaction,definitionInTransaction,runtimeInTransaction,occurrenceView} from './repository.ts';
 import {automationAuthorizationState} from './state.ts';
+import {transferReengagement} from './reengagement.ts';
+import {processedQualifications} from '../prospecting/processed.ts';
 export class WaitingDependency extends Error{}
 async function validate(c:PoolClient,auth:AutomationAuthorization,definition:AutomationDefinition){
  const role=(await c.query('SELECT app.current_role() AS role')).rows[0].role,user=(await c.query("SELECT current_setting('app.user_id') AS id,current_setting('app.workspace_id') AS workspace")).rows[0];
@@ -30,6 +32,11 @@ async function createOccurrence(c:PoolClient,auth:AutomationAuthorization,defini
  if(active){await c.query("UPDATE app.automation_occurrence SET state='blocked',blocked_code='EXECUTION_ACTIVE' WHERE id=$1",[id]);return get();}
  await c.query('SAVEPOINT automation_job');
  try{
+  if(definition.payload.source==='REENGAGE'){
+   await transferReengagement(c,definition,await get(),auth.maxItems);
+   if(auth.origin==='schedule')await c.query('UPDATE app.automation_runtime SET last_run_at=clock_timestamp() WHERE automation_id=$1',[definition.id]);
+   await c.query('RELEASE SAVEPOINT automation_job');return get();
+  }
   let input=validated.current.input!;
   if(input.kind==='qualification'){
    if(!selectLeads){await c.query("UPDATE app.automation_occurrence SET state='blocked',blocked_code='LEAD_SELECTOR_UNAVAILABLE' WHERE id=$1",[id]);await c.query('RELEASE SAVEPOINT automation_job');return get();}
@@ -43,7 +50,8 @@ async function createOccurrence(c:PoolClient,auth:AutomationAuthorization,defini
    const leads=(await c.query('SELECT id,payload FROM app.lead WHERE list_id=$1 AND id=ANY($2::text[])',[input.listId,input.leadIds])).rows;
    if(leads.length!==input.leadIds.length)throw new AppError(409,'O contato não pertence à lista autorizada.');bases=Object.fromEntries(leads.map(row=>[row.id,row.payload]));
   }
-  const checkpoint={context:auth.context,product:auth.product,bases,automation:{id:auth.automationId,authorizationId:auth.id,occurrenceId:id,origin:auth.origin,epoch:auth.epoch,revision:auth.revision,productId:auth.productId,qualificationCriteria:definition.qualificationCriteria},execution:{version:auth.configVersion,profiles:auth.profiles,maxChargeUsd:auth.maxChargeUsd,maxPages:auth.maxPages,aiRoute:auth.aiRoute}};
+  const processed=input.kind==='qualification'&&input.options?.skipProcessed?await processedQualifications(c,input.leadIds,bases,input.modules,auth.context?.version??0):{};
+  const checkpoint={context:auth.context,product:auth.product,bases,processed,automation:{id:auth.automationId,authorizationId:auth.id,occurrenceId:id,origin:auth.origin,epoch:auth.epoch,revision:auth.revision,productId:auth.productId,qualificationCriteria:definition.qualificationCriteria},execution:{version:auth.configVersion,profiles:auth.profiles,maxChargeUsd:auth.maxChargeUsd,maxPages:auth.maxPages,aiRoute:auth.aiRoute}};
   const job=await insertReviewedJob(c,{workspaceId:workspace,userId,role:validated.role,sessionId:'scheduler'},{requestId:id,listId:definition.payload.listId,input,bodyHash:hashValue({authorizationId:auth.id,occurrenceId:id,input}),profileVersion:hashValue(auth),checkpoint,usage:estimateUsage(input,auth.aiRoute),caps:auth.caps,globalCaps:auth.globalCaps});
   await c.query("UPDATE app.automation_occurrence SET job_id=$2,state='queued',blocked_code=NULL WHERE id=$1",[id,job.id]);
   await c.query('UPDATE app.automation_lead_assignment SET job_id=$2 WHERE occurrence_id=$1',[id,job.id]);

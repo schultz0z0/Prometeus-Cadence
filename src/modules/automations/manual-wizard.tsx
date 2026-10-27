@@ -12,6 +12,8 @@ import {localDateAt,scheduleV2Schema} from '@/domain/schedule';
 import {TermLines} from './term-lines';
 import {ScheduleFields} from './schedule-fields';
 import {useIdentity} from '@/client/workspace-provider';
+import {QualificationControls} from '@/modules/prospecting/qualification-controls';
+import type {ModuleId} from '@/domain/prospecting';import type {QualificationOptions} from '@/domain/qualification-policy';
 export function ManualWizard({
   initialSource = "MAPS",
 }: {
@@ -52,6 +54,7 @@ export function ManualWizard({
     intervalDays:1,
   });
   const [dedup, setDedup] = useState(["email", "cnpj"]);
+  const [modules,setModules]=useState<ModuleId[]>(['email','phone']),[options,setOptions]=useState<QualificationOptions>({language:'pt-BR'}),[criteria,setCriteria]=useState(''),[dependency,setDependency]=useState('');
   const names = ["Fonte", "Termos", "Filtros", "Destino", "Agendamento"];
   const canAdvance =
     step === 0
@@ -60,7 +63,7 @@ export function ManualWizard({
         ? ["QUALIFY", "REENGAGE"].includes(source) ||
           (filters.term.trim() &&
             (filters.location.trim() || source === "CNPJ"))
-        : true;
+        : step===2&&source==='QUALIFY'?modules.length>0:step===3&&source==='QUALIFY'?!!list:true;
   async function save() {
     if (
       await run(async () => {
@@ -73,14 +76,15 @@ export function ManualWizard({
             status: "paused",
             schedule,
             dailyLimit: limit,
-            filters: { ...filters, dedup: dedup.join(",") },
+            filters: source==='QUALIFY'?Object.fromEntries(Object.entries(options).map(([k,v])=>[k,String(v)])):source==='REENGAGE'?{sourceListId:filters.sourceListId??'',afterDays:filters.afterDays??'7',...(filters.sourceCadenceId?{sourceCadenceId:filters.sourceCadenceId}:{})}:{ ...filters, dedup: dedup.join(",") },
             modules:
               source === "QUALIFY"
-                ? ["Qualificação por IA", "Resumo com IA"]
+                ? modules
                 : [],
             createdAt: new Date().toISOString(),
+            ...(source==='QUALIFY'?{criteria,...(dependency?{dependsOnAutomationId:dependency}:{})}:{}),
           },
-          destination === "new" ? { name } : list,
+          source==='QUALIFY'?list:destination === "new" ? { name } : list,
         );
       }, "Automação criada pausada.")
     ) {
@@ -162,7 +166,7 @@ export function ManualWizard({
                 <p className="secondary-text">
                   Defina o que buscar e onde buscar.
                 </p>
-                {["QUALIFY", "REENGAGE"].includes(source) ? (
+                {source==='REENGAGE'?<div className="stack"><Field label="Lista de origem"><select required value={filters.sourceListId??''} onChange={e=>setFilters({...filters,sourceListId:e.target.value,sourceCadenceId:''})}><option value="">Selecione uma lista</option>{s.lists.map(l=><option key={l.id} value={l.id}>{l.name}</option>)}</select></Field><Field label="Cadência concluída"><select value={filters.sourceCadenceId??''} onChange={e=>setFilters({...filters,sourceCadenceId:e.target.value})}><option value="">Qualquer cadência da lista de origem</option>{s.cadences.filter(c=>c.listId===filters.sourceListId).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></Field><Notice>Move os contatos que concluíram a cadência sem responder para outra lista. A transferência não inicia envios.</Notice></div>:source==='QUALIFY' ? (
                   <Notice>
                     A lista de origem será escolhida na etapa Destino.
                   </Notice>
@@ -185,6 +189,7 @@ export function ManualWizard({
                     onChange={(e) => setLimit(Number(e.target.value))}
                   />
                 </Field>
+                {source==='QUALIFY'?<><QualificationControls modules={modules} onModules={setModules} options={options} onOptions={setOptions}/><Field label="Critérios de qualificação (opcional)"><textarea value={criteria} maxLength={4000} onChange={e=>setCriteria(e.target.value)}/></Field></>:source==='REENGAGE'?<Field label="Dias após a conclusão da cadência"><input type="number" min={1} max={3650} required value={filters.afterDays??'7'} onChange={e=>setFilters({...filters,afterDays:e.target.value})}/></Field>:<>
                 <div>
                   <p className="field-label">Deduplicação</p>
                   {identity?<small>Usa CNPJ e identificador estável da fonte. E-mail e telefone isolados não identificam uma empresa com segurança.</small>:<div className="row wrap">
@@ -226,12 +231,13 @@ export function ManualWizard({
                 {source === "CNPJ" && (
                   <CnpjFilters value={filters} onChange={setFilters} />
                 )}
+                </>}
               </>
             ) : step === 3 ? (
               <>
                 <h2>Listas de Destino</h2>
-                <p className="secondary-text">Onde salvar os leads gerados?</p>
-                <div className="row">
+                <p className="secondary-text">{source==='QUALIFY'?'Qual lista será qualificada?':source==='REENGAGE'?'Para qual lista mover os contatos?':'Onde salvar os leads gerados?'}</p>
+                {source!=='QUALIFY'&&<div className="row">
                   <Button
                     type="button"
                     variant={destination === "new" ? "soft" : ""}
@@ -246,8 +252,8 @@ export function ManualWizard({
                   >
                     Usar lista existente
                   </Button>
-                </div>
-                {destination === "new" ? (
+                </div>}
+                {destination === "new"&&source!=='QUALIFY' ? (
                   <Notice>
                     Uma lista com o nome “{name}” será criada na confirmação.
                   </Notice>
@@ -265,6 +271,7 @@ export function ManualWizard({
                     </select>
                   </Field>
                 )}
+                {source==='QUALIFY'&&<Field label="Aguardar busca da mesma lista (opcional)"><select value={dependency} onChange={e=>setDependency(e.target.value)}><option value="">Sem dependência</option>{s.automations.filter(a=>a.listId===list&&['MAPS','WEB','CNPJ','APOLLO'].includes(a.source)).map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>}
               </>
             ) : (
               <>
@@ -272,8 +279,7 @@ export function ManualWizard({
                 <p className="secondary-text">Quando executar a automação?</p>
                 <ScheduleFields value={schedule} onChange={setSchedule}/>
                 <Notice>
-                  Esta automação será criada pausada. A recorrência real depende
-                  do serviço de execução.
+                  Esta automação será criada pausada. Revise e ative na lista de automações para autorizar as próximas execuções.
                 </Notice>
               </>
             )}

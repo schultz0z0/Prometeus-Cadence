@@ -22,6 +22,6 @@ export function actorInput(profile:ProviderProfile,input:GenerationInput){
     if(unsupported.length)throw new ProviderError('UNSUPPORTED_FILTER');
     if(!f.cnpj&&!f.cnae)throw new ProviderError('CNPJ_REQUIRES_CNAE');
     const list=(value:string)=>value.split(',').map(x=>x.trim()).filter(Boolean);
-    return f.cnpj?{mode:'lookup',cnpjs:[f.cnpj],maxRecords:input.limit,includePartners:false}:{mode:'search',...(f.cnae?{cnae:list(f.cnae)}:{}),...(f.state?{uf:list(f.state)}:{}),...(f.city?{city:list(f.city)}:{}),maxRecords:input.limit,includePartners:false};
+    return f.cnpj?{mode:'lookup',cnpjs:[f.cnpj],maxRecords:input.limit,includePartners:profile.partners===true}:{mode:'search',...(f.cnae?{cnae:list(f.cnae)}:{}),...(f.state?{uf:list(f.state)}:{}),...(f.city?{city:list(f.city)}:{}),maxRecords:input.limit,includePartners:false};
   }throw new ProviderError('PROFILE_UNAVAILABLE');
 }

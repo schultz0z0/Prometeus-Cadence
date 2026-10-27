@@ -56,3 +56,9 @@ REA apoiou as observações de runtime; RES organizou inventário/evidências/li
 ## Critério esclarecido pelo operador —26/10
 
 O alvo continua sendo visual, fluxos e funcionalidades completos, sem exigir demonstração de um backend interno idêntico ao da referência. A operação própria precisa ser real e testada. Estados não observados continuam sem comprovação na referência, mas não bloqueiam a implementação de um contrato de produto explicitamente identificado. O [roteiro revisado](../../superpowers/plans/2026-10-26-prometeus-cadence-parity-closure.md) adiciona06A-P,06A-H,06F e06G e reparte os grandes blocos existentes. Esta revisão de planejamento não implementa esses módulos.
+
+## s08 — qualificação/enriquecimento e recorrência
+
+[EV-270](evidence/EV-270-qualification-enrichment.json) e [relatório06B.2](../../validation/06-qualification-enrichment.md):302unitários/306integrações, qualificador efetivo, contato pessoal com evidência, cache/crédito/entrega protegida e reengajamento sem mensagem. Comparação de superfícies desktop/mobile, com resultados próprios persistidos. Nenhuma operação paga ou mensagem externa na referência; estados bloqueados/carregando não observados. Sem aceite integral da família visual.
+
+Direção posterior explícita: Apify/LLM são configuração exclusiva da administração do SaaS; os usuários conectam seus canais próprios e fornecem o contexto da empresa. A política/tela de provedores por workspace ainda precisa mudar. Novo06IA antes de06D.1/06F, com instruções por tarefa, contexto isolado + pedido, JEV/LLM e avaliações mensuráveis. Não foi declarado concluído no06B.2.

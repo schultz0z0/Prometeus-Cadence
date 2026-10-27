@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-10-27T02:11:53.524Z",
+  "localhostLoginStatus": 200,
+  "continuousRuntimeRunning": true,
+  "services": {
+    "dispatch": {
+      "alive": true,
+      "state": "waiting",
+      "failures": 0,
+      "lastSuccess": "2026-10-27T02:11:52.172Z"
+    },
+    "sync": {
+      "alive": true,
+      "state": "waiting",
+      "failures": 0,
+      "lastSuccess": "2026-10-27T02:11:49.939Z"
+    },
+    "jobs": {
+      "alive": true,
+      "state": "waiting",
+      "failures": 0,
+      "lastSuccess": "2026-10-27T02:11:51.779Z"
+    },
+    "scheduler": {
+      "alive": true,
+      "state": "waiting",
+      "failures": 0,
+      "lastSuccess": "2026-10-27T02:11:51.370Z"
+    },
+    "channels": {
+      "alive": true,
+      "state": "waiting",
+      "failures": 0,
+      "lastSuccess": "2026-10-27T02:11:51.468Z"
+    },
+    "billing": {
+      "alive": true,
+      "state": "waiting",
+      "failures": 0,
+      "lastSuccess": "2026-10-27T02:11:50.859Z"
+    }
+  }
+}

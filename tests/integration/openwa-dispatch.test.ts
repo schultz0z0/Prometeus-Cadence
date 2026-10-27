@@ -54,7 +54,11 @@ test('SQL final guard repeats capability and contact binding even when TypeScrip
 test('two OpenWA connections share the last workspace slot without leaking a second provider quota hold',async t=>{
  const a=await ready(t),{createOpenwaRecord}=await import('../../src/server/channels/openwa/repository.ts'),input={requestId:randomUUID(),name:'Second fixture'},view=await createOpenwaRecord(a.u.p,input);
  const b=await ready(t,{u:a.u,input,view,id:view.connection.id});await testAdmin(c=>c.query('UPDATE app.messaging_limits SET workspace_daily_limit=1 WHERE workspace_id=$1',[a.u.p.workspaceId]));
- const ids=[await queued(a),await queued(b)],leases=await Promise.all(ids.map(messageId=>claimDispatch(new Date().toISOString(),{workspaceId:a.u.p.workspaceId,messageId})));assert.ok(leases[0]);assert.ok(leases[1]);
+ // Claims intentionally use SKIP LOCKED on the shared workspace. Acquire the
+ // two leases sequentially; the quota race under test is concurrent dispatch.
+ const ids=[await queued(a),await queued(b)],leases=[];
+ for(const messageId of ids)leases.push(await claimDispatch(new Date().toISOString(),{workspaceId:a.u.p.workspaceId,messageId}));
+ assert.ok(leases[0]);assert.ok(leases[1]);
  let posts=0;const {createOpenwaAdapter}=await import('../../src/server/channels/providers/openwa.ts');const adapter=createOpenwaAdapter(async()=>{posts++;return Response.json({messageId:'true_15550000002@c.us_'+randomUUID(),timestamp:Math.floor(Date.now()/1000)},{status:201});});
  await Promise.all(leases.map(lease=>dispatchOne(lease!,{adapter,now:()=>new Date().toISOString()})));assert.equal(posts,1);
  assert.equal(await testAdmin(async c=>(await c.query('SELECT count(*) FROM app.openwa_usage_reservation WHERE workspace_id=$1',[a.u.p.workspaceId])).rows[0].count),'1');

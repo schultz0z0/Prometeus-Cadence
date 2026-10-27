@@ -18,6 +18,9 @@ import {readAiPolicy} from './ai/settings.ts';
 import {readConnectionCheck} from './ai/connection.ts';
 import {resolveAiRoute,aiRouteView,type AiRoute} from '../../domain/ai-routing.ts';
 import {readApprovedContext} from '../context/repository.ts';
+import {qualificationFingerprint} from '../../domain/qualification-policy.ts';
+import {enrichmentCheckpoint} from './enrichment-context.ts';
+import {processedQualifications} from './processed.ts';
 const secret=()=>{const s=process.env.BETTER_AUTH_SECRET;if(!s)throw Error('Review signing is not configured');return s;};
 async function authorized(c:PoolClient,p:Principal){
   const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;
@@ -27,35 +30,40 @@ async function reviewState(c:PoolClient,p:Principal,input:ProspectingInput){
   await authorized(c,p);
   const {config,policy}=await workspaceProspectingConfig(c);
   let aiRoute:AiRoute|null=null;const aiBlockers:string[]=[];
-  if(input.kind==='qualification'&&input.modules.some(m=>['qualify','summary'].includes(m))){
+  if(input.kind==='qualification'&&input.modules.some(m=>['qualify','summary','decisors'].includes(m))){
     const aiPolicy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),selected=aiPolicy.conventionalProvider?runtime.conventional[aiPolicy.conventionalProvider].route:null;
     const resolution=resolveAiRoute(aiPolicy,runtime,selected?await readConnectionCheck(c,selected):null);aiRoute=resolution.route;aiBlockers.push(...resolution.blockers);
   }
-  const blockers=[...aiBlockers,...requirements(config,input,p.workspaceId,aiRoute)];
+  const blockers=[...aiBlockers];
   let listId:string|null=null;
   if(input.kind==='qualification'||input.destination.mode==='existing'){
     listId=input.kind==='qualification'?input.listId:input.destination.mode==='existing'?input.destination.listId:null;
     if(!(await c.query('SELECT 1 FROM app.list WHERE id=$1',[listId])).rowCount)throw new AppError(404,'Lista não encontrada neste workspace.');
   }
-  let context:Record<string,unknown>|null=null;let bases:Record<string,unknown>={};
+  let context:Record<string,unknown>|null=null;let bases:Record<string,unknown>={};const processed:Record<string,boolean>={};
   if(input.kind==='qualification'){
     const rows=(await c.query('SELECT id,payload FROM app.lead WHERE list_id=$1 AND id=ANY($2::text[])',[listId,input.leadIds])).rows;
     if(rows.length!==input.leadIds.length)throw new AppError(404,'Um contato selecionado não pertence à lista.');
     bases=Object.fromEntries(rows.map(r=>[r.id,r.payload]));
     context=await readApprovedContext(c) as unknown as Record<string,unknown>|null;
+    if(input.options?.skipProcessed){
+      Object.assign(processed,await processedQualifications(c,input.leadIds,bases,input.modules,Number(context?.version??0)));
+    }
     if(input.modules.includes('qualify')&&!context?.approvedAt)blockers.push('Revise e aprove o contexto da empresa antes de qualificar com IA.');
   }
   const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);
-  const profileVersion=hashValue({config:config.version,policy:policy??null,contextVersion:context?.version??0,aiRoute});
+  const enrichment=input.kind==='qualification'?await enrichmentCheckpoint(c,input,bases,config,aiRoute):null;
+  blockers.push(...requirements(config,input,p.workspaceId,aiRoute,enrichment?.reserveCredits));
+  const profileVersion=hashValue({config:config.version,policy:policy??null,contextVersion:context?.version??0,aiRoute,...(enrichment?{enrichment}: {})});
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};
-  return {config,blockers,proof,profileVersion,aiRoute,checkpoint:{context,bases,execution:{aiRoute,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:Number(process.env.APOLLO_MAX_PAGES??0)}}};
+  return {config,blockers,proof,profileVersion,aiRoute,enrichment,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:Number(process.env.APOLLO_MAX_PAGES??0)}}};
 }
 function parseInput(input:unknown):ProspectingInput{const parsed=jobInputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise fonte, filtros, destino e quantidade.');return parsed.data;}
 export async function prepareJob(p:Principal,input:unknown):Promise<Review>{
   const parsed=parseInput(input);
   return withWorkspaceTransaction(p,async c=>{
     const state=await reviewState(c,p,parsed),now=Date.now();
-    return {token:createReviewToken(state.proof,secret(),now),expiresAt:new Date(now+600000).toISOString(),input:parsed,blockers:state.blockers,profileVersion:state.profileVersion,aiRoute:state.aiRoute?aiRouteView(state.aiRoute):null,usage:estimateUsage(parsed,state.aiRoute),warnings:['A execução usa serviços externos. Custos desconhecidos não são tratados como zero.','Resultados de IA serão apresentados para revisão antes de aplicar.',...(parsed.kind==='generation'&&parsed.source==='CNPJ'?['Filtros e cobertura dependem do Actor; esta fonte não é uma base nacional local.']:[])]};
+    return {token:createReviewToken(state.proof,secret(),now),expiresAt:new Date(now+600000).toISOString(),input:parsed,blockers:state.blockers,profileVersion:state.profileVersion,aiRoute:state.aiRoute?aiRouteView(state.aiRoute):null,usage:estimateUsage(parsed,state.aiRoute,state.enrichment?.reserveCredits),...(state.enrichment?{enrichmentPreview:{companies:state.enrichment.groups.length,cached:state.enrichment.cached,maxCredits:state.enrichment.reserveCredits,freshLookups:state.enrichment.reserveCredits}}:{}),warnings:['A execução usa serviços externos. Custos desconhecidos não são tratados como zero.','Resultados de IA serão apresentados para revisão antes de aplicar.',...(parsed.kind==='generation'&&parsed.source==='CNPJ'?['Filtros e cobertura dependem do Actor; esta fonte não é uma base nacional local.']:[])]};
   });
 }
 export async function confirmJob(p:Principal,input:unknown):Promise<JobView>{
@@ -75,7 +83,7 @@ export async function confirmJob(p:Principal,input:unknown):Promise<JobView>{
       listId=randomUUID();await c.query('INSERT INTO app.list(workspace_id,id,name) VALUES($1,$2,$3)',[p.workspaceId,listId,body.input.destination.name]);
       await c.query('UPDATE app.workspace_meta SET revision=revision+1 WHERE workspace_id=$1',[p.workspaceId]);
     }else listId=body.input.kind==='qualification'?body.input.listId:body.input.destination.mode==='existing'?body.input.destination.listId:'';
-    const job=await insertReviewedJob(c,p,{requestId:body.requestId,listId,input:body.input,bodyHash:hash,profileVersion:state.profileVersion,checkpoint:state.checkpoint,usage:estimateUsage(body.input,state.aiRoute),caps:state.config.caps,globalCaps:state.config.globalCaps});
+    const job=await insertReviewedJob(c,p,{requestId:body.requestId,listId,input:body.input,bodyHash:hash,profileVersion:state.profileVersion,checkpoint:state.checkpoint,usage:estimateUsage(body.input,state.aiRoute,state.enrichment?.reserveCredits),caps:state.config.caps,globalCaps:state.config.globalCaps});
     await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,'prospecting.confirm')",[p.workspaceId,p.userId]);
     return job;
   });
@@ -94,7 +102,7 @@ export async function getJob(p:Principal,id:string):Promise<JobView>{return with
   const row=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[id])).rows[0];
   if(!row)throw new AppError(404,'Execução não encontrada.');
   const usage=(await c.query("SELECT * FROM app.usage_ledger WHERE job_id=$1 AND event='consume' ORDER BY created_at",[id])).rows.map(r=>({provider:r.provider,operationId:r.operation_id,units:r.units,costUsd:r.cost_usd===null?null:Number(r.cost_usd),costKind:r.cost_kind,...r.metadata}));
-  const unresolvedAttempts=(await c.query("SELECT id,provider,step FROM app.prospecting_attempt WHERE job_id=$1 AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') ORDER BY created_at,id",[id])).rows.map(a=>({...a,canAttachRun:a.provider==='apify'&&(row.kind==='generation'||a.step.startsWith('registry:')||a.step.startsWith('website:'))}));
+  const unresolvedAttempts=(await c.query("SELECT id,provider,step FROM app.prospecting_attempt WHERE job_id=$1 AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') ORDER BY created_at,id",[id])).rows.map(a=>({...a,canAttachRun:a.provider==='apify'&&(row.kind==='generation'||a.step.startsWith('registry:')||a.step.startsWith('website:')||a.step.startsWith('abort:'))}));
   const role=(await c.query("SELECT app.current_role() AS role")).rows[0].role;const retainedResults=['owner','admin'].includes(role)?(await c.query("SELECT id,provider,payload FROM app.prospecting_attempt WHERE job_id=$1 AND payload->>'receivedWithoutMembership'='true' ORDER BY created_at,id LIMIT 10",[id])).rows.map(a=>({operationId:a.id,provider:a.provider,result:a.payload.result,receivedAt:a.payload.receivedAt})):undefined;
   return {...jobView(row),usage,unresolvedAttempts,retainedResults};
 });}

@@ -1,0 +1,1407 @@
+{
+  "date": "2026-10-26",
+  "reference": {
+    "kind": "reference",
+    "report": [
+      {
+        "label": "enrichment",
+        "file": "output/playwright/06b2/reference-1920-enrichment.png",
+        "viewport": {
+          "width": 1920,
+          "height": 855
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Enriquecer decisores",
+            "x": 292,
+            "y": 116,
+            "w": 233,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Escolha a lista",
+            "x": 313,
+            "y": 293,
+            "w": 517,
+            "font": "600 16px / 20px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "labels": [],
+        "panels": [
+          {
+            "x": 292,
+            "y": 276,
+            "w": 1276,
+            "h": 173
+          }
+        ]
+      },
+      {
+        "label": "qualifier-empty",
+        "file": "output/playwright/06b2/reference-1920-qualifier-empty.png",
+        "viewport": {
+          "width": 1920,
+          "height": 855
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Qualificador de Leads",
+            "x": 292,
+            "y": 170,
+            "w": 240,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Selecionar Lista de Leads",
+            "x": 353,
+            "y": 369,
+            "w": 187,
+            "font": "600 16px / 24px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Lista de Leads"
+        ],
+        "panels": []
+      },
+      {
+        "label": "qualifier-selected",
+        "file": "output/playwright/06b2/reference-1920-qualifier-selected.png",
+        "viewport": {
+          "width": 1920,
+          "height": 855
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Qualificador de Leads",
+            "x": 292,
+            "y": 170,
+            "w": 240,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Lista selecionada",
+            "x": 353,
+            "y": 369,
+            "w": 129,
+            "font": "600 16px / 24px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Selecionar Leads para Qualificar",
+            "x": 353,
+            "y": 619,
+            "w": 239,
+            "font": "600 16px / 24px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Configurar Módulos de Qualificação",
+            "x": 353,
+            "y": 1103,
+            "w": 264,
+            "font": "600 16px / 24px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Trocar de lista",
+          "Apenas com site",
+          "Sem email preenchido",
+          "Pular já processados",
+          "Idioma",
+          "Desqualificar lead se não encontrar e-mail",
+          "Pular leads sem site preenchido",
+          "Limite de leads:"
+        ],
+        "panels": []
+      },
+      {
+        "label": "reengagement-source",
+        "file": "output/playwright/06b2/reference-1920-reengagement-source.png",
+        "viewport": {
+          "width": 1920,
+          "height": 855
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Nova Automação",
+            "x": 340,
+            "y": 116,
+            "w": 266,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Escolha a fonte de dados",
+            "x": 317,
+            "y": 271,
+            "w": 1224,
+            "font": "600 18px / 28px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Nome da automação *",
+          "Descrição (opcional)"
+        ],
+        "panels": []
+      },
+      {
+        "label": "enrichment",
+        "file": "output/playwright/06b2/reference-390-enrichment.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Enriquecer decisores",
+            "x": 16,
+            "y": 152,
+            "w": 233,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Escolha a lista",
+            "x": 37,
+            "y": 555,
+            "w": 310,
+            "font": "600 16px / 20px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "labels": [],
+        "panels": [
+          {
+            "x": 16,
+            "y": 538,
+            "w": 352,
+            "h": 256
+          }
+        ]
+      },
+      {
+        "label": "qualifier-empty",
+        "file": "output/playwright/06b2/reference-390-qualifier-empty.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Qualificador de Leads",
+            "x": 16,
+            "y": 226,
+            "w": 240,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Selecionar Lista de Leads",
+            "x": 77,
+            "y": 535,
+            "w": 187,
+            "font": "600 16px / 24px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Lista de Leads"
+        ],
+        "panels": []
+      },
+      {
+        "label": "qualifier-selected",
+        "file": "output/playwright/06b2/reference-390-qualifier-selected.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "overflow": true,
+        "headings": [
+          {
+            "text": "Qualificador de Leads",
+            "x": 16,
+            "y": 226,
+            "w": 240,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Lista selecionada",
+            "x": 77,
+            "y": 535,
+            "w": 129,
+            "font": "600 16px / 24px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Selecionar Leads para Qualificar",
+            "x": 60,
+            "y": 807,
+            "w": 95,
+            "font": "600 16px / 24px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Configurar Módulos de Qualificação",
+            "x": 77,
+            "y": 1369,
+            "w": 264,
+            "font": "600 16px / 24px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Trocar de lista",
+          "Apenas com site",
+          "Sem email preenchido",
+          "Pular já processados",
+          "Idioma",
+          "Desqualificar lead se não encontrar e-mail",
+          "Pular leads sem site preenchido",
+          "Limite de leads:"
+        ],
+        "panels": []
+      },
+      {
+        "label": "reengagement-source",
+        "file": "output/playwright/06b2/reference-390-reengagement-source.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Nova Automação",
+            "x": 64,
+            "y": 152,
+            "w": 266,
+            "font": "700 24px / 30px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          },
+          {
+            "text": "Escolha a fonte de dados",
+            "x": 33,
+            "y": 323,
+            "w": 318,
+            "font": "600 18px / 28px \"Exo 2\", \"Exo 2 Fallback\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Nome da automação *",
+          "Descrição (opcional)"
+        ],
+        "panels": []
+      }
+    ],
+    "errors": [],
+    "blocked": [
+      {
+        "method": "POST",
+        "path": "/cdn-cgi/rum"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/s/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16447592951/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/tr/"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/tr/"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16447592951/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/cdn-cgi/rum"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/tr/"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16447592951/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/cdn-cgi/rum"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/tr/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16447592951/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/cdn-cgi/rum"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/tr/"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16447592951/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/g/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/cdn-cgi/rum"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/tr/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16447592951/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/cdn-cgi/rum"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/events"
+      },
+      {
+        "method": "POST",
+        "path": "/tr/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16447592951/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/rmkt/collect/16740867426/"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/ccm/collect"
+      },
+      {
+        "method": "POST",
+        "path": "/cdn-cgi/rum"
+      }
+    ],
+    "referenceWrites": 0
+  },
+  "local": {
+    "kind": "local",
+    "report": [
+      {
+        "label": "enrichment",
+        "file": "output/playwright/06b2/local-1920-enrichment.png",
+        "viewport": {
+          "width": 1920,
+          "height": 855
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Enriquecer decisores",
+            "x": 292,
+            "y": 116,
+            "w": 735,
+            "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "Escolha a lista",
+            "x": 313,
+            "y": 298,
+            "w": 375,
+            "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          }
+        ],
+        "labels": [],
+        "panels": [
+          {
+            "x": 293,
+            "y": 196,
+            "w": 531,
+            "h": 68
+          },
+          {
+            "x": 824,
+            "y": 196,
+            "w": 531,
+            "h": 68
+          },
+          {
+            "x": 1356,
+            "y": 196,
+            "w": 531,
+            "h": 68
+          },
+          {
+            "x": 292,
+            "y": 281,
+            "w": 1276,
+            "h": 255
+          }
+        ]
+      },
+      {
+        "label": "qualifier-empty",
+        "file": "output/playwright/06b2/local-1920-qualifier-empty.png",
+        "viewport": {
+          "width": 1920,
+          "height": 855
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Qualificador de Leads",
+            "x": 292,
+            "y": 174,
+            "w": 491,
+            "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "1Selecionar Lista de Leads",
+            "x": 313,
+            "y": 377,
+            "w": 1554,
+            "font": "600 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "Provedores de prospecção",
+            "x": 313,
+            "y": 602,
+            "w": 172,
+            "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+          }
+        ],
+        "labels": [
+          "Lista de LeadsSelecione uma lista…[RE] Decisores QA (1 leads)[RE] 06B1 contatos (2 leads)"
+        ],
+        "panels": [
+          {
+            "x": 292,
+            "y": 356,
+            "w": 1596,
+            "h": 159
+          },
+          {
+            "x": 292,
+            "y": 581,
+            "w": 1596,
+            "h": 144
+          }
+        ]
+      },
+      {
+        "label": "qualifier-selected",
+        "file": "output/playwright/06b2/local-1920-qualifier-selected.png",
+        "viewport": {
+          "width": 1920,
+          "height": 855
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Qualificador de Leads",
+            "x": 292,
+            "y": 174,
+            "w": 491,
+            "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "1Selecionar Lista de Leads",
+            "x": 313,
+            "y": 377,
+            "w": 1554,
+            "font": "600 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "2Selecionar Leads para Qualificar",
+            "x": 313,
+            "y": 560,
+            "w": 1554,
+            "font": "600 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "3Configurar Módulos de Qualificação",
+            "x": 313,
+            "y": 864,
+            "w": 1554,
+            "font": "600 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "Provedores de prospecção",
+            "x": 313,
+            "y": 1699,
+            "w": 172,
+            "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+          }
+        ],
+        "labels": [
+          "Lista de LeadsSelecione uma lista…[RE] Decisores QA (1 leads)[RE] 06B1 contatos (2 leads)",
+          "Extrair e-mailsEncontra e-mails publicados no site da empresa.",
+          "Extrair telefonesEncontra telefones publicados nas páginas coletadas.",
+          "Descobrir siteBusca o site pelo nome da empresa.",
+          "Extração profundaConsulta até três páginas públicas por domínio.",
+          "Verificar formato e domínioConsulta DNS; a existência da caixa não é verificada.",
+          "Consultar CNPJDados cadastrais, atividade, endereço e porte.",
+          "Qualificação por IAAvalia aderência ao contexto aprovado da empresa.",
+          "Resumo com IAResume as informações sustentadas pelas fontes.",
+          "Apenas com site",
+          "Sem e-mail preenchido",
+          "Pular já processados",
+          "Pular sem site",
+          "Desqualificar se não encontrar e-mail",
+          "IdiomaPortuguês (Brasil)InglêsEspanhol",
+          "Limite leads"
+        ],
+        "panels": [
+          {
+            "x": 292,
+            "y": 356,
+            "w": 1596,
+            "h": 159
+          },
+          {
+            "x": 292,
+            "y": 539,
+            "w": 1596,
+            "h": 280
+          },
+          {
+            "x": 292,
+            "y": 843,
+            "w": 1596,
+            "h": 769
+          },
+          {
+            "x": 292,
+            "y": 1678,
+            "w": 1596,
+            "h": 144
+          }
+        ]
+      },
+      {
+        "label": "reengagement-source",
+        "file": "output/playwright/06b2/local-1920-reengagement-source.png",
+        "viewport": {
+          "width": 1920,
+          "height": 855
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Nova Automação",
+            "x": 292,
+            "y": 143,
+            "w": 266,
+            "font": "700 24px / 30px \"Exo 2\", sans-serif"
+          },
+          {
+            "text": "Escolha a fonte de dados",
+            "x": 317,
+            "y": 302,
+            "w": 1230,
+            "font": "700 20px / 28px \"Exo 2\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Nome da automação *",
+          "Descrição (opcional)"
+        ],
+        "panels": []
+      },
+      {
+        "label": "reengagement-terms",
+        "file": "output/playwright/06b2/local-1920-reengagement-terms.png",
+        "viewport": {
+          "width": 1920,
+          "height": 855
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Nova Automação",
+            "x": 292,
+            "y": 143,
+            "w": 266,
+            "font": "700 24px / 30px \"Exo 2\", sans-serif"
+          },
+          {
+            "text": "Termos e Localizações",
+            "x": 317,
+            "y": 302,
+            "w": 1230,
+            "font": "700 20px / 28px \"Exo 2\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Lista de origemSelecione uma lista[RE] Decisores QA[RE] 06B1 contatos",
+          "Cadência concluídaQualquer cadência da lista de origem"
+        ],
+        "panels": []
+      },
+      {
+        "label": "enrichment",
+        "file": "output/playwright/06b2/local-390-enrichment.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Enriquecer decisores",
+            "x": 16,
+            "y": 123,
+            "w": 358,
+            "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "Escolha a lista",
+            "x": 37,
+            "y": 544,
+            "w": 316,
+            "font": "700 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          }
+        ],
+        "labels": [],
+        "panels": [
+          {
+            "x": 17,
+            "y": 304,
+            "w": 356,
+            "h": 68
+          },
+          {
+            "x": 17,
+            "y": 372,
+            "w": 356,
+            "h": 69
+          },
+          {
+            "x": 17,
+            "y": 441,
+            "w": 356,
+            "h": 69
+          },
+          {
+            "x": 16,
+            "y": 527,
+            "w": 358,
+            "h": 431
+          }
+        ]
+      },
+      {
+        "label": "qualifier-empty",
+        "file": "output/playwright/06b2/local-390-qualifier-empty.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Qualificador de Leads",
+            "x": 16,
+            "y": 223,
+            "w": 358,
+            "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "1Selecionar Lista de Leads",
+            "x": 33,
+            "y": 534,
+            "w": 324,
+            "font": "600 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "Provedores de prospecção",
+            "x": 33,
+            "y": 751,
+            "w": 172,
+            "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+          }
+        ],
+        "labels": [
+          "Lista de LeadsSelecione uma lista…[RE] Decisores QA (1 leads)[RE] 06B1 contatos (2 leads)"
+        ],
+        "panels": [
+          {
+            "x": 16,
+            "y": 517,
+            "w": 358,
+            "h": 151
+          },
+          {
+            "x": 16,
+            "y": 734,
+            "w": 358,
+            "h": 270
+          }
+        ]
+      },
+      {
+        "label": "qualifier-selected",
+        "file": "output/playwright/06b2/local-390-qualifier-selected.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Qualificador de Leads",
+            "x": 16,
+            "y": 223,
+            "w": 358,
+            "font": "700 24px / 30px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "1Selecionar Lista de Leads",
+            "x": 33,
+            "y": 534,
+            "w": 324,
+            "font": "600 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "2Selecionar Leads para Qualificar",
+            "x": 33,
+            "y": 709,
+            "w": 324,
+            "font": "600 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "3Configurar Módulos de Qualificação",
+            "x": 33,
+            "y": 1152,
+            "w": 324,
+            "font": "600 16px / 24px \"Exo 2\", Manrope, sans-serif"
+          },
+          {
+            "text": "Provedores de prospecção",
+            "x": 33,
+            "y": 2663,
+            "w": 172,
+            "font": "600 14px / 20px \"Exo 2\", Manrope, sans-serif"
+          }
+        ],
+        "labels": [
+          "Lista de LeadsSelecione uma lista…[RE] Decisores QA (1 leads)[RE] 06B1 contatos (2 leads)",
+          "Extrair e-mailsEncontra e-mails publicados no site da empresa.",
+          "Extrair telefonesEncontra telefones publicados nas páginas coletadas.",
+          "Descobrir siteBusca o site pelo nome da empresa.",
+          "Extração profundaConsulta até três páginas públicas por domínio.",
+          "Verificar formato e domínioConsulta DNS; a existência da caixa não é verificada.",
+          "Consultar CNPJDados cadastrais, atividade, endereço e porte.",
+          "Qualificação por IAAvalia aderência ao contexto aprovado da empresa.",
+          "Resumo com IAResume as informações sustentadas pelas fontes.",
+          "Apenas com site",
+          "Sem e-mail preenchido",
+          "Pular já processados",
+          "Pular sem site",
+          "Desqualificar se não encontrar e-mail",
+          "IdiomaPortuguês (Brasil)InglêsEspanhol",
+          "Limite leads"
+        ],
+        "panels": [
+          {
+            "x": 16,
+            "y": 517,
+            "w": 358,
+            "h": 151
+          },
+          {
+            "x": 16,
+            "y": 692,
+            "w": 358,
+            "h": 419
+          },
+          {
+            "x": 16,
+            "y": 1135,
+            "w": 358,
+            "h": 1445
+          },
+          {
+            "x": 16,
+            "y": 2646,
+            "w": 358,
+            "h": 270
+          }
+        ]
+      },
+      {
+        "label": "reengagement-source",
+        "file": "output/playwright/06b2/local-390-reengagement-source.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Nova Automação",
+            "x": 16,
+            "y": 150,
+            "w": 266,
+            "font": "700 24px / 30px \"Exo 2\", sans-serif"
+          },
+          {
+            "text": "Escolha a fonte de dados",
+            "x": 41,
+            "y": 321,
+            "w": 308,
+            "font": "700 20px / 28px \"Exo 2\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Nome da automação *",
+          "Descrição (opcional)"
+        ],
+        "panels": []
+      },
+      {
+        "label": "reengagement-terms",
+        "file": "output/playwright/06b2/local-390-reengagement-terms.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "overflow": false,
+        "headings": [
+          {
+            "text": "Nova Automação",
+            "x": 16,
+            "y": 150,
+            "w": 266,
+            "font": "700 24px / 30px \"Exo 2\", sans-serif"
+          },
+          {
+            "text": "Termos e Localizações",
+            "x": 41,
+            "y": 321,
+            "w": 308,
+            "font": "700 20px / 28px \"Exo 2\", sans-serif"
+          }
+        ],
+        "labels": [
+          "Lista de origemSelecione uma lista[RE] Decisores QA[RE] 06B1 contatos",
+          "Cadência concluídaQualquer cadência da lista de origem"
+        ],
+        "panels": []
+      }
+    ],
+    "errors": [],
+    "blocked": [],
+    "referenceWrites": 0
+  },
+  "acceptance": {
+    "report": [
+      {
+        "label": "preview-config",
+        "file": "output/playwright/06b2/local-1920-preview-config.png",
+        "width": 1920,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 560,
+            "x": 680,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "preview-loading",
+        "file": "output/playwright/06b2/local-1920-preview-loading.png",
+        "width": 1920,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 560,
+            "x": 680,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "preview-review",
+        "file": "output/playwright/06b2/local-1920-preview-review.png",
+        "width": 1920,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 560,
+            "x": 680,
+            "scrolls": true,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "preview-config",
+        "file": "output/playwright/06b2/local-390-preview-config.png",
+        "width": 390,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 356,
+            "x": 17,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "preview-loading",
+        "file": "output/playwright/06b2/local-390-preview-loading.png",
+        "width": 390,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 356,
+            "x": 17,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "preview-review",
+        "file": "output/playwright/06b2/local-390-preview-review.png",
+        "width": 390,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 356,
+            "x": 17,
+            "scrolls": true,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "preview-config",
+        "file": "output/playwright/06b2/local-320-preview-config.png",
+        "width": 320,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 286,
+            "x": 17,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "preview-loading",
+        "file": "output/playwright/06b2/local-320-preview-loading.png",
+        "width": 320,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 286,
+            "x": 17,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "preview-review",
+        "file": "output/playwright/06b2/local-320-preview-review.png",
+        "width": 320,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 286,
+            "x": 17,
+            "scrolls": true,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "preview-controlled-error",
+        "file": "output/playwright/06b2/local-390-preview-controlled-error.png",
+        "width": 390,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 356,
+            "x": 17,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "enrichment-applied",
+        "file": "output/playwright/06b2/local-1920-enrichment-applied.png",
+        "width": 1920,
+        "overflow": false,
+        "dialog": []
+      },
+      {
+        "label": "contact-evidence",
+        "file": "output/playwright/06b2/local-320-contact-evidence.png",
+        "width": 320,
+        "overflow": false,
+        "dialog": []
+      },
+      {
+        "label": "contact-evidence-persisted",
+        "file": "output/playwright/06b2/local-1920-contact-evidence-persisted.png",
+        "width": 1920,
+        "overflow": false,
+        "dialog": []
+      },
+      {
+        "label": "contacts-enriched-filter",
+        "file": "output/playwright/06b2/local-1920-contacts-enriched-filter.png",
+        "width": 1920,
+        "overflow": false,
+        "dialog": []
+      },
+      {
+        "label": "contacts-unenriched-filter",
+        "file": "output/playwright/06b2/local-1920-contacts-unenriched-filter.png",
+        "width": 1920,
+        "overflow": false,
+        "dialog": []
+      },
+      {
+        "label": "apply-review-controlled-replay",
+        "file": "output/playwright/06b2/local-1920-apply-review-controlled-replay.png",
+        "width": 1920,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 560,
+            "x": 680,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "apply-review-controlled-replay",
+        "file": "output/playwright/06b2/local-390-apply-review-controlled-replay.png",
+        "width": 390,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 352,
+            "x": 19,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "apply-review-controlled-replay",
+        "file": "output/playwright/06b2/local-320-apply-review-controlled-replay.png",
+        "width": 320,
+        "overflow": false,
+        "dialog": [
+          {
+            "w": 282,
+            "x": 19,
+            "scrolls": false,
+            "overflow": false
+          }
+        ]
+      },
+      {
+        "label": "enrichment-results-mobile",
+        "file": "output/playwright/06b2/local-320-enrichment-results-mobile.png",
+        "width": 320,
+        "overflow": false,
+        "dialog": []
+      }
+    ],
+    "errors": [],
+    "writes": [
+      "/api/prospecting/prepare",
+      "/api/prospecting/prepare",
+      "/api/prospecting/prepare",
+      "/api/prospecting/prepare"
+    ],
+    "controlledError": true,
+    "applied": true,
+    "reloaded": true,
+    "liveProviderCalls": 0
+  },
+  "notes": [
+    "Reference nonGET blocked; loading/paid/deep wizard states are not accepted parity.",
+    "Local real apply occurred before this final readback, proved by closure.json.",
+    "Applied selection replay modifies GET only and is not confirmed.",
+    "Wait400ms after resizing, beyond the CSS200ms shell transition; no stable local overflow.",
+    "Company and person values are synthetic QA; screenshots masked via RES.",
+    "Snapshot/restoration of reference localStorage does not claim backend parity."
+  ]
+}

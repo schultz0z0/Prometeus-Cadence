@@ -12,7 +12,7 @@ import {providerContext} from './steps.ts';
 import {settleUsage,releaseUnused} from './usage.ts';
 const schema=z.strictObject({operationId:z.string().min(1).max(120).optional(),runId:z.string().regex(/^[-\w]{1,100}$/).optional(),confirmNotStarted:z.literal(true).optional(),resultUnavailable:z.literal(true).optional()}).refine(v=>[v.runId,v.confirmNotStarted,v.resultUnavailable].filter(Boolean).length===1);
 const unresolvedSql="(state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain')";
-const sourceFor=(job:any,attempt:any)=>job.kind==='generation'?job.source:attempt.step.startsWith('website:')?'WEB':attempt.step.startsWith('registry:')?'CNPJ':null;
+const sourceFor=(job:any,attempt:any)=>job.kind==='generation'?job.source:attempt.step.startsWith('website:')?'WEB':attempt.step.startsWith('registry:')?'CNPJ':attempt.step.startsWith('abort:')?attempt.payload.source:null;
 export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apify?:ApifyAdapter}={}){
   const parsed=schema.safeParse(body);if(!parsed.success)throw new AppError(422,'Selecione uma chamada e uma ação de reconciliação.');
   const selection=parsed.data;
@@ -51,12 +51,13 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
       await settleUsage(c,id,{provider:attempt.provider,operationId:attempt.id,units,costUsd:null,costKind:'unknown'});
       await c.query('UPDATE app.prospecting_attempt SET state=$3,payload=$4,remote_id=$5 WHERE job_id=$1 AND id=$2',[id,attempt.id,selection.resultUnavailable?'failed':'completed',{reservedUnits:units,...(run?{result:{kind:'remote',run}}:{resultUnavailable:true})},run?.runId??null]);
       if(run&&job.kind==='generation')providerRun=run;
-      if(aborting)state='cancelled';
+      if(aborting)state=job.input?.enrichment?'cancelling':'cancelled';
       if(selection.resultUnavailable){
         if(job.kind==='generation')state=current.counts.found>0?'partial':'failed';
         else if(job.kind==='planning'){
           state=(await c.query('SELECT 1 FROM app.planning_proposal WHERE job_id=$1',[id])).rowCount?'partial':'failed';
         }
+        else if(job.input?.enrichment){state=(await c.query("SELECT 1 FROM app.prospecting_item WHERE job_id=$1 AND jsonb_array_length(COALESCE(payload->'enrichment'->'people','[]'::jsonb))>0 LIMIT 1",[id])).rowCount?'partial':'failed';}
         else{
           const [step,leadId]=attempt.step.split(':'),module=(step==='second_opinion'?'qualify':step) as ModuleId;
           if(!job.input.leadIds.includes(leadId)||!['registry','website','qualify','summary'].includes(module))throw new AppError(409,'Esta chamada precisa de resolução administrativa adicional.');
@@ -70,7 +71,7 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
       }
     }
     if((await c.query(`SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND ${unresolvedSql} LIMIT 1`,[id])).rowCount)state='needs_reconciliation';
-    const row=(await c.query("UPDATE app.prospecting_job SET state=$2,actor_id=$3,provider_run=$4,error_code=$5,error_message=$6,lease_until=NULL,lease_token=NULL,fence=fence+1,revision=revision+1,updated_at=now(),checkpoint=checkpoint||$7::jsonb WHERE id=$1 RETURNING *",[id,state,p.userId,providerRun,selection.resultUnavailable?'RESULT_UNAVAILABLE':null,selection.resultUnavailable?'Consumo registrado por confirmação administrativa; resultado indisponível, sem repetir a chamada.':null,aborting?{remoteTerminal:true}:{}])).rows[0];
+    const row=(await c.query("UPDATE app.prospecting_job SET state=$2,actor_id=$3,provider_run=$4,error_code=$5,error_message=$6,lease_until=NULL,lease_token=NULL,fence=fence+1,revision=revision+1,updated_at=now(),checkpoint=checkpoint||$7::jsonb WHERE id=$1 RETURNING *",[id,state,p.userId,providerRun,selection.resultUnavailable?'RESULT_UNAVAILABLE':null,selection.resultUnavailable?'Consumo registrado por confirmação administrativa; resultado indisponível, sem repetir a chamada.':null,aborting&&!job.input?.enrichment?{remoteTerminal:true}:{}])).rows[0];
     if(['failed','partial','cancelled'].includes(state))await releaseUnused(c,id);
     await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES(current_setting('app.workspace_id'),$1,'prospecting.reconcile')",[p.userId]);return jobView(row);
   });

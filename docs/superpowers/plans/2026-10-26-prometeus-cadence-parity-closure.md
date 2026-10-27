@@ -8,7 +8,7 @@ Reproduzir a experiência visual, os fluxos e as funcionalidades de produto do C
 
 O backend próprio precisa funcionar: persistência, isolamento, permissões, filas, quotas, integrações, resultados e recuperação devem ser testados no Prometeus. Quando a regra da referência não puder ser observada, registrar o contrato adotado e sua origem; validá-lo localmente sem chamá-lo de reprodução verificada daquela regra.
 
-As decisões preservadas são trial de7 dias sem cobrança automática, consumo adicional pré-pago, OpenWA gerenciado, modelos conectados por workspace e infraestrutura própria. Marca e assets reimplementados continuam classificados separadamente da comparação de geometria e comportamento. Recursos pendentes só se tornam contratáveis depois do seu aceite operacional.
+As decisões preservadas são trial de7 dias sem cobrança automática, consumo adicional pré-pago, OpenWA gerenciado e infraestrutura própria. Esclarecimento posterior do operador: provedores Apify/LLM são centrais, configurados apenas pelo dono do SaaS; contexto/dados e canais continuam isolados por workspace. A administração de IA por workspace anterior precisa ser substituída no06IA. Marca e assets reimplementados continuam classificados separadamente da comparação de geometria e comportamento. Recursos pendentes só se tornam contratáveis depois do seu aceite operacional.
 
 ## Base da revisão
 
@@ -105,7 +105,8 @@ flowchart TD
   P --> H[06A-H: ciclo financeiro em sandbox]
   H --> C1[06C.1: eventos e desempenho]
   C1 --> B[06B: contatos e prospecção]
-  B --> D[06D: cadências e canais]
+  B --> IA[06IA: administração e inteligência central de IA]
+  IA --> D[06D: cadências e canais]
   D --> C23[06C.2/3: métricas e notificações]
   C23 --> E[06E: segurança e dados]
   E --> F[06F: experiência transversal e assistente]
@@ -142,4 +143,6 @@ O alvo “100%” só tem denominador útil com um inventário-alvo versionado. 
 
 **Atualização de contatos26/10:**06B.1 concluído no escopo de [contatos/importação/busca](../../validation/06-contacts-search.md), incluindo persistência/quota/deduplicação, consultas privadas e sugestão de IA apenas como rascunho.290unitários/283integrações e conferência desktop/mobile; limitações de referência e escala permanecem explícitas.
 
-**Próxima entrega concreta:**06B.2 — qualificação, enriquecimento e recorrência. Conversa/diagnósticos reais do assistente permanecem06F; estados não observados da referência continuam identificados e não são convertidos em aceite100%.
+**Atualização de qualificação26/10:**06B.2 concluído no escopo de [qualificação/enriquecimento/recorrência](../../validation/06-qualification-enrichment.md),302unitários/306integrações, execução/aplicação/evidência próprias e comparação de superfícies desktop/mobile. Fornecedor pago e backend privado da referência não foram exercitados.
+
+**Próxima entrega concreta:06IA — administração central e inteligência adaptativa de IA**, acrescentada por direção explícita do operador durante06B.2. Provedores/chaves/modelos/roteamento são administrados pelo dono do SaaS, sem exigir configuração dos clientes. Instruções gerais versionadas + contexto/público-alvo de cada empresa + pedido atual guiam tarefas; JEV/LLM com evidência, abstenção e avaliações por cenário. Provar isolamento entre clientes e separação entre admin da plataforma e owner do workspace; não basta ocultar o menu. Esse requisito ainda não está implementado. Depois,06D.1; conversa e ações transversais do assistente permanecem06F. Nenhum estado não observado vira aceite100%.

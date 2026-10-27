@@ -3,7 +3,7 @@ import type {AiSettingsView,AiPolicy,AiTestReview,CodexDiagnostic} from '../doma
 import type {ChatGptOAuthView} from '../domain/chatgpt-oauth.ts';
 import {createWorkspaceTransport} from './workspace-transport.ts';
 export function createProspectingClient(options:{workspaceId:string;transport?:typeof fetch;onAccessLost?:(message:string)=>void}){
-  const confirmations=new Map<string,Promise<JobView>>(),requestIds=new Map<string,string>(),applications=new Map<string,Promise<{applied:number;revision:number}>>();
+  const confirmations=new Map<string,Promise<JobView>>(),requestIds=new Map<string,string>(),applications=new Map<string,Promise<{applied:number;revision:number;listId?:string}>>();
   const settingsFlights=new Map<string,Promise<AiPolicy>>();
   const workspace=createWorkspaceTransport({...options,onAccessLost(message){confirmations.clear();applications.clear();requestIds.clear();settingsFlights.clear();options.onAccessLost?.(message);}});
   const request=<T>(path:string,body?:unknown)=>workspace.request<T>('/api/prospecting'+path,body);
@@ -20,6 +20,7 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
     confirmAiTest(review:AiTestReview){const key='probe:'+review.draft.sampleId,flight=key+review.token,prior=confirmations.get(flight);if(prior)return prior;
       const promise=request<JobView>('/ai/test',{requestId:stableId(key),draft:review.draft,reviewToken:review.token}).then(result=>{requestIds.delete(key);return result;}).catch(e=>{confirmations.delete(flight);throw e;});confirmations.set(flight,promise);return promise;},
     capabilities:()=>request<ProviderCapabilities>('/capabilities'),
+    contactEnrichment:(id:string)=>request<import('../domain/enrichment').ContactEnrichment|null>('/contacts/'+encodeURIComponent(id)+'/enrichment'),
     prepare:(input:ProspectingInput)=>request<Review>('/prepare',input),
     confirm(review:Review){
       const key=JSON.stringify(review.input),flightKey=key+review.token,previous=confirmations.get(flightKey);if(previous)return previous;
@@ -32,7 +33,7 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
     cancel:(id:string)=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/cancel',{}),
     apply(id:string,itemIds:string[]){
       const key=id+JSON.stringify([...itemIds].sort()),prior=applications.get(key);if(prior)return prior;
-      const promise=request<{applied:number;revision:number}>('/jobs/'+encodeURIComponent(id)+'/apply',{requestId:stableId('apply:'+key),itemIds}).catch(error=>{applications.delete(key);throw error;});applications.set(key,promise);return promise;
+      const promise=request<{applied:number;revision:number;listId?:string}>('/jobs/'+encodeURIComponent(id)+'/apply',{requestId:stableId('apply:'+key),itemIds}).catch(error=>{applications.delete(key);throw error;});applications.set(key,promise);return promise;
     },
     reconcile:(id:string,body:{operationId?:string;runId?:string;confirmNotStarted?:true;resultUnavailable?:true})=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/reconcile',body),
     dispose(){workspace.dispose();confirmations.clear();requestIds.clear();applications.clear();settingsFlights.clear();},

@@ -3,7 +3,8 @@ import {AppError,checkOrigin,errorResponse} from '../errors.ts';
 import {prepareJob,confirmJob,listJobs,getJob,listJobItems,cancelJob,providerCapabilities} from './service.ts';
 import {applyJobResults} from './application.ts';
 import {reconcileJob} from './reconciliation.ts';
-export type ProspectingAction='capabilities'|'prepare'|'confirm'|'list'|'get'|'items'|'cancel'|'apply'|'reconcile';
+import {readContactEnrichment} from './contact-enrichment.ts';
+export type ProspectingAction='capabilities'|'prepare'|'confirm'|'list'|'get'|'items'|'cancel'|'apply'|'reconcile'|'contact-enrichment';
 export async function readProspectingBody(request:Request){
   if(Number(request.headers.get('content-length'))>2097152)throw new AppError(422,'Requisição limitada a 2 MB.');
   const reader=request.body?.getReader(),chunks:Uint8Array[]=[];let size=0;
@@ -18,6 +19,7 @@ export async function prospectingRequest(request:Request,action:ProspectingActio
     const url=new URL(request.url),page=Object.fromEntries(url.searchParams);
     let result:unknown;
     switch(action){
+      case 'contact-enrichment':result=await readContactEnrichment(p,id!);break;
       case 'capabilities':result=await providerCapabilities(p);break;
       case 'prepare':result=await prepareJob(p,await readProspectingBody(request));break;
       case 'confirm':result=await confirmJob(p,await readProspectingBody(request));break;

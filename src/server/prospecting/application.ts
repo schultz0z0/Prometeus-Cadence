@@ -8,8 +8,9 @@ import {requirePermission} from '../auth/permissions.ts';
 import {hashValue} from './review.ts';
 import {lockWorkspace} from './ingestion.ts';
 import {readApprovedContext} from '../context/repository.ts';
+import {qualificationFingerprint} from '../../domain/qualification-policy.ts';
 const schema=z.strictObject({requestId:z.uuid(),itemIds:z.array(z.string().min(1).max(120)).min(1).max(100).refine(ids=>new Set(ids).size===ids.length)});
-const editable=new Set(['email','phone','site','city','state','cnpj','companyName','summary','qualification','reason']);
+const editable=new Set(['email','phone','site','city','state','cnpj','companyName','summary','qualification','reason','capital','size','legalNature','cnae','openedAt','address']);
 export async function applyJobResults(p:Principal,jobId:string,body:unknown):Promise<{applied:number;revision:number}>{
   const parsed=schema.safeParse(body);if(!parsed.success)throw new AppError(422,'Seleção inválida.');
   const {requestId,itemIds}=parsed.data,hash=hashValue({action:'prospecting.apply',jobId,itemIds:[...itemIds].sort()});
@@ -20,6 +21,12 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
     const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1 FOR UPDATE',[jobId])).rows[0];
     if(!job)throw new AppError(404,'Execução não encontrada.');
     if(job.checkpoint.purpose==='ai-connection-test')throw new AppError(409,'Teste de conexão não pode alterar contatos.');
+    if(job.input.enrichment){
+      if(!['completed','partial'].includes(job.state))throw new AppError(409,'Aguarde o término do enriquecimento.');
+      const result=(await c.query('SELECT app.apply_enrichment($1,$2::text[]) AS result',[jobId,itemIds])).rows[0].result;
+      await c.query("INSERT INTO app.command_result VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4)",[requestId,p.userId,hash,result]);
+      await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES(current_setting('app.workspace_id'),$1,'enrichment.apply')",[p.userId]);return result;
+    }
     if(job.kind!=='qualification'||!['completed','partial'].includes(job.state))throw new AppError(409,'Aguarde o término da qualificação.');
     const items=(await c.query('SELECT * FROM app.prospecting_item WHERE job_id=$1 AND id=ANY($2::text[]) FOR UPDATE',[jobId,itemIds])).rows;
     if(items.length!==itemIds.length||items.some(i=>i.applied))throw new AppError(409,'A seleção contém resultado indisponível.');
@@ -30,6 +37,7 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
     for(const item of items){
       const lead=(await c.query('SELECT payload FROM app.lead WHERE id=$1 FOR UPDATE',[item.lead_id])).rows[0]?.payload;
       if(!lead||lead.listId!==job.list_id)throw new AppError(409,'O contato foi removido ou movido.','RESULT_CONFLICT');
+      if(item.payload.inputFingerprint&&item.payload.inputFingerprint!==hashValue(qualificationFingerprint(lead)))throw new AppError(409,'O contato ou suas fontes mudou. Prepare novamente antes de aplicar.','RESULT_CONFLICT');
       const proposed:Record<string,unknown>={};
       for(const result of item.payload.results as ModuleResult[]){
         if(result.status!=='pending_review')continue;

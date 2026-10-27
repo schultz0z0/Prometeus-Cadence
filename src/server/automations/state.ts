@@ -11,6 +11,7 @@ import {estimateUsage,requirements} from '../prospecting/config.ts';
 import {jobInputSchema} from '../prospecting/schemas.ts';
 import {readApprovedContext} from '../context/repository.ts';
 import {hashValue} from '../prospecting/review.ts';
+import {qualificationOptionsFromFilters} from '../../domain/qualification-policy.ts';
 const moduleNames:Record<string,ModuleId>={email:'email',phone:'phone',website:'website',summary:'summary',deep:'deep',validateEmail:'validateEmail',registry:'registry',qualify:'qualify','Qualificação por IA':'qualify','Resumo com IA':'summary','Extrair e-mails':'email','Extrair telefones':'phone'};
 export async function automationAuthorizationState(c:PoolClient,p:Principal,definition:AutomationDefinition,freshOperationId?:string){
  const {config,policy}=await workspaceProspectingConfig(c),blockers:string[]=[],payload=definition.payload,modules=payload.modules.map(m=>moduleNames[m]).filter(Boolean),context=await readApprovedContext(c);
@@ -30,8 +31,14 @@ export async function automationAuthorizationState(c:PoolClient,p:Principal,defi
   if(parsed.success)input=parsed.data;else blockers.push('A fonte ou os filtros não têm um contrato de busca válido.');
  }else if(payload.source==='QUALIFY'){
   // Forecast IDs count calls only; no lead or list is created for an estimate.
-  const parsed=jobInputSchema.safeParse({kind:'qualification',listId:payload.listId,leadIds:Array.from({length:Math.min(payload.dailyLimit,501)},(_,i)=>'forecast-'+i),modules,summaryPolicy:'all',escalation:'off'});
+  let options;try{options=qualificationOptionsFromFilters(payload.filters);}catch{blockers.push('Revise os filtros e o idioma da qualificação.');}
+  const parsed=jobInputSchema.safeParse({kind:'qualification',listId:payload.listId,leadIds:Array.from({length:Math.min(payload.dailyLimit,501)},(_,i)=>'forecast-'+i),modules,summaryPolicy:'all',escalation:'off',...(options&&Object.keys(options).length?{options}:{})});
   if(parsed.success)input=parsed.data;else blockers.push('Revise os módulos e o volume de qualificação.');
+ }else if(payload.source==='REENGAGE'){
+  const {sourceListId,sourceCadenceId,afterDays,...unknown}=payload.filters;
+  if(payload.modules.length||Object.keys(unknown).some(k=>!['dedup','scope','term','location'].includes(k))||!sourceListId||sourceListId===payload.listId||!/^\d+$/.test(afterDays??'')||Number(afterDays)<1||Number(afterDays)>3650)blockers.push('Selecione listas distintas e um intervalo de 1 a 3650 dias, sem módulos de qualificação.');
+  if(!(await c.query('SELECT 1 FROM app.list WHERE id=$1',[sourceListId??''])).rowCount)blockers.push('A lista de origem não está disponível neste workspace.');
+  if(sourceCadenceId&&!(await c.query('SELECT 1 FROM app.cadence WHERE id=$1 AND list_id=$2',[sourceCadenceId,sourceListId])).rowCount)blockers.push('A cadência de origem não pertence à lista selecionada.');
  }else blockers.push('Esta fonte ainda não possui execução recorrente.');
  if(input)blockers.push(...requirements(config,input,p.workspaceId,aiRoute));
  if(definition.dependsOnAutomationId){

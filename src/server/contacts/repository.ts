@@ -3,6 +3,7 @@ import type {Principal} from '../../domain/workspace.ts';
 import {parseContactsQuery,type ContactsQuery,type ContactsPage} from '../../domain/contacts-query.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
+import {enrichedContactSql} from '../prospecting/contact-enrichment.ts';
 export async function readContacts(p:Principal,input:ContactsQuery):Promise<ContactsPage>{
  let q:ContactsQuery;try{q=parseContactsQuery(new URLSearchParams(Object.entries(input).filter(([,v])=>v!==undefined&&v!=='').map(([k,v])=>[k,String(v)])));}catch{throw new AppError(422,'Consulta de contatos inválida.');}
  return withWorkspaceTransaction(p,async c=>{
@@ -12,6 +13,7 @@ export async function readContacts(p:Principal,input:ContactsQuery):Promise<Cont
   for(const [field,value]of [['qualification',q.qualification],['source',q.source]] as const)if(value)clauses.push(`l.payload->>'${field}'=${bind(value)}`);
   if(q.state)clauses.push(`upper(l.payload->>'state')=upper(${bind(q.state)})`);
   if(q.onlyFavorites)clauses.push("l.payload->>'favorite'='true'");
+  if(q.enriched)clauses.push((q.enriched==='no'?'NOT ':'')+enrichedContactSql);
   const email="nullif(btrim(l.payload->>'email'),'') IS NOT NULL",phone="nullif(btrim(l.payload->>'phone'),'') IS NOT NULL";
   if(q.contact)clauses.push(q.contact==='email'?email:q.contact==='phone'?phone:`NOT(${email}) AND NOT(${phone})`);
   if(q.summary)clauses.push((q.summary==='no'?'NOT ':'')+"(nullif(btrim(l.payload->>'summary'),'') IS NOT NULL)");

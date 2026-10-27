@@ -23,9 +23,12 @@ import {ensureOAuthCompanion} from './ai/json.ts';
 import {recordConnectionCheck} from './ai/connection.ts';
 import type {AiRoute} from '../../domain/ai-routing.ts';
 import {syncOccurrenceJob} from '../automations/assignments.ts';
+import {qualificationSkipReason,assessEmail} from '../../domain/qualification-policy.ts';
+import {runEnrichment} from './enrichment.ts';
+import type {DecisorGenerator} from './ai/decisors.ts';
 export interface QualificationAdapters{
   signal?:AbortSignal;apify?:SourceAdapter;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
-  collect?:typeof fetchEvidencePack;
+  collect?:typeof fetchEvidencePack;checkEmail?:typeof checkEmailDns;decisors?:DecisorGenerator;
   decide?:typeof decide;generate?:typeof generate;
 }
 async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,deps:QualificationAdapters):Promise<Evidence[]>{
@@ -38,9 +41,10 @@ async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,dep
     });
   });
 }
-async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters):Promise<Partial<Candidate>|null>{
-  const source=module==='registry'?'CNPJ':'WEB',step=module+':'+lead.id;
+export async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string}={}):Promise<Partial<Candidate>|null>{
+  const source=module==='registry'?'CNPJ':'WEB',step=module+':'+lead.id+(options.suffix?':'+options.suffix:'');
   const ctx=providerContext(job,source,hashValue({job:lease.jobId,step}),deps.signal??new AbortController().signal),adapter=deps.apify??new ApifyAdapter();
+  if(options.partners)ctx.profile.partners=true;
   const input:Extract<JobInput,{kind:'generation'}>={kind:'generation',source,destination:{mode:'existing',listId:lead.listId},filters:module==='registry'?{term:lead.name,cnpj:lead.cnpj!}:{term:lead.name,location:[lead.city,lead.state].filter(Boolean).join(', ')||'Brasil'},limit:1,dedupScope:'workspace'};
   const started=await performStep(lease,step,'apify',{apifyRuns:1},()=>adapter.start(ctx,input),r=>({provider:'apify',operationId:ctx.operationId,units:r.kind==='uncertain'?{}:{apifyRuns:1},costUsd:null,costKind:'unknown'}));
   if(started.kind==='uncertain'){await finishJob(lease,'needs_reconciliation','START_UNCERTAIN');return null;}
@@ -61,6 +65,7 @@ async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'
 export async function runQualification(lease:JobLease,deps:QualificationAdapters={}){
   const job=await readLeasedJob(lease),input=job.input as JobInput;
   if(input.kind!=='qualification')throw Error('INVALID_JOB_KIND');
+  if(input.enrichment)return runEnrichment(lease,deps);
   let current:{leadId:string;module:ModuleResult['module']}|undefined;
   try{
     if(job.state==='cancelling'){
@@ -78,7 +83,9 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       const base=job.checkpoint.bases[leadId] as Lead;
       const lead={...base,...Object.assign({},...prior.map(r=>r.proposed))} as Lead;
       const result:ModuleResult={module,status:'pending_review',proposed:{},base:{},reasons:[],evidenceIds:[],usage:null,contextVersion:job.checkpoint.context?.version??0};
-      if(module==='summary'&&input.summaryPolicy==='fits'&&!prior.some(r=>r.module==='qualify'&&r.proposed.qualification==='qualified')){result.status='skipped';result.reasons=['SUMMARY_REQUIRES_FIT'];}
+      const skip=qualificationSkipReason(base,input.options,!!job.checkpoint.processed?.[leadId]);
+      if(skip){result.status='skipped';result.reasons=[skip];}
+      else if(module==='summary'&&input.summaryPolicy==='fits'&&!prior.some(r=>r.module==='qualify'&&r.proposed.qualification==='qualified')){result.status='skipped';result.reasons=['SUMMARY_REQUIRES_FIT'];}
       else if(module==='registry'||module==='website'){
         let registryCnpj=normalizeCnpj(lead.cnpj);
         if(module==='registry'&&!registryCnpj){
@@ -90,9 +97,10 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
         else if(result.status!=='skipped'){const source=await sourceResult(lease,job,{...lead,cnpj:registryCnpj},module,deps);if(source===null)return;
           if(module==='registry'&&source.cnpj&&source.cnpj!==registryCnpj)throw new ProviderError('CNPJ_IDENTITY_MISMATCH');
           result.evidenceIds.push(...await withLeasedTransaction(lease,c=>saveEvidence(c,lease.jobId,lead.id,'evidence' in source?source.evidence??[]:[])));
-          for(const key of (module==='website'?['site']:['cnpj','companyName','city','state']) as (keyof Lead)[])if(source[key as keyof typeof source])Object.assign(result.proposed,{[key]:source[key as keyof typeof source]});if(!Object.keys(result.proposed).length){result.status='skipped';result.reasons=['NO_RESULT'];}}
+          for(const key of (module==='website'?['site']:['cnpj','companyName','city','state','capital','size','legalNature','cnae','openedAt','address']) as (keyof Lead)[])if(source[key as keyof typeof source])Object.assign(result.proposed,{[key]:source[key as keyof typeof source]});if(!Object.keys(result.proposed).length){result.status='skipped';result.reasons=['NO_RESULT'];}}
       }else if(module==='validateEmail'){
-        const validation=lead.email?await checkEmailDns(lead.email):null;result.status='succeeded';result.reasons=[!validation?'NO_EMAIL':validation.format?'FORMAT_VALID':'FORMAT_INVALID',validation?.dns===true?'MAIL_DOMAIN_FOUND':'MAIL_DOMAIN_UNKNOWN','MAILBOX_NOT_VERIFIED'];
+        const validation=lead.email?await (deps.checkEmail??checkEmailDns)(lead.email):null;result.status='succeeded';result.reasons=[!validation?'NO_EMAIL':validation.format?'FORMAT_VALID':'FORMAT_INVALID',validation?.dns===true?'MAIL_DOMAIN_FOUND':'MAIL_DOMAIN_UNKNOWN','MAILBOX_NOT_VERIFIED'];
+        if(validation&&lead.email)result.emailAssessment=assessEmail(lead.email,validation,new Date().toISOString());
       }else{
         const evidence=await collectEvidence(lease,job,lead,input.modules.includes('deep'),deps);result.evidenceIds=evidence.map(e=>e.id);
         if(!evidence.length){result.status='skipped';result.reasons=['NO_EVIDENCE'];}
@@ -101,7 +109,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
           const facts=extractContacts(evidence),value=module==='email'?facts.emails[0]:facts.phones[0];
           if(value)result.proposed={[module]:value};else{result.status='skipped';result.reasons=['CONTACT_NOT_FOUND'];}
         }else{
-          const context=job.checkpoint.context as CompanyProfile|null,criteria=JSON.stringify({offer:context?.offer,idealCustomer:context?.idealCustomer,products:context?.products,pains:context?.pains,customCriteria:job.checkpoint.automation?.qualificationCriteria,product:job.checkpoint.product});
+          const context=job.checkpoint.context as CompanyProfile|null,criteria=JSON.stringify({offer:context?.offer,idealCustomer:context?.idealCustomer,products:context?.products,pains:context?.pains,customCriteria:job.checkpoint.automation?.qualificationCriteria,product:job.checkpoint.product,language:input.options?.language??'pt-BR'});
           const aiRoute=job.checkpoint.execution?.aiRoute as AiRoute|undefined;
           const cacheKey=hashValue({aiRoute,contract:'jev-decisions-v1',model:'typesafe/jev-1.13',criteria,evidence:evidence.map(e=>e.hash),facts:{name:lead.name,cnpj:lead.cnpj}});
           if(module==='qualify'&&aiRoute?.decisionProvider!=='jev'&&aiRoute){
@@ -120,6 +128,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
           }
         }
       }
+      if(!skip&&result.status!=='failed'&&input.options?.disqualifyNoEmail&&!chooseNextModule(input,[...prior,result])&&!lead.email&&[...prior,result].some(r=>r.module==='email'&&r.reasons.includes('CONTACT_NOT_FOUND'))){result.status='pending_review';result.proposed.qualification='disqualified';result.proposed.reason='E-mail não encontrado nas fontes coletadas; regra de seleção configurada pelo usuário.';result.reasons.push('USER_NO_EMAIL_RULE');}
       for(const key of Object.keys(result.proposed) as (keyof Lead)[])Object.assign(result.base,{[key]:base[key]??null});
       await withLeasedTransaction(lease,c=>recordModuleResult(c,lease,leadId,result));
       return;
@@ -144,7 +153,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
     await handleStepFailure(lease,error);
   }
 }
-async function preflight(lease:JobLease,job:any,deps:QualificationAdapters,jev=false,freshOperationId?:string){
+export async function preflight(lease:JobLease,job:any,deps:QualificationAdapters,jev=false,freshOperationId?:string){
  await withLeasedTransaction(lease,c=>assertAiRouteCurrent(c,job,freshOperationId));
  const route=job.checkpoint.execution.aiRoute as AiRoute;
  if(jev&&route.conventional.provider==='chatgpt-oauth'){

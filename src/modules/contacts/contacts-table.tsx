@@ -48,6 +48,7 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
   const [stateFilter,setStateFilter]=useState('');
   const [sourceFilter,setSourceFilter]=useState('');
   const [createdFrom,setCreatedFrom]=useState(''),[createdTo,setCreatedTo]=useState(''),[cadenceFilter,setCadenceFilter]=useState(''),[replyFilter,setReplyFilter]=useState<''|'yes'|'no'>(''),[optOutFilter,setOptOutFilter]=useState<''|'yes'|'no'>('');
+  const [enrichedFilter,setEnrichedFilter]=useState<''|'yes'|'no'>('');
   const [page, setPage] = useState(1);
   const [more, setMore] = useState(false);
   const [bulk, setBulk] = useState(false);
@@ -61,10 +62,10 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
     sort,
     contact:contactFilter as ''|'email'|'phone'|'none',state:stateFilter,source:sourceFilter,createdFrom,createdTo,
   });
-  const remote=useContacts({search:query,listId:list,qualification:status,onlyFavorites:favorite,sort,contact:contactFilter as ''|'email'|'phone'|'none',state:stateFilter,source:sourceFilter,createdFrom:createdFrom||undefined,createdTo:createdTo||undefined,cadenceId:cadenceFilter,reply:replyFilter,optOut:optOutFilter,page,pageSize:20});
+  const remote=useContacts({search:query,listId:list,qualification:status,onlyFavorites:favorite,sort,contact:contactFilter as ''|'email'|'phone'|'none',state:stateFilter,source:sourceFilter,createdFrom:createdFrom||undefined,createdTo:createdTo||undefined,cadenceId:cadenceFilter,reply:replyFilter,optOut:optOutFilter,enriched:enrichedFilter,page,pageSize:20});
   const total=remote.enabled?remote.data?.total??0:filtered.length;
   const rows=remote.enabled?remote.data?.items??[]:filtered.slice((page-1)*20,page*20);
-  useEffect(()=>{setSelection([]);setPage(1);},[query,list,status,favorite,sort,contactFilter,stateFilter,sourceFilter,createdFrom,createdTo,cadenceFilter,replyFilter,optOutFilter]);
+  useEffect(()=>{setSelection([]);setPage(1);},[query,list,status,favorite,sort,contactFilter,stateFilter,sourceFilter,createdFrom,createdTo,cadenceFilter,replyFilter,optOutFilter,enrichedFilter]);
   const toggle = (id: string) =>
     setSelection((x) =>
       x.includes(id) ? x.filter((a) => a !== id) : [...x, id],
@@ -75,7 +76,7 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
     if(identity?.activeWorkspaceId){
       const transport=createWorkspaceTransport({workspaceId:identity.activeWorkspaceId});
       try{exportRows=await collectContactExport(async exportPage=>{
-        const params=new URLSearchParams(Object.entries({search:query,listId:list,qualification:status,onlyFavorites:String(favorite),sort,contact:contactFilter,state:stateFilter,source:sourceFilter,createdFrom,createdTo,cadenceId:cadenceFilter,reply:replyFilter,optOut:optOutFilter,page:String(exportPage),pageSize:'100'}).filter(([,v])=>v!==''));
+        const params=new URLSearchParams(Object.entries({search:query,listId:list,qualification:status,onlyFavorites:String(favorite),sort,contact:contactFilter,state:stateFilter,source:sourceFilter,createdFrom,createdTo,cadenceId:cadenceFilter,reply:replyFilter,optOut:optOutFilter,enriched:enrichedFilter,page:String(exportPage),pageSize:'100'}).filter(([,v])=>v!==''));
         return transport.request<ContactsPage>('/api/contacts?'+params);
       });}finally{transport.dispose();}
     }
@@ -223,7 +224,7 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
               </option>
             ))}
           </select>
-          <div className="dropdown-wrap contacts-filter-menu"><Button icon="ListFilter" aria-expanded={filterMenu} onClick={()=>setFilterMenu(!filterMenu)}>Adicionar filtro</Button>{filterMenu&&<div className="dropdown">{['Status','Cadência','Contato disponível','Resposta','Origem','Enriquecimento','Estado','Criado em','Favoritos','CRM','E-mail verificado','Opt-out'].map(t=><button key={t} disabled={['Enriquecimento','CRM','E-mail verificado'].includes(t)||!identity&&['Cadência','Resposta','Opt-out'].includes(t)} title={['Enriquecimento','CRM','E-mail verificado'].includes(t)?'Depende do módulo de qualificação ou integração correspondente.':undefined} onClick={()=>{if(t==='Favoritos'){setFavorite(!favorite);setPage(1);}else setFilterKind(t);setFilterMenu(false);}}>{t}</button>)}</div>}</div>
+          <div className="dropdown-wrap contacts-filter-menu"><Button icon="ListFilter" aria-expanded={filterMenu} onClick={()=>setFilterMenu(!filterMenu)}>Adicionar filtro</Button>{filterMenu&&<div className="dropdown">{['Status','Cadência','Contato disponível','Resposta','Origem','Enriquecimento','Estado','Criado em','Favoritos','CRM','E-mail verificado','Opt-out'].map(t=><button key={t} disabled={['CRM','E-mail verificado'].includes(t)||!identity&&['Cadência','Resposta','Opt-out','Enriquecimento'].includes(t)} title={['CRM','E-mail verificado'].includes(t)?'Depende do módulo de qualificação ou integração correspondente.':undefined} onClick={()=>{if(t==='Favoritos'){setFavorite(!favorite);setPage(1);}else setFilterKind(t);setFilterMenu(false);}}>{t}</button>)}</div>}</div>
           {(filterKind==='Status'||status)&&<select
             aria-label="Filtrar qualificação"
             value={status}
@@ -245,8 +246,9 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
           {(filterKind==='Criado em'||createdFrom||createdTo)&&<div className="row wrap"><Field label="Criado a partir de (UTC)"><input type="date" value={createdFrom} onChange={e=>setCreatedFrom(e.target.value)}/></Field><Field label="Criado até (UTC)"><input type="date" value={createdTo} onChange={e=>setCreatedTo(e.target.value)}/></Field></div>}
           {(filterKind==='Cadência'||cadenceFilter)&&<select aria-label="Filtrar cadência" value={cadenceFilter} onChange={e=>setCadenceFilter(e.target.value)}><option value="">Todas as cadências</option><option value="any">Com inscrição em cadência</option><option value="none">Sem inscrição em cadência</option>{s.cadences.filter(c=>!c.archived).map(c=><option value={c.id} key={c.id}>{c.name}</option>)}</select>}
           {(filterKind==='Resposta'||replyFilter)&&<select aria-label="Filtrar resposta" value={replyFilter} onChange={e=>setReplyFilter(e.target.value as typeof replyFilter)}><option value="">Qualquer resposta</option><option value="yes">Com resposta registrada</option><option value="no">Sem resposta registrada</option></select>}
+          {(filterKind==='Enriquecimento'||enrichedFilter)&&<select aria-label="Filtrar enriquecimento" value={enrichedFilter} onChange={e=>setEnrichedFilter(e.target.value as typeof enrichedFilter)}><option value="">Qualquer enriquecimento</option><option value="yes">Com decisor com evidência</option><option value="no">Sem decisor com evidência</option></select>}
           {(filterKind==='Opt-out'||optOutFilter)&&<select aria-label="Filtrar opt-out" value={optOutFilter} onChange={e=>setOptOutFilter(e.target.value as typeof optOutFilter)}><option value="">Qualquer opt-out</option><option value="yes">Com bloqueio registrado</option><option value="no">Sem bloqueio registrado</option></select>}
-          {(status||contactFilter||stateFilter||sourceFilter||favorite||createdFrom||createdTo||cadenceFilter||replyFilter||optOutFilter)&&<Button variant="ghost" icon="X" onClick={()=>{setStatus('');setContactFilter('');setStateFilter('');setSourceFilter('');setFavorite(false);setCreatedFrom('');setCreatedTo('');setCadenceFilter('');setReplyFilter('');setOptOutFilter('');setFilterKind('');setPage(1);}}>Limpar filtros</Button>}
+          {(status||contactFilter||stateFilter||sourceFilter||favorite||createdFrom||createdTo||cadenceFilter||replyFilter||optOutFilter||enrichedFilter)&&<Button variant="ghost" icon="X" onClick={()=>{setStatus('');setContactFilter('');setStateFilter('');setSourceFilter('');setFavorite(false);setCreatedFrom('');setCreatedTo('');setCadenceFilter('');setReplyFilter('');setOptOutFilter('');setEnrichedFilter('');setFilterKind('');setPage(1);}}>Limpar filtros</Button>}
         </div>
         <div className="row">
           <div className="input-icon">

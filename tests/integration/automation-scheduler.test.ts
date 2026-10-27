@@ -19,6 +19,8 @@ import {pauseAutomation} from '../../src/server/automations/authorization.ts';
 import {claimJob} from '../../src/server/prospecting/lease.ts';
 import {readAutomationDefinition} from '../../src/server/automations/repository.ts';
 import {schedulerTransaction} from './automation-helpers.ts';
+import {prepareJob,confirmJob,listJobItems} from '../../src/server/prospecting/service.ts';
+import {runQualification} from '../../src/server/prospecting/qualification.ts';import {applyJobResults} from '../../src/server/prospecting/application.ts';
 beforeEach(()=>{resetRateLimits();process.env.AUTOMATIONS_SCHEDULER_ENABLED='true';process.env.PROSPECTING_GLOBAL_CONCURRENCY='32';});after(closeProspectingPools);
 const qa=(workspaceId:string)=>({workspaceId,signal:new AbortController().signal});
 async function due(workspaceId:string,id:string){await testAdmin(c=>c.query("UPDATE app.automation_runtime SET next_run_at=date_trunc('day',clock_timestamp())-interval '5 days'+interval '7 hours',retry_at=NULL WHERE workspace_id=$1 AND automation_id=$2",[workspaceId,id]));}
@@ -122,4 +124,19 @@ test('reactivation retires an old waiting occurrence instead of mixing authoriza
  await pauseAutomation(f.p,id,{requestId:randomUUID(),expectedRevision:(await readAutomationRuntime(f.p,id)).revision});await activate(f.p,id);
  assert.equal((await listAutomationOccurrences(f.p,id)).items.find(o=>o.id===waiting.id)?.state,'cancelled');
  const pending=await testAdmin(async c=>(await c.query('SELECT pending_occurrence_id FROM app.automation_runtime WHERE automation_id=$1',[id])).rows[0].pending_occurrence_id);assert.equal(pending,null);
+});
+test('recurring qualification preserves selected modules, language and source filters in the actual queued input',async()=>{
+ const f=await automationFixture(),id=await qualifier(f,10),s=await readWorkspaceSnapshot(f.p),definition=s.data.automations.find(a=>a.id===id)!;
+ await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'automation.save',automation:{...definition,filters:{onlyWithSite:'true',onlyMissingEmail:'true',language:'es'},modules:['email','phone']}}});
+ await testAdmin(async c=>{for(const [site,email]of [['https://example.com',''],['',''],['https://example.com','existing@example.com']]){const lead=randomUUID();await c.query('INSERT INTO app.lead(workspace_id,id,list_id,payload) VALUES($1,$2,$3,$4)',[f.p.workspaceId,lead,f.listId,{id:lead,listId:f.listId,name:'[RE] Seleção',qualification:'pending',site,email,createdAt:new Date().toISOString()}]);}});
+ await activate(f.p,id);await due(f.p.workspaceId,id);await runSchedulerOnce(qa(f.p.workspaceId));const occurrence=(await listAutomationOccurrences(f.p,id)).items[0];assert.ok(occurrence.jobId);
+ const input=await testAdmin(async c=>(await c.query('SELECT input FROM app.prospecting_job WHERE id=$1',[occurrence.jobId])).rows[0].input);assert.deepEqual(input.modules,['email','phone']);assert.deepEqual(input.options,{onlyWithSite:true,onlyMissingEmail:true,language:'es'});assert.equal(input.leadIds.length,1);
+});
+test('recurring skip-processed uses the same applied fingerprint proof as manual qualification',async()=>{
+ const f=await automationFixture(),s=await readWorkspaceSnapshot(f.p),leadId=randomUUID();await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'lead.upsert',lead:{id:leadId,listId:f.listId,name:'[RE] Processado',site:'https://example.com',source:'MANUAL',qualification:'pending',createdAt:new Date().toISOString()}}});
+ const input={kind:'qualification',listId:f.listId,leadIds:[leadId],modules:['email'],summaryPolicy:'all',escalation:'off'},review=await prepareJob(f.p,input),job=await confirmJob(f.p,{requestId:randomUUID(),input,reviewToken:review.token});
+ const evidence={id:'e',url:'https://example.com',text:'Contato publicado ana@example.com',hash:'h',fetchedAt:new Date().toISOString(),truncated:false};await runQualification(await grantTestLease(f.p,job.id),{collect:async()=>[evidence]});await runQualification(await grantTestLease(f.p,job.id));await applyJobResults(f.p,job.id,{requestId:randomUUID(),itemIds:(await listJobItems(f.p,job.id)).items.map(i=>i.id)});
+ const id=await qualifier(f,10),snapshot=await readWorkspaceSnapshot(f.p),definition=snapshot.data.automations.find(a=>a.id===id)!;await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'automation.save',automation:{...definition,modules:['email'],filters:{skipProcessed:'true'}}}});
+ await activate(f.p,id);await due(f.p.workspaceId,id);await runSchedulerOnce(qa(f.p.workspaceId));const occurrence=(await listAutomationOccurrences(f.p,id)).items[0];assert.ok(occurrence.jobId);let calls=0;
+ await runQualification(await grantTestLease(f.p,occurrence.jobId!),{collect:async()=>{calls++;return[evidence];}});assert.equal(calls,0);assert.deepEqual((await listJobItems(f.p,occurrence.jobId!)).items[0].results[0].reasons,['ALREADY_PROCESSED']);
 });
