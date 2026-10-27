@@ -1,0 +1,1 @@
+export interface BlobStore{put(workspaceId:string,key:string,bytes:Uint8Array):Promise<void>;get(workspaceId:string,key:string):Promise<Uint8Array>;remove(workspaceId:string,key:string):Promise<void>}

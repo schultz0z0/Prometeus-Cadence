@@ -25,8 +25,9 @@ export async function composeMail(send:MailSend):Promise<Buffer> {
  }
  if(Buffer.byteLength(text)>65536)throw Error('MAIL_CONTENT_TOO_LARGE');
  const transport=nodemailer.createTransport({streamTransport:true,buffer:true,newline:'windows',disableFileAccess:true,disableUrlAccess:true});
- const result=await transport.sendMail({from,to,subject:send.content.subject,text,messageId:send.rfcMessageId,...(thread?.inReplyTo?{inReplyTo:thread.inReplyTo,references:thread.references}:{}),headers,disableFileAccess:true,disableUrlAccess:true});
- if(!Buffer.isBuffer(result.message)||result.message.length>maxBytes)throw Error('MAIL_MIME_TOO_LARGE');return result.message;
+ const attachments=send.resolvedAttachments??[];if(attachments.length>5||attachments.some(a=>!a.content.length||a.content.length>10485760||/[\r\n\\/]/.test(a.filename))||attachments.reduce((sum,a)=>sum+a.content.length,0)>20971520)throw Error('MAIL_ATTACHMENT_LIMIT');
+ const result=await transport.sendMail({from,to,subject:send.content.subject,text,messageId:send.rfcMessageId,attachments:attachments.map(a=>({...a,content:Buffer.from(a.content)})),...(thread?.inReplyTo?{inReplyTo:thread.inReplyTo,references:thread.references}:{}),headers,disableFileAccess:true,disableUrlAccess:true});
+ if(!Buffer.isBuffer(result.message)||result.message.length>30*1024*1024)throw Error('MAIL_MIME_TOO_LARGE');return result.message;
 }
 function plainHtml(html:string):string {
  const walk=(node:any):string=>{

@@ -17,14 +17,16 @@ export interface PublicationView {id:string;cadenceId:string;revision:number;sta
 export interface ReconciliationSnapshot {messageId:string;attemptId:string;remoteId:string|null;resolution:'accepted'|'not_accepted';evidence:string;reference:string;proofKind:'provider-log';verifiedByUser:true;verification:'administrator-evidence'|'provider-api';remoteStatus?:'sent'|'delivered'|'read'|'failed'|'unknown'}
 export interface PublicationInputV2 {version:2;cadenceId:string;expectedRevision:number;leadIds:string[];steps:Record<string,{senderId:string;content:MailContent|OutboundContent}>}
 export interface PublicationRecipientStepV2 {
+ variant?:'A'|'B';attachments?:import('./message-authoring.ts').FrozenAttachment[];
  sender:MessagingSenderView;connectionRevision:number;identityId:string;address:string;
  identity:Identity|MailIdentity;content:MailContent|OutboundContent;preview:string;
  consentIds:string[];suppressionVersion:string;replyEpoch:number;templateProof?:{revision:number;hash:string};
  unsubscribe?:{url:string;hash:string};
 }
 export interface PublicationSnapshotV2 {
+ contentRevision?:number;contentHash?:string;
  version:2;cadence:Cadence;draftRevision:number;actorId:string;
- recipients:{leadId:string;steps:Record<string,PublicationRecipientStepV2>}[];
+ recipients:{leadId:string;enrollmentId?:string;steps:Record<string,PublicationRecipientStepV2>}[];
  recipientFacts:Record<string,Lead>;contextVersion:number;aiRouteRevision:number;
  productId:string|null;productVersion:number|null;
  limits:{workspaceDailyLimit:number;channels:Partial<Record<'EMAIL'|'WHATSAPP',number>>;senders:Record<string,number>};

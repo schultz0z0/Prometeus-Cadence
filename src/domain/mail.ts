@@ -20,6 +20,8 @@ export type SyncCursor={kind:'gmail';historyId:string;pageToken:string|null;wate
  (ImapFolderCursor&{sent?:ImapFolderCursor});
 export interface SyncBatch {messages:MailMessage[];next:SyncCursor;complete:boolean;gap:boolean}
 export interface MailSend {
+ resolvedAttachments?:{filename:string;contentType:string;content:Uint8Array}[];
+ attachments?:import('./message-authoring.ts').FrozenAttachment[];
  connectionId:string;connectionRevision:number;senderId:string;address:string;to:string;content:MailContent;
  rfcMessageId:string;thread:{remoteThreadId:string|null;inReplyTo:string|null;references:string[]}|null;
  purpose:'campaign'|'service'|'test';unsubscribeUrl:string|null;

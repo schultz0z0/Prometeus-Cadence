@@ -1,0 +1,8 @@
+import 'server-only';import fs from 'node:fs/promises';import path from 'node:path';import {createHash,randomUUID} from 'node:crypto';import type {BlobStore} from './blob-store.ts';
+function location(ws:string,key:string){if(!/^[a-f0-9-]{36}$/.test(key))throw Error('INVALID_BLOB_KEY');const configured=process.env.MESSAGE_FILES_ROOT,host=new URL(process.env.BETTER_AUTH_URL??'http://127.0.0.1:3210').hostname;if(!configured&&!['localhost','127.0.0.1','[::1]'].includes(host))throw Error('DURABLE_MESSAGE_FILES_ROOT_REQUIRED');const root=path.resolve(configured??'.runtime/message-files'),dir=path.join(root,createHash('sha256').update(ws).digest('hex'));return{root,dir,file:path.join(dir,key)};}
+async function scoped(ws:string,key:string){const p=location(ws,key);await fs.mkdir(p.dir,{recursive:true,mode:0o700});const root=await fs.realpath(p.root),dir=await fs.realpath(p.dir);if(path.dirname(dir)!==root)throw Error('BLOB_PATH_ESCAPED');return{...p,dir,file:path.join(dir,key)};}
+export const localBlobStore:BlobStore={
+ async put(ws,key,bytes){const p=await scoped(ws,key),temp=p.file+'.'+randomUUID()+'.part';try{const h=await fs.open(temp,'wx',0o600);try{await h.writeFile(bytes);await h.sync();}finally{await h.close();}await fs.rename(temp,p.file);}finally{await fs.unlink(temp).catch(()=>{});}},
+ async get(ws,key){const p=await scoped(ws,key),stat=await fs.lstat(p.file);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>10485760||path.dirname(await fs.realpath(p.file))!==p.dir)throw Error('BLOB_UNAVAILABLE');return new Uint8Array(await fs.readFile(p.file));},
+ async remove(ws,key){const p=location(ws,key);await fs.unlink(p.file).catch(e=>{if(e.code!=='ENOENT')throw e;});},
+};

@@ -115,6 +115,8 @@ const cadence = z.strictObject({
         body: text,
         aiInstructions: text.optional(),
         stopOnReply: z.boolean(),
+        attachmentIds:z.array(id).max(5).refine(v=>new Set(v).size===v.length).optional(),
+        variantB:z.strictObject({body:text,subject:z.string().max(200).optional(),attachmentIds:z.array(id).max(5).refine(v=>new Set(v).size===v.length).optional()}).optional(),
       }),
     )
     .max(30),

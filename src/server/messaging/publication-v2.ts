@@ -20,6 +20,9 @@ import {requireChannelAdmin,senderView,commandHash,priorCommand,completeCommand,
 import {contentSchema} from '../channels/schemas.ts';
 import {createPublicationMailMaterial,readPublicationMailMaterial,unsubscribeArtifact} from '../mail/unsubscribe-material.ts';
 import {nextStepAt} from './schedule.ts';
+import {readContentState,contentBlockers} from './content.ts';
+import {readAttachmentProofs} from './attachments.ts';
+import {chooseMessageVariant,authoringVariables,validateAuthoringVariables} from '../../domain/message-authoring.ts';
 const id=z.string().min(1).max(120);
 const email=z.strictObject({kind:z.literal('email'),subject:z.string().max(200),text:z.string().max(65536),signature:z.string().max(4096)});
 const schema=z.strictObject({version:z.literal(2),cadenceId:id,expectedRevision:z.number().int().min(0),leadIds:z.array(id).min(1).max(500).refine(v=>new Set(v).size===v.length),steps:z.record(id,z.strictObject({senderId:z.uuid(),content:z.union([email,contentSchema])}))});
@@ -41,16 +44,17 @@ export async function publicationV2State(c:PoolClient,p:Principal,input:Publicat
  if(cadence.settings.budgetPercent!==null)blockers.push('SETTING_UNAVAILABLE:budgetPercent');
  for(const step of cadence.steps){if(!Object.hasOwn(input.steps,step.id))blockers.push('STEP_BINDING_REQUIRED:'+step.id);if(!Number.isInteger(step.delayDays))blockers.push('INTEGER_DELAY_REQUIRED:'+step.id);if(!['EMAIL','WHATSAPP'].includes(step.channel))blockers.push('CHANNEL_UNAVAILABLE:'+step.id);}
  if(Object.keys(input.steps).some(k=>!cadence.steps.some(s=>s.id===k)))blockers.push('UNKNOWN_STEP_BINDING');
+ const authored=await readContentState(c,cadence.id);blockers.push(...await contentBlockers(c,cadence));
  const context=await readApprovedContext(c),policy=await readAiPolicy(c),productId=cadence.origin?.productId??null;
  const product=productId?(await c.query('SELECT * FROM app.product_profile WHERE id=$1',[productId])).rows[0]:null;
  if(productId&&(!product||product.archived||!product.approved))blockers.push('PRODUCT_UNAVAILABLE');
- const snapshot:PublicationSnapshotV2={version:2,cadence,draftRevision:revision,actorId:p.userId,recipients:[],recipientFacts:{},contextVersion:context?.version??0,aiRouteRevision:policy.revision,productId,productVersion:product?.approved?.version??null,limits:{workspaceDailyLimit:limits?.workspace_daily_limit??0,channels:{},senders:{}}};
+ const snapshot:PublicationSnapshotV2={version:2,contentRevision:authored.revision,contentHash:authored.hash,cadence,draftRevision:revision,actorId:p.userId,recipients:[],recipientFacts:{},contextVersion:context?.version??0,aiRouteRevision:policy.revision,productId,productVersion:product?.approved?.version??null,limits:{workspaceDailyLimit:limits?.workspace_daily_limit??0,channels:{},senders:{}}};
  const seen=new Set<string>(),proofFacts:unknown[]=[];
  for(const row of channelLimits)snapshot.limits.channels[row.channel as 'EMAIL'|'WHATSAPP']=row.daily_limit;
  for(const leadId of input.leadIds){
   const lead=(await c.query('SELECT payload FROM app.lead WHERE id=$1',[leadId])).rows[0]?.payload as Lead|undefined;if(!lead)throw new AppError(404,'Destinatário não encontrado.');
   if(lead.listId!==cadence.listId||!cadence.settings.acceptedQualifications.includes(lead.qualification))blockers.push('LEAD_INELIGIBLE:'+leadId);
-  snapshot.recipientFacts[leadId]=lead;const recipient:PublicationSnapshotV2['recipients'][number]={leadId,steps:{}};snapshot.recipients.push(recipient);
+  snapshot.recipientFacts[leadId]=lead;const enrollmentHash=hashValue({material,leadId}),enrollmentId=enrollmentHash.slice(0,8)+'-'+enrollmentHash.slice(8,12)+'-5'+enrollmentHash.slice(13,16)+'-a'+enrollmentHash.slice(17,20)+'-'+enrollmentHash.slice(20,32),recipient:PublicationSnapshotV2['recipients'][number]={leadId,enrollmentId,steps:{}};snapshot.recipients.push(recipient);
   let anchor=new Date().toISOString();
   for(const step of cadence.steps){
    const binding=input.steps[step.id];if(!binding)continue;
@@ -59,7 +63,11 @@ export async function publicationV2State(c:PoolClient,p:Principal,input:Publicat
    if(sender.channel!==step.channel||conn.channel!==step.channel)blockers.push('SENDER_CHANNEL_MISMATCH:'+step.id);
    if(!sender.ready||conn.state!=='ready'||!conn.credentials_verified||(conn.token_expires_at&&conn.token_expires_at.getTime()<=Date.now()))blockers.push('SENDER_UNAVAILABLE:'+step.id);
    if(!sender.dailyLimit)blockers.push('EXPLICIT_LIMITS_REQUIRED:'+step.id);snapshot.limits.senders[sender.id]=sender.dailyLimit??0;
+   if(step.variantB||step.attachmentIds?.length){if(binding.content.kind==='email'&&(binding.content.text!==step.body||binding.content.subject!==(step.subject??''))||binding.content.kind==='text'&&binding.content.text!==step.body)blockers.push('CONTENT_BINDING_CHANGED:'+step.id);}
+   const variant=chooseMessageVariant(enrollmentId,!!step.variantB?.body.trim()&&(step.channel!=='EMAIL'||!!step.variantB.subject?.trim())),selected=variant==='B'?step.variantB!:step,attachments=await readAttachmentProofs(c,selected.attachmentIds??[],step.channel);blockers.push(...attachments.blockers);
    let address='',scope='',content=binding.content,preview='',template:TemplateView|null=null,lastInboundAt:string|null=null,mailbox:any=null;
+   if(variant==='B'){if(content.kind==='email')content={...content,subject:selected.subject??'',text:selected.body};else if(content.kind==='text')content={...content,text:selected.body};else blockers.push('VARIANT_TEMPLATE_UNSUPPORTED:'+step.id);}
+   const values=content.kind==='template'?Object.values(content.variables):content.kind==='email'?[content.subject,content.text]:[content.text];for(const value of values){const vars=validateAuthoringVariables({body:value,allowed:authoringVariables});if(!vars.valid)blockers.push('UNKNOWN_VARIABLE:'+step.id+':'+vars.unknown.join(','));if(renderMessage(value,lead).unresolved.length)blockers.push('MISSING_VARIABLE_VALUE:'+step.id);}
    if(step.channel==='EMAIL'){
     try{address=normalizeMailAddress(lead.email??'');}catch{blockers.push('VALID_EMAIL_REQUIRED:'+leadId);}
     scope='email';mailbox=(await c.query('SELECT * FROM app.email_mailbox WHERE id=$1',[conn.id])).rows[0];
@@ -86,7 +94,7 @@ export async function publicationV2State(c:PoolClient,p:Principal,input:Publicat
    const unsubscribe=step.channel==='EMAIL'?unsubscribeArtifact(tokens[leadId]):null;
    if(step.channel==='EMAIL'){if(!unsubscribe)blockers.push('EMAIL_PUBLIC_URL_REQUIRED');if(content.kind==='email'){blockers.push(...validateRenderedMail(content,unsubscribe?.url??null).map(b=>b+':'+step.id));preview=content.subject+'\n\n'+renderMailBody(content,unsubscribe?.url??null);}}
    const key=step.id+':'+scope+':'+address;if(seen.has(key))blockers.push('DUPLICATE_RECIPIENT:'+step.id);seen.add(key);
-   recipient.steps[step.id]={sender:{...sender,provider:conn.provider},connectionRevision:Number(conn.revision),identityId:person?.id??'',address,identity:scope==='email'?{channel:'EMAIL',scope:'email',address}:{scope,externalId:external,phone:address},content,preview,consentIds:consents.map(r=>r.id),suppressionVersion:hashValue(suppressions),replyEpoch:Number(person?.reply_epoch??0),...(unsubscribe?{unsubscribe}:{}),...(template?{templateProof:{revision:template.revision,hash:template.hash}}:{})};
+   recipient.steps[step.id]={variant,attachments:attachments.files,sender:{...sender,provider:conn.provider},connectionRevision:Number(conn.revision),identityId:person?.id??'',address,identity:scope==='email'?{channel:'EMAIL',scope:'email',address}:{scope,externalId:external,phone:address},content,preview,consentIds:consents.map(r=>r.id),suppressionVersion:hashValue(suppressions),replyEpoch:Number(person?.reply_epoch??0),...(unsubscribe?{unsubscribe}:{}),...(template?{templateProof:{revision:template.revision,hash:template.hash}}:{})};
    proofFacts.push({leadId,stepId:step.id,mailbox,person,lastInboundAt});
   }
  }
@@ -102,7 +110,7 @@ export async function confirmPublicationV2(p:Principal,input:unknown):Promise<Pu
  return withWorkspaceTransaction(p,async c=>{await requireChannelAdmin(c);await lockWorkspace(c);const hash=commandHash({action:'publication.v2.confirm',input:{...body,material}}),prior=await priorCommand<PublicationView>(c,p,requestId,hash);if(prior)return prior;
   const state=await publicationV2State(c,p,body,material);verifyReviewToken(reviewToken,state.proof,secret());if(state.blockers.length)throw new AppError(409,'A publicação está bloqueada: '+state.blockers[0]);
   const publicationId=randomUUID(),now=new Date().toISOString();await c.query("INSERT INTO app.cadence_publication(workspace_id,id,cadence_id,created_by,snapshot,state) VALUES($1,$2,$3,$4,$5,'active')",[p.workspaceId,publicationId,body.cadenceId,p.userId,state.snapshot]);
-  for(const recipient of state.snapshot.recipients){const enrollmentId=randomUUID(),settings=state.snapshot.cadence.settings,step=state.snapshot.cadence.steps[0],next=nextStepAt({anchorAt:now,delayDays:step.delayDays,now,timezone:settings.timezone,weekdays:settings.weekdays,sendTime:settings.sendTime,skipHolidays:false,holidayDates:null});
+  for(const recipient of state.snapshot.recipients){const enrollmentId=recipient.enrollmentId??randomUUID(),settings=state.snapshot.cadence.settings,step=state.snapshot.cadence.steps[0],next=nextStepAt({anchorAt:now,delayDays:step.delayDays,now,timezone:settings.timezone,weekdays:settings.weekdays,sendTime:settings.sendTime,skipHolidays:false,holidayDates:null});
    await c.query('INSERT INTO app.cadence_enrollment(workspace_id,id,publication_id,lead_id,identity_id,anchor_at,next_at,authorized_reply_epoch) VALUES($1,$2,$3,$4,NULL,$5,$6,0)',[p.workspaceId,enrollmentId,publicationId,recipient.leadId,now,next]);
    for(const [index,entry]of state.snapshot.cadence.steps.entries()){const frozen=recipient.steps[entry.id];await c.query('INSERT INTO app.cadence_enrollment_channel(workspace_id,enrollment_id,step_index,step_id,channel,identity_id,sender_id,authorized_reply_epoch) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.workspaceId,enrollmentId,index,entry.id,entry.channel,frozen.identityId,frozen.sender.id,frozen.replyEpoch]);if(frozen.unsubscribe)await c.query('SELECT app.register_mail_unsubscribe($1,$2)',[frozen.identityId,frozen.unsubscribe.hash]);}
   }

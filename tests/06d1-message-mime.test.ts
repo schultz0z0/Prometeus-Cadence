@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {simpleParser} from 'mailparser';import {composeMail} from '../src/server/mail/mime.ts';import {outgoing} from './fixtures/mail-messages.ts';
+test('real MIME carries the frozen attachment bytes, name and type without file or URL access',async()=>{
+ const bytes=new TextEncoder().encode('%PDF-1.7\nprivate proposal\n%%EOF'),mime=await composeMail({...outgoing,resolvedAttachments:[{filename:'Proposta.pdf',contentType:'application/pdf',content:bytes}]}),parsed=await simpleParser(mime);assert.equal(parsed.attachments.length,1);assert.equal(parsed.attachments[0].filename,'Proposta.pdf');assert.equal(parsed.attachments[0].contentType,'application/pdf');assert.deepEqual(new Uint8Array(parsed.attachments[0].content),bytes);
+});

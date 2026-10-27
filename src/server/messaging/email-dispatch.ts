@@ -14,6 +14,7 @@ import {dispatchPool} from './worker-db.ts';
 import {dispatchBlocker} from './guard.ts';
 import {recordDispatchReceipt} from './receipts.ts';
 import {dispatchTimeAllowed,nextStepAt} from './schedule.ts';
+import {resolveDispatchFiles} from './dispatch-files.ts';
 export type MailDispatchContext=Record<string,any>;
 export function mailConfigFromDispatch(ctx:MailDispatchContext,workspaceId:string):MailConfig{
  const m=ctx.mailbox,c=ctx.connection,s=ctx.sender;
@@ -42,8 +43,9 @@ export async function dispatchEmail(lease:DispatchLease,initial:MailDispatchCont
   const next=nextStepAt({anchorAt:ctx.outbox.next_at,delayDays:0,now:now(),...ctx.publication.snapshot.cadence.settings,holidayDates:null});await dispatchPool().query('SELECT app.defer_message_dispatch($1,$2,$3,$4,$5)',[...leaseArgs(lease),next]);return;
  }
  const config=mailConfigFromDispatch(ctx,lease.workspaceId),adapter=deps.adapter??(config.mailbox.provider==='gmail'?createGmailAdapter(deps):createSmtpImapAdapter(deps));
+ let resolvedAttachments:Awaited<ReturnType<typeof resolveDispatchFiles>>;try{resolvedAttachments=await resolveDispatchFiles(lease);}catch{await dispatchPool().query('SELECT app.block_message_dispatch($1,$2,$3,$4,$5)',[...leaseArgs(lease),'ATTACHMENT_UNAVAILABLE']);return;}
  const gate=(await dispatchPool().query('SELECT app.begin_message_dispatch($1,$2,$3,$4,$5,$6,$7)',[lease.workspaceId,lease.messageId,lease.attemptId,lease.token,lease.fence,ctx.guard,now()])).rows[0].begin_message_dispatch;if(!gate?.allowed)return;
  const heartbeat=setInterval(()=>{void heartbeatDispatch(lease).catch(()=>{});},15000);heartbeat.unref();
- let outcome:SendOutcome;try{outcome=await adapter.sendOnce(config,ctx.outbox.prepared_send as MailSend);}catch{outcome={kind:'uncertain',code:'MAIL_SEND_RESULT_MISSING'};}finally{clearInterval(heartbeat);}
+ let outcome:SendOutcome;try{outcome=await adapter.sendOnce(config,{...ctx.outbox.prepared_send,resolvedAttachments} as MailSend);}catch{outcome={kind:'uncertain',code:'MAIL_SEND_RESULT_MISSING'};}finally{clearInterval(heartbeat);}
  await recordDispatchReceipt(lease,{attemptId:lease.attemptId,outcome,costUsd:null,costKind:'unknown'},now());
 }
