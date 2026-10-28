@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-27",
+  "stage": "before-independent-review",
+  "unit": {
+    "passed": 342,
+    "failed": 0
+  },
+  "integration": {
+    "passed": 378,
+    "failed": 0
+  },
+  "focused": {
+    "passed": 8,
+    "failed": 0
+  },
+  "build": "passed",
+  "typecheck": "passed",
+  "diffcheck": "passed",
+  "browser": {
+    "screenshots": 33,
+    "horizontalOverflow": 0,
+    "pageErrors": 0,
+    "draftPreservedAfterLiveRefresh": true,
+    "escapeClosesModal": true,
+    "fixtures": "response-only; not proof of external delivery"
+  },
+  "runtime": {
+    "localhost": 200,
+    "lanes": 6,
+    "alive": true,
+    "failures": 0
+  },
+  "externalSends": 0,
+  "paidProviderCalls": 0
+}

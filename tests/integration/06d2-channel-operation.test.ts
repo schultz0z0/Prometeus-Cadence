@@ -19,6 +19,9 @@ import {getPools} from '../../src/server/db/pool.ts';
 import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';
 import {closeDispatchPool} from '../../src/server/messaging/worker-db.ts';
 import type {MailAdapter} from '../../src/server/mail/providers/contracts.ts';
+import {channelRequestHandler} from '../../src/server/channels/http.ts';
+import {messagingRequestHandler} from '../../src/server/messaging/http.ts';
+import {base} from './helpers.ts';
 after(async()=>{await getPools().close();await closeIngressPool();await closeDispatchPool();});
 
 async function pilotFixture(){
@@ -70,6 +73,16 @@ test('pilot rechecks membership and connection revision after observation I/O be
   assert.equal(calls,1);assert.equal(Number((await testAdmin(c=>c.query('SELECT count(*) FROM app.channel_pilot_observation WHERE workspace_id=$1',[f.u.p.workspaceId]))).rows[0].count),0);
  }
 });
+test('pilot reads durable receipts rather than adapter claims and observes the response stopping related follow-ups',async()=>{
+ const f=await pilotFixture(),now=new Date(f.now.getTime()+2000).toISOString(),lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);
+ await dispatchOne(lease,{now:()=>now,adapter:{...f.adapter,sendOnce:async()=>({kind:'accepted',remoteId:'wamid.real.'+randomUUID(),acceptedAt:now})}});
+ const publication=await preparePublication(f.u.p,f.input);await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:publication.token});
+ const review=await prepareChannelPilot(f.u.p,f.pilot);
+ await webhookRequest(f.request({messages:[{id:'wamid.reply.'+randomUUID(),from:'5541988888888',timestamp:String(Math.floor((f.now.getTime()+3000)/1000)),type:'text',text:{body:'Recebi o teste'}}]}),f.publicId,'meta');
+ const result=await runChannelPilot(f.u.p,{...f.pilot,reviewToken:review.token,requestId:randomUUID()},{observe:async()=>({messageId:f.message.id,state:'read',acceptedAt:now,deliveredAt:now,readAt:now,supported:['read']})});
+ assert.equal(result.delivery.state,'accepted');assert.equal(result.delivery.readAt,null);assert.ok(result.inboundId);assert.equal(result.stoppedEnrollment,true);
+ assert.equal(await materializeDueMessages(new Date(f.now.getTime()+3*86400000).toISOString(),100,f.u.p.workspaceId),0);
+});
 test('direct SQL cannot create receipt evidence, cross-tenant pilot records, or bypass an operator role',async()=>{
  const f=await pilotFixture(),other=await publicationFixture();
  await assert.rejects(withWorkspaceTransaction(f.u.p,c=>c.query("INSERT INTO app.channel_pilot_observation(workspace_id,request_id,connection_id,message_id,connection_revision,actor_id) VALUES($1,$2,$3,$4,1,$5)",[f.u.p.workspaceId,randomUUID(),f.connection.id,f.message.id,f.u.p.userId])));
@@ -77,4 +90,22 @@ test('direct SQL cannot create receipt evidence, cross-tenant pilot records, or 
  await testAdmin(c=>c.query('UPDATE auth.member SET role=$3 WHERE "organizationId"=$1 AND "userId"=$2',[f.u.p.workspaceId,f.u.p.userId,'operator']));
  await assert.rejects(prepareChannelPilot(f.u.p,f.pilot),{status:403});
  await assert.rejects(withWorkspaceTransaction(f.u.p,c=>c.query('SELECT app.record_channel_pilot($1,$2,$3,1,$4)',[randomUUID(),f.connection.id,f.message.id,f.pilot.ownedRecipient])));
+});
+test('HTTP observation enforces session, tenant, role, validation, fresh review and replay without a send endpoint',async()=>{
+ const f=await pilotFixture(),other=await publicationFixture();
+ const request=(headers:HeadersInit,body:unknown)=>new Request(base+'/api/channels/'+f.connection.id+'/pilot-prepare',{method:'POST',headers,body:JSON.stringify(body)});
+ const target={id:f.connection.id,action:'pilot-prepare'},body={messageId:f.message.id,ownedRecipient:f.pilot.ownedRecipient};
+ const anonymous=await channelRequestHandler(request({'origin':base},body),target);assert.ok([401,403].includes(anonymous.status));
+ assert.equal((await channelRequestHandler(request(f.u.headers,{}),target)).status,422);
+ assert.equal((await channelRequestHandler(request(other.u.headers,body),target)).status,404);
+ const prepared=await channelRequestHandler(request(f.u.headers,body),target);assert.equal(prepared.status,200);const review=await prepared.json();
+ const command={...body,reviewToken:review.token,requestId:randomUUID()},confirmed={...target,action:'pilot-confirm'};
+ const first=await channelRequestHandler(request(f.u.headers,command),confirmed);assert.equal(first.status,200);assert.match(first.headers.get('cache-control')??'',/no-store/);
+ assert.deepEqual(await first.json(),await(await channelRequestHandler(request(f.u.headers,command),confirmed)).json());
+ assert.equal((await channelRequestHandler(request(f.u.headers,{...command,reviewToken:'stale'}),confirmed)).status,409);
+ const evidence=await messagingRequestHandler(new Request(base+'/api/messaging/messages/'+f.message.id+'/evidence',{headers:f.u.headers}),{resource:'messages',id:f.message.id,action:'evidence'});
+ assert.equal(evidence.status,200);assert.equal((await evidence.json()).state,'pending');
+ const foreign=await messagingRequestHandler(new Request(base+'/api/messaging/messages/'+f.message.id+'/evidence',{headers:other.u.headers}),{resource:'messages',id:f.message.id,action:'evidence'});assert.equal(foreign.status,404);
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=$3 WHERE "organizationId"=$1 AND "userId"=$2',[f.u.p.workspaceId,f.u.p.userId,'operator']));
+ assert.equal((await channelRequestHandler(request(f.u.headers,body),target)).status,403);
 });

@@ -20,6 +20,7 @@ import type {SmtpImapDeps} from './providers/smtp-imap.ts';
 import type {MailDeps} from './providers/contracts.ts';
 import {gmailOAuthSettings} from './oauth-protocol.ts';
 import {gmailCallbackUrl} from './callback-url.ts';
+import {prepareChannelPilot,runChannelPilot} from '../messaging/pilot.ts';
 const actionSchema=z.strictObject({requestId:z.uuid(),expectedRevision:z.number().int().min(1)});
 const limitsSchema=actionSchema.extend({limitsRevision:z.number().int().min(0),channelRevision:z.number().int().min(0),workspaceDailyLimit:z.number().int().min(1).max(100000),channelDailyLimit:z.number().int().min(1).max(100000),senderDailyLimit:z.number().int().min(1).max(100000),minIntervalSeconds:z.number().int().min(1).max(86400),maxIntervalSeconds:z.number().int().min(1).max(86400)}).refine(b=>b.maxIntervalSeconds>=b.minIntervalSeconds);
 async function detail(p:Principal,id:string){return withWorkspaceTransaction(p,async c=>{await requireChannelAdmin(c);const row=await mailboxRow(c,id),sender=(await c.query("SELECT * FROM app.channel_sender WHERE connection_id=$1 AND channel='EMAIL' ORDER BY id LIMIT 1",[id])).rows[0];
@@ -30,6 +31,8 @@ export function mailboxHttp(request:Request,params:Record<string,string>,deps:{t
  if(!id){if(request.method==='GET')return listMailboxes(p);if(request.method==='POST')return saveMailbox(p,body);}
  if(request.method==='GET'){if(!action||action==='status')return detail(p,id);if(action==='diagnostics')return diagnoseMailDomain(p,id,new URL(request.url).searchParams.get('selector')??undefined);}
  if(request.method!=='POST')throw new AppError(405,'Método não permitido.');
+ if(action==='pilot-prepare')return prepareChannelPilot(p,{...(body as Record<string,unknown>),connectionId:id});
+ if(action==='pilot-confirm')return runChannelPilot(p,{...(body as Record<string,unknown>),connectionId:id});
  if(action==='test-prepare')return prepareMailTest(p,id,body);if(action==='test-confirm')return confirmMailTest(p,id,body);
  if(action==='disconnect')return disconnectMailbox(p,{...(body as Record<string,unknown>),id});
  if(action==='limits'){

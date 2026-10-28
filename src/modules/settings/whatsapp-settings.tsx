@@ -10,6 +10,7 @@ import {Button,Badge,Field,Modal,Notice,LinkButton} from '@/components/ui/primit
 import {WhatsappConnectionForm} from './whatsapp-connection-form';
 import {WhatsappContentField} from './whatsapp-content-field';
 import {OpenwaConnection,OpenwaConnectModal} from './openwa-connection';
+import {ChannelTestEvidence} from '@/modules/messages/delivery-details';
 import {whatsappBlocker} from '@/client/whatsapp-copy';
 const stateNames:Record<ConnectionView['state'],string>={pending:'Credenciais por verificar',credentials_verified:'Credenciais verificadas',awaiting_webhook:'Aguardando webhook',ready:'Pronta',attention:'Requer atenção',disconnected:'Desconectada'};
 
@@ -24,7 +25,7 @@ function VerifyToken({value,onHide}:{value:string;onHide:()=>void}){
 }
 
 function TestMessage({connection,client,onClose}:{connection:ConnectionView;client:ChannelClient;onClose:()=>void}){
- const [senderId,setSender]=useState(connection.senders[0]?.id??''),[phone,setPhone]=useState(''),[content,setContent]=useState<OutboundContent>({kind:'text',text:''}),[templates,setTemplates]=useState<TemplateView[]>([]),[evidence,setEvidence]=useState(''),[when,setWhen]=useState(''),[review,setReview]=useState<TestSendReview|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[result,setResult]=useState('');
+ const [senderId,setSender]=useState(connection.senders[0]?.id??''),[phone,setPhone]=useState(''),[content,setContent]=useState<OutboundContent>({kind:'text',text:''}),[templates,setTemplates]=useState<TemplateView[]>([]),[evidence,setEvidence]=useState(''),[when,setWhen]=useState(''),[review,setReview]=useState<TestSendReview|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[result,setResult]=useState(''),[resultId,setResultId]=useState('');
  useEffect(()=>{let active=true;client.templates(connection.id).then(v=>{if(active)setTemplates(v);}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[client,connection.id]);
  async function act(fn:()=>Promise<void>){if(busy)return;setBusy(true);setError('');try{await fn();}catch(e){setError(e instanceof Error?e.message:'Falha ao preparar teste.');}finally{setBusy(false);}}
  return <Modal title="Teste de WhatsApp com destinatário autorizado" onClose={()=>{if(!busy)onClose();}}><div className="stack">
@@ -35,8 +36,8 @@ function TestMessage({connection,client,onClose}:{connection:ConnectionView;clie
  <Field label="Evidência da autorização para este teste" help="Descreva como e por quem o teste foi autorizado."><textarea rows={2} value={evidence} onChange={e=>setEvidence(e.target.value)} maxLength={4000}/></Field>
  <Field label="Quando a autorização foi obtida"><input type="datetime-local" value={when} onChange={e=>setWhen(e.target.value)}/></Field>
  <Button variant="primary" disabled={busy||!senderId||!phone} onClick={()=>act(async()=>{setReview(await client.prepareTest(connection.id,{senderId,phone,content,...(evidence&&when?{consent:{source:'Declaração do administrador para teste',occurredAt:new Date(when).toISOString(),evidence}}:{})}));})}>{busy?'Preparando…':'Revisar teste'}</Button></>:null}
- {review&&!result&&<><h3>Confira antes de enviar</h3><p>Para: {review.review.snapshot.identity.phone??review.review.snapshot.identity.externalId}</p><div className="message-preview">{review.review.preview}</div><p className="muted">Revisão válida até {new Date(review.review.expiresAt).toLocaleTimeString('pt-BR')}. O worker revalida os limites antes do envio.</p>{review.review.blockers.map(b=><p role="alert" key={b}>{whatsappBlocker(b)}</p>)}<div className="form-actions"><Button disabled={busy} onClick={()=>setReview(null)}>Editar</Button><Button variant="primary" disabled={busy||review.review.blockers.length>0} onClick={()=>act(async()=>{const m=await client.confirmTest(review);setResult('Mensagem '+m.id+' adicionada à fila. Acompanhe a entrega na inbox.');})}>Confirmar e colocar na fila</Button></div></>}
- {error&&<p role="alert" className="error-bar">{error}</p>}{result&&<><p role="status">{result}</p><LinkButton href="/inbox">Abrir inbox</LinkButton></>}
+ {review&&!result&&<><h3>Confira antes de enviar</h3><p>Para: {review.review.snapshot.identity.phone??review.review.snapshot.identity.externalId}</p><div className="message-preview">{review.review.preview}</div><p className="muted">Revisão válida até {new Date(review.review.expiresAt).toLocaleTimeString('pt-BR')}. O worker revalida os limites antes do envio.</p>{review.review.blockers.map(b=><p role="alert" key={b}>{whatsappBlocker(b)}</p>)}<div className="form-actions"><Button disabled={busy} onClick={()=>setReview(null)}>Editar</Button><Button variant="primary" disabled={busy||review.review.blockers.length>0} onClick={()=>act(async()=>{const m=await client.confirmTest(review);setResultId(m.id);setResult('Mensagem '+m.id+' adicionada à fila. Acompanhe a entrega na inbox.');})}>Confirmar e colocar na fila</Button></div></>}
+ {error&&<p role="alert" className="error-bar">{error}</p>}{result&&<><p role="status">{result}</p><ChannelTestEvidence messageId={resultId} connectionId={connection.id} recipient={phone}/><LinkButton href="/messages/whatsapp">Abrir inbox</LinkButton></>}
  </div></Modal>;
 }
 

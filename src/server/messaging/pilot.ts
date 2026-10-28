@@ -38,10 +38,13 @@ export async function runChannelPilot(p:Principal,input:unknown,deps:Partial<Pil
   await requireChannelAdmin(c);await lockWorkspace(c);const s=await state(c,p,body);verifyReviewToken(reviewToken,s.proof,secret());
   const prior=await priorCommand<PilotResult>(c,p,requestId,hash);if(prior)return prior;
   const inbound=(await c.query(`SELECT m.id FROM app.channel_message m LEFT JOIN app.email_message e ON e.workspace_id=m.workspace_id AND e.message_id=m.id
-   WHERE m.conversation_id=$1 AND m.direction='inbound' AND m.message_order>$2
+   WHERE m.conversation_id=$1 AND m.direction='inbound' AND m.message_order>$2 AND $3::timestamptz IS NOT NULL AND m.occurred_at>=$3
     AND (m.channel='WHATSAPP' OR (e.classification='human' AND NOT e.truncated AND NOT EXISTS(SELECT 1 FROM app.email_thread t WHERE t.workspace_id=e.workspace_id AND t.id=e.thread_id AND t.needs_review)))
-   ORDER BY m.message_order LIMIT 1`,[s.row.conversation_id,s.row.message_order])).rows[0];
-  const stopped=s.row.lead_id?Boolean((await c.query("SELECT 1 FROM app.cadence_enrollment WHERE lead_id=$1 AND state='stopped' AND stop_reason='reply' LIMIT 1",[s.row.lead_id])).rowCount):false;
+   ORDER BY m.message_order LIMIT 1`,[s.row.conversation_id,s.row.message_order,s.row.accepted_at])).rows[0];
+  const stopped=!!inbound&&Boolean((await c.query(`SELECT 1 FROM app.cadence_enrollment e
+   LEFT JOIN app.cadence_enrollment_channel ec ON ec.workspace_id=e.workspace_id AND ec.enrollment_id=e.id
+   JOIN app.channel_identity i ON i.workspace_id=e.workspace_id AND i.id=$1
+   WHERE (e.identity_id=$1 OR ec.identity_id=$1) AND e.state='stopped' AND e.stop_reason='reply' AND i.last_reply_at>=$2 LIMIT 1`,[s.row.identity_id,s.row.created_at])).rowCount);
   const result:PilotResult={outboundId:s.row.id,inboundId:inbound?.id??null,delivery:messageDeliveryEvidence(s.row)!,stoppedEnrollment:stopped};
   await c.query('SELECT app.record_channel_pilot($1,$2,$3,$4,$5)',[requestId,body.connectionId,body.messageId,Number(s.row.connection_revision),body.ownedRecipient]);
   await completeCommand(c,p,requestId,hash,result,'channel.pilot');return result;

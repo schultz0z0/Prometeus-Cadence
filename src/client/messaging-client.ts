@@ -4,6 +4,7 @@ import {createWorkspaceTransport,type WorkspaceTransportOptions} from './workspa
 import {createReviewedCommands} from './channel-client.ts';
 import type {EmailConversationView,EmailThreadView} from '../domain/mail.ts';
 import type {MessageMetrics} from '../domain/message-metrics.ts';
+import type {DeliveryEvidence,PilotResult} from '../domain/channel-evidence.ts';
 export interface ThreadView {conversation:ConversationView;messages:MessageView[];nextCursor:string|null}
 export interface ReplyInput {content:OutboundContent}
 export interface ReplyReview {conversationId:string;input:ReplyInput;review:Review<PreparedSend>&{preview:string}}
@@ -34,6 +35,12 @@ export function createMessagingClient(options:WorkspaceTransportOptions){
   async prepareReconciliation(messageId:string,input:ReconciliationInput):Promise<ReconciliationPrepared>{const copy=structuredClone(input);return {messageId,input:copy,review:await api.request(path('messages',messageId,'reconciliation-prepare'),copy)};},
   confirmReconciliation:(p:ReconciliationPrepared)=>commands.run<MessageView>(p,path('messages',p.messageId,'reconciliation-confirm'),{...p.input,reviewToken:p.review.token}),
   usage:()=>api.request<{reserved:number;consumed:number;costUsd:number|null;emailTracking:{opens:null;clicks:null;delivered:null;read:null}}>(root+'usage'),
+  deliveryEvidence:(messageId:string)=>api.request<DeliveryEvidence>(path('messages',messageId,'evidence')),
+  async observeTest(connectionId:string,messageId:string,ownedRecipient:string):Promise<PilotResult>{
+   const target='/api/channels/'+encodeURIComponent(connectionId)+'/',input={messageId,ownedRecipient};
+   const review=await api.request<{token:string}>(target+'pilot-prepare',input);
+   return api.request<PilotResult>(target+'pilot-confirm',{...input,reviewToken:review.token,requestId:crypto.randomUUID()});
+  },
   metrics:(days=30,cadenceId='')=>api.request<MessageMetrics>(root+'metrics?'+new URLSearchParams({days:String(days),...(cadenceId?{cadenceId}:{})})),
   dispose(){api.dispose();commands.clear();},
  };

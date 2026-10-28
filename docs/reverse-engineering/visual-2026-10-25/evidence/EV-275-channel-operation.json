@@ -1,0 +1,37 @@
+{
+  "id": "EV-275",
+  "date": "2026-10-27",
+  "session": "s13",
+  "scope": "06D.2 channel delivery evidence",
+  "reference": "Historical EV225/EV264; connected/pilot states remain not observed",
+  "local": {
+    "captures": 33,
+    "viewports": [
+      "1920x855",
+      "390x844",
+      "320x844"
+    ],
+    "actualEmptyRoutes": 4,
+    "controlledStates": [
+      "WhatsApp test result",
+      "WhatsApp history",
+      "email history",
+      "failure",
+      "recovery",
+      "cadence/editor"
+    ],
+    "persistentFixtures": 0,
+    "externalSends": 0,
+    "paidCalls": 0
+  },
+  "reaEvidence": "ev_a43e32342a196210e3e815a5d1c9e9ba999bc7ccd13e8329db9ae7390a7a5497",
+  "validation": "../../../validation/06d2-channel-operation.md",
+  "manifest": "../../../validation/evidence/06d2-channel-operation/manifest.json",
+  "cleanup": "../../../validation/evidence/06d2-channel-operation/closure.json",
+  "unknowns": [
+    "Connected reference states",
+    "Live owned-channel end-to-end pilot",
+    "Public production readiness"
+  ],
+  "acceptance": "Independent review pending; no full parity claim"
+}

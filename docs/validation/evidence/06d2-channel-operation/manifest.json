@@ -1,0 +1,242 @@
+{
+  "date": "2026-10-27",
+  "viewports": [
+    "1920x855",
+    "390x844",
+    "320x844"
+  ],
+  "captures": 33,
+  "screens": [
+    {
+      "file": "screens/actual-empty--messages-email-1920.png",
+      "sha256": "8fe4529141880559d010b0875200f7b6c68333bd5b0d7a4e50c38cfa42cfc441",
+      "bytes": 99322,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--messages-email-320.png",
+      "sha256": "378b02f289e17a1e74624c40680ab7de648be5bdcfd5d07c6b87fd6d774c9ae7",
+      "bytes": 40512,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--messages-email-390.png",
+      "sha256": "1a2fb3deaa4ed478ac1eff4bd9c4a33f259538ddf8798c670458942e9237209d",
+      "bytes": 41398,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--messages-whatsapp-1920.png",
+      "sha256": "27ba094366a4e3f710cd812ce7773af9902483230a510861d5869471f38cf71d",
+      "bytes": 105909,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--messages-whatsapp-320.png",
+      "sha256": "ae418fa613a1284850131c440c29c76f2d46082fdd8bfd61e6c4796799e41a24",
+      "bytes": 46722,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--messages-whatsapp-390.png",
+      "sha256": "f2e2b1ae272b18916c23d8b36689a95a6f529ca423d0195eabde34653f63f067",
+      "bytes": 47153,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--settings-email-1920.png",
+      "sha256": "82d113fb23c766964590c86832f71daffcb7006e59ef88bfb6ec22fc4cf7b241",
+      "bytes": 126821,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--settings-email-320.png",
+      "sha256": "cbea1ccc1ad06254e63dc2a112bdd1e02bc972f3e226ddf2fd1607cb744b71ef",
+      "bytes": 43800,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--settings-email-390.png",
+      "sha256": "e635d263110a6d5133309013ea57ad31cf05a2fa203dd55168ce46bcbbf65918",
+      "bytes": 46360,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--settings-whatsapp-1920.png",
+      "sha256": "5fd454b8ad866e624e01275f34d82d4984392711c1d10456234609bddfb8593a",
+      "bytes": 143385,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--settings-whatsapp-320.png",
+      "sha256": "d1c4da819fa7fe0de8ae313f6c31fe1a9932c5a9d9cb2c68caf830ef0d18dca4",
+      "bytes": 69146,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/actual-empty--settings-whatsapp-390.png",
+      "sha256": "c49f4a8c53ecdb46af4d8af91719a3b48836c748d8dd5fe23b9b182b4ab860c0",
+      "bytes": 70935,
+      "state": "actual-empty",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-cadence-1920.png",
+      "sha256": "bbf7c373ce578b2ac09f1560bf940c274bf11440850a0d885304a0d21b0c8c97",
+      "bytes": 119088,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-cadence-320.png",
+      "sha256": "cd11e5d9e67ef8cd8cd1cfaab15035a912c1ece2416e06ed37471958fb39704a",
+      "bytes": 46927,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-cadence-390.png",
+      "sha256": "71051edbe28f00039a40e996f1abfc239a461e737f27682bd86d28b25adc0419",
+      "bytes": 50112,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-cadence-editor-1920.png",
+      "sha256": "e30822518154a844760968ce9ed62fe38a3eb21af1fa976bac748fb8b7e25fca",
+      "bytes": 148746,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-cadence-editor-320.png",
+      "sha256": "bd9228a1ec00fedb2bbda9c216def263a87bb89adffd60180fbdb48015992dea",
+      "bytes": 44646,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-cadence-editor-390.png",
+      "sha256": "490c9b873b77160b6497c68c007b8307972e3ef0a7e9728e6e4792d4d8bf18bc",
+      "bytes": 46136,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-email-history-1920.png",
+      "sha256": "ff5485755b60bc1b308e2a09bf9caa2544c0c30bcbdbd4b7786e67ea6a4d075c",
+      "bytes": 182325,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-email-history-320.png",
+      "sha256": "e3dd23d52e308130d75342dd904aecd4709421328522703ebc087134837247b4",
+      "bytes": 65690,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-email-history-390.png",
+      "sha256": "900b15bf7bee2e76d2a4e9fcdc1892aae814fcb292693569b0a83a5737cbd89b",
+      "bytes": 68542,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-error-1920.png",
+      "sha256": "4d2c9a324fa7c9f469f6395962305c8195f0492bcd1d8097a4bd0ff311e7b9e6",
+      "bytes": 103301,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-error-320.png",
+      "sha256": "d65fc2c1a6a5a6d21583ce17f254bb7e766ad0d8a8f0dda4973e51f93e8f030d",
+      "bytes": 44511,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-error-390.png",
+      "sha256": "0ad2c81a7e6612961320500acc42f72a4762070893b8f17d3ae46285c4aa5aaf",
+      "bytes": 44919,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-recovered-1920.png",
+      "sha256": "6162e281e7db9c32db5700a947f6a7584860199d56debba74d5f2e769e7c299b",
+      "bytes": 96699,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-recovered-320.png",
+      "sha256": "1cdcdb791727d97946ef254f73c6e4a7d5fbc29d98be2721d1a179f0a238478a",
+      "bytes": 37061,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-recovered-390.png",
+      "sha256": "6dcfbcbdae873ba576c85a38bd8c90aaf477726c3ae58c9fd904ec9777f642ce",
+      "bytes": 39478,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-test-result-1920.png",
+      "sha256": "4409acc550b5ae2246bd54e81a6a4ee240ddc72407b2d10963ee9b22199b7947",
+      "bytes": 228482,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-test-result-320.png",
+      "sha256": "6516ea1a1d550623b36d6c3d8198365021db857855943de60a9ca476e41546f6",
+      "bytes": 75026,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-test-result-390.png",
+      "sha256": "15944914abecf255dfe7a983c65caf124b39a75a94a3e27871a4e59063d7b11d",
+      "bytes": 75722,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-whatsapp-history-1920.png",
+      "sha256": "606daa417a63bde9a38e557bbca31ce34e3bb83b8690f33e86cdf56384009a58",
+      "bytes": 185602,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-whatsapp-history-320.png",
+      "sha256": "a7676b8e259dea1db7a8c509a486bd703f8c0e48941f07b276ce9382aea31f99",
+      "bytes": 124319,
+      "state": "controlled-response-fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/controlled-whatsapp-history-390.png",
+      "sha256": "ee4fd16f046d03a6a2686e6820944335b62b142488040c8f957181b058827dd6",
+      "bytes": 124274,
+      "state": "controlled-response-fixture",
+      "masked": true
+    }
+  ]
+}
