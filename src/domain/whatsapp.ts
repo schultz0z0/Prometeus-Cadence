@@ -35,6 +35,6 @@ export type WebhookEvent=EventBase&(
 );
 export interface AuthenticatedBatch {connectionId:string;credentialRevision:number;bodyHash:string;receivedAt:string;events:WebhookEvent[]}
 export type MessageState='received'|'pending'|'dispatching'|'accepted'|'delivered'|'read'|'failed'|'uncertain'|'cancelled'|'blocked';
-export interface MessageView {id:string;conversationId:string;direction:'inbound'|'outbound';text:string|null;mediaKind:string|null;state:MessageState;remoteId:string|null;createdAt:string}
+export interface MessageView {id:string;conversationId:string;direction:'inbound'|'outbound';text:string|null;mediaKind:string|null;state:MessageState;remoteId:string|null;createdAt:string;delivery?:import('./channel-evidence.ts').DeliveryEvidence|null}
 export interface ConversationView {id:string;senderId:string;identityId:string;identity:Identity;leadId:string|null;unread:number;lastMessageAt:string|null}
 export interface DispatchLease {workspaceId:string;messageId:string;attemptId:string;token:string;fence:number;expiresAt:string}

@@ -8,6 +8,7 @@ CREATE TABLE app.channel_pilot_observation(
 );
 ALTER TABLE app.channel_pilot_observation ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.channel_pilot_observation FORCE ROW LEVEL SECURITY;
+REVOKE ALL ON app.channel_pilot_observation FROM cadence_app,cadence_dispatcher,cadence_worker,cadence_ingress;
 CREATE POLICY tenant_read ON app.channel_pilot_observation FOR SELECT
  USING(workspace_id=current_setting('app.workspace_id',true) AND app.current_role() IN('owner','admin'));
 GRANT SELECT ON app.channel_pilot_observation TO cadence_app;
