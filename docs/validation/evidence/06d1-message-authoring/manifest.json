@@ -1,0 +1,476 @@
+{
+  "date": "2026-10-27",
+  "screens": [
+    {
+      "file": "screens/ai-automation-1920.png",
+      "sha256": "f57a8eb1746935a2e49709cafddb7968dfcd5e403261967804182b264ab7bf4b",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/ai-automation-320.png",
+      "sha256": "f29b16362cffd745a88edc209f416cbcb9b322f47d8cafbebfdbab6027067e92",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/ai-automation-390.png",
+      "sha256": "4df8e3ce97e79d3bd3e1211fdd635637d09a3876877acaab120f068da4812f15",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/cadence-1920.png",
+      "sha256": "7de46a84c977cd5f0624d73c4a85f628584dfa84f4ff25ed4696149711423178",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/cadence-320.png",
+      "sha256": "60c70966f9613095725452ddedbadb777e6f0f85914944082f61e7d981240ddd",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/cadence-390.png",
+      "sha256": "7023587e30f639309e73e432e5d4792772e7fc514299ff88b497c585b1caaaaa",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/cadence-settings-1920.png",
+      "sha256": "809edb3343b67874f6aae7617794f743b0eb24b1a1dcd68840f97c8f886193c2",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/cadence-settings-320.png",
+      "sha256": "e27b4c41cf9e4d14064c0fc7a45b7f61c9b5789560a877ba745d18b4fc0b9e06",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/cadence-settings-390.png",
+      "sha256": "546b8ef46c34b9b4b0a52ba35a0176c4c792366cef6d44858faee05cad9e8731",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/editor-b-1920.png",
+      "sha256": "2fb2e29c7cf7e9a9af4cd09ce9a3691c5ad69383bb7b80415c5e23b2b1a4f60b",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/editor-b-320.png",
+      "sha256": "fa2cd0a800004e0edac913e267167846ad40f291b2716f76bfe872e57a9eabcb",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/editor-b-390.png",
+      "sha256": "5a215da81d3e40fc2dbc618ecc6ab68348042fbdb015aa33a278039987d706c3",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/editor-files-1920.png",
+      "sha256": "a2b8b8fdbfcde9555947ad4c56a2d5f68faea8994b0d57fdbbad3274c2248797",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/editor-files-320.png",
+      "sha256": "025ff10d5dae68a07068119dfa525910a4b6bfe52bdb4d8e7d4ed5f73918997e",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/editor-files-390.png",
+      "sha256": "06069396151d6cdaca8b30a5edb66cf145cf1b59fdeac98a44cb15b7db502599",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/new-cadence-1920.png",
+      "sha256": "383520195c74cbc6dc08cb91b4fce65a96875d2b2ecf9fb3697e32e2ba921035",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/new-cadence-320.png",
+      "sha256": "816e244ee7f2b11f42ed29d165c1217183a2e3c393f6ad2d21962d664decdd13",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/new-cadence-390.png",
+      "sha256": "685bd6419b925cc6fcec3fa936f61c153834c98c5ed16c73f8a7d390ac20b901",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/publication-preview-fixture-1920.png",
+      "sha256": "3b6385c95b561eeab8fe4645e4b21ad75917d2feb841a3839a287d99234dc9bd",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "blocked visual fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/publication-preview-fixture-320.png",
+      "sha256": "f32aacecbda4a59250eff8d608c3303fd3864bdbdfc9cf6b2fb540fc5d9bbfce",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "blocked visual fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/publication-preview-fixture-390.png",
+      "sha256": "f2fda7e4c74220caa55af424dd4affd591716a44507128b7a9917dff969a8711",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "blocked visual fixture",
+      "masked": true
+    },
+    {
+      "file": "screens/template-edit-1920.png",
+      "sha256": "0e75c9b4bc490f2af1af79b9fb9007f8058b540975f6ac48179a21f71794f179",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/template-edit-320.png",
+      "sha256": "f768d5317d048848820eb4bebb8c0b2e3fa416583380e594904f220b9688e98a",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/template-edit-390.png",
+      "sha256": "6a474350ba761301d41df49497ada05397f5ff101fa58d0173b24be9ee8760d0",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/templates-1920.png",
+      "sha256": "579454d297d625c3373d6e20ccc5e7ab7226cd574b81c7f7fe234a145ee5c62f",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/templates-320.png",
+      "sha256": "46419f8de41b3912924607edf9a8e126c780254c3f5985cd75730d836f62efd9",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    },
+    {
+      "file": "screens/templates-390.png",
+      "sha256": "8130a0d218dcfcb9f8bf8a650d2a092d495434c3d9ee04daa4073db2218974d5",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "dedicated QA",
+      "masked": true
+    }
+  ],
+  "ui": {
+    "checks": [
+      {
+        "label": "editor-b",
+        "width": 1920,
+        "height": 855,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "editor-b",
+        "width": 390,
+        "height": 844,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "editor-b",
+        "width": 320,
+        "height": 844,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "cadence",
+        "width": 1920,
+        "height": 855,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "cadence",
+        "width": 390,
+        "height": 844,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "cadence",
+        "width": 320,
+        "height": 844,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "new-cadence",
+        "width": 1920,
+        "height": 855,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "new-cadence",
+        "width": 390,
+        "height": 844,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "new-cadence",
+        "width": 320,
+        "height": 844,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "templates",
+        "width": 1920,
+        "height": 855,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "templates",
+        "width": 390,
+        "height": 844,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "templates",
+        "width": 320,
+        "height": 844,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "ai-automation",
+        "width": 1920,
+        "height": 855,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "ai-automation",
+        "width": 390,
+        "height": 844,
+        "horizontalOverflow": false
+      },
+      {
+        "label": "ai-automation",
+        "width": 320,
+        "height": 844,
+        "horizontalOverflow": false
+      }
+    ],
+    "pageErrors": 0,
+    "focusContained": true,
+    "escapeCloses": true,
+    "realMessageSent": false
+  },
+  "details": {
+    "checks": [
+      {
+        "label": "template-edit",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "label": "template-edit",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "label": "template-edit",
+        "width": 320,
+        "overflow": false
+      },
+      {
+        "label": "editor-files",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "label": "editor-files",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "label": "editor-files",
+        "width": 320,
+        "overflow": false
+      },
+      {
+        "label": "cadence-settings",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "label": "cadence-settings",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "label": "cadence-settings",
+        "width": 320,
+        "overflow": false
+      },
+      {
+        "label": "publication-preview-fixture",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "label": "publication-preview-fixture",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "label": "publication-preview-fixture",
+        "width": 320,
+        "overflow": false
+      }
+    ],
+    "pageErrors": 0,
+    "publicationUIFixtureOnly": true,
+    "confirmationRequests": 0,
+    "actualSendersCreated": 0
+  },
+  "authoring": {
+    "templateCopiedAndEditable": true,
+    "variantBReload": true,
+    "privateFilePersisted": true,
+    "uploadRetryAndRejectionObserved": true,
+    "singleEditor": true
+  },
+  "reference": "Historical RES/REA evidence only; inaccessible states not observed; no fresh reference session or 100% parity claim"
+}

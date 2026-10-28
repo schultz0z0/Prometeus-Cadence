@@ -22,7 +22,7 @@ import {createPublicationMailMaterial,readPublicationMailMaterial,unsubscribeArt
 import {nextStepAt} from './schedule.ts';
 import {readContentState,contentBlockers} from './content.ts';
 import {readAttachmentProofs} from './attachments.ts';
-import {chooseMessageVariant,authoringVariables,validateAuthoringVariables} from '../../domain/message-authoring.ts';
+import {chooseMessageVariant,authoringVariables,validateAuthoringVariables,authoredVariantSupported} from '../../domain/message-authoring.ts';
 const id=z.string().min(1).max(120);
 const email=z.strictObject({kind:z.literal('email'),subject:z.string().max(200),text:z.string().max(65536),signature:z.string().max(4096)});
 const schema=z.strictObject({version:z.literal(2),cadenceId:id,expectedRevision:z.number().int().min(0),leadIds:z.array(id).min(1).max(500).refine(v=>new Set(v).size===v.length),steps:z.record(id,z.strictObject({senderId:z.uuid(),content:z.union([email,contentSchema])}))});
@@ -63,6 +63,7 @@ export async function publicationV2State(c:PoolClient,p:Principal,input:Publicat
    if(sender.channel!==step.channel||conn.channel!==step.channel)blockers.push('SENDER_CHANNEL_MISMATCH:'+step.id);
    if(!sender.ready||conn.state!=='ready'||!conn.credentials_verified||(conn.token_expires_at&&conn.token_expires_at.getTime()<=Date.now()))blockers.push('SENDER_UNAVAILABLE:'+step.id);
    if(!sender.dailyLimit)blockers.push('EXPLICIT_LIMITS_REQUIRED:'+step.id);snapshot.limits.senders[sender.id]=sender.dailyLimit??0;
+   if(!authoredVariantSupported(binding.content.kind,!!step.variantB))blockers.push('VARIANT_TEMPLATE_UNSUPPORTED:'+step.id);
    if(step.variantB||step.attachmentIds?.length){if(binding.content.kind==='email'&&(binding.content.text!==step.body||binding.content.subject!==(step.subject??''))||binding.content.kind==='text'&&binding.content.text!==step.body)blockers.push('CONTENT_BINDING_CHANGED:'+step.id);}
    const variant=chooseMessageVariant(enrollmentId,!!step.variantB?.body.trim()&&(step.channel!=='EMAIL'||!!step.variantB.subject?.trim())),selected=variant==='B'?step.variantB!:step,attachments=await readAttachmentProofs(c,selected.attachmentIds??[],step.channel);blockers.push(...attachments.blockers);
    let address='',scope='',content=binding.content,preview='',template:TemplateView|null=null,lastInboundAt:string|null=null,mailbox:any=null;

@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {validateAuthoringVariables,chooseMessageVariant,inspectAttachment,copyTemplateToStep} from '../src/domain/message-authoring.ts';
+import {validateAuthoringVariables,chooseMessageVariant,inspectAttachment,copyTemplateToStep,messageVersion,authoredVariantSupported} from '../src/domain/message-authoring.ts';
+import {planningInputSchema} from '../src/server/planning/contracts.ts';
 test('unknown variables block publication including subject, and inherited names remain unknown',()=>{
  assert.deepEqual(validateAuthoringVariables({body:'Olá {{inexistente}} {{nome}} {{inexistente}} {{constructor}}',allowed:['nome']}),{valid:false,unknown:['inexistente','constructor']});
  assert.deepEqual(validateAuthoringVariables({body:'Olá {{nome}}',allowed:['nome']}),{valid:true,unknown:[]});
@@ -15,4 +16,13 @@ test('attachment validation checks bytes and claimed MIME, not the filename alon
 test('using a template copies editable content without replacing step timing, stop rules or attachment draft',()=>{
  const step={id:'step',channel:'EMAIL' as const,delayDays:3,body:'old',stopOnReply:false,attachmentIds:['own-file']},template={id:'t',name:'T',channel:'EMAIL' as const,tags:[],subject:'Oi {{nome}}',body:'Olá {{nome}}'};
  const copied=copyTemplateToStep(step,template);assert.equal(copied.body,'Olá {{nome}}');assert.equal(copied.subject,'Oi {{nome}}');assert.equal(copied.delayDays,3);assert.equal(copied.stopOnReply,false);assert.deepEqual(copied.attachmentIds,['own-file']);assert.equal(step.body,'old');assert.throws(()=>copyTemplateToStep(step,{...template,channel:'WHATSAPP'}));
+});
+test('reviewed AI preview can explicitly target B while unknown variants remain rejected',()=>{
+ const input={kind:'planning',task:'message_preview',cadenceId:'cadence',stepId:'step',leadId:'lead',variant:'B'};assert.equal(planningInputSchema.safeParse(input).success,true);assert.equal(planningInputSchema.safeParse({...input,variant:'C'}).success,false);
+});
+test('an incomplete B draft cannot silently inherit the A subject or attachments in its preview',()=>{
+ const a={id:'step',channel:'EMAIL' as const,delayDays:0,body:'A',subject:'A subject',attachmentIds:['A-file'],stopOnReply:true,variantB:{body:'B'}};const b=messageVersion(a,'B');assert.equal(b.body,'B');assert.equal(b.subject,undefined);assert.deepEqual(b.attachmentIds,[]);assert.equal(a.subject,'A subject');assert.deepEqual(a.attachmentIds,['A-file']);
+});
+test('approved Meta template content cannot enable authored B even when this recipient would receive A',()=>{
+ assert.equal(authoredVariantSupported('template',true),false);assert.equal(authoredVariantSupported('template',false),true);assert.equal(authoredVariantSupported('email',true),true);assert.equal(authoredVariantSupported('text',true),true);
 });

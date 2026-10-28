@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-27",
+  "removedOwnedContacts": 1,
+  "removedOwnedDrafts": 1,
+  "removedOwnedTemplates": 1,
+  "removedOwnedLists": 1,
+  "removedOwnedFileRecords": 2,
+  "removedOwnedBlobFiles": 1,
+  "priorDataPreserved": true,
+  "qaSessionsRevoked": true,
+  "channels": 0,
+  "publications": 0,
+  "outbox": 0,
+  "paidProviderCalls": 0,
+  "outboundMessages": 0,
+  "publicationUi": "declared blocked readonly fixture; actual server publication and MIME delivery tested in ephemeral catalog"
+}

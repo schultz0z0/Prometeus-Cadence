@@ -8,7 +8,9 @@ export interface AttachmentView{id:string;name:string;mime:string;size:number;st
 export interface FrozenAttachment extends AttachmentView{hash:string}
 export function validateAuthoringVariables(input:{body:string;allowed:readonly string[]}){const allowed=new Set(input.allowed),unknown=[...new Set([...input.body.matchAll(/\{\{\s*([^{}]+?)\s*\}\}/g)].map(m=>m[1]).filter(k=>!allowed.has(k)))];return{valid:!unknown.length,unknown};}
 export function chooseMessageVariant(enrollmentId:string,completeB:boolean):'A'|'B'{if(!completeB)return'A';let hash=2166136261;for(const ch of enrollmentId)hash=Math.imul(hash^ch.charCodeAt(0),16777619);return hash>>>0&1?'B':'A';}
+export function authoredVariantSupported(kind:'email'|'text'|'template',hasB:boolean){return !hasB||kind!=='template';}
 export function copyTemplateToStep(step:CadenceStep,template:Template):CadenceStep{if(step.channel!==template.channel)throw Error('TEMPLATE_CHANNEL_MISMATCH');return{...step,subject:template.subject,body:template.body};}
+export function messageVersion(step:CadenceStep,variant:'A'|'B'):CadenceStep{if(variant==='A')return step;if(!step.variantB)throw Error('VARIANT_B_MISSING');return{...step,body:step.variantB.body,subject:step.variantB.subject,attachmentIds:step.variantB.attachmentIds??[]};}
 export function inspectAttachment(file:AttachmentUpload):{state:'ready'|'rejected';reason?:string}{
  const reject=(reason:string)=>({state:'rejected' as const,reason}),b=file.bytes;
  if(!file.name.trim()||file.name.length>200||/[\\/\u0000-\u001f\u007f]/.test(file.name)||file.name==='.'||file.name==='..')return reject('INVALID_NAME');

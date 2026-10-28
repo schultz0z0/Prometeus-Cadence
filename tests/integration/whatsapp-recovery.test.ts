@@ -13,7 +13,7 @@ import {getPools} from '../../src/server/db/pool.ts';
 import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';
 import {closeDispatchPool} from '../../src/server/messaging/worker-db.ts';
 after(async()=>{await getPools().close();await closeIngressPool();await closeDispatchPool();});
-async function queued(){const f=await publicationFixture(),review=await preparePublication(f.u.p,f.input);await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);return {...f,now,lease};}
+async function queued(sendTime?:string){const f=await publicationFixture(sendTime),review=await preparePublication(f.u.p,f.input);await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);return {...f,now,lease};}
 test('lost REST response stays uncertain across lease expiry; signed trace callback reconciles exactly one consumption',async()=>{
  const f=await queued();let posts=0;
  await dispatchOne(f.lease,{adapter:{...f.adapter,sendOnce:async()=>{posts++;return {kind:'uncertain',code:'LOST_RESPONSE'};}},now:()=>f.now});
@@ -25,7 +25,7 @@ test('lost REST response stays uncertain across lease expiry; signed trace callb
  const state=await testAdmin(async c=>({message:(await c.query('SELECT state FROM app.channel_message WHERE workspace_id=$1 AND id=$2',[f.u.p.workspaceId,f.lease.messageId])).rows[0].state,units:Number((await c.query("SELECT COALESCE(sum(units),0) AS units FROM app.message_usage_ledger WHERE workspace_id=$1 AND event='consume'",[f.u.p.workspaceId])).rows[0].units)}));assert.equal(state.message,'delivered');assert.equal(state.units,1);
 });
 test('only proven rejected POSTs retry at most twice, with persisted backoff, while auth failures never retry',async()=>{
- const f=await queued();let posts=0;let clock=f.now;
+ const f=await queued('00:00');let posts=0;let clock=f.now;
  const adapter={...f.adapter,sendOnce:async()=>{posts++;return {kind:'not_accepted' as const,code:'META_429',retryable:true,retryAfterMs:30000};}};
  let lease=f.lease;
  for(let n=0;n<3;n++){

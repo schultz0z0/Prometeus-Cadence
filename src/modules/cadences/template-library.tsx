@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ReferenceEmptyArt } from "@/components/ui/reference-empty-art";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import type { Template } from "@/domain/model";
+import {authoringVariables,validateAuthoringVariables} from "@/domain/message-authoring";
 import { renderStepPreview } from "@/domain/cadence";
 import {
   Button,
@@ -14,17 +15,7 @@ import {
   Badge,
   Notice,
 } from "@/components/ui/primitives";
-const variables = [
-  "nome",
-  "email",
-  "telefone",
-  "site",
-  "cidade",
-  "razaoSocial",
-  "cnpj",
-  "socio1",
-  "socio1PrimeiroNome",
-];
+const variables=authoringVariables;
 export function TemplateLibrary() {
   const s = useDemo();
   const repo = useRepository();
@@ -259,6 +250,7 @@ export function TemplateLibrary() {
                   }
                 />
               </Field>
+              {validateAuthoringVariables({body:(editing.subject??'')+'\n'+editing.body,allowed:authoringVariables}).unknown.length>0&&<Notice>Há variáveis desconhecidas neste template. Corrija-as antes de publicar uma cadência.</Notice>}
               <div className="row wrap">
                 <small>Inserir:</small>
                 {variables.map((v) => (

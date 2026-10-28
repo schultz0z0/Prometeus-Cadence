@@ -1,3 +1,4 @@
+import {messageVersion} from '../../domain/message-authoring.ts';
 import 'server-only';
 import {z} from 'zod';
 import {isIP} from 'node:net';
@@ -56,8 +57,9 @@ export async function planningReviewState(c:PoolClient,p:Principal,input:Plannin
  }
  if(input.task==='message_preview'){
   const cadence=(await c.query('SELECT payload FROM app.cadence WHERE id=$1',[input.cadenceId])).rows[0]?.payload,lead=(await c.query('SELECT payload FROM app.lead WHERE id=$1',[input.leadId])).rows[0]?.payload;
-  const step=cadence?.steps.find((s:{id:string})=>s.id===input.stepId);
+  let step=cadence?.steps.find((s:{id:string})=>s.id===input.stepId);
   if(!cadence||!lead||!step||lead.listId!==cadence.listId)throw new AppError(404,'Selecione um lead e uma etapa da mesma lista.');
+  if(input.variant==='B'){if(!step.variantB)throw new AppError(409,'Salve a versão B antes de gerar sua prévia.');step=messageVersion(step,'B');}
   baseSnapshot={cadence,lead,step};
  }
  const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);

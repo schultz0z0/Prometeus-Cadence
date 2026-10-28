@@ -4,7 +4,7 @@ export type PlanningInput=
  |{kind:'planning';task:'context_read';domain:string;target:{kind:'company'}|{kind:'product';productId:string}}
  |{kind:'planning';task:'audience_plan';description:string;channel:'email'|'whatsapp'|'both';productId?:string;timezone:string}
  |{kind:'planning';task:'cadence_options';listId:string;objective:string;channels:('EMAIL'|'WHATSAPP')[];tone:string;rhythm:string;highlight:string;avoid:string;decisionMaker:string;productId?:string}
- |{kind:'planning';task:'message_preview';cadenceId:string;stepId:string;leadId:string;productId?:string};
+ |{kind:'planning';task:'message_preview';cadenceId:string;stepId:string;leadId:string;productId?:string;variant?:'A'|'B'};
 export type PlanningTask=PlanningInput['task'];
 export const planningTaskLabels:Record<PlanningTask,string>={context_read:'Leitura de contexto',audience_plan:'Propostas de público',cadence_options:'Opções de cadência',message_preview:'Prévia para um lead'};
 export const contextFields=['name','offer','products','idealCustomer','pains','differentiators','competitors','socialProof','sources'] as const satisfies readonly (keyof CompanyProfile)[];

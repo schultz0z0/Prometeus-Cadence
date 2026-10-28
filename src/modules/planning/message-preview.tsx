@@ -7,8 +7,8 @@ import {AnalysisReview} from './analysis-review';
 import {AnalysisStatus} from './analysis-status';
 import {SourceList} from './source-list';
 import {Button,Notice} from '@/components/ui/primitives';
-export function MessagePreview({cadenceId,step,lead,onAccept}:{cadenceId:string;step:CadenceStep;lead:Lead;onAccept:(step:CadenceStep)=>void}){
- const flow=usePlanningFlow({kind:'planning',task:'message_preview',cadenceId,stepId:step.id,leadId:lead.id}),[conflict,setConflict]=useState(false),proposal=flow.state.proposal;
+export function MessagePreview({cadenceId,step,lead,onAccept,variant='A'}:{cadenceId:string;step:CadenceStep;lead:Lead;onAccept:(step:CadenceStep)=>void;variant?:'A'|'B'}){
+ const flow=usePlanningFlow({kind:'planning',task:'message_preview',cadenceId,stepId:step.id,leadId:lead.id,variant}),[conflict,setConflict]=useState(false),proposal=flow.state.proposal;
  const rendered=proposal?.task==='message_preview'?renderStepPreview(proposal,lead):null;
  function accept(){if(proposal?.task!=='message_preview'||!flow.analysis.data?.previewStep)return;const merged=mergeMessagePreview(flow.analysis.data.previewStep,step,proposal);setConflict(merged.conflict);if(!merged.conflict)onAccept(merged.step);}
  return <section className="panel panel-pad section-gap stack"><h3>Prévia personalizada com IA</h3><small>Usa a etapa salva e somente o lead selecionado. Aceitar altera o editor; a mensagem não é enviada.</small><Button type="button" disabled={flow.busy} onClick={flow.prepare}>Revisar geração para {lead.name}</Button>
