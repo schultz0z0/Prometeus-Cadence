@@ -27,7 +27,7 @@ async function authorized(c:PoolClient,p:Principal){
   const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;
   const current={...p,role};requirePermission(current,'data.write');return current;
 }
-async function reviewState(c:PoolClient,p:Principal,input:ProspectingInput){
+export async function prospectingReviewState(c:PoolClient,p:Principal,input:ProspectingInput){
   await authorized(c,p);
   const {config,policy}=await workspaceProspectingConfig(c);
   let aiRoute:AiRoute|null=null;const aiBlockers:string[]=[];
@@ -63,7 +63,7 @@ function parseInput(input:unknown):ProspectingInput{const parsed=jobInputSchema.
 export async function prepareJob(p:Principal,input:unknown):Promise<Review>{
   const parsed=parseInput(input);
   return withWorkspaceTransaction(p,async c=>{
-    const state=await reviewState(c,p,parsed),now=Date.now();
+    const state=await prospectingReviewState(c,p,parsed),now=Date.now();
     return {token:createReviewToken(state.proof,secret(),now),expiresAt:new Date(now+600000).toISOString(),input:parsed,blockers:state.blockers,profileVersion:state.profileVersion,aiRoute:state.aiRoute?aiRouteView(state.aiRoute):null,usage:estimateUsage(parsed,state.aiRoute,state.enrichment?.reserveCredits),...(state.enrichment?{enrichmentPreview:{companies:state.enrichment.groups.length,cached:state.enrichment.cached,maxCredits:state.enrichment.reserveCredits,freshLookups:state.enrichment.reserveCredits}}:{}),warnings:['A execução usa serviços externos. Custos desconhecidos não são tratados como zero.','Resultados de IA serão apresentados para revisão antes de aplicar.',...(parsed.kind==='generation'&&parsed.source==='CNPJ'?['Filtros e cobertura dependem do Actor; esta fonte não é uma base nacional local.']:[])]};
   });
 }
@@ -76,7 +76,7 @@ export async function confirmJob(p:Principal,input:unknown):Promise<JobView>{
     await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1 FOR UPDATE',[p.workspaceId]);
     const hash=hashValue(body.input),old=(await c.query('SELECT * FROM app.prospecting_job WHERE request_id=$1',[body.requestId])).rows[0];
     if(old){if(old.actor_id!==p.userId||old.body_hash!==hash)throw new AppError(409,'Este identificador já foi utilizado.');return jobView(old);}
-    const state=await reviewState(c,p,body.input);
+    const state=await prospectingReviewState(c,p,body.input);
     verifyReviewToken(body.reviewToken,state.proof,secret());
     if(state.blockers.length)throw new AppError(409,state.blockers[0],'PROVIDER_UNAVAILABLE');
     let listId:string;

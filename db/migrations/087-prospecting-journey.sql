@@ -10,9 +10,9 @@ CREATE TABLE app.prospecting_journey(
 );
 CREATE TABLE app.journey_stage(
  workspace_id text NOT NULL,journey_id text NOT NULL,id text NOT NULL,name text NOT NULL CHECK(name IN('discover','research','people','qualify','review','cadence')),
- version integer NOT NULL DEFAULT 1,company_ids text[] NOT NULL DEFAULT '{}',job_id text NOT NULL,state text NOT NULL DEFAULT 'queued',
+ version integer NOT NULL DEFAULT 1,company_ids text[] NOT NULL DEFAULT '{}',batch_key text NOT NULL,job_id text NOT NULL,state text NOT NULL DEFAULT 'queued',
  missing text[] NOT NULL DEFAULT '{}',created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
- PRIMARY KEY(workspace_id,id),UNIQUE(workspace_id,job_id),UNIQUE(workspace_id,journey_id,name,version,company_ids),
+ PRIMARY KEY(workspace_id,id),UNIQUE(workspace_id,job_id),UNIQUE(workspace_id,journey_id,name,version,batch_key),
  FOREIGN KEY(workspace_id,journey_id) REFERENCES app.prospecting_journey(workspace_id,id),
  FOREIGN KEY(workspace_id,job_id) REFERENCES app.prospecting_job(workspace_id,id)
 );

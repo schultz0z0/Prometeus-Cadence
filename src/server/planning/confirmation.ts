@@ -79,6 +79,7 @@ export async function confirmPlanningSelection(p:Principal,jobId:string,input:un
    await c.query('INSERT INTO app.cadence(workspace_id,id,list_id,payload) VALUES($1,$2,$3,$4)',[p.workspaceId,id,cadence.listId,cadence]);created={cadenceId:id};
   }
   const revision=Number((await c.query('UPDATE app.workspace_meta SET revision=revision+1 WHERE workspace_id=$1 RETURNING revision',[p.workspaceId])).rows[0].revision),result={revision,...created};
+  if(created.cadenceId)await c.query("UPDATE app.prospecting_journey SET cadence_id=$2,state='ready',revision=revision+1 WHERE proposal_job_id=$1",[jobId,created.cadenceId]);
   await c.query('INSERT INTO app.planning_confirmation(workspace_id,job_id,request_id,actor_id,body_hash,result) VALUES($1,$2,$3,$4,$5,$6)',[p.workspaceId,jobId,body.requestId,p.userId,hash,result]);
   await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,'planning.selection.confirm')",[p.workspaceId,p.userId]);return result;
  });

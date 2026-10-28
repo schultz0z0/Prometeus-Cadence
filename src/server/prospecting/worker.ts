@@ -14,6 +14,8 @@ import {resolveCompanyPeople} from '../research/people.ts';
 import {runCompanyResearch} from '../research/company.ts';
 import type {ResearchAdapters} from '../../domain/company-research.ts';
 import type {PeopleAdapters} from '../../domain/company-people.ts';
+import {advanceJourney,advancePendingJourney} from '../research/journey.ts';
+import {AppError} from '../errors.ts';
 async function cleanRevoked(deps:GenerationAdapters,signal:AbortSignal,workspaceId?:string){
   const ticket=(await workerPool().query('SELECT app.claim_revoked_prospecting_cleanup($1) AS ticket',[workspaceId??null])).rows[0].ticket;
   if(!ticket)return false;
@@ -26,6 +28,7 @@ async function cleanRevoked(deps:GenerationAdapters,signal:AbortSignal,workspace
 export async function runWorkerOnce(deps:GenerationAdapters&QualificationAdapters&PlanningAdapters&{research?:ResearchAdapters;people?:PeopleAdapters}={},options:{workerId?:string;signal:AbortSignal;workspaceId?:string}):Promise<boolean>{
   if(await cleanRevoked(deps,options.signal,options.workspaceId))return true;
   if(!prospectingConfig().enabled)return false;
+  if(await advancePendingJourney(options.workspaceId))return true;
   const lease=await claimJob(options.workerId??randomUUID(),options.workspaceId);if(!lease)return false;
   const controller=new AbortController(),signal=AbortSignal.any([controller.signal,options.signal]);let checking=Promise.resolve();
   const timer=setInterval(()=>{checking=checking.then(async()=>{if(!await heartbeat(lease))controller.abort();}).catch(()=>controller.abort());},10000);
@@ -37,7 +40,8 @@ export async function runWorkerOnce(deps:GenerationAdapters&QualificationAdapter
       case 'planning':await runPlanning(lease,{...deps,generate:deps.planningGenerate,signal});break;
       default:throw Error('INVALID_JOB_KIND');
     }
-  }catch{ /* Fencing/revocation leaves the durable journal for reconciliation. */ }
+    if(job.checkpoint?.journey)await advanceJourney(lease);
+  }catch(error){if(error instanceof AppError&&error.code==='JOURNEY_CHANGED')await advanceJourney(lease).catch(()=>{}); /* Other fencing/revocation keeps the durable journal. */ }
   finally{
     clearInterval(timer);await checking;
     try{await withContextTransaction(workerPool(),{workspaceId:lease.workspaceId,userId:lease.actorId,role:'operator',sessionId:'worker'},c=>c.query('UPDATE app.prospecting_job SET lease_until=now() WHERE id=$1 AND lease_token=$2 AND fence=$3',[lease.jobId,lease.token,lease.fence]));}catch{}

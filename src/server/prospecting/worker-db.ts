@@ -6,6 +6,7 @@ import {withContextTransaction} from '../db/transaction.ts';
 import {assertJobLease} from './repository.ts';
 import {lockWorkspace} from './ingestion.ts';
 import {assertAutomationAuthority} from '../automations/guard.ts';
+import {assertJourneyAuthority} from '../research/journey.ts';
 let pool:pg.Pool|undefined;
 export function workerPool(){
   const url=process.env.WORKER_DATABASE_URL;if(!url||new URL(url).username!=='cadence_worker')throw Error('Worker database role required.');
@@ -14,8 +15,9 @@ export function workerPool(){
 export function withLeasedTransaction<T>(lease:JobLease,fn:(c:PoolClient)=>Promise<T>){
   return withContextTransaction(workerPool(),{workspaceId:lease.workspaceId,userId:lease.actorId,role:'operator',sessionId:'worker-job-authority'},async c=>{
     await lockWorkspace(c);await assertJobLease(c,lease,true);
-    const job=(await c.query('SELECT id,workspace_id,actor_id,checkpoint FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
+    const job=(await c.query('SELECT id,workspace_id,actor_id,checkpoint,state FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
+    await assertJourneyAuthority(c,job);
     if(job.checkpoint.automation){await c.query("SELECT set_config('app.automation_job_token',$1,true),set_config('app.automation_job_fence',$2,true)",[lease.token,String(lease.fence)]);await assertAutomationAuthority(c,job,'result');}
-    const result=await fn(c);await assertJobLease(c,lease,true,true);return result;
+    const result=await fn(c);await assertJobLease(c,lease,true,true);await assertJourneyAuthority(c,(await c.query('SELECT actor_id,checkpoint,state FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0]);return result;
   });
 }
