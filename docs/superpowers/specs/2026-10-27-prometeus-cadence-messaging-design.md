@@ -1,6 +1,6 @@
 # Autoria e operação dos canais — desenho técnico
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado e contrato próprio detalhado por solicitação do operador. Implementação pendente nos pacotes abaixo.
+**Baseline:**27/10/2026. **Origem:** escopo aprovado e contrato próprio detalhado por solicitação do operador. Pacotes06D.1/06D.2 implementados no contrato local/controlado; gates externos e limites de prova permanecem explícitos.
 
 **PRD:** [completo](2026-10-27-prometeus-cadence-complete-prd.md). **Arquitetura/segurança/execução:** [contratos compartilhados](2026-10-27-prometeus-cadence-technical-contracts.md).
 
@@ -72,7 +72,7 @@ declare function storeAttachment(p:Principal,file:AttachmentUpload):Promise<Atta
 
 ```ts
 type DeliveryEvidence={messageId:string,state:string,acceptedAt:string|null,deliveredAt:string|null,readAt:string|null,supported:string[]};
-type ChannelPilotInput={connectionId:string,ownedRecipient:string,reviewToken:string,requestId:string};
+type ChannelPilotInput={connectionId:string,messageId:string,ownedRecipient:string,reviewToken:string,requestId:string};
 type PilotAdapters={observe:(remoteId:string)=>Promise<DeliveryEvidence>};
 type PilotResult={outboundId:string,inboundId:string|null,delivery:DeliveryEvidence,stoppedEnrollment:boolean};
 ```
@@ -81,7 +81,7 @@ type PilotResult={outboundId:string,inboundId:string|null,delivery:DeliveryEvide
 
 ```ts
 declare function readDeliveryEvidence(p:Principal,messageId:string):Promise<DeliveryEvidence>;
-declare function runChannelPilot(p:Principal,input:ChannelPilotInput,deps:PilotAdapters):Promise<PilotResult>;
+declare function runChannelPilot(p:Principal,input:ChannelPilotInput,deps?:Partial<PilotAdapters>):Promise<PilotResult>;
 ```
 
 **HTTP/entrada:** Reusar /api/channels/:id/:action, /api/mailboxes/:id/:action e /api/messaging/:resource/:id/:action para teste/reply/read/reconcile; acrescentar evidência suportada ao DTO existente, semendpoint paralelo de envio
@@ -99,3 +99,7 @@ declare function runChannelPilot(p:Principal,input:ChannelPilotInput,deps:PilotA
 Revalidar sessão/associação/política antes e depois de I/O. Não repetir efeito incerto; manter receipt e encaminhar à reconciliação. Cache, paginação e locks incluem workspace. Cada pacote deve passar caso feliz, bloqueio, falha/recuperação, permissão/isolamento e comparação visual no estado/viewport declarado, com evidência de execução real ou controlada separada.
 
 Fora deescopo: funcionalidades não listadas no PRD, rebranding próprio, copiar backend privado não observado ou vender integração sem aceite. Parâmetros de fornecedor/implantação ficam nos gates; mudança de alternativa registra impacto e equivalência sem reabrir o produto inteiro.
+
+## Adaptação de execução06D.2
+
+A observação recebe messageId do teste previamente revisado/enfileirado; não envia nem cria outra mensagem. prepareChannelPilot assina a revisão e runChannelPilot registra a observação sem confiar em recibo retornado pelo adapter. Sessão/usuário/workspace/papel/revisão são conferidos antes e depois do I/O; e-mail usa domínio normalizado com local-part preservado. Detalhes e evidências no [aceite06D.2](../../validation/06d2-channel-operation.md).

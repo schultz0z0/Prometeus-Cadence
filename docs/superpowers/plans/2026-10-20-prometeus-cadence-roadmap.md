@@ -158,3 +158,7 @@ Identidade empresarial e tomadores de decisão concluído no contrato próprio l
 ### Continuidade27/10/2026 —06D.1
 
 Autoria, variantes, anexos privados de e-mail e publicação concluídos no contrato local/controlado; revisão independente com quatro correções e gates verdes. [Aceite06D.1](../../validation/06d1-message-authoring.md). Ordem atual no índice de27/10: próximo06D.2, sem iniciar automaticamente outra família nem declarar paridade/produção pública.
+
+## Continuidade06D.2 —28/10/2026
+
+Concluído no contrato local/controlado:comprovantes e observação revisada sem segunda fila/envio,342 unitários/383 integrações,36 capturas. Uma revisão independente corrigiu dois Important com regressões; menor de erro residual do popup→06F. [Aceite06D.2](../../validation/06d2-channel-operation.md). Próximo06B.5; piloto externo próprio, referência conectada não observada e liberação pública continuam gates explícitos, sem alegação de100%.

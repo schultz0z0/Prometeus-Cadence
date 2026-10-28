@@ -5,7 +5,7 @@
   "scope": "06D.2 channel delivery evidence",
   "reference": "Historical EV225/EV264; connected/pilot states remain not observed",
   "local": {
-    "captures": 33,
+    "captures": 36,
     "viewports": [
       "1920x855",
       "390x844",
@@ -22,7 +22,8 @@
     ],
     "persistentFixtures": 0,
     "externalSends": 0,
-    "paidCalls": 0
+    "paidCalls": 0,
+    "postreviewCaptures": 3
   },
   "reaEvidence": "ev_a43e32342a196210e3e815a5d1c9e9ba999bc7ccd13e8329db9ae7390a7a5497",
   "validation": "../../../validation/06d2-channel-operation.md",
@@ -33,5 +34,15 @@
     "Live owned-channel end-to-end pilot",
     "Public production readiness"
   ],
-  "acceptance": "Independent review pending; no full parity claim"
+  "acceptance": "06D.2 accepted local-controlled; external pilot/full parity/public production remain gated",
+  "tests": {
+    "unit": 342,
+    "integration": 383
+  },
+  "review": {
+    "independentReviews": 1,
+    "important": 2,
+    "fixed": 2,
+    "minorDeferred": 1
+  }
 }

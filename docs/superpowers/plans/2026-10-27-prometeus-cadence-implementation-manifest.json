@@ -1,8 +1,8 @@
 {
   "version": 1,
   "date": "2026-10-27",
-  "scope": "approved-product-baseline;06D.1-completed-local-controlled;remaining-packages-planned",
-  "next": "06D.2",
+  "scope": "approved-product-baseline;06D.2-completed-local-controlled;remaining-packages-planned",
+  "next": "06B.5",
   "end": "08B",
   "packages": [
     {
@@ -236,6 +236,12 @@
         "/messages/whatsapp",
         "/messages/email",
         "/cadences/[id]"
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-10-28",
+      "review": "docs/validation/06d2-channel-operation-review.md",
+      "followUpMigrations": [
+        "db/migrations/086a-channel-pilot-session.sql"
       ]
     },
     {
@@ -1095,5 +1101,6 @@
         "todas jornadas públicas de08A"
       ]
     }
-  ]
+  ],
+  "updatedAt": "2026-10-28"
 }

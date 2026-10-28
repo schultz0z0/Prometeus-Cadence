@@ -5,7 +5,7 @@
     "390x844",
     "320x844"
   ],
-  "captures": 33,
+  "captures": 36,
   "screens": [
     {
       "file": "screens/actual-empty--messages-email-1920.png",
@@ -237,6 +237,28 @@
       "bytes": 124274,
       "state": "controlled-response-fixture",
       "masked": true
+    },
+    {
+      "file": "screens/postreview-email-result-1920.png",
+      "sha256": "9e98316a2c4a06d0a7475457926215b08cbb9080e84a3200addf0118c8cbf85c",
+      "bytes": 202566,
+      "state": "controlled-response-fixture-postreview",
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-email-result-320.png",
+      "sha256": "dde37761977d759299905c48063d3e26b3d3b9f38577609249045cd0f1adafcf",
+      "bytes": 62381,
+      "state": "controlled-response-fixture-postreview",
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-email-result-390.png",
+      "sha256": "8e172ea29af05889b84ec8d4a2ed2e77c36a9419094eb25551763f49dc665eda",
+      "bytes": 68312,
+      "state": "controlled-response-fixture-postreview",
+      "masked": true
     }
-  ]
+  ],
+  "updatedAt": "2026-10-28"
 }
