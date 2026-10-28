@@ -9,11 +9,18 @@ import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {createReviewToken,verifyReviewToken} from '../prospecting/review.ts';
 import {AppError} from '../errors.ts';
 import {messageDeliveryEvidence} from './delivery-evidence.ts';
-const fields={connectionId:z.uuid(),messageId:z.uuid(),ownedRecipient:z.string().trim().min(3).max(254)};
+import {normalizeMailAddress} from '../../domain/mail-policy.ts';
+const recipient=z.string().trim().min(3).max(254).transform((value,ctx)=>{
+ try{return value.includes('@')?normalizeMailAddress(value):value;}catch{ctx.addIssue({code:'custom',message:'Destinatário inválido.'});return z.NEVER;}
+});
+const fields={connectionId:z.uuid(),messageId:z.uuid(),ownedRecipient:recipient};
 const prepareSchema=z.strictObject(fields),confirmSchema=z.strictObject({...fields,requestId:z.uuid(),reviewToken:z.string().max(8192)});
 const secret=()=>{if(!process.env.BETTER_AUTH_SECRET)throw Error('Review signing unavailable');return process.env.BETTER_AUTH_SECRET;};
 async function state(c:PoolClient,p:Principal,input:z.infer<typeof prepareSchema>){
  await requireChannelAdmin(c);
+ const session=(await c.query('SELECT app.lock_channel_pilot_session($1) AS value',[p.sessionId])).rows[0]?.value;
+ if(!session)throw new AppError(401,'Sua sessão venceu. Entre novamente.');
+ if(session.workspaceId!==p.workspaceId)throw new AppError(409,'O workspace mudou. Recarregue antes de continuar.','WORKSPACE_CHANGED');
  const row=(await c.query(`SELECT m.*,c.revision AS connection_revision,c.state AS connection_state,i.external_id,i.phone,v.lead_id
   FROM app.channel_message m JOIN app.channel_connection c ON c.workspace_id=m.workspace_id AND c.id=m.connection_id
   JOIN app.channel_identity i ON i.workspace_id=m.workspace_id AND i.id=m.identity_id

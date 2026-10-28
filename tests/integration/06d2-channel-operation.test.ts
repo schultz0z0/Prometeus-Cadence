@@ -22,6 +22,7 @@ import type {MailAdapter} from '../../src/server/mail/providers/contracts.ts';
 import {channelRequestHandler} from '../../src/server/channels/http.ts';
 import {messagingRequestHandler} from '../../src/server/messaging/http.ts';
 import {base} from './helpers.ts';
+import {prepareMailTest,confirmMailTest} from '../../src/server/mail/tests.ts';
 after(async()=>{await getPools().close();await closeIngressPool();await closeDispatchPool();});
 
 async function pilotFixture(){
@@ -72,6 +73,29 @@ test('pilot rechecks membership and connection revision after observation I/O be
   }}),{status:mutation==='member'?403:409});
   assert.equal(calls,1);assert.equal(Number((await testAdmin(c=>c.query('SELECT count(*) FROM app.channel_pilot_observation WHERE workspace_id=$1',[f.u.p.workspaceId]))).rows[0].count),0);
  }
+});
+for(const mutation of ['revoked','expired','workspace'] as const)test('pilot rejects '+mutation+' session after observation without publishing a journal or command',async()=>{
+ const f=await pilotFixture(),now=new Date(f.now.getTime()+2000).toISOString(),lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);
+ await dispatchOne(lease,{now:()=>now,adapter:{...f.adapter,sendOnce:async()=>({kind:'accepted',remoteId:'wamid.session.'+randomUUID(),acceptedAt:now})}});
+ const review=await prepareChannelPilot(f.u.p,f.pilot),requestId=randomUUID();let calls=0;
+ await assert.rejects(runChannelPilot(f.u.p,{...f.pilot,reviewToken:review.token,requestId},{observe:async()=>{
+  calls++;await testAdmin(c=>mutation==='revoked'?c.query('DELETE FROM auth.session WHERE id=$1',[f.u.p.sessionId]):mutation==='expired'?c.query('UPDATE auth.session SET "expiresAt"=clock_timestamp()-interval \'1 second\' WHERE id=$1',[f.u.p.sessionId]):c.query('UPDATE auth.session SET "activeOrganizationId"=NULL WHERE id=$1',[f.u.p.sessionId]));
+  return {messageId:f.message.id,state:'accepted',acceptedAt:now,deliveredAt:null,readAt:null,supported:['accepted']};
+ }}),{status:mutation==='workspace'?409:401});
+ assert.equal(calls,1);assert.equal(Number((await testAdmin(c=>c.query('SELECT count(*) FROM app.channel_pilot_observation WHERE workspace_id=$1',[f.u.p.workspaceId]))).rows[0].count),0);
+ assert.equal((await readDeliveryEvidence(f.u.p,f.message.id)).state,'accepted');
+});
+test('pilot rejects a substituted session belonging to another user before observation I/O',async()=>{
+ const f=await pilotFixture(),other=await publicationFixture();
+ await assert.rejects(prepareChannelPilot({...f.u.p,sessionId:other.u.p.sessionId},f.pilot),{status:401});
+});
+test('email pilot accepts equivalent domain casing but preserves the mailbox local-part identity',async()=>{
+ const f=await multiFixture(true),messageId=randomUUID(),input={mode:'test' as const,messageId,expectedRevision:1,to:'Contact@EXAMPLE.NET',content:{kind:'email' as const,subject:'Homologação',text:'Teste autorizado',signature:'Equipe QA'},consent:{source:'Fixture',occurredAt:f.now.toISOString(),evidence:'Destinatário fictício do administrador para teste.'}};
+ const review=await prepareMailTest(f.u.p,f.mailbox.id,input);assert.deepEqual(review.blockers,[]);assert.equal(review.snapshot.to,'Contact@example.net');
+ await confirmMailTest(f.u.p,f.mailbox.id,{...input,requestId:randomUUID(),reviewToken:review.token,material:review.material});
+ const pilot={connectionId:f.mailbox.id,messageId,ownedRecipient:'Contact@EXAMPLE.NET'},prepared=await prepareChannelPilot(f.u.p,pilot);
+ const first=await runChannelPilot(f.u.p,{...pilot,reviewToken:prepared.token,requestId:randomUUID()});assert.equal(first.outboundId,messageId);assert.equal(first.delivery.state,'pending');
+ await assert.rejects(prepareChannelPilot(f.u.p,{...pilot,ownedRecipient:'contact@example.net'}),{status:409});
 });
 test('pilot reads durable receipts rather than adapter claims and observes the response stopping related follow-ups',async()=>{
  const f=await pilotFixture(),now=new Date(f.now.getTime()+2000).toISOString(),lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);
