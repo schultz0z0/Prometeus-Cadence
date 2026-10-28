@@ -1,0 +1,58 @@
+{
+  "id": "EV-274",
+  "date": "2026-10-27",
+  "session": "s12",
+  "scope": "06D.1 authored messages and private file UI",
+  "reference": "Historical RES/REA EV-215 and EV-259; no new authenticated reference capture; inaccessible A/B/files states not observed",
+  "local": {
+    "routes": [
+      "/cadences/new",
+      "/cadences/:id",
+      "/templates",
+      "/automations/new/ai"
+    ],
+    "viewports": [
+      "1920x855",
+      "390x844",
+      "320x844"
+    ],
+    "captures": 33,
+    "horizontalOverflows": 0,
+    "dialogFocusFailures": 0,
+    "pageErrors": 0,
+    "templateCopied": true,
+    "uploadRetryRejectionDownload": true,
+    "variantReloadPersisted": true,
+    "publicationFixture": "blocked readonly visual preview; server authority tested in ephemeral database",
+    "actualChannelsCreated": 0,
+    "publications": 0,
+    "outbox": 0,
+    "paidProviderCalls": 0,
+    "outboundMessages": 0,
+    "postreviewReadOnlyCaptures": 6
+  },
+  "validation": "../../../validation/06d1-message-authoring.md",
+  "manifest": "../../../validation/evidence/06d1-message-authoring/manifest.json",
+  "cleanup": "../../../validation/evidence/06d1-message-authoring/closure.json",
+  "unknowns": [
+    "Reference inaccessible paid/connected and A/B/attachments states",
+    "Live channel end-to-end delivery",
+    "Public production load storage/backup malware controls"
+  ],
+  "acceptance": "06D.1 local-controlled accepted; reference inaccessible states and public production not accepted",
+  "tests": {
+    "unit": 341,
+    "integration": 370
+  },
+  "review": {
+    "base": "c610614",
+    "implementationHead": "61ccf56",
+    "critical": 0,
+    "important": 4,
+    "fixed": 4,
+    "minor": 0,
+    "independentReviews": 1,
+    "interruptedReviewResumed": true,
+    "reReview": false
+  }
+}

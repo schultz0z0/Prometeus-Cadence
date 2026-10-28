@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-27",
+  "tests": {
+    "unit": 341,
+    "integration": 370
+  },
+  "focused": 25,
+  "upgrade": 1,
+  "build": "production build exit0",
+  "typecheck": "exit0",
+  "migrations": [
+    "084d",
+    "085",
+    "085a",
+    "085b",
+    "085c",
+    "085d",
+    "085e",
+    "085f",
+    "085g"
+  ],
+  "review": {
+    "base": "c610614",
+    "implementationHead": "61ccf56",
+    "critical": 0,
+    "important": 4,
+    "fixed": 4,
+    "minor": 0,
+    "independentReviews": 1,
+    "interruptedReviewResumed": true,
+    "reReview": false,
+    "correctionHead": "daf1798"
+  },
+  "ui": {
+    "screens": 33,
+    "postreview": 6,
+    "widths": [
+      1920,
+      390,
+      320
+    ],
+    "reference": "historical evidence; inaccessible states not observed",
+    "publication": "blocked readonly visual fixture, authority/MIME in ephemeral DB"
+  },
+  "runtime": {
+    "localhost": 200,
+    "continuousLanes": 6,
+    "failures": 0
+  },
+  "external": {
+    "paidCalls": 0,
+    "messages": 0,
+    "sendersCreated": 0
+  },
+  "logs": [
+    {
+      "kind": "unit",
+      "sha256": "2975abdb225e3630f992a6684d34c3e0ca313c082d12ad6b481eeb2ec7ae5ce4"
+    },
+    {
+      "kind": "integration",
+      "sha256": "d801a13a96647574b23b65da2db6f9a188fd24bfcd8f8c9d4993b22ea6b190a2"
+    },
+    {
+      "kind": "build",
+      "sha256": "00c96b25cd24b7c6aceb46a5f540d8b70e7b78768ed72f27d5cfe01769ca13ad"
+    },
+    {
+      "kind": "typecheck",
+      "sha256": "d63e8193dea500c3b7409dab08420dc52070dc1d790043d91c4bfaabc7846958"
+    }
+  ],
+  "acceptance": "local-controlled; not public production or blanket reference parity"
+}

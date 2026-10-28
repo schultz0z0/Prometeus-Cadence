@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-27 · Session: s11 · Phase:6 Identidade/pessoas implementadas; paridade integral não aceita
+Updated: 2026-10-27 · Session: s12 · Phase:6 Autoria implementada e validada; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s12: autoria A/B, templates e arquivos privados;27 capturas, fluxo real de upload/retry/rejeição/download e recarga. EV-274; QA limpa,0envios/chamadas pagas. Revisão final com quatro correções;341 unitários/370 integrações verdes; próximo06D.2. Ver relatório06D.1.
+- Not covered s12: estados não observados da referência, envio externo de anexo e produção pública.
 
 - Covered s11:06B.4 com identidade/CNPJ/QSA/gestores, fontes e contatos atribuídos, cache privado v2 e entrega revisada; 330 unitários/354 integrações/17 focadas,35 capturas de jornada+6 smoke pós-revisão, cinco correções importantes, runtime200/seis lanes saudáveis. EV-273 e [aceite](../../validation/06b4-company-people.md).
 - Not covered s11: acurácia/cobertura live, estados pagos/conectados da referência, carga/produção pública. Nenhum achado menor nesta revisão; próximos pacotes preservados.

@@ -297,6 +297,72 @@
       "fullPage": true,
       "fixture": "dedicated QA",
       "masked": true
+    },
+    {
+      "file": "screens/postreview-saved-protected-1920.png",
+      "sha256": "d5e4d45261a71d2951dff6a93b4294fc4f5968de0a93a6860c46267ee8078fb9",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "real dedicated QA file management after corrections",
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-saved-protected-320.png",
+      "sha256": "701a622c3e0dc32fd11c04ae3c35537d660b4b132c7201966ffac3d15b5c4aaa",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "real dedicated QA file management after corrections",
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-saved-protected-390.png",
+      "sha256": "d51effa6b06f2c4c384968b851e6155dbda275cd99754af58c7ec797415fb7c6",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "real dedicated QA file management after corrections",
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-unused-delete-1920.png",
+      "sha256": "d474e6d0033507bcaa82ba3f2bcb917f0bf7099290c1eba7d01df5c09ae8228f",
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "fullPage": true,
+      "fixture": "real dedicated QA file management after corrections",
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-unused-delete-320.png",
+      "sha256": "bcc43df87e613d5491aaba20a3bbb254066184d4a5f1d55b7d5a968ffe898c77",
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "real dedicated QA file management after corrections",
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-unused-delete-390.png",
+      "sha256": "4a7b493b299964551193b148a6a10d1a096aed42bdf13543b62a31cc3b6e274c",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPage": true,
+      "fixture": "real dedicated QA file management after corrections",
+      "masked": true
     }
   ],
   "ui": {
@@ -472,5 +538,19 @@
     "uploadRetryAndRejectionObserved": true,
     "singleEditor": true
   },
-  "reference": "Historical RES/REA evidence only; inaccessible states not observed; no fresh reference session or 100% parity claim"
+  "reference": "Historical RES/REA evidence only; inaccessible states not observed; no fresh reference session or 100% parity claim",
+  "postreview": {
+    "unusedFileDeleted": true,
+    "reuploadCreatesNewId": true,
+    "savedDraftFileProtected409": true,
+    "quotaRecoveryVisible": true,
+    "viewports": [
+      1920,
+      390,
+      320
+    ],
+    "screenshots": 6,
+    "pageErrors": 0,
+    "outboundMessages": 0
+  }
 }

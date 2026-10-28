@@ -61,3 +61,7 @@ Referência somente por evidência histórica; zero escrita. QA dedicada local: 
 ## Atualização s11 —27/10/2026
 
 Referência histórica L4; nenhuma escrita ou nova conexão. Local: identidade QA dedicada existente, duas empresas/pessoas sintéticas inseridas por SQL só para UI após a quota real recusar chamadas; execução e cobrança validadas em banco efêmero separado. Aplicação revisada de um contato persistida no browser. Três contatos próprios removidos, todas as sessões QA revogadas, duas listas vazias e um job sintético terminal retidos. L-010fixture;0linhas abertas. Limites/política central, conta do operador e integrações preservados.35capturas mascaradas em ../../../validation/evidence/06b4-company-people/.
+
+## Atualização s12 —27/10/2026
+
+Referência histórica L4, sem escrita. QA local dedicada: contato/lista/rascunho/template e dois registros de arquivo removidos; um blob válido removido, dados anteriores preservados e sessões revogadas. L-011removed, zero canais/publicações/outbox/chamadas pagas/envios.27 capturas mascaradas; prévia de publicação fixture bloqueada, com execução autoritativa verificada separadamente em banco efêmero.

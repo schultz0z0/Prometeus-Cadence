@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06B.4 implementado e validado no escopo local/controlado. Próxima implementação: **06D.1**.
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06D.1 implementado e validado no escopo local/controlado. Próxima implementação: **06D.2**.
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -19,7 +19,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 06A-V | Fechamento visual contínuo e diferenças residuais | contínuo | [tarefas](2026-10-27-prometeus-cadence-06av-visual-closure.md) | Planejado; porta contínua |
 | 06B.3 | Investigação da empresa e redes | 06IA, 06B.1, 06B.2 | [tarefas](2026-10-27-prometeus-cadence-06b3-company-research.md) | Concluído local/controlado; [aceite06B.3](../../validation/06b3-company-research.md) |
 | 06B.4 | Identidade empresarial e tomadores de decisão | 06B.3 | [tarefas](2026-10-27-prometeus-cadence-06b4-company-people.md) | Concluído local/controlado; [aceite06B.4](../../validation/06b4-company-people.md) |
-| 06D.1 | Autoria, variantes, anexos e publicação | 06B.4, 05 | [tarefas](2026-10-27-prometeus-cadence-06d1-message-authoring.md) | Planejado; não executado |
+| 06D.1 | Autoria, variantes, anexos e publicação | 06B.4, 05 | [tarefas](2026-10-27-prometeus-cadence-06d1-message-authoring.md) | Concluído local/controlado; [aceite06D.1](../../validation/06d1-message-authoring.md) |
 | 06D.2 | Canais, inbox e homologação de entrega | 06D.1 | [tarefas](2026-10-27-prometeus-cadence-06d2-channel-operation.md) | Planejado; não executado |
 | 06B.5 | Jornada integrada de prospecção e cadência | 06B.3, 06B.4, 06D.1, 06D.2 | [tarefas](2026-10-27-prometeus-cadence-06b5-prospecting-journey.md) | Planejado; não executado |
 | 06IA-H | Homologação das fontes e inteligência | 06B.5, 06IA | [tarefas](2026-10-27-prometeus-cadence-06iah-intelligence-homologation.md) | Planejado; não executado |
@@ -96,3 +96,5 @@ Pendências herdadas têm dono: acurácia/fornecedor pago→06IA-H; visual resid
 Troca de adaptador sem mudar jornada/resultado: registrar evidência, alternativa, custo, capacidade e testes; atualizar spec/plan afetados e manifesto. Mudança de escopo comercial/UX principal/direito recorrente exige decisão do operador. Nova dependência/skill/plugin segue AGENTS e consulta O Setup; não adicionar ferramentas para compensar documento incompleto.
 
 Nenhum plano presume instalação/contratação automática. Valores/limites técnicos propostos estão explícitos no desenho; manter defaults seguros e limites mais restritivos dos canais. O escopo está escrito; comprovação operacional futura pode reprovar um pacote sem redefinir a finalidade do produto.
+
+Continuidade06D.1: autoria/variantes/anexos/publicação concluídos no contrato local;06D.2 é o próximo. Retenção automática de arquivos→06E.2/08B, capacidades de anexos fora de e-mail e ida/volta real→06D.2; volume/backup/antimalware/carga→08B; estados inacessíveis da referência→08A+área. A recuperação básica de quota já foi corrigida em06D.1.

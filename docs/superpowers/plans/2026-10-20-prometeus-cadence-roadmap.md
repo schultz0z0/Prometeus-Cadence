@@ -154,3 +154,7 @@ Investigação empresarial pública, fatos por campo/fontes, revisão/aplicaçã
 ## Continuidade vigente —27/10/2026 · conclusão06B.4
 
 Identidade empresarial e tomadores de decisão concluído no contrato próprio local/controlado: 330 unitários/354 integrações,17 focados,35 capturas de jornada+6 de smoke pós-revisão, cinco correções importantes e runtime restaurado. [Aceite](../../validation/06b4-company-people.md). A ordem técnica vigente está no [índice geral](2026-10-27-prometeus-cadence-master-plan.md); próximo06D.1, sem reiniciar marcos anteriores. Piloto live06IA-H, referência inacessível e produção pública mantêm gates próprios.
+
+### Continuidade27/10/2026 —06D.1
+
+Autoria, variantes, anexos privados de e-mail e publicação concluídos no contrato local/controlado; revisão independente com quatro correções e gates verdes. [Aceite06D.1](../../validation/06d1-message-authoring.md). Ordem atual no índice de27/10: próximo06D.2, sem iniciar automaticamente outra família nem declarar paridade/produção pública.
