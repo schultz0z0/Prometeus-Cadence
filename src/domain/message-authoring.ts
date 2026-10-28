@@ -4,7 +4,7 @@ export interface ContentStep{id:string;channel:Channel;body:string;subject?:stri
 export interface ContentDraft{cadenceId:string;expectedRevision:number;steps:ContentStep[];requestId?:string}
 export interface ContentPublication{cadenceId:string;contentRevision:number}
 export interface AttachmentUpload{name:string;mime:string;bytes:Uint8Array}
-export interface AttachmentView{id:string;name:string;mime:string;size:number;state:'pending'|'ready'|'rejected'}
+export interface AttachmentView{id:string;name:string;mime:string;size:number;state:'pending'|'ready'|'rejected'|'deleted'}
 export interface FrozenAttachment extends AttachmentView{hash:string}
 export function validateAuthoringVariables(input:{body:string;allowed:readonly string[]}){const allowed=new Set(input.allowed),unknown=[...new Set([...input.body.matchAll(/\{\{\s*([^{}]+?)\s*\}\}/g)].map(m=>m[1]).filter(k=>!allowed.has(k)))];return{valid:!unknown.length,unknown};}
 export function chooseMessageVariant(enrollmentId:string,completeB:boolean):'A'|'B'{if(!completeB)return'A';let hash=2166136261;for(const ch of enrollmentId)hash=Math.imul(hash^ch.charCodeAt(0),16777619);return hash>>>0&1?'B':'A';}

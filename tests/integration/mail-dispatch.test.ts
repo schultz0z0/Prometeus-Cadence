@@ -6,7 +6,7 @@ import {claimMailboxSync} from '../../src/server/mail/sync/repository.ts';import
 import {preparePublication,confirmPublication} from '../../src/server/messaging/publication.ts';import {materializeDueMessages} from '../../src/server/messaging/outbox.ts';import {claimDispatch,leaseArgs} from '../../src/server/messaging/lease.ts';import {dispatchOne} from '../../src/server/messaging/dispatch.ts';import {dispatchPool,closeDispatchPool} from '../../src/server/messaging/worker-db.ts';import {getPools} from '../../src/server/db/pool.ts';import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';import type {MailAdapter} from '../../src/server/mail/providers/contracts.ts';
 after(async()=>{await getPools().close();await closeDispatchPool();await closeIngressPool();});
 const fake=(sendOnce:MailAdapter['sendOnce']):MailAdapter=>({verify:async()=>{throw Error('not used');},readBatch:async()=>{throw Error('not used');},findSent:async()=>null,sendOnce});
-async function queued(sendTime?:string){const f=await multiFixture(true,sendTime),review=await preparePublication(f.u.p,f.input);assert.deepEqual(review.blockers,[]);await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token,material:review.material});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100,f.u.p.workspaceId);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);return {...f,now,lease};}
+async function queued(stableRetryClock=false){const f=await multiFixture(true,stableRetryClock),review=await preparePublication(f.u.p,f.input);assert.deepEqual(review.blockers,[]);await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token,material:review.material});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100,f.u.p.workspaceId);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);return {...f,now,lease};}
 test('live metrics count actual acceptance once and never expose another workspace',async()=>{
  const f=await queued(),other=await multiFixture(true);
  assert.equal((await readMessageMetrics(f.u.p,{days:30})).sent,0);
@@ -31,7 +31,7 @@ test('email SQL barrier catches consent, sync and limit changes after reading a 
  }
 });
 test('proven temporary email rejection stops after three sends and stable RFC identity',async()=>{
- const f=await queued('00:00');let count=0,rfc='';const adapter=fake(async(_config,send)=>{count++;if(rfc)assert.equal(send.rfcMessageId,rfc);rfc=send.rfcMessageId;return {kind:'not_accepted',code:'SMTP_451',retryable:true,retryAfterMs:30000};});
+ const f=await queued(true);let count=0,rfc='';const adapter=fake(async(_config,send)=>{count++;if(rfc)assert.equal(send.rfcMessageId,rfc);rfc=send.rfcMessageId;return {kind:'not_accepted',code:'SMTP_451',retryable:true,retryAfterMs:30000};});
  let now=f.now,lease=f.lease;
  for(let attempt=0;attempt<3;attempt++){await dispatchOne(lease,{now:()=>now,mailAdapter:adapter});if(attempt<2){now=new Date(Date.parse(now)+240000).toISOString();await testAdmin(c=>c.query('UPDATE app.email_mailbox SET last_synced_at=$2 WHERE id=$1',[f.mailbox.id,now]));const next=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(next);lease=next;}}
  assert.equal(count,3);assert.equal(await claimDispatch(new Date(Date.parse(now)+240000).toISOString(),{workspaceId:f.u.p.workspaceId}),null);

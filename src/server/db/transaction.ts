@@ -11,6 +11,11 @@ export async function withWorkspaceTransaction<T>(
 }
 export async function withContextTransaction<T>(pool:Pool,principal:Principal,fn:(client:PoolClient)=>Promise<T>):Promise<T>{
   const client = await pool.connect();
+  try{return await withClientContextTransaction(client,principal,fn);}finally{client.release();}
+}
+// A caller holding a session-scoped lock may reuse the client between short
+// transactions; membership locks still end before storage/network I/O.
+export async function withClientContextTransaction<T>(client:PoolClient,principal:Principal,fn:(client:PoolClient)=>Promise<T>):Promise<T>{
   try {
     await client.query("BEGIN");
     await client.query(
@@ -29,7 +34,5 @@ export async function withContextTransaction<T>(pool:Pool,principal:Principal,fn
   } catch (e) {
     await client.query("ROLLBACK");
     throw translateError(e);
-  } finally {
-    client.release();
   }
 }

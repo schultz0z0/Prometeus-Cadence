@@ -5,12 +5,12 @@ import {recordConsent} from '../../src/server/messaging/consent.ts';
 import {defaultCadenceSettings} from '../../src/demo/seed.ts';
 import {verifiedMetaFixture,testAdmin} from './whatsapp-helpers.ts';
 import type {Cadence,Lead} from '../../src/domain/model.ts';
-export async function publicationFixture(sendTime?:string){
- const f=await verifiedMetaFixture(),now=new Date(),date=now.toISOString(),time=new Date(now.getTime()+120000).toISOString().slice(11,16);
+export async function publicationFixture(stableRetryClock=false){
+ const f=await verifiedMetaFixture(),now=new Date(),date=now.toISOString(),shift=stableRetryClock?12-now.getUTCHours():0,timezone=shift===0?'UTC':'Etc/GMT'+(shift>0?'-':'+')+Math.abs(shift),time=new Date(now.getTime()+shift*3600000+120000).toISOString().slice(11,16);
  await webhookRequest(f.request({messages:[{id:'wamid.'+randomUUID(),from:'5541988888888',timestamp:String(Math.floor(now.getTime()/1000)),type:'text',text:{body:'Oi'}}]}),f.publicId,'meta');
  const templates=await syncTemplates(f.u.p,f.connection.id,1,{adapter:f.adapter});
  const listId=randomUUID(),lead:Lead={id:randomUUID(),listId,name:'Clínica QA',phone:'+5541988888888',qualification:'qualified',source:'MANUAL',createdAt:date};
- const cadence:Cadence={id:randomUUID(),listId,name:'Cadência QA',status:'draft',createdAt:date,steps:[{id:'first',channel:'WHATSAPP',delayDays:0,body:'Olá {{nome}}',stopOnReply:true},{id:'second',channel:'WHATSAPP',delayDays:2,body:'Podemos conversar?',stopOnReply:true}],settings:{...defaultCadenceSettings(),timezone:'UTC',weekdays:[0,1,2,3,4,5,6],sendTime:sendTime??time,skipHolidays:false,excludeReplied:false}};
+ const cadence:Cadence={id:randomUUID(),listId,name:'Cadência QA',status:'draft',createdAt:date,steps:[{id:'first',channel:'WHATSAPP',delayDays:0,body:'Olá {{nome}}',stopOnReply:true},{id:'second',channel:'WHATSAPP',delayDays:2,body:'Podemos conversar?',stopOnReply:true}],settings:{...defaultCadenceSettings(),timezone,weekdays:[0,1,2,3,4,5,6],sendTime:time,skipHolidays:false,excludeReplied:false}};
  const identity=await testAdmin(async c=>{
   await c.query('INSERT INTO app.list(workspace_id,id,name) VALUES($1,$2,$3)',[f.u.p.workspaceId,listId,'QA']);
   await c.query('INSERT INTO app.lead(workspace_id,id,list_id,payload) VALUES($1,$2,$3,$4)',[f.u.p.workspaceId,lead.id,listId,lead]);

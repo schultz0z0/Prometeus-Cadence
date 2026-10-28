@@ -4,8 +4,8 @@ import {publicationFixture} from './messaging-helpers.ts';import {testAdmin,smtp
 import {saveMailbox} from '../../src/server/mail/repository.ts';import {preparePublication,confirmPublication} from '../../src/server/messaging/publication.ts';
 import {prepareChannelTest,confirmChannelTest} from '../../src/server/messaging/replies.ts';
 import {materializeDueMessages} from '../../src/server/messaging/outbox.ts';import type {PublicationInputV2} from '../../src/domain/cadence-runtime.ts';
-export async function multiFixture(emailOnly=false,sendTime?:string){
- const f=await publicationFixture(sendTime),mailbox=await saveMailbox(f.u.p,smtpMailboxInput()),senderId=randomUUID(),identity=randomUUID();
+export async function multiFixture(emailOnly=false,stableRetryClock=false){
+ const f=await publicationFixture(stableRetryClock),mailbox=await saveMailbox(f.u.p,smtpMailboxInput()),senderId=randomUUID(),identity=randomUUID();
  process.env.MAIL_PUBLIC_BASE_URL='https://mail-hooks.example';
  const lead={...f.lead,email:'contact@example.net',...(emailOnly?{phone:undefined}:{})};
  const cadence={...f.cadence,steps:emailOnly?[{id:'first',channel:'EMAIL' as const,delayDays:0,subject:'Olá {{nome}}',body:'Podemos conversar?',stopOnReply:true}]:[{id:'first',channel:'EMAIL' as const,delayDays:0,subject:'Olá {{nome}}',body:'Podemos conversar?',stopOnReply:true},f.cadence.steps[1],{id:'third',channel:'EMAIL' as const,delayDays:4,subject:'Re: Olá {{nome}}',body:'Retomando nosso contato',stopOnReply:true}]};
