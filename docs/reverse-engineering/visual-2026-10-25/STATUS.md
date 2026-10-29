@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-28 · Session: s15 · Phase:6 Homologação controlada validada; paridade integral não aceita
+Updated: 2026-10-29 · Session: s16 · Phase:6 Relatórios locais verificados; revisão final06C.2 pendente; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s16:06C.2 com curadoria somente leitura do histórico real;30capturas mascaradas e24checks1920/390/320,0overflow/pageerror, filtros/popup/polling/recovery/exportnulls. L018restored/L019removed;0novos contatos/canais/mensagens/chamadas pagas. EV-278. Revisão final ainda pendente; não avançar antes do aceite.
+- Not covered s16:estados pagos/conectados da referência, novos envios/inferência/scraping live e produção pública.
 
 - Covered s15:06IA-H administrativo com30casos sintéticos/60saídas, contratos tradicional/híbrido e9capturas reais mascaradas. 351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. L017restored;0chamadas pagas/envios. Próximo06C.2.
 - Not covered s15:inferência/Actor real, acurácia probabilística e estados pagos/conectados da referência; gates externos permanecem.

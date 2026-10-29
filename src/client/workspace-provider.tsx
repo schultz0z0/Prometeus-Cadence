@@ -19,6 +19,7 @@ import {createChannelClient,type ChannelClient} from './channel-client';
 import {createMessagingClient,type MessagingClient} from './messaging-client';
 import {createResearchClient,type ResearchClient} from './research-client';
 import {createMailClient,type MailClient} from './mail-client';
+import {createReportClient,type ReportClient} from './report-client';
 import {useLiveRefresh} from './use-live-refresh';
 export interface IdentityView {
   platformAiAdmin?: boolean;
@@ -52,6 +53,8 @@ const MessagingContext=createContext<MessagingClient|null>(null);
 const ResearchContext=createContext<ResearchClient|null>(null);
 export function useResearch(){return useContext(ResearchContext);}
 const MailContext=createContext<MailClient|null>(null);
+const ReportContext=createContext<ReportClient|null>(null);
+export function useReports(){return useContext(ReportContext);}
 export function useMail(){return useContext(MailContext);}
 const RevisionContext=createContext<number|null>(null);
 export function useMessaging(){return useContext(MessagingContext);}
@@ -91,6 +94,7 @@ export function WorkspaceProvider({
   const [messaging]=useState(()=>createMessagingClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const [research]=useState(()=>createResearchClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const [mail]=useState(()=>createMailClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+  const [reports]=useState(()=>createReportClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
   const current = useSyncExternalStore(
     repo.subscribe,
     repo.snapshot,
@@ -105,11 +109,11 @@ export function WorkspaceProvider({
     return () => {
       mounted.current = false;
       queueMicrotask(() => {
-        if (!mounted.current) {repo.dispose();prospecting.dispose();planning.dispose();company.dispose();automation.dispose();channels.dispose();messaging.dispose();mail.dispose();research.dispose();}
+        if (!mounted.current) {repo.dispose();prospecting.dispose();planning.dispose();company.dispose();automation.dispose();channels.dispose();messaging.dispose();mail.dispose();research.dispose();reports.dispose();}
       });
     };
   }, [repo]);
-  useEffect(()=>{if(access.kind==='blocked'){mail.dispose();research.dispose();}},[access.kind,mail]);
+  useEffect(()=>{if(access.kind==='blocked'){mail.dispose();research.dispose();reports.dispose();}},[access.kind,mail,reports]);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 6000);
@@ -117,7 +121,7 @@ export function WorkspaceProvider({
   }, [toast]);
   useLiveRefresh(()=>repo.refresh(),15000,access.kind!=='blocked',repo);
   return (
-    <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}><AutomationContext value={automation}><ChannelContext value={channels}><MessagingContext value={messaging}><ResearchContext value={research}><MailContext value={mail}><RevisionContext value={current.revision}>
+    <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}><AutomationContext value={automation}><ChannelContext value={channels}><MessagingContext value={messaging}><ResearchContext value={research}><MailContext value={mail}><ReportContext value={reports}><RevisionContext value={current.revision}>
       <CapabilitiesContext value={current.capabilities}>
         <RepositoryContext value={repo}>
           <ToastContext value={setToast}>
@@ -180,6 +184,6 @@ export function WorkspaceProvider({
           </ToastContext>
         </RepositoryContext>
       </CapabilitiesContext>
-    </RevisionContext></MailContext></ResearchContext></MessagingContext></ChannelContext></AutomationContext></RefreshContext></CompanyContext></PlanningContext></ProspectingContext></IdentityContext>
+    </RevisionContext></ReportContext></MailContext></ResearchContext></MessagingContext></ChannelContext></AutomationContext></RefreshContext></CompanyContext></PlanningContext></ProspectingContext></IdentityContext>
   );
 }

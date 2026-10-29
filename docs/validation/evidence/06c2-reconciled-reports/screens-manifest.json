@@ -1,0 +1,182 @@
+[
+  {
+    "name": "cadence-report-1920.png",
+    "sha256": "aeb81a931f843f3930e4808811d1ada98221dff734e73ead1ffe2307bb7484a7",
+    "bytes": 115788,
+    "masked": true
+  },
+  {
+    "name": "cadence-report-320.png",
+    "sha256": "d8c1a038c89b95e59baa3e1976f0201af4186caf50745ddd43e7f725425ae427",
+    "bytes": 45903,
+    "masked": true
+  },
+  {
+    "name": "cadence-report-390.png",
+    "sha256": "8890f1df3124c2be1165448331f76b90f1eaec113b432d19c89235849fc1db49",
+    "bytes": 48466,
+    "masked": true
+  },
+  {
+    "name": "custom-draft-after-poll.png",
+    "sha256": "aae883befe6c697989d7a7f22c653b7ed0b60df73ff939a79d6b0eab571d469a",
+    "bytes": 141658,
+    "masked": true
+  },
+  {
+    "name": "custom-period.png",
+    "sha256": "a2617b798606ca2e30c7f0818612a4ce0b0592d83507efcc1d064d7cddeb839c",
+    "bytes": 228824,
+    "masked": true
+  },
+  {
+    "name": "dashboard-1920.png",
+    "sha256": "187cb3b30f05596335f824324af8be8b023c5098a799d7b2c1703d81783a4265",
+    "bytes": 337627,
+    "masked": true
+  },
+  {
+    "name": "dashboard-320.png",
+    "sha256": "8b3e0bd24332ad7886e08f20833e6b0211cb0b47418e53fdf2a99ff93524a443",
+    "bytes": 290073,
+    "masked": true
+  },
+  {
+    "name": "dashboard-390.png",
+    "sha256": "755b1005f2f4d6c02b223fadf51f5fbc31cb038473ef437332ee508ab6fcf3e9",
+    "bytes": 293135,
+    "masked": true
+  },
+  {
+    "name": "execution-detail-1920.png",
+    "sha256": "2b26a5fd6758a36304b74912b2ad593435e8d2de460da0bdc832e22f62c32a2a",
+    "bytes": 141632,
+    "masked": true
+  },
+  {
+    "name": "execution-detail-320.png",
+    "sha256": "1ff97977f869707d74b8a67ce2b6055e5f7a5e7e737b907014efda89f21dd2b2",
+    "bytes": 56148,
+    "masked": true
+  },
+  {
+    "name": "execution-detail-390.png",
+    "sha256": "a69ff216bf62616c1ab3c4dee331fa01f7f681ef7461a5f2fae81cac469e824f",
+    "bytes": 58757,
+    "masked": true
+  },
+  {
+    "name": "executions-1920.png",
+    "sha256": "9c0ca91f6150da7685befee1337d84b64d2fa574e1a633abf73f36bc328ed0fd",
+    "bytes": 155046,
+    "masked": true
+  },
+  {
+    "name": "executions-320.png",
+    "sha256": "60dbced4e291b0bedad73af8b7466d59974c5d086bda1504898aaf6a48627310",
+    "bytes": 78154,
+    "masked": true
+  },
+  {
+    "name": "executions-390.png",
+    "sha256": "5de2ad79f4ac67c8c48fa44df74ececda6a10d10038574a53cfb9ca329308a9c",
+    "bytes": 87162,
+    "masked": true
+  },
+  {
+    "name": "funnel-detail-1920.png",
+    "sha256": "4cd2d6689c431dd0f975842607e93c411694b2711b335a8bf0652f844a163fd8",
+    "bytes": 222943,
+    "masked": true
+  },
+  {
+    "name": "funnel-detail-320.png",
+    "sha256": "ade82421b953acaf3181c0dcda8d988585f230b471030564f376611aa3f03918",
+    "bytes": 140280,
+    "masked": true
+  },
+  {
+    "name": "funnel-detail-390.png",
+    "sha256": "80cbdbc66068442186fb7ec624b7f05ff4745010a16dcb4430ff5b0c1387b9ef",
+    "bytes": 143629,
+    "masked": true
+  },
+  {
+    "name": "report-update-failure.png",
+    "sha256": "4eb18dbf8e8ff68784dcd2d24effe4fd2d543b4ddc3ef0c4500f858c28911d9f",
+    "bytes": 121894,
+    "masked": true
+  },
+  {
+    "name": "reports-1920.png",
+    "sha256": "dc7dc4c202e2ae10c20aff24ab86d29990971989d480b0cc94cdb3695d655614",
+    "bytes": 154875,
+    "masked": true
+  },
+  {
+    "name": "reports-320.png",
+    "sha256": "72f8d71b4aaa9f83e7ee080a958959fd52c35aeea38c31a096e9de01ada7d1d8",
+    "bytes": 99972,
+    "masked": true
+  },
+  {
+    "name": "reports-390.png",
+    "sha256": "593ca4ce3c3504416264b87bb54c13139efa3e7bfad9f8af1729be672c586cea",
+    "bytes": 101528,
+    "masked": true
+  },
+  {
+    "name": "reports-funnel-1920.png",
+    "sha256": "726341aecf60175940d913573ad2c398fba1a01589305d5b97bc4459968935cb",
+    "bytes": 172319,
+    "masked": true
+  },
+  {
+    "name": "reports-funnel-320.png",
+    "sha256": "c4aca4c6c4087c4cf702b2896abd156d997430321a1af3fcfede1cd50bf196e4",
+    "bytes": 118056,
+    "masked": true
+  },
+  {
+    "name": "reports-funnel-390.png",
+    "sha256": "a98f86be16a80a27b804619989b8e845a662d6892fde144a76df288b9b94e405",
+    "bytes": 118390,
+    "masked": true
+  },
+  {
+    "name": "reports-negocios-1920.png",
+    "sha256": "9c60b0862ca2fd16f574f19793135bd539e0f18d50a304f2fc2662a4894cb761",
+    "bytes": 120007,
+    "masked": true
+  },
+  {
+    "name": "reports-negocios-320.png",
+    "sha256": "66e5d2c78a0b478019520d9995623d0ac576875cc4b04db77eeba067dde1b33a",
+    "bytes": 55414,
+    "masked": true
+  },
+  {
+    "name": "reports-negocios-390.png",
+    "sha256": "502a75ba2c41af76b9f2fb98dc3396bb93775d7c5e7bd05b97b89b165c15f458",
+    "bytes": 54751,
+    "masked": true
+  },
+  {
+    "name": "reports-performance-1920.png",
+    "sha256": "a2ade0c79a8e26f5fb6dfe618e9e31d86d38988531dff7e8e3be6dc415379706",
+    "bytes": 150072,
+    "masked": true
+  },
+  {
+    "name": "reports-performance-320.png",
+    "sha256": "6205553b0758563a56af05c7000673136579147f48c1e0c0d99fb54746e760b7",
+    "bytes": 94739,
+    "masked": true
+  },
+  {
+    "name": "reports-performance-390.png",
+    "sha256": "0fb3d0b5501b9fd792c72b07a9a2f5c8f64fab59ec3e3f41141ee58a816fb919",
+    "bytes": 95648,
+    "masked": true
+  }
+]

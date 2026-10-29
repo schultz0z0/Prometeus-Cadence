@@ -1,0 +1,213 @@
+{
+  "main": {
+    "rows": [
+      {
+        "route": "/dashboard",
+        "width": 1920,
+        "overflow": false,
+        "headings": [
+          "Comece a prospectar",
+          "Dashboard"
+        ]
+      },
+      {
+        "route": "/reports",
+        "width": 1920,
+        "overflow": false,
+        "headings": [
+          "Relatórios",
+          "Os relatórios aparecem depois do primeiro envio"
+        ]
+      },
+      {
+        "route": "/reports/funnel",
+        "width": 1920,
+        "overflow": false,
+        "headings": [
+          "Relatórios"
+        ]
+      },
+      {
+        "route": "/reports/performance",
+        "width": 1920,
+        "overflow": false,
+        "headings": [
+          "Relatórios"
+        ]
+      },
+      {
+        "route": "/reports/negocios",
+        "width": 1920,
+        "overflow": false,
+        "headings": [
+          "Relatórios",
+          "Nenhuma integração FunnelsFlow ativa"
+        ]
+      },
+      {
+        "route": "/executions",
+        "width": 1920,
+        "overflow": false,
+        "headings": [
+          "Execuções"
+        ]
+      },
+      {
+        "route": "/executions/:id",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "route": "/dashboard",
+        "width": 390,
+        "overflow": false,
+        "headings": [
+          "Comece a prospectar",
+          "Dashboard"
+        ]
+      },
+      {
+        "route": "/reports",
+        "width": 390,
+        "overflow": false,
+        "headings": [
+          "Relatórios",
+          "Os relatórios aparecem depois do primeiro envio"
+        ]
+      },
+      {
+        "route": "/reports/funnel",
+        "width": 390,
+        "overflow": false,
+        "headings": [
+          "Relatórios"
+        ]
+      },
+      {
+        "route": "/reports/performance",
+        "width": 390,
+        "overflow": false,
+        "headings": [
+          "Relatórios"
+        ]
+      },
+      {
+        "route": "/reports/negocios",
+        "width": 390,
+        "overflow": false,
+        "headings": [
+          "Relatórios",
+          "Nenhuma integração FunnelsFlow ativa"
+        ]
+      },
+      {
+        "route": "/executions",
+        "width": 390,
+        "overflow": false,
+        "headings": [
+          "Execuções"
+        ]
+      },
+      {
+        "route": "/executions/:id",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "route": "/dashboard",
+        "width": 320,
+        "overflow": false,
+        "headings": [
+          "Comece a prospectar",
+          "Dashboard"
+        ]
+      },
+      {
+        "route": "/reports",
+        "width": 320,
+        "overflow": false,
+        "headings": [
+          "Relatórios",
+          "Os relatórios aparecem depois do primeiro envio"
+        ]
+      },
+      {
+        "route": "/reports/funnel",
+        "width": 320,
+        "overflow": false,
+        "headings": [
+          "Relatórios"
+        ]
+      },
+      {
+        "route": "/reports/performance",
+        "width": 320,
+        "overflow": false,
+        "headings": [
+          "Relatórios"
+        ]
+      },
+      {
+        "route": "/reports/negocios",
+        "width": 320,
+        "overflow": false,
+        "headings": [
+          "Relatórios",
+          "Nenhuma integração FunnelsFlow ativa"
+        ]
+      },
+      {
+        "route": "/executions",
+        "width": 320,
+        "overflow": false,
+        "headings": [
+          "Execuções"
+        ]
+      },
+      {
+        "route": "/executions/:id",
+        "width": 320,
+        "overflow": false
+      }
+    ],
+    "pageErrors": [],
+    "reference": "historical matched viewports; paid/connected reference states remain not observed",
+    "externalCalls": 0
+  },
+  "extra": {
+    "checks": [
+      {
+        "route": "/cadences/:id report",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "route": "/cadences/:id report",
+        "width": 390,
+        "overflow": false
+      },
+      {
+        "route": "/cadences/:id report",
+        "width": 320,
+        "overflow": false
+      },
+      {
+        "customDraftPreservedAfterPolling": true
+      },
+      {
+        "networkFaultRecovered": true,
+        "staleDataLabelled": true
+      },
+      {
+        "modalTabCycleContained": true,
+        "escapeClosed": true
+      },
+      {
+        "exportDownloaded": true
+      }
+    ],
+    "pageErrors": []
+  },
+  "screenshots": 30,
+  "exportNullsVerified": true
+}

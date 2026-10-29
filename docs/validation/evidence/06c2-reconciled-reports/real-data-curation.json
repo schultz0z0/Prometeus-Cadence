@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-28",
+  "source": "pre-existing operator workspace; persisted channel history and contacts; read-only transaction",
+  "scopeHash": "80e000b1603a6d79",
+  "period": {
+    "from": "2026-07-31T02:58:51.048Z",
+    "to": "2026-10-29T02:58:51.047Z"
+  },
+  "independentSourceCounts": {
+    "sent": 3,
+    "replies": 23,
+    "bounces": 0,
+    "optouts": 0,
+    "leads": 1
+  },
+  "reportFactCounts": {
+    "sent": 3,
+    "replies": 23,
+    "bounces": 0,
+    "optouts": 0,
+    "leads": 1
+  },
+  "inboundClassificationCounts": [
+    {
+      "classification": "automatic",
+      "n": 2
+    },
+    {
+      "classification": "human",
+      "n": 22
+    },
+    {
+      "classification": "whatsapp",
+      "n": 1
+    }
+  ],
+  "reconciled": true,
+  "externalCalls": 0,
+  "newMessages": 0,
+  "limitation": "Confirms stored operational history; does not initiate or prove a new provider delivery, scraping call or LLM inference."
+}

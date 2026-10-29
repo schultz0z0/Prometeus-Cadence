@@ -1,5 +1,8 @@
 "use client";
-import { useMessageMetrics } from "@/client/use-message-metrics";
+import {useState} from 'react';
+import {useReconciledReport} from '@/client/use-reconciled-report';
+import {ReportDetail,ReportStamp} from '@/components/reports/report-detail';
+import type {ReportMetric} from '@/domain/reporting';
 import { Badge, Button, EmptyState, Notice } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/icon";
 import { validateCadence } from "@/domain/cadence";
@@ -14,10 +17,10 @@ export function CadenceHealth({cadence,leads,listName,onReview}: {cadence:Cadenc
  <div className="cadence-health-grid"><div><h3>A lista</h3><section className="panel cadence-health-quality"><div className="row wrap"><Icon name="Users" size={17}/><strong>Qualidade da lista</strong><small>{count} leads · {listName}</small></div><div className="cadence-quality-track" aria-hidden="true">{groups.map(g=><i key={g.label} style={{width:percent(g.n)+'%',background:g.color}}/>)}</div><div className="row wrap cadence-quality-legend">{groups.map(g=><span key={g.label}><i style={{background:g.color}}/>{g.label} <b>{percent(g.n)}%</b></span>)}<span>Com telefone <b>{percent(leads.filter(l=>!!l.phone).length)}%</b></span></div><p>Distribuição dos dados cadastrados. Não comprova que o endereço recebe e-mail ou que o telefone tem WhatsApp.</p></section></div><div><h3>Pontos de atenção na régua</h3><section className="panel cadence-health-issues"><Icon name={issues.length?'AlertCircle':'CheckCircle2'} size={17}/><div>{issues.length?issues.map((x,i)=><p key={i}>{x.message}</p>):<p>Nenhum campo obrigatório pendente no rascunho. Confira a publicação antes de ativar.</p>}</div></section></div></div></div>;
 }
 export function CadenceReport({id}: {id:string}) {
- const {metrics,error,live}=useMessageMetrics('30 dias',id);
+ const {report,query,error,live,refresh}=useReconciledReport('30 dias','cadences',id),[detail,setDetail]=useState<ReportMetric|null>(null),metrics=report?.totals;
  if(!live)return <Notice>Entre em um workspace para consultar os eventos desta cadência.</Notice>;
- if(error)return <Notice>{error}</Notice>;
+ if(error&&!metrics)return <Notice>{error} <Button onClick={()=>void refresh().catch(()=>{})}>Tentar novamente</Button></Notice>;
  if(!metrics)return <section className="cadence-report-reference" role="status">Carregando relatório…</section>;
- if(!metrics.sent&&!metrics.replies&&!metrics.failed&&!metrics.pending)return <div className="cadence-report-reference"><EmptyState icon="ChartNoAxesColumn" title="O relatório nasce com o primeiro disparo" description="Assim que os primeiros envios saírem, aqui aparecem as mensagens enviadas, as respostas e as falhas registradas."/></div>;
- return <div className="cadence-report-reference"><div className="cadence-report-stats">{[['Enviados',metrics.sent],['Respostas',metrics.replies],['Falhas',metrics.failed],['Na fila',metrics.pending]].map(([label,value])=><section className="panel" key={label}><span>{label}</span><strong>{value}</strong><small>Últimos 30 dias</small></section>)}</div><section className="panel cadence-report-history"><h3>Envios e respostas por dia</h3><div className="table-scroll"><table className="data-table"><thead><tr><th>Data</th><th>Enviados</th><th>Respostas</th></tr></thead><tbody>{metrics.series.map(day=><tr key={day.date}><td>{day.date}</td><td>{day.sent}</td><td>{day.replies}</td></tr>)}</tbody></table></div></section></div>;
+ if(!['sent','replies','failed','pending','uncertain','bounces','optouts'].some(key=>(metrics[key]??0)>0))return <div className="cadence-report-reference"><ReportStamp report={report} error={error} onRefresh={refresh}/><EmptyState icon="ChartNoAxesColumn" title="O relatório nasce com o primeiro disparo" description="Assim que os primeiros envios saírem, aqui aparecem as mensagens enviadas, as respostas e as falhas registradas."/></div>;
+ return <div className="cadence-report-reference"><ReportStamp report={report} error={error} onRefresh={refresh}/><div className="cadence-report-stats">{[['Enviados','sent'],['Respostas','replies'],['Falhas','failed'],['Na fila','pending'],['Bounces','bounces'],['Opt-outs','optouts']].map(([label,key])=><section className="panel" key={key}><span>{label}</span><strong>{metrics[key]??'—'}</strong><small>Últimos 30 dias</small><button className="small-link orange" onClick={()=>setDetail(key as ReportMetric)}>Ver registros</button></section>)}</div><section className="panel cadence-report-history"><h3>Envios e respostas por dia</h3><div className="table-scroll"><table className="data-table"><thead><tr><th>Data</th><th>Enviados</th><th>Respostas</th></tr></thead><tbody>{report?.series.map(day=><tr key={day.date}><td>{day.date}</td><td>{day.values.sent??0}</td><td>{day.values.replies??0}</td></tr>)}</tbody></table></div></section>{detail&&query&&<ReportDetail key={detail+JSON.stringify(query)} metric={detail} query={query} onClose={()=>setDetail(null)}/>}</div>;
 }

@@ -69,3 +69,7 @@ Referência histórica L4, sem escrita. QA local dedicada: contato/lista/rascunh
 ## Atualização s15 —28/10/2026
 
 Referência histórica L4; nenhuma mutação. QA local dedicada existente: somente leitura das três telas, navegação responsiva e foco/Escape. Nenhum novo registro de domínio/canal/outbox/piloto ou chamada paga. L017restored, snapshot anterior e workspace preservados, própria sessão revogada e navegador fechado. Migração088 e instruções internasv2 aplicadas localmente. Nove capturas mascaradas; limites de prova explícitos emEV277.
+
+## Atualização s16 —29/10/2026
+
+Referência histórica L4; nenhuma escrita. Local: mesma identidade QA dedicada com0contatos/0automações/0canais/0outbox no escopo, sem integrações disparadas por rascunho. Um rascunho privado `[RE]` em lista anterior vazia, nunca publicado, removido por ID exato; dados/listas/históricos anteriores preservados. Workspace restaurado, todas as sessões QA revogadas e browser próprio fechado. L018restored/L019removed.30capturas e24checks de rotas/viewport;0chamadas pagas ou envios. Curadoria do workspace operacional do operador em transação somente leitura; somente contagens anonimizadas na evidência. Migrações089/089a/089b aplicadas localmente.

@@ -5,3 +5,11 @@
 
 .reports-header-controls{flex-wrap:nowrap;gap:8px}.reports-cadence-filter{width:174px;max-width:174px}.reports-header-controls .period-selector{flex-shrink:0}.reports-header-controls .period-selector button{font-size:0.75rem;padding:6px 9px}.reports-performance .reports-panel{padding:20px}.reports-performance h3{font-size:0.875rem;line-height:1.25rem}.reports-performance h3>svg{color:var(--primary)}.reports-performance .reports-unavailable{min-height:112px;padding:20px;color:var(--muted)}.reports-performance .reports-unavailable>span{display:none}.reports-performance .reports-unavailable>small{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.reports-performance .reports-two-grid .reports-unavailable{min-height:248px}.reports-metric-switch>.btn{font-size:0.625rem;line-height:1rem;min-height:24px;padding:0 8px;border:0;background:var(--hover);color:var(--muted)}.reports-performance .reports-panel-title{gap:12px}
 @media(max-width:850px){.reports-header-controls{flex-wrap:wrap}.reports-header-controls .period-selector{flex-shrink:1}.reports-performance .reports-two-grid .reports-unavailable{min-height:180px}}
+/* Drilldowns retain the reference card geometry and keyboard access. */
+.report-metric-value{display:block;background:none;border:0;color:inherit;padding:0;text-align:left;font:inherit;cursor:pointer}
+.report-metric-value:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:4px}
+.reports-stamp{margin:16px 0 8px;gap:8px}
+.reports-funnel-bottom{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}
+.reports-funnel-bottom .reports-qualification-history{margin-top:0;min-height:560px}
+.reports-funnel-side{display:grid;gap:24px}
+@media(max-width:850px){.reports-funnel-bottom{grid-template-columns:1fr}.reports-funnel-bottom .reports-qualification-history{min-height:300px}}

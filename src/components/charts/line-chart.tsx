@@ -3,10 +3,12 @@ export function LineChart({
   values,
   color = "var(--primary)",
   empty = false,
+  dates,
 }: {
   values: number[];
   color?: string;
   empty?: boolean;
+  dates?: string[];
 }) {
   const id = useId().replace(/:/g, "");
   const max = Math.max(...values, 1);
@@ -23,7 +25,7 @@ export function LineChart({
         aria-label={
           empty
             ? "Nenhum envio registrado"
-            : "Leads da base demonstrativa por dia"
+            : "Leads criados por dia no período selecionado"
         }
       >
         <defs>
@@ -66,10 +68,10 @@ export function LineChart({
               />
             ))}
         <text x="25" y="185" fill="var(--muted)" fontSize="11">
-          21/09
+          {dates?.[0]?dates[0].slice(8,10)+'/'+dates[0].slice(5,7):'—'}
         </text>
         <text x="645" y="185" fill="var(--muted)" fontSize="11">
-          20/10
+          {dates?.at(-1)?dates.at(-1)!.slice(8,10)+'/'+dates.at(-1)!.slice(5,7):'—'}
         </text>
       </svg>
     </div>

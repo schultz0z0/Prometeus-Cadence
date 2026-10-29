@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useDemo, useNotify } from "@/demo/provider";
-import { calculateMetrics } from "@/domain/metrics";
+import type {ReportMetric} from "@/domain/reporting";
+import {ReportDetail,ReportStamp} from "@/components/reports/report-detail";
 import { Icon } from "@/components/ui/icon";
 import {
   Badge,
@@ -12,32 +13,24 @@ import {
 import { PeriodSelector } from "@/components/ui/period-selector";
 import { LineChart } from "@/components/charts/line-chart";
 import { DashboardOnboarding } from "@/components/onboarding/checklist";
-import {useMessageMetrics} from '@/client/use-message-metrics';
-import {useWorkspaceRefresh} from '@/client/workspace-provider';
-function dailyLeadCounts(leads: { createdAt: string }[], days: number, timezone: string) {
-  const format = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" });
-  const counts = new Map<string, number>();
-  for (let offset = days - 1; offset >= 0; offset--) counts.set(format.format(new Date(Date.now() - offset * 86_400_000)), 0);
-  for (const lead of leads) {
-    const date = new Date(lead.createdAt);
-    if (!Number.isFinite(date.getTime())) continue;
-    const day = format.format(date);
-    if (counts.has(day)) counts.set(day, counts.get(day)! + 1);
-  }
-  return [...counts.values()];
-}
+import {useReconciledReport} from '@/client/use-reconciled-report';
+import {jobStateLabels} from '@/modules/prospecting/job-history';
 export function Dashboard() {
   const state = useDemo();
   const notify = useNotify();
-  const m = calculateMetrics(state);
+
   const [period, setPeriod] = useState("30 dias");
-  const {metrics:messages,error:metricsError,live}=useMessageMetrics(period),refresh=useWorkspaceRefresh();
-  const metric=(value:number|undefined)=>value===undefined?(live?'…':'0'):String(value);
+  const {report,query,error,refresh:refreshPeriod}=useReconciledReport(period),{report:today,error:todayError,refresh:refreshToday}=useReconciledReport('Hoje');
+  const refresh=()=>Promise.all([refreshPeriod(),refreshToday()]);
+  const messages=report?.totals,now=today?.totals;
+  const [detail,setDetail]=useState<ReportMetric|null>(null);
+  const metric=(value:number|null|undefined)=>value==null?(report?'—':'…'):value.toLocaleString('pt-BR');
+  const m={total:messages?.leads??0,qualified:messages?.qualified??0,funnel:{qualified:messages?.qualified??0,pending:(messages?.leadPending??0)+(messages?.leadWarning??0),disqualified:messages?.leadDisqualified??0}};
   const stats = [
-    ["Leads novos", String(m.total), "base: " + m.total, "Users", "orange"],
+    ["Leads novos", metric(messages?.leads), "criados no período", "Users", "orange"],
     [
       "Qualificados",
-      String(m.qualified),
+      metric(messages?.qualified),
       `${m.total ? Math.round((m.qualified / m.total) * 100) : 0}% dos novos`,
       "CheckCircle2",
       "green-text",
@@ -60,13 +53,13 @@ export function Dashboard() {
               icon="RefreshCw"
               label="Atualizar"
               onClick={() =>
-                void refresh?.().then(()=>notify("Indicadores atualizados com a base do workspace.")).catch(e=>notify(e.message))
+                void refresh().then(()=>notify("Indicadores atualizados com os registros operacionais.")).catch(e=>notify(e.message))
               }
             />
           </>
         }
       />
-      {metricsError&&<p role="status">Indicadores de mensagens: {metricsError}</p>}
+
       <div className="stats-grid">
         {stats.map(([label, value, sub, icon, color]) => (
           <div key={label} className="stat-card panel">
@@ -74,12 +67,12 @@ export function Dashboard() {
               <span>{label}</span>
               <Icon name={icon} size={16} className={color} />
             </div>
-            <strong>{value}</strong>
-            <small>{sub}</small>
+            {query&&label!=="Abertura de e-mail"?<button className="report-metric-value" aria-label={'Ver registros de '+label} onClick={()=>setDetail(({"Leads novos":"leads","Qualificados":"qualified","Mensagens aceitas":"sent","Respostas":"replies","Opt-outs":"optouts"} as Record<string,ReportMetric>)[label])}><strong>{value}</strong></button>:<strong>{value}</strong>}<small>{sub}</small>
           </div>
         ))}
       </div>
       <section className="panel today-panel">
+        {todayError&&<p role="alert">Indicadores de hoje: {todayError}</p>}
         <div className="row between">
           <h3 className="row">
             <Icon name="Sun" size={17} className="orange" />
@@ -89,23 +82,23 @@ export function Dashboard() {
         </div>
         <div className="today-grid">
           {[
-            ["Na fila", "Calendar", metric(messages?.today.pending), "mensagens criadas hoje"],
-            ["E-mails", "Mail", metric(messages?.today.email), "aceitos"],
-            ["WhatsApp", "MessageSquare", metric(messages?.today.whatsapp), "aceitos"],
-            ["Respostas", "MessageSquare", metric(messages?.today.replies), ""],
-            ["Erros", "XCircle", metric(messages?.today.failed), ""],
-            ["Cadências", "Send", String(state.cadences.length), "no workspace"],
+            ["Na fila", "Calendar", metric(now?.pending), "mensagens criadas hoje"],
+            ["E-mails", "Mail", metric(now?.email), "aceitos"],
+            ["WhatsApp", "MessageSquare", metric(now?.whatsapp), "aceitos"],
+            ["Respostas", "MessageSquare", metric(now?.replies), ""],
+            ["Erros", "XCircle", metric(now?.failed), ""],
+            ["Cadências", "Send", metric(messages?.cadences), "no workspace"],
             [
               "Automações",
               "Workflow",
-              String(state.jobs.length),
-              "simulações locais",
+              metric(messages?.automations),
+              "configuradas no workspace",
             ],
-            ["Leads", "Users", String(m.total), "no workspace"],
+            ["Leads", "Users", metric(messages?.baseLeads), "no workspace"],
             [
               "Qualificados",
               "CheckCircle2",
-              String(m.qualified),
+              metric(messages?.baseQualified),
               "no workspace",
             ],
           ].map(([name, icon, num, help]) => (
@@ -127,9 +120,9 @@ export function Dashboard() {
               <Icon name="ChartNoAxesColumn" size={17} className="orange" />
               Leads novos por dia
             </h3>
-            <small>{period} · base do workspace</small>
+            <small>{period.includes("/")?"Período personalizado":period} · criados no período</small>
           </div>
-          <LineChart values={dailyLeadCounts(state.leads, period === "Hoje" ? 1 : period === "7 dias" ? 7 : period === "90 dias" ? 90 : 30, state.preferences.timezone)} />
+          <LineChart values={report?.series.map(day=>day.values.leads??0)??[]} dates={report?.series.map(day=>day.date)}/>
         </section>
         <section className="panel panel-pad">
           <h3 className="row">
@@ -191,36 +184,36 @@ export function Dashboard() {
         </section>
         <section className="panel panel-pad">
           <h3>Geração e qualificação</h3>
-          <small>simulações locais</small>
+          <small>execuções criadas no período</small>
           <div className="mini-stats">
             <div>
-              <strong>{state.jobs.reduce((n, j) => n + j.count, 0)}</strong>
+              <strong>{metric(messages?.executionInserted)}</strong>
               <small>SALVOS</small>
             </div>
             <div>
-              <strong>{state.jobs.length}</strong>
+              <strong>{metric(messages?.executions)}</strong>
               <small>EXECUÇÕES</small>
             </div>
             <div>
-              <strong>{state.jobs.reduce((total, job) => total + job.billableUsage, 0)}</strong>
+              <strong>{metric(messages?.commercialCredits)}</strong>
               <small>CRÉDITOS USADOS</small>
             </div>
           </div>
-          <p className="muted">Resumo das simulações locais. Consulte Execuções para acompanhar os trabalhos dos provedores.</p>
+          <p className="muted">Resultados persistidos das execuções. O consumo comercial consolidado não é medido neste relatório.</p>
         </section>
         <section className="panel panel-pad">
           <h3>Leads nas cadências</h3>
-          <small>no workspace</small>
+          <small>publicações criadas no período</small>
           <div className="funnel-bars">
             <div className="row between">
-              <span>Qualificados na base</span>
-              <strong>{m.qualified}</strong>
+              <span>Leads inscritos</span>
+              <strong>{metric(messages?.enrolled)}</strong>
             </div>
             <div className="funnel-track">
               <i style={{ width: "100%", background: "var(--primary)" }} />
             </div>
           </div>
-          <p className="muted">{state.cadences.filter(cadence => !cadence.archived && cadence.status === "active").length} cadências ativas · histórico em Execuções</p>
+          <p className="muted">{metric(messages?.activeCadences)} cadências ativas · histórico em Execuções</p>
           <Link className="orange small-link" href="/cadences">
             Ver cadências →
           </Link>
@@ -234,16 +227,8 @@ export function Dashboard() {
           </Link>
         </div>
         <div className="activity-empty">
-          {state.jobs.length ? (
-            state.jobs.slice(0, 3).map((j) => (
-              <div className="row" key={j.id}>
-                <Icon name="CheckCircle2" className="green-text" />
-                <span>
-                  {j.name} · {j.count} leads
-                </span>
-                <Badge>Demonstração</Badge>
-              </div>
-            ))
+          {report?.recentExecutions.length ? (
+            report.recentExecutions.map(j=>(<div className="row" key={j.id}><Icon name="Clock"/><Link href={'/executions/'+j.id}>{{generation:'Busca de empresas',qualification:'Qualificação',planning:'Análise de IA'}[j.kind]??'Execução'} · {j.counts.inserted??0} resultados salvos</Link><Badge>{jobStateLabels[j.state]??j.state}</Badge></div>))
           ) : (
             <>
               <Icon name="Clock" size={25} />
@@ -253,6 +238,8 @@ export function Dashboard() {
           )}
         </div>
       </section>
+      <ReportStamp report={report} error={error} onRefresh={refresh}/>
+      {detail&&query&&<ReportDetail key={detail+JSON.stringify(query)} metric={detail} query={query} onClose={()=>setDetail(null)}/>}
     </div>
   );
 }

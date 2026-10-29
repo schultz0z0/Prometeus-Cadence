@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-29",
+  "qaPriorDataPreserved": true,
+  "activeWorkspaceRestored": true,
+  "ownSessionRevoked": true,
+  "newContacts": 0,
+  "newChannels": 0,
+  "newOutbox": 0,
+  "pilotRecords": 0,
+  "externalSends": 0,
+  "paidCalls": 0,
+  "browserFixtures": "one real private unpublished draft removed; no message or provider response fixtures; network failure injected only at browser transport",
+  "ownedUnpublishedDraftsCreated": 1,
+  "ownedUnpublishedDraftsRemoved": 1,
+  "allDedicatedQaSessionsRevoked": true
+}

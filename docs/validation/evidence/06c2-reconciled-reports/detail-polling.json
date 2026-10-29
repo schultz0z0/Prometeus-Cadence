@@ -1,0 +1,7 @@
+{
+  "regressionRed": "Parent polling reloaded the open detail: 1 -> 2",
+  "green": {
+    "openDetailSurvivesParentPolling": true,
+    "detailRequests": 1
+  }
+}
