@@ -5,7 +5,7 @@ import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
 import type {JobLease,ProspectingInput,UsageEstimate} from '../../domain/prospecting.ts';
 import type {Confirm} from '../../domain/reviewed-operation.ts';
-import {journeyInputSchema,journeyRetryIds,type JourneyInput,type JourneyView,type JourneyReview,type JourneyStage} from '../../domain/prospecting-journey.ts';
+import {journeyInputSchema,type JourneyInput,type JourneyView,type JourneyReview,type JourneyStage} from '../../domain/prospecting-journey.ts';
 import {withContextTransaction,withWorkspaceTransaction} from '../db/transaction.ts';
 import {workerPool} from '../prospecting/worker-db.ts';
 import {assertJobLease} from '../prospecting/repository.ts';
@@ -38,7 +38,8 @@ async function basis(c:PoolClient,p:Principal,input:JourneyInput){
  await authorize(c,p);
  const s=await prospectingReviewState(c,p,discovery(input)),context=await readApprovedContext(c),policy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),route=policy.conventionalProvider?runtime.conventional[policy.conventionalProvider].route:null;
  const resolved=resolveAiRoute(policy,runtime,route?await readConnectionCheck(c,route):null);
- const frozen={context,aiRoute:resolved.route,execution:s.checkpoint.execution,policy,sourcePolicy:s.profileVersion};
+ const databaseAuthority=(await c.query('SELECT app.journey_database_authority() value')).rows[0].value;
+ const frozen={context,aiRoute:resolved.route,execution:s.checkpoint.execution,policy,sourcePolicy:s.profileVersion,databaseAuthority};
  const blockers=[...s.blockers,...resolved.blockers];if(!context?.offer||!context.idealCustomer)blockers.push('Aprove a oferta e o cliente ideal no contexto da empresa.');
  return{s,frozen,hash:hashValue(frozen),blockers};
 }
@@ -52,9 +53,9 @@ export async function prepareJourney(p:Principal,value:unknown):Promise<JourneyR
 }
 async function row(c:PoolClient,id:string,lock=false){const r=(await c.query('SELECT * FROM app.prospecting_journey WHERE id=$1'+(lock?' FOR UPDATE':''),[id])).rows[0];if(!r)throw new AppError(404,'Jornada não encontrada.');return r;}
 async function stages(c:PoolClient,id:string){return(await c.query('SELECT s.*,j.state job_state,j.input job_input,j.checkpoint job_checkpoint,j.counts,j.error_code FROM app.journey_stage s JOIN app.prospecting_job j ON j.workspace_id=s.workspace_id AND j.id=s.job_id WHERE s.journey_id=$1 ORDER BY s.created_at,s.id',[id])).rows;}
-async function view(c:PoolClient,id:string):Promise<JourneyView>{const q=await row(c,id),ss=await stages(c,id);return{id:q.id,revision:Number(q.revision),state:q.state,input:q.input,listId:q.list_id,proposalJobId:q.proposal_job_id,cadenceId:q.cadence_id,reason:q.reason,missing:(await missing(c,id)).length,stages:ss.map(s=>({name:s.name,jobId:s.job_id,state:s.job_state,missing:s.missing,companies:s.company_ids.length}))};}
+async function view(c:PoolClient,id:string):Promise<JourneyView>{const q=await row(c,id),ss=await stages(c,id),all=await ids(c,id),gaps=new Set<string>();for(const name of ['research','people','qualify'] as const)for(const id of (await pendingStage(c,q,name,ss,all)).missing)gaps.add(id);return{id:q.id,revision:Number(q.revision),state:q.state,input:q.input,listId:q.list_id,proposalJobId:q.proposal_job_id,cadenceId:q.cadence_id,reason:q.reason,missing:gaps.size,excluded:await excluded(c,id),stages:ss.map(s=>({name:s.name,jobId:s.job_id,state:s.job_state,missing:s.missing,companies:s.company_ids.length}))};}
 export function getJourney(p:Principal,id:string){return withWorkspaceTransaction(p,c=>view(c,id));}
-export function journeyForJob(p:Principal,jobId:string){return withWorkspaceTransaction(p,async c=>{const s=(await c.query('SELECT journey_id FROM app.journey_stage WHERE job_id=$1',[jobId])).rows[0];return s?view(c,s.journey_id):null;});}
+export function journeyForJob(p:Principal,jobId:string){return withWorkspaceTransaction(p,async c=>{const s=(await c.query('SELECT journey_id FROM app.journey_stage WHERE job_id=$1 UNION ALL SELECT journey_id FROM app.journey_proposal_attempt WHERE job_id=$1',[jobId])).rows[0];return s?view(c,s.journey_id):null;});}
 export async function confirmJourney(p:Principal,value:Confirm<JourneyInput>|unknown):Promise<JourneyView>{
  const body=parse(confirmSchema,value);return withWorkspaceTransaction(p,async c=>{
   await authorize(c,p);await c.query('INSERT INTO app.workspace_meta(workspace_id) VALUES($1) ON CONFLICT DO NOTHING',[p.workspaceId]);await lockWorkspace(c);
@@ -65,20 +66,37 @@ export async function confirmJourney(p:Principal,value:Confirm<JourneyInput>|unk
   await enqueue(c,p,await row(c,id),'discover',[]);return view(c,id);
  });
 }
-async function enqueue(c:PoolClient,p:Principal,q:any,name:JourneyStage,ids:string[]){
+async function enqueue(c:PoolClient,p:Principal,q:any,name:JourneyStage,ids:string[],modules:('qualify'|'summary')[]=['qualify','summary']){
  const size=name==='people'?100:500,batches=ids.length?Array.from({length:Math.ceil(ids.length/size)},(_,i)=>ids.slice(i*size,(i+1)*size).sort()):name==='discover'?[[]]:[];
  const version=Number((await c.query('SELECT COALESCE(max(version),0)+1 n FROM app.journey_stage WHERE journey_id=$1 AND name=$2',[q.id,name])).rows[0].n);
  for(const batch of batches){
-  const input:ProspectingInput=name==='discover'?{...discovery(q.input),destination:{mode:'existing',listId:q.list_id}} as ProspectingInput:{kind:'qualification',listId:q.list_id,leadIds:batch,modules:name==='research'?['deep']:name==='people'?['decisors']:['qualify','summary'],summaryPolicy:'all',escalation:'off',...(name==='research'?{companyResearch:{sourceKinds:['website','social','registry'],maxPagesPerCompany:10}}:{}),...(name==='people'?{companyPeople:true,enrichment:{maxCredits:batch.length,destinationName:'Decisores · '+q.input.brief.slice(0,75)}}:{})};
+  const input:ProspectingInput=name==='discover'?{...discovery(q.input),destination:{mode:'existing',listId:q.list_id}} as ProspectingInput:{kind:'qualification',listId:q.list_id,leadIds:batch,modules:name==='research'?['deep']:name==='people'?['decisors']:modules,summaryPolicy:'all',escalation:'off',...(name==='research'?{companyResearch:{sourceKinds:['website','social','registry'],maxPagesPerCompany:10}}:{}),...(name==='people'?{companyPeople:true,enrichment:{maxCredits:batch.length,destinationName:'Decisores · '+q.input.brief.slice(0,75)}}:{})};
   const s=await prospectingReviewState(c,p,input);if(s.blockers.length)throw new AppError(409,s.blockers[0],'JOURNEY_CAPACITY');
-  const job=await insertReviewedJob(c,p,{input,listId:q.list_id,requestId:randomUUID(),bodyHash:hashValue({journey:q.id,name,version,batch}),profileVersion:s.profileVersion,checkpoint:{...s.checkpoint,context:q.basis.context,journey:{id:q.id,name,version,basisHash:hashValue(q.basis)}},usage:estimateUsage(input,s.aiRoute,s.enrichment?.reserveCredits),caps:s.config.caps,globalCaps:s.config.globalCaps});
+  const job=await insertReviewedJob(c,p,{input,listId:q.list_id,requestId:randomUUID(),bodyHash:hashValue({journey:q.id,name,version,batch}),profileVersion:s.profileVersion,checkpoint:{...s.checkpoint,context:q.basis.context,journey:{id:q.id,name,version,basisHash:hashValue(q.basis),databaseAuthority:q.basis.databaseAuthority}},usage:estimateUsage(input,s.aiRoute,s.enrichment?.reserveCredits),caps:s.config.caps,globalCaps:s.config.globalCaps});
   await c.query('INSERT INTO app.journey_stage(workspace_id,journey_id,id,name,version,company_ids,batch_key,job_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.workspaceId,q.id,randomUUID(),name,version,batch,hashValue(batch),job.id]);
  }
 }
-async function ids(c:PoolClient,id:string){return(await c.query("SELECT DISTINCT i.lead_id FROM app.journey_stage s JOIN app.prospecting_item i ON i.workspace_id=s.workspace_id AND i.job_id=s.job_id JOIN app.lead l ON l.workspace_id=i.workspace_id AND l.id=i.lead_id WHERE s.journey_id=$1 AND s.name='discover' ORDER BY i.lead_id",[id])).rows.map(r=>r.lead_id as string);}
-async function missing(c:PoolClient,id:string,name:JourneyStage='research'){
- const cases=(await c.query('SELECT r.lead_id,r.state,j.state job_state FROM app.research_case r JOIN app.journey_stage s ON s.workspace_id=r.workspace_id AND s.job_id=r.job_id JOIN app.prospecting_job j ON j.workspace_id=s.workspace_id AND j.id=s.job_id WHERE s.journey_id=$1 AND s.name=$2',[id,name])).rows;
- return journeyRetryIds(cases.map(r=>({leadId:r.lead_id,state:r.state==='pending'&&terminal.includes(r.job_state)?r.job_state:r.state})));
+async function ids(c:PoolClient,id:string){return(await c.query("SELECT DISTINCT i.lead_id FROM app.journey_stage s JOIN app.prospecting_journey q ON q.workspace_id=s.workspace_id AND q.id=s.journey_id JOIN app.prospecting_item i ON i.workspace_id=s.workspace_id AND i.job_id=s.job_id JOIN app.lead l ON l.workspace_id=i.workspace_id AND l.id=i.lead_id AND l.list_id=q.list_id WHERE s.journey_id=$1 AND s.name='discover' ORDER BY i.lead_id",[id])).rows.map(r=>r.lead_id as string);}
+async function excluded(c:PoolClient,id:string){return Number((await c.query("SELECT count(DISTINCT i.lead_id) n FROM app.journey_stage s JOIN app.prospecting_journey q ON q.workspace_id=s.workspace_id AND q.id=s.journey_id JOIN app.prospecting_item i ON i.workspace_id=s.workspace_id AND i.job_id=s.job_id JOIN app.lead l ON l.workspace_id=i.workspace_id AND l.id=i.lead_id WHERE s.journey_id=$1 AND s.name='discover' AND l.list_id<>q.list_id",[id])).rows[0].n);}
+// Coverage is per company/module, across every valid attempt. A past cancelled
+// batch never invalidates a later success; absence/conflict is not a retry signal.
+async function pendingStage(c:PoolClient,q:any,name:'research'|'people'|'qualify',ss:any[],all:string[]){
+ const valid=ss.filter(s=>s.name===name&&(name==='research'||s.job_checkpoint.journey?.basisHash===hashValue(q.basis))),jobs=valid.map(s=>s.job_id),pending:{id:string;modules:('qualify'|'summary')[]}[]=[],missing:string[]=[];
+ const cases=name==='qualify'?[]:(await c.query('SELECT job_id,lead_id,state,missing FROM app.research_case WHERE job_id=ANY($1::text[])',[jobs])).rows;
+ const items=name==='qualify'?(await c.query('SELECT job_id,lead_id,payload FROM app.prospecting_item WHERE job_id=ANY($1::text[])',[jobs])).rows:[];
+ for(const id of all){
+  const attempts=valid.filter(s=>s.company_ids.includes(id)),finished=attempts.filter(s=>terminal.includes(s.job_state));
+  if(name==='qualify'){
+   const ok=new Set(items.filter(r=>r.lead_id===id&&finished.some(s=>s.job_id===r.job_id)).flatMap(r=>(r.payload.results??[]).filter((m:any)=>['succeeded','pending_review','skipped','applied'].includes(m.status)).map((m:any)=>m.module)));
+   const modules=(['qualify','summary'] as const).filter(m=>!ok.has(m));if(modules.length){pending.push({id,modules});if(finished.length)missing.push(id);}
+  }else{
+   const results=cases.filter(r=>r.lead_id===id&&finished.some(s=>s.job_id===r.job_id));if(results.some(r=>r.state==='completed'))continue;
+   const absent=results.some(r=>r.state==='partial'&&r.missing.length>0&&!r.missing.some((code:string)=>/INDISPONIVEL|MODULE_FAILED|LIMITE_DE_PAGINAS/.test(code)));
+   if(results.some(r=>r.state==='partial')||finished.length)missing.push(id);
+   if(!absent)pending.push({id,modules:[]});
+  }
+ }
+ return{pending,missing};
 }
 async function currentBasis(c:PoolClient,p:Principal,q:any){const b=await basis(c,p,q.input);return b;}
 export async function assertJourneyAuthority(c:PoolClient,job:any){
@@ -91,12 +109,23 @@ export async function assertJourneyAuthority(c:PoolClient,job:any){
 async function synchronize(c:PoolClient,q:any){
  const ss=await stages(c,q.id);for(const s of ss)await c.query('UPDATE app.journey_stage SET state=$2,missing=$3 WHERE id=$1',[s.id,s.job_state,s.error_code?[s.error_code]:[]]);return ss;
 }
+async function drainChildren(c:PoolClient,q:any){
+ for(const s of await stages(c,q.id))if(!terminal.includes(s.job_state)){
+  await c.query("UPDATE app.prospecting_job SET state=CASE WHEN state='queued' THEN 'cancelled' ELSE 'cancelling' END,revision=revision+1 WHERE id=$1",[s.job_id]);
+  if(s.job_state==='queued')await releaseUnused(c,s.job_id);
+ }
+}
 async function advance(c:PoolClient,p:Principal,q:any){
  const ss=await synchronize(c,q);if(q.state!=='running')return;
  if(ss.some(s=>s.job_state==='needs_reconciliation')){await c.query("UPDATE app.prospecting_journey SET state='blocked',reason='NEEDS_RECONCILIATION',revision=revision+1 WHERE id=$1",[q.id]);return;}
- const b=await currentBasis(c,p,q);if(b.hash!==hashValue(q.basis)){await c.query("UPDATE app.prospecting_journey SET state='blocked',reason='CONTEXT_CHANGED',revision=revision+1 WHERE id=$1",[q.id]);return;}
+ const b=await currentBasis(c,p,q);if(b.hash!==hashValue(q.basis)){await drainChildren(c,q);await c.query("UPDATE app.prospecting_journey SET state='blocked',reason='CONTEXT_CHANGED',revision=revision+1 WHERE id=$1",[q.id]);return;}
  if(ss.some(s=>!terminal.includes(s.job_state)))return;
- const all=await ids(c,q.id);if(!all.length){await c.query("UPDATE app.prospecting_journey SET state='review',reason='EMPTY_RESULT',revision=revision+1 WHERE id=$1",[q.id]);return;}
+ const all=await ids(c,q.id);
+ for(const name of sequence){if(!ss.some(s=>s.name===name&&['failed','cancelled'].includes(s.job_state)))continue;
+  const unresolved=name==='discover'?!ss.some(s=>s.name==='discover'&&['completed','partial'].includes(s.job_state)):name==='research'||name==='people'||name==='qualify'?(await pendingStage(c,q,name,ss,all)).pending.length>0:false;
+  if(unresolved){await c.query("UPDATE app.prospecting_journey SET state='blocked',reason='STAGE_STOPPED',revision=revision+1 WHERE id=$1",[q.id]);return;}
+ }
+ if(!all.length){await c.query("UPDATE app.prospecting_journey SET state='review',reason='EMPTY_RESULT',revision=revision+1 WHERE id=$1",[q.id]);return;}
  const next=sequence.filter(n=>n!=='discover').map(name=>({name,covered:new Set(ss.filter(s=>s.name===name&&['completed','partial'].includes(s.job_state)&&(name==='research'||s.job_checkpoint.journey?.basisHash===hashValue(q.basis))).flatMap(s=>s.company_ids as string[]))})).map(s=>({name:s.name,pending:all.filter(id=>!s.covered.has(id))})).find(s=>s.pending.length);
  if(next){await enqueue(c,p,q,next.name,next.pending);await c.query('UPDATE app.prospecting_journey SET revision=revision+1 WHERE id=$1',[q.id]);}
  else await c.query("UPDATE app.prospecting_journey SET state='review',reason=NULL,revision=revision+1 WHERE id=$1",[q.id]);
@@ -123,25 +152,35 @@ export async function prepareJourneyResume(p:Principal,id:string):Promise<Journe
 export async function resumeJourney(p:Principal,id:string,raw:unknown){const body=parse(resumeSchema,raw);return withWorkspaceTransaction(p,async c=>{
  await authorize(c,p);await lockWorkspace(c);const digest=hashValue({action:'journey.resume',id}),old=(await c.query('SELECT * FROM app.command_result WHERE request_id=$1',[body.requestId])).rows[0];if(old){if(old.user_id!==p.userId||old.body_hash!==digest)throw new AppError(409,'Identificador já utilizado.');return view(c,id);}
  const s=await resumeState(c,p,id);verifyReviewToken(body.token,s.pr,secret());if(s.blockers.length)throw new AppError(409,s.blockers[0]);await assertExecution(c);
- const changed=hashValue(s.q.basis)!==s.b.hash;await c.query("UPDATE app.prospecting_journey SET basis=$2,state='running',reason=NULL,revision=revision+1 WHERE id=$1",[id,s.b.frozen]);const q=await row(c,id),all=await ids(c,id);
+ await c.query("UPDATE app.prospecting_journey SET basis=$2,state='running',reason=NULL,revision=revision+1 WHERE id=$1",[id,s.b.frozen]);const q=await row(c,id),all=await ids(c,id);
  if(!all.length){if(s.ss.find(s=>s.name==='discover')?.job_state==='completed')await advance(c,p,q);else await enqueue(c,p,q,'discover',[]);}
  else{
-  const research=await missing(c,id);let started=false;
-  for(const name of ['research','people','qualify'] as const){const previous=s.ss.filter(s=>s.name===name),pending=name==='research'?research:previous.length?previous.filter(s=>!['completed','partial'].includes(s.job_state)).flatMap(s=>s.company_ids):all;const retry=changed&&name!=='research'?all:pending;if(retry.length){await enqueue(c,p,q,name,[...new Set(retry)]);started=true;break;}}
+  let started=false;
+  for(const name of ['research','people','qualify'] as const){const {pending}=await pendingStage(c,q,name,s.ss,all);if(pending.length){
+   if(name==='qualify'){for(const key of ['qualify','summary','qualify,summary']){const group=pending.filter(v=>v.modules.join(',')===key);if(group.length)await enqueue(c,p,q,name,group.map(v=>v.id),group[0].modules);}}
+   else await enqueue(c,p,q,name,pending.map(v=>v.id));started=true;break;
+  }}
   if(!started)await advance(c,p,q);
  }
  await c.query("INSERT INTO app.command_result VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4)",[body.requestId,p.userId,digest,{journeyId:id}]);return view(c,id);
 });}
 const cadenceChannels=z.strictObject({channels:z.array(z.enum(['EMAIL','WHATSAPP'])).min(1).max(2)});
 async function cadenceInput(p:Principal,id:string,raw:unknown){const {channels}=parse(cadenceChannels,raw);return withWorkspaceTransaction(p,async c=>{await authorize(c,p);const q=await row(c,id);if(q.state!=='review'||!q.list_id)throw new AppError(409,'Conclua e revise a jornada antes de sugerir a cadência.');const ss=await stages(c,id);if(ss.some(s=>!terminal.includes(s.job_state)))throw new AppError(409,'Aguarde as etapas pendentes.');return{kind:'planning' as const,task:'cadence_options' as const,listId:q.list_id,objective:'Apresentar a oferta',channels,tone:'Consultivo',rhythm:'Padrão' as const,highlight:q.input.brief,avoid:'Não inventar dados ou prometer contatos pessoais.',decisionMaker:''};});}
-export async function prepareJourneyCadence(p:Principal,id:string,raw:unknown){return preparePlanning(p,await cadenceInput(p,id,raw));}
+async function proposalReplaceable(c:PoolClient,q:any){
+ if(q.cadence_id)return false;if(!q.proposal_job_id)return true;
+ const job=(await c.query('SELECT state,checkpoint FROM app.prospecting_job WHERE id=$1',[q.proposal_job_id])).rows[0];if(!job)return false;
+ if(['failed','cancelled'].includes(job.state))return true;
+ const context=await readApprovedContext(c);return ['completed','partial'].includes(job.state)&&(context?.version??0)!==(job.checkpoint.planning?.base?.contextVersion??0);
+}
+export async function prepareJourneyCadence(p:Principal,id:string,raw:unknown){const input=await cadenceInput(p,id,raw),review=await preparePlanning(p,input);const allowed=await withWorkspaceTransaction(p,async c=>proposalReplaceable(c,await row(c,id)));if(!allowed)review.blockers.push('Aguarde ou revise a análise já vinculada. Um rascunho confirmado não pode ser criado novamente.');return review;}
 export async function confirmJourneyCadence(p:Principal,id:string,raw:unknown){
  const body=parse(z.strictObject({channels:z.array(z.enum(['EMAIL','WHATSAPP'])).min(1).max(2),token:z.string().min(1),requestId:z.uuid()}),raw),input=await cadenceInput(p,id,{channels:body.channels});
  return withWorkspaceTransaction(p,async c=>{await authorize(c,p);await lockWorkspace(c);const q=await row(c,id,true),digest=hashValue(input),old=(await c.query('SELECT id,actor_id,body_hash FROM app.prospecting_job WHERE request_id=$1',[body.requestId])).rows[0];
   if(old){if(old.actor_id!==p.userId||old.body_hash!==digest||q.proposal_job_id!==old.id)throw new AppError(409,'Identificador já utilizado.');return view(c,id);}
-  if(q.state!=='review'||q.proposal_job_id)throw new AppError(409,'Uma proposta já está vinculada ou a jornada mudou.');
+   if(q.state!=='review'||!await proposalReplaceable(c,q))throw new AppError(409,'Uma proposta já está vinculada ou a jornada mudou.');
   const s=await planningReviewState(c,p,input);verifyReviewToken(body.token,s.proof,secret());if(s.blockers.length)throw new AppError(409,s.blockers[0]);
   const job=await insertReviewedJob(c,p,{input,listId:q.list_id,requestId:body.requestId,bodyHash:digest,profileVersion:s.profileVersion,checkpoint:s.checkpoint,usage:estimateUsage(input,s.aiRoute),caps:s.config.caps,globalCaps:s.config.globalCaps});
+   await c.query('INSERT INTO app.journey_proposal_attempt(workspace_id,journey_id,job_id) VALUES($1,$2,$3)',[p.workspaceId,id,job.id]);
   await c.query('UPDATE app.prospecting_journey SET proposal_job_id=$2,revision=revision+1 WHERE id=$1',[id,job.id]);return view(c,id);
  });
 }

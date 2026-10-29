@@ -1,8 +1,8 @@
 {
   "version": 1,
   "date": "2026-10-27",
-  "scope": "approved-product-baseline;06D.2-completed-local-controlled;remaining-packages-planned",
-  "next": "06B.5",
+  "scope": "approved-product-baseline;06B.5-completed-local-controlled;remaining-packages-planned",
+  "next": "06IA-H",
   "end": "08B",
   "packages": [
     {
@@ -88,7 +88,7 @@
         "db/migrations/083a-company-research-review.sql"
       ],
       "review": "docs/validation/06b3-company-research-review.md",
-      "deferredMinorOwner": "06B.5"
+      "deferredMinorOwner": "06F"
     },
     {
       "id": "06B.4",
@@ -286,6 +286,12 @@
         "/executions/[id]",
         "/contacts",
         "/cadences/new"
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-10-28",
+      "review": "docs/validation/06b5-prospecting-journey-review.md",
+      "followUpMigrations": [
+        "db/migrations/087a-journey-recovery-authority.sql"
       ]
     },
     {

@@ -15,9 +15,15 @@ export function workerPool(){
 export function withLeasedTransaction<T>(lease:JobLease,fn:(c:PoolClient)=>Promise<T>){
   return withContextTransaction(workerPool(),{workspaceId:lease.workspaceId,userId:lease.actorId,role:'operator',sessionId:'worker-job-authority'},async c=>{
     await lockWorkspace(c);await assertJobLease(c,lease,true);
+    await c.query("SELECT set_config('app.publication_job',$1,true),set_config('app.publication_token',$2,true),set_config('app.publication_fence',$3,true)",[lease.jobId,lease.token,String(lease.fence)]);
     const job=(await c.query('SELECT id,workspace_id,actor_id,checkpoint,state FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
     await assertJourneyAuthority(c,job);
     if(job.checkpoint.automation){await c.query("SELECT set_config('app.automation_job_token',$1,true),set_config('app.automation_job_fence',$2,true)",[lease.token,String(lease.fence)]);await assertAutomationAuthority(c,job,'result');}
-    const result=await fn(c);await assertJobLease(c,lease,true,true);await assertJourneyAuthority(c,(await c.query('SELECT actor_id,checkpoint,state FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0]);return result;
+    const result=await fn(c);await assertJobLease(c,lease,true,true);
+    const after=(await c.query('SELECT actor_id,checkpoint,state FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
+    // Cancellation may close its journal/reservations after publication was revoked.
+    // SQL publication guards independently reject domain writes in cancelling state.
+    if(!(job.state==='cancelling'&&['cancelled','needs_reconciliation'].includes(after.state)))await assertJourneyAuthority(c,after);
+    return result;
   });
 }

@@ -1,5 +1,5 @@
 {
-  "phase": "before independent review",
+  "phase": "after independent review and one correction pass",
   "date": "2026-10-28",
   "unit": {
     "tests": 346,
@@ -7,8 +7,8 @@
     "fail": 0
   },
   "integration": {
-    "tests": 392,
-    "pass": 392,
+    "tests": 402,
+    "pass": 402,
     "fail": 0
   },
   "browser": {
@@ -30,7 +30,8 @@
   "types": "final after build passed",
   "build": "final webpack passed",
   "migrations": [
-    "087"
+    "087",
+    "087a"
   ],
   "externalCalls": 0,
   "externalSends": 0,
@@ -45,12 +46,39 @@
     "persistentWrites": 0,
     "pageErrors": 0
   },
-  "totalScreenshots": 57,
+  "totalScreenshots": 69,
   "runtime": {
     "localhost": 200,
     "lanes": 6,
     "alive": true,
     "failures": 0
   },
-  "cleanup": "closure.json verified"
+  "cleanup": "closure.json and closure-postreview.json verified",
+  "browserPostReview": {
+    "screenshots": 12,
+    "pageErrors": 0,
+    "horizontalOverflow": 0,
+    "linkedReplacement": true,
+    "partialAndDuplicateVisible": true,
+    "persistentWrites": 0,
+    "externalSends": 0,
+    "paidCalls": 0
+  },
+  "focused": {
+    "tests": 19,
+    "pass": 19,
+    "fail": 0
+  },
+  "review": {
+    "independentReviews": 1,
+    "base": "85009f4",
+    "reviewedHead": "2fe8447",
+    "critical": 0,
+    "important": 8,
+    "fixed": 8,
+    "minor": 0,
+    "inheritedMinorDeferred": 1,
+    "reReview": false
+  },
+  "next": "06IA-H"
 }

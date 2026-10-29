@@ -23,3 +23,40 @@ Extra UI editor probe: AddStep did render four steps; first check raced React, s
 Extra editor viewport assertion initially read layout immediately after resize; passive DOM check at390 showed scrollWidth390/no offenders. Match primary QA's settled resize (250ms) before recording overflow; no CSS change based on a transient measurement. Four steps and edited text survive live polling in the observed page.
 
 Task 3: complete (ebe86e6..review HEAD; focused9/9; unit346/346; integration392/392; finalbuild/types/diffcheck green;57masked screens; own QA closed/restored/revoked; runtime200/sixhealthy). Extra editor9screens confirms4editable steps, poll preserves draft,1controlled draft confirmation and0persistentwrites/sends/calls.
+
+Pre-final review dispatched one fresh astra/high seat for85009f4..2fe8447 with exact ReviewFocus and all rulings. Scope native execution itself remained inline. QAclosed:57screens hashes verified; RES76EV/15rows/0open passes after action vocabulary normalize; planning37docs/26packages/26requirements no cycles/errors; runtime200sixhealthy.
+
+Interrupted initial final review hit usage limit before returning findings. User requested continue; same sole seat resumed (no replacement/re-review). Current tree2fe8447clean, local smoke200sixhealthy and RES/planning checks reconfirmed.
+
+Final review received: 0Critical/8Important/0Minor. Accepted all eight after tracing service/worker/SQL boundaries; one RED-GREEN correction pass begins. Root causes: terminal cancellation rechecks publication authority; stage-level coverage loses per-company/module outcomes; generic ownership grants; proposal link single-shot; SQL lacks frozen-basis fence. Nine Declined-to-judge entries preserved in review report; final rulings below.
+
+Final: Ruling: live Apify/LLM/JEV accuracy, availability and monetary cost remain06IA-H — controlled contracts are not a paid/live pilot — cost if wrong: supplier coverage and estimates may need revision before public sale.
+Final: Ruling: connected/paid CadenceFlow states stay unobserved — preserve the user's explicit evidence boundary rather than imply backend/visual parity — cost if wrong: gaps remain for08A when observable.
+Final: Ruling: author browser QA covers the57 prior captures and12 post-review recovery captures at1920/390/320; reviewer inspected two only — accept bounded interaction/overflow evidence, not an independent complete pixel audit — cost if wrong: unobserved visual states can differ.
+Final: Ruling: cleanup and runtime are rechecked by the executor after deployment locally — reviewer did not rerun them — cost if wrong: runtime health is only a point-in-time observation.
+Final: Ruling: executor reruns full suites/build/types after fixes; no second review/re-execution seat — follows the approved single-review correction process — cost if wrong: author verification has less independence.
+Final: Ruling: evidence is masked and tracked text is checked, without a forensic claim about all binaries/images/history — this package does not certify all historic artifacts — cost if wrong: a historical leak could need separate remediation.
+Final: Ruling: real sending, trial, complete commercial consumption and OpenWA limits keep their existing tests and later live gates —06B5 creates jobs/drafts and never sends — cost if wrong: inherited external integration behavior still needs its own homologation.
+Final: Ruling: production load, rollout and restore remain08B — local migration/build checks do not prove public readiness — cost if wrong: deployment/scale gaps may require correction at that gate.
+Final: Ruling: no implicit product in journey DTO; existing wizard remains explicit — preserve approved company context without guessing a product — cost if wrong: product-specific generation requires the separate picker.
+Final: minor (deferred): inherited06B3 batch detail initially ignores leadId query; visible company selector works. Move residual navigation polish from06B5 to06F; not part of the eight functional/authority fixes.
+
+Correction pass: nine regressions RED in review-red2 (active cancel/context recovery, stopped jobs, repeated recovered batch, partial modules, ownership, proposal, SQL publication); all18 GREEN, then19 including deterministic adapter/HTTP cancellation. Strong-identity duplicate semantic mutation additionally reproduced blocked instead of running (18/19 RED), restored exact source; final full suite running. Migration087a applied locally, build/types green;12 postreview captures at1920/390/320, QA L016 restored/revoked,0writes/sends/calls;69image hashes verified.
+
+Final: fixed Important1 — active pause and context invalidation drain safely RED→GREEN; suite402/402, focused19/19.
+
+Final: fixed Important2 — HTTP cancellation and deterministic provider failure wait for review RED→GREEN; suite402/402, focused19/19.
+
+Final: fixed Important3 — later successful recovery covers cancelled history RED→GREEN; suite402/402, focused19/19.
+
+Final: fixed Important4 — partial people/qualification retry only missing company/modules RED→GREEN; suite402/402, focused19/19.
+
+Final: fixed Important5 — strong identity duplicate in another list does not block eligible contacts RED→GREEN; suite402/402, focused19/19.
+
+Final: fixed Important6 — real SQL operator cannot change actor; admin can pause RED→GREEN; suite402/402, focused19/19.
+
+Final: fixed Important7 — failed/cancelled/context-invalid proposals replace atomically; obsolete choice rejected; one linked draft RED→GREEN; suite402/402, focused19/19.
+
+Final: fixed Important8 — direct SQL publication rejects changed context/central policy; technical receipt retained RED→GREEN; suite402/402, focused19/19.
+
+Final verification:346/346 unit;402/402 full integration;19/19focused;webpackbuild/types/diffcheck;69hashedmaskedcaptures including12postreview;QA L015/L016restored/ownsessionrevoked;runtime200sixhealthy. EightImportant fixed in one pass,0Critical,0newMinor; inherited navigation minor06B3→06F. Final review clean after verified fixes; keep local branch, next06IA-H.

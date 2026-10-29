@@ -5,7 +5,7 @@ export const journeyInputSchema=z.strictObject({brief:z.string().trim().min(2).m
 export type JourneyInput=z.infer<typeof journeyInputSchema>;
 export type JourneyStage='discover'|'research'|'people'|'qualify'|'review'|'cadence';
 export type JourneyState='running'|'paused'|'blocked'|'review'|'ready';
-export interface JourneyView{id:string;revision:number;state:JourneyState;input:JourneyInput;stages:{name:JourneyStage;jobId:string|null;state:string;missing:string[];companies:number}[];listId:string|null;proposalJobId:string|null;cadenceId:string|null;missing:number;reason:string|null}
+export interface JourneyView{id:string;revision:number;state:JourneyState;input:JourneyInput;stages:{name:JourneyStage;jobId:string|null;state:string;missing:string[];companies:number}[];listId:string|null;proposalJobId:string|null;cadenceId:string|null;missing:number;excluded?:number;reason:string|null}
 export type JourneyReview=Reviewed<JourneyInput>&{usage:UsageEstimate[];effects:string[]};
 export function nextJourneyStage(input:{research:string;qualification:string;cadenceApproved:boolean}):'research'|'qualify'|'review'|'ready'{
  if(!['completed','partial'].includes(input.research))return 'research';

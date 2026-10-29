@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-28 · Session: s13 · Phase:6 Canais e comprovantes validados; paridade integral não aceita
+Updated: 2026-10-28 · Session: s14 · Phase:6 Jornada integrada validada; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s14:06B.5 com pausas/retomada por empresa/módulo, duplicatas entre listas, propostas substituíveis e guardSQL087a.346unit/402integration/19focused;69capturas,12pós-revisão. Oito Important corrigidos numa passagem;QA L015/L016restored;runtime200/seis lanes. Próximo06IA-H.
+- Not covered s14:acurácia/custo live, estados conectados/pagos da referência, carga/produção. Menor histórico06B.3→06F.
 
 - Covered s13:06D.2 evidence/inbox/test popup;36 masked screenshots in1920/390/320, zero overflow/page errors, draft preserved through refresh;383 integration/342 unit green. EV-275; own QA session revoked and prior data preserved. Uma revisão independente;dois Important corrigidos e um menor adiado→06F. Próximo06B.5.
 - Not covered s13:connected/pilot reference states, external channel delivery and public production.
@@ -51,6 +54,8 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 - Decide: nenhuma decisão comercial reaberta; preservar trial7 dias, créditos pré-pagos, OpenWA gerenciado e billing aprovado. Sem100% e sem aceite do marco enquanto restar cobertura exigida.
 
 ## Next actions
+
+Fila vigente s14:06IA-H — homologação das fontes e inteligência após06B.5. Filas s13 e anteriores são históricas; nenhum estado não observado recebe aceite integral.
 
 Fila vigente s11: executar06D.1 após o aceite06B.4. Filas abaixo são históricas; pilotos e gates externos continuam nos respectivos pacotes.
 

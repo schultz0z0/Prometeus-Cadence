@@ -132,6 +132,8 @@ declare function advanceJourney(lease:JobLease):Promise<JourneyView>;
 
 **Plano:** [tarefas](../plans/2026-10-27-prometeus-cadence-06b5-prospecting-journey.md).
 
+**Aceite06B.5 em28/10/2026:** contrato local/controlado,346unitários/402integrações/19focadas,69capturas. Jornada usa contexto aprovado sem escolher produto implicitamente; o DTO não temproductId. Fatos/pessoas/qualificação continuam revisão explícita. Pausa, retomada por empresa/módulo e substituição de proposta são revisadas; falha não dispara outra chamada. Identidade e publicação congelada têm guardSQL087a, mantendo receipts técnicos. [Relatório](../../validation/06b5-prospecting-journey.md). Acurácia live→06IA-H; sem aceite integral da referência ou produção.
+
 ### 06IA-H — Homologação das fontes e inteligência
 
 **Requisitos:** R06. **Dependências:** 06B.5, 06IA.

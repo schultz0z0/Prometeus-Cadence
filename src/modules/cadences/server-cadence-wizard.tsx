@@ -1,4 +1,7 @@
 "use client";
+import {useEffect,useState} from 'react';
+import {useProspecting} from '@/client/workspace-provider';
+import type {JourneyView} from '@/domain/prospecting-journey';
 import {useDemo} from '@/demo/provider';
 import {usePlanningFlow} from '@/modules/planning/use-planning-flow';
 import {useApprovedPlanningContext,ProductPicker} from '@/modules/planning/product-picker';
@@ -8,6 +11,8 @@ import {AnalysisStatus} from '@/modules/planning/analysis-status';
 import {Button,Field,PageHeader,Steps,Notice,LinkButton} from '@/components/ui/primitives';
 const objectives=[['Primeiro contato','Gente que nunca falou com você. Abre com o que você viu da empresa e uma pergunta.'],['Retomar quem sumiu','Já conversou, mas parou. Retoma do ponto em que parou, sem culpa.'],['Proposta parada','Mandou proposta e não teve resposta. Tira a dúvida do caminho e propõe o próximo passo.'],['Pós-evento ou webinar','Quem se inscreveu ou passou no evento. Aproveita o gancho enquanto está quente.'],['Reativar base ou ex-clientes','Clientes antigos ou base parada. Oferta ou novidade, sem parecer disparo.'],['Indicação ou parceria','Alguém indicou, ou você quer propor parceria. Começa pelo nome em comum.']];
 export function ServerCadenceWizard({initialList='',initialChannel='whatsapp',initialProduct='',initialJob}:{initialList?:string;initialChannel?:string;initialProduct?:string;initialJob?:string}){
+ const prospecting=useProspecting(),[journey,setJourney]=useState<JourneyView|null>(null),[journeyLoaded,setJourneyLoaded]=useState(!initialJob);
+ useEffect(()=>{let live=true;if(initialJob&&prospecting)prospecting.journeyForJob(initialJob).then(j=>{if(live){setJourney(j);setJourneyLoaded(true);}}).catch(()=>{if(live)setJourneyLoaded(false);});return()=>{live=false;};},[initialJob,prospecting]);
  const workspace=useDemo(),{context,error}=useApprovedPlanningContext(),flow=usePlanningFlow({kind:'planning',task:'cadence_options',listId:initialList||workspace.lists[0]?.id||'',objective:'Primeiro contato',channels:initialChannel==='both'?['WHATSAPP','EMAIL']:initialChannel==='email'?['EMAIL']:['WHATSAPP'],tone:'Pessoal',rhythm:'Padrão',highlight:'',avoid:'',decisionMaker:'',productId:initialProduct||undefined},initialJob);
  const {state,dispatch,busy}=flow,input=state.input;if(input.task!=='cadence_options')return null;
  const set=(key:keyof typeof input,value:unknown)=>dispatch({type:'input',input:{...input,[key]:value}});
@@ -25,7 +30,7 @@ export function ServerCadenceWizard({initialList='',initialChannel='whatsapp',in
  <AnalysisStatus data={flow.analysis.data} error={flow.analysis.error} onRefresh={flow.analysis.refresh}/>
  {state.view==='options'&&state.proposal?.task==='cadence_options'&&<CadenceProposals options={state.proposal.options} recommended={state.proposal.recommendedOptionId} disabled={busy||!['completed','partial'].includes(flow.analysis.data?.job.state??'')} onSelect={option=>dispatch({type:'select',optionId:option.id,edits:{name:option.name,steps:structuredClone(option.steps)}})}/>}
  {state.view==='edit'&&state.edits&&<><CadenceProposalEditor channels={input.channels} value={state.edits as unknown as CadenceEdits} onChange={value=>dispatch({type:'edit',edits:value as unknown as Record<string,unknown>})}/><div className="form-actions"><Button disabled={busy} onClick={()=>dispatch({type:'back'})}>Voltar às opções</Button><Button variant="primary" disabled={busy} onClick={flow.prepareSelection}>Salvar rascunho →</Button></div></>}
- <Button disabled={busy} onClick={()=>dispatch({type:'new-review'})}>Mudar a entrada ou gerar outras três</Button>
+ {journey?<LinkButton href={'/executions/'+journey.stages[0]?.jobId}>Voltar à jornada para revisar nova análise</LinkButton>:<Button disabled={busy||!journeyLoaded} onClick={()=>dispatch({type:'new-review'})}>Mudar a entrada ou gerar outras três</Button>}
  </>}
  {state.review&&<AnalysisReview review={state.review} busy={busy} error={state.error} onConfirm={flow.confirm} onClose={()=>{if(!busy)dispatch({type:'dismiss-review'});}}/>}
  {state.selectionReview&&<SelectionReview review={state.selectionReview} busy={busy} error={state.error} onConfirm={flow.confirmSelection} onClose={()=>{if(!busy)dispatch({type:'dismiss-selection'});}}/>}

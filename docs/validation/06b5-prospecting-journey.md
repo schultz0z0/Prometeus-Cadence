@@ -1,6 +1,6 @@
 # 06B.5 — Jornada integrada de prospecção e cadência
 
-Data:28/10/2026. Status: implementação local/controlada em validação final e revisão independente. Não representa aceite de acurácia live, paridade integral com a referência ou produção pública.
+Data:28/10/2026. Status: concluído no contrato local/controlado, após revisão independente e correções. Não representa aceite de acurácia live, paridade integral com a referência ou produção pública.
 
 ## Comportamento entregue
 
@@ -41,8 +41,18 @@ Os dados de UI controlados são respostas interceptadas no navegador, sem persis
 
 Docker estava desligado no início; iniciado oculto. Migração087 aplicada no ambiente local autorizado e supervisor de seis lanes retomado. A QA usa identidade dedicada existente; snapshot anterior, workspace e sessão são restaurados/revogados no fechamento. Nenhum contato/canal/cadência/job operacional é criado por esta QA visual. O journal dos testes existe apenas no banco efêmero, removido pelo runner.
 
-Branch de trabalho:`codex/prospecting-journey-06b5`, base85009f4. Sem push/merge/deploy implícito. [Ledger de execução](evidence/06b5-prospecting-journey/execution-ledger.md). Revisão e fechamento final pendentes nesta seção.
+Branch de trabalho:`codex/prospecting-journey-06b5`, base85009f4. Sem push/merge/deploy implícito. [Ledger de execução](evidence/06b5-prospecting-journey/execution-ledger.md). Revisão e fechamento final registrados na seção de aceite pós-revisão abaixo.
 
 ### Fechamento antes da revisão independente
 
 Build final do código exato e tipos pós-build aprovados;346/346 unitários e392/392 integrações.57 capturas no manifesto, incluindo nove da edição com quatro etapas, texto preservado após16s de polling, revisão e confirmação controlada de um rascunho. REA capturou passivamente o popup local mascarado em390×844:ev_87eddcb94ae5da1a28ea826623f4afebff3e59911344f705eaf6f6e745192881. Não é uma observação nova do CadenceFlow. QA restaurada e sessão revogada, comprovadas emclosure.json; nenhum dado anterior alterado. Localhost200/seis lanes saudáveis. Revisão independente ainda não concluída.
+
+## Aceite pós-revisão —28/10/2026
+
+**346/346 unitários,402/402 integrações completas,19/19 focadas**, build de produção e tipos aprovados. Uma revisão independente identificou oito Important; todos corrigidos em uma passagem com regressões RED→GREEN. Pausa ativa/contexto alterado drenam os filhos sem publicar domínio; falha e cancelamento não iniciam nova tentativa sem revisão. Cobertura por empresa/módulo desconta sucessos de tentativas posteriores; a retomada não repete a classificação quando apenas o resumo falhou. Ausência pública/conflito continuam explícitos, sem retry automático. Duplicatas em outra lista preservam o contato único e são excluídas dos lotes de destino, com aviso.
+
+Migração complementar087a torna identidade/ator imutáveis, permite pausa administrativa, congela contexto/políticas no SQL de publicação e preserva cada tentativa de proposta. Proposta terminal falhada/cancelada ou com contexto desatualizado pode ser substituída por análise revisada; a escolha antiga é recusada e a nova cria exatamente um rascunho vinculado. O wizard volta à jornada, evitando regeneração desvinculada. Receipts técnicos permanecem no journal mesmo quando publicação perde autoridade. Configuração de runtime continua também protegida pelo fence TypeScript.
+
+**69 capturas mascaradas**,12 após correções em1920×855/390×844/320×844, sem pageerror/overflow. As últimas comprovam pendências/duplicatas visíveis, revisão de substituição e retorno vinculado da análise falhada. São estados controlados de resposta, com0escritas persistentes/envios/chamadas pagas. Própria sessão revogada e navegador fechado; dados anteriores e workspace restaurados. Migração local aplicada; localhost200 e seis lanes saudáveis. [Revisão](06b5-prospecting-journey-review.md), [manifesto](evidence/06b5-prospecting-journey/manifest.json), [verificação](evidence/06b5-prospecting-journey/verification.json), [cleanup pós-revisão](evidence/06b5-prospecting-journey/closure-postreview.json).
+
+Menor histórico06B.3: lote abre a primeira empresa apesar doleadId no link; seletor nominal funciona. Polimento de navegação movido para06F. Não é um achado novo desta revisão. Próximo pacote: **06IA-H — homologação das fontes e inteligência**. Acurácia live, referência conectada não observada e produção pública permanecem gates explícitos; nenhum push/merge/deploy foi realizado.

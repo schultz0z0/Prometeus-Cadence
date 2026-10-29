@@ -162,3 +162,7 @@ Autoria, variantes, anexos privados de e-mail e publicação concluídos no cont
 ## Continuidade06D.2 —28/10/2026
 
 Concluído no contrato local/controlado:comprovantes e observação revisada sem segunda fila/envio,342 unitários/383 integrações,36 capturas. Uma revisão independente corrigiu dois Important com regressões; menor de erro residual do popup→06F. [Aceite06D.2](../../validation/06d2-channel-operation.md). Próximo06B.5; piloto externo próprio, referência conectada não observada e liberação pública continuam gates explícitos, sem alegação de100%.
+
+## Continuidade06B.5 —28/10/2026
+
+Jornada concluída no contrato local/controlado;346unitários/402integrações/19focadas,69capturas,uma revisão independente/oito Important corrigidos. [Aceite](../../validation/06b5-prospecting-journey.md). Próximo06IA-H:homologação das fontes e inteligência; sem alteração dos marcos07/08 ou gates live/públicos. Menor herdado06B.3→06F.

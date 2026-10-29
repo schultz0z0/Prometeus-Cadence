@@ -629,6 +629,138 @@
         "height": 844
       },
       "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/postreview-failed-proposal-linked-back-1920.png",
+      "sha256": "528d9fa6a7a40a96a5c0300c66ff686428e074d4e86daf6182a3999d0d77f51a",
+      "width": 1920,
+      "height": 855,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-failed-proposal-linked-back-320.png",
+      "sha256": "a47588ca57e39c4ae00b26fd3b12968d65df596c6d0a547edf87fe65225ad76e",
+      "width": 320,
+      "height": 844,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-failed-proposal-linked-back-390.png",
+      "sha256": "7273a5500a1df1429b6cc662c3fa611468199b4aa7b3e8b040c9364fee2b8d43",
+      "width": 390,
+      "height": 844,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-replacement-entry-1920.png",
+      "sha256": "b49c133ddc3be7c7978e2e52138ebcc6456b753edcc309f96d1b2716d582acb5",
+      "width": 1920,
+      "height": 1484,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-replacement-entry-320.png",
+      "sha256": "051bc2b4eae8c4e86731f31b32709ef90ce9ff3387946f8b09644a5ee2bce4d5",
+      "width": 320,
+      "height": 2421,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-replacement-entry-390.png",
+      "sha256": "1296ecff45c9d7ea722b7fe46915c6f0ad45a3812b3022a5660b284fc538706e",
+      "width": 390,
+      "height": 2151,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-replacement-review-1920.png",
+      "sha256": "7137a55cf4b3c0e713cee1249a41ec0797cfe29f557101bf67714a2b20a00984",
+      "width": 1920,
+      "height": 1484,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-replacement-review-320.png",
+      "sha256": "06f44839eb5d2b12d054780a3153fa4557dbe6516c873dfea612defe4b5ed4e4",
+      "width": 320,
+      "height": 2421,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-replacement-review-390.png",
+      "sha256": "2b334171d7719c46b1da204f742f5629f03f2659071426d0d096eeaf28b2ddc8",
+      "width": 390,
+      "height": 2151,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-stopped-partial-duplicate-1920.png",
+      "sha256": "cf6adc2e65f2b571fce7a4986cfab6e8e1c9f0c640d0ade3dd7bd120cb285c23",
+      "width": 1920,
+      "height": 1316,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-stopped-partial-duplicate-320.png",
+      "sha256": "d1e4cd907b477d793f633063c20ab539a54856b6d25c2dc6729c0a87db3dfe96",
+      "width": 320,
+      "height": 2169,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
+    },
+    {
+      "file": "screens/postreview-stopped-partial-duplicate-390.png",
+      "sha256": "d2a4ae8ccf74c71d9428accb58d8e2268309ae9cf0e62d5d0bfd5cf167d2ddfe",
+      "width": 390,
+      "height": 1888,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "post-review controlled recovery UI; response-only fixtures; no persistent writes"
     }
   ]
 }
