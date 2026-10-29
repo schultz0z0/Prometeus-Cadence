@@ -1,6 +1,6 @@
 // Product instructions, not executable code or user-installed agent skills.
-export const AI_SKILLS_VERSION='prometeus-skills-v1';
-export type AiSkillTask='context_read'|'audience_plan'|'cadence_options'|'message_preview'|'qualify'|'summary'|'second_opinion'|'decisors'|'contact_evidence'|'rank';
+export const AI_SKILLS_VERSION='prometeus-skills-v2';
+export type AiSkillTask='context_read'|'audience_plan'|'cadence_options'|'message_preview'|'qualify'|'summary'|'second_opinion'|'decisors'|'company_people'|'contact_evidence'|'rank';
 const taskInstructions:Record<AiSkillTask,string[]>={
  context_read:['Extract company knowledge from supplied public evidence. Every factual field requires a literal quote and owned citation. Missing fields remain empty.'],
  audience_plan:['Prioritize the current request for audience, geography and channel; the approved seller profile explains the offer and must not silently replace the requested audience. Return editable hypotheses, never invented market size or contacts.'],
@@ -10,6 +10,7 @@ const taskInstructions:Record<AiSkillTask,string[]>={
  summary:['Summarize only supplied lead evidence relevant to the current request. Distinguish the seller company from the lead. Unknown facts remain unknown.'],
  second_opinion:['Review the cited evidence against the same criteria. Abstain on missing/conflicting facts; never turn uncertainty into verified contact data.'],
  decisors:['Extract named decision makers only when a literal quote supports company, role and explicitly attributed personal contact. Generic corporate phone/email and name-only QSA are insufficient. Never guess an email pattern or active WhatsApp.'],
+ company_people:['Identify people only from quoted company affiliation and decision-making roles. Retain a supported person even without a personal contact. Contact fields are optional; generic corporate details, homonyms and former roles never establish a current personal contact. Never infer WhatsApp activity or guess private fields.'],
  contact_evidence:['Evaluate person/company/role/contact attribution from supplied evidence; never claim mailbox, phone or WhatsApp verification. Conflict requires insufficient_evidence. Do not generate missing contact facts.'],
  rank:['Choose only among supplied fixed options using the current request and approved seller context. Never edit options or invent a stronger option. Missing basis requires insufficient_evidence.'],
 };

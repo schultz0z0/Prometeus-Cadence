@@ -19,10 +19,12 @@ export const decisorRequest=(input:DecisorDiscoveryInput)=>({
 export const generateDecisors:DecisorGenerator=async(ctx,input)=>runConventionalJson(ctx,decisorRequest(input));
 // Company research keeps a sourced person even when no useful personal contact exists.
 // The contact-delivery validator remains stricter and unchanged.
-export const generateCompanyPeople:DecisorGenerator=async(ctx,input)=>{
+export const companyPeopleRequest=(input:DecisorDiscoveryInput)=>{
  const request=decisorRequest(input),prompt=JSON.parse(request.prompt);
- prompt.contract='company-people-v1:'+AI_SKILLS_VERSION;
+ prompt.contract='company-people-v2:'+AI_SKILLS_VERSION;
+ prompt.skill=buildAiSkill('company_people',{company:input.context,product:input.product,request:input.request??{targetCompany:input.company,knownNames:input.knownNames}});
  prompt.task='Identify corroborated company decision makers, including people without a published personal contact.';
  prompt.rules=prompt.rules.map((r:string)=>r.startsWith('Return no person unless')?'Return a person only when a literal quote supports their name, company affiliation and decision-making role. Email and phone are optional; preserve absence.':r);
- return runConventionalJson(ctx,{...request,prompt:JSON.stringify(prompt)});
+ return {...request,prompt:JSON.stringify(prompt)};
 };
+export const generateCompanyPeople:DecisorGenerator=async(ctx,input)=>runConventionalJson(ctx,companyPeopleRequest(input));
