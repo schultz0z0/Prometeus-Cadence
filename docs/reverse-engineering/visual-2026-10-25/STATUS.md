@@ -1,12 +1,12 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-29 · Session: s16 · Phase:6 Relatórios locais verificados; revisão final06C.2 pendente; paridade integral não aceita
+Updated: 2026-10-29 · Session: s16 · Phase:6 Relatórios06C.2 concluídos no contrato local/controlado; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
 
-- Covered s16:06C.2 com curadoria somente leitura do histórico real;30capturas mascaradas e24checks1920/390/320,0overflow/pageerror, filtros/popup/polling/recovery/exportnulls. L018restored/L019removed;0novos contatos/canais/mensagens/chamadas pagas. EV-278. Revisão final ainda pendente; não avançar antes do aceite.
+- Covered s16:06C.2 com curadoria somente leitura do histórico real;38capturas mascaradas e32checks1920/390/320,0overflow/pageerror, filtros/popup/polling/recovery/exportnulls. L018/L020/L021restored eL019removed;0novos contatos/canais/mensagens/chamadas pagas. EV-278. Uma revisão independente/duas correções Important RED→GREEN;355unitários/432integrações/11focadas; dois menores→08A. Próximo06C.3.
 - Not covered s16:estados pagos/conectados da referência, novos envios/inferência/scraping live e produção pública.
 
 - Covered s15:06IA-H administrativo com30casos sintéticos/60saídas, contratos tradicional/híbrido e9capturas reais mascaradas. 351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. L017restored;0chamadas pagas/envios. Próximo06C.2.
@@ -60,6 +60,8 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 - Decide: nenhuma decisão comercial reaberta; preservar trial7 dias, créditos pré-pagos, OpenWA gerenciado e billing aprovado. Sem100% e sem aceite do marco enquanto restar cobertura exigida.
 
 ## Next actions
+
+Fila vigente s16:06C.3 — notificações, preferências e resumos.06C.2concluído local/controlado; gates externos e08A/08B preservados. Filas anteriores abaixo são históricas.
 
 Fila vigente s15:06C.2 — dashboard, relatórios e execuções reconciliados.06IA-H local/controlado concluído; piloto real segue gate, não um aceite implícito. Filas anteriores são históricas.
 

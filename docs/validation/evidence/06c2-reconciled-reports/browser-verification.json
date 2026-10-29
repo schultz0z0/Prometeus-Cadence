@@ -208,6 +208,70 @@
     ],
     "pageErrors": []
   },
-  "screenshots": 30,
-  "exportNullsVerified": true
+  "screenshots": 38,
+  "exportNullsVerified": true,
+  "postReview": {
+    "rows": [
+      {
+        "route": "/dashboard",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "route": "/reports",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "route": "/reports/funnel",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "route": "/reports/performance",
+        "width": 1920,
+        "overflow": false
+      },
+      {
+        "route": "/dashboard",
+        "width": 320,
+        "overflow": false
+      },
+      {
+        "route": "/reports",
+        "width": 320,
+        "overflow": false
+      },
+      {
+        "route": "/reports/funnel",
+        "width": 320,
+        "overflow": false
+      },
+      {
+        "route": "/reports/performance",
+        "width": 320,
+        "overflow": false
+      }
+    ],
+    "channels": [
+      {
+        "metric": "email",
+        "status": 200,
+        "total": 0,
+        "items": 0,
+        "otherChannelRows": 0
+      },
+      {
+        "metric": "whatsapp",
+        "status": 200,
+        "total": 0,
+        "items": 0,
+        "otherChannelRows": 0
+      }
+    ],
+    "pageErrors": [],
+    "responseFixtures": 0,
+    "externalCalls": 0
+  },
+  "totalRouteChecks": 32
 }

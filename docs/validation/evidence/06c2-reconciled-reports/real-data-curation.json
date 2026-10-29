@@ -1,10 +1,10 @@
 {
-  "date": "2026-10-28",
+  "date": "2026-10-29",
   "source": "pre-existing operator workspace; persisted channel history and contacts; read-only transaction",
   "scopeHash": "80e000b1603a6d79",
   "period": {
-    "from": "2026-07-31T02:58:51.048Z",
-    "to": "2026-10-29T02:58:51.047Z"
+    "from": "2026-07-31T11:30:53.999Z",
+    "to": "2026-10-29T11:30:53.999Z"
   },
   "independentSourceCounts": {
     "sent": 3,

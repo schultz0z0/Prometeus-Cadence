@@ -1,0 +1,18 @@
+{
+  "rulings": [
+    "dedicated native branch codex/reconciled-reports-06c2 from57e6e23, without new worktree — established user preference — cost if wrong: less filesystem isolation.",
+    "materialize bounded report query projections keyed by exact UTC interval/timezone/cadence and committed source revision; retain source facts as authority, never sum raw event attempts — arbitrary local timezones cannot safely reuse UTC daily totals — cost if wrong: more cache keys and bounded rebuild work.",
+    "current qualified counts describe the creation cohort, not a fabricated qualification timestamp; historical qualification transitions without timestamps remain unavailable — sources have only current qualification — cost if wrong: qualification history needs future instrumented events.",
+    "attribute an inbound reply/optout to the latest preceding accepted outbound in the same conversation (or identity for explicit suppression) and exact bounce outbound, rather than all cadences that ever touched the conversation — avoids duplicate cross-cadence attribution — cost if wrong: last-touch attribution is not proof of an explicit reply reference and must be labelled.",
+    "preserve legacy metrics API empty result for unknown cadence while new reports API returns404 — existing callers/tests rely on non-disclosing empty compatibility — cost if wrong: two error contracts must remain documented.",
+    "all workspace members may read derived reports; explicit forced rebuild is owner/admin only in service and SQL — existing read permissions — cost if wrong: role-specific report visibility would require a new permission decision.",
+    "detail message links explicitly open the channel inbox rather than promise a preselected conversation unsupported by existing inbox — preserve truthful navigation — cost if wrong: one extra conversation selection.",
+    "no new external delivery/provider pilot in this reporting package — stored-history curation and real local DB flows are the authorized evidence, external gates stay separate — cost if wrong: no new delivery is proved.",
+    "paid/connected reference states stay not observed — explicit operator decision and historical evidence boundary — cost if wrong: exact parity remains unverified there.",
+    "local latency is not public SLO — deployment/load remains08B gate — cost if wrong: public latency can differ."
+  ],
+  "minors": [
+    "Final: minor (deferred):93-calendar-day selection across autumn DST can be rejected by93x24h bound — owner08A; explicit error/recovery, no wrong count.",
+    "Final: minor (deferred):SQL p_force NULL can recompute an unchanged tenant projection as operator — owner08A; no additional data/write authority, normal API cannot passNULL."
+  ]
+}

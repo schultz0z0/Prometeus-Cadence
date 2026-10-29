@@ -1,0 +1,110 @@
+[
+  {
+    "name": "06c2-final-review-full-integration.log",
+    "tail": [
+      "✔ an accepted receipt survives role revocation after POST without scheduling further messages (232.7908ms)",
+      "✔ a signed callback before the REST receipt consumes once and the next step waits from acceptance (230.9693ms)",
+      "✔ fractional acceptance schedule crosses the real SQL guard without INVALID_SCHEDULE (379.7385ms)",
+      "✔ recent inbound on sender A cannot authorize service text or publication on stale sender B (394.8906ms)",
+      "✔ signed late delivered and read callbacks supersede negative reconciliation without another POST (358.7166ms)",
+      "✔ connections are tenant scoped; saves preserve blank secrets and replay without leaking keys (405.2577ms)",
+      "✔ current database role defeats stale administrative principal and no key means no save (226.808ms)",
+      "ℹ tests 432",
+      "ℹ suites 0",
+      "ℹ pass 432",
+      "ℹ fail 0",
+      "ℹ cancelled 0",
+      "ℹ skipped 0",
+      "ℹ todo 0",
+      "ℹ duration_ms 383109.4919"
+    ]
+  },
+  {
+    "name": "06c2-final-review-unit.log",
+    "tail": [
+      "✔ identical GETs share a pending read per workspace instance but POSTs never share (24.5905ms)",
+      "✔ failed GET can be retried and independent workspace transports never share (1.2777ms)",
+      "✔ dirty external refresh keeps the original snapshot and concurrent refresh coalesces (1.4636ms)",
+      "✔ mutation invalidates older GETs instead of reusing stale coalesced data (2.5565ms)",
+      "✔ disposal aborts pending reads and does not publish the old workspace response (0.521ms)",
+      "✔ a GET started during a POST cannot replace a post-commit reload (0.5665ms)",
+      "✔ a stalled read has a deadline and releases its slot for a subsequent retry (15009.4108ms)",
+      "ℹ tests 355",
+      "ℹ suites 0",
+      "ℹ pass 355",
+      "ℹ fail 0",
+      "ℹ cancelled 0",
+      "ℹ skipped 0",
+      "ℹ todo 0",
+      "ℹ duration_ms 20379.6301"
+    ]
+  },
+  {
+    "name": "06c2-review-channel-final-green.log",
+    "tail": [
+      "✔ acceptance belongs to its provider period even when the queued message was created earlier (346.7819ms)",
+      "✔ UTC absolute period with local grouping handles empty boundaries and tenant-scoped cursors (283.9908ms)",
+      "✔ revocation and foreign SQL access cannot read or rebuild another workspace projection (204.6273ms)",
+      "{\"fixture\":\"10000 leads and10000 repeated operational events; authenticated HTTP handler + real SQL; no external calls\",\"warmP95Ms\":100,\"bytes\":12868}",
+      "✔ ten thousand leads and operational events use bounded warm reads and cursor pages (3097.5898ms)",
+      "✔ drilldown traverses every microsecond-precision record exactly once and equals its total (135.6872ms)",
+      "✔ mixed channel cards drill into exactly their accepted email and WhatsApp populations (395.691ms)",
+      "ℹ tests 11",
+      "ℹ suites 0",
+      "ℹ pass 11",
+      "ℹ fail 0",
+      "ℹ cancelled 0",
+      "ℹ skipped 0",
+      "ℹ todo 0",
+      "ℹ duration_ms 8009.9038"
+    ]
+  },
+  {
+    "name": "06c2-final-review-build.log",
+    "tail": [
+      "├ ƒ /onboarding/profile",
+      "├ ○ /onboarding/workspace",
+      "├ ƒ /privacy",
+      "├ ƒ /register",
+      "├ ƒ /reports",
+      "├ ƒ /reports/[tab]",
+      "├ ƒ /reset-password",
+      "├ ƒ /sdr",
+      "├ ƒ /settings/[[...section]]",
+      "├ ƒ /templates",
+      "├ ƒ /terms",
+      "├ ƒ /unsubscribe/[token]",
+      "└ ƒ /verify-email",
+      "○  (Static)   prerendered as static content",
+      "ƒ  (Dynamic)  server-rendered on demand"
+    ]
+  },
+  {
+    "name": "06c2-final-review-types.log",
+    "tail": [
+      "[rtk] /!\\ No hook installed — run `rtk init -g` for automatic token savings",
+      "> prometeus-cadence@0.1.0 typecheck",
+      "> tsc --noEmit"
+    ]
+  },
+  {
+    "name": "06c2-postreview-browser.log",
+    "tail": [
+      "    rules.placeholders = false;",
+      "    re.last = { cleared: true };",
+      "    return re.last;",
+      "  }",
+      "  re.mask = { apply, clear, rules };",
+      "  return apply();",
+      "})();",
+      "});await page.addStyleTag({content:'.account-menu,input,textarea,select{filter:blur(12px)!important}'});await page.screenshot({path:'output/playwright/06c2/postreview-'+route.slice(1).replaceAll('/','-')+'-'+width+'.png',fullPage:true});rows.push({route,width,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)});}",
+      " const channels=await page.evaluate(async()=>{const from=new Date(Date.now()-30*86400000).toISOString(),to=new Date().toISOString(),q=new URLSearchParams({view:'cadences',from,to,timezone:'UTC'}),rows=[];for(const metric of ['email','whatsapp']){const r=await fetch('/api/reports/'+metric+'?'+q,{cache:'no-store'}),body=await r.json();rows.push({metric,status:r.status,total:body.totals?.[metric],items:body.items?.length,otherChannelRows:body.items?.filter(x=>x.channel!==(metric==='email'?'EMAIL':'WHATSAPP')).length});}return rows;});if(channels.some(r=>r.status!==200||r.total!==0||r.items!==0||r.otherChannelRows!==0))throw Error('Channel detail runtime contract failed');await page.setViewportSize({width:1920,height:855});await page.goto('http://127.0.0.1:3210/dashboard');return{rows,channels,pageErrors:errors,responseFixtures:0,externalCalls:0};",
+      "}",
+      ")(page);",
+      "```",
+      "### Page",
+      "- Page URL: http://127.0.0.1:3210/dashboard",
+      "- Page Title: Prometeus Cadence · Prospecção inteligente"
+    ]
+  }
+]

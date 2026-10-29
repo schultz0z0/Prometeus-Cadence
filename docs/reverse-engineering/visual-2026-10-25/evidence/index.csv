@@ -79,4 +79,4 @@ id,date,session,route,shows,masked
 "EV-276","2026-10-28","s14","/leads/generator; /automations/new/ai; /executions/:id; /contacts; /cadences/new","06B.5 controlled journey and69 masked captures;8review fixes; next06IA-H; no blanket parity","yes; no credentials"
 "EV-277","2026-10-28","s15","/settings/ai; /settings/context; /leads/enrich","06IA-H controlled benchmark;9masked actual UI captures; no empirical accuracy or blanket parity","yes; no credentials or personal values"
 
-"EV-278","2026-10-29","s16","/dashboard; /reports; /reports/:tab; /executions/:id; /cadences/:id","06C2 persisted real-data curation and30masked local captures; historical reference only; no blanket parity","yes; no credentials or personal values"
+"EV-278","2026-10-29","s16","/dashboard; /reports; /reports/:tab; /executions/:id; /cadences/:id","06C2 persisted real-data curation and38masked local captures;32route checks; historical reference only; no blanket parity","yes; no credentials or personal values"

@@ -1,0 +1,2192 @@
+# Review package: 57e6e233baf9ee15164ec4e6736a1093407051d6..22a461659ddacf5e32f7f296b3703d4639f40c7f
+
+## Commits
+22a4616 feat: connect dashboards and report drilldowns to reconciled data
+fad4f39 feat: reconcile report projections with authoritative channel facts
+a5ce9fd feat: define reconciled reporting periods and projection schema
+
+## Files changed
+ db/migrations/089-report-projections.sql           | 114 +++++++++++
+ .../089a-report-timestamp-index-permissions.sql    |   3 +
+ db/migrations/089b-report-optout-channel.sql       |  45 +++++
+ .../visual-2026-10-25/STATUS.md                    |   5 +-
+ .../evidence/EV-278-reconciled-reports.md          |  20 ++
+ .../visual-2026-10-25/evidence/index.csv           |   2 +
+ .../visual-2026-10-25/log/2026-10-29-s16.md        |   5 +
+ .../visual-2026-10-25/sandbox/environment.md       |   4 +
+ .../visual-2026-10-25/sandbox/ledger.csv           |   6 +
+ docs/validation/06c2-reconciled-reports.md         |  65 +++++++
+ .../browser-verification.json                      | 213 +++++++++++++++++++++
+ .../evidence/06c2-reconciled-reports/closure.json  |  16 ++
+ .../06c2-reconciled-reports/detail-closure.json    |  13 ++
+ .../06c2-reconciled-reports/detail-polling.json    |   7 +
+ .../real-data-curation.json                        |  41 ++++
+ .../06c2-reconciled-reports/screens-manifest.json  | 182 ++++++++++++++++++
+ .../screens/cadence-report-1920.png                | Bin 0 -> 115788 bytes
+ .../screens/cadence-report-320.png                 | Bin 0 -> 45903 bytes
+ .../screens/cadence-report-390.png                 | Bin 0 -> 48466 bytes
+ .../screens/custom-draft-after-poll.png            | Bin 0 -> 141658 bytes
+ .../screens/custom-period.png                      | Bin 0 -> 228824 bytes
+ .../screens/dashboard-1920.png                     | Bin 0 -> 337627 bytes
+ .../screens/dashboard-320.png                      | Bin 0 -> 290073 bytes
+ .../screens/dashboard-390.png                      | Bin 0 -> 293135 bytes
+ .../screens/execution-detail-1920.png              | Bin 0 -> 141632 bytes
+ .../screens/execution-detail-320.png               | Bin 0 -> 56148 bytes
+ .../screens/execution-detail-390.png               | Bin 0 -> 58757 bytes
+ .../screens/executions-1920.png                    | Bin 0 -> 155046 bytes
+ .../screens/executions-320.png                     | Bin 0 -> 78154 bytes
+ .../screens/executions-390.png                     | Bin 0 -> 87162 bytes
+ .../screens/funnel-detail-1920.png                 | Bin 0 -> 222943 bytes
+ .../screens/funnel-detail-320.png                  | Bin 0 -> 140280 bytes
+ .../screens/funnel-detail-390.png                  | Bin 0 -> 143629 bytes
+ .../screens/report-update-failure.png              | Bin 0 -> 121894 bytes
+ .../screens/reports-1920.png                       | Bin 0 -> 154875 bytes
+ .../screens/reports-320.png                        | Bin 0 -> 99972 bytes
+ .../screens/reports-390.png                        | Bin 0 -> 101528 bytes
+ .../screens/reports-funnel-1920.png                | Bin 0 -> 172319 bytes
+ .../screens/reports-funnel-320.png                 | Bin 0 -> 118056 bytes
+ .../screens/reports-funnel-390.png                 | Bin 0 -> 118390 bytes
+ .../screens/reports-negocios-1920.png              | Bin 0 -> 120007 bytes
+ .../screens/reports-negocios-320.png               | Bin 0 -> 55414 bytes
+ .../screens/reports-negocios-390.png               | Bin 0 -> 54751 bytes
+ .../screens/reports-performance-1920.png           | Bin 0 -> 150072 bytes
+ .../screens/reports-performance-320.png            | Bin 0 -> 94739 bytes
+ .../screens/reports-performance-390.png            | Bin 0 -> 95648 bytes
+ .../06c2-reconciled-reports/verification.json      |  30 +++
+ scripts/test-integration.mjs                       |   1 +
+ src/app/api/reports/[id]/route.ts                  |   3 +
+ src/app/api/reports/route.ts                       |   3 +
+ src/app/reports-reference.css                      |   8 +
+ src/client/report-client.ts                        |   8 +
+ src/client/use-reconciled-report.ts                |  21 ++
+ src/client/workspace-provider.tsx                  |  12 +-
+ src/components/charts/line-chart.tsx               |   8 +-
+ src/components/reports/report-detail.tsx           |  21 ++
+ src/components/ui/period-selector.tsx              |  15 +-
+ src/domain/reporting.ts                            |  40 ++++
+ src/modules/cadences/cadence-insights.tsx          |  13 +-
+ src/modules/dashboard/dashboard.tsx                |  97 ++++------
+ src/modules/reports/reports.tsx                    |  75 ++++----
+ src/server/messaging/metrics.ts                    |  42 +---
+ src/server/operations/projections.ts               |  13 ++
+ src/server/operations/report-http.ts               |   8 +
+ src/server/operations/reports.ts                   |  30 +++
+ src/server/operations/repository.ts                |   1 +
+ tests/06c2-reconciled-reports.test.ts              |  22 +++
+ tests/integration/06c2-reconciled-reports.test.ts  |  64 +++++++
+ 68 files changed, 1127 insertions(+), 149 deletions(-)
+
+## Diff
+diff --git a/db/migrations/089-report-projections.sql b/db/migrations/089-report-projections.sql
+new file mode 100644
+index 0000000..64500da
+--- /dev/null
++++ b/db/migrations/089-report-projections.sql
+@@ -0,0 +1,114 @@
++-- Rebuildable technical projections only. Business records remain authoritative.
++CREATE TABLE app.report_source_head(workspace_id text PRIMARY KEY REFERENCES auth.organization(id),revision bigint NOT NULL DEFAULT 0);
++CREATE TABLE app.report_projection_checkpoint(
++ workspace_id text NOT NULL REFERENCES auth.organization(id),projection_version text NOT NULL,period text NOT NULL,
++ from_at timestamptz NOT NULL,to_at timestamptz NOT NULL,timezone text NOT NULL,cadence_id text,
++ source_revision bigint NOT NULL,as_of timestamptz NOT NULL DEFAULT clock_timestamp(),
++ PRIMARY KEY(workspace_id,projection_version,period),CHECK(to_at>from_at AND to_at-from_at<=interval '93 days')
++);
++CREATE TABLE app.report_daily_projection(
++ workspace_id text NOT NULL,projection_version text NOT NULL,period text NOT NULL,key text NOT NULL,date date,values jsonb NOT NULL,
++ PRIMARY KEY(workspace_id,projection_version,period,key),
++ FOREIGN KEY(workspace_id,projection_version,period) REFERENCES app.report_projection_checkpoint(workspace_id,projection_version,period) ON DELETE CASCADE,
++ CHECK(length(key)<=500 AND jsonb_typeof(values)='object' AND pg_column_size(values)<=8192)
++);
++DO $$ DECLARE t text;BEGIN FOREACH t IN ARRAY ARRAY['report_source_head','report_projection_checkpoint','report_daily_projection'] LOOP
++ EXECUTE format('ALTER TABLE app.%I ENABLE ROW LEVEL SECURITY',t);EXECUTE format('ALTER TABLE app.%I FORCE ROW LEVEL SECURITY',t);
++ EXECUTE format('REVOKE ALL ON app.%I FROM PUBLIC,cadence_app,cadence_worker,cadence_dispatcher,cadence_ingress,cadence_billing',t);
++ EXECUTE format('CREATE POLICY report_read ON app.%I FOR SELECT TO cadence_app USING(workspace_id=current_setting(''app.workspace_id'',true) AND app.current_role() IS NOT NULL)',t);
++ EXECUTE format('GRANT SELECT ON app.%I TO cadence_app',t);
++END LOOP;END $$;
++CREATE FUNCTION app.report_timestamp(p_value text) RETURNS timestamptz LANGUAGE plpgsql IMMUTABLE SET search_path=pg_catalog AS $$
++BEGIN IF p_value IS NULL OR p_value !~ '^\d{4}-\d{2}-\d{2}T.*(Z|[+-]\d{2}:\d{2})$' THEN RETURN NULL;END IF;RETURN p_value::timestamptz;EXCEPTION WHEN OTHERS THEN RETURN NULL;END $$;
++REVOKE ALL ON FUNCTION app.report_timestamp(text) FROM PUBLIC;
++CREATE INDEX report_lead_period ON app.lead(workspace_id,app.report_timestamp(payload->>'createdAt'),id);
++CREATE INDEX report_outbox_conversation_acceptance ON app.message_outbox(workspace_id,identity_id,accepted_at DESC) WHERE accepted_at IS NOT NULL;
++CREATE INDEX report_message_conversation_period ON app.channel_message(workspace_id,conversation_id,metric_at DESC,id);
++
++CREATE FUNCTION app.report_facts(p_from timestamptz,p_to timestamptz,p_cadence text DEFAULT NULL)
++RETURNS TABLE(metric text,id text,happened_at timestamptz,channel text,cadence_id text,publication_id text,step_index integer,identity_id text,kind text,state text,ref_id text)
++LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog AS $$
++DECLARE ws text:=current_setting('app.workspace_id',true);
++BEGIN
++ IF app.current_role() IS NULL OR p_from IS NULL OR p_to IS NULL OR p_to<=p_from OR p_to-p_from>interval '93 days' THEN RAISE EXCEPTION 'REPORT_SCOPE_INVALID';END IF;
++ IF p_cadence IS NOT NULL AND NOT EXISTS(SELECT 1 FROM app.cadence c WHERE c.workspace_id=ws AND c.id=p_cadence) THEN RAISE EXCEPTION 'REPORT_CADENCE_NOT_FOUND';END IF;
++ RETURN QUERY
++ WITH messages AS MATERIALIZED(
++  SELECT m.*,o.publication_id AS own_pub,o.step_index AS own_step,o.accepted_at AS provider_accepted,cp.cadence_id AS own_cadence,em.classification,em.truncated
++  FROM app.channel_message m LEFT JOIN app.message_outbox o ON o.workspace_id=m.workspace_id AND o.message_id=m.id
++  LEFT JOIN app.cadence_publication cp ON cp.workspace_id=o.workspace_id AND cp.id=o.publication_id
++  LEFT JOIN app.email_message em ON em.workspace_id=m.workspace_id AND em.message_id=m.id
++  WHERE m.workspace_id=ws AND m.metric_at>=p_from AND m.metric_at<p_to
++ ), candidates AS(
++  SELECT 'sent'::text metric,m.id,m.provider_accepted at,m.channel,m.own_cadence cadence,m.own_pub pub,m.own_step step,m.identity_id ident,'message'::text kind,m.state,m.conversation_id ref
++  FROM messages m WHERE m.direction='outbound' AND m.provider_accepted>=p_from AND m.provider_accepted<p_to
++  UNION ALL
++  SELECT CASE m.state WHEN 'failed' THEN 'failed' WHEN 'uncertain' THEN 'uncertain' ELSE 'pending' END,m.id,m.metric_at,m.channel,m.own_cadence,m.own_pub,m.own_step,m.identity_id,'message',m.state,m.conversation_id
++  FROM messages m WHERE m.direction='outbound' AND m.state IN('failed','uncertain','pending','dispatching')
++  UNION ALL
++  SELECT 'replies',m.id,m.metric_at,m.channel,last_touch.cadence_id,last_touch.publication_id,last_touch.step_index,m.identity_id,'message',m.state,m.conversation_id
++  FROM messages m LEFT JOIN LATERAL(
++   SELECT cp.cadence_id,o.publication_id,o.step_index FROM app.channel_message parent JOIN app.message_outbox o ON o.workspace_id=parent.workspace_id AND o.message_id=parent.id JOIN app.cadence_publication cp ON cp.workspace_id=o.workspace_id AND cp.id=o.publication_id
++   WHERE parent.workspace_id=ws AND parent.conversation_id=m.conversation_id AND o.accepted_at<=m.metric_at ORDER BY o.accepted_at DESC,o.message_id DESC LIMIT 1
++  )last_touch ON true
++  WHERE m.direction='inbound' AND (m.channel='WHATSAPP' OR m.classification='human' AND NOT coalesce(m.truncated,false))
++  UNION ALL
++  SELECT 'bounces',b.outbound_message_id,b.at,'EMAIL',cp.cadence_id,o.publication_id,o.step_index,m.identity_id,'message','bounced',m.conversation_id
++  FROM(SELECT eb.outbound_message_id,min(eb.created_at) at FROM app.email_bounce eb WHERE eb.workspace_id=ws GROUP BY eb.outbound_message_id)b
++  JOIN app.channel_message m ON m.workspace_id=ws AND m.id=b.outbound_message_id LEFT JOIN app.message_outbox o ON o.workspace_id=ws AND o.message_id=m.id LEFT JOIN app.cadence_publication cp ON cp.workspace_id=ws AND cp.id=o.publication_id WHERE b.at>=p_from AND b.at<p_to
++  UNION ALL
++  SELECT 'optouts',s.identity_id,s.at,NULL,last_touch.cadence_id,last_touch.publication_id,last_touch.step_index,s.identity_id,'identity','suppressed',last_touch.conversation_id
++  FROM(SELECT cs.identity_id,min(cs.created_at) at FROM app.contact_suppression cs WHERE cs.workspace_id=ws AND cs.reason<>'hard_bounce' GROUP BY cs.identity_id)s
++  LEFT JOIN LATERAL(SELECT cp.cadence_id,o.publication_id,o.step_index,m.conversation_id FROM app.message_outbox o JOIN app.channel_message m ON m.workspace_id=o.workspace_id AND m.id=o.message_id LEFT JOIN app.cadence_publication cp ON cp.workspace_id=o.workspace_id AND cp.id=o.publication_id WHERE o.workspace_id=ws AND o.identity_id=s.identity_id AND o.accepted_at<=s.at ORDER BY o.accepted_at DESC,o.message_id DESC LIMIT 1)last_touch ON true
++  WHERE s.at>=p_from AND s.at<p_to
++  UNION ALL
++  SELECT bucket.metric,l.id,app.report_timestamp(l.payload->>'createdAt'),NULL,p_cadence,NULL,NULL,l.id,'lead',coalesce(l.payload->>'qualification','new'),l.id FROM app.lead l CROSS JOIN LATERAL unnest(ARRAY['leads',CASE l.payload->>'qualification' WHEN 'qualified' THEN 'qualified' WHEN 'pending' THEN 'leadPending' WHEN 'warning' THEN 'leadWarning' WHEN 'disqualified' THEN 'leadDisqualified' END])bucket(metric) WHERE bucket.metric IS NOT NULL AND l.workspace_id=ws AND app.report_timestamp(l.payload->>'createdAt')>=p_from AND app.report_timestamp(l.payload->>'createdAt')<p_to AND (p_cadence IS NULL OR EXISTS(SELECT 1 FROM app.cadence_enrollment en JOIN app.cadence_publication cp ON cp.workspace_id=en.workspace_id AND cp.id=en.publication_id WHERE en.workspace_id=ws AND en.lead_id=l.id AND cp.cadence_id=p_cadence))
++  UNION ALL
++  SELECT 'enrolled',e.lead_id,e.created_at,NULL,e.cadence_id,e.publication_id,NULL,e.identity_id,'lead',e.state,e.lead_id FROM(SELECT DISTINCT ON(en.lead_id)en.lead_id,cp.created_at,cp.cadence_id,cp.id publication_id,en.identity_id,en.state FROM app.cadence_enrollment en JOIN app.cadence_publication cp ON cp.workspace_id=en.workspace_id AND cp.id=en.publication_id WHERE en.workspace_id=ws AND cp.created_at>=p_from AND cp.created_at<p_to AND (p_cadence IS NULL OR cp.cadence_id=p_cadence) ORDER BY en.lead_id,cp.created_at,en.id)e
++  UNION ALL
++  SELECT 'executions',j.id,j.created_at,NULL,NULL,NULL,NULL,NULL,'execution',j.state,j.id FROM app.prospecting_job j WHERE j.workspace_id=ws AND j.created_at>=p_from AND j.created_at<p_to AND p_cadence IS NULL
++ ) SELECT x.metric,x.id,x.at,x.channel,x.cadence,x.pub,x.step,x.ident,x.kind,x.state,x.ref FROM candidates x WHERE p_cadence IS NULL OR x.cadence=p_cadence;
++END $$;
++REVOKE ALL ON FUNCTION app.report_facts(timestamptz,timestamptz,text) FROM PUBLIC;
++GRANT EXECUTE ON FUNCTION app.report_facts(timestamptz,timestamptz,text) TO cadence_app;
++
++CREATE FUNCTION app.ensure_report_projection(p_from timestamptz,p_to timestamptz,p_zone text,p_cadence text DEFAULT NULL,p_force boolean DEFAULT false) RETURNS jsonb
++LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
++DECLARE ws text:=current_setting('app.workspace_id',true);rev bigint;cache_key text;prior app.report_projection_checkpoint;role text:=app.current_role();
++BEGIN
++ IF role IS NULL OR p_force AND role NOT IN('owner','admin') OR p_from IS NULL OR p_to IS NULL OR p_to<=p_from OR p_to-p_from>interval '93 days' OR p_zone IS NULL OR length(p_zone)>100 THEN RAISE EXCEPTION 'REPORT_SCOPE_INVALID';END IF;
++ PERFORM p_from AT TIME ZONE p_zone;
++ IF p_cadence IS NOT NULL AND NOT EXISTS(SELECT 1 FROM app.cadence WHERE workspace_id=ws AND id=p_cadence) THEN RAISE EXCEPTION 'REPORT_CADENCE_NOT_FOUND';END IF;
++ INSERT INTO app.report_source_head(workspace_id) VALUES(ws) ON CONFLICT DO NOTHING;
++ SELECT revision INTO rev FROM app.report_source_head WHERE workspace_id=ws FOR SHARE;
++ cache_key:=md5(extract(epoch FROM p_from)::text||'/'||extract(epoch FROM p_to)::text||'/'||p_zone||'/'||coalesce(p_cadence,''));
++ SELECT * INTO prior FROM app.report_projection_checkpoint WHERE workspace_id=ws AND projection_version='reports-v1' AND period=cache_key;
++ IF FOUND AND prior.source_revision=rev AND NOT p_force THEN RETURN jsonb_build_object('period',cache_key,'revision',rev,'asOf',prior.as_of);END IF;
++ INSERT INTO app.report_projection_checkpoint(workspace_id,projection_version,period,from_at,to_at,timezone,cadence_id,source_revision) VALUES(ws,'reports-v1',cache_key,p_from,p_to,p_zone,p_cadence,rev)
++ ON CONFLICT(workspace_id,projection_version,period) DO UPDATE SET source_revision=EXCLUDED.source_revision,as_of=clock_timestamp();
++ DELETE FROM app.report_daily_projection WHERE workspace_id=ws AND projection_version='reports-v1' AND period=cache_key;
++ INSERT INTO app.report_daily_projection(workspace_id,projection_version,period,key,date,values)
++ WITH facts AS MATERIALIZED(SELECT f.*,(f.happened_at AT TIME ZONE p_zone)::date local_date FROM app.report_facts(p_from,p_to,p_cadence)f), tagged AS(
++  SELECT f.*,f.metric='replies' AND EXISTS(SELECT 1 FROM facts sent WHERE sent.metric='sent' AND sent.identity_id=f.identity_id AND sent.cadence_id IS NOT DISTINCT FROM f.cadence_id) AS recipient_reply FROM facts f
++ ) SELECT ws,'reports-v1',cache_key,
++ CASE WHEN grouping(local_date)=0 THEN 'series:'||local_date::text WHEN grouping(step_index)=0 THEN 'step:'||coalesce(publication_id,'')||':'||coalesce(step_index::text,'') WHEN grouping(cadence_id)=0 THEN 'cadence:'||coalesce(cadence_id,'') ELSE 'totals' END,
++ CASE WHEN grouping(local_date)=0 THEN local_date ELSE NULL END,
++ jsonb_build_object('sent',count(*) FILTER(WHERE metric='sent'),'email',count(*) FILTER(WHERE metric='sent' AND channel='EMAIL'),'whatsapp',count(*) FILTER(WHERE metric='sent' AND channel='WHATSAPP'),'replies',count(*) FILTER(WHERE metric='replies'),'failed',count(*) FILTER(WHERE metric='failed'),'pending',count(*) FILTER(WHERE metric='pending'),'uncertain',count(*) FILTER(WHERE metric='uncertain'),'bounces',count(*) FILTER(WHERE metric='bounces'),'optouts',count(*) FILTER(WHERE metric='optouts'),'leads',count(*) FILTER(WHERE metric='leads'),'qualified',count(*) FILTER(WHERE metric='qualified'),'leadPending',count(*) FILTER(WHERE metric='leadPending'),'leadWarning',count(*) FILTER(WHERE metric='leadWarning'),'leadDisqualified',count(*) FILTER(WHERE metric='leadDisqualified'),'enrolled',count(*) FILTER(WHERE metric='enrolled'),'executions',count(*) FILTER(WHERE metric='executions'),'recipients',count(DISTINCT identity_id) FILTER(WHERE metric='sent'),'responders',count(DISTINCT identity_id) FILTER(WHERE recipient_reply),'opens',NULL,'clicks',NULL,'connected',NULL,'qualificationHistory',NULL,'cadenceId',cadence_id,'publicationId',publication_id,'stepIndex',step_index)
++ FROM tagged GROUP BY GROUPING SETS((),(local_date),(cadence_id),(cadence_id,publication_id,step_index));
++ -- Keep a bounded cache, not an unbounded second reporting history.
++ DELETE FROM app.report_projection_checkpoint WHERE workspace_id=ws AND (projection_version,period) IN(SELECT projection_version,period FROM app.report_projection_checkpoint WHERE workspace_id=ws ORDER BY as_of DESC OFFSET 128);
++ RETURN jsonb_build_object('period',cache_key,'revision',rev,'asOf',(SELECT as_of FROM app.report_projection_checkpoint WHERE workspace_id=ws AND projection_version='reports-v1' AND period=cache_key));
++END $$;
++REVOKE ALL ON FUNCTION app.ensure_report_projection(timestamptz,timestamptz,text,text,boolean) FROM PUBLIC;
++GRANT EXECUTE ON FUNCTION app.ensure_report_projection(timestamptz,timestamptz,text,text,boolean) TO cadence_app;
++CREATE INDEX report_checkpoint_recent ON app.report_projection_checkpoint(workspace_id,as_of DESC);
++CREATE FUNCTION app.invalidate_report_projection() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
++DECLARE ws text;BEGIN
++ ws:=CASE WHEN TG_OP='DELETE' THEN OLD.workspace_id ELSE NEW.workspace_id END;
++ INSERT INTO app.report_source_head(workspace_id,revision) VALUES(ws,1) ON CONFLICT(workspace_id) DO UPDATE SET revision=app.report_source_head.revision+1;
++ RETURN NULL;
++END $$;
++REVOKE ALL ON FUNCTION app.invalidate_report_projection() FROM PUBLIC;
++DO $$ DECLARE t text;BEGIN FOREACH t IN ARRAY ARRAY['lead','cadence','cadence_publication','cadence_enrollment','channel_message','message_outbox','email_message','email_bounce','contact_suppression','prospecting_job'] LOOP
++ EXECUTE format('CREATE TRIGGER report_source_change AFTER INSERT OR UPDATE OR DELETE ON app.%I FOR EACH ROW EXECUTE FUNCTION app.invalidate_report_projection()',t);
++END LOOP;END $$;
+diff --git a/db/migrations/089a-report-timestamp-index-permissions.sql b/db/migrations/089a-report-timestamp-index-permissions.sql
+new file mode 100644
+index 0000000..1ccb215
+--- /dev/null
++++ b/db/migrations/089a-report-timestamp-index-permissions.sql
+@@ -0,0 +1,3 @@
++-- Index expressions execute under the inserting role. This pure parser reads
++-- no table and grants no authority over projections or tenant data.
++GRANT EXECUTE ON FUNCTION app.report_timestamp(text) TO cadence_app,cadence_worker;
+diff --git a/db/migrations/089b-report-optout-channel.sql b/db/migrations/089b-report-optout-channel.sql
+new file mode 100644
+index 0000000..3c11f2a
+--- /dev/null
++++ b/db/migrations/089b-report-optout-channel.sql
+@@ -0,0 +1,45 @@
++-- Preserve the attributed conversation channel in suppression drilldowns.
++CREATE OR REPLACE FUNCTION app.report_facts(p_from timestamptz,p_to timestamptz,p_cadence text DEFAULT NULL)
++RETURNS TABLE(metric text,id text,happened_at timestamptz,channel text,cadence_id text,publication_id text,step_index integer,identity_id text,kind text,state text,ref_id text)
++LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog AS $$
++DECLARE ws text:=current_setting('app.workspace_id',true);
++BEGIN
++ IF app.current_role() IS NULL OR p_from IS NULL OR p_to IS NULL OR p_to<=p_from OR p_to-p_from>interval '93 days' THEN RAISE EXCEPTION 'REPORT_SCOPE_INVALID';END IF;
++ IF p_cadence IS NOT NULL AND NOT EXISTS(SELECT 1 FROM app.cadence c WHERE c.workspace_id=ws AND c.id=p_cadence) THEN RAISE EXCEPTION 'REPORT_CADENCE_NOT_FOUND';END IF;
++ RETURN QUERY
++ WITH messages AS MATERIALIZED(
++  SELECT m.*,o.publication_id AS own_pub,o.step_index AS own_step,o.accepted_at AS provider_accepted,cp.cadence_id AS own_cadence,em.classification,em.truncated
++  FROM app.channel_message m LEFT JOIN app.message_outbox o ON o.workspace_id=m.workspace_id AND o.message_id=m.id
++  LEFT JOIN app.cadence_publication cp ON cp.workspace_id=o.workspace_id AND cp.id=o.publication_id
++  LEFT JOIN app.email_message em ON em.workspace_id=m.workspace_id AND em.message_id=m.id
++  WHERE m.workspace_id=ws AND m.metric_at>=p_from AND m.metric_at<p_to
++ ), candidates AS(
++  SELECT 'sent'::text metric,m.id,m.provider_accepted at,m.channel,m.own_cadence cadence,m.own_pub pub,m.own_step step,m.identity_id ident,'message'::text kind,m.state,m.conversation_id ref
++  FROM messages m WHERE m.direction='outbound' AND m.provider_accepted>=p_from AND m.provider_accepted<p_to
++  UNION ALL
++  SELECT CASE m.state WHEN 'failed' THEN 'failed' WHEN 'uncertain' THEN 'uncertain' ELSE 'pending' END,m.id,m.metric_at,m.channel,m.own_cadence,m.own_pub,m.own_step,m.identity_id,'message',m.state,m.conversation_id
++  FROM messages m WHERE m.direction='outbound' AND m.state IN('failed','uncertain','pending','dispatching')
++  UNION ALL
++  SELECT 'replies',m.id,m.metric_at,m.channel,last_touch.cadence_id,last_touch.publication_id,last_touch.step_index,m.identity_id,'message',m.state,m.conversation_id
++  FROM messages m LEFT JOIN LATERAL(
++   SELECT cp.cadence_id,o.publication_id,o.step_index FROM app.channel_message parent JOIN app.message_outbox o ON o.workspace_id=parent.workspace_id AND o.message_id=parent.id JOIN app.cadence_publication cp ON cp.workspace_id=o.workspace_id AND cp.id=o.publication_id
++   WHERE parent.workspace_id=ws AND parent.conversation_id=m.conversation_id AND o.accepted_at<=m.metric_at ORDER BY o.accepted_at DESC,o.message_id DESC LIMIT 1
++  )last_touch ON true
++  WHERE m.direction='inbound' AND (m.channel='WHATSAPP' OR m.classification='human' AND NOT coalesce(m.truncated,false))
++  UNION ALL
++  SELECT 'bounces',b.outbound_message_id,b.at,'EMAIL',cp.cadence_id,o.publication_id,o.step_index,m.identity_id,'message','bounced',m.conversation_id
++  FROM(SELECT eb.outbound_message_id,min(eb.created_at) at FROM app.email_bounce eb WHERE eb.workspace_id=ws GROUP BY eb.outbound_message_id)b
++  JOIN app.channel_message m ON m.workspace_id=ws AND m.id=b.outbound_message_id LEFT JOIN app.message_outbox o ON o.workspace_id=ws AND o.message_id=m.id LEFT JOIN app.cadence_publication cp ON cp.workspace_id=ws AND cp.id=o.publication_id WHERE b.at>=p_from AND b.at<p_to
++  UNION ALL
++  SELECT 'optouts',s.identity_id,s.at,last_touch.channel,last_touch.cadence_id,last_touch.publication_id,last_touch.step_index,s.identity_id,'identity','suppressed',last_touch.conversation_id
++  FROM(SELECT cs.identity_id,min(cs.created_at) at FROM app.contact_suppression cs WHERE cs.workspace_id=ws AND cs.reason<>'hard_bounce' GROUP BY cs.identity_id)s
++  LEFT JOIN LATERAL(SELECT cp.cadence_id,o.publication_id,o.step_index,m.conversation_id,m.channel FROM app.message_outbox o JOIN app.channel_message m ON m.workspace_id=o.workspace_id AND m.id=o.message_id LEFT JOIN app.cadence_publication cp ON cp.workspace_id=o.workspace_id AND cp.id=o.publication_id WHERE o.workspace_id=ws AND o.identity_id=s.identity_id AND o.accepted_at<=s.at ORDER BY o.accepted_at DESC,o.message_id DESC LIMIT 1)last_touch ON true
++  WHERE s.at>=p_from AND s.at<p_to
++  UNION ALL
++  SELECT bucket.metric,l.id,app.report_timestamp(l.payload->>'createdAt'),NULL,p_cadence,NULL,NULL,l.id,'lead',coalesce(l.payload->>'qualification','new'),l.id FROM app.lead l CROSS JOIN LATERAL unnest(ARRAY['leads',CASE l.payload->>'qualification' WHEN 'qualified' THEN 'qualified' WHEN 'pending' THEN 'leadPending' WHEN 'warning' THEN 'leadWarning' WHEN 'disqualified' THEN 'leadDisqualified' END])bucket(metric) WHERE bucket.metric IS NOT NULL AND l.workspace_id=ws AND app.report_timestamp(l.payload->>'createdAt')>=p_from AND app.report_timestamp(l.payload->>'createdAt')<p_to AND (p_cadence IS NULL OR EXISTS(SELECT 1 FROM app.cadence_enrollment en JOIN app.cadence_publication cp ON cp.workspace_id=en.workspace_id AND cp.id=en.publication_id WHERE en.workspace_id=ws AND en.lead_id=l.id AND cp.cadence_id=p_cadence))
++  UNION ALL
++  SELECT 'enrolled',e.lead_id,e.created_at,NULL,e.cadence_id,e.publication_id,NULL,e.identity_id,'lead',e.state,e.lead_id FROM(SELECT DISTINCT ON(en.lead_id)en.lead_id,cp.created_at,cp.cadence_id,cp.id publication_id,en.identity_id,en.state FROM app.cadence_enrollment en JOIN app.cadence_publication cp ON cp.workspace_id=en.workspace_id AND cp.id=en.publication_id WHERE en.workspace_id=ws AND cp.created_at>=p_from AND cp.created_at<p_to AND (p_cadence IS NULL OR cp.cadence_id=p_cadence) ORDER BY en.lead_id,cp.created_at,en.id)e
++  UNION ALL
++  SELECT 'executions',j.id,j.created_at,NULL,NULL,NULL,NULL,NULL,'execution',j.state,j.id FROM app.prospecting_job j WHERE j.workspace_id=ws AND j.created_at>=p_from AND j.created_at<p_to AND p_cadence IS NULL
++ ) SELECT x.metric,x.id,x.at,x.channel,x.cadence,x.pub,x.step,x.ident,x.kind,x.state,x.ref FROM candidates x WHERE p_cadence IS NULL OR x.cadence=p_cadence;
++END $$;
+diff --git a/docs/reverse-engineering/visual-2026-10-25/STATUS.md b/docs/reverse-engineering/visual-2026-10-25/STATUS.md
+index 1a187fb..7129403 100644
+--- a/docs/reverse-engineering/visual-2026-10-25/STATUS.md
++++ b/docs/reverse-engineering/visual-2026-10-25/STATUS.md
+@@ -1,18 +1,21 @@
+ # Status: CadenceFlow Visual
+-Updated: 2026-10-28 · Session: s15 · Phase:6 Homologação controlada validada; paridade integral não aceita
++Updated: 2026-10-29 · Session: s16 · Phase:6 Relatórios locais verificados; revisão final06C.2 pendente; paridade integral não aceita
+ Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
+ 
+ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
+ 
+ ## Summary
+ 
++- Covered s16:06C.2 com curadoria somente leitura do histórico real;30capturas mascaradas e24checks1920/390/320,0overflow/pageerror, filtros/popup/polling/recovery/exportnulls. L018restored/L019removed;0novos contatos/canais/mensagens/chamadas pagas. EV-278. Revisão final ainda pendente; não avançar antes do aceite.
++- Not covered s16:estados pagos/conectados da referência, novos envios/inferência/scraping live e produção pública.
++
+ - Covered s15:06IA-H administrativo com30casos sintéticos/60saídas, contratos tradicional/híbrido e9capturas reais mascaradas. 351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. L017restored;0chamadas pagas/envios. Próximo06C.2.
+ - Not covered s15:inferência/Actor real, acurácia probabilística e estados pagos/conectados da referência; gates externos permanecem.
+ 
+ - Covered s14:06B.5 com pausas/retomada por empresa/módulo, duplicatas entre listas, propostas substituíveis e guardSQL087a.346unit/402integration/19focused;69capturas,12pós-revisão. Oito Important corrigidos numa passagem;QA L015/L016restored;runtime200/seis lanes. Próximo06IA-H.
+ - Not covered s14:acurácia/custo live, estados conectados/pagos da referência, carga/produção. Menor histórico06B.3→06F.
+ 
+ - Covered s13:06D.2 evidence/inbox/test popup;36 masked screenshots in1920/390/320, zero overflow/page errors, draft preserved through refresh;383 integration/342 unit green. EV-275; own QA session revoked and prior data preserved. Uma revisão independente;dois Important corrigidos e um menor adiado→06F. Próximo06B.5.
+ - Not covered s13:connected/pilot reference states, external channel delivery and public production.
+ 
+ 
+diff --git a/docs/reverse-engineering/visual-2026-10-25/evidence/EV-278-reconciled-reports.md b/docs/reverse-engineering/visual-2026-10-25/evidence/EV-278-reconciled-reports.md
+new file mode 100644
+index 0000000..7020bdd
+--- /dev/null
++++ b/docs/reverse-engineering/visual-2026-10-25/evidence/EV-278-reconciled-reports.md
+@@ -0,0 +1,20 @@
++# EV-278 —06C.2 relatórios reconciliados
++
++**Data:**29/10/2026. **Sessão:**s16. **Origem local:**localhost3210; referência somente pela evidência histórica EV-219/227/229/250/254. Nenhuma mutação nova da referência.
++
++[obs EV-278]30capturas locais mascaradas em1920×855/390×844/320×844 e24verificações de rota/viewport sem overflow/pageerror, com fontes e limites no [relatório](../../../validation/06c2-reconciled-reports.md). Mesmos cards/abas/filtros e composição dos painéis; detalhe pelo número do indicador. Consulta customizada real, estado vazio, histórico parcial preexistente e falha de rede controlada/recuperação. Nenhuma resposta de fornecedor foi fabricada no navegador.
++
++[obs EV-278] Curadoria somente leitura reconciliou histórico operacional existente:3aceites,23mensagens humanas,0bounces/opt-outs e1lead. Dois e-mails automáticos ficaram fora da contagem humana. Nenhum novo envio/chamada paga. Testes de integração usam banco/papéis/jornadas reais com transporte externo substituído; não comprovam nova entrega externa.
++
++## Not tested
++
++- Estados conectados/pagos e backend privado da referência, por decisão já registrada do operador.
++- Paridade pixel a pixel de todos os estados e dados; captura com estado diferente não é prova de igualdade integral.
++- Scraping/inferência live, carga e disponibilidade pública. Gate06IA-H e08B preservados.
++
++## Evidências
++
++- [Manifesto de capturas](../../../validation/evidence/06c2-reconciled-reports/screens-manifest.json)
++- [Navegador](../../../validation/evidence/06c2-reconciled-reports/browser-verification.json)
++- [Curadoria](../../../validation/evidence/06c2-reconciled-reports/real-data-curation.json)
++- [Cleanup](../../../validation/evidence/06c2-reconciled-reports/closure.json)
+diff --git a/docs/reverse-engineering/visual-2026-10-25/evidence/index.csv b/docs/reverse-engineering/visual-2026-10-25/evidence/index.csv
+index 95f92ae..2982200 100644
+--- a/docs/reverse-engineering/visual-2026-10-25/evidence/index.csv
++++ b/docs/reverse-engineering/visual-2026-10-25/evidence/index.csv
+@@ -71,10 +71,12 @@ id,date,session,route,shows,masked
+ 
+ "EV-270","2026-10-26","s08","/leads/enrich; /leads/qualifier; /automations/new","06B.2 implementation; guarded reference and local persisted QA; no blanket parity","yes; session data excluded"
+ "EV-271","2026-10-27","s09","/settings/context; /settings/ai; /settings/mcp; /leads/qualifier","06IA central administration and private context; real local permissions and read-only reference; no whole-product parity","yes; no credentials or personal field values"
+ "EV-272","2026-10-27","s10","/leads/generator; /contacts; /leads/:id; /executions/:id","06B.3 controlled implementation and27 post-review masked captures; historical reference; no blanket parity","yes; no credentials"
+ "EV-273","2026-10-27","s11","/leads/enrich; /leads/:id; /contacts; /executions/:id; /linkedin/enrichment","06B.4 controlled implementation;35 masked captures; SQL UI fixtures and separate service/billing integration proof; no blanket parity","yes; no credentials"
+ "EV-274","2026-10-27","s12","/cadences/new; /cadences/:id; /templates; /automations/new/ai","06D.1 private file upload/retry/download and27 masked captures; blocked publication UI fixture; no blanket parity","yes; no credentials"
+ 
+ "EV-275","2026-10-27","s13","localhost channel operation","36 masked captures; real empty and declared response-only fixtures; EV-275-channel-operation.json","masked"
+ "EV-276","2026-10-28","s14","/leads/generator; /automations/new/ai; /executions/:id; /contacts; /cadences/new","06B.5 controlled journey and69 masked captures;8review fixes; next06IA-H; no blanket parity","yes; no credentials"
+ "EV-277","2026-10-28","s15","/settings/ai; /settings/context; /leads/enrich","06IA-H controlled benchmark;9masked actual UI captures; no empirical accuracy or blanket parity","yes; no credentials or personal values"
++
++"EV-278","2026-10-29","s16","/dashboard; /reports; /reports/:tab; /executions/:id; /cadences/:id","06C2 persisted real-data curation and30masked local captures; historical reference only; no blanket parity","yes; no credentials or personal values"
+diff --git a/docs/reverse-engineering/visual-2026-10-25/log/2026-10-29-s16.md b/docs/reverse-engineering/visual-2026-10-25/log/2026-10-29-s16.md
+new file mode 100644
+index 0000000..8a2d961
+--- /dev/null
++++ b/docs/reverse-engineering/visual-2026-10-25/log/2026-10-29-s16.md
+@@ -0,0 +1,5 @@
++# s16 —06C.2
++
++Referência histórica L4, nenhuma nova escrita. UI local em1920/390/320,30capturas mascaradas e24verificações de rotas. Cards/detalhe/período personalizado, preservação de datas pelo polling, falha de rede/recovery,Tab/Escape e JSON com null conferidos. Rascunho próprio sem destinatários/publicação removido; sessões QA revogadas; L018restored/L019removed.0envios/chamadas pagas.
++
++Curadoria de registros operacionais existentes reconciliada somente leitura; banco efêmero prova regras/isolamento sem usar contatos reais em fixtures. Evidência EV-278 e relatório06C.2. Revisão final/aceite ainda pendentes nesta preparação; não inicia06C.3 antes do fechamento.
+diff --git a/docs/reverse-engineering/visual-2026-10-25/sandbox/environment.md b/docs/reverse-engineering/visual-2026-10-25/sandbox/environment.md
+index 702b12c..3395ddb 100644
+--- a/docs/reverse-engineering/visual-2026-10-25/sandbox/environment.md
++++ b/docs/reverse-engineering/visual-2026-10-25/sandbox/environment.md
+@@ -62,10 +62,14 @@ Referência somente por evidência histórica; zero escrita. QA dedicada local:
+ 
+ Referência histórica L4; nenhuma escrita ou nova conexão. Local: identidade QA dedicada existente, duas empresas/pessoas sintéticas inseridas por SQL só para UI após a quota real recusar chamadas; execução e cobrança validadas em banco efêmero separado. Aplicação revisada de um contato persistida no browser. Três contatos próprios removidos, todas as sessões QA revogadas, duas listas vazias e um job sintético terminal retidos. L-010fixture;0linhas abertas. Limites/política central, conta do operador e integrações preservados.35capturas mascaradas em ../../../validation/evidence/06b4-company-people/.
+ 
+ ## Atualização s12 —27/10/2026
+ 
+ Referência histórica L4, sem escrita. QA local dedicada: contato/lista/rascunho/template e dois registros de arquivo removidos; um blob válido removido, dados anteriores preservados e sessões revogadas. L-011removed, zero canais/publicações/outbox/chamadas pagas/envios.27 capturas mascaradas; prévia de publicação fixture bloqueada, com execução autoritativa verificada separadamente em banco efêmero.
+ 
+ ## Atualização s15 —28/10/2026
+ 
+ Referência histórica L4; nenhuma mutação. QA local dedicada existente: somente leitura das três telas, navegação responsiva e foco/Escape. Nenhum novo registro de domínio/canal/outbox/piloto ou chamada paga. L017restored, snapshot anterior e workspace preservados, própria sessão revogada e navegador fechado. Migração088 e instruções internasv2 aplicadas localmente. Nove capturas mascaradas; limites de prova explícitos emEV277.
++
++## Atualização s16 —29/10/2026
++
++Referência histórica L4; nenhuma escrita. Local: mesma identidade QA dedicada com0contatos/0automações/0canais/0outbox no escopo, sem integrações disparadas por rascunho. Um rascunho privado `[RE]` em lista anterior vazia, nunca publicado, removido por ID exato; dados/listas/históricos anteriores preservados. Workspace restaurado, todas as sessões QA revogadas e browser próprio fechado. L018restored/L019removed.30capturas e24checks de rotas/viewport;0chamadas pagas ou envios. Curadoria do workspace operacional do operador em transação somente leitura; somente contagens anonimizadas na evidência. Migrações089/089a/089b aplicadas localmente.
+diff --git a/docs/reverse-engineering/visual-2026-10-25/sandbox/ledger.csv b/docs/reverse-engineering/visual-2026-10-25/sandbox/ledger.csv
+index 79bffcb..ba27aa2 100644
+--- a/docs/reverse-engineering/visual-2026-10-25/sandbox/ledger.csv
++++ b/docs/reverse-engineering/visual-2026-10-25/sandbox/ledger.csv
+@@ -17,10 +17,16 @@ L-012,2026-10-27,A2,create,06D1 isolated message authoring fixtures,localhost de
+ 
+ L-013,2026-10-27,A1,update,06D2 channel evidence UI,localhost dedicated QA identity,private 06d2 state,no new contacts channels or outbox; browser-only declared history fixtures,restore active workspace and revoke own QA sessions; close owned browser,restored,No persistent fixture created; prior workspace data and navigation restored; own QA session revoked; routes removed; no sends or paid calls
+ 
+ L-014,2026-10-28,A1,update,06D2 postreview email evidence UI,localhost dedicated QA identity,private 06d2 state,no new contacts channels or outbox; browser-only declared history fixtures,restore active workspace and revoke own QA sessions; close owned browser,restored,No persistent fixture created; prior workspace data and navigation restored; own QA session revoked; routes removed; no sends or paid calls
+ 
+ L-015,2026-10-28,A1,update,06B5 journey UI,localhost dedicated QA identity,private 06b5 state,no new contacts channels or outbox; browser-only declared history fixtures,restore active workspace and revoke own QA sessions; close owned browser,restored,No persistent fixture created; prior workspace data and navigation restored; own QA session revoked; routes removed; no sends or paid calls
+ 
+ L-016,2026-10-28,A1,update,06B5 recovery UI after review,localhost dedicated QA identity,private 06b5 state,no new contacts channels or outbox; browser-only declared history fixtures,restore active workspace and revoke own QA sessions; close owned browser,restored,No persistent fixture created; prior workspace data and navigation restored; own QA session revoked; routes removed; no sends or paid calls
+ 
+ L-017,2026-10-28,A1,update,06IA-H intelligence UI,localhost dedicated QA identity,private 06iah state,no new contacts channels or outbox; read-only real UI,restore active workspace and revoke own QA sessions; close owned browser,restored,No persistent fixture created; prior workspace data and navigation restored; own QA session revoked; no sends or paid calls
++
++L-018,2026-10-28,A1,update,06C2 reconciled reports UI,localhost dedicated QA identity,private 06c2 state,no new contacts channels or outbox; read-only real UI,restore active workspace and revoke own QA sessions; close owned browser,restored,No persistent fixture created; prior workspace data and navigation restored; own QA session revoked; routes removed; no sends or paid calls
++
++L-019,2026-10-29,A2,create,06C2 private cadence draft,localhost dedicated QA identity,private 06c2 fixture,absent; existing contacts0 automations0 channels0 outbox0,delete only owned unpublished draft and revoke own session,removed,Owned unpublished draft deleted by exact ID; no contacts publications messages or paid calls created
++
++L-020,2026-10-28,A1,update,06C2 reconciled reports UI,localhost dedicated QA identity,private 06c2 state,no new contacts channels or outbox; read-only real UI,restore active workspace and revoke own QA sessions; close owned browser,restored,No persistent fixture created; prior workspace data and navigation restored; own QA session revoked; routes removed; no sends or paid calls
+diff --git a/docs/validation/06c2-reconciled-reports.md b/docs/validation/06c2-reconciled-reports.md
+new file mode 100644
+index 0000000..6b97137
+--- /dev/null
++++ b/docs/validation/06c2-reconciled-reports.md
+@@ -0,0 +1,65 @@
++# 06C.2 — Dashboard e relatórios reconciliados
++
++**Execução:** 28–29/10/2026. **Estado:** implementação e verificações locais registradas; revisão final ainda pendente. Não é aceite de produção pública nem de paridade integral com o CadenceFlow.
++
++## Resultado implementado
++
++Dashboard, relatórios geral/funil/performance e relatório da cadência consultam o mesmo serviço autorizado. Totais, séries e detalhe usam `app.report_facts`, mensagens únicas, publicações e etapas persistidas. Tentativas, respostas automáticas e DSNs não se tornam respostas humanas. Bounces e opt-outs continuam atribuídos quando há filtro de cadência. A atribuição é a última mensagem aceita anterior na conversa/identidade; bounce usa a mensagem correlacionada.
++
++Períodos são instantes UTC absolutos, agrupados pelo fuso do workspace. O seletor personalizado agora transmite as datas escolhidas, incluindo o último dia local, em vez de descartar os valores. Mudanças de filtro retiram a leitura anterior; atualização automática preserva filtros e rascunhos. Falha de atualização identifica a última leitura e oferece recuperação.
++
++Indicadores clicáveis abrem detalhe paginado, com a mesma base do total. A exportação JSON preserva `null` nas medições indisponíveis. Links de mensagens abrem a caixa do canal; não prometem selecionar uma conversa automaticamente. O histórico de execuções e o popup de ocorrências continuam usando seus serviços autoritativos existentes, sem outra fila ou cópia de resultados.
++
++## Significado dos indicadores
++
++| Indicador | Base e limite |
++|---|---|
++| Aceitas | Uma mensagem com aceite registrado pelo provedor no período; não soma tentativas. |
++| Respostas | Mensagens humanas recebidas no período; e-mails automáticos, truncados e DSNs excluídos. |
++| Falhas / fila / incertas | Estado atual da mensagem cujo instante operacional está no período. Incerteza não comprova falha nem autoriza repetir envio. |
++| Bounce | Uma mensagem de saída correlacionada; DSNs repetidos não aumentam o total. |
++| Opt-out | Uma identidade suprimida; hard bounce sozinho não é pedido de saída. |
++| Leads / qualificados | Contatos criados no período e sua qualificação **atual**. Não inventa a data histórica da qualificação. |
++| Inscritos | Contatos distintos em publicações criadas no período; pode incluir contatos captados antes. Não é a mesma coorte de criação dos leads. |
++| Taxa de resposta | Identidades destinatárias com aceite no período que também responderam no período / identidades com aceite no período, por cadência. Denominador zero resulta em `null`. |
++| Contadores atuais | Base, cadências, automações e publicações ativas identificados como estoque atual, separados da captação do período. |
++| Abertura / clique / conexão / histórico da qualificação / consumo comercial consolidado | `null` / “—” enquanto não houver medição autoritativa correspondente. |
++
++## Prova com histórico operacional real
++
++Transação somente leitura sobre o workspace preexistente do operador; nenhuma chamada nova de Apify, LLM, e-mail ou WhatsApp. Consultas independentes das tabelas reconciliaram **3 aceites, 23 respostas humanas, 0 bounces, 0 opt-outs e 1 contato** com os fatos do relatório. A origem continha 22 e-mails humanos, 1 mensagem WhatsApp e 2 e-mails automáticos; estes dois ficaram fora do total humano.
++
++[Curadoria sem dados pessoais](evidence/06c2-reconciled-reports/real-data-curation.json). Isso comprova a leitura do histórico persistido; não é um novo teste de entrega externa, nem valida a precisão de scraping/inferência.
++
++## Testes e regressões
++
++- Domínio: telemetria indisponível versus zero, métricas inválidas, divisão por zero, período absoluto/limitado, calendário inválido, dias de 23/25 horas e offset fixo. Data personalizada passou de função ausente para quatro testes verdes.
++- Integração com PostgreSQL efêmero, papéis e isolamento reais: publicação, materialização, lease, dispatch, classificação de entrada e DSN correlacionado. Apenas o transporte externo foi substituído; não houve envio real pelo teste.
++- Repetição e eventos atrasados, rebuild idempotente, cursor isolado, acesso HTTP anônimo/escopo divergente/input inválido, revogação de membro e escrita SQL de projeção proibida.
++- 10 mil leads e 10 mil eventos repetidos: página de 50 itens, 12.587 bytes; 20 leituras aquecidas pelo handler HTTP autenticado. p95 observado nas rodadas: 84–176 ms; última focada após correção de canal: **93 ms**. Perfil local/controlado; não é SLO público ou ensaio de rede de produção.
++- A suíte completa detectou `permission denied for function report_timestamp` em gravações normais de contatos. Os três casos de `contacts-base` falharam antes da migração corretiva089a e passaram depois. A função é um parser puro, sem leitura de tabela; o grant não permite escrever em projeções.
++- O teste de opt-out de e-mail detectou canal `null` e destino incorreto;089b preserva o canal da conversa atribuída. Regressão 8/9 RED → 9/9 GREEN.
++- O teste real de navegador detectou duas consultas do detalhe ao ocorrer polling da página principal. Após usar a identidade estável dos filtros, o mesmo teste comprovou uma consulta, mantendo o detalhe aberto durante a atualização. [Regressão](evidence/06c2-reconciled-reports/detail-polling.json).
++- Verificação anterior à revisão final, já após089b: **430/430 integrações**, **355/355 unitários**, **9/9 focadas**, build de produção e tipos aprovados. O teste do popup também passou no build final. Resultados em [verification.json](evidence/06c2-reconciled-reports/verification.json).
++
++## UI, referência e limites
++
++**30 capturas mascaradas**, **24 verificações de rota/viewport**, sem erro JavaScript de página e sem overflow horizontal nos casos observados. Rotas: dashboard, relatórios geral/funil/performance/CRM, execuções/lista/detalhe e relatório de cadência; desktop1920×855,390×844 e320×844. Exercitados: vazio real, histórico parcial persistido, popup de detalhe, período personalizado, datas mantidas durante17s de polling, falha de rede injetada no transporte e recuperação, ciclo deTab/Escape e download real com `null`.
++
++[Verificações do navegador](evidence/06c2-reconciled-reports/browser-verification.json), [manifesto das capturas](evidence/06c2-reconciled-reports/screens-manifest.json), [funil desktop](evidence/06c2-reconciled-reports/screens/reports-funnel-1920.png), [detalhe320px](evidence/06c2-reconciled-reports/screens/funnel-detail-320.png).
++
++Comparação com evidências históricas EV-219/227/229/250/254 e capturas pareadas da auditoria visual: cards, abas, filtros, painéis e estrutura responsiva preservados; controles de drilldown incorporados nos números para não acrescentar uma linha a cada card. Funil mantém painel inferior de qualificação ao lado dos dois painéis de conexões. Dados/estados distintos não constituem comparação pixel a pixel. Gráficos sem medição mostram indisponibilidade; os estados pagos/conectados da referência permanecem não observados, conforme decisão do operador. Não houve nova mutação da referência.
++
++## Persistência e operação
++
++Migrações089/089a/089b aplicadas no banco local. Projeções derivadas com RLS forçada, revisão das fontes, checkpoint confirmado, cache de até128 consultas por workspace e reconstrução limitada a31dias por chamada. Histórico de negócio não é reescrito. Só owner/admin força reconstrução; membros atuais podem ler relatórios.
++
++O Docker apresentou erro1920 em sockets AF_UNIX ao iniciar pelo contexto do Codex. Diretórios efêmeros de IPC foram preservados com sufixo `.06c2-stale`; volumes, VHDX e configurações não foram apagados. O operador iniciou o Docker manualmente e o motor voltou. Nenhum reset ou mudança de segurança aplicada. Runtime local3210 e seis serviços contínuos conferidos saudáveis; confirmação final no fechamento.
++
++## Cleanup
++
++L018/L020 restauradas; L019 removida. Um rascunho privado sem destinatários foi criado para abrir a aba de relatório e removido por ID exato, após confirmar zero publicações. Dados anteriores preservados, workspace restaurado, sessões da identidade QA dedicada revogadas e navegador próprio fechado. **Zero novos contatos, canais, mensagens, chamadas pagas ou envios externos.** [Prova](evidence/06c2-reconciled-reports/closure.json) e [rodada do detalhe](evidence/06c2-reconciled-reports/detail-closure.json).
++
++## Próximo pacote
++
++Após o aceite/revisão final deste pacote: **06C.3 — notificações, preferências e resumos**. Os gates de piloto real de fontes/modelos e liberação pública continuam nos pacotes próprios.
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/browser-verification.json b/docs/validation/evidence/06c2-reconciled-reports/browser-verification.json
+new file mode 100644
+index 0000000..ec2788a
+--- /dev/null
++++ b/docs/validation/evidence/06c2-reconciled-reports/browser-verification.json
+@@ -0,0 +1,213 @@
++{
++  "main": {
++    "rows": [
++      {
++        "route": "/dashboard",
++        "width": 1920,
++        "overflow": false,
++        "headings": [
++          "Comece a prospectar",
++          "Dashboard"
++        ]
++      },
++      {
++        "route": "/reports",
++        "width": 1920,
++        "overflow": false,
++        "headings": [
++          "Relatórios",
++          "Os relatórios aparecem depois do primeiro envio"
++        ]
++      },
++      {
++        "route": "/reports/funnel",
++        "width": 1920,
++        "overflow": false,
++        "headings": [
++          "Relatórios"
++        ]
++      },
++      {
++        "route": "/reports/performance",
++        "width": 1920,
++        "overflow": false,
++        "headings": [
++          "Relatórios"
++        ]
++      },
++      {
++        "route": "/reports/negocios",
++        "width": 1920,
++        "overflow": false,
++        "headings": [
++          "Relatórios",
++          "Nenhuma integração FunnelsFlow ativa"
++        ]
++      },
++      {
++        "route": "/executions",
++        "width": 1920,
++        "overflow": false,
++        "headings": [
++          "Execuções"
++        ]
++      },
++      {
++        "route": "/executions/:id",
++        "width": 1920,
++        "overflow": false
++      },
++      {
++        "route": "/dashboard",
++        "width": 390,
++        "overflow": false,
++        "headings": [
++          "Comece a prospectar",
++          "Dashboard"
++        ]
++      },
++      {
++        "route": "/reports",
++        "width": 390,
++        "overflow": false,
++        "headings": [
++          "Relatórios",
++          "Os relatórios aparecem depois do primeiro envio"
++        ]
++      },
++      {
++        "route": "/reports/funnel",
++        "width": 390,
++        "overflow": false,
++        "headings": [
++          "Relatórios"
++        ]
++      },
++      {
++        "route": "/reports/performance",
++        "width": 390,
++        "overflow": false,
++        "headings": [
++          "Relatórios"
++        ]
++      },
++      {
++        "route": "/reports/negocios",
++        "width": 390,
++        "overflow": false,
++        "headings": [
++          "Relatórios",
++          "Nenhuma integração FunnelsFlow ativa"
++        ]
++      },
++      {
++        "route": "/executions",
++        "width": 390,
++        "overflow": false,
++        "headings": [
++          "Execuções"
++        ]
++      },
++      {
++        "route": "/executions/:id",
++        "width": 390,
++        "overflow": false
++      },
++      {
++        "route": "/dashboard",
++        "width": 320,
++        "overflow": false,
++        "headings": [
++          "Comece a prospectar",
++          "Dashboard"
++        ]
++      },
++      {
++        "route": "/reports",
++        "width": 320,
++        "overflow": false,
++        "headings": [
++          "Relatórios",
++          "Os relatórios aparecem depois do primeiro envio"
++        ]
++      },
++      {
++        "route": "/reports/funnel",
++        "width": 320,
++        "overflow": false,
++        "headings": [
++          "Relatórios"
++        ]
++      },
++      {
++        "route": "/reports/performance",
++        "width": 320,
++        "overflow": false,
++        "headings": [
++          "Relatórios"
++        ]
++      },
++      {
++        "route": "/reports/negocios",
++        "width": 320,
++        "overflow": false,
++        "headings": [
++          "Relatórios",
++          "Nenhuma integração FunnelsFlow ativa"
++        ]
++      },
++      {
++        "route": "/executions",
++        "width": 320,
++        "overflow": false,
++        "headings": [
++          "Execuções"
++        ]
++      },
++      {
++        "route": "/executions/:id",
++        "width": 320,
++        "overflow": false
++      }
++    ],
++    "pageErrors": [],
++    "reference": "historical matched viewports; paid/connected reference states remain not observed",
++    "externalCalls": 0
++  },
++  "extra": {
++    "checks": [
++      {
++        "route": "/cadences/:id report",
++        "width": 1920,
++        "overflow": false
++      },
++      {
++        "route": "/cadences/:id report",
++        "width": 390,
++        "overflow": false
++      },
++      {
++        "route": "/cadences/:id report",
++        "width": 320,
++        "overflow": false
++      },
++      {
++        "customDraftPreservedAfterPolling": true
++      },
++      {
++        "networkFaultRecovered": true,
++        "staleDataLabelled": true
++      },
++      {
++        "modalTabCycleContained": true,
++        "escapeClosed": true
++      },
++      {
++        "exportDownloaded": true
++      }
++    ],
++    "pageErrors": []
++  },
++  "screenshots": 30,
++  "exportNullsVerified": true
++}
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/closure.json b/docs/validation/evidence/06c2-reconciled-reports/closure.json
+new file mode 100644
+index 0000000..8a61695
+--- /dev/null
++++ b/docs/validation/evidence/06c2-reconciled-reports/closure.json
+@@ -0,0 +1,16 @@
++{
++  "date": "2026-10-29",
++  "qaPriorDataPreserved": true,
++  "activeWorkspaceRestored": true,
++  "ownSessionRevoked": true,
++  "newContacts": 0,
++  "newChannels": 0,
++  "newOutbox": 0,
++  "pilotRecords": 0,
++  "externalSends": 0,
++  "paidCalls": 0,
++  "browserFixtures": "one real private unpublished draft removed; no message or provider response fixtures; network failure injected only at browser transport",
++  "ownedUnpublishedDraftsCreated": 1,
++  "ownedUnpublishedDraftsRemoved": 1,
++  "allDedicatedQaSessionsRevoked": true
++}
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/detail-closure.json b/docs/validation/evidence/06c2-reconciled-reports/detail-closure.json
+new file mode 100644
+index 0000000..6807033
+--- /dev/null
++++ b/docs/validation/evidence/06c2-reconciled-reports/detail-closure.json
+@@ -0,0 +1,13 @@
++{
++  "date": "2026-10-29",
++  "qaPriorDataPreserved": true,
++  "activeWorkspaceRestored": true,
++  "ownSessionRevoked": true,
++  "newContacts": 0,
++  "newChannels": 0,
++  "newOutbox": 0,
++  "pilotRecords": 0,
++  "externalSends": 0,
++  "paidCalls": 0,
++  "browserFixtures": "none; real read-only UI; owned browser closed"
++}
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/detail-polling.json b/docs/validation/evidence/06c2-reconciled-reports/detail-polling.json
+new file mode 100644
+index 0000000..15a2e99
+--- /dev/null
++++ b/docs/validation/evidence/06c2-reconciled-reports/detail-polling.json
+@@ -0,0 +1,7 @@
++{
++  "regressionRed": "Parent polling reloaded the open detail: 1 -> 2",
++  "green": {
++    "openDetailSurvivesParentPolling": true,
++    "detailRequests": 1
++  }
++}
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/real-data-curation.json b/docs/validation/evidence/06c2-reconciled-reports/real-data-curation.json
+new file mode 100644
+index 0000000..19fb21e
+--- /dev/null
++++ b/docs/validation/evidence/06c2-reconciled-reports/real-data-curation.json
+@@ -0,0 +1,41 @@
++{
++  "date": "2026-10-28",
++  "source": "pre-existing operator workspace; persisted channel history and contacts; read-only transaction",
++  "scopeHash": "80e000b1603a6d79",
++  "period": {
++    "from": "2026-07-31T02:58:51.048Z",
++    "to": "2026-10-29T02:58:51.047Z"
++  },
++  "independentSourceCounts": {
++    "sent": 3,
++    "replies": 23,
++    "bounces": 0,
++    "optouts": 0,
++    "leads": 1
++  },
++  "reportFactCounts": {
++    "sent": 3,
++    "replies": 23,
++    "bounces": 0,
++    "optouts": 0,
++    "leads": 1
++  },
++  "inboundClassificationCounts": [
++    {
++      "classification": "automatic",
++      "n": 2
++    },
++    {
++      "classification": "human",
++      "n": 22
++    },
++    {
++      "classification": "whatsapp",
++      "n": 1
++    }
++  ],
++  "reconciled": true,
++  "externalCalls": 0,
++  "newMessages": 0,
++  "limitation": "Confirms stored operational history; does not initiate or prove a new provider delivery, scraping call or LLM inference."
++}
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens-manifest.json b/docs/validation/evidence/06c2-reconciled-reports/screens-manifest.json
+new file mode 100644
+index 0000000..a7cdff2
+--- /dev/null
++++ b/docs/validation/evidence/06c2-reconciled-reports/screens-manifest.json
+@@ -0,0 +1,182 @@
++[
++  {
++    "name": "cadence-report-1920.png",
++    "sha256": "aeb81a931f843f3930e4808811d1ada98221dff734e73ead1ffe2307bb7484a7",
++    "bytes": 115788,
++    "masked": true
++  },
++  {
++    "name": "cadence-report-320.png",
++    "sha256": "d8c1a038c89b95e59baa3e1976f0201af4186caf50745ddd43e7f725425ae427",
++    "bytes": 45903,
++    "masked": true
++  },
++  {
++    "name": "cadence-report-390.png",
++    "sha256": "8890f1df3124c2be1165448331f76b90f1eaec113b432d19c89235849fc1db49",
++    "bytes": 48466,
++    "masked": true
++  },
++  {
++    "name": "custom-draft-after-poll.png",
++    "sha256": "aae883befe6c697989d7a7f22c653b7ed0b60df73ff939a79d6b0eab571d469a",
++    "bytes": 141658,
++    "masked": true
++  },
++  {
++    "name": "custom-period.png",
++    "sha256": "a2617b798606ca2e30c7f0818612a4ce0b0592d83507efcc1d064d7cddeb839c",
++    "bytes": 228824,
++    "masked": true
++  },
++  {
++    "name": "dashboard-1920.png",
++    "sha256": "187cb3b30f05596335f824324af8be8b023c5098a799d7b2c1703d81783a4265",
++    "bytes": 337627,
++    "masked": true
++  },
++  {
++    "name": "dashboard-320.png",
++    "sha256": "8b3e0bd24332ad7886e08f20833e6b0211cb0b47418e53fdf2a99ff93524a443",
++    "bytes": 290073,
++    "masked": true
++  },
++  {
++    "name": "dashboard-390.png",
++    "sha256": "755b1005f2f4d6c02b223fadf51f5fbc31cb038473ef437332ee508ab6fcf3e9",
++    "bytes": 293135,
++    "masked": true
++  },
++  {
++    "name": "execution-detail-1920.png",
++    "sha256": "2b26a5fd6758a36304b74912b2ad593435e8d2de460da0bdc832e22f62c32a2a",
++    "bytes": 141632,
++    "masked": true
++  },
++  {
++    "name": "execution-detail-320.png",
++    "sha256": "1ff97977f869707d74b8a67ce2b6055e5f7a5e7e737b907014efda89f21dd2b2",
++    "bytes": 56148,
++    "masked": true
++  },
++  {
++    "name": "execution-detail-390.png",
++    "sha256": "a69ff216bf62616c1ab3c4dee331fa01f7f681ef7461a5f2fae81cac469e824f",
++    "bytes": 58757,
++    "masked": true
++  },
++  {
++    "name": "executions-1920.png",
++    "sha256": "9c0ca91f6150da7685befee1337d84b64d2fa574e1a633abf73f36bc328ed0fd",
++    "bytes": 155046,
++    "masked": true
++  },
++  {
++    "name": "executions-320.png",
++    "sha256": "60dbced4e291b0bedad73af8b7466d59974c5d086bda1504898aaf6a48627310",
++    "bytes": 78154,
++    "masked": true
++  },
++  {
++    "name": "executions-390.png",
++    "sha256": "5de2ad79f4ac67c8c48fa44df74ececda6a10d10038574a53cfb9ca329308a9c",
++    "bytes": 87162,
++    "masked": true
++  },
++  {
++    "name": "funnel-detail-1920.png",
++    "sha256": "4cd2d6689c431dd0f975842607e93c411694b2711b335a8bf0652f844a163fd8",
++    "bytes": 222943,
++    "masked": true
++  },
++  {
++    "name": "funnel-detail-320.png",
++    "sha256": "ade82421b953acaf3181c0dcda8d988585f230b471030564f376611aa3f03918",
++    "bytes": 140280,
++    "masked": true
++  },
++  {
++    "name": "funnel-detail-390.png",
++    "sha256": "80cbdbc66068442186fb7ec624b7f05ff4745010a16dcb4430ff5b0c1387b9ef",
++    "bytes": 143629,
++    "masked": true
++  },
++  {
++    "name": "report-update-failure.png",
++    "sha256": "4eb18dbf8e8ff68784dcd2d24effe4fd2d543b4ddc3ef0c4500f858c28911d9f",
++    "bytes": 121894,
++    "masked": true
++  },
++  {
++    "name": "reports-1920.png",
++    "sha256": "dc7dc4c202e2ae10c20aff24ab86d29990971989d480b0cc94cdb3695d655614",
++    "bytes": 154875,
++    "masked": true
++  },
++  {
++    "name": "reports-320.png",
++    "sha256": "72f8d71b4aaa9f83e7ee080a958959fd52c35aeea38c31a096e9de01ada7d1d8",
++    "bytes": 99972,
++    "masked": true
++  },
++  {
++    "name": "reports-390.png",
++    "sha256": "593ca4ce3c3504416264b87bb54c13139efa3e7bfad9f8af1729be672c586cea",
++    "bytes": 101528,
++    "masked": true
++  },
++  {
++    "name": "reports-funnel-1920.png",
++    "sha256": "726341aecf60175940d913573ad2c398fba1a01589305d5b97bc4459968935cb",
++    "bytes": 172319,
++    "masked": true
++  },
++  {
++    "name": "reports-funnel-320.png",
++    "sha256": "c4aca4c6c4087c4cf702b2896abd156d997430321a1af3fcfede1cd50bf196e4",
++    "bytes": 118056,
++    "masked": true
++  },
++  {
++    "name": "reports-funnel-390.png",
++    "sha256": "a98f86be16a80a27b804619989b8e845a662d6892fde144a76df288b9b94e405",
++    "bytes": 118390,
++    "masked": true
++  },
++  {
++    "name": "reports-negocios-1920.png",
++    "sha256": "9c60b0862ca2fd16f574f19793135bd539e0f18d50a304f2fc2662a4894cb761",
++    "bytes": 120007,
++    "masked": true
++  },
++  {
++    "name": "reports-negocios-320.png",
++    "sha256": "66e5d2c78a0b478019520d9995623d0ac576875cc4b04db77eeba067dde1b33a",
++    "bytes": 55414,
++    "masked": true
++  },
++  {
++    "name": "reports-negocios-390.png",
++    "sha256": "502a75ba2c41af76b9f2fb98dc3396bb93775d7c5e7bd05b97b89b165c15f458",
++    "bytes": 54751,
++    "masked": true
++  },
++  {
++    "name": "reports-performance-1920.png",
++    "sha256": "a2ade0c79a8e26f5fb6dfe618e9e31d86d38988531dff7e8e3be6dc415379706",
++    "bytes": 150072,
++    "masked": true
++  },
++  {
++    "name": "reports-performance-320.png",
++    "sha256": "6205553b0758563a56af05c7000673136579147f48c1e0c0d99fb54746e760b7",
++    "bytes": 94739,
++    "masked": true
++  },
++  {
++    "name": "reports-performance-390.png",
++    "sha256": "0fb3d0b5501b9fd792c72b07a9a2f5c8f64fab59ec3e3f41141ee58a816fb919",
++    "bytes": 95648,
++    "masked": true
++  }
++]
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/cadence-report-1920.png b/docs/validation/evidence/06c2-reconciled-reports/screens/cadence-report-1920.png
+new file mode 100644
+index 0000000..b322fb6
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/cadence-report-1920.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/cadence-report-320.png b/docs/validation/evidence/06c2-reconciled-reports/screens/cadence-report-320.png
+new file mode 100644
+index 0000000..fc83d8f
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/cadence-report-320.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/cadence-report-390.png b/docs/validation/evidence/06c2-reconciled-reports/screens/cadence-report-390.png
+new file mode 100644
+index 0000000..80d1275
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/cadence-report-390.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/custom-draft-after-poll.png b/docs/validation/evidence/06c2-reconciled-reports/screens/custom-draft-after-poll.png
+new file mode 100644
+index 0000000..7ecc1a7
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/custom-draft-after-poll.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/custom-period.png b/docs/validation/evidence/06c2-reconciled-reports/screens/custom-period.png
+new file mode 100644
+index 0000000..fcf9c7e
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/custom-period.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/dashboard-1920.png b/docs/validation/evidence/06c2-reconciled-reports/screens/dashboard-1920.png
+new file mode 100644
+index 0000000..49e3970
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/dashboard-1920.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/dashboard-320.png b/docs/validation/evidence/06c2-reconciled-reports/screens/dashboard-320.png
+new file mode 100644
+index 0000000..f22240b
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/dashboard-320.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/dashboard-390.png b/docs/validation/evidence/06c2-reconciled-reports/screens/dashboard-390.png
+new file mode 100644
+index 0000000..67e47f7
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/dashboard-390.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/execution-detail-1920.png b/docs/validation/evidence/06c2-reconciled-reports/screens/execution-detail-1920.png
+new file mode 100644
+index 0000000..4378f02
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/execution-detail-1920.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/execution-detail-320.png b/docs/validation/evidence/06c2-reconciled-reports/screens/execution-detail-320.png
+new file mode 100644
+index 0000000..beec2a5
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/execution-detail-320.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/execution-detail-390.png b/docs/validation/evidence/06c2-reconciled-reports/screens/execution-detail-390.png
+new file mode 100644
+index 0000000..7f1d3ba
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/execution-detail-390.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/executions-1920.png b/docs/validation/evidence/06c2-reconciled-reports/screens/executions-1920.png
+new file mode 100644
+index 0000000..ad8a05e
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/executions-1920.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/executions-320.png b/docs/validation/evidence/06c2-reconciled-reports/screens/executions-320.png
+new file mode 100644
+index 0000000..c19c261
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/executions-320.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/executions-390.png b/docs/validation/evidence/06c2-reconciled-reports/screens/executions-390.png
+new file mode 100644
+index 0000000..555cd31
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/executions-390.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/funnel-detail-1920.png b/docs/validation/evidence/06c2-reconciled-reports/screens/funnel-detail-1920.png
+new file mode 100644
+index 0000000..5a1958a
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/funnel-detail-1920.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/funnel-detail-320.png b/docs/validation/evidence/06c2-reconciled-reports/screens/funnel-detail-320.png
+new file mode 100644
+index 0000000..f3d9730
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/funnel-detail-320.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/funnel-detail-390.png b/docs/validation/evidence/06c2-reconciled-reports/screens/funnel-detail-390.png
+new file mode 100644
+index 0000000..9103f2f
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/funnel-detail-390.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/report-update-failure.png b/docs/validation/evidence/06c2-reconciled-reports/screens/report-update-failure.png
+new file mode 100644
+index 0000000..b3e7630
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/report-update-failure.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-1920.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-1920.png
+new file mode 100644
+index 0000000..ed4b039
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-1920.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-320.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-320.png
+new file mode 100644
+index 0000000..cb28a07
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-320.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-390.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-390.png
+new file mode 100644
+index 0000000..0775696
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-390.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-funnel-1920.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-funnel-1920.png
+new file mode 100644
+index 0000000..5eb0d73
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-funnel-1920.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-funnel-320.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-funnel-320.png
+new file mode 100644
+index 0000000..8d267a7
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-funnel-320.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-funnel-390.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-funnel-390.png
+new file mode 100644
+index 0000000..4131c02
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-funnel-390.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-negocios-1920.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-negocios-1920.png
+new file mode 100644
+index 0000000..9f25e03
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-negocios-1920.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-negocios-320.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-negocios-320.png
+new file mode 100644
+index 0000000..7cbb5a5
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-negocios-320.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-negocios-390.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-negocios-390.png
+new file mode 100644
+index 0000000..0b5dad3
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-negocios-390.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-performance-1920.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-performance-1920.png
+new file mode 100644
+index 0000000..46770df
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-performance-1920.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-performance-320.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-performance-320.png
+new file mode 100644
+index 0000000..ef6fea3
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-performance-320.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/screens/reports-performance-390.png b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-performance-390.png
+new file mode 100644
+index 0000000..9bd6b2a
+Binary files /dev/null and b/docs/validation/evidence/06c2-reconciled-reports/screens/reports-performance-390.png differ
+diff --git a/docs/validation/evidence/06c2-reconciled-reports/verification.json b/docs/validation/evidence/06c2-reconciled-reports/verification.json
+new file mode 100644
+index 0000000..51edaf2
+--- /dev/null
++++ b/docs/validation/evidence/06c2-reconciled-reports/verification.json
+@@ -0,0 +1,30 @@
++{
++  "date": "2026-10-29",
++  "phase": "pre-final-review",
++  "unit": {
++    "tests": 355,
++    "pass": 355,
++    "fail": 0
++  },
++  "integration": {
++    "tests": 430,
++    "pass": 430,
++    "fail": 0
++  },
++  "focused": {
++    "tests": 9,
++    "pass": 9,
++    "fail": 0
++  },
++  "build": "production webpack build exited0 after detail polling fix",
++  "types": "post-build tsc exited0",
++  "migrations": [
++    "089",
++    "089a",
++    "089b"
++  ],
++  "realData": "real-data-curation.json; no new external calls",
++  "browser": "browser-verification.json;30masked captures/24route checks; detail-polling.json RED->GREEN",
++  "cleanup": "closure.json and detail-closure.json; L018/L020restored and L019removed",
++  "publicSlo": false
++}
+diff --git a/scripts/test-integration.mjs b/scripts/test-integration.mjs
+index c757db8..33e8087 100644
+--- a/scripts/test-integration.mjs
++++ b/scripts/test-integration.mjs
+@@ -9,20 +9,21 @@ ensureBillingEnvironment();
+ for (const prefix of ["MIGRATOR", "AUTH", "APP", "WORKER", "INGRESS", "DISPATCH", "BILLING"]) {
+   const value = process.env[`TEST_${prefix}_DATABASE_URL`];
+   if (!value || !new URL(value).pathname.endsWith("_test"))
+     throw Error("Refusing integration tests against a non-test database.");
+   process.env[`${prefix}_DATABASE_URL`] = value;
+ }
+ process.env.NODE_ENV = "test";
+ process.env.CADENCE_INTEGRATION = "1";
+ const known = [
+   "06iah-intelligence-homologation",
++  "06c2-reconciled-reports",
+   "06b5-prospecting-journey",
+   "06d2-channel-operation",
+   "06d1-message-authoring",
+   "06d1-upgrade",
+   "06b4-company-people",
+   "06b3-company-research",
+   "platform-ai",
+   "platform-ai-context",
+   "platform-ai-dispatch",
+   "reengagement",
+diff --git a/src/app/api/reports/[id]/route.ts b/src/app/api/reports/[id]/route.ts
+new file mode 100644
+index 0000000..6484cd1
+--- /dev/null
++++ b/src/app/api/reports/[id]/route.ts
+@@ -0,0 +1,3 @@
++import {reportRequest} from '../../../../server/operations/report-http';
++export const runtime='nodejs';
++export async function GET(request:Request,context:{params:Promise<{id:string}>}){return reportRequest(request,(await context.params).id);}
+diff --git a/src/app/api/reports/route.ts b/src/app/api/reports/route.ts
+new file mode 100644
+index 0000000..bb8a048
+--- /dev/null
++++ b/src/app/api/reports/route.ts
+@@ -0,0 +1,3 @@
++import {reportRequest} from '../../../server/operations/report-http';
++export const runtime='nodejs';
++export async function GET(request:Request){return reportRequest(request);}
+diff --git a/src/app/reports-reference.css b/src/app/reports-reference.css
+index 7f86f9c..6e2865d 100644
+--- a/src/app/reports-reference.css
++++ b/src/app/reports-reference.css
+@@ -1,7 +1,15 @@
+ .reports-reference{font-size:0.875rem}.reports-reference .page-heading{align-items:flex-start;margin-bottom:24px}.reports-header-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.reports-cadence-filter{min-height:36px;font-size:0.75rem;max-width:230px}.reports-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto}.reports-tabs>a{display:flex;align-items:center;gap:8px;padding:12px 16px;white-space:nowrap;color:var(--secondary);border-bottom:2px solid transparent;font-size:0.875rem}.reports-tabs>a[aria-current=page]{color:var(--primary);border-color:var(--primary)}.reports-panel{padding:24px;border:1px solid var(--border);border-radius:12px;background:var(--surface);min-width:0}.reports-panel h3{font-size:1rem;font-weight:600;display:flex;align-items:center;gap:8px}.reports-panel h3>svg{color:var(--secondary)}.reports-metrics{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:16px;margin-bottom:24px}.reports-metrics>.reports-panel{padding:20px;display:grid;gap:12px}.reports-metrics .reports-panel>div{display:flex;justify-content:space-between;gap:8px}.reports-metrics small{font-size:0.75rem;color:var(--muted)}.reports-metrics strong{font-family:"Exo 2",Manrope,sans-serif;font-size:1.75rem;line-height:2.25rem}.reports-two-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}.reports-chart-caption{font-size:0.75rem;color:var(--muted);margin:12px 0}.reports-unavailable{display:grid;align-content:center;justify-items:center;text-align:center;min-height:220px;gap:10px;color:var(--secondary);padding:24px}.reports-unavailable>span{font-size:2rem;color:var(--muted)}.reports-unavailable p{font-size:0.875rem}.reports-unavailable small{max-width:560px;font-size:0.75rem;color:var(--muted);line-height:1.125rem}.reports-performance{display:grid;gap:24px}.reports-performance .reports-two-grid{margin-top:0}.reports-panel-title{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.reports-metric-switch{display:flex;gap:4px}.reports-metric-switch .btn{font-size:0.75rem;min-height:30px;padding:0 10px}.reports-metric-switch .btn[aria-pressed=true]{background:var(--primary);color:white;border-color:var(--primary)}.reports-detail-row{display:flex;gap:24px;align-items:center;flex-wrap:wrap;padding:24px 0}.reports-detail-row small{color:var(--muted)}.reports-onboarding{padding:48px 24px;text-align:center;display:grid;justify-items:center;gap:16px}.reports-illustration{width:180px;height:140px;display:flex;align-items:center;justify-content:center;gap:16px;color:var(--primary);background:radial-gradient(ellipse,#ff6b0010,transparent 70%)}.reports-onboarding h2{font-size:1.5rem;line-height:2rem}.reports-onboarding p{max-width:650px;color:var(--secondary);font-size:0.875rem;line-height:1.375rem}.reports-onboarding .btn{margin-top:8px}.reports-onboarding-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.reports-onboarding-cards .reports-panel{display:grid;gap:12px}.reports-onboarding-cards .reports-panel>span{display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);width:36px;height:36px;border-radius:10px}.reports-onboarding-cards p{color:var(--secondary);font-size:0.8125rem;line-height:1.25rem}.reports-help{font-size:0.75rem;color:var(--muted);text-align:center;margin:24px 0}.reports-help a{color:var(--primary)}.reports-funnel-metrics{grid-template-columns:repeat(6,minmax(0,1fr))}.reports-funnel-stages{display:grid;gap:20px;margin-top:28px}.reports-funnel-stages>div{display:grid;grid-template-columns:140px 1fr 180px;align-items:center;gap:16px}.reports-funnel-bar{position:relative;min-height:44px;display:flex;align-items:center;padding:0 16px;border-radius:8px;background:var(--hover);overflow:hidden}.reports-funnel-bar i{position:absolute;inset:0 auto 0 0;background:#ff6b0020}.reports-funnel-bar strong{z-index:1}.reports-funnel-bar.unavailable i{background:repeating-linear-gradient(135deg,#94a3b80d 0 8px,#94a3b81a 8px 16px)}.reports-funnel-stages small{font-size:0.75rem;color:var(--muted)}.reports-qualification-history{margin-top:24px}.reports-crm-state{display:flex;gap:16px;align-items:flex-start;padding:32px}.reports-crm-state>svg{color:var(--primary);flex:none}.reports-crm-state p{color:var(--secondary);margin:12px 0 20px}.reports-series{margin-top:16px}.reports-series>svg{width:100%;height:auto;max-height:260px}.reports-series text{font-size:0.6875rem;fill:var(--muted)}.reports-series details{font-size:0.75rem;color:var(--secondary)}.reports-series summary{cursor:pointer}.execution-reference{font-size:0.875rem}.execution-reference .field-grid{grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}.execution-reference .field>span{font-size:0.75rem}.execution-reference .data-table td{font-size:0.8125rem;padding:20px 16px}.execution-reference .data-table small{display:block;color:var(--muted);font-size:0.6875rem;margin-top:4px}.execution-reference .data-table th{font-size:0.6875rem}.execution-reference .execution-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}.execution-summary>div{padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:grid;gap:6px}.execution-summary small{color:var(--secondary);font-size:0.75rem;line-height:1.125rem}
+ @media(max-width:1450px){.reports-metrics{grid-template-columns:repeat(4,1fr)}.reports-funnel-metrics{grid-template-columns:repeat(3,1fr)}}@media(max-width:850px){.reports-two-grid,.reports-onboarding-cards{grid-template-columns:1fr}.reports-metrics{grid-template-columns:repeat(2,1fr)}.reports-funnel-stages>div{grid-template-columns:100px 1fr}.reports-funnel-stages small{grid-column:2}.reports-reference .page-heading{gap:16px}.execution-reference .field-grid,.execution-reference .execution-summary{grid-template-columns:repeat(2,1fr)}}
+ 
+ @media(max-width:650px){.reports-metric-switch{flex-wrap:wrap;max-width:100%}.reports-header-controls{min-width:0;max-width:100%}.reports-header-controls .period-selector{flex-wrap:wrap}}
+ 
+ .reports-header-controls{flex-wrap:nowrap;gap:8px}.reports-cadence-filter{width:174px;max-width:174px}.reports-header-controls .period-selector{flex-shrink:0}.reports-header-controls .period-selector button{font-size:0.75rem;padding:6px 9px}.reports-performance .reports-panel{padding:20px}.reports-performance h3{font-size:0.875rem;line-height:1.25rem}.reports-performance h3>svg{color:var(--primary)}.reports-performance .reports-unavailable{min-height:112px;padding:20px;color:var(--muted)}.reports-performance .reports-unavailable>span{display:none}.reports-performance .reports-unavailable>small{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.reports-performance .reports-two-grid .reports-unavailable{min-height:248px}.reports-metric-switch>.btn{font-size:0.625rem;line-height:1rem;min-height:24px;padding:0 8px;border:0;background:var(--hover);color:var(--muted)}.reports-performance .reports-panel-title{gap:12px}
+ @media(max-width:850px){.reports-header-controls{flex-wrap:wrap}.reports-header-controls .period-selector{flex-shrink:1}.reports-performance .reports-two-grid .reports-unavailable{min-height:180px}}
++/* Drilldowns retain the reference card geometry and keyboard access. */
++.report-metric-value{display:block;background:none;border:0;color:inherit;padding:0;text-align:left;font:inherit;cursor:pointer}
++.report-metric-value:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:4px}
++.reports-stamp{margin:16px 0 8px;gap:8px}
++.reports-funnel-bottom{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}
++.reports-funnel-bottom .reports-qualification-history{margin-top:0;min-height:560px}
++.reports-funnel-side{display:grid;gap:24px}
++@media(max-width:850px){.reports-funnel-bottom{grid-template-columns:1fr}.reports-funnel-bottom .reports-qualification-history{min-height:300px}}
+diff --git a/src/client/report-client.ts b/src/client/report-client.ts
+new file mode 100644
+index 0000000..633c613
+--- /dev/null
++++ b/src/client/report-client.ts
+@@ -0,0 +1,8 @@
++import type {ReportMetric,ReportQuery,ReportView} from '../domain/reporting.ts';
++import {createWorkspaceTransport,type WorkspaceTransportOptions} from './workspace-transport.ts';
++export function createReportClient(options:WorkspaceTransportOptions){
++ const api=createWorkspaceTransport(options);
++ const query=(input:ReportQuery)=>new URLSearchParams(Object.entries(input).filter(([,v])=>v!==undefined) as [string,string][]).toString();
++ return{read:(input:ReportQuery)=>api.request<ReportView>('/api/reports?'+query(input)),detail:(metric:ReportMetric,input:ReportQuery)=>api.request<ReportView>('/api/reports/'+metric+'?'+query(input)),dispose:api.dispose};
++}
++export type ReportClient=ReturnType<typeof createReportClient>;
+diff --git a/src/client/use-reconciled-report.ts b/src/client/use-reconciled-report.ts
+new file mode 100644
+index 0000000..0cd7cdd
+--- /dev/null
++++ b/src/client/use-reconciled-report.ts
+@@ -0,0 +1,21 @@
++"use client";
++import {useCallback,useEffect,useRef,useState} from 'react';
++import {useDemo} from '@/demo/provider';
++import {useReports} from './workspace-provider';
++import {useLiveRefresh} from './use-live-refresh';
++import {reportPeriodFromSelection,type ReportQuery,type ReportView} from '@/domain/reporting';
++export function useReconciledReport(selection:string,view:ReportQuery['view']='dashboard',cadenceId=''){
++ const client=useReports(),timezone=useDemo().preferences.timezone;
++ const key=JSON.stringify([selection,timezone,view,cadenceId]),current=useRef({key,sequence:0});
++ if(current.current.key!==key)current.current={key,sequence:current.current.sequence+1};
++ const [state,setState]=useState<{key:string;report:ReportView|null;query:ReportQuery|null;error:string}>({key:'',report:null,query:null,error:''});
++ const refresh=useCallback(async(signal?:AbortSignal)=>{
++  if(!client)return;const sequence=++current.current.sequence;
++  const active=()=>!signal?.aborted&&current.current.key===key&&current.current.sequence===sequence;
++  try{const query:ReportQuery={...reportPeriodFromSelection(selection,timezone),view,...(cadenceId?{cadenceId}:{})},report=await client.read(query);if(active())setState({key,report,query,error:''});}
++  catch(e){if(active())setState(old=>({key,report:old.key===key?old.report:null,query:old.key===key?old.query:null,error:(e as Error).message}));throw e;}
++ },[client,key,selection,timezone,view,cadenceId]);
++ useEffect(()=>{const controller=new AbortController();void refresh(controller.signal).catch(()=>{});return()=>controller.abort();},[refresh]);
++ useLiveRefresh(refresh,15000,!!client,key);
++ return{report:state.key===key?state.report:null,query:state.key===key?state.query:null,error:state.key===key?state.error:'',refresh,live:!!client};
++}
+diff --git a/src/client/workspace-provider.tsx b/src/client/workspace-provider.tsx
+index e4e7921..a9c16a0 100644
+--- a/src/client/workspace-provider.tsx
++++ b/src/client/workspace-provider.tsx
+@@ -12,20 +12,21 @@ import { createWorkspaceRepository } from "./workspace-repository";
+ import { createDraftRecovery } from "./draft-recovery";
+ import { RepositoryContext, ToastContext } from "@/demo/provider";
+ import {createProspectingClient,type ProspectingClient} from './prospecting-client';
+ import {createPlanningClient,type PlanningClient} from './planning-client';
+ import {createContextClient,type ContextClient} from './context-client';
+ import {createAutomationClient,type AutomationClient} from './automation-client';
+ import {createChannelClient,type ChannelClient} from './channel-client';
+ import {createMessagingClient,type MessagingClient} from './messaging-client';
+ import {createResearchClient,type ResearchClient} from './research-client';
+ import {createMailClient,type MailClient} from './mail-client';
++import {createReportClient,type ReportClient} from './report-client';
+ import {useLiveRefresh} from './use-live-refresh';
+ export interface IdentityView {
+   platformAiAdmin?: boolean;
+   user: { id: string; name: string; email: string };
+   activeWorkspaceId: string | null;
+   workspaces: { id: string; name: string; role: string }[];
+   members: {
+     id: string;
+     userId: string;
+     name: string;
+@@ -45,20 +46,22 @@ const CapabilitiesContext = createContext<string[] | null>(null);
+ const ProspectingContext=createContext<ProspectingClient|null>(null);
+ const PlanningContext=createContext<PlanningClient|null>(null);
+ const CompanyContext=createContext<ContextClient|null>(null);
+ const RefreshContext=createContext<(()=>Promise<void>)|null>(null);
+ const AutomationContext=createContext<AutomationClient|null>(null);
+ const ChannelContext=createContext<ChannelClient|null>(null);
+ const MessagingContext=createContext<MessagingClient|null>(null);
+ const ResearchContext=createContext<ResearchClient|null>(null);
+ export function useResearch(){return useContext(ResearchContext);}
+ const MailContext=createContext<MailClient|null>(null);
++const ReportContext=createContext<ReportClient|null>(null);
++export function useReports(){return useContext(ReportContext);}
+ export function useMail(){return useContext(MailContext);}
+ const RevisionContext=createContext<number|null>(null);
+ export function useMessaging(){return useContext(MessagingContext);}
+ export function useWorkspaceRevision(){return useContext(RevisionContext);}
+ export function useChannels(){return useContext(ChannelContext);}
+ export function useAutomationClient(){return useContext(AutomationContext);}
+ export function useWorkspaceRefresh(){return useContext(RefreshContext);}
+ export function usePlanning(){return useContext(PlanningContext);}
+ export function useContextClient(){return useContext(CompanyContext);}
+ export function useProspecting(){return useContext(ProspectingContext);}
+@@ -84,47 +87,48 @@ export function WorkspaceProvider({
+     for(const [field,original] of fields.current){if(!field.isConnected){fields.current.delete(field);continue;}if(fieldValue(field)!==original)return true;}return false;
+   },onLocalCommit:()=>fields.current.clear()}));
+   const [prospecting]=useState(()=>createProspectingClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+   const [planning]=useState(()=>createPlanningClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+   const [company]=useState(()=>createContextClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+   const [automation]=useState(()=>createAutomationClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+   const [channels]=useState(()=>createChannelClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+   const [messaging]=useState(()=>createMessagingClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+   const [research]=useState(()=>createResearchClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+   const [mail]=useState(()=>createMailClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
++  const [reports]=useState(()=>createReportClient({workspaceId:initial.workspaceId,onAccessLost:repo.invalidateAccess}));
+   const current = useSyncExternalStore(
+     repo.subscribe,
+     repo.snapshot,
+     repo.snapshot,
+   );
+   const access = useSyncExternalStore(repo.subscribe, repo.access, repo.access);
+   const [edited] = useState(createDraftRecovery);
+   const [toast, setToast] = useState("");
+   const mounted = useRef(false);
+   useEffect(() => {
+     mounted.current = true;
+     return () => {
+       mounted.current = false;
+       queueMicrotask(() => {
+-        if (!mounted.current) {repo.dispose();prospecting.dispose();planning.dispose();company.dispose();automation.dispose();channels.dispose();messaging.dispose();mail.dispose();research.dispose();}
++        if (!mounted.current) {repo.dispose();prospecting.dispose();planning.dispose();company.dispose();automation.dispose();channels.dispose();messaging.dispose();mail.dispose();research.dispose();reports.dispose();}
+       });
+     };
+   }, [repo]);
+-  useEffect(()=>{if(access.kind==='blocked'){mail.dispose();research.dispose();}},[access.kind,mail]);
++  useEffect(()=>{if(access.kind==='blocked'){mail.dispose();research.dispose();reports.dispose();}},[access.kind,mail,reports]);
+   useEffect(() => {
+     if (!toast) return;
+     const timer = setTimeout(() => setToast(""), 6000);
+     return () => clearTimeout(timer);
+   }, [toast]);
+   useLiveRefresh(()=>repo.refresh(),15000,access.kind!=='blocked',repo);
+   return (
+-    <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}><AutomationContext value={automation}><ChannelContext value={channels}><MessagingContext value={messaging}><ResearchContext value={research}><MailContext value={mail}><RevisionContext value={current.revision}>
++    <IdentityContext value={identity}><ProspectingContext value={prospecting}><PlanningContext value={planning}><CompanyContext value={company}><RefreshContext value={repo.refresh}><AutomationContext value={automation}><ChannelContext value={channels}><MessagingContext value={messaging}><ResearchContext value={research}><MailContext value={mail}><ReportContext value={reports}><RevisionContext value={current.revision}>
+       <CapabilitiesContext value={current.capabilities}>
+         <RepositoryContext value={repo}>
+           <ToastContext value={setToast}>
+             {access.kind === "blocked" ? (
+               <main className="auth-content" style={{ minHeight: "100svh" }}>
+                 <section className="auth-box">
+                   <h1>O acesso ao workspace mudou</h1>
+                   <p role="alert">{access.message}</p>
+                   <p>Os dados anteriores foram retirados desta tela.</p>
+                   {edited.size() > 0 && (
+@@ -173,13 +177,13 @@ export function WorkspaceProvider({
+                   <a href="/login" target="_blank" rel="noreferrer">
+                     {" "}
+                     Entrar →
+                   </a>
+                 )}
+               </div>
+             )}
+           </ToastContext>
+         </RepositoryContext>
+       </CapabilitiesContext>
+-    </RevisionContext></MailContext></ResearchContext></MessagingContext></ChannelContext></AutomationContext></RefreshContext></CompanyContext></PlanningContext></ProspectingContext></IdentityContext>
++    </RevisionContext></ReportContext></MailContext></ResearchContext></MessagingContext></ChannelContext></AutomationContext></RefreshContext></CompanyContext></PlanningContext></ProspectingContext></IdentityContext>
+   );
+ }
+diff --git a/src/components/charts/line-chart.tsx b/src/components/charts/line-chart.tsx
+index 8493fd7..8db4d01 100644
+--- a/src/components/charts/line-chart.tsx
++++ b/src/components/charts/line-chart.tsx
+@@ -1,36 +1,38 @@
+ import { useId } from "react";
+ export function LineChart({
+   values,
+   color = "var(--primary)",
+   empty = false,
++  dates,
+ }: {
+   values: number[];
+   color?: string;
+   empty?: boolean;
++  dates?: string[];
+ }) {
+   const id = useId().replace(/:/g, "");
+   const max = Math.max(...values, 1);
+   const pts = values.map((v, i) => [
+     25 + (i * 650) / Math.max(values.length - 1, 1),
+     150 - (v / max) * 110,
+   ]);
+   const line = pts.map((p) => p.join(",")).join(" ");
+   return (
+     <div className="line-chart">
+       <svg
+         viewBox="0 0 700 205"
+         role="img"
+         aria-label={
+           empty
+             ? "Nenhum envio registrado"
+-            : "Leads da base demonstrativa por dia"
++            : "Leads criados por dia no período selecionado"
+         }
+       >
+         <defs>
+           <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+             <stop offset="0%" stopColor={color} stopOpacity=".15" />
+             <stop offset="100%" stopColor={color} stopOpacity="0" />
+           </linearGradient>
+         </defs>
+         {[40, 78, 116, 154].map((y) => (
+           <line
+@@ -59,19 +61,19 @@ export function LineChart({
+                 key={x}
+                 cx={x}
+                 cy={y}
+                 r="4"
+                 fill={color}
+                 stroke="var(--surface)"
+                 strokeWidth="2"
+               />
+             ))}
+         <text x="25" y="185" fill="var(--muted)" fontSize="11">
+-          21/09
++          {dates?.[0]?dates[0].slice(8,10)+'/'+dates[0].slice(5,7):'—'}
+         </text>
+         <text x="645" y="185" fill="var(--muted)" fontSize="11">
+-          20/10
++          {dates?.at(-1)?dates.at(-1)!.slice(8,10)+'/'+dates.at(-1)!.slice(5,7):'—'}
+         </text>
+       </svg>
+     </div>
+   );
+ }
+diff --git a/src/components/reports/report-detail.tsx b/src/components/reports/report-detail.tsx
+new file mode 100644
+index 0000000..179d304
+--- /dev/null
++++ b/src/components/reports/report-detail.tsx
+@@ -0,0 +1,21 @@
++"use client";
++import Link from 'next/link';
++import {useEffect,useState} from 'react';
++import {useReports} from '@/client/workspace-provider';
++import {Button,Modal} from '@/components/ui/primitives';
++import {reportMetricDefinitions,type ReportMetric,type ReportQuery,type ReportView} from '@/domain/reporting';
++export function ReportDetail({metric,query,onClose}:{metric:ReportMetric;query:ReportQuery;onClose:()=>void}){
++ const client=useReports(),[result,setResult]=useState<ReportView|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[reload,setReload]=useState(0),scope=JSON.stringify(query);
++ useEffect(()=>{let active=true;setResult(null);setError('');if(client){setBusy(true);client.detail(metric,JSON.parse(scope)).then(value=>{if(active)setResult(value);}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setBusy(false);});}return()=>{active=false;};},[client,metric,scope,reload]);
++ async function more(){if(!client||!result?.nextCursor)return;setBusy(true);try{const next=await client.detail(metric,{...query,cursor:result.nextCursor});setResult({...next,items:[...result.items,...next.items]});setError('');}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
++ const definition=reportMetricDefinitions[metric];
++ return <Modal title="Detalhe do indicador" onClose={onClose} wide><p>{definition.description}</p><small>{new Date(query.from).toLocaleString('pt-BR',{timeZone:query.timezone})} até {new Date(query.to).toLocaleString('pt-BR',{timeZone:query.timezone})} (fim exclusivo) · {query.timezone}</small>
++ {error&&<p role="alert">{error} <Button onClick={()=>setReload(x=>x+1)}>Consultar novamente</Button></p>}
++ {!result&&busy&&<p role="status">Carregando registros…</p>}
++ {result&&<><p><strong>{result.totals[metric]??'—'}</strong> registros · atualizado em {new Date(result.asOf).toLocaleString('pt-BR',{timeZone:query.timezone})}</p><div className="table-scroll"><table className="data-table"><thead><tr><th>Data</th><th>Canal / tipo</th><th>Estado</th><th>Origem</th></tr></thead><tbody>{result.items.map(item=><tr key={item.id}><td>{new Date(item.occurredAt).toLocaleString('pt-BR',{timeZone:query.timezone})}</td><td>{item.channel??item.kind}</td><td>{item.state}</td><td><Link href={item.href.split('?')[0]}>{item.kind==='message'?'Abrir caixa':'Abrir registro'}</Link></td></tr>)}</tbody></table></div>{!result.items.length&&<p>Nenhum registro neste período.</p>}{result.nextCursor&&<Button disabled={busy||!!error} onClick={()=>void more()}>{busy?'Carregando…':'Ver mais registros'}</Button>}</>}
++ </Modal>;
++}
++export function ReportStamp({report,error,onRefresh}:{report:ReportView|null;error:string;onRefresh:()=>Promise<unknown>}){
++ return <div className="row between wrap reports-stamp"><small>{report?<>Atualizado em {new Date(report.asOf).toLocaleString('pt-BR',{timeZone:report.period.timezone})} · {report.period.timezone}{error?' · última leitura; atualização falhou':''}</>:'Consultando indicadores…'}</small><Button icon="RefreshCw" onClick={()=>void onRefresh().catch(()=>{})}>Atualizar indicadores</Button>{error&&<p role="alert">{error}</p>}</div>;
++}
++export function exportReport(report:ReportView){const blob=new Blob([JSON.stringify({period:report.period,asOf:report.asOf,totals:report.totals,series:report.series,cadences:report.cadences,steps:report.steps,definitions:report.definitions,attribution:report.attribution},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='relatorio-'+report.period.from.slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+diff --git a/src/components/ui/period-selector.tsx b/src/components/ui/period-selector.tsx
+index a1af832..10c4916 100644
+--- a/src/components/ui/period-selector.tsx
++++ b/src/components/ui/period-selector.tsx
+@@ -4,55 +4,58 @@ import { Button, Field, Modal } from "./primitives";
+ export function PeriodSelector({
+   value,
+   onChange,
+   extended = false,
+ }: {
+   value: string;
+   onChange: (v: string) => void;
+   extended?: boolean;
+ }) {
+   const [custom, setCustom] = useState(false);
++  const [error,setError]=useState('');
+   return (
+     <>
+       <div className="period-selector">
+         {(extended?["Hoje", "7 dias", "15 dias", "30 dias", "60 dias", "90 dias", "Personalizado"]:["Hoje", "7 dias", "30 dias", "90 dias", "Personalizado"]).map((v) => (
+           <button
+             key={v}
+-            className={value === v ? "selected" : ""}
+-            aria-pressed={value === v}
++            className={value === v || v==='Personalizado'&&value.includes('/') ? "selected" : ""}
++            aria-pressed={value === v || v==='Personalizado'&&value.includes('/')}
+             onClick={() =>
+               v === "Personalizado" ? setCustom(true) : onChange(v)
+             }
+           >
+             {v}
+           </button>
+         ))}
+       </div>
+       {custom && (
+         <Modal title="Período personalizado" onClose={() => setCustom(false)}>
+           <form
+             onSubmit={(e) => {
+               e.preventDefault();
+               const data = new FormData(e.currentTarget);
+-              if (String(data.get("start")) > String(data.get("end"))) return;
+-              onChange("Personalizado");
++              const start=String(data.get('start')),end=String(data.get('end'));
++              if(start>end||Date.parse(end)-Date.parse(start)>92*86400000){setError('Escolha até 93 dias, com a data final após a inicial.');return;}
++              onChange(start+'/'+end);setError('');
+               setCustom(false);
+             }}
+           >
+             <div className="field-grid">
+               <Field label="De">
+-                <input type="date" name="start" required />
++                <input type="date" name="start" required defaultValue={value.includes('/')?value.split('/')[0]:''}/>
+               </Field>
+               <Field label="Até">
+-                <input type="date" name="end" required />
++                <input type="date" name="end" required defaultValue={value.includes('/')?value.split('/')[1]:''}/>
+               </Field>
+             </div>
++            {error&&<p role="alert">{error}</p>}
+             <div className="form-actions">
+               <Button variant="primary" type="submit">
+                 Aplicar período
+               </Button>
+             </div>
+           </form>
+         </Modal>
+       )}
+     </>
+   );
+diff --git a/src/domain/reporting.ts b/src/domain/reporting.ts
+new file mode 100644
+index 0000000..47108ee
+--- /dev/null
++++ b/src/domain/reporting.ts
+@@ -0,0 +1,40 @@
++import {z} from 'zod';
++import {localDateAt,wallTimeToUtc} from './schedule.ts';
++export const reportMetricDefinitions={
++ sent:{unit:'unique-message',description:'Uma mensagem aceita pelo provedor; tentativas não são somadas.'},
++ replies:{unit:'human-inbound-message',description:'Mensagem recebida humana; DSN e resposta automática são excluídos.'},
++ failed:{unit:'unique-message',description:'Mensagem em falha definitiva; incerteza e retry não são falhas definitivas.'},
++ pending:{unit:'unique-message',description:'Mensagem atualmente na fila ou em transmissão, criada no período.'},
++ bounces:{unit:'outbound-message',description:'Uma mensagem de e-mail com bounce correlacionado, mesmo com DSNs repetidos.'},
++ optouts:{unit:'channel-identity',description:'Identidade suprimida no período por motivo diferente de hard bounce.'},
++ leads:{unit:'lead',description:'Contato criado no período; base atual não substitui data de captação.'},
++ qualified:{unit:'lead',description:'Contatos do período que estão qualificados atualmente; não é histórico da data de qualificação.'},
++ leadPending:{unit:'lead',description:'Contatos criados no período atualmente pendentes de qualificação.'},
++ leadWarning:{unit:'lead',description:'Contatos criados no período atualmente com atenção na qualificação.'},
++ leadDisqualified:{unit:'lead',description:'Contatos criados no período atualmente desqualificados.'},
++ enrolled:{unit:'lead',description:'Contatos inscritos em publicações criadas no período, sem duplicar o mesmo contato.'},
++ executions:{unit:'job',description:'Execuções criadas no período, sem somar tentativas do provedor.'},
++} as const;
++export type ReportMetric=keyof typeof reportMetricDefinitions;
++export type ReportPeriod={from:string;to:string;timezone:string};
++export interface ReportQuery extends ReportPeriod{view:'dashboard'|'cadences'|'executions'|'funnel';cadenceId?:string;cursor?:string;metric?:ReportMetric}
++export interface ReportItem{id:string;kind:string;occurredAt:string;channel:string|null;cadenceId:string|null;stepIndex:number|null;state:string;href:string}
++export interface ReportView{period:ReportPeriod;totals:Record<string,number|null>;series:{date:string;values:Record<string,number|null>}[];items:ReportItem[];nextCursor:string|null;asOf:string;stale:boolean;checkpoint:string;definitions:typeof reportMetricDefinitions;cadences:{id:string;name:string;values:Record<string,number|null>}[];steps:{cadenceId:string;publicationId:string;stepIndex:number;values:Record<string,number|null>}[];recentExecutions:{id:string;kind:string;state:string;createdAt:string;counts:Record<string,number>}[];attribution:'last-preceding-accepted-message'}
++const absolute=z.iso.datetime({offset:true}).max(40);
++const validZone=(value:string)=>{try{new Intl.DateTimeFormat('en',{timeZone:value});return true;}catch{return false;}};
++const querySchema=z.strictObject({view:z.enum(['dashboard','cadences','executions','funnel']),from:absolute,to:absolute,timezone:z.string().min(1).max(100).refine(validZone),cadenceId:z.string().min(1).max(200).optional(),cursor:z.string().min(1).max(2048).optional(),metric:z.enum(Object.keys(reportMetricDefinitions) as [ReportMetric,...ReportMetric[]]).optional()}).refine(v=>Date.parse(v.to)>Date.parse(v.from)&&Date.parse(v.to)-Date.parse(v.from)<=93*86400000);
++export function parseReportQuery(raw:unknown):ReportQuery{const value=querySchema.parse(raw);return{...value,from:new Date(value.from).toISOString(),to:new Date(value.to).toISOString()};}
++export function supportedMetric(input:{supported:boolean;value:number}):number|null{if(!input.supported)return null;if(!Number.isFinite(input.value)||input.value<0)throw Error('Valor de métrica inválido.');return input.value;}
++export function reportRate(numerator:number|null,denominator:number|null){return numerator===null||denominator===null||!Number.isFinite(numerator)||!Number.isFinite(denominator)||numerator<0||denominator<=0||numerator>denominator?null:numerator/denominator*100;}
++export function reportPeriodForDays(days:number,timezone:string,now=new Date().toISOString()):ReportPeriod{
++ if(!Number.isInteger(days)||days<1||days>93||!validZone(timezone))throw Error('Período inválido.');const today=localDateAt(now,timezone),day=Date.parse(today+'T00:00:00Z'),date=(n:number)=>new Date(day+n*86400000).toISOString().slice(0,10);
++ return{from:wallTimeToUtc(date(1-days),'00:00',timezone),to:wallTimeToUtc(date(1),'00:00',timezone),timezone};
++}
++export function reportSqlTimezone(timezone:string){const zone=new Intl.DateTimeFormat('en',{timeZone:timezone}).resolvedOptions().timeZone;return/^[+-]\d{2}:\d{2}$/.test(zone)?'UTC'+(zone[0]==='+'?'-':'+')+zone.slice(1):zone;}
++export function reportPeriodFromSelection(selection:string,timezone:string,now?:string):ReportPeriod{
++ const days:Record<string,number>={'Hoje':1,'7 dias':7,'15 dias':15,'30 dias':30,'60 dias':60,'90 dias':90};
++ if(days[selection])return reportPeriodForDays(days[selection],timezone,now);
++ const dates=selection.split('/');if(dates.length!==2||dates.some(date=>!z.iso.date().safeParse(date).success)||dates[0]>dates[1])throw Error('Escolha um período válido de até 93 dias.');
++ const next=new Date(Date.parse(dates[1]+'T00:00:00Z')+86400000).toISOString().slice(0,10);
++ const {from,to}=parseReportQuery({view:'dashboard',from:wallTimeToUtc(dates[0],'00:00',timezone),to:wallTimeToUtc(next,'00:00',timezone),timezone});return{from,to,timezone};
++}
+diff --git a/src/modules/cadences/cadence-insights.tsx b/src/modules/cadences/cadence-insights.tsx
+index 22e9885..009d731 100644
+--- a/src/modules/cadences/cadence-insights.tsx
++++ b/src/modules/cadences/cadence-insights.tsx
+@@ -1,23 +1,26 @@
+ "use client";
+-import { useMessageMetrics } from "@/client/use-message-metrics";
++import {useState} from 'react';
++import {useReconciledReport} from '@/client/use-reconciled-report';
++import {ReportDetail,ReportStamp} from '@/components/reports/report-detail';
++import type {ReportMetric} from '@/domain/reporting';
+ import { Badge, Button, EmptyState, Notice } from "@/components/ui/primitives";
+ import { Icon } from "@/components/ui/icon";
+ import { validateCadence } from "@/domain/cadence";
+ import type { Cadence, Lead } from "@/domain/model";
+ export function CadenceHealth({cadence,leads,listName,onReview}: {cadence:Cadence;leads:Lead[];listName:string;onReview:()=>void}) {
+  const count=leads.length,percent=(n:number)=>count?Math.round(100*n/count):0;
+  const generic=/^(contato|comercial|atendimento|info|vendas)@/i,finance=/^(financeiro|nfe|fiscal|cobranca)@/i;
+  const groups=[{label:'nome@empresa',n:leads.filter(l=>l.email&&!generic.test(l.email)&&!finance.test(l.email)).length,color:'#00a781'},{label:'contato@/comercial@',n:leads.filter(l=>l.email&&generic.test(l.email)).length,color:'#ff6b00'},{label:'financeiro@/nfe@',n:leads.filter(l=>l.email&&finance.test(l.email)).length,color:'#d39d00'},{label:'sem e-mail',n:leads.filter(l=>!l.email).length,color:'#cbd5e1'}];
+  const issues=validateCadence(cadence),channels=[...new Set(cadence.steps.map(s=>s.channel))];
+  return <div className="cadence-health-reference"><section className="panel cadence-health-status"><header><Icon name="Shield" size={20}/><div><strong>Revise antes de ativar</strong><p>Confira os remetentes e a seleção de leads na publicação.</p></div><Button icon="RefreshCw" onClick={onReview}>Conferir publicação</Button></header><div><Icon name="Info" size={17}/><span>A conexão, os limites e os destinatários são validados antes de colocar mensagens na fila.</span></div></section>
+  <h3>Canais desta régua</h3><div className="cadence-health-channels">{channels.map(channel=><section className="panel" key={channel}><div className="row"><Icon name={channel==='EMAIL'?'Mail':channel==='WHATSAPP'?'MessageSquare':'Linkedin'} size={16}/>{channel==='EMAIL'?'E-mail':channel==='WHATSAPP'?'WhatsApp':'LinkedIn'}</div><Badge>{channel==='LINKEDIN'?'Disponível apenas no rascunho':'Validar na publicação'}</Badge></section>)}</div>
+  <div className="cadence-health-grid"><div><h3>A lista</h3><section className="panel cadence-health-quality"><div className="row wrap"><Icon name="Users" size={17}/><strong>Qualidade da lista</strong><small>{count} leads · {listName}</small></div><div className="cadence-quality-track" aria-hidden="true">{groups.map(g=><i key={g.label} style={{width:percent(g.n)+'%',background:g.color}}/>)}</div><div className="row wrap cadence-quality-legend">{groups.map(g=><span key={g.label}><i style={{background:g.color}}/>{g.label} <b>{percent(g.n)}%</b></span>)}<span>Com telefone <b>{percent(leads.filter(l=>!!l.phone).length)}%</b></span></div><p>Distribuição dos dados cadastrados. Não comprova que o endereço recebe e-mail ou que o telefone tem WhatsApp.</p></section></div><div><h3>Pontos de atenção na régua</h3><section className="panel cadence-health-issues"><Icon name={issues.length?'AlertCircle':'CheckCircle2'} size={17}/><div>{issues.length?issues.map((x,i)=><p key={i}>{x.message}</p>):<p>Nenhum campo obrigatório pendente no rascunho. Confira a publicação antes de ativar.</p>}</div></section></div></div></div>;
+ }
+ export function CadenceReport({id}: {id:string}) {
+- const {metrics,error,live}=useMessageMetrics('30 dias',id);
++ const {report,query,error,live,refresh}=useReconciledReport('30 dias','cadences',id),[detail,setDetail]=useState<ReportMetric|null>(null),metrics=report?.totals;
+  if(!live)return <Notice>Entre em um workspace para consultar os eventos desta cadência.</Notice>;
+- if(error)return <Notice>{error}</Notice>;
++ if(error&&!metrics)return <Notice>{error} <Button onClick={()=>void refresh().catch(()=>{})}>Tentar novamente</Button></Notice>;
+  if(!metrics)return <section className="cadence-report-reference" role="status">Carregando relatório…</section>;
+- if(!metrics.sent&&!metrics.replies&&!metrics.failed&&!metrics.pending)return <div className="cadence-report-reference"><EmptyState icon="ChartNoAxesColumn" title="O relatório nasce com o primeiro disparo" description="Assim que os primeiros envios saírem, aqui aparecem as mensagens enviadas, as respostas e as falhas registradas."/></div>;
+- return <div className="cadence-report-reference"><div className="cadence-report-stats">{[['Enviados',metrics.sent],['Respostas',metrics.replies],['Falhas',metrics.failed],['Na fila',metrics.pending]].map(([label,value])=><section className="panel" key={label}><span>{label}</span><strong>{value}</strong><small>Últimos 30 dias</small></section>)}</div><section className="panel cadence-report-history"><h3>Envios e respostas por dia</h3><div className="table-scroll"><table className="data-table"><thead><tr><th>Data</th><th>Enviados</th><th>Respostas</th></tr></thead><tbody>{metrics.series.map(day=><tr key={day.date}><td>{day.date}</td><td>{day.sent}</td><td>{day.replies}</td></tr>)}</tbody></table></div></section></div>;
++ if(!['sent','replies','failed','pending','uncertain','bounces','optouts'].some(key=>(metrics[key]??0)>0))return <div className="cadence-report-reference"><ReportStamp report={report} error={error} onRefresh={refresh}/><EmptyState icon="ChartNoAxesColumn" title="O relatório nasce com o primeiro disparo" description="Assim que os primeiros envios saírem, aqui aparecem as mensagens enviadas, as respostas e as falhas registradas."/></div>;
++ return <div className="cadence-report-reference"><ReportStamp report={report} error={error} onRefresh={refresh}/><div className="cadence-report-stats">{[['Enviados','sent'],['Respostas','replies'],['Falhas','failed'],['Na fila','pending'],['Bounces','bounces'],['Opt-outs','optouts']].map(([label,key])=><section className="panel" key={key}><span>{label}</span><strong>{metrics[key]??'—'}</strong><small>Últimos 30 dias</small><button className="small-link orange" onClick={()=>setDetail(key as ReportMetric)}>Ver registros</button></section>)}</div><section className="panel cadence-report-history"><h3>Envios e respostas por dia</h3><div className="table-scroll"><table className="data-table"><thead><tr><th>Data</th><th>Enviados</th><th>Respostas</th></tr></thead><tbody>{report?.series.map(day=><tr key={day.date}><td>{day.date}</td><td>{day.values.sent??0}</td><td>{day.values.replies??0}</td></tr>)}</tbody></table></div></section>{detail&&query&&<ReportDetail key={detail+JSON.stringify(query)} metric={detail} query={query} onClose={()=>setDetail(null)}/>}</div>;
+ }
+diff --git a/src/modules/dashboard/dashboard.tsx b/src/modules/dashboard/dashboard.tsx
+index a0a9292..5578e81 100644
+--- a/src/modules/dashboard/dashboard.tsx
++++ b/src/modules/dashboard/dashboard.tsx
+@@ -1,50 +1,43 @@
+ "use client";
+ import Link from "next/link";
+ import { useState } from "react";
+ import { useDemo, useNotify } from "@/demo/provider";
+-import { calculateMetrics } from "@/domain/metrics";
++import type {ReportMetric} from "@/domain/reporting";
++import {ReportDetail,ReportStamp} from "@/components/reports/report-detail";
+ import { Icon } from "@/components/ui/icon";
+ import {
+   Badge,
+   IconButton,
+   PageHeader,
+ } from "@/components/ui/primitives";
+ import { PeriodSelector } from "@/components/ui/period-selector";
+ import { LineChart } from "@/components/charts/line-chart";
+ import { DashboardOnboarding } from "@/components/onboarding/checklist";
+-import {useMessageMetrics} from '@/client/use-message-metrics';
+-import {useWorkspaceRefresh} from '@/client/workspace-provider';
+-function dailyLeadCounts(leads: { createdAt: string }[], days: number, timezone: string) {
+-  const format = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" });
+-  const counts = new Map<string, number>();
+-  for (let offset = days - 1; offset >= 0; offset--) counts.set(format.format(new Date(Date.now() - offset * 86_400_000)), 0);
+-  for (const lead of leads) {
+-    const date = new Date(lead.createdAt);
+-    if (!Number.isFinite(date.getTime())) continue;
+-    const day = format.format(date);
+-    if (counts.has(day)) counts.set(day, counts.get(day)! + 1);
+-  }
+-  return [...counts.values()];
+-}
++import {useReconciledReport} from '@/client/use-reconciled-report';
++import {jobStateLabels} from '@/modules/prospecting/job-history';
+ export function Dashboard() {
+   const state = useDemo();
+   const notify = useNotify();
+-  const m = calculateMetrics(state);
++
+   const [period, setPeriod] = useState("30 dias");
+-  const {metrics:messages,error:metricsError,live}=useMessageMetrics(period),refresh=useWorkspaceRefresh();
+-  const metric=(value:number|undefined)=>value===undefined?(live?'…':'0'):String(value);
++  const {report,query,error,refresh:refreshPeriod}=useReconciledReport(period),{report:today,error:todayError,refresh:refreshToday}=useReconciledReport('Hoje');
++  const refresh=()=>Promise.all([refreshPeriod(),refreshToday()]);
++  const messages=report?.totals,now=today?.totals;
++  const [detail,setDetail]=useState<ReportMetric|null>(null);
++  const metric=(value:number|null|undefined)=>value==null?(report?'—':'…'):value.toLocaleString('pt-BR');
++  const m={total:messages?.leads??0,qualified:messages?.qualified??0,funnel:{qualified:messages?.qualified??0,pending:(messages?.leadPending??0)+(messages?.leadWarning??0),disqualified:messages?.leadDisqualified??0}};
+   const stats = [
+-    ["Leads novos", String(m.total), "base: " + m.total, "Users", "orange"],
++    ["Leads novos", metric(messages?.leads), "criados no período", "Users", "orange"],
+     [
+       "Qualificados",
+-      String(m.qualified),
++      metric(messages?.qualified),
+       `${m.total ? Math.round((m.qualified / m.total) * 100) : 0}% dos novos`,
+       "CheckCircle2",
+       "green-text",
+     ],
+     ["Mensagens aceitas", metric(messages?.sent), metric(messages?.email)+" e-mail · "+metric(messages?.whatsapp)+" WhatsApp", "Send", "orange"],
+     ["Respostas", metric(messages?.replies), "recebidas no período", "MessageSquare", "green-text"],
+     ["Abertura de e-mail", "—", "Rastreamento indisponível", "Eye", "purple-text"],
+     ["Opt-outs", metric(messages?.optouts), "no período", "XCircle", "orange"],
+   ];
+   return (
+@@ -53,66 +46,66 @@ export function Dashboard() {
+       <PageHeader
+         title="Dashboard"
+         description="Visão geral da sua prospecção"
+         actions={
+           <>
+             <PeriodSelector value={period} onChange={setPeriod} />
+             <IconButton
+               icon="RefreshCw"
+               label="Atualizar"
+               onClick={() =>
+-                void refresh?.().then(()=>notify("Indicadores atualizados com a base do workspace.")).catch(e=>notify(e.message))
++                void refresh().then(()=>notify("Indicadores atualizados com os registros operacionais.")).catch(e=>notify(e.message))
+               }
+             />
+           </>
+         }
+       />
+-      {metricsError&&<p role="status">Indicadores de mensagens: {metricsError}</p>}
++
+       <div className="stats-grid">
+         {stats.map(([label, value, sub, icon, color]) => (
+           <div key={label} className="stat-card panel">
+             <div className="between row">
+               <span>{label}</span>
+               <Icon name={icon} size={16} className={color} />
+             </div>
+-            <strong>{value}</strong>
+-            <small>{sub}</small>
++            {query&&label!=="Abertura de e-mail"?<button className="report-metric-value" aria-label={'Ver registros de '+label} onClick={()=>setDetail(({"Leads novos":"leads","Qualificados":"qualified","Mensagens aceitas":"sent","Respostas":"replies","Opt-outs":"optouts"} as Record<string,ReportMetric>)[label])}><strong>{value}</strong></button>:<strong>{value}</strong>}<small>{sub}</small>
+           </div>
+         ))}
+       </div>
+       <section className="panel today-panel">
++        {todayError&&<p role="alert">Indicadores de hoje: {todayError}</p>}
+         <div className="row between">
+           <h3 className="row">
+             <Icon name="Sun" size={17} className="orange" />
+             Hoje
+           </h3>
+           <small>desde 00:00 · {state.preferences.timezone}</small>
+         </div>
+         <div className="today-grid">
+           {[
+-            ["Na fila", "Calendar", metric(messages?.today.pending), "mensagens criadas hoje"],
+-            ["E-mails", "Mail", metric(messages?.today.email), "aceitos"],
+-            ["WhatsApp", "MessageSquare", metric(messages?.today.whatsapp), "aceitos"],
+-            ["Respostas", "MessageSquare", metric(messages?.today.replies), ""],
+-            ["Erros", "XCircle", metric(messages?.today.failed), ""],
+-            ["Cadências", "Send", String(state.cadences.length), "no workspace"],
++            ["Na fila", "Calendar", metric(now?.pending), "mensagens criadas hoje"],
++            ["E-mails", "Mail", metric(now?.email), "aceitos"],
++            ["WhatsApp", "MessageSquare", metric(now?.whatsapp), "aceitos"],
++            ["Respostas", "MessageSquare", metric(now?.replies), ""],
++            ["Erros", "XCircle", metric(now?.failed), ""],
++            ["Cadências", "Send", metric(messages?.cadences), "no workspace"],
+             [
+               "Automações",
+               "Workflow",
+-              String(state.jobs.length),
+-              "simulações locais",
++              metric(messages?.automations),
++              "configuradas no workspace",
+             ],
+-            ["Leads", "Users", String(m.total), "no workspace"],
++            ["Leads", "Users", metric(messages?.baseLeads), "no workspace"],
+             [
+               "Qualificados",
+               "CheckCircle2",
+-              String(m.qualified),
++              metric(messages?.baseQualified),
+               "no workspace",
+             ],
+           ].map(([name, icon, num, help]) => (
+             <div className="today-item" key={name}>
+               <span>
+                 <Icon name={icon} size={13} />
+                 {name}
+               </span>
+               <strong>{num}</strong>
+               <small>{help || "\u00a0"}</small>
+@@ -120,23 +113,23 @@ export function Dashboard() {
+           ))}
+         </div>
+       </section>
+       <div className="dashboard-grid">
+         <section className="panel panel-pad">
+           <div className="row between">
+             <h3 className="row">
+               <Icon name="ChartNoAxesColumn" size={17} className="orange" />
+               Leads novos por dia
+             </h3>
+-            <small>{period} · base do workspace</small>
++            <small>{period.includes("/")?"Período personalizado":period} · criados no período</small>
+           </div>
+-          <LineChart values={dailyLeadCounts(state.leads, period === "Hoje" ? 1 : period === "7 dias" ? 7 : period === "90 dias" ? 90 : 30, state.preferences.timezone)} />
++          <LineChart values={report?.series.map(day=>day.values.leads??0)??[]} dates={report?.series.map(day=>day.date)}/>
+         </section>
+         <section className="panel panel-pad">
+           <h3 className="row">
+             <Icon name="Target" size={17} className="orange" />
+             Funil de qualificação
+           </h3>
+           <div className="funnel-bars">
+             {(
+               [
+                 ["qualified", "Qualificado", "var(--green)"],
+@@ -184,75 +177,69 @@ export function Dashboard() {
+                 <strong>{value}</strong>
+               </div>
+             ))}
+           </div>
+           <Link className="orange small-link" href="/reports">
+             Ver relatório detalhado →
+           </Link>
+         </section>
+         <section className="panel panel-pad">
+           <h3>Geração e qualificação</h3>
+-          <small>simulações locais</small>
++          <small>execuções criadas no período</small>
+           <div className="mini-stats">
+             <div>
+-              <strong>{state.jobs.reduce((n, j) => n + j.count, 0)}</strong>
++              <strong>{metric(messages?.executionInserted)}</strong>
+               <small>SALVOS</small>
+             </div>
+             <div>
+-              <strong>{state.jobs.length}</strong>
++              <strong>{metric(messages?.executions)}</strong>
+               <small>EXECUÇÕES</small>
+             </div>
+             <div>
+-              <strong>{state.jobs.reduce((total, job) => total + job.billableUsage, 0)}</strong>
++              <strong>{metric(messages?.commercialCredits)}</strong>
+               <small>CRÉDITOS USADOS</small>
+             </div>
+           </div>
+-          <p className="muted">Resumo das simulações locais. Consulte Execuções para acompanhar os trabalhos dos provedores.</p>
++          <p className="muted">Resultados persistidos das execuções. O consumo comercial consolidado não é medido neste relatório.</p>
+         </section>
+         <section className="panel panel-pad">
+           <h3>Leads nas cadências</h3>
+-          <small>no workspace</small>
++          <small>publicações criadas no período</small>
+           <div className="funnel-bars">
+             <div className="row between">
+-              <span>Qualificados na base</span>
+-              <strong>{m.qualified}</strong>
++              <span>Leads inscritos</span>
++              <strong>{metric(messages?.enrolled)}</strong>
+             </div>
+             <div className="funnel-track">
+               <i style={{ width: "100%", background: "var(--primary)" }} />
+             </div>
+           </div>
+-          <p className="muted">{state.cadences.filter(cadence => !cadence.archived && cadence.status === "active").length} cadências ativas · histórico em Execuções</p>
++          <p className="muted">{metric(messages?.activeCadences)} cadências ativas · histórico em Execuções</p>
+           <Link className="orange small-link" href="/cadences">
+             Ver cadências →
+           </Link>
+         </section>
+       </div>
+       <section className="panel section-gap">
+         <div className="panel-heading">
+           <h3>Atividade recente</h3>
+           <Link className="small-link" href="/executions">
+             Ver todas →
+           </Link>
+         </div>
+         <div className="activity-empty">
+-          {state.jobs.length ? (
+-            state.jobs.slice(0, 3).map((j) => (
+-              <div className="row" key={j.id}>
+-                <Icon name="CheckCircle2" className="green-text" />
+-                <span>
+-                  {j.name} · {j.count} leads
+-                </span>
+-                <Badge>Demonstração</Badge>
+-              </div>
+-            ))
++          {report?.recentExecutions.length ? (
++            report.recentExecutions.map(j=>(<div className="row" key={j.id}><Icon name="Clock"/><Link href={'/executions/'+j.id}>{{generation:'Busca de empresas',qualification:'Qualificação',planning:'Análise de IA'}[j.kind]??'Execução'} · {j.counts.inserted??0} resultados salvos</Link><Badge>{jobStateLabels[j.state]??j.state}</Badge></div>))
+           ) : (
+             <>
+               <Icon name="Clock" size={25} />
+               <p>Nenhuma execução encontrada</p>
+               <small>Configure suas cadências para começar</small>
+             </>
+           )}
+         </div>
+       </section>
++      <ReportStamp report={report} error={error} onRefresh={refresh}/>
++      {detail&&query&&<ReportDetail key={detail+JSON.stringify(query)} metric={detail} query={query} onClose={()=>setDetail(null)}/>}
+     </div>
+   );
+ }
+diff --git a/src/modules/reports/reports.tsx b/src/modules/reports/reports.tsx
+index 081e75d..20de7de 100644
+--- a/src/modules/reports/reports.tsx
++++ b/src/modules/reports/reports.tsx
+@@ -1,76 +1,67 @@
+ "use client";
+ import {useIdentity} from '@/client/workspace-provider';
+ import {JobHistory} from '@/modules/prospecting/job-history';
+ import Link from 'next/link';
+ import {useState} from 'react';
+ import {useDemo} from '@/demo/provider';
+-import {calculateMetrics} from '@/domain/metrics';
+-import type {MessageMetrics} from '@/domain/message-metrics';
++import type {ReportView,ReportMetric} from '@/domain/reporting';
++import {ReportDetail,ReportStamp,exportReport} from '@/components/reports/report-detail';
++
+ import {Icon} from '@/components/ui/icon';
+ import {PageHeader,EmptyState,Badge,LinkButton,Button} from '@/components/ui/primitives';
+ import {PeriodSelector} from '@/components/ui/period-selector';
+-import {useMessageMetrics} from '@/client/use-message-metrics';
++import {useReconciledReport} from '@/client/use-reconciled-report';
+ 
+ export function Reports({tab='overview'}: {tab?:string}) {
+   const s=useDemo(),[period,setPeriod]=useState('30 dias'),[cadence,setCadence]=useState('');
+-  const {metrics:messages,error:metricsError,live}=useMessageMetrics(period,cadence);
+-  const cadenceName=s.cadences.find(item=>item.id===cadence)?.name;
++  const {report,query,error,refresh,live}=useReconciledReport(period,tab==='funnel'?'funnel':'cadences',cadence),[detail,setDetail]=useState<ReportMetric|null>(null);
++  const inspect=(metric:ReportMetric)=>setDetail(metric);
+   return <div className="reports-reference">
+     <PageHeader title="Relatórios" description="Desempenho dos disparos e do funil de vendas" actions={<div className="reports-header-controls"><PeriodSelector extended value={period} onChange={setPeriod}/><select aria-label="Cadência" className="reports-cadence-filter" value={cadence} onChange={e=>setCadence(e.target.value)}><option value="">Todas as cadências</option>{s.cadences.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></div>}/>
+     <nav className="reports-tabs" aria-label="Relatórios">{[['overview','Visão geral','/reports','ChartNoAxesColumn'],['funnel','Funil de vendas','/reports/funnel','Filter'],['negocios','Negócios CRM','/reports/negocios','Building2'],['performance','Performance','/reports/performance','ChartNoAxesColumn']].map(([key,label,href,icon])=><Link key={key} href={href} aria-current={tab===key?'page':undefined}><Icon name={icon} size={16}/>{label}</Link>)}</nav>
+-    {metricsError&&<p role="alert" className="reports-error">Indicadores de mensagens: {metricsError}</p>}
+-    {tab==='overview'?<ReportOverview messages={messages} period={period} cadence={cadence} live={live} error={metricsError}/>:tab==='funnel'?<ReportFunnel messages={messages} cadence={cadence}/>:tab==='performance'?<ReportPerformance messages={messages} cadenceName={cadenceName}/>:<section className="reports-panel reports-crm-state"><Icon name="AlertCircle" size={24}/><div><h2>Nenhuma integração FunnelsFlow ativa</h2><p>Ative uma integração para acompanhar o funil de negócios. A integração ainda está em preparação neste ambiente.</p><LinkButton href="/settings/apps" variant="primary">Configurar integração</LinkButton></div></section>}
++
++    {tab==='negocios'?<section className="reports-panel reports-crm-state"><Icon name="AlertCircle" size={24}/><div><h2>Nenhuma integração FunnelsFlow ativa</h2><p>Ative uma integração para acompanhar o funil de negócios. A integração ainda está em preparação neste ambiente.</p><LinkButton href="/settings/apps" variant="primary">Configurar integração</LinkButton></div></section>:!report?<ReportsUnavailable message={error?'Não foi possível consultar os relatórios':live?'Consultando seus indicadores…':'Entre em um workspace para consultar os relatórios'}/>:tab==='overview'?<ReportOverview report={report} period={period} inspect={inspect}/>:tab==='funnel'?<ReportFunnel report={report} inspect={inspect}/>:<ReportPerformance report={report}/>}
++    <ReportStamp report={report} error={error} onRefresh={refresh}/>
++    {report&&<div className="row wrap"><Button onClick={()=>exportReport(report)}>Exportar indicadores</Button><small>Métricas sem medição permanecem indisponíveis no arquivo.</small></div>}
++    {detail&&query&&<ReportDetail key={detail+JSON.stringify(query)} metric={detail} query={query} onClose={()=>setDetail(null)}/>}
++
+   </div>;
+ }
+ 
+ function ReportsUnavailable({message='Medição indisponível',detail}: {message?:string;detail?:string}) {
+   return <div className="reports-unavailable"><span aria-hidden="true">—</span><p>{message}</p>{detail&&<small>{detail}</small>}</div>;
+ }
+-function ReportOverview({messages,period,cadence,live,error}: {messages:MessageMetrics|null;period:string;cadence:string;live:boolean;error:string}) {
+-  if(!live||!messages||messages.sent===0)return <>
+-    <section className="reports-onboarding"><div className="reports-illustration" aria-hidden="true"><Icon name="ChartNoAxesColumn" size={68}/><Icon name="ArrowRight" size={22}/></div><h2>{live&&!messages?(error?'Não foi possível consultar os relatórios':'Consultando seus indicadores…'):'Os relatórios aparecem depois do primeiro envio'}</h2><p>{live&&!messages?'Aguarde a leitura do histórico de mensagens do workspace.':'Envios e respostas por canal e cadência. Aparecem depois do primeiro envio no período selecionado.'}</p><LinkButton href="/cadences" variant="primary">Ver cadências</LinkButton></section>
+-    <div className="reports-onboarding-cards">{[['Send','O que saiu','Envios por canal e cadência, no período que você escolher.'],['Inbox','Quem respondeu','Respostas: acompanhe as conversas que a prospecção está gerando.'],['ChartNoAxesColumn','Onde melhorar','O funil mostra os indicadores disponíveis e o que ainda não é medido.']].map(([icon,title,description])=><section className="reports-panel" key={title}><span><Icon name={icon} size={17}/></span><h3>{title}</h3><p>{description}</p></section>)}</div>
+-    <p className="reports-help">Como ler os relatórios? <Link href="/first-steps">Veja os primeiros passos</Link></p>
+-  </>;
+-  const stats=[['Mail','E-mails aceitos',messages.email],['MessageSquare','WhatsApp aceitos',messages.whatsapp],['Eye','Aberturas',null],['Link2','Cliques',null],['MessageSquare','Respostas',messages.replies],['XCircle','Bounces',cadence?null:messages.bounces],['LogOut','Opt-outs',cadence?null:messages.optouts]] as const;
+-  return <><div className="reports-metrics">{stats.map(([icon,label,value])=><section className="reports-panel" key={label}><div><small>{label}</small><Icon name={icon} size={15}/></div><strong>{value===null?'—':value.toLocaleString('pt-BR')}</strong><small>{value===null?'Medição indisponível neste filtro':'no período selecionado'}</small></section>)}</div><div className="reports-two-grid">
+-    <section className="reports-panel"><h3>Envios por dia</h3><p className="reports-chart-caption">{period} · mensagens aceitas pelo provedor</p><ReportSeries values={messages.series.map(item=>({date:item.date,value:item.sent}))} label="Envios por dia"/></section>
+-    <section className="reports-panel"><h3>Respostas por dia</h3><p className="reports-chart-caption">{period} · respostas recebidas</p><ReportSeries values={messages.series.map(item=>({date:item.date,value:item.replies}))} label="Respostas por dia"/></section>
+-    <section className="reports-panel"><h3>Engajamento por dia</h3><ReportsUnavailable message="Aberturas e cliques indisponíveis" detail="O rastreamento de abertura e clique ainda não está implementado."/></section>
+-    <section className="reports-panel"><h3>Bounces & Opt-outs por dia</h3><ReportsUnavailable message="Série diária indisponível" detail="Os totais disponíveis estão nos cartões acima."/></section>
+-  </div></>;
++function ReportOverview({report,period,inspect}:{report:ReportView;period:string;inspect:(metric:ReportMetric)=>void}){
++ const t=report.totals;
++ if(!['sent','replies','failed','pending','uncertain','bounces','optouts'].some(key=>(t[key]??0)>0))return <><section className="reports-onboarding"><div className="reports-illustration" aria-hidden="true"><Icon name="ChartNoAxesColumn" size={68}/><Icon name="ArrowRight" size={22}/></div><h2>Os relatórios aparecem depois do primeiro envio</h2><p>Nenhuma mensagem registrada no período e cadência selecionados. O funil continua disponível para os contatos captados.</p><LinkButton href="/cadences" variant="primary">Ver cadências</LinkButton></section><div className="reports-onboarding-cards">{[['Send','O que saiu','Envios por canal e cadência, no período que você escolher.'],['Inbox','Quem respondeu','Respostas humanas registradas nas conversas.'],['ChartNoAxesColumn','Onde melhorar','Confira os indicadores disponíveis no funil.']].map(([icon,title,description])=><section className="reports-panel" key={title}><span><Icon name={icon} size={17}/></span><h3>{title}</h3><p>{description}</p></section>)}</div><p className="reports-help">Como ler os relatórios? <Link href="/first-steps">Veja os primeiros passos</Link></p></>;
++ const stats=[['Mail','E-mails aceitos',t.email,'sent'],['MessageSquare','WhatsApp aceitos',t.whatsapp,'sent'],['Eye','Aberturas',null,''],['Link2','Cliques',null,''],['MessageSquare','Respostas',t.replies,'replies'],['XCircle','Bounces',t.bounces,'bounces'],['LogOut','Opt-outs',t.optouts,'optouts']] as const;
++ return <><div className="reports-metrics">{stats.map(([icon,label,value,key])=><section className="reports-panel" key={label}><div><small>{label}</small><Icon name={icon} size={15}/></div>{key?<button className="report-metric-value" aria-label={'Ver registros de '+label+(key==='sent'?' (todos os canais)':'')} onClick={()=>inspect(key)}><strong>{value==null?'—':value.toLocaleString('pt-BR')}</strong></button>:<strong>—</strong>}<small>{value==null?'Medição indisponível':'no período selecionado'}</small></section>)}</div><div className="reports-two-grid">
++ {(['sent','replies'] as const).map(key=><section className="reports-panel" key={key}><h3>{key==='sent'?'Envios':'Respostas'} por dia</h3><p className="reports-chart-caption">{period.includes('/')?'Período personalizado':period} · {key==='sent'?'mensagens aceitas pelo provedor':'respostas humanas recebidas'}</p><ReportSeries values={report.series.map(day=>({date:day.date,value:day.values[key]??0}))} label={key==='sent'?'Envios por dia':'Respostas por dia'}/></section>)}
++ <section className="reports-panel"><h3>Engajamento por dia</h3><ReportsUnavailable message="Aberturas e cliques indisponíveis" detail="A integração não fornece essas medições."/></section>
++ <section className="reports-panel"><h3>Bounces & Opt-outs por dia</h3><ReportSeries values={report.series.map(day=>({date:day.date,value:day.values.bounces??0}))} label="Bounces por dia"/><ReportSeries values={report.series.map(day=>({date:day.date,value:day.values.optouts??0}))} label="Opt-outs por dia"/></section></div><p className="reports-chart-caption">{t.pending??0} na fila · {t.uncertain??0} com resultado incerto · {t.failed??0} falhas definitivas. Respostas e opt-outs usam a última mensagem aceita anterior na conversa; bounces usam a mensagem correlacionada.</p></>;
+ }
+-
+-function ReportFunnel({messages,cadence}: {messages:MessageMetrics|null;cadence:string}) {
+-  const m=calculateMetrics(useDemo()),percent=m.total?Math.round(m.qualified/m.total*100):0;
+-  return <><div className="reports-metrics reports-funnel-metrics">{[['Total Leads',m.total,'base atual'],['Qualificados',m.qualified,`${percent}% da base atual`],['Em Cadência',null,'sem medição de inscritos'],['Conectados',null,'sem medição de conexões'],['Responderam',messages?.replies??null,'mensagens no período'],['Opt-outs',cadence?null:messages?.optouts??null,'no período']].map(([label,value,note])=><section className="reports-panel" key={String(label)}><small>{label}</small><strong>{value===null?'—':Number(value).toLocaleString('pt-BR')}</strong><small>{note}</small></section>)}</div>
+-    <section className="reports-panel reports-funnel"><h3>Funil de Conversão</h3><p className="reports-chart-caption">Leads e qualificados são uma fotografia da base atual. Inscrições em cadências e conexões ainda não têm medição neste relatório.</p><FunnelFigure total={m.total} qualified={m.qualified}/></section>
+-    <section className="reports-panel reports-qualification-history"><h3>Qualificação por Dia</h3><ReportsUnavailable message="Histórico diário de qualificação indisponível" detail="O cadastro informa o estado atual do lead; a data de criação não representa a data em que ele foi qualificado."/></section>
+-    <div className="reports-two-grid"><section className="reports-panel"><h3>Origem das Conexões</h3><ReportsUnavailable message="Origem das conexões indisponível"/></section><section className="reports-panel"><h3>Canal de Conexão</h3><ReportsUnavailable message="Medição de conexões indisponível"/></section></div>
+-  </>;
++function ReportFunnel({report,inspect}:{report:ReportView;inspect:(metric:ReportMetric)=>void}){
++ const t=report.totals,total=t.leads??0,qualified=t.qualified??0,enrolled=t.enrolled??0;
++ return <><div className="reports-metrics reports-funnel-metrics">{[['Total Leads',t.leads,'criados no período','leads'],['Qualificados',t.qualified,'estado atual dos novos contatos','qualified'],['Em Cadência',t.enrolled,'inscritos em publicações do período','enrolled'],['Conectados',null,'sem medição de conexões',''],['Responderam',t.replies,'mensagens humanas no período','replies'],['Opt-outs',t.optouts,'identidades suprimidas no período','optouts']].map(([label,value,note,key])=><section className="reports-panel" key={String(label)}><small>{label}</small>{key?<button className="report-metric-value" aria-label={'Ver registros de '+label} onClick={()=>inspect(key as ReportMetric)}><strong>{value==null?'—':Number(value).toLocaleString('pt-BR')}</strong></button>:<strong>—</strong>}<small>{note}</small></section>)}</div>
++ <section className="reports-panel reports-funnel"><h3>Funil de Conversão</h3><p className="reports-chart-caption">Contatos criados no período e sua qualificação atual. Inscritos contam publicações criadas no período; podem incluir contatos captados antes. As etapas têm bases diferentes.</p><FunnelFigure total={total} qualified={qualified} enrolled={enrolled}/></section>
++ <div className="reports-funnel-bottom"><section className="reports-panel reports-qualification-history"><h3>Qualificação por Dia</h3><ReportsUnavailable message="Histórico diário de qualificação indisponível" detail="A data de criação não representa a data em que o contato foi qualificado."/></section><div className="reports-funnel-side"><section className="reports-panel"><h3>Origem das Conexões</h3><ReportsUnavailable message="Origem das conexões indisponível"/></section><section className="reports-panel"><h3>Canal de Conexão</h3><ReportsUnavailable message="Medição de conexões indisponível"/></section></div></div></>;
+ }
+-
+-function FunnelFigure({total,qualified}:{total:number;qualified:number}){
+- const qualifiedHeight=total?Math.max(8,qualified/total*100):8;
+- const top=(height:number)=>65-height/2,bottom=(height:number)=>65+height/2;
+- return <div className="reports-funnel-figure"><svg viewBox="0 0 1200 130" role="img" aria-label={'Funil da base atual: '+total+' leads e '+qualified+' qualificados. Etapas seguintes sem medição.'}><defs><pattern id="funnel-unmeasured" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="var(--hover)"/><line x1="0" x2="0" y1="0" y2="8" stroke="var(--border)" strokeWidth="3"/></pattern></defs><polygon points={'0,15 292,'+top(qualifiedHeight)+' 292,'+bottom(qualifiedHeight)+' 0,115'} fill="#94a3b8"/><polygon points={'302,'+top(qualifiedHeight)+' 594,57 594,73 302,'+bottom(qualifiedHeight)} fill="#548df5"/><polygon points="604,57 896,57 896,73 604,73" fill="url(#funnel-unmeasured)"/><polygon points="906,57 1200,57 1200,73 906,73" fill="url(#funnel-unmeasured)"/></svg><div className="reports-funnel-legend">{[['Total de Leads',total,'#94a3b8'],['Qualificados',qualified,'#548df5'],['Em Cadência',null,'#ff8a36'],['Conectados',null,'#40c977']].map(([label,value,color])=><div key={String(label)}><small><i style={{background:String(color)}}/>{label}</small><strong>{value===null?'—':Number(value).toLocaleString('pt-BR')}</strong><span>{value===null?'Medição indisponível':''}</span></div>)}</div></div>;
++function FunnelFigure({total,qualified,enrolled}:{total:number;qualified:number;enrolled:number}){
++ const height=total?Math.max(8,qualified/total*100):8,top=(n:number)=>65-n/2,bottom=(n:number)=>65+n/2;
++ return <div className="reports-funnel-figure"><svg viewBox="0 0 1200 130" role="img" aria-label={'Contatos do período: '+total+'; qualificados atualmente: '+qualified+'; inscritos em publicações do período: '+enrolled+'. Bases distintas.'}><defs><pattern id="funnel-unmeasured" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="var(--hover)"/><line x1="0" x2="0" y1="0" y2="8" stroke="var(--border)" strokeWidth="3"/></pattern></defs><polygon points={'0,15 292,'+top(height)+' 292,'+bottom(height)+' 0,115'} fill="#94a3b8"/><polygon points={'302,'+top(height)+' 594,57 594,73 302,'+bottom(height)} fill="#548df5"/><polygon points="604,57 896,57 896,73 604,73" fill="#ff8a36"/><polygon points="906,57 1200,57 1200,73 906,73" fill="url(#funnel-unmeasured)"/></svg><div className="reports-funnel-legend">{[['Total de Leads',total,'#94a3b8'],['Qualificados',qualified,'#548df5'],['Em Cadência',enrolled,'#ff8a36'],['Conectados',null,'#40c977']].map(([label,value,color])=><div key={String(label)}><small><i style={{background:String(color)}}/>{label}</small><strong>{value==null?'—':Number(value).toLocaleString('pt-BR')}</strong><span>{value==null?'Medição indisponível':''}</span></div>)}</div></div>;
+ }
+-
+-function ReportPerformance({messages,cadenceName}: {messages:MessageMetrics|null;cadenceName?:string}) {
+-  const [metric,setMetric]=useState('Envios');
+-  const value=metric==='Envios'?messages?.sent:metric==='Resposta'?messages?.replies:null;
+-  return <div className="reports-performance">
+-    <section className="reports-panel reports-comparison"><h3><Icon name="ChartNoAxesColumn" size={16}/>Comparativo entre Cadências: Taxas (%)</h3><ReportsUnavailable message="Taxas por cadência indisponíveis" detail="Os totais de mensagens não representam taxas por destinatário. A API atual não fornece este comparativo."/></section>
+-    <section className="reports-panel reports-cadence-detail"><div className="reports-panel-title"><h3><Icon name="Workflow" size={16}/>Detalhamento por Cadência</h3><div className="reports-metric-switch" role="group" aria-label="Métrica do detalhamento">{['Envios','Abertura','Clique','Resposta','Conexão'].map(item=><Button key={item} aria-pressed={metric===item} onClick={()=>setMetric(item)}>{item}</Button>)}</div></div>{cadenceName?<div className="reports-detail-row"><strong>{cadenceName}</strong><span>{metric}</span><strong>{value==null?'—':value.toLocaleString('pt-BR')}</strong><small>{value==null?'Medição indisponível':'mensagens no período selecionado'}</small></div>:<ReportsUnavailable message="Selecione uma cadência no filtro acima" detail="Consulte os totais de envios e respostas da cadência. Aberturas, cliques e conexões ainda não são medidos."/>}</section>
+-    <div className="reports-two-grid"><section className="reports-panel reports-stage-performance"><h3><Icon name="ListChecks" size={16}/>Performance por Etapa</h3><ReportsUnavailable message="Métricas por etapa indisponíveis" detail="A API atual não fornece o detalhamento por etapa da cadência."/></section><section className="reports-panel reports-best-times"><h3><Icon name="Clock" size={16}/>Melhores Horários (aberturas de e-mail)</h3><ReportsUnavailable message="Aberturas por horário indisponíveis" detail="O rastreamento de aberturas ainda não está implementado."/><p className="reports-chart-caption">Os horários serão comparáveis quando houver medição de abertura por dia e hora.</p></section></div>
+-  </div>;
++function ReportPerformance({report}:{report:ReportView}){
++ const [metric,setMetric]=useState('Envios'),key=metric==='Envios'?'sent':metric==='Resposta'?'replies':metric==='Abertura'?'opens':metric==='Clique'?'clicks':'connected';
++ return <div className="reports-performance"><section className="reports-panel reports-comparison"><h3><Icon name="ChartNoAxesColumn" size={16}/>Comparativo entre Cadências: Taxas (%)</h3>{report.cadences.length?<div className="table-scroll"><table className="data-table"><thead><tr><th>Cadência</th><th>Resposta</th><th>Destinatários</th><th>Responderam</th><th>Abertura / clique</th></tr></thead><tbody>{report.cadences.map(c=><tr key={c.id}><td><Link href={'/cadences/'+c.id}>{c.name}</Link></td><td>{c.values.replyRate==null?'—':c.values.replyRate.toFixed(1)+'%'}</td><td>{c.values.recipients??0}</td><td>{c.values.responders??0}</td><td>— / —</td></tr>)}</tbody></table></div>:<ReportsUnavailable message="Sem mensagens atribuídas a cadências neste período"/>}<small>Taxa: destinatários com mensagem aceita no período que responderam no mesmo período. Cada identidade conta uma vez por cadência.</small></section>
++ <section className="reports-panel reports-cadence-detail"><div className="reports-panel-title"><h3><Icon name="Workflow" size={16}/>Detalhamento por Cadência</h3><div className="reports-metric-switch" role="group" aria-label="Métrica do detalhamento">{['Envios','Abertura','Clique','Resposta','Conexão'].map(item=><Button key={item} aria-pressed={metric===item} onClick={()=>setMetric(item)}>{item}</Button>)}</div></div>{report.cadences.length?report.cadences.map(c=><div className="reports-detail-row" key={c.id}><Link href={'/cadences/'+c.id}>{c.name}</Link><span>{metric}</span><strong>{c.values[key]==null?'—':c.values[key].toLocaleString('pt-BR')}</strong><small>{c.values[key]==null?'Medição indisponível':'mensagens no período selecionado'}</small></div>):<ReportsUnavailable message="Nenhuma cadência com dados no filtro selecionado"/>}</section>
++ <div className="reports-two-grid"><section className="reports-panel reports-stage-performance"><h3><Icon name="ListChecks" size={16}/>Performance por Etapa</h3>{report.steps.length?<div className="table-scroll"><table className="data-table"><thead><tr><th>Cadência / publicação / etapa</th><th>Aceitas</th><th>Respostas</th><th>Falhas</th><th>Na fila</th></tr></thead><tbody>{report.steps.map(step=><tr key={step.publicationId+':'+step.stepIndex}><td>{report.cadences.find(c=>c.id===step.cadenceId)?.name??'Cadência'} · {step.publicationId.slice(0,8)} · {step.stepIndex+1}</td><td>{step.values.sent??0}</td><td>{step.values.replies??0}</td><td>{step.values.failed??0}</td><td>{step.values.pending??0}</td></tr>)}</tbody></table></div>:<ReportsUnavailable message="Sem mensagens atribuídas a etapas neste período"/>}</section><section className="reports-panel reports-best-times"><h3><Icon name="Clock" size={16}/>Melhores Horários (aberturas de e-mail)</h3><ReportsUnavailable message="Aberturas por horário indisponíveis" detail="A integração não fornece medição de abertura."/></section></div></div>;
+ }
+ 
+ function ReportSeries({values,label}: {values:{date:string;value:number}[];label:string}) {
+   if(!values.length)return <ReportsUnavailable message="Sem dados no período selecionado"/>;
+   const max=Math.max(...values.map(item=>item.value),1),points=values.map((item,index)=>`${32+(index*630)/Math.max(values.length-1,1)},${160-(item.value/max)*125}`).join(' ');
+   const shortDate=(date:string)=>date.slice(8,10)+'/'+date.slice(5,7);
+   return <div className="reports-series"><svg viewBox="0 0 700 200" role="img" aria-label={label}>{[35,75,115,160].map(y=><line key={y} x1="32" x2="668" y1={y} y2={y} stroke="#e5e7eb" strokeDasharray="3 4"/>)}<text x="4" y="38">{max}</text><text x="15" y="164">0</text><polyline points={points} fill="none" stroke="#ff6b00" strokeWidth="2.5" strokeLinejoin="round"/>{values.length===1&&<circle cx="32" cy={160-values[0].value/max*125} r="4" fill="#ff6b00"/>}<text x="32" y="190">{shortDate(values[0].date)}</text><text x="635" y="190">{shortDate(values[values.length-1].date)}</text></svg><details><summary>Ver dados da série</summary><table className="data-table"><thead><tr><th>DATA</th><th>{label.toLocaleUpperCase('pt-BR')}</th></tr></thead><tbody>{values.map(item=><tr key={item.date}><td>{shortDate(item.date)}</td><td>{item.value}</td></tr>)}</tbody></table></details></div>;
+ }
+ 
+ export function Executions({automationId}: {automationId?:string}) {return useIdentity()?<JobHistory automationId={automationId}/>:<DemoExecutions/>;}
+diff --git a/src/server/messaging/metrics.ts b/src/server/messaging/metrics.ts
+index d4365fa..4bd26c1 100644
+--- a/src/server/messaging/metrics.ts
++++ b/src/server/messaging/metrics.ts
+@@ -1,36 +1,12 @@
+-import type {Principal} from '../../domain/workspace.ts';
+-import type {MessageMetrics} from '../../domain/message-metrics.ts';
+-import {withWorkspaceTransaction} from '../db/transaction.ts';
+-import {AppError} from '../errors.ts';
++import type {Principal} from '../../domain/workspace.ts';import type {MessageMetrics} from '../../domain/message-metrics.ts';
++import {reportPeriodForDays} from '../../domain/reporting.ts';import {localDateAt} from '../../domain/schedule.ts';
++import {withWorkspaceTransaction} from '../db/transaction.ts';import {AppError} from '../errors.ts';import {readReport} from '../operations/reports.ts';
+ export async function readMessageMetrics(p:Principal,options:{days:number;cadenceId?:string}):Promise<MessageMetrics>{
+  if(!Number.isInteger(options.days)||options.days<1||options.days>90||options.cadenceId&&options.cadenceId.length>200)throw new AppError(422,'Período inválido.');
+- return withWorkspaceTransaction(p,async c=>{
+-  const timezone=(await c.query("SELECT coalesce(payload->>'timezone','America/Sao_Paulo') AS zone FROM app.workspace_preferences")).rows[0]?.zone??'America/Sao_Paulo';
+-  let queryZone:string;
+-  try{
+-   const canonical=new Intl.DateTimeFormat('en',{timeZone:timezone}).resolvedOptions().timeZone;
+-   // Intl uses ISO offset signs; PostgreSQL timezone text uses the POSIX sign.
+-   queryZone=/^[+-]\d{2}:\d{2}$/.test(canonical)?'UTC'+(canonical[0]==='+'?'-':'+')+canonical.slice(1):canonical;
+-  }catch{throw new AppError(422,'Revise o fuso horário do workspace.');}
+-  const period=(await c.query(`WITH local_day AS(SELECT (clock_timestamp() AT TIME ZONE $1)::date AS today)
+-   SELECT today::text AS today,(today-($2::int-1))::timestamp AT TIME ZONE $1 AS from_at,(today+1)::timestamp AT TIME ZONE $1 AS to_at FROM local_day`,[queryZone,options.days])).rows[0];
+-  const rows=(await c.query(`WITH scoped AS(
+-   SELECT m.*,m.metric_at AT TIME ZONE $1 AS happened,
+-    o.accepted_at IS NOT NULL AS sent, m.direction='inbound' AND (m.channel='WHATSAPP' OR em.classification='human') AS reply
+-   FROM app.channel_message m LEFT JOIN app.message_outbox o ON o.workspace_id=m.workspace_id AND o.message_id=m.id
+-   LEFT JOIN app.email_message em ON em.workspace_id=m.workspace_id AND em.message_id=m.id
+-   WHERE m.workspace_id=$3 AND m.metric_at>=$4 AND m.metric_at<$5
+-   AND ($2::text IS NULL OR EXISTS(SELECT 1 FROM app.channel_message related JOIN app.message_outbox ro ON ro.workspace_id=related.workspace_id AND ro.message_id=related.id JOIN app.cadence_publication cp ON cp.workspace_id=ro.workspace_id AND cp.id=ro.publication_id WHERE related.workspace_id=m.workspace_id AND related.conversation_id=m.conversation_id AND cp.cadence_id=$2))
+-  ) SELECT happened::date::text AS date,count(*) FILTER(WHERE sent AND channel='EMAIL')::int AS email,
+-   count(*) FILTER(WHERE sent AND channel='WHATSAPP')::int AS whatsapp,count(*) FILTER(WHERE reply)::int AS replies,
+-   count(*) FILTER(WHERE state='failed')::int AS failed,count(*) FILTER(WHERE state IN('pending','dispatching'))::int AS pending
+-   FROM scoped GROUP BY happened::date ORDER BY happened::date`,[queryZone,options.cadenceId??null,p.workspaceId,period.from_at,period.to_at])).rows;
+-  const today=period.today;
+-  const total={email:0,whatsapp:0,replies:0,failed:0,pending:0};for(const row of rows)for(const key of Object.keys(total) as (keyof typeof total)[])total[key]+=row[key];
+-  const current=rows.find(row=>row.date===today)??{email:0,whatsapp:0,replies:0,failed:0,pending:0};
+-  const counts=(await c.query(`SELECT
+-   (SELECT count(DISTINCT identity_id)::int FROM app.contact_suppression WHERE workspace_id=$1 AND created_at>=$2 AND created_at<$3) AS optouts,
+-   (SELECT count(*)::int FROM app.email_bounce WHERE workspace_id=$1 AND created_at>=$2 AND created_at<$3) AS bounces`,[p.workspaceId,period.from_at,period.to_at])).rows[0];
+-  return {...total,period:{timezone,from:period.from_at.toISOString(),to:period.to_at.toISOString()},sent:total.email+total.whatsapp,optouts:options.cadenceId?0:counts.optouts,bounces:options.cadenceId?0:counts.bounces,today:{email:current.email,whatsapp:current.whatsapp,replies:current.replies,failed:current.failed,pending:current.pending},series:rows.map(row=>({date:row.date,sent:row.email+row.whatsapp,replies:row.replies})),tracking:{opens:null,clicks:null}};
+- });
++ const timezone=await withWorkspaceTransaction(p,async c=>(await c.query("SELECT coalesce(payload->>'timezone','America/Sao_Paulo') zone FROM app.workspace_preferences")).rows[0]?.zone??'America/Sao_Paulo');
++ let period;try{period=reportPeriodForDays(options.days,timezone);}catch{throw new AppError(422,'Revise o fuso horário do workspace.');}
++ const zero={email:0,whatsapp:0,replies:0,failed:0,pending:0};let report;
++ try{report=await readReport(p,{view:'dashboard',...period,...(options.cadenceId?{cadenceId:options.cadenceId}:{})});}catch(e){if(!(e instanceof AppError)||e.status!==404||!options.cadenceId)throw e;return{...zero,sent:0,bounces:0,optouts:0,period,today:{...zero},series:[],tracking:{opens:null,clicks:null}};}
++ const total=report.totals,today=report.series.find(d=>d.date===localDateAt(new Date().toISOString(),timezone))?.values??zero;
++ return{period,sent:total.sent??0,email:total.email??0,whatsapp:total.whatsapp??0,replies:total.replies??0,failed:total.failed??0,pending:total.pending??0,optouts:total.optouts??0,bounces:total.bounces??0,today:{email:today.email??0,whatsapp:today.whatsapp??0,replies:today.replies??0,failed:today.failed??0,pending:today.pending??0},series:report.series.map(d=>({date:d.date,sent:d.values.sent??0,replies:d.values.replies??0})),tracking:{opens:null,clicks:null}};
+ }
+diff --git a/src/server/operations/projections.ts b/src/server/operations/projections.ts
+new file mode 100644
+index 0000000..01a3ec0
+--- /dev/null
++++ b/src/server/operations/projections.ts
+@@ -0,0 +1,13 @@
++import 'server-only';
++import type {PoolClient} from 'pg';import type {Principal} from '../../domain/workspace.ts';
++import {parseReportQuery,reportSqlTimezone,type ReportQuery} from '../../domain/reporting.ts';
++import {withWorkspaceTransaction} from '../db/transaction.ts';import {AppError} from '../errors.ts';
++export async function authorizeReport(c:PoolClient,p:Principal){const session=(await c.query('SELECT app.lock_channel_pilot_session($1) value',[p.sessionId])).rows[0].value;if(session?.workspaceId!==p.workspaceId)throw new AppError(403,'A sessão do relatório mudou ou venceu.');}
++export async function ensureReportProjection(c:PoolClient,q:ReportQuery,force=false):Promise<{period:string;revision:number;asOf:string}>{
++ const result=(await c.query('SELECT app.ensure_report_projection($1,$2,$3,$4,$5) value',[q.from,q.to,reportSqlTimezone(q.timezone),q.cadenceId??null,force])).rows[0].value;return{...result,revision:Number(result.revision),asOf:new Date(result.asOf).toISOString()};
++}
++export async function rebuildReportProjection(p:Principal,input:{from:string;to:string}):Promise<{checkpoint:string;rows:number}>{
++ let q:ReportQuery;try{q=parseReportQuery({view:'dashboard',...input,timezone:'UTC'});}catch{throw new AppError(422,'Período inválido para reconstrução.');}
++ const to=new Date(Math.min(Date.parse(q.to),Date.parse(q.from)+31*86400000)).toISOString();
++ return withWorkspaceTransaction(p,async c=>{await authorizeReport(c,p);const role=(await c.query('SELECT app.current_role() role')).rows[0].role;if(!['owner','admin'].includes(role))throw new AppError(403,'Somente administradores reconstroem projeções.');const receipt=await ensureReportProjection(c,{...q,to},true);const rows=Number((await c.query("SELECT count(*) n FROM app.report_daily_projection WHERE projection_version='reports-v1' AND period=$1",[receipt.period])).rows[0].n);return{checkpoint:to,rows};});
++}
+diff --git a/src/server/operations/report-http.ts b/src/server/operations/report-http.ts
+new file mode 100644
+index 0000000..525342c
+--- /dev/null
++++ b/src/server/operations/report-http.ts
+@@ -0,0 +1,8 @@
++import {requirePrincipal} from '../auth/principal.ts';import {AppError,errorResponse} from '../errors.ts';import {readReport,readReportDetail} from './reports.ts';import type {ReportQuery} from '../../domain/reporting.ts';
++export async function reportRequest(request:Request,id?:string){
++ if(request.method!=='GET')return new Response(null,{status:405,headers:{allow:'GET','cache-control':'no-store'}});
++ try{const p=await requirePrincipal(request.headers),expected=request.headers.get('x-cadence-workspace');if(expected&&expected!==p.workspaceId)throw new AppError(409,'O workspace mudou. Atualize o relatório.','WORKSPACE_CHANGED');
++  const q=new URL(request.url).searchParams;if([...q.keys()].some(k=>!['view','from','to','timezone','cadenceId','cursor','metric'].includes(k))||[...new Set(q.keys())].some(k=>q.getAll(k).length!==1))throw new AppError(422,'Filtros de relatório inválidos.');
++  const input=Object.fromEntries(q.entries()) as unknown as ReportQuery;const result=id?await readReportDetail(p,id,input):await readReport(p,input);return Response.json(result,{headers:{'cache-control':'no-store','x-report-checkpoint':result.checkpoint}});
++ }catch(e){return errorResponse(e);}
++}
+diff --git a/src/server/operations/reports.ts b/src/server/operations/reports.ts
+new file mode 100644
+index 0000000..1eac877
+--- /dev/null
++++ b/src/server/operations/reports.ts
+@@ -0,0 +1,30 @@
++import 'server-only';
++import {z} from 'zod';import type {Principal} from '../../domain/workspace.ts';
++import {parseReportQuery,reportMetricDefinitions,reportRate,reportSqlTimezone,type ReportQuery,type ReportView,type ReportMetric,type ReportItem} from '../../domain/reporting.ts';
++import {withWorkspaceTransaction} from '../db/transaction.ts';import {AppError} from '../errors.ts';import {authorizeReport,ensureReportProjection} from './projections.ts';import {hashValue} from '../prospecting/review.ts';
++const cursorSchema=z.strictObject({basis:z.string().regex(/^[a-f0-9]{64}$/),at:z.iso.datetime(),id:z.string().min(1).max(200)});
++const values=(raw:Record<string,unknown>)=>{const v=Object.fromEntries(Object.entries(raw).filter(([k,n])=>!['cadenceId','publicationId','stepIndex'].includes(k)&&(n===null||typeof n==='number'))) as Record<string,number|null>;return{...v,replyRate:reportRate(v.responders,v.recipients)};};
++function href(row:{kind:string;channel:string|null;ref_id:string|null}){if(row.kind==='execution')return'/executions/'+encodeURIComponent(row.ref_id??'');if(row.kind==='lead')return'/leads/'+encodeURIComponent(row.ref_id??'');return row.ref_id?'/messages/'+(row.channel==='EMAIL'?'email':'whatsapp')+'?conversationId='+encodeURIComponent(row.ref_id):'/contacts';}
++export async function readReport(p:Principal,raw:ReportQuery):Promise<ReportView>{
++ let q:ReportQuery;try{q=parseReportQuery(raw);}catch{throw new AppError(422,'Revise o período, fuso e filtros do relatório.');}
++ return withWorkspaceTransaction(p,async c=>{
++  await authorizeReport(c,p);if(q.cadenceId&&!(await c.query('SELECT id FROM app.cadence WHERE id=$1',[q.cadenceId])).rowCount)throw new AppError(404,'Cadência não encontrada.');
++  const receipt=await ensureReportProjection(c,q),checkpoint=receipt.revision+':'+receipt.period,metric=q.metric??(q.view==='executions'?'executions':q.view==='funnel'?'leads':'sent'),basis=hashValue({workspaceId:p.workspaceId,...q,cursor:undefined,metric,checkpoint});let cursor:z.infer<typeof cursorSchema>|null=null;
++  if(q.cursor){try{cursor=cursorSchema.parse(JSON.parse(Buffer.from(q.cursor,'base64url').toString()));}catch{throw new AppError(422,'Cursor de relatório inválido.');}if(cursor.basis!==basis)throw new AppError(409,'O relatório mudou; atualize a primeira página.','REPORT_CURSOR_CHANGED');}
++  const rows=(await c.query("SELECT key,date::text,values FROM app.report_daily_projection WHERE projection_version='reports-v1' AND period=$1 ORDER BY key",[receipt.period])).rows;
++  const totals=values(rows.find(r=>r.key==='totals')?.values??{}),series=rows.filter(r=>r.key.startsWith('series:')).map(r=>({date:r.date,values:values(r.values)}));
++  const dates=(await c.query("SELECT d::date::text date FROM generate_series(($1::timestamptz AT TIME ZONE $3)::date,(($2::timestamptz-interval '1 microsecond') AT TIME ZONE $3)::date,interval '1 day')d",[q.from,q.to,reportSqlTimezone(q.timezone)])).rows;
++  const empty=Object.fromEntries(Object.entries(totals).map(([k,v])=>[k,v===null?null:0]));const completeSeries=dates.map(d=>series.find(s=>s.date===d.date)??{date:d.date,values:empty});
++  const facts=(await c.query('SELECT * FROM app.report_facts($1,$2,$3) WHERE metric=$4 AND ($5::timestamptz IS NULL OR (happened_at,id)<($5::timestamptz,$6::text)) ORDER BY happened_at DESC,id DESC LIMIT 51',[q.from,q.to,q.cadenceId??null,metric,cursor?.at??null,cursor?.id??null])).rows;
++  const items:ReportItem[]=facts.slice(0,50).map(r=>({id:r.id,kind:r.kind,occurredAt:r.happened_at.toISOString(),channel:r.channel,cadenceId:r.cadence_id,stepIndex:r.step_index,state:r.state,href:href(r)})),last=items.at(-1);
++  const cadenceRows=rows.filter(r=>r.key.startsWith('cadence:')&&r.values.cadenceId),ids=cadenceRows.map(r=>r.values.cadenceId),names=(await c.query("SELECT id,left(payload->>'name',200) name FROM app.cadence WHERE id=ANY($1::text[])",[ids])).rows;
++  const cadences=cadenceRows.map(r=>({id:r.values.cadenceId,name:names.find(n=>n.id===r.values.cadenceId)?.name??'Cadência arquivada',values:values(r.values)}));
++  const steps=rows.filter(r=>r.key.startsWith('step:')&&r.values.cadenceId&&r.values.publicationId&&Number.isInteger(r.values.stepIndex)).map(r=>({cadenceId:r.values.cadenceId,publicationId:r.values.publicationId,stepIndex:r.values.stepIndex,values:values(r.values)}));
++  const stock=(await c.query(`SELECT count(*)::int "baseLeads",count(*) FILTER(WHERE l.payload->>'qualification'='qualified')::int "baseQualified",(SELECT count(*)::int FROM app.cadence WHERE payload->>'archived' IS DISTINCT FROM 'true') cadences,(SELECT count(*)::int FROM app.automation WHERE payload->>'archived' IS DISTINCT FROM 'true') automations,(SELECT count(DISTINCT cadence_id)::int FROM app.cadence_publication WHERE state='active') "activeCadences" FROM app.lead l WHERE ($1::text IS NULL OR EXISTS(SELECT 1 FROM app.cadence_enrollment e JOIN app.cadence_publication cp ON cp.workspace_id=e.workspace_id AND cp.id=e.publication_id WHERE e.workspace_id=l.workspace_id AND e.lead_id=l.id AND cp.cadence_id=$1))`,[q.cadenceId??null])).rows[0];
++  Object.assign(totals,stock,{commercialCredits:null});
++  const jobs=(await c.query(`SELECT coalesce(sum((counts->>'inserted')::numeric),0)::int inserted,coalesce(sum((counts->>'found')::numeric),0)::int found,coalesce(sum((counts->>'pending')::numeric),0)::int pending FROM app.prospecting_job WHERE created_at>=$1 AND created_at<$2 AND $3::text IS NULL`,[q.from,q.to,q.cadenceId??null])).rows[0];Object.assign(totals,{executionInserted:jobs.inserted,executionFound:jobs.found,executionPending:jobs.pending});
++  const recentExecutions=(await c.query('SELECT id,kind,state,created_at,counts FROM app.prospecting_job WHERE created_at>=$1 AND created_at<$2 AND $3::text IS NULL ORDER BY created_at DESC,id DESC LIMIT 3',[q.from,q.to,q.cadenceId??null])).rows.map(j=>({id:j.id,kind:j.kind,state:j.state,createdAt:j.created_at.toISOString(),counts:j.counts}));
++  return{period:{from:q.from,to:q.to,timezone:q.timezone},totals,series:completeSeries,items,nextCursor:facts.length>50&&last?Buffer.from(JSON.stringify({basis,at:last.occurredAt,id:last.id})).toString('base64url'):null,asOf:receipt.asOf,stale:false,checkpoint,definitions:reportMetricDefinitions,cadences,steps,recentExecutions,attribution:'last-preceding-accepted-message'};
++ });
++}
++export async function readReportDetail(p:Principal,id:string,q:ReportQuery){if(!Object.hasOwn(reportMetricDefinitions,id))throw new AppError(404,'Indicador não encontrado.');return readReport(p,{...q,metric:id as ReportMetric});}
+diff --git a/src/server/operations/repository.ts b/src/server/operations/repository.ts
+index 8a9f730..4a05c39 100644
+--- a/src/server/operations/repository.ts
++++ b/src/server/operations/repository.ts
+@@ -1,11 +1,12 @@
+ import 'server-only';
++export {readReport,readReportDetail} from './reports.ts';
+ import {z} from 'zod';
+ import type {Principal} from '../../domain/workspace.ts';
+ import type {OperationEventsPage} from '../../domain/operation-events.ts';
+ import {withWorkspaceTransaction} from '../db/transaction.ts';
+ import {AppError} from '../errors.ts';
+ const schema=z.strictObject({cursor:z.string().min(1).max(512).optional(),limit:z.number().int().min(1).max(100).optional()});
+ const cursorSchema=z.strictObject({workspaceId:z.string().min(1).max(120),sequence:z.string().regex(/^(0|[1-9][0-9]{0,18})$/).refine(s=>BigInt(s)<=9223372036854775807n)});
+ const encode=(workspaceId:string,sequence:string)=>Buffer.from(JSON.stringify({workspaceId,sequence})).toString('base64url');
+ export async function readOperationEvents(p:Principal,input:{cursor?:string;limit?:number}):Promise<OperationEventsPage>{
+  const parsed=schema.safeParse(input);if(!parsed.success)throw new AppError(422,'Consulta de eventos inválida.');
+diff --git a/tests/06c2-reconciled-reports.test.ts b/tests/06c2-reconciled-reports.test.ts
+new file mode 100644
+index 0000000..79afcc8
+--- /dev/null
++++ b/tests/06c2-reconciled-reports.test.ts
+@@ -0,0 +1,22 @@
++import test from 'node:test';import assert from 'node:assert/strict';
++import {supportedMetric,reportRate,parseReportQuery,reportPeriodForDays,reportMetricDefinitions,reportPeriodFromSelection} from '../src/domain/reporting.ts';
++test('unsupported telemetry remains null and invalid measured values cannot become counters',()=>{
++ assert.equal(supportedMetric({supported:false,value:0}),null);assert.equal(supportedMetric({supported:true,value:0}),0);assert.equal(supportedMetric({supported:true,value:12}),12);
++ for(const value of [NaN,Infinity,-1])assert.throws(()=>supportedMetric({supported:true,value}));
++ assert.equal(reportRate(0,0),null);assert.equal(reportRate(1,4),25);assert.equal(reportRate(null,4),null);assert.equal(reportRate(4,3),null);
++ assert.equal(reportMetricDefinitions.sent.unit,'unique-message');assert.equal(reportMetricDefinitions.replies.unit,'human-inbound-message');
++});
++test('custom date selection queries both inclusive local dates across DST instead of falling back to thirty days',()=>{
++ assert.deepEqual(reportPeriodFromSelection('2026-03-07/2026-03-08','America/New_York'),{from:'2026-03-07T05:00:00.000Z',to:'2026-03-09T04:00:00.000Z',timezone:'America/New_York'});
++ for(const value of ['Personalizado','2026-02-31/2026-03-02','2026-03-09/2026-03-08','2026-01-01/2026-10-01'])assert.throws(()=>reportPeriodFromSelection(value,'UTC'));
++});
++test('report periods require absolute bounded instants and validate timezone filters',()=>{
++ const query={view:'dashboard',from:'2026-10-01T00:00:00Z',to:'2026-10-29T00:00:00Z',timezone:'America/Sao_Paulo'};assert.equal(parseReportQuery(query).from,'2026-10-01T00:00:00.000Z');
++ for(const change of [{from:'2026-10-01'},{to:query.from},{to:'2027-10-01T00:00:00Z'},{timezone:'invalid/zone'},{view:'arbitrary'},{secret:'no'}])assert.throws(()=>parseReportQuery({...query,...change}));
++});
++test('local calendar days handle DST forward/back and fixed offset sign correctly',()=>{
++ assert.deepEqual(reportPeriodForDays(1,'America/New_York','2026-03-08T12:00:00Z'),{from:'2026-03-08T05:00:00.000Z',to:'2026-03-09T04:00:00.000Z',timezone:'America/New_York'});
++ assert.deepEqual(reportPeriodForDays(1,'America/New_York','2026-11-01T12:00:00Z'),{from:'2026-11-01T04:00:00.000Z',to:'2026-11-02T05:00:00.000Z',timezone:'America/New_York'});
++ assert.deepEqual(reportPeriodForDays(1,'+03:00','2026-10-29T00:30:00Z'),{from:'2026-10-28T21:00:00.000Z',to:'2026-10-29T21:00:00.000Z',timezone:'+03:00'});
++ assert.throws(()=>reportPeriodForDays(0,'UTC'));assert.throws(()=>reportPeriodForDays(94,'UTC'));
++});
+diff --git a/tests/integration/06c2-reconciled-reports.test.ts b/tests/integration/06c2-reconciled-reports.test.ts
+new file mode 100644
+index 0000000..83d5800
+--- /dev/null
++++ b/tests/integration/06c2-reconciled-reports.test.ts
+@@ -0,0 +1,64 @@
++import test,{after,beforeEach} from 'node:test';import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';
++import {getPools} from '../../src/server/db/pool.ts';import {closeDispatchPool} from '../../src/server/messaging/worker-db.ts';import {closeIngressPool} from '../../src/server/channels/ingress-db.ts';
++import {multiFixture} from './multichannel-helpers.ts';import {testAdmin} from './mail-helpers.ts';import {resetRateLimits} from './helpers.ts';import {prospectingUser} from './prospecting-helpers.ts';
++import {preparePublication,confirmPublication} from '../../src/server/messaging/publication.ts';import {materializeDueMessages} from '../../src/server/messaging/outbox.ts';import {claimDispatch} from '../../src/server/messaging/lease.ts';import {dispatchOne} from '../../src/server/messaging/dispatch.ts';
++import {claimMailboxSync} from '../../src/server/mail/sync/repository.ts';import {ingestMailBatch} from '../../src/server/mail/ingestion.ts';import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
++import {readReport,readReportDetail} from '../../src/server/operations/reports.ts';import {rebuildReportProjection} from '../../src/server/operations/projections.ts';import type {MailAdapter} from '../../src/server/mail/providers/contracts.ts';import type {MailMessage} from '../../src/domain/mail.ts';
++import {reportRequest} from '../../src/server/operations/report-http.ts';
++beforeEach(resetRateLimits);after(async()=>{await getPools().close();await closeDispatchPool();await closeIngressPool();});
++const query=(cadenceId?:string)=>({view:'dashboard' as const,from:new Date(Date.now()-86400000).toISOString(),to:new Date(Date.now()+86400000).toISOString(),timezone:'UTC',...(cadenceId?{cadenceId}:{})});
++async function fixture(){const f=await multiFixture(true),review=await preparePublication(f.u.p,f.input);assert.deepEqual(review.blockers,[]);const publication=await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token,material:review.material});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100,f.u.p.workspaceId);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);const m=await testAdmin(async c=>(await c.query('SELECT em.*,cm.conversation_id FROM app.email_message em JOIN app.channel_message cm ON cm.workspace_id=em.workspace_id AND cm.id=em.message_id WHERE em.message_id=$1',[lease.messageId])).rows[0]);return{...f,publication,lease,message:m,now};}
++const adapter=(sendOnce:MailAdapter['sendOnce']):MailAdapter=>({verify:async()=>{throw Error('not used');},readBatch:async()=>{throw Error('not used');},findSent:async()=>null,sendOnce});
++const incoming=(f:Awaited<ReturnType<typeof fixture>>,overrides:Partial<MailMessage>={}):MailMessage=>({remoteId:randomUUID(),remoteThreadId:null,rfcMessageId:'<'+randomUUID()+'@example.net>',inReplyTo:f.message.rfc_message_id,references:[f.message.rfc_message_id],from:f.lead.email!,to:[f.mailbox.address!],subject:'Re: Olá',text:'Podemos conversar',receivedAt:new Date().toISOString(),direction:'inbound',classification:'human',attachments:[],truncated:false,...overrides});
++async function ingest(f:Awaited<ReturnType<typeof fixture>>,messages:MailMessage[]){await testAdmin(c=>c.query("UPDATE app.email_sync_cursor SET next_at=clock_timestamp()-interval '1 second' WHERE mailbox_id=$1",[f.mailbox.id]));const leases=await claimMailboxSync(new Date(Date.now()+1000).toISOString(),{workspaceId:f.u.p.workspaceId,mailboxId:f.mailbox.id,limit:1});assert.equal(leases.length,1);await ingestMailBatch(leases[0],{messages,next:{kind:'imap',path:'INBOX',uidValidity:'1',lastUid:1,watermark:new Date().toISOString()},complete:true,gap:false});}
++test('accepted messages, real inbound classification and correlated DSN reconcile with the identical drilldown',async()=>{
++ const f=await fixture(),q=query(f.cadence.id);assert.equal((await readReport(f.u.p,q)).totals.sent,0);
++ let calls=0;await dispatchOne(f.lease,{now:()=>f.now,mailAdapter:adapter(async()=>{calls++;return{kind:'accepted',remoteId:'report-'+randomUUID(),acceptedAt:new Date().toISOString()};})});await dispatchOne(f.lease,{now:()=>f.now,mailAdapter:adapter(async()=>{calls++;throw Error('duplicate');})});assert.equal(calls,1);
++ const human=incoming(f),automatic=incoming(f,{headers:{'auto-submitted':'auto-replied'}});await ingest(f,[human,automatic]);await ingest(f,[human,automatic]);
++ const dsn=incoming(f,{from:'mailer-daemon@example.org',inReplyTo:null,references:[],deliveryStatus:'Original-Message-ID: '+f.message.rfc_message_id+'\r\nFinal-Recipient: rfc822; '+f.lead.email+'\r\nAction: failed\r\nStatus: 5.1.1'});await ingest(f,[dsn]);await ingest(f,[dsn]);
++ const report=await readReport(f.u.p,q);assert.equal(report.totals.sent,1);assert.equal(report.totals.email,1);assert.equal(report.totals.replies,1);assert.equal(report.totals.bounces,1);assert.equal(report.totals.optouts,0);assert.equal(report.totals.opens,null);assert.equal(report.stale,false);assert.equal(report.totals.leads,1);assert.equal(report.totals.qualified,1);assert.equal((await readReportDetail(f.u.p,'leads',q)).items.length,1);assert.equal(report.totals.baseLeads,1);assert.equal(report.totals.cadences,1);assert.equal(report.totals.commercialCredits,null);
++ for(const metric of ['sent','replies','bounces'] as const){const detail=await readReportDetail(f.u.p,metric,q);assert.equal(detail.items.length,1);assert.equal(detail.totals[metric],detail.items.length);assert.equal(detail.nextCursor,null);assert.ok(!JSON.stringify(detail).includes('Podemos conversar'));}
++ const other=await prospectingUser();await assert.rejects(readReport(other.p,q),(e:any)=>e.status===404);assert.equal((await readReport(other.p,query())).totals.sent,0);
++});
++test('report HTTP authenticates scope and rejects invalid calendar dates instead of normalizing them',async()=>{
++ const f=await prospectingUser(),q=query(),url='http://127.0.0.1:3210/api/reports?'+new URLSearchParams(q);
++ assert.equal((await reportRequest(new Request(url))).status,401);const headers=new Headers(f.headers);headers.set('x-cadence-workspace','other');assert.equal((await reportRequest(new Request(url,{headers}))).status,409);
++ assert.equal((await reportRequest(new Request(url+'&secret=private',{headers:f.headers}))).status,422);assert.equal((await reportRequest(new Request(url+'&view=funnel',{headers:f.headers}))).status,422);
++ const invalid='http://127.0.0.1:3210/api/reports?'+new URLSearchParams({...q,from:'2026-02-31T00:00:00Z',to:'2026-03-05T00:00:00Z'});assert.equal((await reportRequest(new Request(invalid,{headers:f.headers}))).status,422);
++ const ok=await reportRequest(new Request(url,{headers:f.headers}));assert.equal(ok.status,200);assert.equal(ok.headers.get('cache-control'),'no-store');const data=await ok.json();assert.equal(data.totals.opens,null);assert.ok(!JSON.stringify(data).includes(f.cookie));assert.equal((await reportRequest(new Request(url,{headers:f.headers,method:'POST'}))).status,405);
++ await testAdmin(c=>c.query('DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));assert.equal((await reportRequest(new Request(url,{headers:f.headers}))).status,403);
++});
++test('email optout is attributed to its cadence, excludes bounce suppression and deduplicates repeats',async()=>{
++  const f=await fixture();await dispatchOne(f.lease,{now:()=>f.now,mailAdapter:adapter(async()=>({kind:'accepted',remoteId:randomUUID(),acceptedAt:new Date().toISOString()}))});const optout=incoming(f,{text:'SAIR'});await ingest(f,[optout]);await ingest(f,[optout]);const q=query(f.cadence.id),r=await readReport(f.u.p,q);assert.equal(r.totals.optouts,1);assert.equal(r.totals.bounces,0);const detail=await readReportDetail(f.u.p,'optouts',q);assert.equal(detail.items.length,1);assert.equal(detail.items[0].channel,'EMAIL');assert.match(detail.items[0].href,/^\/messages\/email\?/);
++});
++test('timeout and proven retry count one message state without inventing acceptance',async()=>{
++ for(const uncertain of [true,false]){const f=await fixture();await dispatchOne(f.lease,{now:()=>f.now,mailAdapter:adapter(async()=>uncertain?{kind:'uncertain',code:'LOST'}:{kind:'not_accepted',code:'SMTP_451',retryable:true,retryAfterMs:30000})});const q=query(f.cadence.id),r=await readReport(f.u.p,q);assert.equal(r.totals.sent,0);assert.equal(r.totals.failed,0);assert.equal(r.totals.pending,uncertain?0:1);assert.equal(r.totals.uncertain,uncertain?1:0);}
++});
++test('late events and repeat rebuilds match authoritative rows without changing source history',async()=>{
++ const f=await fixture(),q=query(f.cadence.id),before=await readReport(f.u.p,q);assert.equal(before.totals.pending,1);await dispatchOne(f.lease,{now:()=>f.now,mailAdapter:adapter(async()=>({kind:'accepted',remoteId:randomUUID(),acceptedAt:new Date().toISOString()}))});const after=await readReport(f.u.p,q);assert.equal(after.totals.pending,0);assert.equal(after.totals.sent,1);assert.notEqual(after.checkpoint,before.checkpoint);
++ const first=await rebuildReportProjection(f.u.p,{from:q.from,to:q.to}),second=await rebuildReportProjection(f.u.p,{from:q.from,to:q.to});assert.equal(first.rows,second.rows);assert.equal(first.checkpoint,second.checkpoint);assert.deepEqual((await readReport(f.u.p,q)).totals,after.totals);
++ const real=await testAdmin(async c=>(await c.query('SELECT count(*)::int n FROM app.message_outbox WHERE workspace_id=$1 AND accepted_at IS NOT NULL',[f.u.p.workspaceId])).rows[0].n);assert.equal(real,1);
++ await assert.rejects(withWorkspaceTransaction(f.u.p,c=>c.query("UPDATE app.report_daily_projection SET values='{\"sent\":999}'")));
++});
++test('acceptance belongs to its provider period even when the queued message was created earlier',async()=>{
++ const f=await fixture();await dispatchOne(f.lease,{now:()=>f.now,mailAdapter:adapter(async()=>({kind:'accepted',remoteId:randomUUID(),acceptedAt:new Date().toISOString()}))});
++ await testAdmin(c=>c.query("UPDATE app.channel_message SET created_at=clock_timestamp()-interval '70 days' WHERE id=$1",[f.lease.messageId]));
++ const q=query(f.cadence.id),r=await readReport(f.u.p,q);assert.equal(r.totals.sent,1);assert.equal((await readReportDetail(f.u.p,'sent',q)).items.length,1);
++});
++test('UTC absolute period with local grouping handles empty boundaries and tenant-scoped cursors',async()=>{
++ const f=await prospectingUser(),list=randomUUID();await testAdmin(c=>c.query('INSERT INTO app.list VALUES($1,$2,$3)',[f.p.workspaceId,list,'Period QA']));
++ await testAdmin(async c=>{for(const [n,createdAt]of ['2026-03-08T04:59:59.999Z','2026-03-08T05:00:00.000Z','2026-03-09T03:59:59.999Z','2026-03-09T04:00:00.000Z'].entries()){const id=randomUUID();await c.query('INSERT INTO app.lead VALUES($1,$2,$3,$4)',[f.p.workspaceId,id,list,{id,listId:list,name:'Period '+n,createdAt,qualification:'qualified',source:'MANUAL'}]);}});
++ const q={view:'funnel' as const,from:'2026-03-08T05:00:00Z',to:'2026-03-09T04:00:00Z',timezone:'America/New_York'},r=await readReport(f.p,q);assert.equal(r.totals.leads,2);assert.equal(r.totals.qualified,2);assert.equal(r.series.find(d=>d.date==='2026-03-08')?.values.leads,2);assert.equal((await readReport(f.p,{...q,from:'2025-03-08T05:00:00Z',to:'2025-03-09T04:00:00Z'})).totals.leads,0);
++ const other=await prospectingUser();assert.equal((await readReport(other.p,q)).totals.leads,0);
++});
++test('revocation and foreign SQL access cannot read or rebuild another workspace projection',async()=>{
++ const f=await prospectingUser(),other=await prospectingUser(),q=query();await readReport(f.p,q);assert.equal((await withWorkspaceTransaction(other.p,c=>c.query('SELECT * FROM app.report_daily_projection WHERE workspace_id=$1',[f.p.workspaceId]))).rowCount,0);
++ await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));await assert.rejects(rebuildReportProjection(f.p,{from:q.from,to:q.to}),(e:any)=>e.status===403);
++ await testAdmin(c=>c.query('DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));await assert.rejects(readReport(f.p,q),(e:any)=>e.status===403);
++});
++test('ten thousand leads and operational events use bounded warm reads and cursor pages',async()=>{
++ const f=await prospectingUser(),list=randomUUID();await testAdmin(async c=>{await c.query('INSERT INTO app.list VALUES($1,$2,$3)',[f.p.workspaceId,list,'Large QA']);await c.query(`INSERT INTO app.lead SELECT $1,'report-lead-'||n,$2,jsonb_build_object('id','report-lead-'||n,'listId',$2::text,'name','Synthetic company','qualification',CASE WHEN n%5=0 THEN 'qualified' ELSE 'new' END,'source','MANUAL','createdAt',clock_timestamp()) FROM generate_series(1,10000) n`,[f.p.workspaceId,list]);await c.query("INSERT INTO app.operation_event(workspace_id,sequence,kind,entity_id,state) SELECT $1,n+(SELECT coalesce(max(sequence),0) FROM app.operation_event WHERE workspace_id=$1),'job','same-job','completed' FROM generate_series(1,10000)n",[f.p.workspaceId]);await c.query('UPDATE app.operation_head SET sequence=(SELECT max(sequence) FROM app.operation_event WHERE workspace_id=$1) WHERE workspace_id=$1',[f.p.workspaceId]);await c.query('ANALYZE app.lead');});
++ const q={...query(),view:'funnel' as const},initial=await readReport(f.p,q);assert.equal(initial.totals.leads,10000);assert.equal(initial.totals.qualified,2000);assert.equal(initial.items.length,50);assert.ok(initial.nextCursor);assert.ok(Buffer.byteLength(JSON.stringify(initial))<50000);
++ const next=await readReport(f.p,{...q,cursor:initial.nextCursor!});assert.ok(!next.items.some(i=>initial.items.some(j=>j.id===i.id)));const other=await prospectingUser();await assert.rejects(readReport(other.p,{...q,cursor:initial.nextCursor!}),(e:any)=>e.status===422||e.status===409);
++  const ms=[],url='http://localhost/api/reports?'+new URLSearchParams(q);for(let n=0;n<20;n++){const start=performance.now();const response=await reportRequest(new Request(url,{headers:f.headers}));assert.equal(response.status,200);const body=await response.json();assert.equal(body.totals.leads,10000);ms.push(performance.now()-start);}ms.sort((a,b)=>a-b);const p95=ms[Math.ceil(ms.length*.95)-1];console.log(JSON.stringify({fixture:'10000 leads and10000 repeated operational events; authenticated HTTP handler + real SQL; no external calls',warmP95Ms:Math.round(p95),bytes:Buffer.byteLength(JSON.stringify(initial))}));assert.ok(p95<=250,`warm HTTP p95 ${p95}ms exceeds local250ms target`);
++});

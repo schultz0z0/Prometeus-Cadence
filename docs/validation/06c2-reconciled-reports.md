@@ -1,6 +1,6 @@
 # 06C.2 — Dashboard e relatórios reconciliados
 
-**Execução:** 28–29/10/2026. **Estado:** implementação e verificações locais registradas; revisão final ainda pendente. Não é aceite de produção pública nem de paridade integral com o CadenceFlow.
+**Execução:** 28–29/10/2026. **Estado:** concluído no contrato local/controlado após uma revisão independente e uma passagem de correções. Não é aceite de produção pública nem de paridade integral com o CadenceFlow.
 
 ## Resultado implementado
 
@@ -44,7 +44,7 @@ Transação somente leitura sobre o workspace preexistente do operador; nenhuma 
 
 ## UI, referência e limites
 
-**30 capturas mascaradas**, **24 verificações de rota/viewport**, sem erro JavaScript de página e sem overflow horizontal nos casos observados. Rotas: dashboard, relatórios geral/funil/performance/CRM, execuções/lista/detalhe e relatório de cadência; desktop1920×855,390×844 e320×844. Exercitados: vazio real, histórico parcial persistido, popup de detalhe, período personalizado, datas mantidas durante17s de polling, falha de rede injetada no transporte e recuperação, ciclo deTab/Escape e download real com `null`.
+**38 capturas mascaradas**, **32 verificações de rota/viewport** (incluindo8checks após a revisão), sem erro JavaScript de página e sem overflow horizontal nos casos observados. Rotas: dashboard, relatórios geral/funil/performance/CRM, execuções/lista/detalhe e relatório de cadência; desktop1920×855,390×844 e320×844. Exercitados: vazio real, histórico parcial persistido, popup de detalhe, período personalizado, datas mantidas durante17s de polling, falha de rede injetada no transporte e recuperação, ciclo deTab/Escape e download real com `null`.
 
 [Verificações do navegador](evidence/06c2-reconciled-reports/browser-verification.json), [manifesto das capturas](evidence/06c2-reconciled-reports/screens-manifest.json), [funil desktop](evidence/06c2-reconciled-reports/screens/reports-funnel-1920.png), [detalhe320px](evidence/06c2-reconciled-reports/screens/funnel-detail-320.png).
 
@@ -52,14 +52,18 @@ Comparação com evidências históricas EV-219/227/229/250/254 e capturas parea
 
 ## Persistência e operação
 
-Migrações089/089a/089b aplicadas no banco local. Projeções derivadas com RLS forçada, revisão das fontes, checkpoint confirmado, cache de até128 consultas por workspace e reconstrução limitada a31dias por chamada. Histórico de negócio não é reescrito. Só owner/admin força reconstrução; membros atuais podem ler relatórios.
+Migrações089/089a/089b/089c aplicadas no banco local. Projeções derivadas com RLS forçada, revisão das fontes, checkpoint confirmado, cache de até128 consultas por workspace e reconstrução limitada a31dias por chamada. Histórico de negócio não é reescrito. O serviço/API restringe reconstrução explícita aowner/admin; membros atuais podem ler relatórios. O desvio deNULL na chamadaSQL direta fica documentado como menor em08A, sem ampliar acesso a dados.
 
-O Docker apresentou erro1920 em sockets AF_UNIX ao iniciar pelo contexto do Codex. Diretórios efêmeros de IPC foram preservados com sufixo `.06c2-stale`; volumes, VHDX e configurações não foram apagados. O operador iniciou o Docker manualmente e o motor voltou. Nenhum reset ou mudança de segurança aplicada. Runtime local3210 e seis serviços contínuos conferidos saudáveis; confirmação final no fechamento.
+O Docker apresentou erro1920 em sockets AF_UNIX ao iniciar pelo contexto do Codex. Diretórios efêmeros de IPC foram preservados com sufixo `.06c2-stale`; volumes, VHDX e configurações não foram apagados. O operador iniciou o Docker manualmente e o motor voltou. Nenhum reset ou mudança de segurança aplicada. Runtime local3210 e seis serviços contínuos conferidos saudáveis; confirmados novamente no fechamento (HTTP 200, seis serviços ativos, zero falhas).
 
 ## Cleanup
 
-L018/L020 restauradas; L019 removida. Um rascunho privado sem destinatários foi criado para abrir a aba de relatório e removido por ID exato, após confirmar zero publicações. Dados anteriores preservados, workspace restaurado, sessões da identidade QA dedicada revogadas e navegador próprio fechado. **Zero novos contatos, canais, mensagens, chamadas pagas ou envios externos.** [Prova](evidence/06c2-reconciled-reports/closure.json) e [rodada do detalhe](evidence/06c2-reconciled-reports/detail-closure.json).
+L018/L020/L021 restauradas; L019 removida. Um rascunho privado sem destinatários foi criado para abrir a aba de relatório e removido por ID exato, após confirmar zero publicações. Dados anteriores preservados, workspace restaurado, sessões da identidade QA dedicada revogadas e navegador próprio fechado. **Zero novos contatos, canais, mensagens, chamadas pagas ou envios externos.** [Prova](evidence/06c2-reconciled-reports/closure.json) e [rodada do detalhe](evidence/06c2-reconciled-reports/detail-closure.json), mais [pós-revisão](evidence/06c2-reconciled-reports/postreview-closure.json).
+
+## Revisão final
+
+Uma revisão independente encontrou dois Important: perda de microssegundos no cursor e cards dos canais abrindo a população geral. Ambos corrigidos em uma passagem, com regressões reais:50/120→120/120registros únicos e fixture de publicação/dispatch mista com2e-mails/1WhatsApp e respectivos detalhes. Migração089c mantém métricas específicas de canal sem duplicar o contador geral. [Revisão e dois menores adiados para08A](06c2-reconciled-reports-review.md). Verificação final: **355/355unitários,432/432integrações,11/11focadas**, build/tipos/diff aprovados,38capturas e32checks sem overflow/pageerror. p95HTTP aquecido de **106ms** no ensaio local de10mil leads/eventos, payload de12868bytes. Os dois menores permanecem em08A; não houve segunda revisão.
 
 ## Próximo pacote
 
-Após o aceite/revisão final deste pacote: **06C.3 — notificações, preferências e resumos**. Os gates de piloto real de fontes/modelos e liberação pública continuam nos pacotes próprios.
+Com o aceite local/controlado registrado: **06C.3 — notificações, preferências e resumos**. Os gates de piloto real de fontes/modelos e liberação pública continuam nos pacotes próprios.

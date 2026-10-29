@@ -170,3 +170,7 @@ Jornada concluída no contrato local/controlado;346unitários/402integrações/1
 ## Continuidade06IA-H —28/10/2026
 
 351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. Avaliador/CLI entregues localmente; piloto real de fontes/modelos permanece pendente e obrigatório para aceite empírico/publicação. [Aceite](../../validation/06iah-intelligence-homologation.md). Próximo06C.2, sem alterar o escopo07/08.
+
+## Aceite06C.2 —29/10/2026
+
+Dashboard/relatórios/execuções reconciliados concluídos no contrato local/controlado:355unitários/432integrações/11focadas,38capturas mascaradas e32checks desktop/mobile, uma revisão independente e dois Important corrigidos com RED→GREEN. Curadoria somente leitura do histórico real3aceites/23respostas humanas, sem novos envios/chamadas pagas. Dois menores→08A: limite93datas/DST eNULLforceSQL. [Aceite](../../validation/06c2-reconciled-reports.md). Próximo **06C.3 — notificações, preferências e resumos**. Sem aceite100% da referência nem SLO público.

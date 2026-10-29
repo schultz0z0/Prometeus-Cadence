@@ -1,30 +1,54 @@
 {
   "date": "2026-10-29",
-  "phase": "pre-final-review",
+  "phase": "completed-local-controlled",
   "unit": {
     "tests": 355,
     "pass": 355,
     "fail": 0
   },
   "integration": {
-    "tests": 430,
-    "pass": 430,
+    "tests": 432,
+    "pass": 432,
     "fail": 0
   },
   "focused": {
-    "tests": 9,
-    "pass": 9,
+    "tests": 11,
+    "pass": 11,
     "fail": 0
   },
-  "build": "production webpack build exited0 after detail polling fix",
+  "performance": {
+    "fixture": "10000 leads and10000 repeated operational events; authenticated HTTP handler + real SQL; no external calls",
+    "warmP95Ms": 106,
+    "bytes": 12868
+  },
+  "build": "production webpack exited0 after both Important fixes",
   "types": "post-build tsc exited0",
   "migrations": [
     "089",
     "089a",
-    "089b"
+    "089b",
+    "089c"
   ],
-  "realData": "real-data-curation.json; no new external calls",
-  "browser": "browser-verification.json;30masked captures/24route checks; detail-polling.json RED->GREEN",
-  "cleanup": "closure.json and detail-closure.json; L018/L020restored and L019removed",
-  "publicSlo": false
+  "independentReviews": 1,
+  "importantFindings": 2,
+  "importantFixed": 2,
+  "deferredMinors": 2,
+  "deferredMinorOwner": "08A",
+  "realData": "real-data-curation.json; read-only3accepted/23human/0bounce/0optout/1lead",
+  "browser": {
+    "screenshots": 38,
+    "routeChecks": 32,
+    "pageErrors": 0,
+    "overflow": 0,
+    "responseFixtures": 0
+  },
+  "cleanup": "L018/L020/L021restored and L019removed; exact owned draft removed; all QA sessions revoked",
+  "runtime": {
+    "localhost": 200,
+    "lanes": 6,
+    "alive": true,
+    "failures": 0
+  },
+  "publicSlo": false,
+  "fullReferenceParity": false
 }

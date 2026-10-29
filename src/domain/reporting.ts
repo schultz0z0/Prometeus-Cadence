@@ -2,6 +2,8 @@ import {z} from 'zod';
 import {localDateAt,wallTimeToUtc} from './schedule.ts';
 export const reportMetricDefinitions={
  sent:{unit:'unique-message',description:'Uma mensagem aceita pelo provedor; tentativas não são somadas.'},
+ email:{unit:'unique-message',description:'Uma mensagem de e-mail aceita pelo provedor no período; exclui WhatsApp e tentativas.'},
+ whatsapp:{unit:'unique-message',description:'Uma mensagem de WhatsApp aceita pelo provedor no período; exclui e-mail e tentativas.'},
  replies:{unit:'human-inbound-message',description:'Mensagem recebida humana; DSN e resposta automática são excluídos.'},
  failed:{unit:'unique-message',description:'Mensagem em falha definitiva; incerteza e retry não são falhas definitivas.'},
  pending:{unit:'unique-message',description:'Mensagem atualmente na fila ou em transmissão, criada no período.'},

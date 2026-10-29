@@ -1,8 +1,8 @@
 {
   "version": 1,
   "date": "2026-10-27",
-  "scope": "approved-product-baseline;06IA-H-completed-local-controlled;remaining-packages-planned",
-  "next": "06C.2",
+  "scope": "approved-product-baseline;06C.2-completed-local-controlled;remaining-packages-planned",
+  "next": "06C.3",
   "end": "08B",
   "packages": [
     {
@@ -381,7 +381,21 @@
         "/executions",
         "/executions/[id]",
         "/cadences/[id]"
-      ]
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-10-29",
+      "review": "docs/validation/06c2-reconciled-reports-review.md",
+      "followUpMigrations": [
+        "db/migrations/089a-report-timestamp-index-permissions.sql",
+        "db/migrations/089b-report-optout-channel.sql",
+        "db/migrations/089c-report-channel-drilldowns.sql"
+      ],
+      "deferredMinorOwner": "08A",
+      "deferredMinors": [
+        "93-calendar-day custom selection across autumn DST can exceed absolute93x24h bound and be rejected.",
+        "SQL explicitNULLforce recomputes unchanged tenant projection; no additional data/write authority."
+      ],
+      "externalGate": "Historical operational data reconciled; no new paid calls/outbound; unobserved reference states and public load/deployment remain separate gates."
     },
     {
       "id": "06C.3",

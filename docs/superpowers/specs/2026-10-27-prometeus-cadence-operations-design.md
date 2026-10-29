@@ -33,6 +33,8 @@ Eventos e tabelas autoritativas → projeção/relatório → notificação conf
 
 ### 06C.2 — Dashboard, relatórios e execuções reconciliados
 
+**Estado em29/10/2026:**concluído no contrato local/controlado; [aceite](../../validation/06c2-reconciled-reports.md), uma revisão/duas correções Important, dois menores→08A. Próximo06C.3; não é aceite de produção/paridade integral.
+
 **Requisitos:** R10. **Dependências:** 06D.2, 06B.5, 06C.1.
 
 **Persistência:** report_projection_checkpoint, report_daily_projection; UNIQUE(workspace_id,projection_version,period,key); replay ordenado sem alterar fontes
