@@ -1,22 +1,22 @@
 {
   "date": "2026-10-28",
-  "phase": "before independent review",
+  "phase": "after independent review and verified corrections",
   "unit": {
-    "tests": 350,
-    "pass": 350,
+    "tests": 351,
+    "pass": 351,
     "fail": 0
   },
   "integration": {
-    "tests": 415,
-    "pass": 415,
+    "tests": 421,
+    "pass": 421,
     "fail": 0
   },
   "focused": {
-    "tests": 13,
-    "pass": 13,
+    "tests": 19,
+    "pass": 19,
     "fail": 0
   },
-  "build": "webpack production build passed",
+  "build": "final webpack production build passed",
   "types": "post-build passed",
   "browser": {
     "rows": [
@@ -386,7 +386,8 @@
     "reference": "historical evidence only; no connected reference attested"
   },
   "migrations": [
-    "088"
+    "088",
+    "088a"
   ],
   "paidCalls": 0,
   "externalSends": 0,
@@ -396,5 +397,25 @@
     "failures": 0
   },
   "cleanup": "closure.json verified",
-  "review": "pending"
+  "review": {
+    "resolved": true,
+    "independentReviews": 1,
+    "reviewedBase": "e6248c1",
+    "reviewedHead": "7daba4e",
+    "critical": 0,
+    "important": 2,
+    "fixed": 2,
+    "minorDeferred": 1,
+    "minorOwner": "08A",
+    "reReview": false,
+    "summary": "351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A."
+  },
+  "fixture": {
+    "datasetVersion": "research-gold-v2",
+    "coverage": 0.9375,
+    "attributionPrecision": 1,
+    "abstentionRate": 1,
+    "empirical": false
+  },
+  "next": "06C.2"
 }

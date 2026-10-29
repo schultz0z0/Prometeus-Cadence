@@ -3,7 +3,7 @@
   "unsupportedFacts": 0,
   "crossTenantLeaks": 0,
   "attributionPrecision": 1,
-  "coverage": 0.875,
+  "coverage": 0.9375,
   "abstentionRate": 1,
   "costUsd": 0,
   "knownCostUsd": 0,
@@ -13,7 +13,7 @@
   "complete": true,
   "failures": [],
   "empirical": false,
-  "datasetVersion": "research-gold-v1",
+  "datasetVersion": "research-gold-v2",
   "evidenceKind": "authored synthetic proposals through production validators and structured JEV parser",
   "externalHttp": 0
 }

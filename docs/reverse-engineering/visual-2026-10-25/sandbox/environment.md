@@ -65,3 +65,7 @@ Referência histórica L4; nenhuma escrita ou nova conexão. Local: identidade Q
 ## Atualização s12 —27/10/2026
 
 Referência histórica L4, sem escrita. QA local dedicada: contato/lista/rascunho/template e dois registros de arquivo removidos; um blob válido removido, dados anteriores preservados e sessões revogadas. L-011removed, zero canais/publicações/outbox/chamadas pagas/envios.27 capturas mascaradas; prévia de publicação fixture bloqueada, com execução autoritativa verificada separadamente em banco efêmero.
+
+## Atualização s15 —28/10/2026
+
+Referência histórica L4; nenhuma mutação. QA local dedicada existente: somente leitura das três telas, navegação responsiva e foco/Escape. Nenhum novo registro de domínio/canal/outbox/piloto ou chamada paga. L017restored, snapshot anterior e workspace preservados, própria sessão revogada e navegador fechado. Migração088 e instruções internasv2 aplicadas localmente. Nove capturas mascaradas; limites de prova explícitos emEV277.

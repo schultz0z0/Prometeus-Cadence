@@ -166,3 +166,7 @@ Concluído no contrato local/controlado:comprovantes e observação revisada sem
 ## Continuidade06B.5 —28/10/2026
 
 Jornada concluída no contrato local/controlado;346unitários/402integrações/19focadas,69capturas,uma revisão independente/oito Important corrigidos. [Aceite](../../validation/06b5-prospecting-journey.md). Próximo06IA-H:homologação das fontes e inteligência; sem alteração dos marcos07/08 ou gates live/públicos. Menor herdado06B.3→06F.
+
+## Continuidade06IA-H —28/10/2026
+
+351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. Avaliador/CLI entregues localmente; piloto real de fontes/modelos permanece pendente e obrigatório para aceite empírico/publicação. [Aceite](../../validation/06iah-intelligence-homologation.md). Próximo06C.2, sem alterar o escopo07/08.

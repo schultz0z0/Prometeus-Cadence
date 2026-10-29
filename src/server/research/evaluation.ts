@@ -1,5 +1,6 @@
 import 'server-only';
 import {randomUUID} from 'node:crypto';
+import {z} from 'zod';
 import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
 import {evaluationInputSchema,validateResearchDataset,scoreResearchEvaluation,evaluationFingerprint,predictionSchema,type ResearchDataset,type ResearchCase,type EvaluationInput,type EvaluationPrediction,type EvaluationReport,type EvaluationFact} from '../../domain/research-evaluation.ts';
@@ -29,6 +30,17 @@ const signing=()=>{if(!process.env.BETTER_AUTH_SECRET)throw Error('Evaluation si
 const proof=(p:Principal,input:EvaluationInput,fingerprint:string)=>({action:'research.evaluate',workspaceId:p.workspaceId,actorId:p.userId,sessionId:p.sessionId,input,fingerprint});
 export async function prepareResearchEvaluation(p:Principal,raw:unknown,gold:unknown){const {input,dataset}=parse(raw,gold);return withWorkspaceTransaction(p,async c=>{const b=await basis(c,p,dataset);return{input,token:createReviewToken(proof(p,input,b.fingerprint),signing()),expiresAt:new Date(Date.now()+600000).toISOString(),basisHash:b.fingerprint,blockers:[],warnings:['Fixtures comprovam contratos; não comprovam acurácia de fornecedores reais.','Sem teto de custo por operação, o modo live não inicia uma chamada.']};});}
 
+const closureSchema=z.strictObject({runId:z.uuid(),requestId:z.uuid(),reason:z.literal('acknowledge-unresolved')});
+type EvaluationClosure=z.infer<typeof closureSchema>;
+function closureInput(raw:unknown){const parsed=closureSchema.safeParse(raw);if(!parsed.success)throw new AppError(422,'Revise o encerramento administrativo.');return parsed.data;}
+function closureDataset(raw:unknown){try{return validateResearchDataset(raw);}catch{throw new AppError(422,'Dataset inválido.');}}
+async function closureRow(c:PoolClient,id:string){const row=(await c.query('SELECT id,revision,state,lease_until,closed_by,closure_request_id FROM app.ai_evaluation_run WHERE id=$1',[id])).rows[0];if(!row)throw new AppError(404,'Avaliação não encontrada.');return row;}
+function closable(row:{state:string;lease_until:Date}){if(!['running','uncertain'].includes(row.state)||row.lease_until.getTime()>Date.now())throw new AppError(409,'Aguarde o lease terminar ou confira o encerramento já registrado.');}
+const closureProof=(p:Principal,input:EvaluationClosure,row:{revision:string;state:string;lease_until:Date},fingerprint:string)=>({action:'research.close',workspaceId:p.workspaceId,actorId:p.userId,sessionId:p.sessionId,input,revision:row.revision,state:row.state,leaseUntil:row.lease_until.toISOString(),fingerprint});
+export async function prepareEvaluationClosure(p:Principal,raw:unknown,gold:unknown){const input=closureInput(raw),dataset=closureDataset(gold);return withWorkspaceTransaction(p,async c=>{const b=await basis(c,p,dataset),row=await closureRow(c,input.runId);closable(row);return{input,token:createReviewToken(closureProof(p,input,row,b.fingerprint),signing()),basisHash:b.fingerprint,expiresAt:new Date(Date.now()+600000).toISOString(),warnings:['Encerra sem repetir I/O e sem atestar sucesso ou ausência de cobrança. Custos desconhecidos permanecem desconhecidos.']};});}
+export async function closeResearchEvaluation(p:Principal,raw:unknown,gold:unknown,token:string){const input=closureInput(raw),dataset=closureDataset(gold);await withWorkspaceTransaction(p,async c=>{const b=await basis(c,p,dataset);await lockWorkspace(c);const row=await closureRow(c,input.runId);if(row.state==='closed'){if(row.closed_by!==p.userId||row.closure_request_id!==input.requestId)throw new AppError(409,'O encerramento já foi registrado por outra solicitação.');return;}closable(row);verifyReviewToken(token,closureProof(p,input,row,b.fingerprint),signing());await c.query('SELECT app.close_evaluation($1,$2,$3,$4,$5,$6,$7)',[input.runId,row.revision,row.state,p.sessionId,input.requestId,input.reason,b.database]);});return readResearchEvaluation(p,input.runId,dataset);}
+async function runningBasis(p:Principal,dataset:ResearchDataset,id:string,token:string,fingerprint:string){await withWorkspaceTransaction(p,async c=>{const current=await basis(c,p,dataset);if(current.fingerprint!==fingerprint)throw new AppError(409,'A base da avaliação mudou.','EVALUATION_CHANGED');const r=await c.query("SELECT id FROM app.ai_evaluation_run WHERE id=$1 AND actor_id=$2 AND lease_token=$3 AND state='running' AND lease_until>clock_timestamp()",[id,p.userId,token]);if(!r.rowCount)throw new AppError(409,'A avaliação perdeu o lease; confira os receipts e encerre com revisão.','EVALUATION_FENCE');});}
+
 // Offline transport uses authored model proposals, production request builders,
 // attribution validators and the actual structured JEV parser. No network I/O.
 export async function fixtureResearchPrediction(row:ResearchCase,variant:'traditional'|'hybrid'):Promise<EvaluationPrediction>{
@@ -55,17 +67,17 @@ export async function evaluateResearch(raw:EvaluationInput,deps:EvaluationAdapte
  });if('old' in started)return started.old!;
  const {id,token,b}=started,predictions:EvaluationPrediction[]=[];let knownCost=0,stop:string|null=null,uncertain=false,unknownQuote=false;
  for(const row of selected.cases){for(const variant of ['traditional','hybrid'] as const){
-  await withWorkspaceTransaction(p,async c=>{const current=await basis(c,p,dataset);if(current.fingerprint!==b.fingerprint)throw new AppError(409,'A base da avaliação mudou.','EVALUATION_CHANGED');});
+  await runningBasis(p,dataset,id,token,b.fingerprint);
   const upper=input.mode==='fixture'?0:await deps.quote!(row.id,variant);
   if(upper===null||!Number.isFinite(upper)||upper<0||input.mode==='live-owned'&&!deps.replayOnly&&upper===0||knownCost+upper>input.maxCostUsd){unknownQuote=upper===null||!Number.isFinite(upper);stop='BUDGET_OR_QUOTE_UNAVAILABLE';break;}
-  await withWorkspaceTransaction(p,async c=>{const current=await basis(c,p,dataset);if(current.fingerprint!==b.fingerprint)throw new AppError(409,'A base da avaliação mudou.','EVALUATION_CHANGED');});
+  await runningBasis(p,dataset,id,token,b.fingerprint);
   let rawResult:unknown;try{rawResult=input.mode==='fixture'?await fixtureResearchPrediction(row,variant):await deps.run!(row,variant,b.authority);}catch{rawResult={unavailable:true};}
   const received=await receipt(p,id,token,row,variant,rawResult);if(received.cost!==null)knownCost+=received.cost;
   let prediction:EvaluationPrediction;try{prediction=predictionSchema.parse(rawResult);}catch{stop='RESULT_UNCERTAIN';uncertain=true;break;}
   // Pin envelope to the reviewed task/route; no source may select a provider.
   if(prediction.caseId!==row.id||prediction.variant!==variant||input.mode==='live-owned'&&(prediction.provider!==b.authority.provider||prediction.model!==b.authority.model)){stop='OUTPUT_CONTRACT_CHANGED';uncertain=true;break;}
   predictions.push(prediction);
-  await withWorkspaceTransaction(p,async c=>{const current=await basis(c,p,dataset);if(current.fingerprint!==b.fingerprint)throw new AppError(409,'A base da avaliação mudou.','EVALUATION_CHANGED');});
+  await runningBasis(p,dataset,id,token,b.fingerprint);
   if(input.mode==='live-owned'&&(prediction.costUsd===null||prediction.costUsd>upper)){stop=prediction.costUsd===null?'UNKNOWN_COST':'COST_BOUND_EXCEEDED';break;}
  }if(stop)break;}
  let report:EvaluationReport;
@@ -74,5 +86,5 @@ export async function evaluateResearch(raw:EvaluationInput,deps:EvaluationAdapte
  await withWorkspaceTransaction(p,async c=>{const current=await basis(c,p,dataset);if(current.fingerprint!==b.fingerprint)throw new AppError(409,'A base da avaliação mudou.');await c.query('SELECT app.finish_evaluation($1,$2,$3,$4,$5)',[id,token,b.fingerprint,report,uncertain?'uncertain':stop?'blocked':'completed']);});return report;
 }
 export async function readResearchEvaluation(p:Principal,id:string,gold:unknown){let dataset:ResearchDataset;try{dataset=validateResearchDataset(gold);}catch{throw new AppError(422,'Dataset inválido.');}return withWorkspaceTransaction(p,async c=>{const b=await basis(c,p,dataset),r=(await c.query('SELECT report,fingerprint,state,input FROM app.ai_evaluation_run WHERE id=$1',[id])).rows[0];if(!r)throw new AppError(404,'Avaliação não encontrada.');const current=r.fingerprint===b.fingerprint;
- if(!r.report){const receipts=(await c.query('SELECT cost_usd FROM app.ai_evaluation_case WHERE run_id=$1',[id])).rows,knownCostUsd=receipts.reduce((n,r)=>n+Number(r.cost_usd??0),0),unknownCosts=receipts.filter(r=>r.cost_usd===null).length;return{current,state:r.state,report:{runId:id,fingerprint:r.fingerprint,mode:r.input.mode,empirical:false,accepted:false,complete:false,cases:r.input.caseIds.length,predictions:receipts.length,knownCostUsd,costUsd:null,unknownCosts,failures:['INCOMPLETE_REVIEW_RECEIPTS'],unsupportedFacts:0,crossTenantLeaks:0,attributionPrecision:null,coverage:null,abstentionRate:null}};}
+ if(!r.report||r.state==='closed'){const receipts=(await c.query('SELECT cost_usd FROM app.ai_evaluation_case WHERE run_id=$1',[id])).rows,knownCostUsd=receipts.reduce((n,r)=>n+Number(r.cost_usd??0),0),unknownCosts=receipts.filter(r=>r.cost_usd===null).length+(r.state==='closed'?1:0);return{current,state:r.state,report:{runId:id,fingerprint:r.fingerprint,mode:r.input.mode,empirical:false,accepted:false,complete:false,cases:r.input.caseIds.length,predictions:receipts.length,knownCostUsd,costUsd:null,unknownCosts,failures:[r.state==='closed'?'ADMIN_CLOSED_UNRESOLVED':'INCOMPLETE_REVIEW_RECEIPTS'],unsupportedFacts:0,crossTenantLeaks:0,attributionPrecision:null,coverage:null,abstentionRate:null}};}
  return{current,state:r.state,report:current?r.report:{...r.report,accepted:false,failures:[...r.report.failures,'STALE_FINGERPRINT']}};});}

@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06B.5 implementado e validado no escopo local/controlado. Próxima implementação: **06IA-H**.
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **06C.2**.
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -22,7 +22,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 06D.1 | Autoria, variantes, anexos e publicação | 06B.4, 05 | [tarefas](2026-10-27-prometeus-cadence-06d1-message-authoring.md) | Concluído local/controlado; [aceite06D.1](../../validation/06d1-message-authoring.md) |
 | 06D.2 | Canais, inbox e homologação de entrega | 06D.1 | [tarefas](2026-10-27-prometeus-cadence-06d2-channel-operation.md) | Concluído local/controlado; piloto externo permanece gate |
 | 06B.5 | Jornada integrada de prospecção e cadência | 06B.3, 06B.4, 06D.1, 06D.2 | [tarefas](2026-10-27-prometeus-cadence-06b5-prospecting-journey.md) | Concluído local/controlado; acurácia live permanece gate06IA-H |
-| 06IA-H | Homologação das fontes e inteligência | 06B.5, 06IA | [tarefas](2026-10-27-prometeus-cadence-06iah-intelligence-homologation.md) | Planejado; não executado |
+| 06IA-H | Homologação das fontes e inteligência | 06B.5, 06IA | [tarefas](2026-10-27-prometeus-cadence-06iah-intelligence-homologation.md) | Concluído local/controlado; piloto real/acurácia externa pendentes |
 | 06C.2 | Dashboard, relatórios e execuções reconciliados | 06D.2, 06B.5, 06C.1 | [tarefas](2026-10-27-prometeus-cadence-06c2-reconciled-reports.md) | Planejado; não executado |
 | 06C.3 | Notificações, preferências e resumos | 06C.2 | [tarefas](2026-10-27-prometeus-cadence-06c3-notifications.md) | Planejado; não executado |
 | 06E.1 | Autenticador, sessões e administração de membros | 02, 06A-P, 06A-H | [tarefas](2026-10-27-prometeus-cadence-06e1-security-members.md) | Planejado; não executado |
@@ -102,3 +102,5 @@ Continuidade06D.1: autoria/variantes/anexos/publicação concluídos no contrato
 Continuidade06D.2 em28/10:comprovantes suportados e observação sem novo envio;342/383 testes,36 capturas, uma revisão independente/dois Important corrigidos. Menor de erro residual do popup→06F. Ida/volta live e domínio/tokens públicos→gate explícito de homologação/08B; nenhuma execução externa foi declarada feita. Próximo06B.5, sem alteração das dependências restantes. [Aceite](../../validation/06d2-channel-operation.md).
 
 Continuidade06B.5 em28/10: jornada com revisão, recuperação por empresa/módulo, isolamentoSQL e um rascunho vinculado;346/402/19testes,69capturas. Uma revisão independente/oito Important corrigidos. Menor herdado06B.3 de seleção inicial do lote→06F. Próximo06IA-H, preservando demais dependências e gates públicos. [Aceite](../../validation/06b5-prospecting-journey.md).
+
+Continuidade06IA-H em28/10: 351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. Piloto empírico pago permanece gate06IA-H/08B; a infraestrutura de avaliação local está entregue, sem certificação comercial de acurácia. Próximo06C.2. [Aceite](../../validation/06iah-intelligence-homologation.md).

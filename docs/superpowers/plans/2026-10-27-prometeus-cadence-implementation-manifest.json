@@ -1,8 +1,8 @@
 {
   "version": 1,
   "date": "2026-10-27",
-  "scope": "approved-product-baseline;06B.5-completed-local-controlled;remaining-packages-planned",
-  "next": "06IA-H",
+  "scope": "approved-product-baseline;06IA-H-completed-local-controlled;remaining-packages-planned",
+  "next": "06C.2",
   "end": "08B",
   "packages": [
     {
@@ -328,7 +328,16 @@
         "/settings/ai",
         "/settings/context",
         "/leads/enrich"
-      ]
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-10-28",
+      "review": "docs/validation/06iah-intelligence-homologation-review.md",
+      "followUpMigrations": [
+        "db/migrations/088a-evaluation-recovery.sql"
+      ],
+      "deferredMinorOwner": "08A",
+      "deferredMinor": "Binary floating USD budget boundary may stop one prediction early; use integer/decimal accounting in final regression.",
+      "externalGate": "Real paid source/model pilot and empirical accuracy remain pending; fixture/replay cannot attest them."
     },
     {
       "id": "06C.2",

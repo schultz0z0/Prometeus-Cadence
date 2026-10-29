@@ -164,6 +164,8 @@ declare function evaluateResearch(input:EvaluationInput,deps:EvaluationAdapters)
 
 **Plano:** [tarefas](../plans/2026-10-27-prometeus-cadence-06iah-intelligence-homologation.md).
 
+**Aceite06IA-H local/controlado em28/10/2026:** 351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. [Relatório](../../validation/06iah-intelligence-homologation.md). O contrato implementado estende input com requestId UUID; adapter entrega fatos/citações tipados e envelope de versão, e o avaliador deriva métricas contra o gabarito. Precisão/cobertura podem ser null quando não há denominador; unknowncost é null, nunca0. Modo fixture testa propostas sintéticas e validadores; live-ownedCLI compara saídas próprias já coletadas sem dispatch. empirical=false sempre; acurácia real/produção exigem piloto externo separado.
+
 ## Falhas, operação e critérios de pronto
 
 Revalidar sessão/associação/política antes e depois de I/O. Não repetir efeito incerto; manter receipt e encaminhar à reconciliação. Cache, paginação e locks incluem workspace. Cada pacote deve passar caso feliz, bloqueio, falha/recuperação, permissão/isolamento e comparação visual no estado/viewport declarado, com evidência de execução real ou controlada separada.

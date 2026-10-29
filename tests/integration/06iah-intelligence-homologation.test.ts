@@ -4,6 +4,12 @@ import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 import {saveAiPolicy} from '../../src/server/prospecting/ai/settings.ts';
 import {evaluateResearch,prepareResearchEvaluation,readResearchEvaluation,fixtureResearchPrediction} from '../../src/server/research/evaluation.ts';
 import {companyPeopleRequest} from '../../src/server/prospecting/ai/decisors.ts';
+import * as evaluationService from '../../src/server/research/evaluation.ts';
+import {sanitizePeopleSource} from '../../src/domain/company-people.ts';
+import {scoreResearchEvaluation} from '../../src/domain/research-evaluation.ts';
+import {cookies,requestAuth,password} from './helpers.ts';
+import {requirePrincipal} from '../../src/server/auth/principal.ts';
+import {identityAction} from '../../src/server/workspaces/service.ts';
 configureProspectingTest();Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});beforeEach(resetRateLimits);after(closeProspectingPools);
 const dataset=JSON.parse(fs.readFileSync('tests/fixtures/research-evaluation.json','utf8'));
 async function fixture(){const f=await prospectingUser({platformAi:true});await saveAiPolicy(f.p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});return f;}
@@ -75,4 +81,54 @@ test('CLI prepares and confirms one fixture run using an actual platform-admin s
  const prepared=call('prepare');assert.equal(prepared.status,0,prepared.stderr);const data=JSON.parse(prepared.stdout);assert.ok(data.token);fs.writeFileSync(review,JSON.stringify(data));const confirmed=call('run',['--review='+review]);assert.equal(confirmed.status,0,confirmed.stderr);const r=JSON.parse(confirmed.stdout);assert.equal(r.accepted,true);assert.equal(r.mode,'fixture');assert.equal(r.empirical,false);assert.ok(!confirmed.stdout.includes(f.cookie));
  const replay=call('run',['--review='+review]);assert.equal(replay.status,0);assert.equal(JSON.parse(replay.stdout).runId,r.runId);
  }finally{for(const file of [manifest,session,review])if(fs.existsSync(file))fs.unlinkSync(file);}
+});
+test('redacted CPF and age retain the permitted person and cited contact in both variants',async()=>{
+ const gold=structuredClone(dataset),row=gold.cases.find((c:any)=>c.category==='cpf-age-redaction');row.proposed.people[0].quote=sanitizePeopleSource(row.sources[0].text);
+ const predictions=[];for(const item of gold.cases)for(const variant of ['traditional','hybrid'] as const)predictions.push(await fixtureResearchPrediction(item,variant));
+ const retained=predictions.filter(p=>p.caseId===row.id);assert.equal(retained.length,2);assert.ok(retained.every(p=>p.facts.length===3));assert.ok(!JSON.stringify(retained).includes('123.456.789-09'));assert.ok(!JSON.stringify(retained).includes('47 anos'));assert.equal(scoreResearchEvaluation(gold,predictions).accepted,true);
+});
+test('reviewed administrative closure releases an uncertain run without replaying provider I/O',async()=>{
+ const f=await fixture(),{value,review}=await prepared(f,input('live-owned',2));let calls=0;
+ const run=await evaluateResearch(value,{principal:f.p,dataset,reviewToken:review.token,liveOptIn:true,quote:async()=>.1,run:async()=>{calls++;return{invalid:true} as any;}});
+ const closure={runId:run.runId,requestId:randomUUID(),reason:'acknowledge-unresolved' as const};
+ const reviewed=await evaluationService.prepareEvaluationClosure(f.p,closure,dataset);const closed=await evaluationService.closeResearchEvaluation(f.p,closure,dataset,reviewed.token);assert.equal(closed.state,'closed');assert.equal(closed.report.accepted,false);assert.equal(closed.report.costUsd,null);assert.equal(calls,1);
+ assert.equal((await evaluationService.closeResearchEvaluation(f.p,closure,dataset,reviewed.token)).state,'closed');
+ const next=await prepared(f,input('live-owned',2));const completed=await evaluateResearch(next.value,{principal:f.p,dataset,reviewToken:next.review.token,liveOptIn:true,quote:async()=>.01,run:async(row:any,variant:any,a:any)=>{calls++;return{...await fixtureResearchPrediction(row,variant),provider:a.provider,model:a.model,costUsd:.01};}});assert.equal(completed.accepted,true);assert.equal(calls,61);
+});
+test('orphan closure requires an expired lease, a current admin review and preserves late receipts',async()=>{
+ const f=await fixture(),other=await prospectingUser(),{value,review}=await prepared(f,input('live-owned',2));
+ await assert.rejects(evaluateResearch(value,{principal:f.p,dataset,reviewToken:review.token,liveOptIn:true,quote:async()=>.1,run:async(row:any,variant:any,a:any)=>{await testAdmin(c=>c.query('UPDATE auth.member SET role=\'viewer\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));return{...await fixtureResearchPrediction(row,variant),provider:a.provider,model:a.model,costUsd:.1};}}),(e:any)=>e.status===403);
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=\'owner\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));const journal=await testAdmin(async c=>(await c.query('SELECT id,lease_token FROM app.ai_evaluation_run WHERE workspace_id=$1',[f.p.workspaceId])).rows[0]);const closure={runId:journal.id,requestId:randomUUID(),reason:'acknowledge-unresolved' as const};
+ await assert.rejects(evaluationService.prepareEvaluationClosure(f.p,closure,dataset),(e:any)=>e.status===409);
+ await testAdmin(c=>c.query('UPDATE app.ai_evaluation_run SET lease_until=clock_timestamp()-interval \'1 second\' WHERE id=$1',[journal.id]));
+ await assert.rejects(evaluationService.prepareEvaluationClosure(other.p,closure,dataset),(e:any)=>e.status===403);
+ const ready=await evaluationService.prepareEvaluationClosure(f.p,closure,dataset);
+ await withWorkspaceTransaction(f.p,c=>c.query('SELECT app.record_evaluation_receipt($1,$2,$3,$4,$5,$6,$7,$8)',[journal.id,journal.lease_token,dataset.cases[0].id,'hybrid','late','a'.repeat(64),.2,1]));
+ await assert.rejects(evaluationService.closeResearchEvaluation(f.p,closure,dataset,ready.token),(e:any)=>e.status===409);
+ const latest=await evaluationService.prepareEvaluationClosure(f.p,closure,dataset);await testAdmin(c=>c.query('UPDATE auth.member SET role=\'viewer\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));await assert.rejects(evaluationService.closeResearchEvaluation(f.p,closure,dataset,latest.token),(e:any)=>e.status===403);
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=\'owner\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));const closed=await evaluationService.closeResearchEvaluation(f.p,closure,dataset,latest.token);assert.equal(closed.state,'closed');assert.ok(Math.abs(closed.report.knownCostUsd-.3)<1e-9);assert.equal(closed.report.accepted,false);
+ await assert.rejects(withWorkspaceTransaction(other.p,c=>c.query('SELECT app.close_evaluation($1,$2,$3,$4,$5,$6,$7)',[journal.id,2,'running',other.p.sessionId,randomUUID(),'acknowledge-unresolved',{}])));
+ await assert.rejects(withWorkspaceTransaction(f.p,c=>c.query('SELECT app.finish_evaluation($1,$2,$3,$4,$5)',[journal.id,journal.lease_token,review.basisHash,{accepted:true,empirical:false},'completed'])));
+});
+test('lease expiration during a quote prevents dispatch and remains administratively closable',async()=>{
+ const f=await fixture(),{value,review}=await prepared(f,input('live-owned',2));let calls=0;
+ await assert.rejects(evaluateResearch(value,{principal:f.p,dataset,reviewToken:review.token,liveOptIn:true,quote:async()=>{await testAdmin(c=>c.query('UPDATE app.ai_evaluation_run SET lease_until=clock_timestamp()-interval \'1 second\' WHERE workspace_id=$1',[f.p.workspaceId]));return .1;},run:async()=>{calls++;throw Error('Expired dispatch');}}));assert.equal(calls,0);
+});
+test('CLI rejects incomplete submitted outputs before creating any live journal',async()=>{
+ const f=await fixture(),prefix='.runtime/06iah-missing-'+randomUUID(),files=['manifest','session','review','outputs'].map(n=>prefix+'-'+n+'.json');
+ try{const value=input('live-owned',2),review=await prepareResearchEvaluation(f.p,value,dataset);fs.writeFileSync(files[0],JSON.stringify({datasetFile:'tests/fixtures/research-evaluation.json',input:value}));fs.writeFileSync(files[1],JSON.stringify({cookie:f.cookie,workspaceId:f.p.workspaceId}));fs.writeFileSync(files[2],JSON.stringify(review));fs.writeFileSync(files[3],JSON.stringify({fingerprint:review.basisHash,predictions:[await fixtureResearchPrediction(dataset.cases[0],'traditional')]}));
+ const r=spawnSync(process.execPath,['--conditions=react-server','--experimental-strip-types','scripts/evaluate-research.ts','--action=run','--manifest='+files[0],'--session='+files[1],'--review='+files[2],'--outputs='+files[3],'--live-owned=true'],{encoding:'utf8',windowsHide:true});assert.notEqual(r.status,0);assert.equal(JSON.parse(r.stdout).accepted,false);assert.equal(await testAdmin(async c=>Number((await c.query('SELECT count(*) n FROM app.ai_evaluation_run WHERE workspace_id=$1',[f.p.workspaceId])).rows[0].n)),0);
+ }finally{for(const file of files)if(fs.existsSync(file))fs.unlinkSync(file);}
+});
+test('CLI closes from a fresh admin session after original expiry without changing receipts or attesting success',async()=>{
+ const f=await fixture(),{value,review}=await prepared(f,input('live-owned',2));const run=await evaluateResearch(value,{principal:f.p,dataset,reviewToken:review.token,liveOptIn:true,quote:async()=>.1,run:async()=>({invalid:true}) as any});
+ const signed=await requestAuth('sign-in/email',{email:f.email,password});assert.equal(signed.status,200);const cookie=cookies(signed),headers=new Headers({cookie});await identityAction(headers,{type:'switch',workspaceId:f.p.workspaceId});const fresh=await requirePrincipal(headers);assert.notEqual(fresh.sessionId,f.p.sessionId);
+ await testAdmin(c=>c.query('UPDATE auth.session SET "expiresAt"=clock_timestamp()-interval \'1 second\' WHERE id=$1',[f.p.sessionId]));
+ const prefix='.runtime/06iah-close-'+randomUUID(),files=['manifest','session','review'].map(n=>prefix+'-'+n+'.json');try{
+  fs.writeFileSync(files[0],JSON.stringify({datasetFile:'tests/fixtures/research-evaluation.json',input:input()}));fs.writeFileSync(files[1],JSON.stringify({cookie,workspaceId:f.p.workspaceId}));
+  const call=(action:string,extra:string[]=[])=>spawnSync(process.execPath,['--conditions=react-server','--experimental-strip-types','scripts/evaluate-research.ts','--action='+action,'--manifest='+files[0],'--session='+files[1],'--run-id='+run.runId,...extra],{encoding:'utf8',windowsHide:true});
+  const prepared=call('prepare-close');assert.equal(prepared.status,0,prepared.stdout);fs.writeFileSync(files[2],prepared.stdout);const closed=call('close',['--review='+files[2]]);assert.equal(closed.status,0,closed.stdout);const report=JSON.parse(closed.stdout);assert.equal(report.state,'closed');assert.equal(report.report.accepted,false);assert.equal(report.report.costUsd,null);assert.equal(report.report.predictions,1);assert.equal(call('close',['--review='+files[2]]).status,0);
+  const journal=await testAdmin(async c=>(await c.query('SELECT lease_token,closed_session FROM app.ai_evaluation_run WHERE id=$1',[run.runId])).rows[0]);assert.equal(journal.closed_session,fresh.sessionId);
+  await withWorkspaceTransaction(fresh,c=>c.query('SELECT app.record_evaluation_receipt($1,$2,$3,$4,$5,$6,$7,$8)',[run.runId,journal.lease_token,dataset.cases[0].id,'hybrid','after-close','b'.repeat(64),.2,1]));const latest=await readResearchEvaluation(fresh,run.runId,dataset);assert.equal(latest.report.accepted,false);assert.equal(latest.report.predictions,2);assert.equal(latest.report.knownCostUsd,.2);assert.equal(latest.report.costUsd,null);
+ }finally{for(const file of files)if(fs.existsSync(file))fs.unlinkSync(file);}
 });

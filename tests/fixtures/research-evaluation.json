@@ -1,5 +1,5 @@
 {
-  "version": "research-gold-v1",
+  "version": "research-gold-v2",
   "cases": [
     {
       "id": "case-01",
@@ -1060,7 +1060,7 @@
             "name": "Ana Exemplo",
             "role": "diretora comercial",
             "evidenceId": "source",
-            "quote": "Clínica Exemplo. Ana Exemplo, diretora comercial. Contato pessoal de Ana Exemplo: ana@example.com. CPF 123.456.789-09, 47 anos.",
+            "quote": "Clínica Exemplo. Ana Exemplo, diretora comercial. Contato pessoal de Ana Exemplo: ana@example.com. CPF [CPF removido], [idade removida].",
             "email": "ana@example.com"
           }
         ]

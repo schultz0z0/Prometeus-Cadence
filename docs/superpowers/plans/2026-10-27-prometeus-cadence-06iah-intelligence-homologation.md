@@ -9,7 +9,7 @@
 
 ## Global Constraints
 
-- Pacote planejado; não marcado concluído. Dependências: 06B.5, 06IA. Ordem vigente no índice geral;07D só executa produto após seu gate.
+- Pacote concluído no contrato local/controlado em28/10/2026; piloto real permanece gate. Dependências: 06B.5, 06IA. Ordem vigente no índice geral;07D só executa produto após seu gate.
 - Apify/LLM centrais; contexto, canais, dados, cache, quota e resultados privados por workspace. Sem autoelevação de owner a admin da plataforma.
 - Preservar trial de 7 dias, consumo pré-pago e OpenWA 20 mensagens/5 novoscontatos por dia; intervalo 60–180 s e demais gates existentes.
 - Fidelidade ao CadenceFlow por rota/estado/viewport; não criar outra estética. Estados da referência não observados permanecem classificados.
@@ -60,7 +60,7 @@ declare function evaluateResearch(input:EvaluationInput,deps:EvaluationAdapters)
 
 **Interfaces:** Produz `acceptResearchEvaluation(input:{unsupportedFacts:number;crossTenantLeaks:number;attributionPrecision:number}):boolean` e os DTOs acima. Consome os contratos comuns e formatos existentes da área.
 
-- [ ] **Step 1 — RED:** criar `tests/06iah-intelligence-homologation.test.ts` com o caso abaixo e variações de limite/ausência. Umfato semsuporte reprova o conjunto mesmo se precisão geral éalta.
+- [x] **Step 1 — RED:** criar `tests/06iah-intelligence-homologation.test.ts` com o caso abaixo e variações de limite/ausência. Umfato semsuporte reprova o conjunto mesmo se precisão geral éalta.
 
 ```ts
 import test from 'node:test';
@@ -71,9 +71,9 @@ test('06IA-H preserva a regra do domínio',()=>{
 });
 ```
 
-- [ ] **Step 2 — confirmar RED:** `rtk proxy node --experimental-strip-types --test tests/06iah-intelligence-homologation.test.ts`. Esperado: teste falha pela função/regra ausente; corrigir antes erros de fixture/sintaxe que mascarem a regra.
-- [ ] **Step 3 — implementar:** definir os tipos e a função acima. Criar migração com tabelas/índices/FKs descritos, RLS forçada por workspace, funções worker mínimas e idempotência transacional; não conceder escrita ampla ao dispatcher. Dataset versionado com 30 casos: empresascom/sem site, sociaisconfusas, QSAsemcontato, homônimos, gestor não sócio, fonte ausente e instruçãoinjetada. Avaliartradicional e híbrido com mesmasevidências. Gates próprios:0 vazamentos/0 fatossemcitação, precisão deatribuição>=95% sobre casosrotulados e 100%abstenção noscasos semsuporte; cobertura e custo reportados sem garantia comercial. Publicarversão de skill só após regressão;live opt-in tetoUSDpositivo e bloqueioquandoatingido.
-- [ ] **Step 4 — GREEN e commit:** repetir exatamente o comando RED até passar; conferir tipos/contratos e commit local focado, sem push/deploy implícito.
+- [x] **Step 2 — confirmar RED:** `rtk proxy node --experimental-strip-types --test tests/06iah-intelligence-homologation.test.ts`. Esperado: teste falha pela função/regra ausente; corrigir antes erros de fixture/sintaxe que mascarem a regra.
+- [x] **Step 3 — implementar:** definir os tipos e a função acima. Criar migração com tabelas/índices/FKs descritos, RLS forçada por workspace, funções worker mínimas e idempotência transacional; não conceder escrita ampla ao dispatcher. Dataset versionado com 30 casos: empresascom/sem site, sociaisconfusas, QSAsemcontato, homônimos, gestor não sócio, fonte ausente e instruçãoinjetada. Avaliartradicional e híbrido com mesmasevidências. Gates próprios:0 vazamentos/0 fatossemcitação, precisão deatribuição>=95% sobre casosrotulados e 100%abstenção noscasos semsuporte; cobertura e custo reportados sem garantia comercial. Publicarversão de skill só após regressão;live opt-in tetoUSDpositivo e bloqueioquandoatingido.
+- [x] **Step 4 — GREEN e commit:** repetir exatamente o comando RED até passar; conferir tipos/contratos e commit local focado, sem push/deploy implícito.
 
 ### Task 2: Serviço, execução e invariantes de falha
 
@@ -81,7 +81,7 @@ test('06IA-H preserva a regra do domínio',()=>{
 
 **Interfaces:** Consome DTOs/identidade e o resultado da Task 1; produz exatamente as funções de serviço declaradas neste plano. Dependências externas devem ser injetáveis nos testes, sem substituir autoridade real do banco.
 
-- [ ] **Step 1 — RED de integração:** adicionar `06iah-intelligence-homologation` à allowlist do runner. Reaproveitar fixtures de identidade/bancos/fechamento em tests/integration/helpers.ts e helpers da área; criar 2 workspaces e papéis próprios, sem usar contas/dados reais. Escrever os testes abaixo com contagens/estados/efeitos observáveis.
+- [x] **Step 1 — RED de integração:** adicionar `06iah-intelligence-homologation` à allowlist do runner. Reaproveitar fixtures de identidade/bancos/fechamento em tests/integration/helpers.ts e helpers da área; criar 2 workspaces e papéis próprios, sem usar contas/dados reais. Escrever os testes abaixo com contagens/estados/efeitos observáveis.
 
   - Caso 1: dataset com 0 dados não passa por denominadorzero; unknowncost não ézeroUSD.
   - Caso 2: modo fixture executa 0HTTP e compara saída ao gabarito; modo live recusa orçamentoausente.
@@ -90,9 +90,9 @@ test('06IA-H preserva a regra do domínio',()=>{
 
   - Caso de autoridade: endpoint direto/worker com usuário removido ou recurso cruzado retorna 403/404, publica 0 resultados para o cliente e não expõe segredo. Receipts técnicos já recebidos ficam só no escopo autorizado.
 
-- [ ] **Step 2 — confirmar RED:** `rtk proxy node scripts/test-integration.mjs 06iah-intelligence-homologation`. Esperado: falha pela regra de serviço ainda ausente; banco criado pelo runner é efêmero _test, nunca o banco operacional.
-- [ ] **Step 3 — implementar serviço:** usar as assinaturas declaradas, validação Zod, transações/locks/leases e deduplicação. Dataset versionado com 30 casos: empresascom/sem site, sociaisconfusas, QSAsemcontato, homônimos, gestor não sócio, fonte ausente e instruçãoinjetada. Avaliartradicional e híbrido com mesmasevidências. Gates próprios:0 vazamentos/0 fatossemcitação, precisão deatribuição>=95% sobre casosrotulados e 100%abstenção noscasos semsuporte; cobertura e custo reportados sem garantia comercial. Publicarversão de skill só após regressão;live opt-in tetoUSDpositivo e bloqueioquandoatingido. Não ampliar permissões para fazer teste passar. Task 2 cobre todos os itens de Review Focus; nenhum caso fica delegado apenas à observação visual.
-- [ ] **Step 4 — GREEN e commit:** repetir a suíte focada; comparar os efeitos reais no banco/adapter com asserções e confirmar 0 efeitos inesperados. Commitar apenas os arquivos do pacote.
+- [x] **Step 2 — confirmar RED:** `rtk proxy node scripts/test-integration.mjs 06iah-intelligence-homologation`. Esperado: falha pela regra de serviço ainda ausente; banco criado pelo runner é efêmero _test, nunca o banco operacional.
+- [x] **Step 3 — implementar serviço:** usar as assinaturas declaradas, validação Zod, transações/locks/leases e deduplicação. Dataset versionado com 30 casos: empresascom/sem site, sociaisconfusas, QSAsemcontato, homônimos, gestor não sócio, fonte ausente e instruçãoinjetada. Avaliartradicional e híbrido com mesmasevidências. Gates próprios:0 vazamentos/0 fatossemcitação, precisão deatribuição>=95% sobre casosrotulados e 100%abstenção noscasos semsuporte; cobertura e custo reportados sem garantia comercial. Publicarversão de skill só após regressão;live opt-in tetoUSDpositivo e bloqueioquandoatingido. Não ampliar permissões para fazer teste passar. Task 2 cobre todos os itens de Review Focus; nenhum caso fica delegado apenas à observação visual.
+- [x] **Step 4 — GREEN e commit:** repetir a suíte focada; comparar os efeitos reais no banco/adapter com asserções e confirmar 0 efeitos inesperados. Commitar apenas os arquivos do pacote.
 
 ### Task 3: HTTP, UI/UX e aceite do pacote
 
@@ -100,11 +100,11 @@ test('06IA-H preserva a regra do domínio',()=>{
 
 **Interfaces:** Consome serviços da Task 2 e expõe os mesmos estados ao usuário, sem simular resultado nem autorização no browser. Se 07D for excluído, não criar superfícies deproduto e registrar a decisão como entrega do gate.
 
-- [ ] **Step 1 — RED de contrato HTTP:** acrescentar à suíte focada pedido anônimo 401/403, papel proibido 403, input inválido 422, revisão conflitante 409 e repetição idempotente quando houver mutação; para avaliadorCLI, manifesto incompleto retorna exitcode nãozero e relatório de pendências. Confirmar falha antes do handler/avaliador.
-- [ ] **Step 2 — ligar operações:** Sem nova API de cliente. ExecuçãoCLI administrativa; leitura resumida apenas por admin da plataforma, reaproveitando guardplatformAI. Cliente recebeestado/cobertura/ausênciahonestos, sem scoresdeconfiança promocionais; admin recebe relatório versionado queexplica falhas e custo. Gates de menu são só apresentação; serviço continua autoritativo. Estados de erro/loading/empty/partial/revoke e limites têm ação de recuperação e não apagam rascunho.
-- [ ] **Step 3 — conferir visual e jornada:** `/settings/ai`, `/settings/context`, `/leads/enrich`. Comparar com evidência disponível da referência no mesmo estado em 1920×855/390×844; checar 320 px, foco/escape/scroll, loading/falha/limite/sucesso. Mascarar dados e restaurar contexto de navegação/QA. Registrar desconhecidos da referência em separado.
-- [ ] **Step 4 — verificação e aceite:** focados GREEN → `rtk proxy npm test` → `rtk proxy npm run test:integration` → `rtk proxy npm run build` → `rtk proxy npm run typecheck` → `rtk proxy git diff --check`. Todos passam ou o pacote fica pendente com falha reproduzível. No pacote puramente documental/gate excluído, rodar validador de documentos/links e suíte focada correspondente, sem testes de produto não alterado.
-- [ ] **Step 5 — fechamento:** escrever relatório com casos, evidências/limitações, cleanupQA, restore de políticas/destinos, custos/saldo quando aplicável e estado de runtime. Revisão final conforme execução nativa; corrigir achados com regressão. Atualizar linha do índice/roadmap somente pelo aceite efetivo e commit local focado.
+- [x] **Step 1 — RED de contrato HTTP:** acrescentar à suíte focada pedido anônimo 401/403, papel proibido 403, input inválido 422, revisão conflitante 409 e repetição idempotente quando houver mutação; para avaliadorCLI, manifesto incompleto retorna exitcode nãozero e relatório de pendências. Confirmar falha antes do handler/avaliador.
+- [x] **Step 2 — ligar operações:** Sem nova API de cliente. ExecuçãoCLI administrativa; leitura resumida apenas por admin da plataforma, reaproveitando guardplatformAI. Cliente recebeestado/cobertura/ausênciahonestos, sem scoresdeconfiança promocionais; admin recebe relatório versionado queexplica falhas e custo. Gates de menu são só apresentação; serviço continua autoritativo. Estados de erro/loading/empty/partial/revoke e limites têm ação de recuperação e não apagam rascunho.
+- [x] **Step 3 — conferir visual e jornada:** `/settings/ai`, `/settings/context`, `/leads/enrich`. Comparar com evidência disponível da referência no mesmo estado em 1920×855/390×844; checar 320 px, foco/escape/scroll, loading/falha/limite/sucesso. Mascarar dados e restaurar contexto de navegação/QA. Registrar desconhecidos da referência em separado.
+- [x] **Step 4 — verificação e aceite:** focados GREEN → `rtk proxy npm test` → `rtk proxy npm run test:integration` → `rtk proxy npm run build` → `rtk proxy npm run typecheck` → `rtk proxy git diff --check`. Todos passam ou o pacote fica pendente com falha reproduzível. No pacote puramente documental/gate excluído, rodar validador de documentos/links e suíte focada correspondente, sem testes de produto não alterado.
+- [x] **Step 5 — fechamento:** escrever relatório com casos, evidências/limitações, cleanupQA, restore de políticas/destinos, custos/saldo quando aplicável e estado de runtime. Revisão final conforme execução nativa; corrigir achados com regressão. Atualizar linha do índice/roadmap somente pelo aceite efetivo e commit local focado.
 
 ## Gate externo e critério específico
 
@@ -113,3 +113,7 @@ Produção/fornecedor pago sórecebem aceite empírico após piloto real control
 ## Self-review do plano
 
 R06 mapeados às três tarefas. DTOs e funções têm uma definição neste plano e no desenho de área; contratos comuns evitam reinterpretar autorização/revisão. Task 1 cobre regra pura/persistência;Task 2 cobre todos os itens de Review Focus;Task 3 cobre o que a pessoa realmente consegue operar e ver. Dados/arquivos citados como Create são futuros; Modify foi conferido no baseline ou tem pacote anterior proprietário. Escrever um plano não equivale a passar seus testes.
+
+## Execução e aceite local/controlado
+
+351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. [Aceite](../../validation/06iah-intelligence-homologation.md), [revisão](../../validation/06iah-intelligence-homologation-review.md). DTO executado usa requestId e fatos tipados com citações por saída; métricas são derivadas no avaliador, não confiadas a contadores do modelo. CLI live-owned é somente replay de saídas previamente coletadas, sem adapter executável ou chamadas pagas; empirical=false. O parser JEV existente foi reutilizado, sem modificar jev.ts. Comparação visual limitada às nove capturas/estados reais e referência histórica; demais estados não recebem aceite100%. Próximo06C.2; nenhum push/merge/deploy.

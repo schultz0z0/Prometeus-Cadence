@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto';
 import {z} from 'zod';
+import {sanitizePeopleSource} from './company-people.ts';
 const fact=z.strictObject({subject:z.string().min(1).max(200),field:z.enum(['company.name','company.email','company.phone','person.name','person.role','person.email','person.phone','person.linkedin']),value:z.string().min(1).max(500)});
 const source=z.strictObject({id:z.string().min(1).max(120),url:z.url().max(2048),text:z.string().max(12000)});
 export const researchCaseSchema=z.strictObject({id:z.string().regex(/^[\w-]{1,80}$/),category:z.string().min(1).max(80),scopeId:z.string().min(1).max(120),company:z.strictObject({id:z.string(),name:z.string(),cnpj:z.string().optional(),email:z.string().optional(),phone:z.string().optional()}),sources:z.array(source).max(10),proposed:z.unknown(),expected:z.array(fact).max(100),mustAbstain:z.boolean(),identity:z.enum(['resolved','missing','conflict']).optional()});
@@ -27,7 +28,7 @@ export function scoreResearchEvaluation(raw:unknown,values:unknown[]):Omit<Evalu
  for(const p of predictions){const k=p.caseId+':'+p.variant;if(!wanted.has(k)||seen.has(k))throw Error('Invalid prediction set');seen.add(k);}if(seen.size!==wanted.size)throw Error('Incomplete prediction set');
  let unsupportedFacts=0,crossTenantLeaks=0,correctAttributions=0,attributions=0,matched=0,expected=0,abstentions=0,abstentionCases=0,knownCostUsd=0,unknownCosts=0;const failures:string[]=[];
  for(const p of predictions){const c=dataset.cases.find(c=>c.id===p.caseId)!,good=new Set<string>(),expectedKeys=new Set(c.expected.map(key));if(p.scopeId!==c.scopeId){crossTenantLeaks++;failures.push(c.id+':scope');}
-  for(const f of p.facts){const s=c.sources.find(s=>s.id===f.sourceId),supported=!!s&&s.text.includes(f.quote)&&f.quote.includes(f.value)&&expectedKeys.has(key(f))&&p.scopeId===c.scopeId;
+  for(const f of p.facts){const s=c.sources.find(s=>s.id===f.sourceId),supported=!!s&&sanitizePeopleSource(s.text).includes(f.quote)&&f.quote.includes(f.value)&&expectedKeys.has(key(f))&&p.scopeId===c.scopeId;
    if(!supported){unsupportedFacts++;failures.push(c.id+':unsupported');}else good.add(key(f));if(personal(f)){attributions++;if(supported)correctAttributions++;}}
   matched+=good.size;expected+=expectedKeys.size;if(c.mustAbstain){abstentionCases++;if(!p.facts.some(personal))abstentions++;else failures.push(c.id+':abstention');}
   if(p.costUsd===null)unknownCosts++;else knownCostUsd+=p.costUsd;

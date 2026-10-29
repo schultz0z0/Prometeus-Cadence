@@ -23,3 +23,10 @@ test('every dataset, Actor, build, model, skill and context change invalidates t
  for(const key of Object.keys(versions))assert.notEqual(evaluationFingerprint(dataset,{...versions,[key]:'changed'}),original);
  assert.notEqual(evaluationFingerprint({...dataset,version:'v2'},versions),original);
 });
+test('citations use the sanitized evidence representation without restoring CPF or age',()=>{
+ const rawText=dataset.cases[0].sources[0].text+' CPF 123.456.789-09, 47 anos.',quote=dataset.cases[0].sources[0].text+' CPF [CPF removido], [idade removida].';
+ const gold={...dataset,cases:[{...dataset.cases[0],sources:[{...dataset.cases[0].sources[0],text:rawText}]}]};
+ const results=['traditional','hybrid'].map(variant=>({...prediction(variant as 'traditional'|'hybrid'),facts:[{...prediction('traditional').facts[0],quote}]}));
+ const report=scoreResearchEvaluation(gold,results);assert.equal(report.unsupportedFacts,0);assert.equal(report.attributionPrecision,1);assert.equal(report.coverage,1);
+ const forged=results.map(p=>({...p,facts:[{...p.facts[0],quote:quote+' Invented evidence'}]}));assert.equal(scoreResearchEvaluation(gold,forged).unsupportedFacts,2);
+});

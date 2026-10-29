@@ -1,0 +1,34 @@
+{
+  "id": "EV-277",
+  "date": "2026-10-28",
+  "session": "s15",
+  "type": "local-controlled-implementation",
+  "routes": [
+    "/settings/ai",
+    "/settings/context",
+    "/leads/enrich"
+  ],
+  "viewports": [
+    [
+      1920,
+      855
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      320,
+      844
+    ]
+  ],
+  "screenshots": 9,
+  "report": "../../../validation/06iah-intelligence-homologation.md",
+  "reference": "Historical EV217/226/271; connected/paid states not observed",
+  "verification": "351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A.",
+  "empirical": false,
+  "paidCalls": 0,
+  "externalSends": 0,
+  "cleanup": "L017 restored; prior QA snapshot and workspace preserved; own session revoked; browser closed",
+  "status": "Local-controlled accepted; no full-parity or empirical-accuracy claim; next06C.2"
+}

@@ -1,6 +1,6 @@
 # 06IA-H — Homologação das fontes e inteligência
 
-Status: implementação local/controlada verificada; revisão independente pendente. O aceite empírico com fornecedores reais e a liberação pública não fazem parte deste resultado.
+Status: concluído no contrato local/controlado, após revisão independente e correções verificadas. O aceite empírico com fornecedores reais e a liberação pública não fazem parte deste resultado.
 
 ## Entrega
 
@@ -25,7 +25,16 @@ rtk proxy node --conditions=react-server --experimental-strip-types scripts/eval
 
 O manifesto contém `datasetFile` e `input:{requestId,datasetVersion,caseIds,mode,maxCostUsd}`; `requestId` é UUID novo por intenção, preservado no replay. Fixture aceita custo0 e usa o arquivo sintético versionado em `tests/fixtures/research-evaluation.json`. A sessão privada contém `{cookie,workspaceId}` de uma sessão autenticada do administrador da plataforma; owner comum não é suficiente. Salvar a saída de prepare em arquivo privado de revisão com `token`/`basisHash`, conferir antes de run. Não colocar cookies, tokens ou dados reais no Git/log compartilhado. A CLI herdada `evaluate-prospecting.mjs --research` delega ao mesmo fluxo.
 
-`live-owned` exige opt-in `--live-owned=true`, orçamentoUSD positivo, arquivo `--outputs` com `{fingerprint,predictions}` e versões iguais à revisão. É **benchmark de saídas próprias previamente coletadas**, sem chamadas a fornecedores; todos os relatórios mantêm `empirical:false`. Não importa código executável. Custo desconhecido permanece `null`, interrompe o processamento e não vira zero. O serviço interno admite adapter controlado pelo servidor com teto por operação; não há adapter pago selecionado ou executado nesta entrega. Qualquer piloto real precisa de coleta/rotulagem, autorização, orçamento e reconciliação próprios. Um journal incerto bloqueia nova execução live nesse workspace até apuração administrativa; não editar SQL para forçar sucesso.
+`live-owned` exige opt-in `--live-owned=true`, orçamentoUSD positivo, arquivo `--outputs` com `{fingerprint,predictions}` e versões iguais à revisão. É **benchmark de saídas próprias previamente coletadas**, sem chamadas a fornecedores; todos os relatórios mantêm `empirical:false`. Não importa código executável. Custo desconhecido permanece `null`, interrompe o processamento e não vira zero. O conjunto completo de variantes deve estar no arquivo antes de iniciar o journal. O serviço interno admite adapter controlado pelo servidor com teto por operação; não há adapter pago selecionado ou executado nesta entrega. Qualquer piloto real precisa de coleta/rotulagem, autorização, orçamento e reconciliação próprios.
+
+Um journal incerto bloqueia nova execução live nesse workspace até encerramento administrativo revisado. Após expirar o lease, use uma sessão administrativa atual e um manifesto com UUID próprio para a intenção de encerramento:
+
+```powershell
+rtk proxy node --conditions=react-server --experimental-strip-types scripts/evaluate-research.ts --action=prepare-close --manifest=.runtime/closure-manifest.json --session=.runtime/evaluation-session.json --run-id=ID_DO_RUN
+rtk proxy node --conditions=react-server --experimental-strip-types scripts/evaluate-research.ts --action=close --manifest=.runtime/closure-manifest.json --session=.runtime/evaluation-session.json --run-id=ID_DO_RUN --review=.runtime/closure-review.json
+```
+
+Salvar a saída de prepare-close no arquivo privado de revisão e conferir os avisos. O encerramento mantém `accepted:false`, custo desconhecido e receipts, sem repetir I/O ou afirmar ausência de cobrança. Recibo tardio invalida a revisão anterior; prepare novamente. Sessão original vencida não impede recuperação com sessão administrativa nova. Só uma intenção nova revisada pode iniciar outro benchmark. Não editar SQL para forçar sucesso. A reconciliação financeira de fornecedor continua separada.
 
 ## Verificação e visual
 
@@ -36,3 +45,7 @@ Nove capturas reais de leitura em `/settings/ai`, `/settings/context`, `/leads/e
 QA dedicada preservada, workspace anterior restaurado, própria sessão revogada e navegador próprio fechado; zero contatos/canais/outbox/pilotos criados. Migração088 aplicada ao banco local, build atualizado e seis lanes saudáveis,localhost200. Nenhum push/merge/deploy.
 
 [Verificação](evidence/06iah-intelligence-homologation/verification.json), [manifesto de capturas](evidence/06iah-intelligence-homologation/manifest.json), [resultado sintético](evidence/06iah-intelligence-homologation/fixture-report.json), [cleanup](evidence/06iah-intelligence-homologation/closure.json), [decisões](evidence/06iah-intelligence-homologation/execution-ledger.md).
+
+## Fechamento
+
+351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. Próximo pacote: **06C.2 — dashboard, relatórios e execuções reconciliados**. Branch local preservada; nenhum push/merge/deploy. O piloto real de fontes/modelos continua pendente e obrigatório antes de aceitar acurácia ou produção pública. [Revisão](06iah-intelligence-homologation-review.md).

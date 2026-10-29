@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-28 · Session: s14 · Phase:6 Jornada integrada validada; paridade integral não aceita
+Updated: 2026-10-28 · Session: s15 · Phase:6 Homologação controlada validada; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s15:06IA-H administrativo com30casos sintéticos/60saídas, contratos tradicional/híbrido e9capturas reais mascaradas. 351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. L017restored;0chamadas pagas/envios. Próximo06C.2.
+- Not covered s15:inferência/Actor real, acurácia probabilística e estados pagos/conectados da referência; gates externos permanecem.
 
 - Covered s14:06B.5 com pausas/retomada por empresa/módulo, duplicatas entre listas, propostas substituíveis e guardSQL087a.346unit/402integration/19focused;69capturas,12pós-revisão. Oito Important corrigidos numa passagem;QA L015/L016restored;runtime200/seis lanes. Próximo06IA-H.
 - Not covered s14:acurácia/custo live, estados conectados/pagos da referência, carga/produção. Menor histórico06B.3→06F.
@@ -54,6 +57,8 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 - Decide: nenhuma decisão comercial reaberta; preservar trial7 dias, créditos pré-pagos, OpenWA gerenciado e billing aprovado. Sem100% e sem aceite do marco enquanto restar cobertura exigida.
 
 ## Next actions
+
+Fila vigente s15:06C.2 — dashboard, relatórios e execuções reconciliados.06IA-H local/controlado concluído; piloto real segue gate, não um aceite implícito. Filas anteriores são históricas.
 
 Fila vigente s14:06IA-H — homologação das fontes e inteligência após06B.5. Filas s13 e anteriores são históricas; nenhum estado não observado recebe aceite integral.
 
