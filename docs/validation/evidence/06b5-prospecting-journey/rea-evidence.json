@@ -1,0 +1,11 @@
+{
+ "date":"2026-10-28",
+ "operation":"capture_web_screenshot",
+ "evidence_id":"ev_87eddcb94ae5da1a28ea826623f4afebff3e59911344f705eaf6f6e745192881",
+ "sha256":"6c1f8331f21c4e41baa2968c5aa9cb8d215bf01467d6ca57c3ab0812df2359df",
+ "viewport":{"width":390,"height":844},
+ "target":"owned masked localhost journey popup",
+ "reference":"historical; not observed by this REA capture",
+ "limitations":["Visible viewport only; no scroll or script evaluation by REA","Browser host platform and architecture not observed","Not proof of reference backend or external delivery"],
+ "cleanup":"Only passive CDP tools; no native binary session opened. Owned Playwright session closed."
+}

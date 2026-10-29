@@ -12,7 +12,7 @@ import {grantTestLease} from './prospecting-helpers.ts';
 import {runCompanyResearch} from '../../src/server/research/company.ts';
 import {journeyRequest} from '../../src/server/research/journey-http.ts';
 import {base,resetRateLimits} from './helpers.ts';
-configureProspectingTest();Object.assign(process.env,{OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({candidates:1000,apifyRuns:2000,openaiCalls:2000}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({candidates:100000,apifyRuns:100000,openaiCalls:100000})});
+configureProspectingTest();Object.assign(process.env,{PROSPECTING_GLOBAL_CONCURRENCY:'32',OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({candidates:1000,apifyRuns:2000,openaiCalls:2000}),PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({candidates:100000,apifyRuns:100000,openaiCalls:100000})});
 after(async()=>{await workerPool().end();await closeProspectingPools();});
 beforeEach(resetRateLimits);
 async function fixture(n=2){
@@ -57,6 +57,11 @@ test('context changes require a new review and keep discovery facts; stale confi
  await assert.rejects(resumeJourney(f.p,j.id,{token:old.token,requestId:randomUUID()}),(e:any)=>e.status===409);
  const r=await prepareJourneyResume(f.p,j.id),again=await resumeJourney(f.p,j.id,{token:r.token,requestId:randomUUID()});assert.equal(again.stages.filter(s=>s.name==='discover').length,1);assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,2);
  const g=await fixture(),s=await start(g);await testAdmin(c=>c.query("UPDATE app.prospecting_job SET state='needs_reconciliation',lease_until=clock_timestamp()-interval '1 second' WHERE id=$1",[s.journey.stages[0].jobId]));await cancelJourney(g.p,s.journey.id);const unknown=await prepareJourneyResume(g.p,s.journey.id);assert.ok(unknown.blockers.length);await assert.rejects(resumeJourney(g.p,s.journey.id,{token:unknown.token,requestId:randomUUID()}),(e:any)=>e.status===409);
+});
+test('resuming a paused queued stage does not skip research or cancelled downstream people batches',async()=>{
+ const f=await fixture(),{journey}=await start(f);let j=await done(f,journey,'discover');await cancelJourney(f.p,j.id);let r=await prepareJourneyResume(f.p,j.id);j=await resumeJourney(f.p,j.id,{token:r.token,requestId:randomUUID()});assert.equal(j.stages.at(-1)?.name,'research');
+ j=await done(f,j,'research');assert.equal(j.stages.at(-1)?.name,'people');await cancelJourney(f.p,j.id);r=await prepareJourneyResume(f.p,j.id);j=await resumeJourney(f.p,j.id,{token:r.token,requestId:randomUUID()});assert.equal(j.stages.at(-1)?.name,'people');
+ j=await done(f,j,'people');assert.equal(j.stages.at(-1)?.name,'qualify');j=await done(f,j,'qualify');assert.equal(j.state,'review');assert.equal(j.stages.filter(s=>s.name==='discover').length,1);
 });
 test('tenant, current role, stale worker fence and revoked actor cannot create downstream jobs',async()=>{
  const f=await fixture(),other=await fixture(),{journey}=await start(f);await assert.rejects(getJourney(other.p,journey.id),(e:any)=>e.status===404);

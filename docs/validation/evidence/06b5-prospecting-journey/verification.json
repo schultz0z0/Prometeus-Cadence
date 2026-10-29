@@ -1,0 +1,56 @@
+{
+  "phase": "before independent review",
+  "date": "2026-10-28",
+  "unit": {
+    "tests": 346,
+    "pass": 346,
+    "fail": 0
+  },
+  "integration": {
+    "tests": 392,
+    "pass": 392,
+    "fail": 0
+  },
+  "browser": {
+    "screenshots": 48,
+    "viewports": [
+      1920,
+      390,
+      320
+    ],
+    "pageErrors": 0,
+    "horizontalOverflow": 0,
+    "backPreservesDraft": true,
+    "escapeCloses": true,
+    "controlledWrites": 6,
+    "persistentWrites": 0,
+    "externalSends": 0,
+    "paidCalls": 0
+  },
+  "types": "final after build passed",
+  "build": "final webpack passed",
+  "migrations": [
+    "087"
+  ],
+  "externalCalls": 0,
+  "externalSends": 0,
+  "newActors": 0,
+  "browserExtra": {
+    "screenshots": 9,
+    "editableSteps": 4,
+    "draftPreservedAfterPolling": true,
+    "controlledConfirmations": 1,
+    "externalSends": 0,
+    "paidCalls": 0,
+    "persistentWrites": 0,
+    "pageErrors": 0
+  },
+  "totalScreenshots": 57,
+  "runtime": {
+    "localhost": 200,
+    "lanes": 6,
+    "alive": true,
+    "failures": 0
+  },
+  "cleanup": "closure.json verified"
+}

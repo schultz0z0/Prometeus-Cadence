@@ -1,0 +1,36 @@
+{
+  "id": "EV-276",
+  "date": "2026-10-28",
+  "session": "s14",
+  "type": "local-controlled-implementation",
+  "routes": [
+    "/leads/generator",
+    "/automations/new/ai",
+    "/executions/:id",
+    "/contacts",
+    "/cadences/new",
+    "/cadences/new/ai"
+  ],
+  "viewports": [
+    [
+      1920,
+      855
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      320,
+      844
+    ]
+  ],
+  "screenshots": 57,
+  "report": "../../../validation/06b5-prospecting-journey.md",
+  "reference": "Historical EV205/206,211/212,213/214,231/232; connected states not observed",
+  "verification": "346 unit;392 integration;9focused;build/types passed",
+  "externalSends": 0,
+  "paidCalls": 0,
+  "cleanup": "Dedicated QA prior snapshot/workspace restored; own session revoked; browser closed",
+  "status": "Independent review pending"
+}

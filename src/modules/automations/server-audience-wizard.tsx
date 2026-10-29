@@ -1,5 +1,7 @@
 "use client";
 import Link from 'next/link';
+import {useState} from 'react';
+import {JourneyStart} from '@/modules/prospecting/research-journey';
 import {useDemo} from '@/demo/provider';
 import {usePlanningFlow} from '@/modules/planning/use-planning-flow';
 import {useApprovedPlanningContext,ProductPicker} from '@/modules/planning/product-picker';
@@ -8,10 +10,11 @@ import {AnalysisReview,SelectionReview} from '@/modules/planning/analysis-review
 import {AnalysisStatus} from '@/modules/planning/analysis-status';
 import {Button,Field,PageHeader,Steps,Notice,LinkButton,ChannelPills} from '@/components/ui/primitives';
 export function ServerAudienceWizard({initialJob}:{initialJob?:string}){
+ const [journey,setJourney]=useState(false);
  const workspace=useDemo(),flow=usePlanningFlow({kind:'planning',task:'audience_plan',description:'',channel:'whatsapp',timezone:workspace.preferences.timezone},initialJob),{context,error}=useApprovedPlanningContext();
  const {state,dispatch,busy}=flow,input=state.input;if(input.task!=='audience_plan')return null;
  const edited=state.edits as unknown as AudienceEdits|null;
- if(state.created?.listId)return <><PageHeader title="Pronto" description="A lista e as duas automações foram criadas e continuam pausadas." back="/automations"/><section className="panel panel-pad stack"><h2>{edited?.title}</h2><Notice>Nenhuma busca ou mensagem foi iniciada. Revise e ative a recorrência quando desejar.</Notice><div className="row wrap"><LinkButton variant="primary" href={`/cadences/new/ai?list=${encodeURIComponent(state.created.listId)}&channel=${edited?.channel??input.channel}${input.productId?'&product='+encodeURIComponent(input.productId):''}`}>Criar a cadência dessa lista →</LinkButton><LinkButton href={'/contacts?list='+encodeURIComponent(state.created.listId)}>Ver lista</LinkButton><LinkButton href="/automations">Ir para automações</LinkButton></div></section>{state.error&&<p role="alert">{state.error}</p>}</>;
+ if(state.created?.listId)return <><PageHeader title="Pronto" description="A lista e as duas automações foram criadas e continuam pausadas." back="/automations"/><section className="panel panel-pad stack"><h2>{edited?.title}</h2><Notice>Nenhuma busca ou mensagem foi iniciada. Revise e ative a recorrência quando desejar.</Notice><div className="row wrap"><LinkButton variant="primary" href={`/cadences/new/ai?list=${encodeURIComponent(state.created.listId)}&channel=${edited?.channel??input.channel}${input.productId?'&product='+encodeURIComponent(input.productId):''}`}>Criar a cadência dessa lista →</LinkButton><LinkButton href={'/contacts?list='+encodeURIComponent(state.created.listId)}>Ver lista</LinkButton><LinkButton href="/automations">Ir para automações</LinkButton><Button onClick={()=>setJourney(true)}>Iniciar prospecção completa</Button></div></section>{journey&&<JourneyStart initial={{brief:edited?.filters.term??edited?.title,location:edited?.filters.location??'',limit:edited?.dailyLimit??10,destinationListId:state.created.listId}} onClose={()=>setJourney(false)}/>}{state.error&&<p role="alert">{state.error}</p>}</>;
  return <div className="workflow-reference ai-workflow-reference audience-ai-reference"><PageHeader title="Nova automação com IA" description="Descreva o público, revise três propostas e confirme o que será criado." back="/automations"/><Steps items={['Quem alcançar','Escolher o plano']} current={state.view==='input'?0:1}/>
   {(state.error||error)&&<p className="error-bar" role="alert">{state.error||error}</p>}
   {state.view==='input'?<div className="workspace-form"><div className="ai-workflow-main">

@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-28",
+  "qaPriorDataPreserved": true,
+  "activeWorkspaceRestored": true,
+  "ownSessionRevoked": true,
+  "newContacts": 0,
+  "newChannels": 0,
+  "newOutbox": 0,
+  "pilotRecords": 0,
+  "externalSends": 0,
+  "paidCalls": 0,
+  "browserFixtures": "response-only; routes removed and owned browser closed after evidence"
+}

@@ -51,7 +51,7 @@ export async function prepareJourney(p:Principal,value:unknown):Promise<JourneyR
  const input=parse(journeyInputSchema,value);return withWorkspaceTransaction(p,async c=>{const b=await basis(c,p,input),pr=proof(p,input,b.hash);return{input,token:createReviewToken(pr,secret()),expiresAt:new Date(Date.now()+600000).toISOString(),basisHash:b.hash,blockers:b.blockers,warnings:['A pesquisa pode ser parcial. Contatos pessoais não são garantidos.','Custos de fornecedores desconhecidos não são tratados como zero. A capacidade é revalidada em cada etapa.'],usage:estimated(input,b.frozen.aiRoute),effects:['Criar a lista de destino, se necessário, e iniciar busca, investigação, pessoas e qualificação.','Resultados permanecem revisáveis. Nenhuma cadência será publicada e nenhuma mensagem será enviada.']};});
 }
 async function row(c:PoolClient,id:string,lock=false){const r=(await c.query('SELECT * FROM app.prospecting_journey WHERE id=$1'+(lock?' FOR UPDATE':''),[id])).rows[0];if(!r)throw new AppError(404,'Jornada não encontrada.');return r;}
-async function stages(c:PoolClient,id:string){return(await c.query('SELECT s.*,j.state job_state,j.input job_input,j.counts,j.error_code FROM app.journey_stage s JOIN app.prospecting_job j ON j.workspace_id=s.workspace_id AND j.id=s.job_id WHERE s.journey_id=$1 ORDER BY s.created_at,s.id',[id])).rows;}
+async function stages(c:PoolClient,id:string){return(await c.query('SELECT s.*,j.state job_state,j.input job_input,j.checkpoint job_checkpoint,j.counts,j.error_code FROM app.journey_stage s JOIN app.prospecting_job j ON j.workspace_id=s.workspace_id AND j.id=s.job_id WHERE s.journey_id=$1 ORDER BY s.created_at,s.id',[id])).rows;}
 async function view(c:PoolClient,id:string):Promise<JourneyView>{const q=await row(c,id),ss=await stages(c,id);return{id:q.id,revision:Number(q.revision),state:q.state,input:q.input,listId:q.list_id,proposalJobId:q.proposal_job_id,cadenceId:q.cadence_id,reason:q.reason,missing:(await missing(c,id)).length,stages:ss.map(s=>({name:s.name,jobId:s.job_id,state:s.job_state,missing:s.missing,companies:s.company_ids.length}))};}
 export function getJourney(p:Principal,id:string){return withWorkspaceTransaction(p,c=>view(c,id));}
 export function journeyForJob(p:Principal,jobId:string){return withWorkspaceTransaction(p,async c=>{const s=(await c.query('SELECT journey_id FROM app.journey_stage WHERE job_id=$1',[jobId])).rows[0];return s?view(c,s.journey_id):null;});}
@@ -77,8 +77,8 @@ async function enqueue(c:PoolClient,p:Principal,q:any,name:JourneyStage,ids:stri
 }
 async function ids(c:PoolClient,id:string){return(await c.query("SELECT DISTINCT i.lead_id FROM app.journey_stage s JOIN app.prospecting_item i ON i.workspace_id=s.workspace_id AND i.job_id=s.job_id JOIN app.lead l ON l.workspace_id=i.workspace_id AND l.id=i.lead_id WHERE s.journey_id=$1 AND s.name='discover' ORDER BY i.lead_id",[id])).rows.map(r=>r.lead_id as string);}
 async function missing(c:PoolClient,id:string,name:JourneyStage='research'){
- const cases=(await c.query('SELECT r.lead_id,r.state FROM app.research_case r JOIN app.journey_stage s ON s.workspace_id=r.workspace_id AND s.job_id=r.job_id WHERE s.journey_id=$1 AND s.name=$2',[id,name])).rows;
- return journeyRetryIds(cases.map(r=>({leadId:r.lead_id,state:r.state})));
+ const cases=(await c.query('SELECT r.lead_id,r.state,j.state job_state FROM app.research_case r JOIN app.journey_stage s ON s.workspace_id=r.workspace_id AND s.job_id=r.job_id JOIN app.prospecting_job j ON j.workspace_id=s.workspace_id AND j.id=s.job_id WHERE s.journey_id=$1 AND s.name=$2',[id,name])).rows;
+ return journeyRetryIds(cases.map(r=>({leadId:r.lead_id,state:r.state==='pending'&&terminal.includes(r.job_state)?r.job_state:r.state})));
 }
 async function currentBasis(c:PoolClient,p:Principal,q:any){const b=await basis(c,p,q.input);return b;}
 export async function assertJourneyAuthority(c:PoolClient,job:any){
@@ -97,8 +97,8 @@ async function advance(c:PoolClient,p:Principal,q:any){
  const b=await currentBasis(c,p,q);if(b.hash!==hashValue(q.basis)){await c.query("UPDATE app.prospecting_journey SET state='blocked',reason='CONTEXT_CHANGED',revision=revision+1 WHERE id=$1",[q.id]);return;}
  if(ss.some(s=>!terminal.includes(s.job_state)))return;
  const all=await ids(c,q.id);if(!all.length){await c.query("UPDATE app.prospecting_journey SET state='review',reason='EMPTY_RESULT',revision=revision+1 WHERE id=$1",[q.id]);return;}
- const next=sequence.find(n=>!ss.some(s=>s.name===n));
- if(next){await enqueue(c,p,q,next,all);await c.query('UPDATE app.prospecting_journey SET revision=revision+1 WHERE id=$1',[q.id]);}
+ const next=sequence.filter(n=>n!=='discover').map(name=>({name,covered:new Set(ss.filter(s=>s.name===name&&['completed','partial'].includes(s.job_state)&&(name==='research'||s.job_checkpoint.journey?.basisHash===hashValue(q.basis))).flatMap(s=>s.company_ids as string[]))})).map(s=>({name:s.name,pending:all.filter(id=>!s.covered.has(id))})).find(s=>s.pending.length);
+ if(next){await enqueue(c,p,q,next.name,next.pending);await c.query('UPDATE app.prospecting_journey SET revision=revision+1 WHERE id=$1',[q.id]);}
  else await c.query("UPDATE app.prospecting_journey SET state='review',reason=NULL,revision=revision+1 WHERE id=$1",[q.id]);
 }
 export async function advanceJourney(lease:JobLease):Promise<JourneyView>{

@@ -76,3 +76,4 @@ id,date,session,route,shows,masked
 "EV-274","2026-10-27","s12","/cadences/new; /cadences/:id; /templates; /automations/new/ai","06D.1 private file upload/retry/download and27 masked captures; blocked publication UI fixture; no blanket parity","yes; no credentials"
 
 "EV-275","2026-10-27","s13","localhost channel operation","36 masked captures; real empty and declared response-only fixtures; EV-275-channel-operation.json","masked"
+"EV-276","2026-10-28","s14","/leads/generator; /automations/new/ai; /executions/:id; /contacts; /cadences/new","06B.5 controlled journey and57 masked captures; review pending; no blanket parity","yes; no credentials"

@@ -27,3 +27,9 @@
 @media(max-width:640px){.research-generator-entry{align-items:stretch;flex-direction:column}.research-results h2{font-size:18px}.research-fact{padding:12px}.research-fact-choice .badge{margin-left:26px}.research-dialog .row>.btn{flex:1}.research-results .field{max-width:100%}}
 
 .research-options label{flex-wrap:nowrap;align-items:flex-start}.research-options label input{margin-top:3px}
+/* Journey uses the existing workflow panels and compact status rows. */
+.journey-stages{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.journey-stages li{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--border,#e0e3eb)}
+.journey-stages li>div{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.journey-progress p,.journey-progress a{overflow-wrap:anywhere}
+@media(max-width:600px){.journey-stages li{align-items:flex-start;flex-direction:column;gap:8px}.journey-stages li>div{justify-content:flex-start}.journey-progress .row>.btn{max-width:100%;white-space:normal}}

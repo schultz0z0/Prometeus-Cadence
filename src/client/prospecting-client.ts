@@ -1,6 +1,8 @@
 import type {ProspectingInput,Review,JobView,JobItemView,Page,ProviderCapabilities,JobFilters} from '../domain/prospecting.ts';
 import type {AiSettingsView,AiPolicy,AiTestReview,CodexDiagnostic} from '../domain/ai-routing.ts';
 import type {ChatGptOAuthView} from '../domain/chatgpt-oauth.ts';
+import type {JourneyInput,JourneyReview,JourneyView} from '../domain/prospecting-journey.ts';
+import type {PlanningReview} from '../domain/planning.ts';
 import {createWorkspaceTransport} from './workspace-transport.ts';
 export function createProspectingClient(options:{workspaceId:string;transport?:typeof fetch;onAccessLost?:(message:string)=>void}){
   const confirmations=new Map<string,Promise<JobView>>(),requestIds=new Map<string,string>(),applications=new Map<string,Promise<{applied:number;revision:number;listId?:string}>>();
@@ -9,6 +11,15 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
   const request=<T>(path:string,body?:unknown)=>workspace.request<T>('/api/prospecting'+path,body);
   const stableId=(key:string)=>{let id=requestIds.get(key);if(!id){id=crypto.randomUUID();requestIds.set(key,id);}return id;};
   return{
+    prepareJourney:(input:JourneyInput)=>request<JourneyReview>('/journeys',{action:'prepare',input}),
+    confirmJourney:(review:JourneyReview)=>request<JourneyView>('/journeys',{action:'confirm',input:review.input,token:review.token,requestId:stableId('journey:'+review.token)}),
+    journey:(id:string)=>request<JourneyView>('/journeys?id='+encodeURIComponent(id)),
+    journeyForJob:(id:string)=>request<JourneyView|null>('/journeys?jobId='+encodeURIComponent(id)),
+    pauseJourney:(id:string)=>request<JourneyView>('/journeys/'+encodeURIComponent(id)+'/cancel',{}),
+    prepareJourneyResume:(id:string)=>request<JourneyReview>('/journeys/'+encodeURIComponent(id)+'/resume',{action:'prepare'}),
+    resumeJourney:(id:string,review:JourneyReview)=>request<JourneyView>('/journeys/'+encodeURIComponent(id)+'/resume',{action:'confirm',token:review.token,requestId:stableId('journey-resume:'+review.token)}),
+    prepareJourneyCadence:(id:string,channels:('EMAIL'|'WHATSAPP')[])=>request<PlanningReview>('/journeys/'+encodeURIComponent(id)+'/prepare-cadence',{channels}),
+    confirmJourneyCadence:(id:string,review:PlanningReview)=>request<JourneyView>('/journeys/'+encodeURIComponent(id)+'/confirm-cadence',{channels:review.input.task==='cadence_options'?review.input.channels:[],token:review.token,requestId:stableId('journey-cadence:'+review.token)}),
     aiSettings:()=>request<AiSettingsView>('/ai/policy'),
     connectChatgpt:(expectedRevision:number)=>request<{url:string}>('/ai/oauth/start',{expectedRevision}),
     selectChatgptModel:(expectedRevision:number,model:string)=>request<ChatGptOAuthView>('/ai/oauth/model',{expectedRevision,model}),

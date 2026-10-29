@@ -1,0 +1,634 @@
+{
+  "date": "2026-10-28",
+  "masked": true,
+  "reference": "Historical EV205/206,211/212,213/214,231/232; combined connected states not observed",
+  "screens": [
+    {
+      "file": "screens/actual--automations-new-ai-1920.png",
+      "sha256": "4edde417260a74177a37c0552d19286c58ab7ae3a656829ccc15bb3255d66f39",
+      "width": 1920,
+      "height": 1059,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual--automations-new-ai-320.png",
+      "sha256": "f29b16362cffd745a88edc209f416cbcb9b322f47d8cafbebfdbab6027067e92",
+      "width": 320,
+      "height": 1712,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual--automations-new-ai-390.png",
+      "sha256": "4df8e3ce97e79d3bd3e1211fdd635637d09a3876877acaab120f068da4812f15",
+      "width": 390,
+      "height": 1652,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual--cadences-new-1920.png",
+      "sha256": "d8a03b1b086b9f7a977afa8359e2e000f1c73fb8511359af2917dea98f5db51e",
+      "width": 1920,
+      "height": 952,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual--cadences-new-320.png",
+      "sha256": "816e244ee7f2b11f42ed29d165c1217183a2e3c393f6ad2d21962d664decdd13",
+      "width": 320,
+      "height": 1040,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual--cadences-new-390.png",
+      "sha256": "685bd6419b925cc6fcec3fa936f61c153834c98c5ed16c73f8a7d390ac20b901",
+      "width": 390,
+      "height": 978,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual--contacts-1920.png",
+      "sha256": "3839a9319d8ae1920f58758ab32a6ccb095370ff0bf24c7381dc379e10f39421",
+      "width": 1920,
+      "height": 855,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual--contacts-320.png",
+      "sha256": "890264cf4544d970507aa987da5ca4c72f4719197866670d3f8e68faf66d9da5",
+      "width": 320,
+      "height": 947,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual--contacts-390.png",
+      "sha256": "9d963b830bd2249ff7e9cfd04ada914458d70e70135660395b61fc28aea23034",
+      "width": 390,
+      "height": 853,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual-blocked-review-1920.png",
+      "sha256": "2f13e10a7d0a909703bcf74d81f1991676c9fc311074eefbd0ead394c1b5d1ca",
+      "width": 1920,
+      "height": 1356,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual-blocked-review-320.png",
+      "sha256": "bef0a4730e66369ecc22ac510cd1050031d8ada4bdf5cf8dd26b1e6ee684fb49",
+      "width": 320,
+      "height": 2427,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual-blocked-review-390.png",
+      "sha256": "27f6447011494e7b752a422eb916ec677384846cf9e2ed9d7451f72a2486dee3",
+      "width": 390,
+      "height": 2315,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual-generator-1920.png",
+      "sha256": "1e738054539fa6f16e458bd1a78fdc1753152820ac8b6262d35bfaa363b9b27e",
+      "width": 1920,
+      "height": 1356,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual-generator-320.png",
+      "sha256": "fd7b2e5a7e753d9a5095188fe1f35f641d5d120ca14d4cc7c135460db30ca509",
+      "width": 320,
+      "height": 2427,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/actual-generator-390.png",
+      "sha256": "6905cce267046ec47dc9ef62db148647d81ab1a93b1af9e37447fb6d9bc5285f",
+      "width": 390,
+      "height": 2315,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/controlled-cadence-analysis-review-1920.png",
+      "sha256": "e06dc5cbcc9d88e04b164c53345e8076f4c4797f72539e41806cf20b5199e898",
+      "width": 1920,
+      "height": 1357,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-cadence-analysis-review-320.png",
+      "sha256": "3bf826755b40fe03ff09bc553c6cc05dd23a4c81461c895c6c802a2727be2b7c",
+      "width": 320,
+      "height": 2041,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-cadence-analysis-review-390.png",
+      "sha256": "94d270ecebaec9473fcb03b82b0605559974a786bb485746d0a7d4a2ac09a80d",
+      "width": 390,
+      "height": 1799,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-cadence-linked-1920.png",
+      "sha256": "ca24be6296f2e74578391ad69f10b664774169e9d0dba4df9ab21bfc0ebe88b3",
+      "width": 1920,
+      "height": 1184,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-cadence-linked-320.png",
+      "sha256": "f694bac7fb0b93bd688c5d95f2e1887b6ba560fd90e5130d06caa1888a605a44",
+      "width": 320,
+      "height": 1802,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-cadence-linked-390.png",
+      "sha256": "3ec4b7b11e613342647a3b9138fa2a00da7ddcf40f8ee551291fd1046ad15e71",
+      "width": 390,
+      "height": 1562,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-draft-created-1920.png",
+      "sha256": "8f75455b439d19778462fb2faf1e0853dfc28ac964a329766267404a1bee1f58",
+      "width": 1920,
+      "height": 855,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-draft-created-320.png",
+      "sha256": "7c55c9b59d3024fc4a964dba9acf7a2c6c7c39fe3f1e8be1682609b0b95e9a1a",
+      "width": 320,
+      "height": 844,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-draft-created-390.png",
+      "sha256": "e4b1f62ed6af425627ef136377e6621752193cc38e310c7feb7c32b05ee828fd",
+      "width": 390,
+      "height": 844,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-draft-selection-review-1920.png",
+      "sha256": "a4f859b9ce9b387a280a8f4b33a7afc04a0f2af6892d891ee3c0abdd31198345",
+      "width": 1920,
+      "height": 3628,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-draft-selection-review-320.png",
+      "sha256": "c0f70465658b39c143fce34abafad79e53db3f20cb19a07803f69272fcd296e2",
+      "width": 320,
+      "height": 4298,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-draft-selection-review-390.png",
+      "sha256": "49e37da21fd9c859c2040aa53d30b6f4904bd039dfb6bded91280a30dbd48c3a",
+      "width": 390,
+      "height": 4131,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-edited-four-steps-1920.png",
+      "sha256": "6880de478bf39b6fff05ed1d2e1a12d0633310cae4f51997ed612f8fa6de64a4",
+      "width": 1920,
+      "height": 3628,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-edited-four-steps-320.png",
+      "sha256": "3ee69337b372ab521d7ac5465a7a4a3417d26ee43f1f09ad19420e7afb92ad48",
+      "width": 320,
+      "height": 4298,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-edited-four-steps-390.png",
+      "sha256": "d767d4e866c5b561d107b85ad3a106a43ef4271ffc4b4ea7db3cbdfeaa7c76ac",
+      "width": 390,
+      "height": 4131,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-failure-1920.png",
+      "sha256": "796f616f53060e182933edb7194ae81b41beaeb724d8b87f75c0a76f370b52f5",
+      "width": 1920,
+      "height": 855,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-failure-320.png",
+      "sha256": "dd00b6797eb84fbaf679b44e94837a1ec3210cc5e10354130531753e45e96587",
+      "width": 320,
+      "height": 898,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-failure-390.png",
+      "sha256": "71e023f1296161bba42caf8c960f3c94ef99c31e1bdee87d8e46ec786f770a1e",
+      "width": 390,
+      "height": 844,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-partial-review-1920.png",
+      "sha256": "ecdb9ac561913d6a48709c36c3cb963179d86924849e1f216bb662ecab8d6032",
+      "width": 1920,
+      "height": 1357,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-partial-review-320.png",
+      "sha256": "0a0cc235758f4cec2e943081bdcce6f07c57242c1e6bce5107d02e51b24bcb8a",
+      "width": 320,
+      "height": 2041,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-partial-review-390.png",
+      "sha256": "87ddda9428e28c8315c3828e171699f05e3409a084a8c4aa06d863d8e9cd5479",
+      "width": 390,
+      "height": 1799,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-paused-1920.png",
+      "sha256": "034111940b7f661e9c255c6ee774ea440385a1ad962160dbd15c1a413c94d110",
+      "width": 1920,
+      "height": 1058,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-paused-320.png",
+      "sha256": "62e985a9e2ab12ec66d5ce6de1a92bf2ccfbff1747bb60894f18464d95a20a5a",
+      "width": 320,
+      "height": 1545,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-paused-390.png",
+      "sha256": "96fbfd99d92c1da09fbd691058935493ad9486952a2a966f70ee2a32ece5033f",
+      "width": 390,
+      "height": 1371,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-progress-1920.png",
+      "sha256": "663687008b413437dc2a00ff6c34fcbc1fa307ab9502c6e4d57ce290dc927b49",
+      "width": 1920,
+      "height": 1058,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-progress-320.png",
+      "sha256": "fdee70c409d3cc879a3903dddf3ba44c26c22f4e4d1cc399614a0e3cda4b1e82",
+      "width": 320,
+      "height": 1545,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-progress-390.png",
+      "sha256": "500cb7947a74b08743e0aa29e44e9b67b8323134274e63a3e7a64ee64b5e97bd",
+      "width": 390,
+      "height": 1337,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-recovered-draft-1920.png",
+      "sha256": "26d32de2a763172d335ff17d7edb9d1e53b44d5078d3872fd8461dffadd94624",
+      "width": 1920,
+      "height": 1058,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-recovered-draft-320.png",
+      "sha256": "494a344adc0a556fb75667e88cc10519e4ac120162992415334a2cabd73d7155",
+      "width": 320,
+      "height": 1545,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-recovered-draft-390.png",
+      "sha256": "1cbc4ac14beb3b171ac614735ca2fcd273fd3b3e3fcd73e386de485a6e55277c",
+      "width": 390,
+      "height": 1371,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-resume-review-1920.png",
+      "sha256": "eb86b317072bc73ee9bd20571a2edacf57ad5b1a9cd4f964e4dcc5a1c3915984",
+      "width": 1920,
+      "height": 1058,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-resume-review-320.png",
+      "sha256": "4399f816ba99efc92fe9207442cb2cab820bab90c47d1f3138be824e80ff5e97",
+      "width": 320,
+      "height": 1545,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-resume-review-390.png",
+      "sha256": "4d49584afb474397d840a097ed603caf68291d9d86c84604a0bfee686b1f0173",
+      "width": 390,
+      "height": 1371,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-review-1920.png",
+      "sha256": "530c32580240a1e9f43e61d4a975af6b5a0321c5e9213ce224a3368218c26e3f",
+      "width": 1920,
+      "height": 1356,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-review-320.png",
+      "sha256": "24e8803f9c3ed02b87e2d043638313dd7d3e4dd23a0a94f42bcc1e0bb8a47800",
+      "width": 320,
+      "height": 2427,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-review-390.png",
+      "sha256": "5ed36982c74f12bbb44e954bf3770be6bc0c048f91f58b6e788ab80dbeb95322",
+      "width": 390,
+      "height": 2315,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-uncertain-1920.png",
+      "sha256": "51996856b3c6fe0ce8c26dad46997a8405b863cbeed723ff9b84e33a9390bc2e",
+      "width": 1920,
+      "height": 1184,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-uncertain-320.png",
+      "sha256": "7131d03c53e0a0cf8fee9930e88368530bed3f2975fbaf4d82ac633362aec989",
+      "width": 320,
+      "height": 1737,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/controlled-uncertain-390.png",
+      "sha256": "b2db916ae03e8b14a5fe3ff33b92aec295e4d5909625d6bdd636d7a192280d58",
+      "width": 390,
+      "height": 1519,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "response-only fixture"
+    },
+    {
+      "file": "screens/journey-input-1920.png",
+      "sha256": "69b9685a29c21ae6907e6493ae07bbb60546bf874e555301f02a33ee0015844a",
+      "width": 1920,
+      "height": 1356,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/journey-input-320.png",
+      "sha256": "7863987b55069e6cb796fa0e599fe1bc348e01a3ef1a5cc6a847e3567ccb0d88",
+      "width": 320,
+      "height": 2427,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    },
+    {
+      "file": "screens/journey-input-390.png",
+      "sha256": "58589bb7ebc92f4e0643b28ccbfc681fbbdd3cbfc77f0cbeb154f2b1cb4f4c1d",
+      "width": 390,
+      "height": 2315,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "actual local UI; no confirmed execution"
+    }
+  ]
+}
