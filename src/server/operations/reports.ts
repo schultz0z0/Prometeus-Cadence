@@ -1,0 +1,26 @@
+import 'server-only';
+import {z} from 'zod';import type {Principal} from '../../domain/workspace.ts';
+import {parseReportQuery,reportMetricDefinitions,reportRate,reportSqlTimezone,type ReportQuery,type ReportView,type ReportMetric,type ReportItem} from '../../domain/reporting.ts';
+import {withWorkspaceTransaction} from '../db/transaction.ts';import {AppError} from '../errors.ts';import {authorizeReport,ensureReportProjection} from './projections.ts';import {hashValue} from '../prospecting/review.ts';
+const cursorSchema=z.strictObject({basis:z.string().regex(/^[a-f0-9]{64}$/),at:z.iso.datetime(),id:z.string().min(1).max(200)});
+const values=(raw:Record<string,unknown>)=>{const v=Object.fromEntries(Object.entries(raw).filter(([k,n])=>!['cadenceId','publicationId','stepIndex'].includes(k)&&(n===null||typeof n==='number'))) as Record<string,number|null>;return{...v,replyRate:reportRate(v.responders,v.recipients)};};
+function href(row:{kind:string;channel:string|null;ref_id:string|null}){if(row.kind==='execution')return'/executions/'+encodeURIComponent(row.ref_id??'');if(row.kind==='lead')return'/leads/'+encodeURIComponent(row.ref_id??'');return row.ref_id?'/messages/'+(row.channel==='EMAIL'?'email':'whatsapp')+'?conversationId='+encodeURIComponent(row.ref_id):'/contacts';}
+export async function readReport(p:Principal,raw:ReportQuery):Promise<ReportView>{
+ let q:ReportQuery;try{q=parseReportQuery(raw);}catch{throw new AppError(422,'Revise o período, fuso e filtros do relatório.');}
+ return withWorkspaceTransaction(p,async c=>{
+  await authorizeReport(c,p);if(q.cadenceId&&!(await c.query('SELECT id FROM app.cadence WHERE id=$1',[q.cadenceId])).rowCount)throw new AppError(404,'Cadência não encontrada.');
+  const receipt=await ensureReportProjection(c,q),checkpoint=receipt.revision+':'+receipt.period,metric=q.metric??(q.view==='executions'?'executions':q.view==='funnel'?'leads':'sent'),basis=hashValue({workspaceId:p.workspaceId,...q,cursor:undefined,metric,checkpoint});let cursor:z.infer<typeof cursorSchema>|null=null;
+  if(q.cursor){try{cursor=cursorSchema.parse(JSON.parse(Buffer.from(q.cursor,'base64url').toString()));}catch{throw new AppError(422,'Cursor de relatório inválido.');}if(cursor.basis!==basis)throw new AppError(409,'O relatório mudou; atualize a primeira página.','REPORT_CURSOR_CHANGED');}
+  const rows=(await c.query("SELECT key,date::text,values FROM app.report_daily_projection WHERE projection_version='reports-v1' AND period=$1 ORDER BY key",[receipt.period])).rows;
+  const totals=values(rows.find(r=>r.key==='totals')?.values??{}),series=rows.filter(r=>r.key.startsWith('series:')).map(r=>({date:r.date,values:values(r.values)}));
+  const dates=(await c.query("SELECT d::date::text date FROM generate_series(($1::timestamptz AT TIME ZONE $3)::date,(($2::timestamptz-interval '1 microsecond') AT TIME ZONE $3)::date,interval '1 day')d",[q.from,q.to,reportSqlTimezone(q.timezone)])).rows;
+  const empty=Object.fromEntries(Object.entries(totals).map(([k,v])=>[k,v===null?null:0]));const completeSeries=dates.map(d=>series.find(s=>s.date===d.date)??{date:d.date,values:empty});
+  const facts=(await c.query('SELECT * FROM app.report_facts($1,$2,$3) WHERE metric=$4 AND ($5::timestamptz IS NULL OR (happened_at,id)<($5::timestamptz,$6::text)) ORDER BY happened_at DESC,id DESC LIMIT 51',[q.from,q.to,q.cadenceId??null,metric,cursor?.at??null,cursor?.id??null])).rows;
+  const items:ReportItem[]=facts.slice(0,50).map(r=>({id:r.id,kind:r.kind,occurredAt:r.happened_at.toISOString(),channel:r.channel,cadenceId:r.cadence_id,stepIndex:r.step_index,state:r.state,href:href(r)})),last=items.at(-1);
+  const cadenceRows=rows.filter(r=>r.key.startsWith('cadence:')&&r.values.cadenceId),ids=cadenceRows.map(r=>r.values.cadenceId),names=(await c.query("SELECT id,left(payload->>'name',200) name FROM app.cadence WHERE id=ANY($1::text[])",[ids])).rows;
+  const cadences=cadenceRows.map(r=>({id:r.values.cadenceId,name:names.find(n=>n.id===r.values.cadenceId)?.name??'Cadência arquivada',values:values(r.values)}));
+  const steps=rows.filter(r=>r.key.startsWith('step:')&&r.values.cadenceId&&r.values.publicationId&&Number.isInteger(r.values.stepIndex)).map(r=>({cadenceId:r.values.cadenceId,publicationId:r.values.publicationId,stepIndex:r.values.stepIndex,values:values(r.values)}));
+  return{period:{from:q.from,to:q.to,timezone:q.timezone},totals,series:completeSeries,items,nextCursor:facts.length>50&&last?Buffer.from(JSON.stringify({basis,at:last.occurredAt,id:last.id})).toString('base64url'):null,asOf:receipt.asOf,stale:false,checkpoint,definitions:reportMetricDefinitions,cadences,steps,attribution:'last-preceding-accepted-message'};
+ });
+}
+export async function readReportDetail(p:Principal,id:string,q:ReportQuery){if(!Object.hasOwn(reportMetricDefinitions,id))throw new AppError(404,'Indicador não encontrado.');return readReport(p,{...q,metric:id as ReportMetric});}

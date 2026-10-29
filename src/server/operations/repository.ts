@@ -1,4 +1,5 @@
 import 'server-only';
+export {readReport,readReportDetail} from './reports.ts';
 import {z} from 'zod';
 import type {Principal} from '../../domain/workspace.ts';
 import type {OperationEventsPage} from '../../domain/operation-events.ts';
