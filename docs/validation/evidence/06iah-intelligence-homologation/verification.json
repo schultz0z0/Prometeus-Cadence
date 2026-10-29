@@ -1,0 +1,400 @@
+{
+  "date": "2026-10-28",
+  "phase": "before independent review",
+  "unit": {
+    "tests": 350,
+    "pass": 350,
+    "fail": 0
+  },
+  "integration": {
+    "tests": 415,
+    "pass": 415,
+    "fail": 0
+  },
+  "focused": {
+    "tests": 13,
+    "pass": 13,
+    "fail": 0
+  },
+  "build": "webpack production build passed",
+  "types": "post-build passed",
+  "browser": {
+    "rows": [
+      {
+        "route": "/settings/ai",
+        "width": 1920,
+        "headings": [],
+        "overflow": false,
+        "inputs": 0,
+        "buttons": [
+          {
+            "label": "Como funciona esta área",
+            "disabled": false
+          }
+        ],
+        "focus": {
+          "tag": "A",
+          "visible": true
+        }
+      },
+      {
+        "route": "/settings/context",
+        "width": 1920,
+        "headings": [
+          "Contexto de IA",
+          "Perfis de produtos e serviços"
+        ],
+        "overflow": false,
+        "inputs": 5,
+        "buttons": [
+          {
+            "label": "Como funciona esta área",
+            "disabled": false
+          },
+          {
+            "label": "Reler",
+            "disabled": true
+          },
+          {
+            "label": "Quem é a empresa Rascunho",
+            "disabled": false
+          },
+          {
+            "label": "Adicionar produto",
+            "disabled": false
+          },
+          {
+            "label": "Visão geralO que a empresa faz, pra quem e como cobra0 de 4",
+            "disabled": false
+          },
+          {
+            "label": "Perfil de clienteQuem compra, quem usa e quem não é cliente0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Dores e resultadosO que dói no cliente e o que ele ganha0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "DiferenciaisPor que você e não o concorrente0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "ConcorrentesCom quem o cliente compara0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Prova socialNúmeros, clientes e cases0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Outros detalhesLimitações e fontes0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Salvar rascunho",
+            "disabled": false
+          },
+          {
+            "label": "Aprovar e salvar",
+            "disabled": true
+          }
+        ],
+        "focus": {
+          "tag": "A",
+          "visible": true
+        }
+      },
+      {
+        "route": "/leads/enrich",
+        "width": 1920,
+        "headings": [
+          "Enriquecer decisores"
+        ],
+        "overflow": false,
+        "inputs": 0,
+        "buttons": [
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          }
+        ],
+        "focus": {
+          "tag": "A",
+          "visible": true
+        }
+      },
+      {
+        "route": "/settings/ai",
+        "width": 390,
+        "headings": [],
+        "overflow": false,
+        "inputs": 0,
+        "buttons": [
+          {
+            "label": "Como funciona esta área",
+            "disabled": false
+          }
+        ],
+        "focus": {
+          "tag": "A",
+          "visible": true
+        }
+      },
+      {
+        "route": "/settings/context",
+        "width": 390,
+        "headings": [
+          "Contexto de IA",
+          "Perfis de produtos e serviços"
+        ],
+        "overflow": false,
+        "inputs": 5,
+        "buttons": [
+          {
+            "label": "Como funciona esta área",
+            "disabled": false
+          },
+          {
+            "label": "Reler",
+            "disabled": true
+          },
+          {
+            "label": "Quem é a empresa Rascunho",
+            "disabled": false
+          },
+          {
+            "label": "Adicionar produto",
+            "disabled": false
+          },
+          {
+            "label": "Visão geralO que a empresa faz, pra quem e como cobra0 de 4",
+            "disabled": false
+          },
+          {
+            "label": "Perfil de clienteQuem compra, quem usa e quem não é cliente0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Dores e resultadosO que dói no cliente e o que ele ganha0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "DiferenciaisPor que você e não o concorrente0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "ConcorrentesCom quem o cliente compara0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Prova socialNúmeros, clientes e cases0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Outros detalhesLimitações e fontes0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Salvar rascunho",
+            "disabled": false
+          },
+          {
+            "label": "Aprovar e salvar",
+            "disabled": true
+          }
+        ],
+        "focus": {
+          "tag": "A",
+          "visible": true
+        }
+      },
+      {
+        "route": "/leads/enrich",
+        "width": 390,
+        "headings": [
+          "Enriquecer decisores"
+        ],
+        "overflow": false,
+        "inputs": 0,
+        "buttons": [
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          }
+        ],
+        "focus": {
+          "tag": "A",
+          "visible": true
+        }
+      },
+      {
+        "route": "/settings/ai",
+        "width": 320,
+        "headings": [],
+        "overflow": false,
+        "inputs": 0,
+        "buttons": [
+          {
+            "label": "Como funciona esta área",
+            "disabled": false
+          }
+        ],
+        "focus": {
+          "tag": "A",
+          "visible": true
+        }
+      },
+      {
+        "route": "/settings/context",
+        "width": 320,
+        "headings": [
+          "Contexto de IA",
+          "Perfis de produtos e serviços"
+        ],
+        "overflow": false,
+        "inputs": 5,
+        "buttons": [
+          {
+            "label": "Como funciona esta área",
+            "disabled": false
+          },
+          {
+            "label": "Reler",
+            "disabled": true
+          },
+          {
+            "label": "Quem é a empresa Rascunho",
+            "disabled": false
+          },
+          {
+            "label": "Adicionar produto",
+            "disabled": false
+          },
+          {
+            "label": "Visão geralO que a empresa faz, pra quem e como cobra0 de 4",
+            "disabled": false
+          },
+          {
+            "label": "Perfil de clienteQuem compra, quem usa e quem não é cliente0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Dores e resultadosO que dói no cliente e o que ele ganha0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "DiferenciaisPor que você e não o concorrente0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "ConcorrentesCom quem o cliente compara0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Prova socialNúmeros, clientes e cases0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Outros detalhesLimitações e fontes0 de 1",
+            "disabled": false
+          },
+          {
+            "label": "Salvar rascunho",
+            "disabled": false
+          },
+          {
+            "label": "Aprovar e salvar",
+            "disabled": true
+          }
+        ],
+        "focus": {
+          "tag": "A",
+          "visible": true
+        }
+      },
+      {
+        "route": "/leads/enrich",
+        "width": 320,
+        "headings": [
+          "Enriquecer decisores"
+        ],
+        "overflow": false,
+        "inputs": 0,
+        "buttons": [
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          },
+          {
+            "label": "Ver preview",
+            "disabled": true
+          }
+        ],
+        "focus": {
+          "tag": "A",
+          "visible": true
+        }
+      }
+    ],
+    "pageErrors": [],
+    "externalCalls": 0,
+    "reference": "historical evidence only; no connected reference attested"
+  },
+  "migrations": [
+    "088"
+  ],
+  "paidCalls": 0,
+  "externalSends": 0,
+  "runtime": {
+    "localhost": 200,
+    "lanes": 6,
+    "failures": 0
+  },
+  "cleanup": "closure.json verified",
+  "review": "pending"
+}

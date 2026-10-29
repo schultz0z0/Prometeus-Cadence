@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-28",
+  "masked": true,
+  "reference": "Historical EV217/226/271; connected/paid reference states not observed. No new full-parity claim.",
+  "screens": [
+    {
+      "file": "screens/leads-enrich-1920.png",
+      "sha256": "aff192ae412f3fcdbf90e0600d630640bda5bc8b6ceb74f76659bc6009686ba5",
+      "width": 1920,
+      "height": 855,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "state": "actual read-only local UI; dedicated non-platform-admin QA"
+    },
+    {
+      "file": "screens/leads-enrich-320.png",
+      "sha256": "64e08d85e73221ddcdd4f3d95b30847bc27b6a129c51f349ca13402cc91aefd0",
+      "width": 320,
+      "height": 1572,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "state": "actual read-only local UI; dedicated non-platform-admin QA"
+    },
+    {
+      "file": "screens/leads-enrich-390.png",
+      "sha256": "c9cd310be2460e4524e01a7fe1c41ebfcaeef2c03a88cd7824dbe24f467b8b1b",
+      "width": 390,
+      "height": 1556,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "actual read-only local UI; dedicated non-platform-admin QA"
+    },
+    {
+      "file": "screens/settings-ai-1920.png",
+      "sha256": "5e4cb5ad5611c14536a58979f47a81de142da6495b0b4d8caba8cdecf0830fc7",
+      "width": 1920,
+      "height": 872,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "state": "actual read-only local UI; dedicated non-platform-admin QA"
+    },
+    {
+      "file": "screens/settings-ai-320.png",
+      "sha256": "a5875c36b9e21dd216e3262596b6cf5ef6dfc6d4eb1acf18a2f116360ba3f39f",
+      "width": 320,
+      "height": 844,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "state": "actual read-only local UI; dedicated non-platform-admin QA"
+    },
+    {
+      "file": "screens/settings-ai-390.png",
+      "sha256": "c70293aecee8061005d651169c54e04c3fa569d4e9bdc551a3eb9f2d9143df67",
+      "width": 390,
+      "height": 844,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "actual read-only local UI; dedicated non-platform-admin QA"
+    },
+    {
+      "file": "screens/settings-context-1920.png",
+      "sha256": "0c00cb41effd8cc6ff021536ad387b25ff9276f7ab4cf4f56e499837f425acde",
+      "width": 1920,
+      "height": 1643,
+      "viewport": {
+        "width": 1920,
+        "height": 855
+      },
+      "state": "actual read-only local UI; dedicated non-platform-admin QA"
+    },
+    {
+      "file": "screens/settings-context-320.png",
+      "sha256": "eafd30f5c9bab5eea0a0497acfde7f24dcb72f814a35b76cd0a855e8e60240a7",
+      "width": 320,
+      "height": 2499,
+      "viewport": {
+        "width": 320,
+        "height": 844
+      },
+      "state": "actual read-only local UI; dedicated non-platform-admin QA"
+    },
+    {
+      "file": "screens/settings-context-390.png",
+      "sha256": "348f6d5b1a9bee1205ac87c49e693a6d8db37e582ea99f900b6f54572f7f636f",
+      "width": 390,
+      "height": 2328,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "state": "actual read-only local UI; dedicated non-platform-admin QA"
+    }
+  ]
+}

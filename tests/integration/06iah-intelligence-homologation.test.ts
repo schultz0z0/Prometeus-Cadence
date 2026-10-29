@@ -1,4 +1,4 @@
-import test,{after,beforeEach} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {randomUUID} from 'node:crypto';
+import test,{after,beforeEach} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {randomUUID} from 'node:crypto';import {spawnSync} from 'node:child_process';
 import {configureProspectingTest,prospectingUser,testAdmin,closeProspectingPools} from './prospecting-helpers.ts';import {resetRateLimits} from './helpers.ts';
 import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 import {saveAiPolicy} from '../../src/server/prospecting/ai/settings.ts';
@@ -44,6 +44,10 @@ test('revocation during I/O keeps only a technical receipt and cannot publish th
  const f=await fixture(),{value,review}=await prepared(f,input('live-owned',2));let calls=0;
  await assert.rejects(evaluateResearch(value,{principal:f.p,dataset,reviewToken:review.token,liveOptIn:true,quote:async()=>.1,run:async(c:any,v:any,a:any)=>{calls++;const p=await fixtureResearchPrediction(c,v);await testAdmin(c=>c.query('UPDATE auth.member SET role=\'viewer\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));return{...p,provider:a.provider,model:a.model,costUsd:.1};}}),(e:any)=>e.status===403);
  assert.equal(calls,1);const rows=await testAdmin(async c=>(await c.query('SELECT r.report,(SELECT count(*)::int FROM app.ai_evaluation_case c WHERE c.run_id=r.id) receipts FROM app.ai_evaluation_run r WHERE workspace_id=$1',[f.p.workspaceId])).rows);assert.equal(rows[0].report,null);assert.equal(rows[0].receipts,1);
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=\'owner\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));const runId=await testAdmin(async c=>(await c.query('SELECT id FROM app.ai_evaluation_run WHERE workspace_id=$1',[f.p.workspaceId])).rows[0].id);const recovered=await readResearchEvaluation(f.p,runId,dataset);assert.equal(recovered.report.accepted,false);assert.equal(recovered.report.knownCostUsd,.1);
+});
+test('a received output from a different provider closes as uncertain with its recorded cost',async()=>{
+ const f=await fixture(),{value,review}=await prepared(f,input('live-owned',2));const r=await evaluateResearch(value,{principal:f.p,dataset,reviewToken:review.token,liveOptIn:true,quote:async()=>.1,run:async(row:any,variant:any)=>({...await fixtureResearchPrediction(row,variant),provider:'unreviewed-provider',costUsd:.1})});assert.equal(r.accepted,false);assert.equal(r.knownCostUsd,.1);assert.equal((await readResearchEvaluation(f.p,r.runId,dataset)).state,'uncertain');
 });
 test('revocation while obtaining the cost ceiling prevents model dispatch',async()=>{
  const f=await fixture(),{value,review}=await prepared(f,input('live-owned',2));let calls=0;
@@ -60,4 +64,15 @@ test('tenant owner is not platform admin; direct SQL cannot insert or forge eval
  assert.equal((await withWorkspaceTransaction(other.p,c=>c.query('SELECT * FROM app.ai_evaluation_run'))).rowCount,0);
  await assert.rejects(withWorkspaceTransaction(other.p,c=>c.query("INSERT INTO app.ai_evaluation_run(workspace_id,id,actor_id,session_id,request_id,body_hash,fingerprint,input,versions,database_basis,lease_token) VALUES($1,'forged',$2,$3,'request','hash','hash','{}','{}','{}','token')",[other.p.workspaceId,other.p.userId,other.p.sessionId])));
  await assert.rejects(withWorkspaceTransaction(f.p,c=>c.query("UPDATE app.ai_evaluation_run SET report='{\"accepted\":true}' WHERE id=$1",[r.runId])));
+});
+test('administrative CLI rejects an incomplete manifest with a safe nonzero result',()=>{
+ const file='.runtime/06iah-invalid-'+randomUUID()+'.json';try{fs.writeFileSync(file,JSON.stringify({private:'must-not-echo'}));const result=spawnSync(process.execPath,['--conditions=react-server','--experimental-strip-types','scripts/evaluate-research.ts','--action=check','--manifest='+file],{encoding:'utf8',windowsHide:true});assert.notEqual(result.status,0);const r=JSON.parse(result.stdout);assert.equal(r.accepted,false);assert.equal(r.code,'EVALUATION_MANIFEST_INVALID');assert.ok(!JSON.stringify(r).includes('must-not-echo'));}finally{fs.unlinkSync(file);}
+});
+test('CLI prepares and confirms one fixture run using an actual platform-admin session',async()=>{
+ const f=await fixture(),prefix='.runtime/06iah-cli-'+randomUUID(),manifest=prefix+'-manifest.json',session=prefix+'-session.json',review=prefix+'-review.json';
+ try{const value=input();fs.writeFileSync(manifest,JSON.stringify({datasetFile:'tests/fixtures/research-evaluation.json',input:value}));fs.writeFileSync(session,JSON.stringify({cookie:f.cookie,workspaceId:f.p.workspaceId}));
+ const call=(action:string,extra:string[]=[])=>spawnSync(process.execPath,['--conditions=react-server','--experimental-strip-types','scripts/evaluate-research.ts','--action='+action,'--manifest='+manifest,'--session='+session,...extra],{encoding:'utf8',windowsHide:true});
+ const prepared=call('prepare');assert.equal(prepared.status,0,prepared.stderr);const data=JSON.parse(prepared.stdout);assert.ok(data.token);fs.writeFileSync(review,JSON.stringify(data));const confirmed=call('run',['--review='+review]);assert.equal(confirmed.status,0,confirmed.stderr);const r=JSON.parse(confirmed.stdout);assert.equal(r.accepted,true);assert.equal(r.mode,'fixture');assert.equal(r.empirical,false);assert.ok(!confirmed.stdout.includes(f.cookie));
+ const replay=call('run',['--review='+review]);assert.equal(replay.status,0);assert.equal(JSON.parse(replay.stdout).runId,r.runId);
+ }finally{for(const file of [manifest,session,review])if(fs.existsSync(file))fs.unlinkSync(file);}
 });
