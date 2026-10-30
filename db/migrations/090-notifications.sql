@@ -43,7 +43,7 @@ BEGIN
  OR jsonb_typeof(value->'email')<>'boolean' OR jsonb_typeof(value->'whatsapp')<>'boolean' OR jsonb_typeof(value->'sound')<>'boolean' OR jsonb_typeof(value->'badge')<>'boolean'
  OR value->'summary'->>'frequency' NOT IN('off','daily','weekly') OR coalesce(value->'summary'->>'time','')!~'^(?:[01][0-9]|2[0-3]):[0-5][0-9]$'
  THEN RAISE EXCEPTION 'NOTIFICATION_INVALID';END IF;
- IF value->'quiet'<>'null'::jsonb AND (jsonb_typeof(value->'quiet')<>'object' OR coalesce(value->'quiet'->>'start','')!~'^(?:[01][0-9]|2[0-3]):[0-5][0-9]$' OR coalesce(value->'quiet'->>'end','')!~'^(?:[01][0-9]|2[0-3]):[0-5][0-9]$') THEN RAISE EXCEPTION 'NOTIFICATION_INVALID';END IF;
+ IF value->'quiet'<>'null'::jsonb AND (jsonb_typeof(value->'quiet')<>'object' OR NOT EXISTS(SELECT 1 FROM pg_timezone_names WHERE name=value->'quiet'->>'timezone') OR coalesce(value->'quiet'->>'start','')!~'^(?:[01][0-9]|2[0-3]):[0-5][0-9]$' OR coalesce(value->'quiet'->>'end','')!~'^(?:[01][0-9]|2[0-3]):[0-5][0-9]$') THEN RAISE EXCEPTION 'NOTIFICATION_INVALID';END IF;
  IF value->'quiet'<>'null'::jsonb THEN PERFORM clock_timestamp() AT TIME ZONE(value->'quiet'->>'timezone');END IF;
  INSERT INTO app.notification_preference(workspace_id,user_id,revision,payload) VALUES(ws,uid,coalesce(rev,0)+1,value)
  ON CONFLICT(workspace_id,user_id) DO UPDATE SET revision=EXCLUDED.revision,payload=EXCLUDED.payload,updated_at=clock_timestamp() RETURNING revision INTO rev;

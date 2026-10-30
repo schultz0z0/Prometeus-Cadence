@@ -3,7 +3,7 @@ import {randomUUID} from 'node:crypto';
 import {runtimeConfig,runSerialLoop} from './runtime-core.ts';
 process.loadEnvFile('.env.local');
 const name=process.argv[2],config=runtimeConfig(process.env),controller=new AbortController(),workerId=randomUUID();
-if(!['dispatch','sync','jobs','scheduler','channels','billing'].includes(name))throw Error('Invalid runtime lane');
+if(!['dispatch','sync','jobs','scheduler','channels','billing','notifications'].includes(name))throw Error('Invalid runtime lane');
 for(const signal of ['SIGINT','SIGTERM'] as const)process.on(signal,()=>controller.abort());
 process.on('message',message=>{if(message==='shutdown')controller.abort();});
 process.on('disconnect',()=>controller.abort());
@@ -22,6 +22,8 @@ if(name==='dispatch'){
  const {runOpenwaChannelTick}=await import('../src/server/channels/openwa/worker.ts');tick=()=>runOpenwaChannelTick({now:new Date().toISOString(),signal:controller.signal}).then(result=>{if(result.failed)throw Error('Channel maintenance failed');return result;});intervalMs=config.channelsMs;
 }else if(name==='billing'){
  const {processBillingTick}=await import('../src/server/billing/worker.ts');tick=()=>processBillingTick({limit:config.billingBatch,signal:controller.signal});intervalMs=config.billingMs;
+}else if(name==='notifications'){
+ const {processNotificationTick}=await import('../src/server/notifications/worker.ts');tick=()=>processNotificationTick({limit:config.notificationBatch,signal:controller.signal});intervalMs=config.notificationMs;
 }else if(name==='jobs'){
  const {runWorkerOnce}=await import('../src/server/prospecting/worker.ts');tick=()=>runWorkerOnce({},{workerId,signal:controller.signal});intervalMs=config.jobMs;
 }else{
@@ -35,6 +37,6 @@ try{
  const [{closeDispatchPool},{closeIngressPool}]=await Promise.all([import('../src/server/messaging/worker-db.ts'),import('../src/server/channels/ingress-db.ts')]);
  await Promise.allSettled([closeDispatchPool(),closeIngressPool()]);
  if(name==='billing'){const {closeBillingPool}=await import('../src/server/billing/db.ts');await closeBillingPool();}
- if(name==='jobs'||name==='scheduler'){const {workerPool}=await import('../src/server/prospecting/worker-db.ts');await workerPool().end();}
+ if(name==='jobs'||name==='scheduler'||name==='notifications'){const {workerPool}=await import('../src/server/prospecting/worker-db.ts');await workerPool().end();}
  process.disconnect?.();
 }

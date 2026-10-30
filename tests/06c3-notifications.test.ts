@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import{notificationAllowed,quietUntil,summaryWindow,notificationSound,notificationPreferencesSchema,defaultNotificationPreferences}from'../src/domain/notifications.ts';
+import{runtimeConfig}from'../scripts/runtime-core.ts';
 test('notification delivery requires enabled channel, verified destination and nonquiet state',()=>{
  for(const enabled of[true,false])for(const quiet of[true,false])for(const verifiedDestination of[true,false])assert.equal(notificationAllowed({enabled,quiet,verifiedDestination}),enabled&&!quiet&&verifiedDestination);
 });
@@ -23,3 +24,4 @@ test('preference contract rejects unrecognized destinations, invalid zones and d
  const p=defaultNotificationPreferences;assert.equal(notificationPreferencesSchema.safeParse(p).success,true);
  for(const extra of[{destination:'other@example.com'},{quiet:{timezone:'Wrong/Zone',start:'22:00',end:'08:00'}},{events:['lead_reply','lead_reply']}])assert.equal(notificationPreferencesSchema.safeParse({...p,...extra}).success,false);
 });
+test('notification runtime has bounded permanent cadence',()=>{const c=runtimeConfig({});assert.equal(c.notificationMs,5000);assert.equal(c.notificationBatch,20);assert.throws(()=>runtimeConfig({RUNTIME_NOTIFICATION_MS:'100'}));});
