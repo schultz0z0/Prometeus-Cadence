@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getPools } from "../db/pool.ts";
 import { requireIdentity } from "./principal.ts";
 import { AppError, checkOrigin, errorResponse } from "../errors.ts";
+import{invalidateFactorChallenges}from'./two-factor-policy.ts';
 export async function securityRequest(request: Request) {
   try {
     const { user, session } = await requireIdentity(request.headers);
@@ -28,6 +29,7 @@ export async function securityRequest(request: Request) {
       [body.data.sessionId, user.id],
     );
     if (!deleted.rowCount) throw new AppError(404, "Sessão não encontrada.");
+    await invalidateFactorChallenges(getPools().authPool,user.id);
     return Response.json(
       { ok: true },
       { headers: { "cache-control": "no-store" } },

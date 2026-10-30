@@ -3,7 +3,8 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { getPools } from "../db/pool.ts";
 import { requireIdentity, requirePrincipal } from "../auth/principal.ts";
-import { AppError } from "../errors.ts";
+import { AppError,translateError } from "../errors.ts";
+import{canRemoveOwner}from'../../domain/security-policy.ts';
 import { sendLocalMail } from "../auth/mail.ts";
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {isPlatformAiAdmin} from '../prospecting/ai/platform.ts';
@@ -19,12 +20,13 @@ const actionSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("switch"), workspaceId: id }),
   z.strictObject({
     type: z.literal("invite"),
+    requestId:z.uuid().optional(),
     email: z.email().max(254),
     role,
   }),
   z.strictObject({ type: z.literal("accept"), invitationId: id }),
-  z.strictObject({ type: z.literal("role"), memberId: id, role }),
-  z.strictObject({ type: z.literal("remove"), memberId: id }),
+  z.strictObject({ type: z.literal("role"), memberId: id, role:z.enum(['owner','admin','operator']),expectedRevision:z.number().int().min(1).optional(),requestId:z.uuid().optional() }),
+  z.strictObject({ type: z.literal("remove"), memberId: id,expectedRevision:z.number().int().min(1).optional(),requestId:z.uuid().optional() }),
   z.strictObject({
     type: z.literal("rename"),
     name: z.string().trim().min(2).max(100),
@@ -50,13 +52,14 @@ export async function identitySnapshot(headers: Headers) {
   const members = active
     ? ((
         await pool.query(
-          'SELECT m.id,m."userId",m.role,u.name,u.email FROM member m JOIN "user" u ON u.id=m."userId" WHERE m."organizationId"=$1',
+          'SELECT m.id,m."userId",m.role,m.revision,u.name,u.email FROM member m JOIN "user" u ON u.id=m."userId" WHERE m."organizationId"=$1',
           [active.id],
         )
       ).rows as {
         id: string;
         userId: string;
         role: string;
+        revision:number;
         name: string;
         email: string;
       }[])
@@ -65,7 +68,7 @@ export async function identitySnapshot(headers: Headers) {
     active && active.role !== "operator"
       ? (
           await pool.query(
-            'SELECT id,email,role,status,"expiresAt" FROM invitation WHERE "organizationId"=$1 AND status=\'pending\' AND "expiresAt">now()',
+            'SELECT id,email,role,status,revision,"expiresAt" FROM invitation WHERE "organizationId"=$1 AND status=\'pending\' AND "expiresAt">now()',
             [active.id],
           )
         ).rows
@@ -91,6 +94,7 @@ export async function identityAction(
   if(user.registrationRequired) throw new AppError(403,'Complete seu cadastro para continuar.','REGISTRATION_REQUIRED');
   const client = await getPools().authPool.connect();
   let invitationMail: { email: string; id: string; name: string } | undefined;
+  const result:{id?:string}={};
   try {
     await client.query("BEGIN");
     // Serialize membership changes and provisioning for an actor; target row locks
@@ -213,6 +217,8 @@ export async function identityAction(
     ).rows[0];
     if (!actor || actor.role === "operator")
       throw new AppError(403, "Seu papel não permite administrar o workspace.");
+    const requestId='requestId'in action?action.requestId:undefined;
+    if(requestId){const previous=(await client.query('SELECT actor_id,result,input=$3::jsonb matches FROM membership_request WHERE workspace_id=$1 AND request_id=$2',[p.workspaceId,requestId,action])).rows[0];if(previous){if(previous.actor_id!==user.id||!previous.matches)throw new AppError(409,'Esta operação já foi utilizada com outros dados.');await client.query('COMMIT');return previous.result;}}
     if (action.type === "invite") {
       if (action.role === "admin" && actor.role !== "owner")
         throw new AppError(
@@ -242,6 +248,7 @@ export async function identityAction(
           "Já existe um convite pendente com outro papel.",
         );
       const inviteId = pending?.id ?? randomUUID();
+      result.id=inviteId;
       if (!pending)
         await client.query(
           'INSERT INTO invitation(id,"organizationId",email,role,status,"expiresAt","createdAt","inviterId") VALUES($1,$2,$3,$4,\'pending\',now()+interval \'48 hours\',now(),$5)',
@@ -258,7 +265,7 @@ export async function identityAction(
           p.workspaceId,
         ])
       ).rows[0];
-      invitationMail = { email: action.email, id: inviteId, name: org.name };
+      if(!pending)invitationMail = { email: action.email, id: inviteId, name: org.name };
     } else if (action.type === "rename") {
       await client.query("UPDATE organization SET name=$1 WHERE id=$2", [
         action.name,
@@ -272,16 +279,18 @@ export async function identityAction(
         )
       ).rows[0];
       if (!target) throw new AppError(404, "Membro não encontrado.");
+      if(action.expectedRevision!==undefined&&target.revision!==action.expectedRevision)throw new AppError(409,'O membro mudou. Atualize antes de continuar.','MEMBERSHIP_CHANGED');
       if (
-        target.role === "owner" ||
+        (target.role === "owner"&&actor.role!=='owner') ||
         (actor.role !== "owner" &&
           (target.role !== "operator" ||
             (action.type === "role" && action.role !== "operator")))
       )
         throw new AppError(
           403,
-          "Somente o proprietário pode alterar administradores; a titularidade é preservada.",
+          "Seu papel não permite alterar este membro.",
         );
+      if(target.role==='owner'&&(action.type==='remove'||action.role!=='owner')){const owners=Number((await client.query('SELECT count(*) FROM member WHERE "organizationId"=$1 AND role=\'owner\' AND id<>$2',[p.workspaceId,target.id])).rows[0].count);if(!canRemoveOwner({targetRole:target.role,remainingOwners:owners}))throw new AppError(409,'O workspace precisa manter pelo menos um proprietário.','LAST_OWNER');}
       if (action.type === "remove" || action.type === "role") {
         const targetEmail = (
           await client.query('SELECT email FROM "user" WHERE id=$1', [
@@ -305,10 +314,11 @@ export async function identityAction(
       "INSERT INTO membership_audit(actor_id,workspace_id,action) VALUES($1,$2,$3)",
       [user.id, p.workspaceId, action.type],
     );
+    if(requestId)await client.query('INSERT INTO membership_request(workspace_id,request_id,actor_id,input,result) VALUES($1,$2,$3,$4,$5)',[p.workspaceId,requestId,user.id,action,result]);
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK");
-    throw e;
+    if(e instanceof Error&&e.message==='LAST_OWNER')throw new AppError(409,'O workspace precisa manter pelo menos um proprietário.','LAST_OWNER');throw translateError(e);
   } finally {
     client.release();
   }
@@ -321,5 +331,5 @@ export async function identityAction(
     );
     return { id: m.id };
   }
-  return {};
+  return result;
 }

@@ -2,7 +2,7 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { APIError } from 'better-auth/api';
 import { validateRegistration } from '../../domain/registration.ts';
-import { organization } from "better-auth/plugins";
+import { organization,twoFactor } from "better-auth/plugins";
 import {
   adminAc,
   ownerAc,
@@ -86,6 +86,7 @@ export function authOptions(pool: Pool) {
         ),
     },
     session: {
+      additionalFields:{twoFactorVerified:{type:'boolean' as const,required:false,defaultValue:false,input:false,returned:false}},
       expiresIn: 60 * 60 * 24 * 7,
       updateAge: 60 * 60 * 24,
       cookieCache: { enabled: false },
@@ -107,6 +108,7 @@ export function authOptions(pool: Pool) {
       },
     },
     plugins: [
+      twoFactor({issuer:'Prometeus Cadence',allowPasswordless:true,twoFactorCookieMaxAge:300,skipVerificationOnEnable:false,backupCodeOptions:{storeBackupCodes:'encrypted'}}),
       organization({
         roles: { owner: ownerAc, admin: adminAc, operator: memberAc },
         creatorRole: "owner",
@@ -140,9 +142,12 @@ export async function handleAuthRequest(request: Request) {
   let authPath:string;
   try{authPath=decodeURIComponent(new URL(request.url).pathname).replace(/\/+$/,'');}
   catch{return Response.json({message:'Requisição inválida.'},{status:422});}
+  // The library supplies algorithms and challenge handling. Product wrappers
+  // enforce current-session proof, replay prevention and stricter setup policy.
+  if(authPath.startsWith('/api/auth/two-factor/')||authPath.startsWith('/api/auth/totp/'))return Response.json({message:'Use a configuração de segurança da conta.'},{status:403,headers:{'cache-control':'no-store'}});
   // Organization tables/ACL are provided by the plugin. Product mutations go
   // through the stricter business service, including owner invariants and audit.
-  if (new URL(request.url).pathname.startsWith("/api/auth/organization/"))
+  if (authPath.startsWith("/api/auth/organization/"))
     return Response.json(
       { message: "Use a administração do workspace." },
       { status: 403 },
@@ -153,6 +158,12 @@ export async function handleAuthRequest(request: Request) {
     request.headers.get("origin") !== new URL(base).origin
   ) {
     return Response.json({ message: "Origem não permitida." }, { status: 403 });
+  }
+  const existingSession=request.headers.get('cookie')?await getAuth().api.getSession({headers:request.headers}):null;
+  if(existingSession){
+    const proof=(await getPools().authPool.query('SELECT u."twoFactorEnabled",s."twoFactorVerified" FROM session s JOIN "user" u ON u.id=s."userId" WHERE s.id=$1 AND s."userId"=$2 AND s."expiresAt">clock_timestamp()',[existingSession.session.id,existingSession.user.id])).rows[0];
+    const publicPath=/^\/api\/auth\/(?:sign-in\/|sign-up\/|callback\/|reset-password(?:\/|$))/.test(authPath)||['/api/auth/get-session','/api/auth/sign-out','/api/auth/request-password-reset','/api/auth/verify-email','/api/auth/send-verification-email','/api/auth/error'].includes(authPath);
+    if(proof?.twoFactorEnabled&&!proof.twoFactorVerified&&!publicPath)return Response.json({code:'TWO_FACTOR_REQUIRED',message:'Confirme o código do autenticador para continuar.'},{status:403,headers:{'cache-control':'no-store'}});
   }
   // This application exposes JSON signup only. Reject other formats before
   // duplicate handling, including legacy form submissions accepted upstream.
@@ -205,6 +216,9 @@ export async function handleAuthRequest(request: Request) {
   const response = await getAuth().handler(
     new Request(request.url, { method: request.method, headers, body }),
   );
+  if(existingSession&&response.ok&&['/api/auth/sign-out','/api/auth/revoke-session','/api/auth/revoke-sessions','/api/auth/revoke-other-sessions'].includes(authPath)){
+    const{invalidateFactorChallenges}=await import('./two-factor-policy.ts');await invalidateFactorChallenges(getPools().authPool,existingSession.user.id);
+  }
   if (response.status >= 300 && response.status < 400) return response;
   if (response.headers.get("content-type")?.includes("application/json")) {
     const data = await response.json();

@@ -10,11 +10,12 @@ export async function requireIdentity(headers: Headers) {
     throw new AppError(403, "Confirme seu e-mail para continuar.");
   const current = (
     await getPools().authPool.query(
-      'SELECT "activeOrganizationId" FROM session WHERE id=$1 AND "userId"=$2 AND "expiresAt">now()',
+      'SELECT s."activeOrganizationId",s."twoFactorVerified",u."twoFactorEnabled" FROM session s JOIN "user" u ON u.id=s."userId" WHERE s.id=$1 AND s."userId"=$2 AND s."expiresAt">now()',
       [result.session.id, result.user.id],
     )
   ).rows[0];
   if (!current) throw new AppError(401, "Sua sessão venceu. Entre novamente.");
+  if(current.twoFactorEnabled&&!current.twoFactorVerified)throw new AppError(403,'Confirme o código do autenticador para continuar.','TWO_FACTOR_REQUIRED');
   return {
     ...result,
     session: {
