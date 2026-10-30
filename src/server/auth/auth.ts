@@ -216,6 +216,12 @@ export async function handleAuthRequest(request: Request) {
   const response = await getAuth().handler(
     new Request(request.url, { method: request.method, headers, body }),
   );
+  if(existingSession&&response.ok&&['/api/auth/change-password','/api/auth/set-password'].includes(authPath)){
+    // The credential trigger revokes existing sessions. Better Auth can rotate a
+    // replacement afterwards; the product requires a fresh login after a change.
+    await getPools().authPool.query('DELETE FROM session WHERE "userId"=$1',[existingSession.user.id]);
+    const{invalidateFactorChallenges}=await import('./two-factor-policy.ts');await invalidateFactorChallenges(getPools().authPool,existingSession.user.id);
+  }
   if(existingSession&&response.ok&&['/api/auth/sign-out','/api/auth/revoke-session','/api/auth/revoke-sessions','/api/auth/revoke-other-sessions'].includes(authPath)){
     const{invalidateFactorChallenges}=await import('./two-factor-policy.ts');await invalidateFactorChallenges(getPools().authPool,existingSession.user.id);
   }

@@ -5,7 +5,8 @@ import { useIdentity } from "@/client/workspace-provider";
 import { useAction } from "@/demo/provider";
 import { Button, Field, Notice, Badge } from "@/components/ui/primitives";
 import { Icon } from "@/components/ui/icon";
-import { EyeOff, KeyRound, Monitor, ShieldCheck } from "lucide-react";
+import { EyeOff, Monitor, Lock,ShieldCheck } from "lucide-react";
+import {TwoFactorDialog} from './two-factor';
 function PasswordField({label,value,onChange,autoComplete,minLength}:{label:string;value:string;onChange:(value:string)=>void;autoComplete:string;minLength?:number}) {
   const [visible,setVisible]=useState(false);
   return <Field label={label}><span className="settings-password-field"><input type={visible?"text":"password"} autoComplete={autoComplete} required minLength={minLength} maxLength={128} value={value} onChange={e=>onChange(e.target.value)}/><button type="button" aria-label={visible?"Ocultar senha":"Mostrar senha"} aria-pressed={visible} onClick={()=>setVisible(!visible)}>{visible?<EyeOff size={16}/>:<Icon name="Eye" size={16}/>}</button></span></Field>;
@@ -18,6 +19,10 @@ interface Session {
   userAgent?: string;
   current: boolean;
 }
+function deviceLabel(ua=''){
+ const browser=/Edg\//.test(ua)?'Edge':/Firefox\//.test(ua)?'Firefox':/Chrome\//.test(ua)?'Chrome':/Safari\//.test(ua)?'Safari':'Outro dispositivo';
+ const system=/Android/.test(ua)?'Android':/iPhone|iPad/.test(ua)?'iOS':/Windows/.test(ua)?'Windows 10/11':/Mac OS/.test(ua)?'macOS':/Linux/.test(ua)?'Linux':'';return system?browser+' · '+system:browser;
+}
 export function Security() {
   const identity = useIdentity(),
     run = useAction();
@@ -26,11 +31,11 @@ export function Security() {
     [newPassword, setNew] = useState(""),
     [confirmation, setConfirmation] = useState(""),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),[factor,setFactor]=useState<{enabled:boolean;hasPassword:boolean}|null>(null),[factorOpen,setFactorOpen]=useState(false);
   async function load() {
-    const r = await fetch("/api/security", { cache: "no-store" });
+    let r;try{r=await fetch("/api/security", { cache: "no-store" });}catch{throw Error('Não foi possível carregar as sessões.');}
     if (!r.ok) throw Error("Não foi possível carregar as sessões.");
-    setSessions((await r.json()).sessions);
+    const data=await r.json();setSessions(data.sessions);setFactor(data.factor);setError('');
   }
   useEffect(() => {
     if (identity) void load().catch((e) => setError(e.message));
@@ -63,8 +68,8 @@ export function Security() {
                       result.error.message ??
                         "Não foi possível trocar a senha.",
                     );
-                  await load();
-                }, "Senha alterada. Outras sessões foram encerradas.")
+                  location.assign('/login');
+                }, "Senha alterada. Entre novamente para continuar.")
               ) {
                 setCurrent("");
                 setNew("");
@@ -73,7 +78,7 @@ export function Security() {
               setBusy(false);
             }}
           >
-            <header className="settings-reference-panel-head"><span className="settings-reference-symbol"><KeyRound size={20}/></span><div><h2>Senha</h2><p>Mínimo de 12 caracteres. Depois de trocar, as outras sessões são encerradas.</p></div></header>
+            <header className="settings-reference-panel-head"><span className="settings-reference-symbol"><Lock size={20}/></span><div><h2>Senha</h2><p>Mínimo de 12 caracteres. Depois de trocar, entre novamente neste navegador.</p></div></header>
             <div className="settings-reference-panel-body"><div className="settings-reference-grid security-password-grid">
               <PasswordField label="Senha atual" value={currentPassword} onChange={setCurrent} autoComplete="current-password"/>
               <PasswordField label="Nova senha" value={newPassword} onChange={setNew} autoComplete="new-password" minLength={12}/>
@@ -81,30 +86,31 @@ export function Security() {
             </div>
             {confirmation&&confirmation!==newPassword&&<p role="status" className="settings-reference-footnote">As novas senhas precisam ser iguais.</p>}
             <div className="form-actions">
-              <Button variant="primary" icon="Lock" disabled={busy||!currentPassword||newPassword.length<12||confirmation!==newPassword}>
+              <Button variant="primary" icon="Lock" disabled={busy||!factor?.hasPassword||!currentPassword||newPassword.length<12||confirmation!==newPassword}>
                 Trocar senha
               </Button>
             </div>
             </div>
           </form>
-          <section className="settings-reference-panel"><header className="settings-reference-panel-head"><span className="settings-reference-symbol"><ShieldCheck size={20}/></span><div><h2>Autenticador (2FA)</h2><p>Google Authenticator, 1Password, Authy ou similar.</p></div><Badge>Indisponível</Badge></header><div className="settings-reference-panel-body row between wrap"><p>A configuração do autenticador ainda não está disponível neste ambiente.</p><Button variant="primary" disabled>Ativar autenticador</Button></div></section>
+          <section className="settings-reference-panel"><header className="settings-reference-panel-head"><span className="settings-reference-symbol"><ShieldCheck size={20}/></span><div><h2>Autenticador (2FA)</h2><p>Google Authenticator, 1Password, Authy ou similar.</p></div><Badge tone={factor?.enabled?'green':undefined}>{factor?factor.enabled?'Ativo':'Inativo':'Carregando…'}</Badge></header><div className="settings-reference-panel-body row between wrap"><p>{factor?.enabled?'Sua conta está protegida pelo código do autenticador.':'Adicione uma segunda etapa de verificação ao entrar na sua conta.'}</p><Button variant="primary" disabled={!factor||busy} onClick={()=>setFactorOpen(true)}>{factor?.enabled?'Desativar autenticador':'Ativar autenticador'}</Button></div></section>
+          {factorOpen&&factor&&<TwoFactorDialog enabled={factor.enabled} hasPassword={factor.hasPassword} onClose={()=>setFactorOpen(false)} onEnabled={load}/>}
           <section className="settings-reference-panel"><header className="settings-reference-panel-head"><span className="settings-reference-symbol"><Monitor size={20}/></span><div><h2>Dispositivos conectados</h2><p>Sessões ativas da sua conta. Encerre as que você não reconhecer.</p></div></header><div className="settings-reference-panel-body">
-          {error && <p role="alert">{error}</p>}
+          {error && <div><p role="alert">{error}</p><Button onClick={()=>void load().catch(e=>setError(e.message))}>Tentar novamente</Button></div>}
           <div className="settings-session-list">
             {sessions.map((s) => (
               <div key={s.id} className="settings-session-row row between wrap">
                 <div>
                   <strong>
-                    {s.current ? "Este dispositivo" : "Outro dispositivo"}
+                    {deviceLabel(s.userAgent)}
                   </strong>
                   <p
                     className="muted"
                     style={{ maxWidth: 500, overflowWrap: "anywhere" }}
                   >
-                    {s.userAgent || "Navegador local"}
+                    {s.current?'Este dispositivo':'Sessão ativa'}
                   </p>
                   <small>
-                    Criada em {new Date(s.createdAt).toLocaleString("pt-BR")}
+                    Último uso {new Date(s.updatedAt).toLocaleString("pt-BR")} · Expira {new Date(s.expiresAt).toLocaleString('pt-BR')}
                   </small>
                 </div>
                 <div className="row">

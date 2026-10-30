@@ -251,7 +251,7 @@ export async function identityAction(
       result.id=inviteId;
       if (!pending)
         await client.query(
-          'INSERT INTO invitation(id,"organizationId",email,role,status,"expiresAt","createdAt","inviterId") VALUES($1,$2,$3,$4,\'pending\',now()+interval \'48 hours\',now(),$5)',
+          'INSERT INTO invitation(id,"organizationId",email,role,status,"expiresAt","createdAt","inviterId") VALUES($1,$2,$3,$4,\'pending\',now()+interval \'7 days\',now(),$5)',
           [
             inviteId,
             p.workspaceId,

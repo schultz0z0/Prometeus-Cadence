@@ -29,7 +29,7 @@ export async function withClientContextTransaction<T>(client:PoolClient,principa
       throw new AppError(403, "Você não tem mais acesso ao workspace.");
     // Interactive requests prove their current session. Background roles are
     // constrained by their own durable lease/fencing checks, not a browser token.
-    if(context.rows[0]?.database_role==='cadence_app' && principal.sessionId){const proof=await client.query('SELECT app.second_factor_allowed($1) allowed',[principal.sessionId]);if(!proof.rows[0]?.allowed)throw new AppError(403,'Confirme o código do autenticador para continuar.','TWO_FACTOR_REQUIRED');}
+    if(context.rows[0]?.database_role==='cadence_app' && principal.sessionId){const proof=await client.query('SELECT app.second_factor_allowed($1) allowed',[principal.sessionId]);if(proof.rows[0]?.allowed==null)throw new AppError(401,'Sua sessão venceu. Entre novamente.');if(!proof.rows[0].allowed)throw new AppError(403,'Confirme o código do autenticador para continuar.','TWO_FACTOR_REQUIRED');}
     principal = { ...principal, role: membership.rows[0].role };
     const result = await fn(client);
     await client.query("COMMIT");

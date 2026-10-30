@@ -1,0 +1,518 @@
+{
+  "package": "06E.1",
+  "status": "pending-final-review",
+  "referenceWrites": 0,
+  "images": [
+    {
+      "file": "local-disable-start-1920.png",
+      "sha256": "730ff0076e0ab40bd0b759b81a4ee82e20ac5b336c0c74cedf8a9bdc27ba34f3",
+      "width": 1920,
+      "imageHeight": 855,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-disable-start-320.png",
+      "sha256": "f87ee39b46ea3fd75117627f35fa59407b77906d2ddfe81e5e107263725068ef",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-disable-start-390.png",
+      "sha256": "76f48661ebfe743c11f9fd49ffd1df6e407e1f5d9e474409df2cb8221ede8ba1",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-disabled-login-390.png",
+      "sha256": "6f458027ee4119caa7dba7391bc90c76bb473539c7113030bc5299e6048b7f27",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-enabled-1920.png",
+      "sha256": "62ad0beb6627a705bb69a9a7b10f99731a650f40fe34e10b61e0c67981926bd8",
+      "width": 1920,
+      "imageHeight": 855,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-enabled-320.png",
+      "sha256": "110a6e74c187eb7657541a1423a5c9983460fb5982dadf8706a7895eacd1e0c8",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-enabled-390.png",
+      "sha256": "e8f013b5c85584cbe7634a2164cd6d9597e5421f55cb45a1b4e669060411a8ce",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-final-seats-1920.png",
+      "sha256": "0b1ef154b20b9d00f36d9d268fee95130c1d5ae919b200bfe73f126c9716b3b6",
+      "width": 1920,
+      "imageHeight": 872,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-final-seats-320.png",
+      "sha256": "4e4ea22d01f7c5812416eab063202cd31ed32f31c76fafc8cc58821d140cb19b",
+      "width": 320,
+      "imageHeight": 1059,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-final-seats-390.png",
+      "sha256": "308f75b234bd158dc20feb4a708fb0084595868ac7005b09f27864af382a64e4",
+      "width": 390,
+      "imageHeight": 976,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-final-security-1920.png",
+      "sha256": "c3806aef6c9b73fbc79fe1391c7050e5100d83754926b84d49f7e0b6264e67ab",
+      "width": 1920,
+      "imageHeight": 979,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-final-security-320.png",
+      "sha256": "58f13b492729179dfe9e7a37a6350661fab6915332705d9c1c520585e387a0f4",
+      "width": 320,
+      "imageHeight": 1526,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-final-security-390.png",
+      "sha256": "870f5abd009640d4d3de69bbbf5b0df15d0475bf6ae8e4f0b7d04fa35a7129df",
+      "width": 390,
+      "imageHeight": 1490,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-login-challenge-390.png",
+      "sha256": "fe3dfae15515364997dddefecabcfda4208e9242bc0f9a97c2447c870a78b1c3",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-login-wrong-code-390.png",
+      "sha256": "2023d4a0e2f658556b2fabbedcdde20b55091bf7b083289396a7862f2f2d9a42",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-member-admin-390.png",
+      "sha256": "7870f38b5ddc322911036c241f61258416878ef4b51cedec04def2b57e0240e6",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-member-pending-390.png",
+      "sha256": "f46289e1d439bf52d4aebea043e62f559e6282584e6badc255233a57408292fa",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-member-removed-390.png",
+      "sha256": "ed2db4fbad405995429340c0d5f01b9c211560794e7a26e5bcf0dba33f41f582",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-member-seat-limit-390.png",
+      "sha256": "cd703f1f7afe3cb4eb4d6cb1bb4252fa5b1770397264b0036a79a3b60d93ddba",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-member-stale-conflict-390.png",
+      "sha256": "5e0fadd9bc551a03ed6d9632c2ad03ba4ac8d3cae83eb67427173279c94c3196",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-password-revoked-320.png",
+      "sha256": "c4e1ea4bc4dc4351873d2ac96c04e1a23cb3a6691456767d370c46887ca13158",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-public-accept-invitation-1920.png",
+      "sha256": "09d2eca053c20e5dad417bc21c7a8693f3d83dbb554ae46b4246bcef79ddfc66",
+      "width": 1920,
+      "imageHeight": 855,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-public-accept-invitation-320.png",
+      "sha256": "c4e1ea4bc4dc4351873d2ac96c04e1a23cb3a6691456767d370c46887ca13158",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-public-accept-invitation-390.png",
+      "sha256": "6f458027ee4119caa7dba7391bc90c76bb473539c7113030bc5299e6048b7f27",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-public-login-1920.png",
+      "sha256": "09d2eca053c20e5dad417bc21c7a8693f3d83dbb554ae46b4246bcef79ddfc66",
+      "width": 1920,
+      "imageHeight": 855,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-public-login-320.png",
+      "sha256": "c4e1ea4bc4dc4351873d2ac96c04e1a23cb3a6691456767d370c46887ca13158",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-public-login-390.png",
+      "sha256": "6f458027ee4119caa7dba7391bc90c76bb473539c7113030bc5299e6048b7f27",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-public-reset-password-1920.png",
+      "sha256": "cecd6768c66b01144deaefb6614f86932fda844be3f6d666555a09ba8a494d46",
+      "width": 1920,
+      "imageHeight": 855,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-public-reset-password-320.png",
+      "sha256": "38f1698af0596288627bbd9c86d8fb24d5532055936c63dda86d79ee8df9a0e4",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-public-reset-password-390.png",
+      "sha256": "851054cbeed149749427594df70d91110b7d7feca99843252f81e80d072b5b2d",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-reset-expired-320.png",
+      "sha256": "909a3d0dde2d7ee017a0636f8f635af77beae85dd9345bcf194ce7fe9abb122d",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-seats-1920.png",
+      "sha256": "4e84cb4c9b25412e3b165004faa85cbc3e3a6baa85f3d051d7d48d7742615a7a",
+      "width": 1920,
+      "imageHeight": 872,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-seats-320.png",
+      "sha256": "02a7bc3a5fa2e468407780d3c431eaf35ee5adcd680de6a13c4e2011a07eac0e",
+      "width": 320,
+      "imageHeight": 1059,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-seats-390.png",
+      "sha256": "308f75b234bd158dc20feb4a708fb0084595868ac7005b09f27864af382a64e4",
+      "width": 390,
+      "imageHeight": 976,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-security-1920.png",
+      "sha256": "5b25dc4ffd41a7d8248e548cd30924eab27d910d9d5a379fdcc45e175fbd45e2",
+      "width": 1920,
+      "imageHeight": 906,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-security-320.png",
+      "sha256": "fbf7f0f60b8b9facd9e5ec5cc879c5ecfa2ca2b9525b191ee70cb39245febb86",
+      "width": 320,
+      "imageHeight": 1353,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-security-390.png",
+      "sha256": "7c6b6221bec8e275610eae1b05ecf4e6ecf6c4f0bba7e35fabeca9c6146760c3",
+      "width": 390,
+      "imageHeight": 1269,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-security-enabled-390.png",
+      "sha256": "5eea91752c0a596746f7331ec59b204ea87b63f642c33284c43c10edc4ed1581",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-session-load-failure-390.png",
+      "sha256": "9d9664a9f8e1d22c55228004ab3def5a2f4ef968e2364000b29212af6e9547ee",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-session-revoked-390.png",
+      "sha256": "893ac66f95e174968d2533f628fea5e67839a6d64635702670dbfc8ee04d1075",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-setup-close-confirmation-390.png",
+      "sha256": "9f7bd0c2b2584f71c40af384d2b60bdbec3af5df0c787584d51660db5d3e6ab6",
+      "width": 390,
+      "imageHeight": 1269,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-setup-qr-390.png",
+      "sha256": "d25ac9695b96daf25edb53ede28466c079ed00bb0e46cf13d3a9ffaaa0ab45a6",
+      "width": 390,
+      "imageHeight": 1269,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-setup-start-1920.png",
+      "sha256": "b1ce8c5eb3cfa412fdfa81b0b6febd4f600b4eef79e6cfa69b90cf91c6b6c4ba",
+      "width": 1920,
+      "imageHeight": 906,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-setup-start-320.png",
+      "sha256": "ef3d4b8694536fe70dea273e2c6fee4c25029c6975dd500db098dbc8e56024c6",
+      "width": 320,
+      "imageHeight": 1353,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-setup-start-390.png",
+      "sha256": "6823294fd9e2b5f5183c39ef8c0e68c6249610d861dad8d97786977e714c342f",
+      "width": 390,
+      "imageHeight": 1269,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-setup-success-390.png",
+      "sha256": "554250bbfc7dd9fc83a75ac965d0f9db33c800573befbeb2647625e1b1ba05d4",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "local-setup-wrong-password-390.png",
+      "sha256": "c07534020a6d6dd89e2bf1e21f2f96158a46264fd0b42949b1e644a9f67c713f",
+      "width": 390,
+      "imageHeight": 1269,
+      "masked": true,
+      "source": "local disposable QA"
+    },
+    {
+      "file": "reference-public-accept-invitation-1920.png",
+      "sha256": "d3e28f7be7e6f6679ef9a2824a808d96d033c5b09bce748469d8e0794a2fea33",
+      "width": 1920,
+      "imageHeight": 855,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-public-accept-invitation-320.png",
+      "sha256": "771145a0b50483668d5eb8d7b512d70a37609af7b4c4e30b2f96ce932a0593f9",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-public-accept-invitation-390.png",
+      "sha256": "ef837f9ff10ffe2114cb4c96c72e48bb3bc33fa9c30f50e9f33dad07498fecb2",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-public-login-1920.png",
+      "sha256": "fef4b2d288d580b85cf7e5518bef9aedd1abaefa186f51febae0b58374b646d3",
+      "width": 1920,
+      "imageHeight": 855,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-public-login-320.png",
+      "sha256": "86353aa131da2687105b1d9a3bb43db6dd98d9cda686a082894f83d8d51da5c9",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-public-login-390.png",
+      "sha256": "6aedc2cc92ca5b664ebdbf195f37226146695e6850e405a3aafff40ee54e4c1d",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-public-reset-password-1920.png",
+      "sha256": "23ff6656f5528039181ddae1c9139a200cb54693a624c0edde4799ad1aa4ceeb",
+      "width": 1920,
+      "imageHeight": 855,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-public-reset-password-320.png",
+      "sha256": "5092875c6994b630a6cdcd98e677caf4303c45ccfcc3f24591f54d96af092f92",
+      "width": 320,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-public-reset-password-390.png",
+      "sha256": "02c117438c69fc09c1964d38baf02c1357f6f4fbb45ad8f96985272cea9f59b4",
+      "width": 390,
+      "imageHeight": 844,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-seats-1920.png",
+      "sha256": "0c1757d63fd4145f4f872267e08e1393d5bf2d46d279d63252f4fb937dccbf44",
+      "width": 1920,
+      "imageHeight": 855,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-seats-320.png",
+      "sha256": "8f47f24b3e5b3b05518170f7f6e5b493bc084964e1f9ae115da285082f91f8e2",
+      "width": 320,
+      "imageHeight": 960,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-seats-390.png",
+      "sha256": "01c21aa7a0ea4d6e5ae7c552523df8f8f312d164b39221714e1bcca686926df9",
+      "width": 390,
+      "imageHeight": 924,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-security-1920.png",
+      "sha256": "8086dbf4013c6065d726d06853c5ce93511242f357f4b3b7f6088197b17c60c4",
+      "width": 1920,
+      "imageHeight": 863,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-security-320.png",
+      "sha256": "47b2ec5e9616b77b5cf5f146cd5eb95a495d353776e0b5516559e9ab81521303",
+      "width": 320,
+      "imageHeight": 1513,
+      "masked": true,
+      "source": "reference L4 read-only"
+    },
+    {
+      "file": "reference-security-390.png",
+      "sha256": "a4c3be3a3efe9b17f672d1a7cfce7a6b2c98a01c1db744a98b37004c5f48cdb5",
+      "width": 390,
+      "imageHeight": 1407,
+      "masked": true,
+      "source": "reference L4 read-only"
+    }
+  ],
+  "cleanup": {
+    "ownedUsersRemoved": 2,
+    "ownedWorkspaceRemoved": true,
+    "remainingOwnedSessions": 0,
+    "externalSends": 0,
+    "paidCalls": 0,
+    "operatorAccountUntouched": true
+  },
+  "limitations": [
+    "QR/backup/connected and paid reference flows not exercised; reference backend not attested",
+    "OAuth pending-session state tested synthetically without real Google reauthorization",
+    "Mailbox verified by dedicated SQL fixture; new external SMTP delivery not attested",
+    "Local signup/invitation mail stayed in loopback capture; no external destination",
+    "Intermediate browser scripts resumed after expected workspace selection and corrected accessible locator; only stated checkpoints accepted"
+  ]
+}

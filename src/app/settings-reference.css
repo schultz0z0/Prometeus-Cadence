@@ -54,6 +54,23 @@
 .settings-session-row:last-child { border-bottom:0; }
 .settings-session-row strong { font-size:0.875rem; }
 .settings-session-row p,.settings-session-row small { margin:4px 0 0; font-size:0.75rem; line-height:1.125rem; }
+.factor-dialog { width:min(560px,calc(100vw - 32px)); }
+.security-reference form.settings-reference-panel > .settings-reference-panel-body { padding-bottom:12px; }
+.security-reference form.settings-reference-panel .form-actions { margin:18px -20px 0; padding:12px 20px 0; }
+.security-reference form.settings-reference-panel .form-actions .btn.primary { min-height:32px; font-size:0.75rem; }
+.factor-dialog .stack { display:flex; flex-direction:column; gap:16px; }
+.factor-dialog .factor-qr { display:grid; justify-items:center; gap:12px; }
+.factor-dialog .factor-qr img { max-width:100%; height:auto; }
+.factor-dialog details { max-width:100%; overflow-wrap:anywhere; }
+.factor-backups { padding:16px; border:1px solid var(--border); border-radius:10px; background:var(--hover); }
+.factor-backups > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.factor-backups code { overflow-wrap:anywhere; font-size:0.8125rem; }
+.factor-dialog .form-actions { flex-wrap:wrap; }
+.members-reference { position:relative; }
+.members-status { gap:12px; flex-wrap:wrap; position:absolute; right:0; top:0; }
+.members-empty { display:flex; min-height:168px; align-items:center; justify-content:center; flex-direction:column; gap:10px; }
+.members-empty svg,.members-empty p { color:var(--muted); }
+.members-empty p { font-size:0.75rem; margin:0; }
 .context-reference .subtitle { max-width:900px; margin:4px 0 0; font-size:0.875rem; line-height:1.25rem; }
 .context-reference .context-used { gap:8px; margin:14px 0 24px; font-size:0.75rem; line-height:1.125rem; }
 .context-reference .context-used .badge { border:0; background:var(--hover,#f3f4f6); font-size:0.6875rem; line-height:1rem; padding:2px 7px; }
@@ -99,6 +116,8 @@
   .context-reference .context-save-bar { margin-left:280px; flex-wrap:wrap; }
 }
 @media(max-width:767px) {
+  .members-status { position:static; margin-bottom:16px; }
+  .security-reference form.settings-reference-panel .form-actions { margin-left:-16px; margin-right:-16px; padding-left:16px; padding-right:16px; }
   .settings-reference-grid,.security-password-grid,.settings-contact-block .billing-contact-fields { grid-template-columns:1fr; }
   .settings-reference-panel-head,.settings-reference-panel-body { padding:16px; }
   .settings-contact-block > .field { max-width:none; }

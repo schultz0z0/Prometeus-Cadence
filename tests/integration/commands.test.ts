@@ -9,6 +9,7 @@ import {
 } from "../../src/server/workspaces/commands.ts";
 import { verifiedUser, resetRateLimits } from "./helpers.ts";
 import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
+import {testAdmin} from './prospecting-helpers.ts';
 after(async () => getPools().close());
 test("one bulk action and its job roll back together and retry once after a committed response is lost", async () => {
   await resetRateLimits();
@@ -110,10 +111,10 @@ test("normalized rows isolate same IDs, transaction context resets and foreign l
     }),
   );
   assert.equal((await readWorkspaceSnapshot(a)).revision, 1);
-  await getPools().authPool.query(
-    'DELETE FROM member WHERE "organizationId"=$1 AND "userId"=$2',
+  await testAdmin(c=>c.query(
+    'DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',
     [a.workspaceId, a.userId],
-  );
+  ));
   await assert.rejects(readWorkspaceSnapshot(a));
 });
 test("audience confirmation is atomic, concurrent-safe and idempotent before revision checking", async () => {

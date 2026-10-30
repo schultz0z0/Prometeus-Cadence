@@ -3,6 +3,8 @@ import{getPools}from'../../src/server/db/pool.ts';import{getAuth}from'../../src/
 import{prepareTotp,verifyTotp,disableTotp,completeSecondFactor}from'../../src/server/auth/two-factor-policy.ts';
 import{identityAction,identitySnapshot}from'../../src/server/workspaces/service.ts';import{verifiedUser,resetRateLimits,requestAuth,cookies,password,base}from'./helpers.ts';import{testAdmin}from'./prospecting-helpers.ts';import{symmetricDecrypt}from'better-auth/crypto';
 import{withWorkspaceTransaction}from'../../src/server/db/transaction.ts';
+import{twoFactorRequest}from'../../src/server/auth/two-factor-http.ts';
+import{identityRequest}from'../../src/server/workspaces/identity-http.ts';
 after(async()=>getPools().close());
 const h=(cookie:string)=>new Headers({cookie,origin:base});
 async function user(){await resetRateLimits();return verifiedUser();}
@@ -47,7 +49,7 @@ test('membership revisions and idempotency prevent stale edits and duplicate rem
 });
 test('a captured interactive principal without current second-factor proof cannot execute an app transaction',async()=>{
  const u=await user(),headers=h(u.cookie);await identityAction(headers,{type:'create',requestId:randomUUID(),name:'Second factor SQL guard'});const p=await requirePrincipal(headers),setup=await prepareTotp(headers,{password}),out=new Headers();await verifyTotp(headers,{challengeId:setup.challengeId,code:await code(u.user.id)},out);
- await assert.rejects(withWorkspaceTransaction(p,c=>c.query('SELECT 1')),{status:403,code:'TWO_FACTOR_REQUIRED'});
+  await assert.rejects(withWorkspaceTransaction(p,c=>c.query('SELECT 1')),{status:401});
  const current=await requirePrincipal(h(cookies(new Response(null,{headers:out}))));await assert.rejects(withWorkspaceTransaction(current,c=>c.query('SELECT secret FROM auth."twoFactor"')),/permission denied/);
 });
 test('passwordless setup needs a fresh authenticated session and pending social-style sessions must complete TOTP',async()=>{
@@ -65,8 +67,28 @@ test('setup attempts are bounded and SQL last-owner guard also rejects a direct 
  const ws=(await identityAction(headers,{type:'create',requestId:randomUUID(),name:'Direct owner guard'})).workspaceId!;await assert.rejects(getPools().authPool.query('DELETE FROM member WHERE "organizationId"=$1',[ws]),/LAST_OWNER/);
 });
 test('revoking an interactive session without 2FA also fences a previously captured principal',async()=>{
- const u=await user(),headers=h(u.cookie);await identityAction(headers,{type:'create',requestId:randomUUID(),name:'Session fencing'});const p=await requirePrincipal(headers);await securityRequest(new Request(base+'/api/security',{method:'POST',headers,body:JSON.stringify({sessionId:p.sessionId})}));await assert.rejects(withWorkspaceTransaction(p,c=>c.query('SELECT 1')),{status:403});
+ const u=await user(),headers=h(u.cookie);await identityAction(headers,{type:'create',requestId:randomUUID(),name:'Session fencing'});const p=await requirePrincipal(headers);await securityRequest(new Request(base+'/api/security',{method:'POST',headers,body:JSON.stringify({sessionId:p.sessionId})}));await assert.rejects(withWorkspaceTransaction(p,c=>c.query('SELECT 1')),{status:401});
 });
 test('disabling requires password and fresh TOTP and revokes all sessions and pending login challenges',async()=>{
  const u=await factorUser(),pending=await login(u.email);await assert.rejects(disableTotp(h(u.cookie),{password:'wrong-password',code:await code(u.user.id)}));assert.equal((await requireIdentity(h(u.cookie))).user.id,u.user.id);await getPools().authPool.query('DELETE FROM totp_use WHERE user_id=$1',[u.user.id]);await disableTotp(h(u.cookie),{password,code:await code(u.user.id)});await assert.rejects(requireIdentity(h(u.cookie)),{status:401});await assert.rejects(completeSecondFactor(h(pending),{code:u.setup.backupCodes[0],backup:true}));assert.equal((await getPools().authPool.query('SELECT "twoFactorEnabled" FROM "user" WHERE id=$1',[u.user.id])).rows[0].twoFactorEnabled,false);
+});
+test('HTTP factor adapter enforces origin identity strict input and private no-store responses',async()=>{
+ const u=await user(),call=(action:string,body:unknown,cookie=u.cookie,origin=base)=>twoFactorRequest(new Request(base+'/api/security/two-factor/'+action,{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify(body)}),action);
+ assert.equal((await call('prepare',{password},'')).status,401);assert.equal((await call('prepare',{password},u.cookie,'https://foreign.example')).status,403);assert.equal((await call('prepare',{password,other:true})).status,422);assert.equal((await call('unknown',{})).status,404);assert.equal((await call('verify',{challengeId:randomUUID(),code:'bad'})).status,422);
+ const r=await call('prepare',{password}),setup=await r.json();assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');assert.ok(setup.qr.startsWith('data:image/png;base64,'));assert.deepEqual(Object.keys(setup).sort(),['backupCodes','challengeId','qr','uri']);const verified=await call('verify',{challengeId:setup.challengeId,code:await code(u.user.id)});assert.equal(verified.status,200);assert.deepEqual(await verified.json(),{enabled:true});assert.ok(verified.headers.getSetCookie().length>0);
+ const pending=await login(u.email),recovered=await call('recovery',{code:setup.backupCodes[0],backup:true},pending);assert.equal(recovered.status,200);assert.deepEqual(await recovered.json(),{ok:true});
+});
+test('HTTP membership edits require current scope revision request identity and supported method; conflicts and replay are explicit',async()=>{
+ const a=await user(),b=await user(),ah=h(a.cookie),ws=(await identityAction(ah,{type:'create',name:'HTTP membership',requestId:randomUUID()})).workspaceId!;ah.set('x-cadence-workspace',ws);
+ const call=(body:unknown,headers=ah,method='POST')=>identityRequest(new Request(base+'/api/identity',{method,headers,body:JSON.stringify(body)}));
+ const invite={type:'invite',email:b.email,role:'operator',requestId:randomUUID()};assert.equal((await call(invite,new Headers({origin:base,'x-cadence-workspace':ws}))).status,401);assert.equal((await call({...invite,requestId:undefined})).status,422);assert.equal((await call(invite,ah,'DELETE')).status,405);
+ const first=await call(invite);assert.equal(first.status,200);const result=await first.json();assert.deepEqual(await(await call(invite)).json(),result);await identityAction(h(b.cookie),{type:'accept',invitationId:result.id});const m=(await identitySnapshot(ah)).members.find(v=>v.userId===b.user.id)!;
+ const role={type:'role',memberId:m.id,role:'admin',requestId:randomUUID(),expectedRevision:m.revision};assert.equal((await call(role)).status,200);assert.equal((await call({...role,role:'operator',requestId:randomUUID()})).status,409);assert.equal((await call({...role,expectedRevision:undefined})).status,422);
+ await identityAction(ah,{type:'role',memberId:m.id,role:'operator',expectedRevision:2,requestId:randomUUID()});const bh=h(b.cookie);bh.set('x-cadence-workspace',ws);assert.equal((await call({...invite,email:'other@cadence.example',requestId:randomUUID()},bh)).status,403);
+});
+test('a successful password change cannot return a replacement cookie that keeps the current browser authenticated',async()=>{
+ const u=await user(),response=await requestAuth('change-password',{currentPassword:password,newPassword:'Replaced-test-password-984!',revokeOtherSessions:true},u.cookie);assert.equal(response.status,200);const replacement=cookies(response);assert.ok(replacement);await assert.rejects(requireIdentity(h(replacement)),{status:401});
+});
+test('new team invitations use the observed seven-day lifetime without rewriting earlier invitations',async()=>{
+ const a=await user(),headers=h(a.cookie);await identityAction(headers,{type:'create',name:'Invite lifetime',requestId:randomUUID()});const before=Date.now(),r=await identityAction(headers,{type:'invite',email:'lifetime@cadence.example',role:'operator',requestId:randomUUID()}),invitation=(await identitySnapshot(headers)).invitations.find(i=>i.id===r.id)!;const hours=(+new Date(invitation.expiresAt)-before)/3600000;assert.ok(hours>167&&hours<=169);
 });

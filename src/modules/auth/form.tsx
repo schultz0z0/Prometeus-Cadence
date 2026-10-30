@@ -8,6 +8,7 @@ import { RegistrationChoice, type RegistrationIntent } from "./registration-choi
 import {RegistrationFields} from './registration-fields';
 import {LEGAL_VERSION} from '@/domain/legal-documents';
 import {entryDestination,signupDestination,validateRegistration} from '@/domain/registration';
+import {SecondFactorForm} from './second-factor';
 type Mode = "login" | "register" | "forgot" | "reset" | "verify";
 const titles: Record<Mode, string> = {
   login: "Bem-vindo de volta",
@@ -23,6 +24,7 @@ export function AuthForm({
   next = '/dashboard',
   initialError = '',
   localMail = false,
+  initialSecondFactor=false,
 }: {
   mode: Mode;
   token?: string;
@@ -30,8 +32,10 @@ export function AuthForm({
   next?: string;
   initialError?: string;
   localMail?: boolean;
+  initialSecondFactor?:boolean;
 }) {
   const [email, setEmail] = useState("");
+  const [secondFactor,setSecondFactor]=useState(initialSecondFactor);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -51,6 +55,7 @@ export function AuthForm({
   const verificationPath='/onboarding/entry?next='+encodeURIComponent(onboardingPath);
   const loginPath='/login?next='+encodeURIComponent(onboardingPath);
   let validRegistration=false;try{validateRegistration(registration);validRegistration=true;}catch{}
+  const invalidReset=mode==='reset'&&!token;
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
@@ -87,7 +92,8 @@ export function AuthForm({
         throw Error(
           result.error.code === 'EMAIL_NOT_VERIFIED' ? 'Confirme seu e-mail antes de entrar. Você pode solicitar outro link abaixo.' : mode==='reset' ? 'Este link é inválido, expirou ou já foi utilizado. Solicite um novo link.' : mode==='login' ? 'Não foi possível entrar. Confira seu e-mail e senha e tente novamente.' : result.error.message ?? "Não foi possível concluir. Tente novamente.",
         );
-      if (mode === "login") location.assign(onboardingPath);
+      if(mode==='login'&&result.data&&'twoFactorRedirect'in result.data&&result.data.twoFactorRedirect){setPassword('');setSecondFactor(true);}
+      else if (mode === "login") location.assign(onboardingPath);
       else setDone(true);
     } catch (err) {
       setError(
@@ -100,7 +106,7 @@ export function AuthForm({
     }
   }
   return (
-    <main className={`auth-page auth-${mode}`}>
+    <main className={`auth-page auth-${mode}${invalidReset?' auth-reset-invalid':''}`}>
       <aside className="auth-story">
         <Link href="/" className="auth-logo">
           ◈ Prometeus<span>Cadence</span>
@@ -129,13 +135,14 @@ export function AuthForm({
       <section className="auth-content">
         <div className="auth-box">
           {mode==='register'&&<div className="registration-progress" aria-label="Etapas do cadastro"><span className={done||registerDetails?'complete':'active'}>{done||registerDetails?'✓':'1'}</span><i/><span className={done?'complete':registerDetails?'active':''}>{done?'✓':'2'}</span><i/><span className={done?'active':''}>3</span></div>}
-          <h1>{mode==='register'?(registerDetails?'Criar sua conta':'Escolha como começar'):titles[mode]}</h1>
+          {invalidReset&&<Link href="/login" className="auth-reset-mobile-brand">◈ Prometeus<span>Cadence</span></Link>}
+          <h1>{invalidReset?'Link inválido':secondFactor?'Verificação de segurança':mode==='register'?(registerDetails?'Criar sua conta':'Escolha como começar'):titles[mode]}</h1>
           <p>
-            {mode === "login"
+            {invalidReset?'Este link de redefinição está incompleto ou expirou. Solicite um novo em “Esqueci a senha”.':secondFactor?'Confirme sua identidade para continuar':mode === "login"
               ? "Entre na sua conta para continuar"
               : mode==='forgot'?'Sem problema! Informe seu e-mail para receber o link de redefinição.':mode==='register'&&!registerDetails?'Dá pra trocar de plano depois, a qualquer momento.':mode==='register'?'Preencha seus dados e confirme seu e-mail. Nenhuma cobrança é feita ao criar a conta.':"Sua conta e seus dados em um workspace exclusivo."}
           </p>
-          {mode==='register'&&!registerDetails?<RegistrationChoice value={intent} onChange={setIntent} onContinue={()=>setRegisterDetails(true)}/>:done ? (
+          {invalidReset?<Link className="btn primary auth-reset-back" href={loginPath}>← Voltar ao login</Link>:secondFactor?<SecondFactorForm next={onboardingPath} onBack={async()=>{await authClient.signOut();location.assign(loginPath);}}/>:mode==='register'&&!registerDetails?<RegistrationChoice value={intent} onChange={setIntent} onContinue={()=>setRegisterDetails(true)}/>:done ? (
             <div className="auth-feedback" role="status">
               {mode === "reset"
                 ? "Senha redefinida. Entre com sua nova senha."

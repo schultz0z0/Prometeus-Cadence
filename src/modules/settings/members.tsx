@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState,useRef } from "react";
 import { useIdentity, type IdentityView } from "@/client/workspace-provider";
 import { identityPost } from "@/modules/auth/workspace";
 import { useAction } from "@/demo/provider";
@@ -21,21 +21,24 @@ export function Members() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("operator");
   const [busy, setBusy] = useState(false);
+  const requests=useRef(new Map<string,string>());
   const run = useAction();
   const me = data?.workspaces.find(
     (w) => w.id === data.activeWorkspaceId,
   )?.role;
-  async function act(body: unknown) {
+  async function refresh(){const response=await fetch('/api/identity',{cache:'no-store',headers:{'x-cadence-workspace':data!.activeWorkspaceId!}});if(!response.ok)throw Error('Não foi possível atualizar os membros.');setData(await response.json());}
+  async function act(body: Record<string,unknown>) {
     if (busy) return false;
     setBusy(true);
     const ok = await run(async () => {
-      await identityPost(body, data?.activeWorkspaceId ?? undefined);
+      const key=JSON.stringify(body),requestId=requests.current.get(key)??crypto.randomUUID();requests.current.set(key,requestId);
+      await identityPost({...body,requestId}, data?.activeWorkspaceId ?? undefined);
       const response = await fetch("/api/identity", {
         cache: "no-store",
         headers: { "x-cadence-workspace": data!.activeWorkspaceId! },
       });
       if (!response.ok) throw Error("Não foi possível atualizar os membros.");
-      setData(await response.json());
+      setData(await response.json());requests.current.delete(key);
     }, "Workspace atualizado.");
     setBusy(false);
     return ok;
@@ -46,8 +49,9 @@ export function Members() {
       <p className="subtitle">
         Pessoas do seu time que operam esta conta. Entram com o próprio login e trabalham nos seus leads e cadências.
       </p>
+      {data&&<div className="members-status row between"><Badge>{data.members.length} {data.members.length===1?'membro':'membros'} · {data.invitations.length} convites pendentes</Badge><Button disabled={busy} onClick={()=>void run(refresh,'Membros atualizados.')}>Atualizar membros</Button></div>}
       <section className="settings-reference-panel">
-        <header className="settings-reference-panel-head"><span className="settings-reference-symbol"><Icon name="Users" size={20}/></span><div><h2>Convidar</h2><p>A pessoa recebe um e-mail com o link de acesso, válido por 48 horas.</p></div></header>
+        <header className="settings-reference-panel-head"><span className="settings-reference-symbol"><Icon name="Users" size={20}/></span><div><h2>Convidar</h2><p>A pessoa recebe um e-mail com o link de acesso, válido por 7 dias.</p></div></header>
         <form className="settings-reference-panel-body members-invite-form" onSubmit={async e=>{e.preventDefault();if(await act({type:"invite",email,role}))setEmail("");}}>
           <Field label="E-mail"><input type="email" placeholder="colega@empresa.com.br" required disabled={!data||me==="operator"||busy} value={email} onChange={e=>setEmail(e.target.value)}/></Field>
           {me==="owner"&&<Field label="Papel"><select value={role} disabled={busy} onChange={e=>setRole(e.target.value)}><option value="operator">Operador</option><option value="admin">Administrador</option></select></Field>}
@@ -57,6 +61,8 @@ export function Members() {
       <section className="settings-reference-panel"><header className="settings-reference-panel-head"><span className="settings-reference-symbol"><Icon name="Users" size={20}/></span><div><h2>Quem tem acesso</h2><p>Membros e permissões do workspace.</p></div></header><div className="settings-reference-panel-body">
       {!data ? (
         <Notice>Convites estão disponíveis no modo autenticado.</Notice>
+      ) : data.members.length===1&&data.invitations.length===0?(
+        <div className="members-empty"><Icon name="Users" size={20}/><strong>Só você por enquanto</strong><p>Convide alguém do time pelo formulário acima.</p></div>
       ) : (
         <>
           <div className="table-scroll">
@@ -75,34 +81,35 @@ export function Members() {
                     <td>{m.name}</td>
                     <td>{m.email}</td>
                     <td>
-                      {m.role === "owner" || me !== "owner" ? (
+                      {me !== "owner" ? (
                         <Badge>{labels[m.role]}</Badge>
                       ) : (
                         <select
                           aria-label={`Papel de ${m.name}`}
                           value={m.role}
-                          disabled={busy}
+                          disabled={busy||(m.role==='owner'&&data.members.filter(v=>v.role==='owner').length===1)}
                           onChange={(e) =>
                             void act({
                               type: "role",
                               memberId: m.id,
                               role: e.target.value,
+                              expectedRevision:m.revision,
                             })
                           }
                         >
                           <option value="operator">Operador</option>
                           <option value="admin">Administrador</option>
+                          <option value="owner">Proprietário</option>
                         </select>
                       )}
                     </td>
                     <td>
-                      {m.role !== "owner" &&
-                        (me === "owner" ||
+                      {(me === "owner"&&(m.role!=='owner'||data.members.filter(v=>v.role==='owner').length>1) ||
                           (me === "admin" && m.role === "operator")) && (
                           <Button
                             disabled={busy}
                             onClick={() =>
-                              void act({ type: "remove", memberId: m.id })
+                              void act({ type: "remove", memberId: m.id,expectedRevision:m.revision })
                             }
                           >
                             Remover
@@ -128,7 +135,7 @@ export function Members() {
             <p className="muted">Nenhum convite pendente.</p>
           )}
           <Notice>
-            Convites deste ambiente ficam no capturador local de e-mails.
+            Os convites pendentes também ocupam assentos do plano. Se outra pessoa alterar o time, atualize os membros antes de tentar novamente.
           </Notice>
         </>
       )}

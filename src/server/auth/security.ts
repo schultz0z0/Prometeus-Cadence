@@ -14,8 +14,9 @@ export async function securityRequest(request: Request) {
           [user.id],
         )
       ).rows;
+      const factor=(await getPools().authPool.query('SELECT u."twoFactorEnabled" enabled,EXISTS(SELECT 1 FROM account a WHERE a."userId"=u.id AND a."providerId"=\'credential\' AND a.password IS NOT NULL) "hasPassword" FROM "user" u WHERE id=$1',[user.id])).rows[0];
       return Response.json(
-        { sessions: rows.map((r) => ({ ...r, current: r.id === session.id })) },
+        { sessions: rows.map((r) => ({ ...r, current: r.id === session.id })),factor },
         { headers: { "cache-control": "no-store" } },
       );
     }

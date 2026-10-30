@@ -32,12 +32,14 @@ export interface IdentityView {
     name: string;
     email: string;
     role: string;
+    revision:number;
   }[];
   invitations: {
     id: string;
     email: string;
     role: string;
     status: string;
+    revision:number;
     expiresAt: string;
   }[];
 }

@@ -42,7 +42,7 @@ test('ready credentials and a queued test do not fabricate delivery; current ten
 test('authenticated out-of-order WhatsApp receipts retain delivered/read evidence and are never downgraded by sent',async()=>{
  const f=await pilotFixture(),now=new Date(f.now.getTime()+2000).toISOString(),lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);
  const remote='wamid.evidence.'+randomUUID();await dispatchOne(lease,{now:()=>now,adapter:{...f.adapter,sendOnce:async()=>({kind:'accepted',remoteId:remote,acceptedAt:now})}});
- assert.equal((await readDeliveryEvidence(f.u.p,f.message.id)).state,'accepted');
+  assert.equal((await readDeliveryEvidence(f.u.p,f.message.id)).state,'accepted');
  for(const status of ['read','delivered','sent'])assert.equal((await webhookRequest(f.request({statuses:[{id:remote,status,timestamp:String(Math.floor(f.now.getTime()/1000)),recipient_id:'5541988888888'}]}),f.publicId,'meta')).status,200);
  const proof=await readDeliveryEvidence(f.u.p,f.message.id);assert.equal(proof.state,'read');assert.ok(proof.deliveredAt&&proof.readAt&&proof.acceptedAt);
 });
@@ -83,7 +83,9 @@ for(const mutation of ['revoked','expired','workspace'] as const)test('pilot rej
   return {messageId:f.message.id,state:'accepted',acceptedAt:now,deliveredAt:null,readAt:null,supported:['accepted']};
  }}),{status:mutation==='workspace'?409:401});
  assert.equal(calls,1);assert.equal(Number((await testAdmin(c=>c.query('SELECT count(*) FROM app.channel_pilot_observation WHERE workspace_id=$1',[f.u.p.workspaceId]))).rows[0].count),0);
- assert.equal((await readDeliveryEvidence(f.u.p,f.message.id)).state,'accepted');
+  if(mutation==='workspace')assert.equal((await readDeliveryEvidence(f.u.p,f.message.id)).state,'accepted');
+  else await assert.rejects(readDeliveryEvidence(f.u.p,f.message.id),{status:401});
+  assert.equal((await testAdmin(c=>c.query('SELECT state FROM app.channel_message WHERE workspace_id=$1 AND id=$2',[f.u.p.workspaceId,f.message.id]))).rows[0].state,'accepted');
 });
 test('pilot rejects a substituted session belonging to another user before observation I/O',async()=>{
  const f=await pilotFixture(),other=await publicationFixture();

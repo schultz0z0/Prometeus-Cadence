@@ -35,8 +35,8 @@ export function WorkspaceSetup({ invitationId }: { invitationId?: string }) {
     fetch("/api/identity", { cache: "no-store" })
       .then(async (r) => {
         const next=invitationId?'/accept-invitation?id='+encodeURIComponent(invitationId):entryDestination(location.pathname+location.search);
-        if (r.status === 401) {location.assign('/login?next='+encodeURIComponent(next));return;}
         const data=await r.json();
+        if(r.status===401||data.code==='TWO_FACTOR_REQUIRED'){location.assign('/login?next='+encodeURIComponent(next));return;}
         if (!r.ok) throw Error(data.message??'Não foi possível carregar sua conta.');
         if(data.registrationRequired){location.assign('/onboarding/profile?next='+encodeURIComponent(next));return;}
         setWorkspaces(data.workspaces);

@@ -50,7 +50,7 @@ test('direct OAuth registers per workspace, validates callback identity, rotates
 });
 test('callback binds session and workspace; permission downgrade and hosted mode cannot connect',async()=>{
  const f=await fixture();try{
-  const callback=await f.begin();await assert.rejects(()=>finishOAuth({...f.p,sessionId:'different'},callback,f.deps),{status:403});
+   const callback=await f.begin();await assert.rejects(()=>finishOAuth({...f.p,sessionId:'different'},callback,f.deps),{status:401});
   assert.equal(f.store.read(f.p.workspaceId)?.state,'disconnected');
   const next=await f.begin();await testAdmin(c=>c.query('UPDATE auth.member SET role=\'operator\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));
   await assert.rejects(()=>finishOAuth(f.p,next,f.deps),{status:403});
