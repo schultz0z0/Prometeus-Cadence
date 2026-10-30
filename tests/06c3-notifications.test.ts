@@ -1,6 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import{notificationAllowed,quietUntil,summaryWindow,notificationSound,notificationPreferencesSchema,defaultNotificationPreferences}from'../src/domain/notifications.ts';
 import{runtimeConfig}from'../scripts/runtime-core.ts';
+import{mergeNotificationWindow}from'../src/client/notification-window.ts';
 test('notification delivery requires enabled channel, verified destination and nonquiet state',()=>{
  for(const enabled of[true,false])for(const quiet of[true,false])for(const verifiedDestination of[true,false])assert.equal(notificationAllowed({enabled,quiet,verifiedDestination}),enabled&&!quiet&&verifiedDestination);
 });
@@ -25,3 +26,8 @@ test('preference contract rejects unrecognized destinations, invalid zones and d
  for(const extra of[{destination:'other@example.com'},{quiet:{timezone:'Wrong/Zone',start:'22:00',end:'08:00'}},{events:['lead_reply','lead_reply']}])assert.equal(notificationPreferencesSchema.safeParse({...p,...extra}).success,false);
 });
 test('notification runtime has bounded permanent cadence',()=>{const c=runtimeConfig({});assert.equal(c.notificationMs,5000);assert.equal(c.notificationBatch,20);assert.throws(()=>runtimeConfig({RUNTIME_NOTIFICATION_MS:'100'}));});
+test('polling reconciles the entire loaded window without losing the old first-page boundary',()=>{
+ const items=Array.from({length:35},(_,i)=>({id:String(35-i),eventKey:String(i),title:'Fixture',href:'/reports',readAt:null,createdAt:new Date((35-i)*1000).toISOString()}));
+ const fresh=[{...items[0],id:'36',createdAt:new Date(36000).toISOString()},...items.slice(0,29)];const merged=mergeNotificationWindow(items,fresh,true);assert.equal(merged.length,36);assert.ok(merged.some(i=>i.id==='6'));assert.equal(merged[0].id,'36');
+});
+test('revoked access suppresses every cached notification including previously loaded pages',()=>{const cached=[{id:'older',eventKey:'x',title:'Private',href:'/reports',readAt:null,createdAt:'2026-10-01T00:00:00Z'}];assert.deepEqual(mergeNotificationWindow(cached,[],false),[]);});

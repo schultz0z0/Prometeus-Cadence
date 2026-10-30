@@ -4,6 +4,8 @@ import{getPools}from'../../src/server/db/pool.ts';import{withWorkspaceTransactio
 import{defaultNotificationPreferences as defaults}from'../../src/domain/notifications.ts';
 import{saveNotificationPreferences,listNotifications,readNotification}from'../../src/server/notifications/service.ts';import{processNotificationTick}from'../../src/server/notifications/worker.ts';
 import{notificationRequest}from'../../src/server/notifications/http.ts';import{base}from'./helpers.ts';
+import{verifiedMetaFixture}from'./whatsapp-helpers.ts';import{webhookRequest}from'../../src/server/channels/webhooks.ts';import{closeIngressPool}from'../../src/server/channels/ingress-db.ts';import{saveMailbox}from'../../src/server/mail/repository.ts';import{smtpMailboxInput}from'./mail-helpers.ts';
+after(closeIngressPool);
 after(async()=>{await getPools().close();await workerPool().end();});
 const signal=new AbortController().signal;
 async function prospectingUser(){await resetRateLimits();return createUser();}
@@ -62,4 +64,32 @@ test('HTTP enforces fresh identity, workspace, origin, revision and narrow body'
 test('lost preference response replays the same revision without duplicating or rescheduling',async()=>{
  const u=await prospectingUser(),input={...defaults,summary:{frequency:'weekly' as const,time:'09:00'}};const first=await saveNotificationPreferences(u.p,input);const next=(await testAdmin(c=>c.query('SELECT next_at FROM app.scheduled_summary WHERE workspace_id=$1',[u.p.workspaceId]))).rows[0].next_at.toISOString();
  const replay=await saveNotificationPreferences(u.p,input);assert.equal(first.revision,1);assert.equal(replay.revision,1);assert.equal((await testAdmin(c=>c.query('SELECT next_at FROM app.scheduled_summary WHERE workspace_id=$1',[u.p.workspaceId]))).rows[0].next_at.toISOString(),next);
+});
+test('direct SQL rejects missing or mismatched payload revision and incomplete nested contracts',async()=>{
+ const u=await prospectingUser();await prefs(u.p);const {expectedRevision,...missing}=defaults;
+ for(const input of[missing,{...defaults,expectedRevision:0},{...defaults,expectedRevision:1,summary:{time:'09:00'}},{...defaults,expectedRevision:1,events:['lead_reply','lead_reply']},{...defaults,expectedRevision:1,summary:{frequency:'off',time:'09:00',destination:'extra'}}])await assert.rejects(withWorkspaceTransaction(u.p,c=>c.query('SELECT app.save_notification_preferences(1,$1,NULL)',[input])),/NOTIFICATION_INVALID/);
+});
+test('summary uses authoritative revision and quarantines malformed legacy rows without blocking other users',async()=>{
+ process.env.NOTIFICATIONS_DELIVERY_ENABLED='false';const legacy=await prospectingUser(),bad=await prospectingUser(),healthy=await prospectingUser();
+ for(const u of[legacy,bad,healthy])await prefs(u.p,{summary:{frequency:'daily',time:'09:00'}});
+ await testAdmin(async c=>{await c.query("UPDATE app.notification_preference SET payload=payload-'expectedRevision' WHERE workspace_id=$1",[legacy.p.workspaceId]);await c.query("UPDATE app.notification_preference SET payload=jsonb_set(payload,'{summary,time}','\"invalid\"') WHERE workspace_id=$1",[bad.p.workspaceId]);await c.query("UPDATE app.scheduled_summary SET next_at=now()-interval '1 minute' WHERE workspace_id=ANY($1::text[])",[[legacy.p.workspaceId,bad.p.workspaceId,healthy.p.workspaceId]]);});
+ try{await processNotificationTick({limit:100,signal});
+ for(const u of[legacy,healthy])assert.equal((await listNotifications(u.p)).items.filter(i=>i.eventKey.startsWith('summary:')).length,1);
+ assert.equal(Number((await testAdmin(c=>c.query('SELECT count(*) FROM app.scheduled_summary WHERE workspace_id=$1 AND next_at>now()',[bad.p.workspaceId]))).rows[0].count),1);
+ }finally{await testAdmin(c=>c.query('DELETE FROM app.scheduled_summary WHERE workspace_id=ANY($1::text[])',[[legacy.p.workspaceId,bad.p.workspaceId,healthy.p.workspaceId]]));}
+});
+for(const kind of['lead_reply','delivery_failed'])test(kind+' delivery is cancelled when its originating connection is disconnected',async()=>{
+ const f=await verifiedMetaFixture();await prefs(f.u.p,{events:[kind]});
+ assert.equal((await webhookRequest(f.request({messages:[{id:'wamid.notification.'+randomUUID(),from:'5541988888888',timestamp:String(Math.floor(Date.now()/1000)),type:'text',text:{body:'Authorized fixture'}}]}),f.publicId,'meta')).status,200);
+ if(kind==='delivery_failed')await testAdmin(async c=>{const row=(await c.query('SELECT * FROM app.channel_message WHERE workspace_id=$1 LIMIT 1',[f.u.p.workspaceId])).rows[0],mid=randomUUID();await c.query("INSERT INTO app.channel_message(workspace_id,id,connection_id,sender_id,identity_id,conversation_id,direction,state) VALUES($1,$2,$3,$4,$5,$6,'outbound','failed')",[row.workspace_id,mid,row.connection_id,row.sender_id,row.identity_id,row.conversation_id]);await c.query("INSERT INTO app.message_outbox(workspace_id,message_id,connection_id,sender_id,identity_id,actor_id,authority_kind,prepared_send,state) VALUES($1,$2,$3,$4,$5,$6,'admin','{}','failed')",[row.workspace_id,mid,row.connection_id,row.sender_id,row.identity_id,f.u.p.userId]);});
+ process.env.NOTIFICATIONS_DELIVERY_ENABLED='false';await processNotificationTick({limit:100,signal});assert.equal((await listNotifications(f.u.p)).items.length,1);
+ await testAdmin(c=>c.query("UPDATE app.channel_connection SET state='disconnected' WHERE id=$1",[f.connection.id]));let calls=0;process.env.NOTIFICATIONS_DELIVERY_ENABLED='true';await processNotificationTick({limit:100,signal},{sendEmail:async v=>{if(v.to===f.u.email)calls++;}});assert.equal(calls,0);assert.equal((await testAdmin(c=>c.query('SELECT state,reason FROM app.notification_delivery WHERE workspace_id=$1',[f.u.p.workspaceId]))).rows[0].reason,'CHANNEL_REVOKED');
+});
+test('a second outage after recovery creates a new incident while repeated ticks and revisions do not',async()=>{
+ process.env.NOTIFICATIONS_DELIVERY_ENABLED='false';const u=await prospectingUser();await prefs(u.p);const c=await event(u.p);await processNotificationTick({limit:100,signal});
+ await testAdmin(db=>db.query('UPDATE app.channel_connection SET revision=revision+1 WHERE id=$1',[c.id]));await processNotificationTick({limit:100,signal});assert.equal((await listNotifications(u.p)).items.length,1);
+ await testAdmin(db=>db.query("UPDATE app.channel_connection SET state='ready' WHERE id=$1",[c.id]));await processNotificationTick({limit:100,signal});await testAdmin(db=>db.query("UPDATE app.channel_connection SET state='attention' WHERE id=$1",[c.id]));await processNotificationTick({limit:100,signal});await processNotificationTick({limit:100,signal});assert.equal((await listNotifications(u.p)).items.length,2);
+});
+test('email connection attention points to email settings while WhatsApp points to WhatsApp settings',async()=>{
+ process.env.NOTIFICATIONS_DELIVERY_ENABLED='false';const u=await prospectingUser();await prefs(u.p);await event(u.p);const mailbox=await saveMailbox(u.p,smtpMailboxInput());await testAdmin(db=>db.query("UPDATE app.channel_connection SET state='attention' WHERE id=$1",[mailbox.id]));await processNotificationTick({limit:100,signal});const items=(await listNotifications(u.p)).items;assert.equal(items.length,2);assert.deepEqual(items.map(i=>i.href).sort(),['/settings/email','/settings/whatsapp']);
 });

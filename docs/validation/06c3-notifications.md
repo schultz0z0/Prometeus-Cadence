@@ -1,6 +1,6 @@
 # 06C.3 — Notificações, preferências e resumos
 
-**Execução:** 29–30/10/2026. **Estado:** implementação em validação; revisão final e aceite ainda pendentes. Não comprova entrega externa nem paridade integral com a referência.
+**Execução:** 29–30/10/2026. **Estado:** concluído no contrato local/controlado, após uma revisão independente e sete correções Important. Não comprova entrega externa nem paridade integral com a referência.
 
 ## Implementação
 
@@ -8,14 +8,14 @@ Preferências e feed privados por usuário/workspace, com autorização atual no
 
 Eventos confirmados de resposta humana, execução finalizada, falha de envio e atenção de conexão geram itens únicos. Respostas automáticas/DSNs não viram respostas humanas. O checkpoint acompanha a ordem de commit do feed operacional; a instalação não transforma o histórico anterior em backlog de avisos.
 
-A fila técnica de entrega verifica associação atual, preferência, destino e conexão de origem antes de reservar a chamada. Silêncio adia avisos. Incerteza de rede não autoriza reenvio. Revogação durante I/O permite apenas guardar o recibo técnico, sem restaurar acesso ao workspace. O resumo diário/semanal usa o período local completo e fatos do relatório reconciliado, sem ler workspaces vizinhos.
+A fila técnica de entrega verifica associação atual, preferência, destino e conexão de origem antes de reservar a chamada. Silêncio adia avisos. Incerteza de rede não autoriza reenvio. Revogação durante I/O permite apenas guardar o recibo técnico, sem restaurar acesso ao workspace. O resumo diário/semanal usa o período local completo e fatos do relatório reconciliado, com escopo explícito de workspace. A fixture semanal de vizinho positivo precisa ser fortalecida em08A; não tratar seu zero como prova completa de isolamento.
 
 O serviço supervisionado `notifications` usa lote e intervalo limitados. O navegador consulta a cada 15 segundos quando visível/online. Som exige gesto, não toca na leitura inicial e não reproduz backlog ao retornar à aba. Conta e Notificações consultam o mesmo serviço de preferências, preservando rascunhos durante atualização.
 
 ## Evidência e verificações
 
-- Domínio: seis casos, incluindo todos os estados de autorização de entrega, silêncio 22–08, DST, semana completa e retomada sem som de backlog.
-- PostgreSQL efêmero com papéis reais: nove casos de deduplicação, isolamento, leitura por usuário, origem/HTTP/revisão, revogação de associação/conexão, destino não verificado, incerteza e replay sem reagendamento. Apenas transporte externo usa capturador.
+- Domínio: oito casos, incluindo paginação em atualização, limpeza de cache após revogação, estados de autorização de entrega, silêncio 22–08, DST, semana completa e retomada sem som de backlog.
+- PostgreSQL efêmero com papéis reais: quinze casos de deduplicação, isolamento, leitura por usuário, origem/HTTP/revisão, revogação de associação/conexão, destino não verificado, incerteza e replay sem reagendamento. Apenas transporte externo usa capturador.
 - Primeira suíte completa: 440/440 integrações e 361/361 unitários. Após a regressão adicional de replay: **441/441 integrações**, **361/361 unitários**, **9/9 focadas**, build de produção e tipos aprovados.
 - Build de produção detectou assinatura incompatível no handler Next. Corrigido com wrapper explícito conforme a documentação instalada; build e tipos posteriores aprovados.
 - QA real do navegador concluída: **34 capturas mascaradas, 21 pares de rota/viewport e 12 verificações de popup**, sem overflow ou pageerror nas rodadas. Persistência, revisão compartilhada com Conta, rascunho durante17s/pane de rede e recuperação, paginação30+5, leitura35→34 e foco/Escape verificados. Itens sintéticos de UI, quando usados, são identificados como tais e não demonstram entrega de provedor.
@@ -34,4 +34,8 @@ Configuração e política de incerteza: [operação](../operations/notification
 
 ## Fechamento
 
-Preferências, agenda e inbox anteriores restaurados exatamente. Somente os35itens sintéticos próprios foram removidos. Nenhum contato/canal/outbox criado; todas as sessões QA revogadas e os dois browsers próprios fechados. [Fechamento](evidence/06c3-notifications/closure.json). Curadoria somente leitura no workspace operacional comprova checkpoint em dia,0avisos/entregas/incertezas, sem replay do histórico e sem chamadas/envios. [Curadoria](evidence/06c3-notifications/real-data-curation.json). Pendente somente revisão independente, correções necessárias e atualização do roteiro pelo aceite real.
+Preferências, agenda e inbox anteriores restaurados exatamente. Somente os35itens sintéticos próprios foram removidos. Nenhum contato/canal/outbox criado; todas as sessões QA revogadas e os dois browsers próprios fechados. [Fechamento](evidence/06c3-notifications/closure.json). Curadoria somente leitura no workspace operacional comprova checkpoint em dia,0avisos/entregas/incertezas, sem replay do histórico e sem chamadas/envios. [Curadoria](evidence/06c3-notifications/real-data-curation.json). Após a revisão: mais36itens sintéticos próprios foram criados/removidos, preferências/agenda/inbox restaurados e sessões QA revogadas. [Fechamento pós-revisão](evidence/06c3-notifications/postreview-closure.json). Uma revisão independente e sete Important corrigidos em uma passagem; um menor de fixture semanal adiado para08A. [Revisão](06c3-notifications-review.md). Próximo06E.1.
+
+## Aceite após revisão
+
+**363/363 unitários,447/447 integrações,15/15 focadas**, build de produção e tipos posteriores aprovados. Total48capturas mascaradas,30pares de rota/viewport,15popups e2estados de conflito mobile. Atualização35+1 manteve36avisos; revogação403 removeu todo o cache, inclusive páginas anteriores. Conta recupera conflito409 preservando a frequência escolhida e as preferências concorrentes, com novo salvar explícito. SMTP/WhatsApp externos continuam sem habilitação/piloto. [Verificação](evidence/06c3-notifications/verification.json), [navegador pós-revisão](evidence/06c3-notifications/postreview-browser.json).

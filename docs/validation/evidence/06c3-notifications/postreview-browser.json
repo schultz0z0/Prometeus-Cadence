@@ -1,0 +1,208 @@
+{
+  "date": "2026-10-30",
+  "visual": {
+    "rows": [
+      {
+        "route": "/settings/notifications",
+        "width": 1920,
+        "file": "output/playwright/06c3/postreview-notifications-1920.png",
+        "overflow": false
+      },
+      {
+        "route": "/settings/account",
+        "width": 1920,
+        "file": "output/playwright/06c3/postreview-account-1920.png",
+        "overflow": false
+      },
+      {
+        "route": "/dashboard",
+        "width": 1920,
+        "file": "output/playwright/06c3/postreview-dashboard-1920.png",
+        "overflow": false
+      },
+      {
+        "route": "popup:notifications",
+        "width": 1920,
+        "file": "output/playwright/06c3/postreview-popup-1920.png",
+        "items": 36,
+        "overflow": false
+      },
+      {
+        "route": "/settings/notifications",
+        "width": 390,
+        "file": "output/playwright/06c3/postreview-notifications-390.png",
+        "overflow": false
+      },
+      {
+        "route": "/settings/account",
+        "width": 390,
+        "file": "output/playwright/06c3/postreview-account-390.png",
+        "overflow": false
+      },
+      {
+        "route": "/dashboard",
+        "width": 390,
+        "file": "output/playwright/06c3/postreview-dashboard-390.png",
+        "overflow": false
+      },
+      {
+        "route": "popup:notifications",
+        "width": 390,
+        "file": "output/playwright/06c3/postreview-popup-390.png",
+        "items": 36,
+        "overflow": false
+      },
+      {
+        "route": "/settings/notifications",
+        "width": 320,
+        "file": "output/playwright/06c3/postreview-notifications-320.png",
+        "overflow": false
+      },
+      {
+        "route": "/settings/account",
+        "width": 320,
+        "file": "output/playwright/06c3/postreview-account-320.png",
+        "overflow": false
+      },
+      {
+        "route": "/dashboard",
+        "width": 320,
+        "file": "output/playwright/06c3/postreview-dashboard-320.png",
+        "overflow": false
+      },
+      {
+        "route": "popup:notifications",
+        "width": 320,
+        "file": "output/playwright/06c3/postreview-popup-320.png",
+        "items": 36,
+        "overflow": false
+      }
+    ],
+    "pageErrors": [],
+    "masked": true,
+    "syntheticUiOnly": true,
+    "externalCalls": 0
+  },
+  "conflict": {
+    "conflictObserved": true,
+    "explicitRecovery": true,
+    "summaryIntentPreserved": true,
+    "concurrentPreferencesPreserved": true
+  },
+  "mobile": {
+    "conflictObserved": true,
+    "explicitRecovery": true,
+    "summaryIntentPreserved": true,
+    "concurrentPreferencesPreserved": true
+  },
+  "window": {
+    "afterPoll": 36,
+    "afterRevocation": 0,
+    "pollPreservedBoundary": true,
+    "revocationClearedOlderPages": true
+  },
+  "hashes": [
+    {
+      "file": "screens/postreview-notifications-1920.png",
+      "sha256": "e87764c377b784d861e59f1563e0e3b6af235b28372b0cb5758eebadee819aaf",
+      "width": 1920,
+      "height": 1493,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-account-1920.png",
+      "sha256": "3e6629d0c5d57255bb95dc51193a36b0a80052006f1dbec948090b8ba1aff08c",
+      "width": 1920,
+      "height": 1904,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-dashboard-1920.png",
+      "sha256": "ef8a1ea9ae02422de4b123126ac27c8eda67809b151f664b42c109cd4a750744",
+      "width": 1920,
+      "height": 2613,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-popup-1920.png",
+      "sha256": "1555b3fac3a70a44937a5504625e3f30e15415235dc25ee4a56354983767b818",
+      "width": 1920,
+      "height": 855,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-notifications-390.png",
+      "sha256": "cfb1e8e8336981b3f9cc0b2b6ceba3b5046b948f55dc57cc4e7393f50781f8c9",
+      "width": 390,
+      "height": 1860,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-account-390.png",
+      "sha256": "0c82dd029ab8705d828447bd6ad4cf20760e49f1ddb2e30e19793acc2004e2b2",
+      "width": 390,
+      "height": 2454,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-dashboard-390.png",
+      "sha256": "51cb9227e3cb0fe34ff6e9095662c91bee357f2ad1244b16e0feb0095d073ccf",
+      "width": 390,
+      "height": 4735,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-popup-390.png",
+      "sha256": "0fef5ba3f194e0236b4bfef909416a9c2c1db09d4c4daa359fca47ff5bf42a0b",
+      "width": 390,
+      "height": 844,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-notifications-320.png",
+      "sha256": "964c734ec0f55ebb441b5a6405b2bcee1c69328f9a9bce6952ce7cc545dfbea6",
+      "width": 320,
+      "height": 2084,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-account-320.png",
+      "sha256": "82ac492f3c7bb9faa5935360e39ddc986b87a4a1ca87de5f09405921fca149a1",
+      "width": 320,
+      "height": 2538,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-dashboard-320.png",
+      "sha256": "2fd87356076101e2573b5ff24459e855d4f17ee3549bda894f1b7a1737f5d28f",
+      "width": 320,
+      "height": 5108,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-popup-320.png",
+      "sha256": "1623952d868c16af0a4cb527475966d770de504e61eceaa71a43d7cd428d877d",
+      "width": 320,
+      "height": 844,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-conflict-320.png",
+      "sha256": "a176ae2806304f1d4723c451047ac5bc9a1475d33349ec9e0e9438ca11d5ce52",
+      "width": 320,
+      "height": 844,
+      "masked": true
+    },
+    {
+      "file": "screens/postreview-rebased-320.png",
+      "sha256": "90a589a4be1311e62d879bfdfe466be4edded7beeefc8e8ee29ac3d40a7e4a32",
+      "width": 320,
+      "height": 844,
+      "masked": true
+    }
+  ],
+  "fixtures": "36 synthetic private UI items; not provider evidence",
+  "faultInjection": "HTTP403 for browser access-loss state; SQL tests independently revoke real membership and source connections",
+  "referenceWrites": 0,
+  "externalSends": 0
+}

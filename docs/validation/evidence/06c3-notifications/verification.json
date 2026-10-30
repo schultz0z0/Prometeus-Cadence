@@ -1,27 +1,36 @@
 {
   "date": "2026-10-30",
-  "phase": "pre-final-review",
+  "phase": "accepted-local-controlled",
   "unit": {
-    "tests": 361,
-    "pass": 361,
+    "tests": 363,
+    "pass": 363,
     "fail": 0
   },
   "integration": {
-    "tests": 441,
-    "pass": 441,
+    "tests": 447,
+    "pass": 447,
     "fail": 0
   },
   "focused": {
-    "tests": 9,
-    "pass": 9,
+    "tests": 15,
+    "pass": 15,
     "fail": 0
   },
-  "build": "production webpack exit0 after scoped UI refinements",
+  "domainFocused": {
+    "tests": 8,
+    "pass": 8,
+    "fail": 0
+  },
+  "build": "production webpack exit0",
   "types": "post-build exit0",
-  "screenshots": 34,
-  "routeViewportChecks": 21,
-  "emptyAndFinalDialogs": 12,
+  "screenshots": 48,
+  "routeViewportChecks": 30,
+  "emptyAndFinalDialogs": 15,
+  "accountConflictMobileStates": 2,
   "referenceWrites": 0,
   "externalSends": 0,
-  "reviewPending": true
+  "independentReviews": 1,
+  "importantFixed": 7,
+  "minorDeferred": 1,
+  "reviewPending": false
 }

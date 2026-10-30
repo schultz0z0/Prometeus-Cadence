@@ -1,8 +1,8 @@
 {
   "version": 1,
   "date": "2026-10-27",
-  "scope": "approved-product-baseline;06C.2-completed-local-controlled;remaining-packages-planned",
-  "next": "06C.3",
+  "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
+  "next": "06E.1",
   "end": "08B",
   "packages": [
     {
@@ -433,7 +433,16 @@
         "/settings/notifications",
         "/settings/account",
         "/dashboard"
-      ]
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-10-30",
+      "review": "docs/validation/06c3-notifications-review.md",
+      "followUpMigrations": [
+        "db/migrations/090a-notification-worker.sql",
+        "db/migrations/090b-notification-preference-replay.sql",
+        "db/migrations/090c-notification-review-guards.sql"
+      ],
+      "deferredMinorOwner": "08A"
     },
     {
       "id": "06E.1",
@@ -1131,5 +1140,5 @@
       ]
     }
   ],
-  "updatedAt": "2026-10-28"
+  "updatedAt": "2026-10-30"
 }

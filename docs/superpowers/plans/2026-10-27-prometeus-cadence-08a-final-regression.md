@@ -109,3 +109,7 @@ Referênciaunknownclassificada e limitaçãoremotaregistrada sãoaceitas comolim
 ## Self-review do plano
 
 R24, R01, R07, R09, R18, R21 mapeados às três tarefas. DTOs e funções têm uma definição neste plano e no desenho de área; contratos comuns evitam reinterpretar autorização/revisão. Task 1 cobre regra pura/persistência;Task 2 cobre todos os itens de Review Focus;Task 3 cobre o que a pessoa realmente consegue operar e ver. Dados/arquivos citados como Create são futuros; Modify foi conferido no baseline ou tem pacote anterior proprietário. Escrever um plano não equivale a passar seus testes.
+
+## Débito herdado06C.3 (30/10/2026)
+
+Fortalecer a fixture de isolamento semanal com timestamp ISO válido e fato positivo dentro da semana anterior fechada: comprovar primeiro que conta no workspace de origem e depois que não entra no resumo vizinho. O teste atual usa timestamptz::text e now()-3days, portanto seu zero não comprova essa condição. Minor adiado da revisão única06C.3; não alterar o contrato de silêncio/frequência sem considerar as divergências registradas. Ver docs/validation/06c3-notifications-review.md.

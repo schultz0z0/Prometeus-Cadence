@@ -1,0 +1,23 @@
+{
+  "rulings": [
+    "dedicated native branch without new worktree, preserving established preference — cost if wrong: less filesystem isolation.",
+    "existing planned tools reused; setup-agent not exposed in tool inventory, no new tool/skill/plugin recommended or installed — cost if wrong: unavailable catalog could contain a better helper.",
+    "no unverified WhatsApp account destination is promoted from registration phone — pending verification and provider capability are explicit — cost if wrong: external WhatsApp alerts remain deferred until a verified destination transport exists. SQL projection schema introduced; worker functions belong Task2.",
+    "summary contract supports one daily or weekly frequency; monthly remains explicitly unavailable in existing Account layout — cost if wrong: simultaneous/monthly schedules require a future contract extension.",
+    "existing source events support replies/jobs/send failures/integration attention; SDR meeting/handoff/approval/qualification switches remain unavailable rather than invent events — cost if wrong: those notices await their owning module.",
+    "preserve approved quiet deferral and current each-reply contract, record these observed parity gaps for08A/SDR rather than silently replace behavior — cost if wrong: those states are not exact reference parity yet. Scoped header/weight/switch/listen/destination geometry refinements applied. Initial QA locator getByLabel(exact) included select option text; fresh snapshot proves combobox available, use actual role locator.",
+    "external opt-ins default off in the new per-user service; legacy workspace snapshot flags were preparation placeholders, not delivery authorization — cost if wrong: users must explicitly save their external preference again. Exact lost-response preference replay RED409 -> GREEN same revision/unchanged schedule via forward090b, preserving already-applied migration checksums. Account QA checked before asynchronous load; fresh snapshot showed weekly correctly checked, so wait for enabled controls before asserting.",
+    "public SMTP deliverability and provider TLS handshake remain an external pilot gate; local adapter capture is not public delivery proof — no new external dispatch authorized — cost if wrong: provider-specific delivery defects may remain until pilot.",
+    "WhatsApp alert transport and destination proof remain pending, with no registration-phone promotion — owning verified capability absent — cost if wrong: opted-in WhatsApp alerts cannot deliver yet.",
+    "SDR event producers remain owned by later SDR packages and their switches unavailable — no fabricated events — cost if wrong: no SDR notices until that module.",
+    "one daily OR weekly summary stands; monthly and simultaneous schedules remain unavailable — approved contract — cost if wrong: users cannot combine schedules yet.",
+    "first-reply-only and agent-inclusive options remain recorded parity gaps for08A/SDR — approved each-reply contract retained — cost if wrong: these reference states differ.",
+    "quiet deferral stands instead of reference business-hours discard — approved delivery semantics preserve pending notices — cost if wrong: users receive deferred notices they might expect discarded.",
+    "legacy preparation flags are not external opt-in authorization — explicit new per-user save required — cost if wrong: users must opt in again.",
+    "no100percent visual parity claim from34screens; desktop/mobile matrix covers only observed states — blocked reference states remain unobserved — cost if wrong: visual differences remain until08A.",
+    "uncertain external transmission remains non-retryable automatically — avoid duplicates without authoritative receipt reconciliation — cost if wrong: an unaccepted uncertain notice may remain unsent."
+  ],
+  "minors": [
+    "Final: minor (deferred): weekly isolation fixture uses a non-ISO timestamp outside a guaranteed closed week; eligible positive-neighbor proof remains absent. Owner08A."
+  ]
+}

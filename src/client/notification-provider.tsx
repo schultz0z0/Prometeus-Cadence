@@ -4,7 +4,7 @@ type View={data:NotificationPage|null;error:string;client:NotificationClient;ref
 export function NotificationProvider({children}:{children:React.ReactNode}){
  const identity=useIdentity(),[data,setData]=useState<NotificationPage|null>(null),[error,setError]=useState(''),blocked=useRef(false),mounted=useRef(false),last=useRef<string|null>(null),audio=useRef<AudioContext|null>(null);
  const[client]=useState(()=>createNotificationClient({workspaceId:identity?.activeWorkspaceId??'',onAccessLost:message=>{blocked.current=true;setData(null);setError(message);}}));
- const refresh=useCallback(async()=>{if(blocked.current)return;try{const next=await client.list();if(!mounted.current)return;const now=Date.now(),p=next.preferences.value;
+ const refresh=useCallback(async()=>{if(blocked.current)return;try{const next=await client.list();if(!mounted.current||blocked.current)return;const now=Date.now(),p=next.preferences.value;
   if(notificationSound({enabled:p.sound&&!quietUntil(new Date(now).toISOString(),p.quiet),visible:document.visibilityState==='visible'&&navigator.onLine,activated:audio.current?.state==='running',previous:last.current,current:next.latestKey,latestAt:Date.parse(next.latestAt??''),now})&&audio.current){const context=audio.current,osc=context.createOscillator(),gain=context.createGain();osc.frequency.value=660;gain.gain.setValueAtTime(.04,context.currentTime);gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+.14);osc.connect(gain);gain.connect(context.destination);osc.start();osc.stop(context.currentTime+.15);}
   last.current=next.latestKey??'empty';setData(next);setError('');
  }catch(e){if(mounted.current)setError(e instanceof Error?e.message:'Não foi possível atualizar.');}},[client]);

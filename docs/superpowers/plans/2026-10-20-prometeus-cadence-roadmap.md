@@ -174,3 +174,7 @@ Jornada concluída no contrato local/controlado;346unitários/402integrações/1
 ## Aceite06C.2 —29/10/2026
 
 Dashboard/relatórios/execuções reconciliados concluídos no contrato local/controlado:355unitários/432integrações/11focadas,38capturas mascaradas e32checks desktop/mobile, uma revisão independente e dois Important corrigidos com RED→GREEN. Curadoria somente leitura do histórico real3aceites/23respostas humanas, sem novos envios/chamadas pagas. Dois menores→08A: limite93datas/DST eNULLforceSQL. [Aceite](../../validation/06c2-reconciled-reports.md). Próximo **06C.3 — notificações, preferências e resumos**. Sem aceite100% da referência nem SLO público.
+
+### Continuidade30/10 —06C.3
+
+Notificações, preferências e resumos concluídos local/controlado:363unitários/447integrações/15focadas;48capturas mascaradas; uma revisão independente e sete Important corrigidos numa passagem RED→GREEN. QA restaurada;0novos envios/chamadas pagas. Um menor da fixture semanal→08A; piloto de avisos externos e diferenças não observadas da referência preservados. [Aceite](../../validation/06c3-notifications.md). Próximo **06E.1 — Autenticador, sessões e administração de membros**.

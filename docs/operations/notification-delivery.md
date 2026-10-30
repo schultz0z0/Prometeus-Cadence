@@ -12,4 +12,8 @@ Períodos de silêncio adiam avisos e som; o feed permanece consultável. Resumo
 
 O navegador consulta o feed somente enquanto está visível e online, com intervalo de 15 segundos. O som precisa de gesto do usuário, ignora a primeira leitura e não reproduz o backlog ao retomar a aba. Marcar um aviso como lido não altera leitura remota de e-mail/WhatsApp.
 
+A revisão de preferências usada pelo worker vem da coluna transacional, nunca de um valor enviado no JSON. Uma linha legada de resumo com contrato ou calendário inválido é isolada por uma hora; os demais usuários continuam sendo processados. Salvar preferências válidas substitui essa linha e recalcula a próxima ocorrência. O SQL rejeita contratos incompletos inclusive em chamadas diretas.
+
+Avisos de resposta, falha de envio e atenção conservam a conexão de origem em campo próprio. Desconectar ou arquivar a origem cancela a entrega ainda pendente. Recuperação seguida de nova falha produz um novo incidente; repetir o tick ou somente a revisão da conexão não duplica o incidente anterior.
+
 O gate externo permanece separado do aceite local: capturadores de testes e leitura de histórico não demonstram entrega de um novo aviso por um provedor público.

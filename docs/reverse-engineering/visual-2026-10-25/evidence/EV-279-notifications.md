@@ -7,3 +7,5 @@ Local:34capturas mascaradas,21pares de rota/viewport e12popups. Feed real/HTTP/p
 [Aceite em preparação](../../../validation/06c3-notifications.md).
 
 Not tested: nova entrega externaSMTP/WhatsApp; estados pagos/SDR da referência; paridade integral. Primeira resposta/inclusão do agente/horário comercial com descarte observados na referência, sem implementação no contrato deste pacote; manter diferença explícita para08A/SDR.
+
+[obs EV-279 pós-revisão]30/10: uma revisão independente; sete Important corrigidos com RED→GREEN,363unitários/447integrações/15focadas.48capturas totais,30pares rota-viewport,15popups e2conflitos mobile; cache36após polling e0após403. L024restored/L025removed;36itens próprios removidos, preferências/agenda/inbox restaurados, sessões revogadas/browser próprio fechado. Sem envios externos. Um menor da fixture semanal→08A. Aceite local/controlado concluído; próximo06E.1. Evidência/limitações no relatório e revisão.

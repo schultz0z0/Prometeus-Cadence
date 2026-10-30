@@ -24,7 +24,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 06B.5 | Jornada integrada de prospecção e cadência | 06B.3, 06B.4, 06D.1, 06D.2 | [tarefas](2026-10-27-prometeus-cadence-06b5-prospecting-journey.md) | Concluído local/controlado; acurácia live permanece gate06IA-H |
 | 06IA-H | Homologação das fontes e inteligência | 06B.5, 06IA | [tarefas](2026-10-27-prometeus-cadence-06iah-intelligence-homologation.md) | Concluído local/controlado; piloto real/acurácia externa pendentes |
 | 06C.2 | Dashboard, relatórios e execuções reconciliados | 06D.2, 06B.5, 06C.1 | [tarefas](2026-10-27-prometeus-cadence-06c2-reconciled-reports.md) | Planejado; não executado |
-| 06C.3 | Notificações, preferências e resumos | 06C.2 | [tarefas](2026-10-27-prometeus-cadence-06c3-notifications.md) | Planejado; não executado |
+| 06C.3 | Notificações, preferências e resumos | 06C.2 | [tarefas](2026-10-27-prometeus-cadence-06c3-notifications.md) | Concluído local/controlado30/10; [aceite](../../validation/06c3-notifications.md) |
 | 06E.1 | Autenticador, sessões e administração de membros | 02, 06A-P, 06A-H | [tarefas](2026-10-27-prometeus-cadence-06e1-security-members.md) | Planejado; não executado |
 | 06E.2 | Duplicados, fusão, privacidade e ciclo dos dados | 06E.1, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-06e2-data-lifecycle.md) | Planejado; não executado |
 | 06F | Assistente, busca, onboarding e ajuda | 06C.3, 06E.2, 06IA | [tarefas](2026-10-27-prometeus-cadence-06f-assistant-experience.md) | Planejado; não executado |
@@ -104,3 +104,5 @@ Continuidade06D.2 em28/10:comprovantes suportados e observação sem novo envio;
 Continuidade06B.5 em28/10: jornada com revisão, recuperação por empresa/módulo, isolamentoSQL e um rascunho vinculado;346/402/19testes,69capturas. Uma revisão independente/oito Important corrigidos. Menor herdado06B.3 de seleção inicial do lote→06F. Próximo06IA-H, preservando demais dependências e gates públicos. [Aceite](../../validation/06b5-prospecting-journey.md).
 
 Continuidade06IA-H em28/10: 351/351 unitários,421/421 integrações completas,19/19 focadas, build/tipos aprovados;30casos sintéticos/60saídas e9capturas mascaradas desktop/mobile. Uma revisão independente;dois Important corrigidos com regressões RED→GREEN e um menor de arredondamento adiado para08A. Piloto empírico pago permanece gate06IA-H/08B; a infraestrutura de avaliação local está entregue, sem certificação comercial de acurácia. Próximo06C.2. [Aceite](../../validation/06iah-intelligence-homologation.md).
+
+Continuidade06C.3 em30/10:363unitários/447integrações/15focadas,48capturas mascaradas, uma revisão independente e sete Important corrigidos com RED→GREEN. Um menor de prova positiva de isolamento semanal→08A. Preferências/feed/resumos privados e serviço contínuo; entrega externa/políticas da referência não observadas seguem gates. Próximo06E.1 — autenticador, sessões e membros. [Aceite](../../validation/06c3-notifications.md).

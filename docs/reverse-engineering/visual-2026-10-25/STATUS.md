@@ -1,12 +1,12 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-30 · Session: s17 · Phase:6 Notificações06C.3 verificadas localmente; revisão final pendente; paridade integral não aceita
+Updated: 2026-10-30 · Session: s17 · Phase:6 Notificações06C.3 concluídas local/controlado; próximo06E.1; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
 
-- Covered s17:06C.3 com441integrações/361unitários/9focadas,34capturas mascaradas/21pares de rota-viewport/12popups. Referência atual somente leitura comREA/RES. Preferências/feed/resumos no servidor e serviço contínuo. L022restored/L023removed;0novos contatos/canais/outbox/chamadas pagas. EV-279. Revisão final ainda pendente; não avançar antes do aceite.
+- Covered s17:06C.3 com447integrações/363unitários/15focadas,48capturas mascaradas/30pares rota-viewport/15popups e2estados de conflito mobile. Uma revisão independente/sete Important corrigidos; um menor→08A. L022/L024restored eL023/L025removed;0novos contatos/canais/outbox/chamadas pagas. EV-279. Próximo06E.1.
 - Not covered s17: nova entrega externaSMTP/WhatsApp, estadosSDR e paridade integral. Diferenças de primeira resposta e horário comercial da referência explicitadas emEV279.
 
 - Covered s16:06C.2 com curadoria somente leitura do histórico real;38capturas mascaradas e32checks1920/390/320,0overflow/pageerror, filtros/popup/polling/recovery/exportnulls. L018/L020/L021restored eL019removed;0novos contatos/canais/mensagens/chamadas pagas. EV-278. Uma revisão independente/duas correções Important RED→GREEN;355unitários/432integrações/11focadas; dois menores→08A. Próximo06C.3.
@@ -64,7 +64,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s16:06C.3 — notificações, preferências e resumos.06C.2concluído local/controlado; gates externos e08A/08B preservados. Filas anteriores abaixo são históricas.
+Fila vigente s17:06E.1 — autenticador, sessões e administração de membros.06C.3 concluído local/controlado; piloto externo e08A/08B preservados.
+
+Fila histórica s16:06C.3 — notificações, preferências e resumos.06C.2concluído local/controlado; gates externos e08A/08B preservados. Filas anteriores abaixo são históricas.
 
 Fila vigente s15:06C.2 — dashboard, relatórios e execuções reconciliados.06IA-H local/controlado concluído; piloto real segue gate, não um aceite implícito. Filas anteriores são históricas.
 
