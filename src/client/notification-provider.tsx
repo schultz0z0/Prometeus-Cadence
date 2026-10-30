@@ -1,0 +1,14 @@
+"use client";
+import{createContext,useContext,useEffect,useRef,useState,useCallback}from'react';import{useIdentity}from'./workspace-provider';import{createNotificationClient,type NotificationClient}from'./notification-client';import{useLiveRefresh}from'./use-live-refresh';import{notificationSound,quietUntil,type NotificationPage}from'../domain/notifications';
+type View={data:NotificationPage|null;error:string;client:NotificationClient;refresh:()=>Promise<void>};const Context=createContext<View|null>(null);export const useNotifications=()=>useContext(Context);
+export function NotificationProvider({children}:{children:React.ReactNode}){
+ const identity=useIdentity(),[data,setData]=useState<NotificationPage|null>(null),[error,setError]=useState(''),blocked=useRef(false),mounted=useRef(false),last=useRef<string|null>(null),audio=useRef<AudioContext|null>(null);
+ const[client]=useState(()=>createNotificationClient({workspaceId:identity?.activeWorkspaceId??'',onAccessLost:message=>{blocked.current=true;setData(null);setError(message);}}));
+ const refresh=useCallback(async()=>{if(blocked.current)return;try{const next=await client.list();if(!mounted.current)return;const now=Date.now(),p=next.preferences.value;
+  if(notificationSound({enabled:p.sound&&!quietUntil(new Date(now).toISOString(),p.quiet),visible:document.visibilityState==='visible'&&navigator.onLine,activated:audio.current?.state==='running',previous:last.current,current:next.latestKey,latestAt:Date.parse(next.latestAt??''),now})&&audio.current){const context=audio.current,osc=context.createOscillator(),gain=context.createGain();osc.frequency.value=660;gain.gain.setValueAtTime(.04,context.currentTime);gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+.14);osc.connect(gain);gain.connect(context.destination);osc.start();osc.stop(context.currentTime+.15);}
+  last.current=next.latestKey??'empty';setData(next);setError('');
+ }catch(e){if(mounted.current)setError(e instanceof Error?e.message:'Não foi possível atualizar.');}},[client]);
+ useEffect(()=>{mounted.current=true;const activate=()=>{try{audio.current??=new AudioContext();void audio.current.resume().catch(()=>{});}catch{}},reset=()=>{last.current=null;};document.addEventListener('pointerdown',activate,{once:true});document.addEventListener('keydown',activate,{once:true});document.addEventListener('visibilitychange',reset);window.addEventListener('online',reset);void refresh();return()=>{mounted.current=false;document.removeEventListener('pointerdown',activate);document.removeEventListener('keydown',activate);document.removeEventListener('visibilitychange',reset);window.removeEventListener('online',reset);queueMicrotask(()=>{if(!mounted.current){client.dispose();void audio.current?.close();}});};},[client,refresh]);
+ useLiveRefresh(refresh,15000,true,client);
+ return <Context value={{data,error,client,refresh}}>{children}</Context>;
+}

@@ -1,0 +1,318 @@
+{
+  "reference": {
+    "rows": [
+      {
+        "route": "/settings/notifications",
+        "width": 1920,
+        "file": "output/playwright/06c3/reference-notifications-1920.png",
+        "overflow": false,
+        "panels": [
+          {
+            "label": "Dentro do CadenceFlow",
+            "x": 597,
+            "y": 211,
+            "width": 287.234375,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          },
+          {
+            "label": "Fora do CadenceFlow",
+            "x": 597,
+            "y": 464,
+            "width": 677.71875,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          }
+        ]
+      },
+      {
+        "route": "/settings/account",
+        "width": 1920,
+        "file": "output/playwright/06c3/reference-account-1920.png",
+        "overflow": false,
+        "panels": [
+          {
+            "label": "Perfil",
+            "x": 597,
+            "y": 211,
+            "width": 389.34375,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          },
+          {
+            "label": "Contatos da conta",
+            "x": 597,
+            "y": 673,
+            "width": 547.640625,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          },
+          {
+            "label": "Relatórios por e-mail",
+            "x": 597,
+            "y": 1268,
+            "width": 725.796875,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          }
+        ]
+      },
+      {
+        "route": "/settings/notifications",
+        "width": 390,
+        "file": "output/playwright/06c3/reference-notifications-390.png",
+        "overflow": false,
+        "panels": [
+          {
+            "label": "Dentro do CadenceFlow",
+            "x": 81,
+            "y": 303,
+            "width": 272,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          },
+          {
+            "label": "Fora do CadenceFlow",
+            "x": 81,
+            "y": 672,
+            "width": 272,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          }
+        ]
+      },
+      {
+        "route": "/settings/account",
+        "width": 390,
+        "file": "output/playwright/06c3/reference-account-390.png",
+        "overflow": false,
+        "panels": [
+          {
+            "label": "Perfil",
+            "x": 81,
+            "y": 323,
+            "width": 272,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          },
+          {
+            "label": "Contatos da conta",
+            "x": 81,
+            "y": 1053,
+            "width": 272,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          },
+          {
+            "label": "Relatórios por e-mail",
+            "x": 81,
+            "y": 1876,
+            "width": 272,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          }
+        ]
+      },
+      {
+        "route": "/settings/notifications",
+        "width": 320,
+        "file": "output/playwright/06c3/reference-notifications-320.png",
+        "overflow": false,
+        "panels": [
+          {
+            "label": "Dentro do CadenceFlow",
+            "x": 81,
+            "y": 323,
+            "width": 202,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          },
+          {
+            "label": "Fora do CadenceFlow",
+            "x": 81,
+            "y": 776,
+            "width": 202,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          }
+        ]
+      },
+      {
+        "route": "/settings/account",
+        "width": 320,
+        "file": "output/playwright/06c3/reference-account-320.png",
+        "overflow": false,
+        "panels": [
+          {
+            "label": "Perfil",
+            "x": 81,
+            "y": 323,
+            "width": 202,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          },
+          {
+            "label": "Contatos da conta",
+            "x": 81,
+            "y": 1069,
+            "width": 202,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          },
+          {
+            "label": "Relatórios por e-mail",
+            "x": 81,
+            "y": 1892,
+            "width": 202,
+            "height": 20,
+            "font": "16px",
+            "weight": "600"
+          }
+        ]
+      }
+    ],
+    "pageErrors": [],
+    "writes": 0,
+    "masked": true,
+    "externalNotifications": 0
+  },
+  "local": {
+    "rows": [
+      {
+        "route": "/settings/notifications",
+        "width": 1920,
+        "file": "output/playwright/06c3/local-notifications-1920.png",
+        "overflow": false
+      },
+      {
+        "route": "/settings/account",
+        "width": 1920,
+        "file": "output/playwright/06c3/local-account-1920.png",
+        "overflow": false
+      },
+      {
+        "route": "/dashboard",
+        "width": 1920,
+        "file": "output/playwright/06c3/local-dashboard-1920.png",
+        "overflow": false
+      },
+      {
+        "route": "/settings/notifications",
+        "width": 390,
+        "file": "output/playwright/06c3/local-notifications-390.png",
+        "overflow": false
+      },
+      {
+        "route": "/settings/account",
+        "width": 390,
+        "file": "output/playwright/06c3/local-account-390.png",
+        "overflow": false
+      },
+      {
+        "route": "/dashboard",
+        "width": 390,
+        "file": "output/playwright/06c3/local-dashboard-390.png",
+        "overflow": false
+      },
+      {
+        "route": "/settings/notifications",
+        "width": 320,
+        "file": "output/playwright/06c3/local-notifications-320.png",
+        "overflow": false
+      },
+      {
+        "route": "/settings/account",
+        "width": 320,
+        "file": "output/playwright/06c3/local-account-320.png",
+        "overflow": false
+      },
+      {
+        "route": "/dashboard",
+        "width": 320,
+        "file": "output/playwright/06c3/local-dashboard-320.png",
+        "overflow": false
+      }
+    ],
+    "pageErrors": [],
+    "preferencesPersisted": true,
+    "accountSummaryShared": true,
+    "draftSurvivedPolling": true,
+    "draftSurvivedNetworkFailure": true,
+    "networkRecovered": true,
+    "responseFixtures": 0
+  },
+  "populated": {
+    "rows": [
+      {
+        "width": 1920,
+        "file": "output/playwright/06c3/populated-1920.png",
+        "items": 35,
+        "overflow": false
+      },
+      {
+        "width": 390,
+        "file": "output/playwright/06c3/populated-390.png",
+        "items": 35,
+        "overflow": false
+      },
+      {
+        "width": 320,
+        "file": "output/playwright/06c3/populated-320.png",
+        "items": 35,
+        "overflow": false
+      }
+    ],
+    "readDecrementedOnce": true,
+    "openDidNotMarkRead": true,
+    "focusInside": true,
+    "externalSends": 0
+  },
+  "emptyDialogChecks": 9,
+  "pairedViewports": [
+    1920,
+    390,
+    320
+  ],
+  "responseFixtures": 0,
+  "uiFixture": "35synthetic private items; no delivery records; separate from PostgreSQL source/transport tests",
+  "finalRefinement": {
+    "rows": [
+      {
+        "width": 1920,
+        "file": "output/playwright/06c3/final-notifications-1920.png",
+        "overflow": false
+      },
+      {
+        "width": 390,
+        "file": "output/playwright/06c3/final-notifications-390.png",
+        "overflow": false
+      },
+      {
+        "width": 320,
+        "file": "output/playwright/06c3/final-notifications-320.png",
+        "overflow": false
+      }
+    ],
+    "pageErrors": [],
+    "postRefinement": true,
+    "fullList": 35,
+    "fixtureUnread": 34,
+    "writes": 0
+  },
+  "routeViewportChecks": 21,
+  "dialogChecks": 12
+}

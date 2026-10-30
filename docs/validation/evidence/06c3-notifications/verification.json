@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-30",
+  "phase": "pre-final-review",
+  "unit": {
+    "tests": 361,
+    "pass": 361,
+    "fail": 0
+  },
+  "integration": {
+    "tests": 441,
+    "pass": 441,
+    "fail": 0
+  },
+  "focused": {
+    "tests": 9,
+    "pass": 9,
+    "fail": 0
+  },
+  "build": "production webpack exit0 after scoped UI refinements",
+  "types": "post-build exit0",
+  "screenshots": 34,
+  "routeViewportChecks": 21,
+  "emptyAndFinalDialogs": 12,
+  "referenceWrites": 0,
+  "externalSends": 0,
+  "reviewPending": true
+}

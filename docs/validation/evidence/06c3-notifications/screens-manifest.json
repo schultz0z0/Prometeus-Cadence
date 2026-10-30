@@ -1,0 +1,240 @@
+[
+  {
+    "file": "screens/empty-account-1920.png",
+    "sha256": "b3b9006c7d36707eb9256f260af1c2940c26685de8fe0f24ff7e961234768437",
+    "width": 1920,
+    "height": 1904,
+    "masked": true
+  },
+  {
+    "file": "screens/empty-account-320.png",
+    "sha256": "b394ba73b357b377173531c9da4c78ced00c79fbfafe76d71a72e6023cdc9881",
+    "width": 320,
+    "height": 2538,
+    "masked": true
+  },
+  {
+    "file": "screens/empty-account-390.png",
+    "sha256": "754f7ed2e0798f4de578254479f7c0e45abae4e10e79f029e41c9482406203a5",
+    "width": 390,
+    "height": 2454,
+    "masked": true
+  },
+  {
+    "file": "screens/empty-dashboard-1920.png",
+    "sha256": "eaf711fc02a8b8e95df3f0bf40ac8e5ceb5c99bef199cc9919d8d8e42c2b956a",
+    "width": 1920,
+    "height": 2613,
+    "masked": true
+  },
+  {
+    "file": "screens/empty-dashboard-320.png",
+    "sha256": "6af1406251632696422fb692489e214e2ce4100f1bab8deb7f89e9b0af5672c4",
+    "width": 320,
+    "height": 5108,
+    "masked": true
+  },
+  {
+    "file": "screens/empty-dashboard-390.png",
+    "sha256": "221c4cfd92e55f912f6e7fb685d77c4db9b527731e66e75bbefb0415b234f667",
+    "width": 390,
+    "height": 4735,
+    "masked": true
+  },
+  {
+    "file": "screens/empty-notifications-1920.png",
+    "sha256": "5045b179803f8f504380adc5cad49ee324c3d2056411be55fe9d1a3051691953",
+    "width": 1920,
+    "height": 1546,
+    "masked": true
+  },
+  {
+    "file": "screens/empty-notifications-320.png",
+    "sha256": "b6ff1558a724a8f46e05cf9804816af33c1aa2c02e846751bdf77bd35d7d6ddd",
+    "width": 320,
+    "height": 2266,
+    "masked": true
+  },
+  {
+    "file": "screens/empty-notifications-390.png",
+    "sha256": "757c1d5ce6f77b78a11deed661bf3f419455dbf02fe27edfedd9d728bda83114",
+    "width": 390,
+    "height": 1940,
+    "masked": true
+  },
+  {
+    "file": "screens/final-notifications-1920.png",
+    "sha256": "afd72ed2af137bf823f4b79a436baceaec0bd0b317f242b8d537ddce4c615307",
+    "width": 1920,
+    "height": 1546,
+    "masked": true
+  },
+  {
+    "file": "screens/final-notifications-320.png",
+    "sha256": "6c2b06877bcdc248575c0a1b23b2909699cbdc09764fb30be258b71bd45d65ae",
+    "width": 320,
+    "height": 2190,
+    "masked": true
+  },
+  {
+    "file": "screens/final-notifications-390.png",
+    "sha256": "dd8920d0c5abe0364a66e984e256cb595e30cc0f25e28b9c12fa911b257e6733",
+    "width": 390,
+    "height": 1948,
+    "masked": true
+  },
+  {
+    "file": "screens/final-populated-1920.png",
+    "sha256": "54b7ae321bcd39816ee7f7c558ca6bd81df83859c307fe3ea1973ee7ea82f075",
+    "width": 1920,
+    "height": 855,
+    "masked": true
+  },
+  {
+    "file": "screens/final-populated-320.png",
+    "sha256": "bdccb79f1dd2731c541fb60133e425b5e995bd20ec822d4e7f9b8afe410ef85a",
+    "width": 320,
+    "height": 844,
+    "masked": true
+  },
+  {
+    "file": "screens/final-populated-390.png",
+    "sha256": "5ad64a443eed0d7b8e635df46b6176546c741012ad5cd1c8925ce03337c514e0",
+    "width": 390,
+    "height": 844,
+    "masked": true
+  },
+  {
+    "file": "screens/local-account-1920.png",
+    "sha256": "771f1e10e48de0cc5c635ac4904971d590f2f3d7793442bac3cb3b696f1924f2",
+    "width": 1920,
+    "height": 1904,
+    "masked": true
+  },
+  {
+    "file": "screens/local-account-320.png",
+    "sha256": "a90c9ccc8c3c465335da1949bfd7cdcf028ab818a74fabc367337d1ab5c55fa8",
+    "width": 320,
+    "height": 2538,
+    "masked": true
+  },
+  {
+    "file": "screens/local-account-390.png",
+    "sha256": "03eb4e29c1a2544f67615c14e4113e56fce97d1a2d936b2aad87a54851f456f8",
+    "width": 390,
+    "height": 2454,
+    "masked": true
+  },
+  {
+    "file": "screens/local-dashboard-1920.png",
+    "sha256": "2cbbc8319ddd7ad80d6a6e0ba0dc3dfcb71e00d2037610499bdfae4cb9aead0a",
+    "width": 1920,
+    "height": 2613,
+    "masked": true
+  },
+  {
+    "file": "screens/local-dashboard-320.png",
+    "sha256": "45b3a90887e3c29ee4fd3976addec89f11293d0420f981da956b8dccf7321a5e",
+    "width": 320,
+    "height": 5108,
+    "masked": true
+  },
+  {
+    "file": "screens/local-dashboard-390.png",
+    "sha256": "af05ff33cb36f9261b2df76ede6dd9977a43202f29c2ded09f69803637c7449c",
+    "width": 390,
+    "height": 4735,
+    "masked": true
+  },
+  {
+    "file": "screens/local-notifications-1920.png",
+    "sha256": "c533688069dc3c0a9e711d36637b83aed85dd9cf490b67e1ec657e50707a43c1",
+    "width": 1920,
+    "height": 1546,
+    "masked": true
+  },
+  {
+    "file": "screens/local-notifications-320.png",
+    "sha256": "bde294b501dee9e82e4dbda5d2ddea729ed306301dd6af7d9a4fd99bb984fcc6",
+    "width": 320,
+    "height": 2266,
+    "masked": true
+  },
+  {
+    "file": "screens/local-notifications-390.png",
+    "sha256": "1a691232153761dfa28f1986433267ba0eb641ee3ce6eba442fd5097b599b599",
+    "width": 390,
+    "height": 1940,
+    "masked": true
+  },
+  {
+    "file": "screens/populated-1920.png",
+    "sha256": "20e8aac4b8f00b54473fe59d5083ac9d1def82f5d8ff1a2963f2f59420c13856",
+    "width": 1920,
+    "height": 2613,
+    "masked": true
+  },
+  {
+    "file": "screens/populated-320.png",
+    "sha256": "f25aa54c7cce47aeaf8bdc60d79c56b1076119258fb1418c449b044fc0192281",
+    "width": 320,
+    "height": 5108,
+    "masked": true
+  },
+  {
+    "file": "screens/populated-390.png",
+    "sha256": "9d56d2dab1c02f0403bc5f64d9ccc185fe94622a1a8ce7b3c468d75bdcb69de7",
+    "width": 390,
+    "height": 4735,
+    "masked": true
+  },
+  {
+    "file": "screens/preferences-saved.png",
+    "sha256": "5f663433ed02b923fa3288760bddc6d99ff63ee41bb3ee19e47213ab6f72fe3c",
+    "width": 1920,
+    "height": 1881,
+    "masked": true
+  },
+  {
+    "file": "screens/reference-account-1920.png",
+    "sha256": "82c322f2aff0b85885f409c2e6845793131940a993714943047d1721e0a45c31",
+    "width": 1920,
+    "height": 1579,
+    "masked": true
+  },
+  {
+    "file": "screens/reference-account-320.png",
+    "sha256": "27683d5660074f1827880fe61d0274673dd43b94eade6337eca5b2d986e8add2",
+    "width": 320,
+    "height": 2307,
+    "masked": true
+  },
+  {
+    "file": "screens/reference-account-390.png",
+    "sha256": "f648714784dce070db52712e351f9907ccde33df310425fd19490d12af4815f8",
+    "width": 390,
+    "height": 2219,
+    "masked": true
+  },
+  {
+    "file": "screens/reference-notifications-1920.png",
+    "sha256": "12534e3aa7974c20ca0eddae68d7b6f05969a297603c720d6148851fa23463d0",
+    "width": 1920,
+    "height": 1303,
+    "masked": true
+  },
+  {
+    "file": "screens/reference-notifications-320.png",
+    "sha256": "436787b6c869ca2c345e0590bd4119c694ec7db9f99935de6ff695ce085a31a4",
+    "width": 320,
+    "height": 1943,
+    "masked": true
+  },
+  {
+    "file": "screens/reference-notifications-390.png",
+    "sha256": "7ea62cab791888bf7e6fde68f4a8f2e5f1557c6b964b075128d1d54cf0d78561",
+    "width": 390,
+    "height": 1691,
+    "masked": true
+  }
+]

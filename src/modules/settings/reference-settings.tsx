@@ -5,22 +5,7 @@ import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { Icon } from "@/components/ui/icon";
 import { Button, Field, Toggle, Notice, Modal } from "@/components/ui/primitives";
 
-export function NotificationSettings() {
-  const s=useDemo(), repo=useRepository(), run=useAction();
-  const [p,setP]=useState(s.preferences);
-  return <div className="reference-settings notification-reference"><h1>Notificações</h1><p className="subtitle">Como você fica sabendo que um lead respondeu</p>
-    <section className="reference-panel"><header><Icon name="Bell"/><h2>Dentro do Prometeus</h2></header><div className="reference-panel-body">
-      <Toggle label="Contador de não lidos no menu" description="Mostra quantas conversas ainda precisam da sua atenção." checked={false} disabled onChange={()=>{}}/>
-      <Toggle label="Som ao receber uma mensagem" description="Avise quando uma nova resposta chegar com o aplicativo aberto." checked={false} disabled onChange={()=>{}}/>
-      <small className="muted">As preferências de contador e som ainda não estão disponíveis.</small>
-    </div></section>
-    <section className="reference-panel"><header><Icon name="Send"/><h2>Fora do Prometeus</h2></header><div className="reference-panel-body">
-      <div className="reference-channel-options"><Toggle label="E-mail" checked={p.notifyEmail} onChange={v=>setP({...p,notifyEmail:v})}/><Toggle label="WhatsApp" checked={p.notifyWhatsapp} onChange={v=>setP({...p,notifyWhatsapp:v})}/><Link href="/settings/account">Alterar número</Link></div>
-      <div className="reference-events">{["Lead respondeu","Reunião pedida ou agendada","Handoff humano","Resposta do agente aguardando aprovação","Lead qualificado pelo agente","Falha no envio da resposta do agente"].map(t=><Toggle key={t} label={t} checked={false} disabled onChange={()=>{}}/>)}</div>
-      <Notice>Os canais de aviso podem ser preparados abaixo. Os eventos individuais serão habilitados quando o serviço de notificações estiver disponível.</Notice>
-      <Button variant="primary" onClick={()=>void run(()=>repo.updatePreferences({notifyEmail:p.notifyEmail,notifyWhatsapp:p.notifyWhatsapp}),"Preferências salvas.")}>Salvar preferências</Button>
-    </div></section></div>;
-}
+export {NotificationSettings} from './notification-settings';
 
 export function ReferenceSettings({section}:{section:string}) {
   const s=useDemo(), [modal,setModal]=useState(false), [scanned,setScanned]=useState(false);

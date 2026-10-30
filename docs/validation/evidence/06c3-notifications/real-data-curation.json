@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-30",
+  "scopeHash": "80e000b1603a6d79f8bc040780541555de320e1c129be28eadec7d2db77c6539",
+  "source": "preexisting operator workspace; read-only transaction",
+  "items": 0,
+  "delivered": 0,
+  "uncertain": 0,
+  "caught_up": true,
+  "externalDeliveryEnabled": false,
+  "newProviderCalls": 0,
+  "newExternalSends": 0,
+  "historicalBacklogReplayed": false
+}

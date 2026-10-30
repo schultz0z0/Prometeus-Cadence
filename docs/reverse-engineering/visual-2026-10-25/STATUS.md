@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-29 · Session: s16 · Phase:6 Relatórios06C.2 concluídos no contrato local/controlado; paridade integral não aceita
+Updated: 2026-10-30 · Session: s17 · Phase:6 Notificações06C.3 verificadas localmente; revisão final pendente; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s17:06C.3 com441integrações/361unitários/9focadas,34capturas mascaradas/21pares de rota-viewport/12popups. Referência atual somente leitura comREA/RES. Preferências/feed/resumos no servidor e serviço contínuo. L022restored/L023removed;0novos contatos/canais/outbox/chamadas pagas. EV-279. Revisão final ainda pendente; não avançar antes do aceite.
+- Not covered s17: nova entrega externaSMTP/WhatsApp, estadosSDR e paridade integral. Diferenças de primeira resposta e horário comercial da referência explicitadas emEV279.
 
 - Covered s16:06C.2 com curadoria somente leitura do histórico real;38capturas mascaradas e32checks1920/390/320,0overflow/pageerror, filtros/popup/polling/recovery/exportnulls. L018/L020/L021restored eL019removed;0novos contatos/canais/mensagens/chamadas pagas. EV-278. Uma revisão independente/duas correções Important RED→GREEN;355unitários/432integrações/11focadas; dois menores→08A. Próximo06C.3.
 - Not covered s16:estados pagos/conectados da referência, novos envios/inferência/scraping live e produção pública.

@@ -3,6 +3,7 @@ import{prospectingUser as createUser,testAdmin}from'./prospecting-helpers.ts';im
 import{getPools}from'../../src/server/db/pool.ts';import{withWorkspaceTransaction}from'../../src/server/db/transaction.ts';import{workerPool}from'../../src/server/prospecting/worker-db.ts';
 import{defaultNotificationPreferences as defaults}from'../../src/domain/notifications.ts';
 import{saveNotificationPreferences,listNotifications,readNotification}from'../../src/server/notifications/service.ts';import{processNotificationTick}from'../../src/server/notifications/worker.ts';
+import{notificationRequest}from'../../src/server/notifications/http.ts';import{base}from'./helpers.ts';
 after(async()=>{await getPools().close();await workerPool().end();});
 const signal=new AbortController().signal;
 async function prospectingUser(){await resetRateLimits();return createUser();}
@@ -33,7 +34,7 @@ test('weekly summary is deduplicated and contains no facts from neighboring work
  await processNotificationTick({limit:100,signal});await processNotificationTick({limit:100,signal});const rows=(await listNotifications(u.p)).items.filter(i=>i.eventKey.startsWith('summary:'));assert.equal(rows.length,1);assert.match(rows[0].title,/0 contatos/);assert.doesNotMatch(JSON.stringify(rows),/DO NOT LEAK|neighbor/);
 });
 test('preferences conflict and SQL direct calls cannot set arbitrary destinations or overwrite another user',async()=>{
- const u=await prospectingUser();await prefs(u.p);await assert.rejects(prefs(u.p),{status:409});await assert.rejects(saveNotificationPreferences(u.p,{...defaults,...{destination:'elsewhere@example.com'}} as any),{status:422});
+ const u=await prospectingUser();await prefs(u.p);await assert.rejects(prefs(u.p,{sound:true}),{status:409});await assert.rejects(saveNotificationPreferences(u.p,{...defaults,...{destination:'elsewhere@example.com'}} as any),{status:422});
  await assert.rejects(withWorkspaceTransaction(u.p,c=>c.query("SELECT app.save_notification_preferences(1,$1,NULL)",[{...defaults,email:'true'}])),/NOTIFICATION_INVALID/);
  await assert.rejects(withWorkspaceTransaction(u.p,c=>c.query("SELECT app.save_notification_preferences(1,$1,NULL)",[{...defaults,quiet:{start:'22:00',end:'08:00'}}])),/NOTIFICATION_INVALID/);
 });
@@ -45,4 +46,20 @@ test('two users read independently and cursors reject another identity',async()=
 test('revoked source connection and unverified account email produce no send',async()=>{
  const u=await prospectingUser();await prefs(u.p);const connection=await event(u.p);process.env.NOTIFICATIONS_DELIVERY_ENABLED='false';await processNotificationTick({limit:100,signal});await testAdmin(c=>c.query("UPDATE app.channel_connection SET state='disconnected' WHERE id=$1",[connection.id]));let calls=0;process.env.NOTIFICATIONS_DELIVERY_ENABLED='true';await processNotificationTick({limit:100,signal},{sendEmail:async(v)=>{if(v.to===u.email)calls++;}});assert.equal(calls,0);
  const v=await prospectingUser();await prefs(v.p);await event(v.p);await testAdmin(c=>c.query('UPDATE auth."user" SET "emailVerified"=false WHERE id=$1',[v.p.userId]));await processNotificationTick({limit:100,signal},{sendEmail:async(input)=>{if(input.to===v.email)calls++;}});assert.equal(calls,0);
+});
+test('HTTP enforces fresh identity, workspace, origin, revision and narrow body',async()=>{
+ const u=await prospectingUser(),url=base+'/api/notifications',post=(body:unknown,headers=u.headers)=>notificationRequest(new Request(url,{method:'POST',headers,body:JSON.stringify(body)}));
+ assert.equal((await notificationRequest(new Request(url))).status,401);
+ assert.equal((await notificationRequest(new Request(url+'?mode=preferences',{headers:u.headers}))).status,200);
+ assert.equal((await post({action:'preferences',expectedRevision:0,input:defaults})).status,200);
+ assert.equal((await post({action:'preferences',expectedRevision:0,input:{...defaults,sound:true}})).status,409);
+ assert.equal((await post({action:'preferences',expectedRevision:1,input:{...defaults,expectedRevision:1,destination:'untrusted@example.com'}})).status,422);
+ assert.equal((await notificationRequest(new Request(url+'?cursor=x&cursor=y',{headers:u.headers}))).status,422);
+ const bad=new Headers(u.headers);bad.set('origin','https://elsewhere.example');assert.equal((await post({action:'preferences',expectedRevision:1,input:{...defaults,expectedRevision:1}},bad)).status,403);
+ bad.set('x-cadence-workspace',randomUUID());assert.equal((await notificationRequest(new Request(url,{headers:bad}))).status,409);
+ await testAdmin(c=>c.query('DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',[u.p.workspaceId,u.p.userId]));assert.equal((await notificationRequest(new Request(url,{headers:u.headers}))).status,403);
+});
+test('lost preference response replays the same revision without duplicating or rescheduling',async()=>{
+ const u=await prospectingUser(),input={...defaults,summary:{frequency:'weekly' as const,time:'09:00'}};const first=await saveNotificationPreferences(u.p,input);const next=(await testAdmin(c=>c.query('SELECT next_at FROM app.scheduled_summary WHERE workspace_id=$1',[u.p.workspaceId]))).rows[0].next_at.toISOString();
+ const replay=await saveNotificationPreferences(u.p,input);assert.equal(first.revision,1);assert.equal(replay.revision,1);assert.equal((await testAdmin(c=>c.query('SELECT next_at FROM app.scheduled_summary WHERE workspace_id=$1',[u.p.workspaceId]))).rows[0].next_at.toISOString(),next);
 });

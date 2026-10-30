@@ -1,4 +1,5 @@
 import {
+  Volume2,
   Hash,
   Sheet,
   Briefcase,
@@ -109,6 +110,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 const icons: Record<string, LucideIcon> = {
+  Volume2,
   Hash, Briefcase, Activity, Sheet,
   ClipboardPaste,
   ThumbsDown,

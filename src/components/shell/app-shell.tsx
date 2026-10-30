@@ -7,6 +7,8 @@ import { useIdentity } from "@/client/workspace-provider";
 import { useShellBilling } from "@/client/use-shell-billing";
 import { AccountControls } from "./account-controls";
 import {AssistantPanel} from './assistant-panel';
+import{NotificationProvider}from'@/client/notification-provider';
+import{NotificationBell}from'./notifications';
 import { navigation, allPages, pageTitle, type NavigationItem } from "./navigation";
 import { Icon } from "../ui/icon";
 import { Button, IconButton, Modal, LinkButton } from "../ui/primitives";
@@ -14,6 +16,9 @@ function activeChild(n:NavigationItem,path:string){return n.children?.find(c=>c.
 export function AppShell({ children }: {
     children: React.ReactNode;
 }) {
+ const identity=useIdentity();return <NotificationProvider key={(identity?.activeWorkspaceId??'')+':'+identity?.user.id}><AppShellContent>{children}</AppShellContent></NotificationProvider>;
+}
+function AppShellContent({children}:{children:React.ReactNode}){
     const { preferences,leads,cadences } = useDemo();
     const identity = useIdentity();
     const billing = useShellBilling(identity?.activeWorkspaceId ?? null);
@@ -191,7 +196,7 @@ export function AppShell({ children }: {
               Assistente
             </Button>
             <Button variant="compact support-button" icon="MessageCircle" onClick={() => setInfo("Fale com a gente")}>Fale com a gente</Button>
-            <IconButton icon="Bell" label="Notificações" onClick={() => setInfo("Notificações")}/>
+            <NotificationBell/>
             <button className="icon-btn font-button" aria-label="Alternar tamanho do texto" onClick={() => preference(collapsed, theme, font === 16 ? 18 : font === 18 ? 14 : 16)}>
               A<span>A</span>
             </button>
