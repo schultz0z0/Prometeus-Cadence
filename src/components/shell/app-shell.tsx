@@ -7,6 +7,8 @@ import { useIdentity } from "@/client/workspace-provider";
 import { useShellBilling } from "@/client/use-shell-billing";
 import { AccountControls } from "./account-controls";
 import {AssistantPanel} from './assistant-panel';
+import {SearchPalette} from './search-palette';
+import {HelpCenter} from './help-center';
 import{NotificationProvider}from'@/client/notification-provider';
 import{NotificationBell}from'./notifications';
 import { navigation, allPages, pageTitle, type NavigationItem } from "./navigation";
@@ -37,7 +39,6 @@ function AppShellContent({children}:{children:React.ReactNode}){
     const [theme, setTheme] = useState("light");
     const [font, setFont] = useState(16);
     const [search, setSearch] = useState(false);
-    const [query, setQuery] = useState("");
     const [info, setInfo] = useState("");
     const closeInfo=useCallback(()=>setInfo(''),[]);
     useEffect(() => {
@@ -187,7 +188,7 @@ function AppShellContent({children}:{children:React.ReactNode}){
             </button>
           </div>
           <div className="topbar-actions">
-            <button className="global-search" aria-label="Buscar páginas" onClick={() => setSearch(true)}>
+            <button className="global-search" aria-label="Buscar lead, cadência ou página" onClick={() => setSearch(true)}>
               <Icon name="Search" size={15}/>
               <span>Buscar...</span>
               <kbd>Ctrl K</kbd>
@@ -205,26 +206,10 @@ function AppShellContent({children}:{children:React.ReactNode}){
         </header>
         <main className="page-content">{children}</main>
       </div>
-      {search && (<Modal title="O que você procura?" onClose={() => {
-                setSearch(false);
-                setQuery("");
-            }}>
-          <div className="search-input">
-            <Icon name="Search"/>
-            <input autoFocus placeholder="Buscar uma página..." value={query} onChange={(e) => setQuery(e.target.value)}/>
-          </div>
-          <div className="search-results">
-            {allPages
-                .filter((x) => x.label.toLowerCase().includes(query.toLowerCase()))
-                .map((x) => (<Link key={x.href} href={x.href} onClick={() => setSearch(false)}>
-                  <Icon name={x.icon}/>
-                  {x.label}
-                  <Icon name="ArrowRight" size={15}/>
-                </Link>))}
-          </div>
-        </Modal>)}
-      {info==='Assistente'&&<AssistantPanel onClose={closeInfo}/>}
-      {info && info!=='Assistente' && (<Modal title={info} onClose={() => setInfo("")}>
+      {search && <SearchPalette workspaceId={identity?.activeWorkspaceId??null} onClose={()=>setSearch(false)}/>}
+      {info==='Assistente'&&<AssistantPanel workspaceId={identity?.activeWorkspaceId??null} onClose={closeInfo} onHelp={()=>setInfo('Central de Ajuda')}/>}
+      {info==='Central de Ajuda'&&<HelpCenter onClose={closeInfo}/>}
+      {info && !['Assistente','Central de Ajuda'].includes(info) && (<Modal title={info} onClose={() => setInfo("")}>
           {info === "Notificações" ? (<p>O feed de notificações será disponibilizado no marco 06C.3. Acompanhe por enquanto o estado nas áreas de mensagens e execuções.</p>) : (<>
               <p>
                 Encontre empresas, qualifique quem combina com o seu negócio e

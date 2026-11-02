@@ -13,6 +13,7 @@ import "./linkedin-reference.css";
 import "./auth-reference.css";
 import "./registration-reference.css";
 import "./entry-reference.css";
+import "./assistant-reference.css";
 import "./dashboard-reference.css";
 import "./prospecting-reference.css";
 import "./workflows-reference.css";

@@ -40,8 +40,8 @@ export async function chatgptJson(token:string,model:string,prompt:string,schema
  try{
   while(true){combined.throwIfAborted();const part=await reader.read();if(part.done)break;bytes+=part.value.length;if(bytes>2097152)throw Error('limit');buffer=(buffer+decoder.decode(part.value,{stream:true})).replace(/\r\n/g,'\n');
    let boundary:number;while((boundary=buffer.indexOf('\n\n'))>=0){const event=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);const data=event.split('\n').filter(line=>line.startsWith('data:')).map(line=>line.slice(5).trimStart()).join('\n');if(!data||data==='[DONE]')continue;const value=JSON.parse(data);
-    if(value.type==='response.failed'){const code=value.response?.error?.code;if(['subscription_sharing_usage_limit_exceeded','subscription_sharing_usage_unavailable'].includes(code))throw new ProviderError('CHATGPT_QUOTA_EXCEEDED');throw Error('failed');}
-    if(value.type==='response.incomplete'||value.type==='error')throw Error('incomplete');if(value.type==='response.completed')completed=value.response;
+    if(value.type==='response.failed'||value.type==='error'){const code=value.type==='error'?value.error?.code:value.response?.error?.code;if(['subscription_sharing_usage_limit_exceeded','subscription_sharing_usage_unavailable'].includes(code))throw new ProviderError('CHATGPT_QUOTA_EXCEEDED');throw Error('failed');}
+    if(value.type==='response.incomplete')throw Error('incomplete');if(value.type==='response.completed')completed=value.response;
    }
   }
   if(completed?.status!=='completed'||!Array.isArray(completed.output))throw Error('incomplete');let text='';for(const item of completed.output){if(item.type==='reasoning')continue;if(item.type!=='message'||!Array.isArray(item.content))throw Error('invalid');for(const part of item.content){if(part.type!=='output_text'||typeof part.text!=='string')throw Error('invalid');text+=part.text;}}

@@ -107,6 +107,8 @@ import {
   Menu,
   Flame,
   LoaderCircle,
+  Lightbulb,
+  CornerDownLeft,
   type LucideIcon,
 } from "lucide-react";
 const icons: Record<string, LucideIcon> = {
@@ -215,6 +217,8 @@ const icons: Record<string, LucideIcon> = {
   Menu,
   Flame,
   LoaderCircle,
+  Lightbulb,
+  CornerDownLeft,
 };
 export function Icon({
   name,
