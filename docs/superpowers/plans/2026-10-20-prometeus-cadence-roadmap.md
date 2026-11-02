@@ -215,3 +215,12 @@ Webhooks de saída concluídos local/controlado:
 - atenção sem laço e justiça entre tenants.
 
 Uma revisão independente e seis Important corrigidos RED→GREEN. [Aceite](../../validation/07c1a-webhooks.md). Próximo **07C.1b — API pública com tokens escopados**.
+
+### Continuidade 02/11 — 07C.1b
+
+API pública somente leitura concluída local/controlado:
+- chaves escopadas, com token mostrado uma vez;
+- gerar nova e revogar imediatos;
+- leads e eventos com cursor retomável e limite por chave.
+
+Uma revisão independente e quatro Important corrigidos RED→GREEN. **07C.1 concluído.** [Aceite](../../validation/07c1b-public-api.md). Próximo **07C.2**.

@@ -88,3 +88,5 @@ id,date,session,route,shows,masked
 "EV-283","2026-11-02","s21","shell:assistant proposals; shell:how-it-works; /first-steps","06F2 proposal card review/cancel with controlled fixture, route tour progress and seen badge; no reference writes; no live model proposal","yes; fake [RE] data only"
 
 "EV-284","2026-11-02","s22","/settings/webhooks","07C1a webhooks page compared with retained reference text and client component; local geometry and fake-data capture; no reference writes; no external POST","yes; fake [RE] data only"
+
+"EV-285","2026-11-02","s23","/settings/webhooks; GET /api/v1/leads","07C1b own API keys section and read API exercised locally with fake data; reference shows no API keys; no reference writes","yes; fake [RE] data only; token never captured"

@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07C.1b** (atualizado 02/11; 07C.1a concluído).
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07C.2** (atualizado 02/11; 07C.1 concluído).
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -28,7 +28,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 06E.1 | Autenticador, sessões e administração de membros | 02, 06A-P, 06A-H | [tarefas](2026-10-27-prometeus-cadence-06e1-security-members.md) | Concluído local/controlado02/11; [aceite](../../validation/06e1-security-members.md) |
 | 06E.2 | Duplicados, fusão, privacidade e ciclo dos dados | 06E.1, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-06e2-data-lifecycle.md) | Concluído local/controlado02/11; [aceite](../../validation/06e2-data-lifecycle.md) |
 | 06F | Assistente, busca, onboarding e ajuda | 06C.3, 06E.2, 06IA | [tarefas](2026-10-27-prometeus-cadence-06f-assistant-experience.md) | Concluído local/controlado em dois pacotes: [06F.1](2026-11-02-prometeus-cadence-06f1-assistant-search.md) e [06F.2](2026-11-02-prometeus-cadence-06f2-assistant-commands.md) |
-| 07C.1 | API, eventos e webhooks de saída | 06E.2, 06C.2 | [tarefas](2026-10-27-prometeus-cadence-07c1-api-webhooks.md) | Em execução: [07C.1a](2026-11-02-prometeus-cadence-07c1a-webhooks.md) concluído local/controlado; 07C.1b (API pública) planejado |
+| 07C.1 | API, eventos e webhooks de saída | 06E.2, 06C.2 | [tarefas](2026-10-27-prometeus-cadence-07c1-api-webhooks.md) | Concluído local/controlado em dois pacotes: [07C.1a](2026-11-02-prometeus-cadence-07c1a-webhooks.md) e [07C.1b](2026-11-02-prometeus-cadence-07c1b-public-api.md) |
 | 07C.2 | Conectores de cliente e agenda/CRM | 07C.1 | [tarefas](2026-10-27-prometeus-cadence-07c2-customer-connectors.md) | Planejado; não executado |
 | 07A.0 | Viabilidade e capacidades do LinkedIn | 06IA, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07a0-linkedin-feasibility.md) | Planejado; não executado |
 | 07A.1 | Conexão, saúde e sincronização LinkedIn | 07A.0, 07C.2 | [tarefas](2026-10-27-prometeus-cadence-07a1-linkedin-connection.md) | Planejado; não executado |
@@ -128,3 +128,10 @@ Continuidade 07C.1a em 02/11: o 07C.1 foi dividido. O 07C.1a entrega webhooks de
 - justiça por destino e retenção de 30 dias.
 
 Uma revisão independente encontrou seis Important, corrigidos RED→GREEN na 095a; menores→08A. Nenhum POST externo foi feito. Próximo **07C.1b — API pública com tokens escopados**. [Aceite](../../validation/07c1a-webhooks.md).
+
+Continuidade 07C.1b em 02/11: API pública somente leitura com chaves escopadas:
+- token mostrado uma vez e guardado como digest; gerar nova e revogar valem na hora;
+- a chave age como um criador que continua proprietário ou administrador;
+- `/api/v1/leads` e `/api/v1/events` com cursor retomável, atraso de commit e limite de 120/min.
+
+Uma revisão independente encontrou quatro Important, corrigidos RED→GREEN na 096a; menores→08A. **07C.1 concluído.** Próximo **07C.2**. [Aceite](../../validation/07c1b-public-api.md).

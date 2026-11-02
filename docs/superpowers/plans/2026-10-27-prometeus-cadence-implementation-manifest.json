@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07C.1b",
+  "next": "07C.2",
   "end": "08B",
   "packages": [
     {
@@ -744,6 +744,47 @@
       "continuousLane": "integrations"
     },
     {
+      "id": "07C.1b",
+      "title": "API pública com chaves escopadas",
+      "requirements": [
+        "R15"
+      ],
+      "dependencies": [
+        "07C.1a"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-02-prometeus-cadence-07c1b-public-api.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-integrations-design.md",
+      "create": [
+        "src/domain/api-credentials.ts",
+        "src/server/integrations/api-auth.ts",
+        "src/server/integrations/public-api.ts",
+        "src/app/api/v1/leads/route.ts",
+        "src/app/api/v1/events/route.ts",
+        "db/migrations/096-public-api.sql"
+      ],
+      "modify": [
+        "src/server/integrations/http.ts",
+        "src/modules/settings/webhooks.tsx"
+      ],
+      "unit": "tests/07c1-api-webhooks.test.ts",
+      "integration": "tests/integration/07c1-api-webhooks.test.ts",
+      "evidence": "docs/validation/07c1b-public-api.md",
+      "routes": [
+        "/settings/webhooks",
+        "GET /api/v1/leads",
+        "GET /api/v1/events"
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-02",
+      "review": "docs/validation/07c1b-public-api-review.md",
+      "followUpMigrations": [
+        "db/migrations/096a-public-api-review.sql"
+      ],
+      "deferredMinorOwner": "08A"
+    },
+    {
       "id": "07C.1",
       "title": "API, eventos e webhooks de saída",
       "requirements": [
@@ -778,7 +819,7 @@
       ],
       "unit": "tests/07c1-api-webhooks.test.ts",
       "integration": "tests/integration/07c1-api-webhooks.test.ts",
-      "evidence": "docs/validation/07c1-api-webhooks.md",
+      "evidence": "docs/validation/07c1b-public-api.md",
       "routes": [
         "/settings/webhooks",
         "/settings/apps",
@@ -786,8 +827,10 @@
       ],
       "executionSplit": {
         "07C.1a": "completed-local-controlled",
-        "07C.1b": "planned: public API with scoped tokens (/api/v1/leads, /api/v1/events), rotate/revoke"
-      }
+        "07C.1b": "completed-local-controlled"
+      },
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-02"
     },
     {
       "id": "07C.2",
