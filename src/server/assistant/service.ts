@@ -17,6 +17,7 @@ const failures:Record<string,[number,string]>={
  ASSISTANT_ACCESS:[403,'Você não tem mais acesso a este workspace.'],
  ASSISTANT_LIMIT:[429,'Você chegou ao limite de perguntas de hoje. Amanhã o assistente volta a responder; a Central de Ajuda continua aberta.'],
  ASSISTANT_NOT_FOUND:[404,'Conversa não encontrada.'],
+ ASSISTANT_BUSY:[409,'Sua pergunta ainda está sendo respondida. Aguarde um instante e tente de novo.'],
  ASSISTANT_REPLAY_CHANGED:[409,'Esta pergunta já foi enviada com outro texto.'],
  ASSISTANT_INVALID:[422,'Escreva sua pergunta.'],
 };
@@ -36,12 +37,12 @@ async function route(c:PoolClient,p:Principal,deps:AssistantDeps){
  // The local Codex binary is slot-gated by background jobs; the synchronous assistant uses HTTP providers only.
  return resolved.route&&resolved.route.conventional.provider!=='codex-local'?resolved.route.conventional:null;
 }
-const remaining=async(c:PoolClient)=>Number((await c.query(`SELECT greatest(0,30-count(*))::int n FROM app.assistant_message WHERE role='user' AND created_at>=date_trunc('day',clock_timestamp() AT TIME ZONE 'America/Sao_Paulo') AT TIME ZONE 'America/Sao_Paulo'`)).rows[0].n);
-const view=(r:Record<string,any>):AssistantMessage=>({id:r.id,role:r.role,text:r.text,citations:r.citations,fallback:r.fallback,createdAt:r.created_at.toISOString()});
+const remaining=async(c:PoolClient)=>Number((await c.query('SELECT app.assistant_remaining() n')).rows[0].n);
+const view=(r:Record<string,any>):AssistantMessage=>({id:r.id,requestId:r.request_id,role:r.role,text:r.text,citations:r.citations,fallback:r.fallback,createdAt:r.created_at.toISOString()});
 export async function readAssistant(p:Principal,deps:AssistantDeps={}):Promise<AssistantView>{
  try{return await withWorkspaceTransaction(p,async c=>{
   const thread=(await c.query('SELECT id FROM app.assistant_thread ORDER BY updated_at DESC LIMIT 1')).rows[0]?.id??null;
-  const messages=thread?(await c.query('SELECT * FROM app.assistant_message WHERE thread_id=$1 ORDER BY created_at,id',[thread])).rows.map(view):[];
+  const messages=thread?(await c.query('SELECT * FROM (SELECT * FROM app.assistant_message WHERE thread_id=$1 ORDER BY created_at DESC,id DESC LIMIT 50) m ORDER BY created_at,id',[thread])).rows.map(view):[];
   return{threadId:thread,messages,today:todayItems(await facts(c)),aiAvailable:!!await route(c,p,deps),remaining:await remaining(c)};
  });}catch(e){throw assistantError(e);}
 }
@@ -65,28 +66,29 @@ function fallback(articles:typeof helpArticles):{text:string;citations:Assistant
 export async function answerAssistant(p:Principal,raw:unknown,deps:AssistantDeps={}):Promise<AssistantReply>{
  const parsed=assistantInputSchema.safeParse(raw);if(!parsed.success)throw new AppError(422,'Escreva sua pergunta com até 2.000 caracteres.');const input=parsed.data;
  try{
+  // The ask transaction holds the workspace assistant lock only to record the question and claim its generation lease.
   const ask=await withWorkspaceTransaction(p,async c=>{
-   const asked=(await c.query('SELECT app.assistant_ask($1,$2,$3) v',[input.threadId??null,input.requestId,input.text])).rows[0].v as {threadId:string;questionId:string;replay:boolean};
+   const asked=(await c.query('SELECT app.assistant_ask($1,$2,$3) v',[input.threadId??null,input.requestId,input.text])).rows[0].v as {threadId:string;questionId:string;replay:boolean;generate:boolean};
    const done=asked.replay?(await c.query("SELECT * FROM app.assistant_message WHERE request_id=$1 ORDER BY role DESC",[input.requestId])).rows:[];
-   if(done.length===2)return{asked,done};
-   const history=(await c.query("SELECT role,text FROM app.assistant_message WHERE thread_id=$1 AND request_id<>$2 ORDER BY created_at DESC,id DESC LIMIT 6",[asked.threadId,input.requestId])).rows.reverse();
-   return{asked,done:null,facts:await facts(c),route:await route(c,p,deps),history};
+   return{asked,done:done.length===2?done:null,remaining:done.length===2?await remaining(c):0};
   });
-  if(ask.done)return{threadId:ask.asked.threadId,question:view(ask.done[0]),message:view(ask.done[1])};
+  if(ask.done)return{threadId:ask.asked.threadId,question:view(ask.done[0]),message:view(ask.done[1]),remaining:ask.remaining};
+  const ctx=await withWorkspaceTransaction(p,async c=>({facts:await facts(c),route:ask.asked.generate?await route(c,p,deps):null,
+   history:(await c.query("SELECT role,text FROM app.assistant_message WHERE thread_id=$1 AND request_id<>$2 ORDER BY created_at DESC,id DESC LIMIT 6",[ask.asked.threadId,input.requestId])).rows.reverse()}));
   const articles=matchHelp(input.text,input.contextRoute),sources:AssistantCitation[]=[...articles.map(a=>({kind:'help' as const,id:a.id})),{kind:'fact',id:'account'}];
   let answer=fallback(articles),usage:{provider:string;inputTokens?:number;outputTokens?:number}|null=null;
-  if(ask.route){
+  if(ctx.route){
    const signal=AbortSignal.any([AbortSignal.timeout(60000),...(deps.signal?[deps.signal]:[])]);
    try{
-    const r=await(deps.generate??runConventionalJson)({operationId:'assistant:'+input.requestId,workspaceId:p.workspaceId,signal,route:ask.route},
-     {prompt:prompt({question:input.text,route:input.contextRoute,facts:ask.facts!,articles,history:ask.history!}),schema:assistantOutputJsonSchema,maxOutputTokens:4096,parse:v=>parseAssistantOutput(v,sources)});
+    const r=await(deps.generate??runConventionalJson)({operationId:'assistant:'+input.requestId,workspaceId:p.workspaceId,signal,route:ctx.route},
+     {prompt:prompt({question:input.text,route:input.contextRoute,facts:ctx.facts,articles,history:ctx.history}),schema:assistantOutputJsonSchema,maxOutputTokens:4096,parse:v=>parseAssistantOutput(v,sources)});
     answer=r.value;usage=r.usage;
    }catch{if(signal.aborted&&deps.signal?.aborted)throw new AppError(499,'Pergunta cancelada.');}
   }
   return await withWorkspaceTransaction(p,async c=>{
    await c.query('SELECT app.assistant_reply($1,$2,$3,$4,$5,$6,$7)',[input.requestId,answer.text,JSON.stringify(answer.citations),!usage,usage?.provider??null,usage?.inputTokens??null,usage?.outputTokens??null]);
    const rows=(await c.query("SELECT * FROM app.assistant_message WHERE request_id=$1 ORDER BY role DESC",[input.requestId])).rows;
-   return{threadId:ask.asked.threadId,question:view(rows[0]),message:view(rows[1])};
+   return{threadId:ask.asked.threadId,question:view(rows[0]),message:view(rows[1]),remaining:await remaining(c)};
   });
  }catch(e){throw assistantError(e);}
 }

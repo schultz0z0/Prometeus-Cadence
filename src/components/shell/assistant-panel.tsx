@@ -25,7 +25,8 @@ export function AssistantPanel({onClose,onHelp,workspaceId}:{onClose:()=>void;on
  useEffect(()=>{
   const trigger=document.activeElement as HTMLElement|null,dialog=panel.current;
   dialog?.show();input.current?.focus();
-  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();onClose();}};
+  // A modal opened over the panel (search, help) owns Escape; one key press closes one layer.
+  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!document.querySelector('dialog:modal')){event.preventDefault();onClose();}};
   document.addEventListener('keydown',escape);
   return ()=>{document.removeEventListener('keydown',escape);inflight.current?.abort();dialog?.close();trigger?.focus();};
  },[onClose]);
@@ -37,20 +38,22 @@ export function AssistantPanel({onClose,onHelp,workspaceId}:{onClose:()=>void;on
  useEffect(()=>{store.set(draftKey,text);},[draftKey,text]);
  useEffect(()=>{log.current?.scrollTo({top:log.current.scrollHeight});},[view?.messages.length,pending,failed]);
  async function send(question:string,requestId=crypto.randomUUID()){
-  const value=question.trim();if(!value||!workspaceId||pending)return;
+  const value=question.trim();if(!value||!workspaceId||!view||pending)return;
   const controller=new AbortController();inflight.current=controller;
   setPending({text:value,requestId});setFailed(null);if(value===text.trim())setText('');
   try{
    const reply=await askAssistant(workspaceId,{...(view?.threadId?{threadId:view.threadId}:{}),text:value,contextRoute:path,requestId},controller.signal);
-   setView(v=>v&&{...v,threadId:reply.threadId,messages:[...v.messages,reply.question,reply.message],remaining:Math.max(0,v.remaining-1)});
+   setView(v=>v&&{...v,threadId:reply.threadId,messages:[...v.messages.filter(m=>m.requestId!==reply.question.requestId),reply.question,reply.message],remaining:reply.remaining});
   }catch(e){
    if(controller.signal.aborted)return;
    // The question stays available to retry with the same request id, so a lost response is never asked twice.
-   setFailed({text:value,requestId,message:(e as Error).message});
+   setFailed({text:value,requestId,message:(e as Error).message});setText(t=>t||value);
   }finally{if(inflight.current===controller){inflight.current=null;setPending(null);}}
  }
  function dismiss(id:string){const next=[...dismissed,id];setDismissed(next);store.set('assistant-dismissed:'+(workspaceId??'demo'),next.join(','));}
- const today=(view?.today??[]).filter(t=>!dismissed.includes(t.id)),empty=!view?.messages.length&&!pending&&!failed,limited=view?.remaining===0;
+ const today=(view?.today??[]).filter(t=>!dismissed.includes(t.id)),empty=!view?.messages.length&&!pending&&!failed,limited=view?.remaining===0,ready=!!view&&!limited;
+ // A question whose answer never arrived (panel closed mid-answer) is offered again with its own request id.
+ const last=view?.messages.at(-1),orphan=last?.role==='user'&&!pending&&!failed?last:null;
  return <dialog className="assistant-panel" ref={panel} aria-labelledby="assistant-title">
   <header><span className="assistant-avatar"><Icon name="Bot" size={18}/></span><div><h3 id="assistant-title">Assistente Prometeus</h3><p>Tire suas dúvidas sobre a plataforma</p></div>
    <IconButton icon="Plus" label="Nova conversa" onClick={()=>{setView(v=>v&&{...v,threadId:null,messages:[]});setFailed(null);input.current?.focus();}}/><IconButton icon="X" label="Fechar assistente" onClick={onClose}/></header>
@@ -58,13 +61,14 @@ export function AssistantPanel({onClose,onHelp,workspaceId}:{onClose:()=>void;on
    {today.length>0&&<section className="assistant-today">
     <button type="button" aria-expanded={todayOpen} onClick={()=>setTodayOpen(o=>!o)}><Icon name="Lightbulb" size={13}/>PRA HOJE · {today.length}<Icon name={todayOpen?'ChevronUp':'ChevronDown'} size={14}/></button>
     {todayOpen&&today.map(t=><article key={t.id}><header><strong>{t.title}</strong><IconButton icon="X" label={'Dispensar: '+t.title} onClick={()=>dismiss(t.id)}/></header><p>{t.text}</p>
-     <div><Link href={t.href} onClick={onClose}>{t.action}<Icon name="ArrowRight" size={12}/></Link><button type="button" onClick={()=>void send(t.question)} disabled={!!pending||limited}>Perguntar</button></div></article>)}
+     <div><Link href={t.href} onClick={onClose}>{t.action}<Icon name="ArrowRight" size={12}/></Link><button type="button" onClick={()=>void send(t.question)} disabled={!!pending||!ready}>Perguntar</button></div></article>)}
    </section>}
    {empty&&<div className="assistant-welcome"><span className="assistant-welcome-icon"><Icon name="Bot" size={22}/></span><h4>Como posso ajudar?</h4>
     <p>Respondo com base na Central de Ajuda e nos dados da sua conta (plano, canais, cadências) e mostro onde resolver cada coisa.</p>
-    {workspaceId&&<nav aria-label="Sugestões de pergunta">{suggestions.map(s=><button type="button" key={s} onClick={()=>void send(s)} disabled={limited}>{s}</button>)}</nav>}</div>}
+    {workspaceId&&<nav aria-label="Sugestões de pergunta">{suggestions.map(s=><button type="button" key={s} onClick={()=>void send(s)} disabled={!ready}>{s}</button>)}</nav>}</div>}
    {view?.messages.map(m=><Message key={m.id} m={m} onClose={onClose}/>)}
-   {pending&&<><div className="assistant-message user"><p>{pending.text}</p></div><div className="assistant-message assistant pending" role="status"><Icon name="LoaderCircle" size={14}/><p>Consultando a ajuda e a sua conta…</p></div></>}
+   {orphan&&<div className="assistant-message error" role="alert"><p>Esta pergunta ficou sem resposta.</p><button type="button" onClick={()=>void send(orphan.text,orphan.requestId)}>Tentar de novo</button></div>}
+   {pending&&<>{!view?.messages.some(m=>m.requestId===pending.requestId)&&<div className="assistant-message user"><p>{pending.text}</p></div>}<div className="assistant-message assistant pending" role="status"><Icon name="LoaderCircle" size={14}/><p>Consultando a ajuda e a sua conta…</p></div></>}
    {failed&&<><div className="assistant-message user"><p>{failed.text}</p></div><div className="assistant-message error" role="alert"><p>{failed.message}</p><button type="button" onClick={()=>void send(failed.text,failed.requestId)}>Tentar de novo</button></div></>}
    {loadError&&<div className="assistant-message error" role="alert"><p>{loadError}</p><button type="button" onClick={()=>setAttempt(a=>a+1)}>Tentar de novo</button></div>}
   </div>
@@ -72,7 +76,7 @@ export function AssistantPanel({onClose,onHelp,workspaceId}:{onClose:()=>void;on
    <form className="assistant-composer" onSubmit={e=>{e.preventDefault();void send(text);}}>
     <textarea ref={input} rows={1} maxLength={2000} placeholder="Faça sua pergunta..." aria-label="Faça sua pergunta" value={text} disabled={!workspaceId||limited} onChange={e=>setText(e.target.value)}
      onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void send(text);}}}/>
-    <button type="submit" aria-label="Enviar" disabled={!workspaceId||!text.trim()||!!pending||limited}><Icon name="Send" size={16}/></button>
+    <button type="submit" aria-label="Enviar" disabled={!ready||!text.trim()||!!pending}><Icon name="Send" size={16}/></button>
    </form>
    <p>{!workspaceId?'Entre na sua conta para conversar com o assistente.':limited?'Você usou as perguntas de hoje. A Central de Ajuda continua disponível.':view&&!view.aiAvailable?'A IA está indisponível agora; respondo pela Central de Ajuda.':'Com base na Central de Ajuda e na sua conta'}</p>
    <div><button type="button" onClick={onHelp}><Icon name="HelpCircle" size={11}/>Central de Ajuda</button><Link href="/first-steps" onClick={onClose}>Primeiros passos</Link><Link href="/settings/context" onClick={onClose}>Contexto de IA</Link></div>

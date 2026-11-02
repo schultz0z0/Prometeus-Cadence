@@ -1,8 +1,8 @@
 import {z} from 'zod';
 export type AssistantCommand={kind:'create-cadence'|'create-audience-automation'|'qualify-list'|'draft-reply';payload:Record<string,unknown>};
 export type AssistantCitation={kind:'help'|'fact';id:string};
-export interface AssistantMessage{id:string;role:'user'|'assistant';text:string;citations:AssistantCitation[];fallback:boolean;createdAt:string}
-export interface AssistantReply{threadId:string;message:AssistantMessage;question:AssistantMessage}
+export interface AssistantMessage{id:string;requestId:string;role:'user'|'assistant';text:string;citations:AssistantCitation[];fallback:boolean;createdAt:string}
+export interface AssistantReply{threadId:string;message:AssistantMessage;question:AssistantMessage;remaining:number}
 export interface AssistantFacts{leads:number;lists:number;emailReady:boolean;whatsappReady:boolean;cadencesActive:number;cadencesTotal:number;billing:string}
 export interface TodayItem{id:string;title:string;text:string;action:string;href:string;question:string}
 export interface AssistantView{threadId:string|null;messages:AssistantMessage[];today:TodayItem[];aiAvailable:boolean;remaining:number}

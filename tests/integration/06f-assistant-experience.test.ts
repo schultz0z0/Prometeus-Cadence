@@ -1,10 +1,12 @@
 import test,{after}from'node:test';import assert from'node:assert/strict';import{randomUUID}from'node:crypto';
-import{prospectingUser,testAdmin,closeProspectingPools}from'./prospecting-helpers.ts';
+import{prospectingUser as createUser,testAdmin,closeProspectingPools}from'./prospecting-helpers.ts';
 import{executeWorkspaceCommand,readWorkspaceSnapshot}from'../../src/server/workspaces/commands.ts';
 import{answerAssistant,readAssistant,type AssistantDeps}from'../../src/server/assistant/service.ts';
 import{searchWorkspace}from'../../src/server/search/service.ts';
 import{assistantRequest,searchRequest}from'../../src/server/assistant/http.ts';
-import{base}from'./helpers.ts';
+import{base,resetRateLimits}from'./helpers.ts';
+// This file creates many accounts; reset the signup limiter like the other suites do.
+const prospectingUser=async()=>{await resetRateLimits();return createUser();};
 import type{Principal}from'../../src/domain/workspace.ts';
 after(closeProspectingPools);
 const route={provider:'openai' as const,model:'qa-model',configFingerprint:'qa',contractVersion:'conventional-v1' as const};
@@ -102,4 +104,32 @@ test('HTTP contract: anonymous 401, invalid 422, workspace switch 409, search an
  const noOrigin=new Headers(u.headers);noOrigin.delete('origin');assert.equal((await post(ask('oi'),noOrigin)).status,403);
  const ok=await post(ask('Como conecto meu Gmail?'));assert.equal(ok.status,200);const reply=await ok.json();assert.equal(reply.message.role,'assistant');
  const got=await (await assistantRequest(new Request(base+'/api/assistant',{headers:u.headers}))).json();assert.equal(got.threadId,reply.threadId);
+});
+
+test('review: one request id generates once at a time, abandoned retries are capped, and answers carry their request id',async()=>{
+ const{p}=await prospectingUser();let calls=0;
+ const slow:AssistantDeps={route,generate:async(_c,r)=>{calls++;await new Promise(x=>setTimeout(x,300));return{value:r.parse({text:'Uma resposta.',citations:[]}),usage:{provider:'openai'}};}};
+ const input=ask('Como funciona o teste grátis?');
+ const results=await Promise.allSettled([answerAssistant(p,input,slow),answerAssistant(p,input,slow),answerAssistant(p,input,slow)]);
+ assert.equal(calls,1);assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
+ for(const r of results)if(r.status==='rejected')assert.equal(r.reason.code,'ASSISTANT_BUSY');
+ const done=await answerAssistant(p,input,slow);assert.equal(calls,1);assert.equal(done.message.requestId,input.requestId);
+ // A client that aborts mid-answer and replays cannot buy unlimited model calls with one question.
+ let aborts=0;const again=ask('Como funcionam os créditos?');
+ const aborting=():AssistantDeps=>{const c=new AbortController();return{route,signal:c.signal,generate:async()=>{aborts++;c.abort();throw new Error('aborted');}};};
+ for(let i=0;i<3;i++){await assert.rejects(answerAssistant(p,again,aborting()),{status:499});await assert.rejects(answerAssistant(p,again,aborting()),{code:'ASSISTANT_BUSY'});await testAdmin(c=>c.query("UPDATE app.assistant_message SET generating_until=now()-interval '1 second' WHERE request_id=$1",[again.requestId]));}
+ const last=await answerAssistant(p,again,aborting());assert.equal(aborts,3);assert.equal(last.message.fallback,true);
+});
+
+test('review: search folds accents and case, invalid kinds explain themselves, and remaining honors the workspace cap',async()=>{
+ const u=await prospectingUser();await seed(u.p,[lead('j1',{name:'Padaria do João'}),lead('j2',{name:'AÇOUGUE ÉDEN'})]);
+ assert.deepEqual((await searchWorkspace(u.p,{q:'joao'})).items.map(h=>h.id),['j1']);
+ assert.deepEqual((await searchWorkspace(u.p,{q:'acougue eden'})).items.map(h=>h.id),['j2']);
+ assert.deepEqual((await searchWorkspace(u.p,{q:'JOÃO'})).items.map(h=>h.id),['j1']);
+ await assert.rejects(searchWorkspace(u.p,{q:'joao',kinds:['job']}),{status:422,message:/tipo/i});
+ const v=await prospectingUser(),mate={...v.p,workspaceId:u.p.workspaceId};
+ await testAdmin(c=>c.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),mate.workspaceId,mate.userId,'operator']));
+ const t=await answerAssistant(mate,ask('oi'),{route:null});
+ await testAdmin(c=>c.query("INSERT INTO app.assistant_message(workspace_id,user_id,thread_id,request_id,role,text) SELECT $1,$2,$3,gen_random_uuid()::text,'user','q' FROM generate_series(1,199)",[u.p.workspaceId,mate.userId,t.threadId]));
+ assert.equal((await readAssistant(u.p,{route:null})).remaining,0);
 });
