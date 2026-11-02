@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07C.1",
+  "next": "07C.1b",
   "end": "08B",
   "packages": [
     {
@@ -696,6 +696,54 @@
       "completedAt": "2026-11-02"
     },
     {
+      "id": "07C.1a",
+      "title": "Webhooks de saída",
+      "requirements": [
+        "R15"
+      ],
+      "dependencies": [
+        "06E.2",
+        "06C.2"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-02-prometeus-cadence-07c1a-webhooks.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-integrations-design.md",
+      "create": [
+        "src/domain/integration-delivery.ts",
+        "src/server/integrations/webhooks.ts",
+        "src/server/integrations/worker.ts",
+        "src/server/integrations/http.ts",
+        "src/app/api/integrations/route.ts",
+        "src/app/api/integrations/[id]/[action]/route.ts",
+        "src/modules/settings/webhooks.tsx",
+        "db/migrations/095-integrations-outbox.sql"
+      ],
+      "modify": [
+        "src/modules/settings/reference-settings.tsx",
+        "src/server/channels/crypto.ts",
+        "scripts/runtime-lane.ts",
+        "scripts/runtime-supervisor.ts",
+        "scripts/runtime-control.mjs",
+        "scripts/runtime-core.ts",
+        "scripts/test-integration.mjs"
+      ],
+      "unit": "tests/07c1-api-webhooks.test.ts",
+      "integration": "tests/integration/07c1-api-webhooks.test.ts",
+      "evidence": "docs/validation/07c1a-webhooks.md",
+      "routes": [
+        "/settings/webhooks"
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-02",
+      "review": "docs/validation/07c1a-webhooks-review.md",
+      "followUpMigrations": [
+        "db/migrations/095a-integrations-review.sql"
+      ],
+      "deferredMinorOwner": "08A",
+      "continuousLane": "integrations"
+    },
+    {
       "id": "07C.1",
       "title": "API, eventos e webhooks de saída",
       "requirements": [
@@ -735,7 +783,11 @@
         "/settings/webhooks",
         "/settings/apps",
         "/executions/[id]"
-      ]
+      ],
+      "executionSplit": {
+        "07C.1a": "completed-local-controlled",
+        "07C.1b": "planned: public API with scoped tokens (/api/v1/leads, /api/v1/events), rotate/revoke"
+      }
     },
     {
       "id": "07C.2",

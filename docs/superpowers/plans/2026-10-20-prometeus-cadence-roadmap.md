@@ -205,3 +205,13 @@ Comandos revisados do assistente, passeios por área e progresso concluídos loc
 - menores 06B.3 e 06D.2 fechados.
 
 Uma revisão independente e seis Important corrigidos RED→GREEN. **06F concluído.** [Aceite](../../validation/06f2-assistant-commands.md). Próximo **07C.1 — API, eventos e webhooks de saída**.
+
+### Continuidade 02/11 — 07C.1a
+
+Webhooks de saída concluídos local/controlado:
+- página fiel à referência;
+- eventos transacionais de lead entrou, lead qualificado e resposta humana;
+- entrega assinada, com IP público fixado e retentativas limitadas a 24 h;
+- atenção sem laço e justiça entre tenants.
+
+Uma revisão independente e seis Important corrigidos RED→GREEN. [Aceite](../../validation/07c1a-webhooks.md). Próximo **07C.1b — API pública com tokens escopados**.

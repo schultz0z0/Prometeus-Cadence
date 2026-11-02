@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-02 · Session: s21 · Phase:6 06F concluído local/controlado (06F.1+06F.2); próximo 07C.1; paridade integral não aceita
+Updated: 2026-11-02 · Session: s22 · Phase:6 07C.1a webhooks concluídos local/controlado; próximo 07C.1b; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s22: 07C.1a webhooks de saída comparados ao texto e ao componente retidos (L4, sem escrita); QA L031 removed, sem POST externo. Revisão independente: seis Important corrigidos RED→GREEN (095a). EV-284. Próximo 07C.1b.
+- Not covered s22: payload real da referência, entrega a receptor externo real, chave OpenAI própria (fora por decisão).
 
 - Covered s21: 06F.2 com card de proposta (revisão real, cancelado sem confirmar), passeio por área com progresso e selo em Primeiros passos; QA L030 removed, 0 envios. Revisão independente: seis Important corrigidos RED→GREEN (094a). EV-283. 06F concluído; próximo 07C.1.
 - Not covered s21: proposta da IA ao vivo (cota esgotada), QA visual do rascunho de resposta (sem canal conectado), comandos pelo chat na referência.
@@ -76,7 +79,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s21: 07C.1 — API, eventos e webhooks de saída. 06F concluído local/controlado; menores→08A.
+Fila vigente s22: 07C.1b — API pública com tokens escopados. 07C.1a concluído local/controlado; menores→08A.
+
+Fila s21 (histórica): 07C.1 — API, eventos e webhooks de saída.
 
 Fila s20 (histórica): 06F.2 — comandos revisados do assistente, onboarding e tours.
 
