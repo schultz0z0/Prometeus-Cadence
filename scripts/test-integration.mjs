@@ -16,6 +16,7 @@ process.env.NODE_ENV = "test";
 process.env.CADENCE_INTEGRATION = "1";
 const known = [
   "06e2-data-lifecycle",
+  "06f-assistant-experience",
   "06e1-security-members",
   "06c3-notifications",
   "06iah-intelligence-homologation",
