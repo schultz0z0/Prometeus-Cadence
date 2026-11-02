@@ -17,6 +17,7 @@ const failures:Record<string,[number,string]>={
  WEBHOOK_CONFLICT:[409,'O webhook mudou em outra aba. Recarregue antes de salvar.'],
  WEBHOOK_LIMIT:[409,`O limite é de ${MAX_DESTINATIONS} webhooks por workspace.`],
  WEBHOOK_INACTIVE:[409,'Ative o webhook antes de testar.'],
+ WEBHOOK_ATTENTION:[409,'Resolva o alerta deste webhook (edite ou tente de novo) antes de testar.'],
  WEBHOOK_INVALID:[422,'Operação inválida.'],
 };
 export function webhookError(e:unknown){const k=e instanceof Error?failures[e.message]:undefined;return k?new AppError(k[0],k[1],e instanceof Error?e.message:undefined):e;}
@@ -44,7 +45,7 @@ async function blockers(c:PoolClient,id:string|null,input:WebhookInput,resolve:R
  if(!id&&Number((await c.query('SELECT count(*) n FROM app.webhook_destination')).rows[0].n)>=MAX_DESTINATIONS)out.push(failures.WEBHOOK_LIMIT[1]);
  return out;
 }
-const idSchema=z.uuid().nullable(),parseInput=(raw:unknown)=>{const r=webhookInputSchema.safeParse(raw);if(!r.success)throw new AppError(422,'Revise o nome, a URL, os eventos e as listas.');return r.data;};
+const idSchema=z.uuid().nullable(),parseInput=(raw:unknown)=>{const r=webhookInputSchema.safeParse(raw);if(!r.success)throw new AppError(422,r.error.issues.some(i=>i.path[0]==='secret')?'O segredo precisa ter de 16 a 200 caracteres.':'Revise o nome, a URL, os eventos e as listas.');return r.data;};
 export async function prepareWebhook(p:Principal,raw:{id?:string|null;input:unknown},deps:{resolve?:ResolveDns}={}):Promise<Reviewed<Omit<WebhookInput,'secret'>&{secretProvided:boolean}>>{
  const input=parseInput(raw.input),id=raw.id??null;if(!idSchema.safeParse(id).success)throw new AppError(404,'Webhook não encontrado.');
  return withWorkspaceTransaction(p,async c=>{await admin(c);
@@ -60,7 +61,7 @@ export async function confirmWebhook(p:Principal,raw:{id?:string|null;input:unkn
  const target=id??requestId.data;
  try{return await withWorkspaceTransaction(p,async c=>{await admin(c);
   // Same request id on a create returns the destination it already created (double click, retried response).
-  if(!id){const prior=(await c.query('SELECT * FROM app.webhook_destination WHERE id=$1',[target])).rows[0];if(prior){if(prior.url!==input.url||prior.name!==input.name)throw new AppError(409,'Este pedido já foi usado com outros dados.');return view(prior);}}
+  if(!id){const prior=(await c.query('SELECT * FROM app.webhook_destination WHERE id=$1',[target])).rows[0];if(prior){const lists=input.lists.mode==='all'?null:[...new Set(input.lists.ids)];if(prior.url!==input.url||prior.name!==input.name||hashValue([...prior.events].sort())!==hashValue([...input.events].sort())||hashValue(prior.list_ids)!==hashValue(lists))throw new AppError(409,'Este pedido já foi usado com outros dados.');return view(prior);}}
   const b=await blockers(c,id,input,deps.resolve??resolvePublicDns);if(b.length)throw new AppError(409,b[0],'WEBHOOK_BLOCKED');
   const current=id?(await c.query('SELECT secret_revision FROM app.webhook_destination WHERE id=$1',[id])).rows[0]:null;
   if(id&&!current)throw new AppError(404,'Webhook não encontrado.');

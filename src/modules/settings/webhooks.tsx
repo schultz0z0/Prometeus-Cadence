@@ -1,6 +1,6 @@
 "use client";
 import Link from 'next/link';
-import {useCallback,useEffect,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import {useIdentity} from '@/client/workspace-provider';
 import {useDemo} from '@/demo/provider';
 import {agentEvents,MAX_DESTINATIONS,webhookEventLabels,webhookEvents,type DeliveryView,type WebhookEvent,type WebhookView} from '@/domain/integration-delivery';
@@ -56,14 +56,22 @@ function WebhookForm({initial,editing,onClose,onSaved}:{initial:Draft;editing:We
 }
 function Deliveries({id}:{id:string}){
  const api=useApi(),[items,setItems]=useState<DeliveryView[]|null>(null),[error,setError]=useState('');
- useEffect(()=>{let live=true;api<{deliveries:DeliveryView[]}>(`/api/integrations/${id}/deliveries`).then(r=>{if(live)setItems(r.deliveries);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[api,id]);
+ const [tick,setTick]=useState(0);
+ useEffect(()=>{let live=true;api<{deliveries:DeliveryView[]}>(`/api/integrations/${id}/deliveries`).then(r=>{if(live)setItems(r.deliveries);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[api,id,tick]);
+ // Queued or in-flight deliveries refresh on their own until they settle.
+ useEffect(()=>{if(!items?.some(i=>i.state==='pending'||i.state==='delivering'))return;const t=setTimeout(()=>setTick(n=>n+1),5000);return()=>clearTimeout(t);},[items]);
  return <div className="webhook-history"><h4><Icon name="Clock" size={13}/>Últimas entregas</h4>
   {error?<p role="alert">{error}</p>:!items?<p role="status">Carregando entregas…</p>:!items.length?<p>Nenhuma entrega ainda.</p>:
    <ul>{items.map(i=><li key={i.id} className={i.state}><span className="dot"/><code>{i.eventType}</code><span>{stateText[i.state]}{i.lastStatus?` · HTTP ${i.lastStatus}`:''}{i.attempts>1?` · ${i.attempts} tentativas`:''}</span>{i.lastError&&<small title={i.lastError}>{i.lastError}</small>}<time>{new Date(i.createdAt).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</time></li>)}</ul>}
  </div>;
 }
+// Shown once, outside any live region (screen readers must not announce it); focus moves here when it appears.
+function SecretBanner({value,onClose}:{value:string;onClose:()=>void}){
+ const ref=useRef<HTMLDivElement>(null);useEffect(()=>{ref.current?.focus();},[]);
+ return <div className="webhook-secret shown" tabIndex={-1} ref={ref} aria-label="Segredo gerado"><span>Segredo gerado. Copie agora: ele aparece uma vez só.</span><code>{value}</code><Button variant="compact" onClick={()=>void navigator.clipboard?.writeText(value)}>Copiar</Button><Button variant="compact ghost" onClick={onClose}>Fechar</Button></div>;
+}
 export function WebhookSettings(){
- const api=useApi(),{lists}=useDemo(),[items,setItems]=useState<WebhookView[]|null>(null),[error,setError]=useState(''),[form,setForm]=useState<{initial:Draft;editing:WebhookView|null}|null>(null),[open,setOpen]=useState(''),[busy,setBusy]=useState(''),[secrets,setSecrets]=useState<Record<string,string>>({}),[message,setMessage]=useState(''),[confirmDelete,setConfirmDelete]=useState<WebhookView|null>(null);
+ const api=useApi(),{lists}=useDemo(),[items,setItems]=useState<WebhookView[]|null>(null),[error,setError]=useState(''),[form,setForm]=useState<{initial:Draft;editing:WebhookView|null}|null>(null),[open,setOpen]=useState(''),[busy,setBusy]=useState(''),[secrets,setSecrets]=useState<Record<string,string>>({}),[message,setMessage]=useState(''),[confirmDelete,setConfirmDelete]=useState<WebhookView|null>(null),[rotate,setRotate]=useState<WebhookView|null>(null);
  const load=useCallback(()=>{setError('');api<{webhooks:WebhookView[]}>('/api/integrations').then(r=>setItems(r.webhooks)).catch(e=>setError(e.message));},[api]);
  useEffect(load,[load]);
  const listName=(id:string)=>lists.find(l=>l.id===id)?.name??'Lista removida';
@@ -89,20 +97,21 @@ export function WebhookSettings(){
       <div className="webhook-badges">{w.events.map(e=><Badge key={e} tone="orange">{webhookEventLabels[e]}</Badge>)}<Badge>{w.listIds?.length?(w.listIds.length===1?listName(w.listIds[0]):`${w.listIds.length} listas`):'Todas as listas'}</Badge>{w.deliveries>0&&<span className="webhook-count"><Icon name="Send" size={11}/>{w.deliveries} entregas</span>}</div>
      </div><div className="webhook-actions">
       <input type="checkbox" role="switch" className="webhook-switch" aria-label={(w.active?'Pausar ':'Ativar ')+w.name} checked={w.active} disabled={!!busy} onChange={()=>void act(w,w.active?'pause':'activate')}/>
-      <IconButton icon="Play" label={'Testar '+w.name} onClick={()=>void act(w,'test')}/>
+      <IconButton icon="Play" label={'Testar '+w.name} disabled={!!busy||!w.active} onClick={()=>void act(w,'test')}/>
       <IconButton icon="History" label={'Entregas de '+w.name} onClick={()=>setOpen(o=>o===w.id?'':w.id)}/>
-      <IconButton icon="Pencil" label={'Editar '+w.name} onClick={()=>setForm({initial:{name:w.name,url:w.url,secret:'',events:w.events,mode:w.listIds?'specific':'all',ids:w.listIds??[]},editing:w})}/>
-      <IconButton icon="Trash2" label={'Excluir '+w.name} onClick={()=>setConfirmDelete(w)}/>
+      <IconButton icon="Pencil" label={'Editar '+w.name} disabled={!!busy} onClick={()=>setForm({initial:{name:w.name,url:w.url,secret:'',events:w.events,mode:w.listIds?'specific':'all',ids:(w.listIds??[]).filter(id=>lists.some(l=>l.id===id))},editing:w})}/>
+      <IconButton icon="Trash2" label={'Excluir '+w.name} disabled={!!busy} onClick={()=>setConfirmDelete(w)}/>
      </div></div>
      {(w.attention||w.consecutiveFailures>0)&&<div className="webhook-alert"><Icon name="AlertCircle" size={14}/><span>{w.attention?attentionText[w.attention]:w.lastSuccessAt?`Nenhuma entrega deu certo desde ${new Date(w.lastSuccessAt).toLocaleDateString('pt-BR')}.`:'Nenhuma entrega deu certo ainda.'} Confira a URL e se o sistema que recebe está no ar.</span>
       {w.attention&&<Button variant="compact" disabled={!!busy} onClick={()=>void act(w,'retry')}>Tentar de novo</Button>}<Button variant="compact ghost" onClick={()=>setOpen(w.id)}>Ver entregas</Button></div>}
      {!w.secretConfigured&&!secrets[w.id]&&<div className="webhook-secret"><Icon name="KeyRound" size={14}/><span>Sem segredo: o sistema que recebe não consegue confirmar a origem.</span><Button variant="compact" disabled={!!busy} onClick={()=>void act(w,'secret')}>Gerar segredo</Button></div>}
-     {w.secretConfigured&&!secrets[w.id]&&<div className="webhook-secret muted"><Icon name="KeyRound" size={14}/><span>Segredo configurado.</span><Button variant="compact ghost" disabled={!!busy} onClick={()=>void act(w,'secret')}>Gerar novo</Button></div>}
-     {secrets[w.id]&&<div className="webhook-secret shown" role="status"><span>Segredo gerado. Copie agora: ele aparece uma vez só.</span><code>{secrets[w.id]}</code><Button variant="compact" onClick={()=>void navigator.clipboard?.writeText(secrets[w.id])}>Copiar</Button><Button variant="compact ghost" onClick={()=>setSecrets(s=>{const n={...s};delete n[w.id];return n;})}>Fechar</Button></div>}
+     {w.secretConfigured&&!secrets[w.id]&&<div className="webhook-secret muted"><Icon name="KeyRound" size={14}/><span>Segredo configurado.</span><Button variant="compact ghost" disabled={!!busy} onClick={()=>setRotate(w)}>Gerar novo</Button></div>}
+     {secrets[w.id]&&<SecretBanner value={secrets[w.id]} onClose={()=>setSecrets(x=>{const n={...x};delete n[w.id];return n;})}/>}
      {open===w.id&&<Deliveries key={w.id+':'+w.revision+':'+w.deliveries} id={w.id}/>}
     </li>)}</ul>}
   </section>
   {form&&<WebhookForm initial={form.initial} editing={form.editing} onClose={()=>setForm(null)} onSaved={()=>{setForm(null);load();}}/>}
+  {rotate&&<Modal title="Gerar um segredo novo?" description={rotate.name} onClose={()=>setRotate(null)}><div className="stack"><p>O segredo atual deixa de valer na hora: o sistema que recebe precisa do novo para conferir as próximas entregas.</p><div className="form-actions"><Button type="button" onClick={()=>setRotate(null)}>Cancelar</Button><Button type="button" variant="primary" onClick={()=>{const w=rotate;setRotate(null);void act(w,'secret');}}>Gerar novo</Button></div></div></Modal>}
   {confirmDelete&&<Modal title="Excluir este webhook?" description={confirmDelete.name} onClose={()=>setConfirmDelete(null)}><div className="stack"><p>As entregas pendentes são canceladas e o histórico deste destino é apagado.</p><div className="form-actions"><Button type="button" onClick={()=>setConfirmDelete(null)}>Cancelar</Button><Button type="button" variant="danger" onClick={()=>{const w=confirmDelete;setConfirmDelete(null);void act(w,'delete');}}>Excluir</Button></div></div></Modal>}
  </div>;
 }

@@ -75,7 +75,9 @@ test('429 honors Retry-After within 24 h, 5xx backs off, 401 holds the destinati
  // After 24 h a transient failure is final.
  [v]=await listWebhooks(p);await webhookAction(p,v.id,{action:'retry',expectedRevision:v.revision});
  await testAdmin(c=>c.query("UPDATE app.integration_event SET occurred_at=now()-interval '25 hours' WHERE workspace_id=$1",[ws]));
- const late=recorder(()=>({status:500}));await tick(ws,late.request);assert.equal(await count('integration_delivery',ws,"AND state='failed'"),2);
+ const late=recorder(()=>({status:500}));
+ // One attempt per destination per tick: the two deliveries of this destination take two ticks.
+ await tick(ws,late.request);await tick(ws,late.request);assert.equal(await count('integration_delivery',ws,"AND state='failed'"),2);
 });
 
 test('events honor subscriptions, lists and reply channels; pause cancels the queue; replies carry no message text',async()=>{
@@ -122,4 +124,50 @@ test('owner-only management, tenant isolation, one-time secret, idempotent creat
  assert.equal((await integrationItemRequest(new Request(base+'/api/integrations/'+one.id+'/deliveries'),one.id,'deliveries')).status,401);
  await testAdmin(c=>c.query('DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',[u.p.workspaceId,u.p.userId]));
  await assert.rejects(listWebhooks(u.p),{status:403});
+});
+
+test('review: one slow destination gets one attempt per tick; paused destinations are never sent to, even mid-flight',async()=>{
+ const{p}=await prospectingUser(),ws=p.workspaceId;
+ const x=await destination(p,{name:'X',url:'https://x.example.com/h'}),y=await destination(p,{name:'Y',url:'https://y.example.com/h',events:['lead.qualified']});
+ await seed(p,[lead('f1'),lead('f2'),lead('f3')]);
+ const s=await readWorkspaceSnapshot(p),first=s.data.leads.find(l=>l.id==='f1')!;await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'lead.upsert',lead:{...first,qualification:'qualified'}}});
+ const r=recorder(()=>({status:200}));await tick(ws,r.request);
+ assert.deepEqual(r.calls.map(c=>new URL(c.url).hostname).sort(),['x.example.com','y.example.com']);
+ // Paused while the attempt is in flight: the transient failure is cancelled instead of retried.
+ const pausing:WebhookRequest=async()=>{await testAdmin(c=>c.query('UPDATE app.webhook_destination SET active=false WHERE workspace_id=$1 AND id=$2',[ws,x.id]));return{status:503};};
+ await tick(ws,pausing);assert.equal(await count('integration_delivery',ws,`AND destination_id='${x.id}' AND state='cancelled'`),1);
+ await testAdmin(c=>c.query("UPDATE app.integration_delivery SET state='pending',next_at=now() WHERE workspace_id=$1 AND destination_id=$2 AND state<>'delivered'",[ws,x.id]));
+ const none=recorder(()=>({status:200}));await tick(ws,none.request);assert.equal(none.calls.length,0);
+ assert.ok((await listWebhooks(p)).find(w=>w.id===y.id));
+});
+
+test('review: emitting never breaks a domain write; deleted leads cancel their deliveries and erase the copy; email replies wait for classification',async()=>{
+ const f=await verifiedMetaFixture(),p=f.u.p,ws=p.workspaceId;const d=await destination(p,{events:['lead.created','lead.connected']});
+ await testAdmin(async c=>{await c.query("INSERT INTO app.list VALUES($1,'big','Big')",[ws]);await c.query("INSERT INTO app.lead VALUES($1,'huge','big',$2)",[ws,lead('huge','big',{notes:'x'.repeat(250000)})]);});
+ const data=await testAdmin(async c=>(await c.query("SELECT data FROM app.integration_event WHERE workspace_id=$1 AND entity_id='huge'",[ws])).rows[0].data);
+ assert.equal(data.truncated,true);assert.equal(data.lead.id,'huge');
+ await seed(p,[lead('gone')]);assert.equal(await count('integration_delivery',ws,"AND state='pending'"),2);
+ const s=await readWorkspaceSnapshot(p);await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'leads.delete',ids:['gone']}});
+ const erased=await testAdmin(async c=>(await c.query("SELECT e.data,d.state FROM app.integration_event e JOIN app.integration_delivery d ON d.workspace_id=e.workspace_id AND d.event_id=e.id WHERE e.workspace_id=$1 AND e.entity_id='gone'",[ws])).rows[0]);
+ assert.deepEqual(erased,{data:{deleted:true},state:'cancelled'});
+ // An inbound email row alone (auto-reply, bounce, not yet classified) is not a reply.
+ const identity=randomUUID(),conversation=randomUUID();
+ await testAdmin(async c=>{
+  await c.query("INSERT INTO app.channel_identity(workspace_id,id,scope,external_id) VALUES($1,$2,'fixture',$2)",[ws,identity]);
+  await c.query("INSERT INTO app.channel_conversation(workspace_id,id,connection_id,sender_id,identity_id,channel,thread_key,lead_id) VALUES($1,$2,$3,$4,$5,'EMAIL','t1','huge')",[ws,conversation,f.connection.id,f.sender.id,identity]);
+  await c.query("INSERT INTO app.channel_message(workspace_id,id,connection_id,sender_id,identity_id,conversation_id,direction,state,text,occurred_at,channel) VALUES($1,gen_random_uuid()::text,$2,$3,$4,$5,'inbound','received','Estou fora do escritório',now(),'EMAIL')",[ws,f.connection.id,f.sender.id,identity,conversation]);
+ });
+ assert.equal(await count('integration_event',ws,"AND type='lead.connected'"),0);
+ assert.ok(d.id);
+});
+
+test('review: a test is refused while the destination needs attention, failures count per attempt, and a replayed create with other data is refused',async()=>{
+ const{p}=await prospectingUser(),ws=p.workspaceId,i=input(),rv=await prepareWebhook(p,{input:i},{resolve:publicDns}),requestId=randomUUID();
+ const d=await confirmWebhook(p,{input:i,token:rv.token,requestId},{resolve:publicDns});
+ const other=input({events:['lead.qualified']}),rv2=await prepareWebhook(p,{input:other},{resolve:publicDns});
+ await assert.rejects(confirmWebhook(p,{input:other,token:rv2.token,requestId},{resolve:publicDns}),{status:409});
+ await seed(p,[lead('c1')]);await tick(ws,recorder(()=>({status:503})).request);
+ assert.equal((await listWebhooks(p))[0].consecutiveFailures,1);
+ await testAdmin(c=>c.query("UPDATE app.webhook_destination SET attention='unauthorized' WHERE workspace_id=$1",[ws]));
+ const [v]=await listWebhooks(p);await assert.rejects(webhookAction(p,d.id,{action:'test',expectedRevision:v.revision}),{status:409,code:'WEBHOOK_ATTENTION'});
 });

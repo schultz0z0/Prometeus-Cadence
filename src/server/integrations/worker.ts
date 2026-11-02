@@ -49,13 +49,18 @@ async function attempt(row:Claimed,deps:{request:WebhookRequest;resolve:ResolveD
 }
 export async function dispatchIntegrationTick(input:{limit:number;signal:AbortSignal},deps:{request?:WebhookRequest;resolve?:ResolveDns;now?:()=>number}={}):Promise<{sent:number;deferred:number}>{
  if(!Number.isInteger(input.limit)||input.limit<1||input.limit>100)throw Error('Invalid integration batch');
- const token=randomUUID(),rows=(await workerPool().query('SELECT * FROM app.claim_integration_deliveries($1,$2)',[input.limit,token])).rows as Claimed[];
- let sent=0,deferred=0;
- for(const row of rows){
-  if(input.signal.aborted)break;
-  const o=await attempt(row,{request:deps.request??postPinned,resolve:deps.resolve??resolvePublicDns,now:deps.now??Date.now,signal:input.signal});
-  await workerPool().query('SELECT app.finish_integration_delivery($1,$2,$3,$4,$5,$6,$7,$8)',[row.workspace_id,row.id,token,o.state,o.status,o.error,o.next,o.attention]);
-  if(o.state==='delivered')sent++;else deferred++;
- }
+ const token=randomUUID(),seen:string[]=[],c=await workerPool().connect();let sent=0,deferred=0;
+ try{
+  await c.query('SELECT app.purge_integration_events(500)');
+  // One claim per attempt (the lease starts with it) and at most one attempt per destination per tick.
+  for(let i=0;i<input.limit&&!input.signal.aborted;i++){
+   await c.query("SELECT set_config('app.integration_seen',$1,false)",[seen.join(',')]);
+   const row=(await c.query('SELECT * FROM app.claim_integration_deliveries(1,$1)',[token])).rows[0] as Claimed|undefined;
+   if(!row)break;seen.push(row.workspace_id+':'+row.destination_id);
+   const o=await attempt(row,{request:deps.request??postPinned,resolve:deps.resolve??resolvePublicDns,now:deps.now??Date.now,signal:input.signal});
+   await c.query('SELECT app.finish_integration_delivery($1,$2,$3,$4,$5,$6,$7,$8)',[row.workspace_id,row.id,token,o.state,o.status,o.error,o.next,o.attention]);
+   if(o.state==='delivered')sent++;else deferred++;
+  }
+ }finally{await c.query("SELECT set_config('app.integration_seen','',false)").catch(()=>{});c.release();}
  return{sent,deferred};
 }
