@@ -186,7 +186,7 @@ test('07C.1b keys: token shown once and stored as digest; scopes, pagination and
  assert.notEqual(stored,token);assert.equal(stored.length,64);
  const first=await v1('/api/v1/leads?limit=3',token);assert.equal(first.status,200);const one=await first.json();assert.equal(one.data.length,3);
  const second=await (await v1('/api/v1/leads?limit=3&cursor='+one.nextCursor,token)).json();
- const ids=[...one.data,...second.data].map((l:{id:string})=>l.id);assert.equal(new Set(ids).size,5);assert.ok(!ids.includes('theirs'));assert.equal(second.nextCursor,null);
+ const ids=[...one.data,...second.data].map((l:{id:string})=>l.id);assert.equal(new Set(ids).size,5);assert.ok(!ids.includes('theirs'));assert.equal(second.hasMore,false);assert.ok(second.nextCursor);
  const noScope=await v1('/api/v1/events',token);assert.equal(noScope.status,403);
  assert.equal((await v1('/api/v1/leads')).status,401);assert.equal((await v1('/api/v1/leads')).headers.get('www-authenticate'),'Bearer');
  assert.equal((await v1('/api/v1/leads',undefined,{cookie:a.headers.get('cookie')!})).status,401);
@@ -217,6 +217,7 @@ test('07C.1b events feed: recorded for an events:read key, own workspace only, c
  const a=await prospectingUser(),b=await prospectingUser();
  const {token}=await createApiKey(a.p,{name:'[RE] feed',scopes:['events:read']});const other=await createApiKey(b.p,{name:'[RE] b',scopes:['events:read']});
  await seed(a.p,[lead('e1'),lead('e2'),lead('e3')]);await seed(b.p,[lead('x1')]);
+ await testAdmin(c=>c.query("UPDATE app.integration_event SET occurred_at=occurred_at-interval '2 minutes' WHERE workspace_id IN($1,$2)",[a.p.workspaceId,b.p.workspaceId]));
  const p1=await (await v1('/api/v1/events?limit=2',token)).json();const p2=await (await v1('/api/v1/events?limit=2&cursor='+p1.nextCursor,token)).json();
  const ids=[...p1.data,...p2.data].map((e:{entity:{id:string}})=>e.entity.id).sort();assert.deepEqual(ids,['e1','e2','e3']);
  assert.equal(p1.data[0].type,'lead.created');assert.equal(p1.data[0].idempotencyKey,p1.data[0].id);
@@ -237,4 +238,32 @@ test('07C.1b key management is owner/admin only and limited; HTTP contract',asyn
  await assert.rejects(createApiKey(u.p,{name:'x',scopes:['leads:write']}),{status:422});
  const created=await integrationsRequest(new Request(base+'/api/integrations',{method:'POST',headers:u.headers,body:JSON.stringify({action:'create-key',input:{name:'x',scopes:['leads:read']}})}));assert.equal(created.status,409);
  const listed=await (await integrationsRequest(new Request(base+'/api/integrations',{headers:u.headers}))).json();assert.equal(listed.keys.length,10);assert.doesNotMatch(JSON.stringify(listed),/digest|pcak_[A-Za-z0-9_-]{20}/);
+});
+
+test('07C.1b review: events feed lags behind commits, always returns a resumable cursor and exposes channel and list',async()=>{
+ const {createApiKey}=await import('../../src/server/integrations/api-auth.ts');
+ const a=await prospectingUser(),{token}=await createApiKey(a.p,{name:'[RE] sync',scopes:['events:read']});
+ await seed(a.p,[lead('w1'),lead('w2')]);
+ // Fresh events are still inside the commit lag: not served yet.
+ let r=await (await v1('/api/v1/events',token)).json();assert.deepEqual(r.data,[]);assert.equal(r.hasMore,false);
+ await testAdmin(c=>c.query("UPDATE app.integration_event SET occurred_at=occurred_at-interval '2 minutes' WHERE workspace_id=$1",[a.p.workspaceId]));
+ r=await (await v1('/api/v1/events',token)).json();assert.equal(r.data.length,2);assert.equal(r.hasMore,false);assert.ok(r.nextCursor);
+ assert.equal(r.data[0].listId,'base');assert.ok('channel' in r.data[0]);
+ // Polling from the stored cursor returns only what came after it.
+ await seed(a.p,[lead('w3')]);await testAdmin(c=>c.query("UPDATE app.integration_event SET occurred_at=occurred_at-interval '90 seconds' WHERE workspace_id=$1 AND entity_id='w3'",[a.p.workspaceId]));
+ const next=await (await v1('/api/v1/events?cursor='+r.nextCursor,token)).json();assert.deepEqual(next.data.map((e:{entity:{id:string}})=>e.entity.id),['w3']);
+ const idle=await (await v1('/api/v1/events?cursor='+next.nextCursor,token)).json();assert.deepEqual(idle.data,[]);assert.equal(idle.nextCursor,next.nextCursor);
+ assert.equal((await v1('/api/v1/events?list=base',token)).status,422);
+});
+
+test('07C.1b review: a forgotten or orphaned events:read key records nothing; scope misses still count toward the rate; auth comes before validation',async()=>{
+ const {createApiKey}=await import('../../src/server/integrations/api-auth.ts');
+ const a=await prospectingUser(),{key,token}=await createApiKey(a.p,{name:'[RE] velha',scopes:['events:read']});
+ await testAdmin(c=>c.query("UPDATE app.api_credential SET created_at=now()-interval '8 days',last_used_at=NULL WHERE workspace_id=$1 AND id=$2",[a.p.workspaceId,key.id]));
+ await seed(a.p,[lead('o1')]);assert.equal(await count('integration_event',a.p.workspaceId),0);
+ assert.equal((await v1('/api/v1/leads?limit=500')).status,401);
+ const leadsOnly=await createApiKey(a.p,{name:'[RE] leads',scopes:['leads:read']});
+ await testAdmin(c=>c.query("INSERT INTO app.api_rate(workspace_id,credential_id,window_start,hits) VALUES($1,$2,date_trunc('minute',now()),120) ON CONFLICT ON CONSTRAINT api_rate_pkey DO UPDATE SET hits=120",[a.p.workspaceId,leadsOnly.key.id]));
+ assert.equal((await v1('/api/v1/events',leadsOnly.token)).status,429);
+ assert.ok(token);
 });

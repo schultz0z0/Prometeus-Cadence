@@ -69,7 +69,7 @@ function Deliveries({id}:{id:string}){
 // Shown once, outside any live region (screen readers must not announce it); focus moves here when it appears.
 function SecretBanner({value,onClose,label='Segredo gerado'}:{value:string;onClose:()=>void;label?:string}){
  const ref=useRef<HTMLDivElement>(null);useEffect(()=>{ref.current?.focus();},[]);
- return <div className="webhook-secret shown" tabIndex={-1} ref={ref} aria-label={label}><span>{label}. Copie agora: ele aparece uma vez só.</span><code>{value}</code><Button variant="compact" onClick={()=>void navigator.clipboard?.writeText(value)}>Copiar</Button><Button variant="compact ghost" onClick={onClose}>Fechar</Button></div>;
+ return <div className="webhook-secret shown" tabIndex={-1} ref={ref} role="group" aria-label={label}><span>{label}. Copie agora: ele aparece uma vez só.</span><code>{value}</code><Button variant="compact" onClick={()=>void navigator.clipboard?.writeText(value)}>Copiar</Button><Button variant="compact ghost" onClick={onClose}>Fechar</Button></div>;
 }
 export function WebhookSettings(){
  const api=useApi(),{lists}=useDemo(),[items,setItems]=useState<WebhookView[]|null>(null),[error,setError]=useState(''),[form,setForm]=useState<{initial:Draft;editing:WebhookView|null}|null>(null),[open,setOpen]=useState(''),[busy,setBusy]=useState(''),[secrets,setSecrets]=useState<Record<string,string>>({}),[message,setMessage]=useState(''),[confirmDelete,setConfirmDelete]=useState<WebhookView|null>(null),[rotate,setRotate]=useState<WebhookView|null>(null);
@@ -120,22 +120,24 @@ export function WebhookSettings(){
 }
 // Read-only API keys (own design: the reference shows no API keys). The token appears once, after creating or rotating.
 function ApiKeys({keys,onChanged,loadError}:{keys:ApiKeyView[]|null;onChanged:()=>void;loadError:string}){
- const api=useApi(),[form,setForm]=useState(false),[name,setName]=useState(''),[scopes,setScopes]=useState<ApiScope[]>(['leads:read']),[busy,setBusy]=useState(false),[error,setError]=useState(''),[token,setToken]=useState(''),[confirm,setConfirm]=useState<{key:ApiKeyView;op:'rotate'|'revoke'}|null>(null);
+ const api=useApi(),[form,setForm]=useState(false),[name,setName]=useState(''),[scopes,setScopes]=useState<ApiScope[]>(['leads:read']),[busy,setBusy]=useState(false),[error,setError]=useState(''),[token,setToken]=useState<{value:string;label:string}|null>(null),[done,setDone]=useState(''),[confirm,setConfirm]=useState<{key:ApiKeyView;op:'rotate'|'revoke'}|null>(null);
  async function create(){
   if(!name.trim()||!scopes.length)return setError('Dê um nome e escolha pelo menos um escopo.');
   setBusy(true);setError('');
-  try{const r=await api<{token:string}>('/api/integrations',{action:'create-key',input:{name:name.trim(),scopes}});setToken(r.token);setForm(false);setName('');onChanged();}
+  try{const r=await api<{token:string}>('/api/integrations',{action:'create-key',input:{name:name.trim(),scopes}});setToken({value:r.token,label:'Chave criada'});setDone('');setForm(false);setName('');onChanged();}
   catch(e){setError((e as Error).message);}finally{setBusy(false);}
  }
  async function run(key:ApiKeyView,op:'rotate'|'revoke'){
   setBusy(true);setError('');
-  try{const r=await api<{token?:string}>(`/api/integrations/${key.id}/key-${op}`,{expectedRevision:key.revision});if(r.token)setToken(r.token);onChanged();}
+  try{const r=await api<{token?:string}>(`/api/integrations/${key.id}/key-${op}`,{expectedRevision:key.revision});if(r.token)setToken({value:r.token,label:'Nova chave gerada'});setDone(op==='rotate'?'Chave anterior desativada.':'Chave revogada.');onChanged();}
   catch(e){setError((e as Error).message);onChanged();}finally{setBusy(false);}
  }
  const date=(v:string)=>new Date(v).toLocaleDateString('pt-BR');
  return <section className="reference-panel webhook-reference api-keys"><header><Icon name="KeyRound"/><div className="grow"><h2>API de leitura</h2><p>Leia leads e eventos de outros sistemas com <code>Authorization: Bearer</code>. Somente leitura, até 120 requisições por minuto por chave.</p></div>
   <Button variant="primary" icon="Plus" disabled={!keys||keys.length>=MAX_API_KEYS||busy} onClick={()=>{setForm(true);setError('');}}>Nova chave</Button></header>
-  {token&&<div className="webhook-message"><SecretBanner value={token} label="Chave criada" onClose={()=>setToken('')}/></div>}
+  {token&&<div className="webhook-message"><SecretBanner value={token.value} label={token.label} onClose={()=>setToken(null)}/></div>}
+  <p className="sr-only" role="status">{done}</p>
+  {keys&&keys.length>=MAX_API_KEYS&&<div className="webhook-message"><Notice>Limite de {MAX_API_KEYS} chaves ativas. Revogue uma para criar outra.</Notice></div>}
   {error&&!form&&<div className="webhook-message"><Notice tone="error">{error}</Notice></div>}
   {loadError?null:!keys?<div className="reference-empty" role="status"><p>Carregando chaves…</p></div>
   :!keys.length?<div className="reference-empty"><Icon name="KeyRound" size={28}/><strong>Nenhuma chave</strong><p>Crie uma para consultar <code>GET /api/v1/leads</code> e <code>GET /api/v1/events</code> do seu CRM ou automação.</p></div>
@@ -145,7 +147,7 @@ function ApiKeys({keys,onChanged,loadError}:{keys:ApiKeyView[]|null;onChanged:()
    </div><div className="webhook-actions"><Button variant="compact" disabled={busy} onClick={()=>setConfirm({key:k,op:'rotate'})}>Gerar nova</Button><Button variant="compact ghost" disabled={busy} onClick={()=>setConfirm({key:k,op:'revoke'})}>Revogar</Button></div></div></li>)}</ul>}
   {form&&<Modal title="Nova chave de API" description="A chave aparece uma vez só. Guarde no sistema que vai consultar a API." onClose={()=>{if(!busy)setForm(false);}}><div className="stack">
    <Field label="Nome"><input data-autofocus value={name} maxLength={60} onChange={e=>{setName(e.target.value);setError('');}} placeholder="Ex.: n8n, planilha, CRM"/></Field>
-   <fieldset className="webhook-events"><legend>Escopos</legend>{apiScopes.map(sc=><label key={sc}><input type="checkbox" checked={scopes.includes(sc)} onChange={()=>setScopes(v=>v.includes(sc)?v.filter(x=>x!==sc):[...v,sc])}/><span><code>{sc}</code>{apiScopeLabels[sc]}</span></label>)}</fieldset>
+   <fieldset className="webhook-events"><legend>Escopos</legend>{scopes.includes('events:read')&&<p>Com <code>events:read</code>, os eventos de leads ficam guardados por 30 dias para a consulta, enquanto a chave estiver em uso.</p>}{apiScopes.map(sc=><label key={sc}><input type="checkbox" checked={scopes.includes(sc)} onChange={()=>setScopes(v=>v.includes(sc)?v.filter(x=>x!==sc):[...v,sc])}/><span><code>{sc}</code>{apiScopeLabels[sc]}</span></label>)}</fieldset>
    {error&&<Notice tone="error">{error}</Notice>}
    <div className="form-actions"><Button type="button" disabled={busy} onClick={()=>setForm(false)}>Cancelar</Button><Button type="button" variant="primary" disabled={busy} onClick={()=>void create()}>{busy?'Criando…':'Criar chave'}</Button></div>
   </div></Modal>}

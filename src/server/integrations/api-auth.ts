@@ -45,10 +45,11 @@ export async function revokeApiKey(p:Principal,id:string,raw:unknown):Promise<{r
  catch(e){throw keyError(e);}
 }
 // A bearer key acts as its creator, who must still be an owner or admin; there is no session and no cookie.
-export async function resolveApiPrincipal(token:string,scope:ApiScope):Promise<Principal>{
+export async function resolveApiPrincipal(token:string,scope:ApiScope):Promise<Principal>{return(await resolveApiCredential(token,scope)).principal;}
+export async function resolveApiCredential(token:string,scope:ApiScope):Promise<{principal:Principal;credentialId:string}>{
  const r=(await getPools().appPool.query('SELECT * FROM app.resolve_api_key($1,$2)',[digest(token),scope])).rows[0];
  if(!r)throw new AppError(401,'Chave de API inválida, revogada ou sem dono ativo.','API_KEY_INVALID');
- if(!r.allowed)throw new AppError(403,'Esta chave não tem o escopo '+scope+'.','API_SCOPE');
  if(r.retry_after>0)throw Object.assign(new AppError(429,'Limite de requisições por minuto atingido.','API_RATE_LIMIT'),{retryAfter:r.retry_after});
- return{userId:r.user_id,workspaceId:r.workspace_id,role:r.role,sessionId:''};
+ if(!r.allowed)throw new AppError(403,'Esta chave não tem o escopo '+scope+'.','API_SCOPE');
+ return{principal:{userId:r.user_id,workspaceId:r.workspace_id,role:r.role,sessionId:''},credentialId:r.credential_id};
 }
