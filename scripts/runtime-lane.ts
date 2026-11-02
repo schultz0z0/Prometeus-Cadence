@@ -23,7 +23,8 @@ if(name==='dispatch'){
 }else if(name==='billing'){
  const {processBillingTick}=await import('../src/server/billing/worker.ts');tick=()=>processBillingTick({limit:config.billingBatch,signal:controller.signal});intervalMs=config.billingMs;
 }else if(name==='notifications'){
- const {processNotificationTick}=await import('../src/server/notifications/worker.ts');tick=()=>processNotificationTick({limit:config.notificationBatch,signal:controller.signal});intervalMs=config.notificationMs;
+ // Message-text retention shares this lane: both are low-volume periodic maintenance on the worker role.
+ const [{processNotificationTick},{purgeExpiredMessageText}]=await Promise.all([import('../src/server/notifications/worker.ts'),import('../src/server/privacy/worker.ts')]);tick=async()=>{await processNotificationTick({limit:config.notificationBatch,signal:controller.signal});await purgeExpiredMessageText({limit:500,signal:controller.signal});};intervalMs=config.notificationMs;
 }else if(name==='jobs'){
  const {runWorkerOnce}=await import('../src/server/prospecting/worker.ts');tick=()=>runWorkerOnce({},{workerId,signal:controller.signal});intervalMs=config.jobMs;
 }else{
