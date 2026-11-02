@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "06F",
+  "next": "06F.2",
   "end": "08B",
   "packages": [
     {
@@ -542,6 +542,56 @@
       "deferredMinorOwner": "08A"
     },
     {
+      "id": "06F.1",
+      "title": "Busca global e assistente de ajuda e conta",
+      "requirements": [
+        "R14"
+      ],
+      "dependencies": [
+        "06C.3",
+        "06E.2",
+        "06IA"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-02-prometeus-cadence-06f1-assistant-search.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-operations-design.md",
+      "create": [
+        "src/domain/assistant-actions.ts",
+        "src/domain/help-manifest.ts",
+        "src/server/assistant/service.ts",
+        "src/server/assistant/http.ts",
+        "src/server/search/service.ts",
+        "src/app/api/assistant/route.ts",
+        "src/app/api/search/route.ts",
+        "src/client/assistant-client.ts",
+        "src/components/shell/search-palette.tsx",
+        "src/components/shell/help-center.tsx",
+        "src/app/assistant-reference.css",
+        "db/migrations/093-assistant-experience.sql"
+      ],
+      "modify": [
+        "src/components/shell/assistant-panel.tsx",
+        "src/components/shell/app-shell.tsx",
+        "src/server/ai-oauth/protocol.ts"
+      ],
+      "unit": "tests/06f-assistant-experience.test.ts",
+      "integration": "tests/integration/06f-assistant-experience.test.ts",
+      "evidence": "docs/validation/06f1-assistant-search.md",
+      "routes": [
+        "shell:assistant",
+        "shell:search",
+        "shell:help"
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-02",
+      "review": "docs/validation/06f1-assistant-search-review.md",
+      "followUpMigrations": [
+        "db/migrations/093a-assistant-review.sql"
+      ],
+      "deferredMinorOwner": "08A"
+    },
+    {
       "id": "06F",
       "title": "Assistente, busca, onboarding e ajuda",
       "requirements": [
@@ -584,7 +634,11 @@
         "/first-steps",
         "/settings/context",
         "ajudas por rota"
-      ]
+      ],
+      "executionSplit": {
+        "06F.1": "completed-local-controlled",
+        "06F.2": "planned: 4 reviewed commands (/api/assistant/:id/{prepare,confirm,cancel}), onboarding_progress, route tours, inherited minors 06B.3/06B.5/06D.2"
+      }
     },
     {
       "id": "07C.1",

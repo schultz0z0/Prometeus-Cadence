@@ -186,3 +186,12 @@ Autenticador, sessões e administração de membros concluídos local/controlado
 ### Continuidade02/11 —06E.2
 
 Duplicados, fusão, privacidade e ciclo dos dados concluídos local/controlado: varredura da base inteira por CNPJ/e-mail/telefone, fusão revisada que mantém o mais antigo, move vínculos e preserva opt-out, desfazer de7 dias só com bases intactas; retenção do texto das mensagens (30/90 dias mínimos da referência, dono, APAGAR) executada pelo runtime; exclusão com tombstone e purga de conteúdo de IA. 477/477 integrações; uma revisão independente e seis Important corrigidos RED→GREEN. QA L028removed;0envios/chamadas pagas. Exportação privada→pendência explícita. [Aceite](../../validation/06e2-data-lifecycle.md). Próximo **06F — assistente, busca, onboarding e ajuda**.
+
+### Continuidade 02/11 — 06F.1
+
+Busca global e assistente de ajuda e conta concluídos local/controlado:
+- Ctrl K com resultados do workspace;
+- painel lateral com "Pra hoje", conversa privada por usuário, IA central restrita à ajuda local e aos fatos da conta, com fallback da Central de Ajuda;
+- nenhuma mutação pelo chat.
+
+Uma revisão independente e três Important corrigidos RED→GREEN. Resposta real da IA não observada (cota da assinatura da plataforma esgotada). [Aceite](../../validation/06f1-assistant-search.md). Próximo **06F.2 — comandos revisados do assistente, onboarding e tours**.

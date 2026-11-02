@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-02 · Session: s19 · Phase:6 Duplicados/privacidade06E.2 concluídos local/controlado; próximo06F; paridade integral não aceita
+Updated: 2026-11-02 · Session: s20 · Phase:6 Busca/assistente 06F.1 concluídos local/controlado; próximo 06F.2; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s20: 06F.1 comparado às capturas retidas do assistente e da busca (L4, sem escrita); geometria 1920/390/320, três capturas `[RE]`, QA L029 removed, 0 envios. Revisão independente: três Important corrigidos RED→GREEN (093a). EV-282. Próximo 06F.2.
+- Not covered s20: respostas/modelo/backend do assistente da referência; resposta real da IA (cota da assinatura da plataforma esgotada); comandos revisados, onboarding_progress e tours (06F.2).
 
 - Covered s19:06E.2 com fluxos da referência lidos do cliente preservado (sem escrita L4), geometria medida 1920/390/320 e QA local L028removed;0envios/chamadas pagas. Revisão independente: seis Important corrigidos RED→GREEN (092a). 477/477 integrações. EV-281. Próximo06F.
 - Not covered s19: backend da referência para fusão/desfazer/purga; capturas de tela (painel oculto); exportação privada.
@@ -70,7 +73,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s19:06F — assistente, busca, onboarding e ajuda.06E.2 concluído local/controlado; exportação privada e menores→08A.
+Fila vigente s20: 06F.2 — comandos revisados do assistente, onboarding e tours. 06F.1 concluído local/controlado; menores→08A.
+
+Fila s19 (histórica): 06F — assistente, busca, onboarding e ajuda. 06E.2 concluído local/controlado; exportação privada e menores→08A.
 
 Fila vigente s18:06E.2 — duplicados, fusão, privacidade e ciclo dos dados.06E.1 concluído local/controlado; diferenças de2FA da referência→08A.
 

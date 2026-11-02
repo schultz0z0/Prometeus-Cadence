@@ -82,3 +82,5 @@ id,date,session,route,shows,masked
 "EV-278","2026-10-29","s16","/dashboard; /reports; /reports/:tab; /executions/:id; /cadences/:id","06C2 persisted real-data curation and38masked local captures;32route checks; historical reference only; no blanket parity","yes; no credentials or personal values"
 
 "EV-279","2026-10-30","s17","/settings/notifications; /settings/account; /dashboard","06C3 current read-only reference and private local UI;34masked captures;21route/viewport checks; actual server tests and declared synthetic UI rows","yes; no credentials or personal values"
+
+"EV-282","2026-11-02","s20","shell:assistant; shell:search; shell:help","06F1 retained reference overlays compared; local geometry 1920/390/320 and three fake-data captures; no reference writes; no live model answer","yes; fake [RE] data only"

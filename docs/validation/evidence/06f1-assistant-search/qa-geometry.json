@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-02",
+  "environment": "local dev 127.0.0.1:3210, disposable QA workspace [RE] QA Assistente with three [RE] fake leads (example.com)",
+  "reference": {
+    "assistant": "output/playwright/visual-audit/reference-desktop-overlay-assistant.png (1914 wide): panel x≈1438 y≈213 w≈456 h≈617, composer y≈741",
+    "search": "output/playwright/visual-audit/reference-desktop-overlay-global-search.png (1920 wide): palette x≈672 y≈120 w≈576 h≈163, input row ≈48"
+  },
+  "local": {
+    "1920x855": {
+      "assistantPanel": [1421, 211, 460, 620],
+      "assistantHeader": [1422, 212, 458, 62],
+      "todayCard": [1438, 277, 411, 167],
+      "composerTextarea": [1434, 732, 390, 40],
+      "searchPalette": [665, 120, 576, 162],
+      "pageOverflow": false
+    },
+    "390x844": {"assistantPanel": [16, 208, 358, 620], "searchPalette": [19, 16, 352, 146], "searchFooterDisplay": "none", "pageOverflow": false, "panelChildOverflow": 0},
+    "320x700": {"assistantPanel": [16, 64, 288, 620], "sendButton": [255, 572, 36, 36], "pageOverflow": false, "childrenPastViewport": 0}
+  },
+  "flows": [
+    "Assistant opens with focus in the composer; today card 'Falta conectar um canal' derived from facts; 'Conectar um canal' navigates to /settings/email and closes the panel",
+    "Question by UI answered; citation link navigates to /settings/seats and closes the panel",
+    "Network failure keeps the question with a retry; retry reused the same requestId and stored one answer",
+    "Ctrl K palette: empty hint, results by name (sorriso), phone (90000-0002), pages with menu section, ArrowDown/Enter opens /leads/re1, real Escape closes and returns focus to the search button",
+    "Help center lists 17 local articles, filter 'whatsapp' narrows to 2"
+  ],
+  "liveModel": "Platform route chatgpt-oauth returned subscription_sharing_usage_limit_exceeded (external quota); answers came from the help-center fallback. No successful live model answer was observed in this package.",
+  "screenshots": ["local-desktop-assistant-empty-zoom.png", "local-desktop-assistant-conversation.jpg", "local-desktop-search-results.jpg"],
+  "screenshotNote": "Pane captures at reduced resolution (800 wide for a 1920 viewport); data shown is fake [RE] content."
+}
