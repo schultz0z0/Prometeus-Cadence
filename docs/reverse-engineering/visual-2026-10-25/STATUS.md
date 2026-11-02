@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-10-30 · Session: s17 · Phase:6 Notificações06C.3 concluídas local/controlado; próximo06E.1; paridade integral não aceita
+Updated: 2026-11-02 · Session: s18 · Phase:6 Segurança/membros06E.1 concluídos local/controlado; próximo06E.2; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s18:06E.1 com RESL4/REA passivo em Segurança/Membros/login/reset,15capturas da referência e47locais mascaradas. QA local L026removed/L027restored;0envios/chamadas pagas. Revisão independente02/11: um Important corrigido RED→GREEN, dois menores→08A. 466/466 integrações. EV-280. Próximo06E.2.
+- Not covered s18: popup de pareamento/backup/convite válido/múltiplos membros da referência; código por e-mail e confiança30dias anunciados pela referência não implementados.
 
 - Covered s17:06C.3 com447integrações/363unitários/15focadas,48capturas mascaradas/30pares rota-viewport/15popups e2estados de conflito mobile. Uma revisão independente/sete Important corrigidos; um menor→08A. L022/L024restored eL023/L025removed;0novos contatos/canais/outbox/chamadas pagas. EV-279. Próximo06E.1.
 - Not covered s17: nova entrega externaSMTP/WhatsApp, estadosSDR e paridade integral. Diferenças de primeira resposta e horário comercial da referência explicitadas emEV279.
@@ -63,6 +66,8 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 - Decide: nenhuma decisão comercial reaberta; preservar trial7 dias, créditos pré-pagos, OpenWA gerenciado e billing aprovado. Sem100% e sem aceite do marco enquanto restar cobertura exigida.
 
 ## Next actions
+
+Fila vigente s18:06E.2 — duplicados, fusão, privacidade e ciclo dos dados.06E.1 concluído local/controlado; diferenças de2FA da referência→08A.
 
 Fila vigente s17:06E.1 — autenticador, sessões e administração de membros.06C.3 concluído local/controlado; piloto externo e08A/08B preservados.
 

@@ -178,3 +178,7 @@ Dashboard/relatórios/execuções reconciliados concluídos no contrato local/co
 ### Continuidade30/10 —06C.3
 
 Notificações, preferências e resumos concluídos local/controlado:363unitários/447integrações/15focadas;48capturas mascaradas; uma revisão independente e sete Important corrigidos numa passagem RED→GREEN. QA restaurada;0novos envios/chamadas pagas. Um menor da fixture semanal→08A; piloto de avisos externos e diferenças não observadas da referência preservados. [Aceite](../../validation/06c3-notifications.md). Próximo **06E.1 — Autenticador, sessões e administração de membros**.
+
+### Continuidade02/11 —06E.1
+
+Autenticador, sessões e administração de membros concluídos local/controlado: TOTP/backup BetterAuth com guardas próprias, sessão pendente bloqueada em app/API/transação, convites com assento sob lock e papéis/remoção com revisão, idempotência e último owner por trigger. 466/466 integrações;62capturas mascaradas; uma revisão independente e um Important corrigido RED→GREEN. QA L026removed/L027restored;0envios externos/chamadas pagas. Dois menores→08A; diferenças da referência (código por e-mail, confiança30dias, senha8) preservadas na matriz08A. [Aceite](../../validation/06e1-security-members.md). Próximo **06E.2 — duplicados, fusão, privacidade e ciclo dos dados**.

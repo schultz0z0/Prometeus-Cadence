@@ -9,7 +9,7 @@ export function SecondFactorForm({next,onBack}:{next:string;onBack:()=>void}){
   <Field label={backup?'Código de recuperação':'Código do autenticador'}><input autoFocus autoComplete="one-time-code" inputMode={backup?'text':'numeric'} required minLength={6} maxLength={backup?32:6} pattern={backup?undefined:'[0-9]{6}'} value={code} onChange={e=>setCode(backup?e.target.value:e.target.value.replace(/\D/g,''))} disabled={busy}/></Field>
   {error&&<p className="auth-error" role="alert">{error}</p>}
   <Button variant="primary" disabled={busy||code.trim().length<6}>{busy?'Verificando…':'Confirmar e entrar'}</Button>
-  <Button disabled={busy} onClick={()=>{setBackup(!backup);setCode('');setError('');}}>{backup?'Usar aplicativo autenticador':'Usar código de recuperação'}</Button>
-  <Button disabled={busy} onClick={onBack}>Voltar para o login</Button>
+  <Button type="button" disabled={busy} onClick={()=>{setBackup(!backup);setCode('');setError('');}}>{backup?'Usar aplicativo autenticador':'Usar código de recuperação'}</Button>
+  <Button type="button" disabled={busy} onClick={onBack}>Voltar para o login</Button>
  </form>;
 }

@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "06E.1",
+  "next": "06E.2",
   "end": "08B",
   "packages": [
     {
@@ -484,7 +484,14 @@
         "/accept-invitation",
         "/login",
         "/reset-password"
-      ]
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-02",
+      "review": "docs/validation/06e1-security-members-review.md",
+      "followUpMigrations": [
+        "db/migrations/091a-security-attempts.sql"
+      ],
+      "deferredMinorOwner": "08A"
     },
     {
       "id": "06E.2",
@@ -1140,5 +1147,5 @@
       ]
     }
   ],
-  "updatedAt": "2026-10-30"
+  "updatedAt": "2026-11-02"
 }

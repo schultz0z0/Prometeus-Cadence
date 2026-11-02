@@ -13,3 +13,10 @@ test('authenticator codes are exactly six ASCII digits; setup challenge is serve
  for(const code of['12345','1234567','１２３４５６','123 45'])assert.equal(totpVerificationSchema.safeParse({challengeId:crypto.randomUUID(),code}).success,false);
  assert.equal(totpVerificationSchema.safeParse({challengeId:crypto.randomUUID(),code:'012345',userId:'foreign'}).success,false);
 });
+test('secondary factor actions never submit the code form implicitly',async()=>{
+ const{readFile}=await import('node:fs/promises');
+ for(const file of['src/modules/auth/second-factor.tsx','src/modules/settings/two-factor.tsx']){
+  const source=await readFile(new URL('../'+file,import.meta.url),'utf8');
+  for(const tag of source.match(/<Button\b[^>]*onClick=/g)??[])assert.match(tag,/type="button"/,file+': '+tag.slice(0,60));
+ }
+});

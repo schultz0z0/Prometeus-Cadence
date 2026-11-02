@@ -42,3 +42,5 @@ L-024,2026-10-30,A3,update,06C3 private notification preferences,localhost dedic
 L-025,2026-10-30,A2,create,35 synthetic notification UI rows,localhost dedicated QA identity,private06c3fixture,exact prior own inbox archived privately,delete only exact owned fixture ids after read/pagination test,removed,Exactly36owned synthetic notification rows removed by id; zero delivery rows or business records created
 
 L-026,2026-10-30,A2,create,06E1 two disposable local security identities and isolated workspace,localhost QA only,private06e1state,absent before fixture; SMTP local capture only,remove exact owned workspace users auth factor rows and sessions after QA,removed,Exactly two owned QA users workspace factor challenges invitations and sessions removed; zero business data provider calls or external sends
+
+L-027,2026-10-30,A1,update,06E1 final read-only security and members capture,localhost existing dedicated QA identity,private06e1readonly,existing QA data unchanged; own session absent before login,revoke only own new QA session; close owned browser,restored,Read-only captures complete; own session revoked; prior QA data and other sessions preserved

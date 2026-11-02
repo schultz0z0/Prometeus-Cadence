@@ -1,6 +1,6 @@
 # 06E.1 — Autenticador, sessões e membros
 
-Data:30/10/2026. Estado: implementação e QA local executadas; revisão independente final pendente. Não é aceite de paridade100% nem de produção pública.
+Data:30/10/2026; fechamento02/11/2026. Estado: concluído local/controlado após revisão independente ([revisão](06e1-security-members-review.md)). Não é aceite de paridade100% nem de produção pública.
 
 ## Contrato entregue
 
@@ -42,7 +42,7 @@ Limites explícitos:
 
 ## QA, runtime e custos
 
-L-026 encerrada: removidos por identificadores exatos os dois usuários próprios, workspace, memberships/convites, fatores/desafios, sessões e projeções técnicas geradas pela fixture. Nenhuma conta, sessão, canal ou dado do operador foi alterado. Navegadores próprios encerrados. E-mails de cadastro/convite foram enviados somente ao capturador local; não são prova de SMTP público.
+L-026 encerrada: removidos por identificadores exatos os dois usuários próprios, workspace, memberships/convites, fatores/desafios, sessões e projeções técnicas geradas pela fixture. L-027 restaurada: captura final somente leitura com QA dedicada anterior, encerrando apenas a nova sessão própria. Nenhuma conta, sessão, canal ou dado do operador foi alterado. Navegadores próprios encerrados. E-mails de cadastro/convite foram enviados somente ao capturador local; não são prova de SMTP público.
 
 Migrações091/091a aplicadas localmente. Nenhuma chamada paga de Actor/LLM ou mensagem externa; custo externo desta QA:zero. O runtime contínuo foi reiniciado após a migração; saúde definitiva registrada no fechamento. Sem merge/push/deploy público nesta entrega.
 
@@ -57,4 +57,4 @@ Migrações091/091a aplicadas localmente. Nenhuma chamada paga de Actor/LLM ou m
 
 ## Fechamento
 
-Revisão independente, correções, contagem final e próximo pacote serão preenchidos após o gate. Próximo planejado:06E.2 — duplicados, fusão, privacidade e ciclo dos dados.
+Revisão independente em02/11 (intervalo786ef97..515ed06): sem Critical, um Important corrigido com RED→GREEN — botões secundários do formulário de código sem `type="button"` submetiam o código, e "Recomeçar pareamento" ativava o autenticador. Dois menores→08A. Contagem final: 367/367 unitários, 466/466 integrações, 4/4 unitárias do pacote, build e tipos exit0, `git diff --check` limpo. A correção não foi reexercitada em navegador; está coberta por regressão estática. Próximo:06E.2 — duplicados, fusão, privacidade e ciclo dos dados.

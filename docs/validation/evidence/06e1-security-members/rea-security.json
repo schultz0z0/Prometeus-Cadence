@@ -1,0 +1,9 @@
+{
+  "evidence_id": "ev_3d6ed534d816f2604cac5156d93cf1cd75de82bd4dc1b9df459011d1d3124d60",
+  "operation": "inspect_web_page",
+  "authority": "external-service",
+  "confidence": "observed",
+  "source": "https://app.cadenceflow.pro/settings/security",
+  "publicArtifact": "metadata only; no page bodies, headers, cookies, account or session identifiers",
+  "limitations": ["Passive attach window only; prior network activity unavailable", "No script sources, accessibility text, console text, JSON bodies or storage keys/fingerprints requested", "Reference backend and unexercised mutation outcomes not attested"]
+}

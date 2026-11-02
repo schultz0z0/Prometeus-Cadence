@@ -61,7 +61,7 @@
     },
     {
       "file": "local-final-seats-1920.png",
-      "sha256": "0b1ef154b20b9d00f36d9d268fee95130c1d5ae919b200bfe73f126c9716b3b6",
+      "sha256": "4c433e5a6c1f21062943a8442e7fffa4ef5f785e9d096f6ed37884a7145fbc5e",
       "width": 1920,
       "imageHeight": 872,
       "masked": true,
@@ -69,7 +69,7 @@
     },
     {
       "file": "local-final-seats-320.png",
-      "sha256": "4e4ea22d01f7c5812416eab063202cd31ed32f31c76fafc8cc58821d140cb19b",
+      "sha256": "c24a6792eed2d6dfd2a8b00a09d2cfa35359793c15362a6d80ea310e7f4ba5dd",
       "width": 320,
       "imageHeight": 1059,
       "masked": true,
@@ -77,7 +77,7 @@
     },
     {
       "file": "local-final-seats-390.png",
-      "sha256": "308f75b234bd158dc20feb4a708fb0084595868ac7005b09f27864af382a64e4",
+      "sha256": "6159c09d68112deb97b39a344820f446fd45407c76c583346c5b50376055e2bd",
       "width": 390,
       "imageHeight": 976,
       "masked": true,
@@ -85,25 +85,25 @@
     },
     {
       "file": "local-final-security-1920.png",
-      "sha256": "c3806aef6c9b73fbc79fe1391c7050e5100d83754926b84d49f7e0b6264e67ab",
+      "sha256": "7502e72b6b34d97079c74cebbe066d261a6ed9cb7f7d346795941a56fc63b7ac",
       "width": 1920,
-      "imageHeight": 979,
+      "imageHeight": 884,
       "masked": true,
       "source": "local disposable QA"
     },
     {
       "file": "local-final-security-320.png",
-      "sha256": "58f13b492729179dfe9e7a37a6350661fab6915332705d9c1c520585e387a0f4",
+      "sha256": "ac2264541a65a0e81a2d5cbbc7c4258b45ad9f765d95cb10b4f39f3b7501d492",
       "width": 320,
-      "imageHeight": 1526,
+      "imageHeight": 1343,
       "masked": true,
       "source": "local disposable QA"
     },
     {
       "file": "local-final-security-390.png",
-      "sha256": "870f5abd009640d4d3de69bbbf5b0df15d0475bf6ae8e4f0b7d04fa35a7129df",
+      "sha256": "aa29023011bbde8078bca78c186137bd6dbda2a261cced3c8b52fdb8e6bf5692",
       "width": 390,
-      "imageHeight": 1490,
+      "imageHeight": 1157,
       "masked": true,
       "source": "local disposable QA"
     },
