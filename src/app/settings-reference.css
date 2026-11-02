@@ -128,3 +128,60 @@
   .context-reference .context-save-bar > .row { flex-wrap:wrap; }
   .context-approval-date { margin-left:0; width:100%; }
 }
+/* 06E.2 data lifecycle: reference SecaoConfig panels for Contatos duplicados and Privacidade. */
+.lifecycle-reference { display:block; }
+.lifecycle-reference > .settings-reference-panel { margin:24px 0 0; }
+.duplicates-reference > .settings-reference-panel:first-of-type { margin-top:0; }
+.lifecycle-panel .settings-reference-panel-head > .badge { margin-left:auto; flex:none; }
+.lifecycle-panel .settings-reference-panel-body { display:grid; gap:16px; }
+.lifecycle-scan { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.lifecycle-scan > span { font-size:0.875rem; color:var(--secondary); }
+.lifecycle-scan .btn, .lifecycle-footer .btn { min-height:36px; font-size:0.875rem; gap:8px; }
+.lifecycle-hint { display:flex; align-items:flex-start; gap:6px; margin:0; font-size:0.75rem; line-height:1rem; color:var(--muted); }
+.lifecycle-hint svg, .lifecycle-warning p svg { flex:none; margin-top:1px; }
+.lifecycle-groups { max-height:60vh; overflow-y:auto; display:grid; gap:8px; padding:8px; border:1px solid var(--border); border-radius:8px; }
+.lifecycle-group { display:flex; gap:12px; padding:8px; border-radius:6px; cursor:pointer; }
+.lifecycle-group:hover { background:var(--hover); }
+.lifecycle-group > input { margin-top:4px; width:16px; height:16px; flex:none; }
+.lifecycle-group > span { min-width:0; flex:1; }
+.lifecycle-group-key { display:flex; align-items:center; gap:8px; min-width:0; }
+.lifecycle-group-key small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.75rem; color:var(--secondary); }
+.lifecycle-lead { display:block; margin-top:2px; font-size:0.75rem; overflow-wrap:anywhere; }
+.lifecycle-lead .keep { font-weight:500; color:var(--text); }
+.lifecycle-lead .drop { color:var(--muted); text-decoration:line-through; }
+.lifecycle-lead small { font-size:0.75rem; color:var(--muted); }
+.lifecycle-footer { display:flex; align-items:center; justify-content:flex-end; gap:12px; padding:12px 20px; border-top:1px solid var(--border); }
+.lifecycle-footer .lifecycle-message { margin:0 auto 0 0; font-size:0.75rem; color:var(--secondary); }
+.lifecycle-save.btn { min-height:32px; font-size:0.75rem; gap:6px; }
+.lifecycle-merges { display:grid; gap:4px; }
+.lifecycle-merge-row { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:0.75rem; }
+.lifecycle-merge-row > span { flex:1; color:var(--secondary); overflow-wrap:anywhere; }
+.lifecycle-merge-row > small { color:var(--muted); }
+.lifecycle-merge-row > button { border:0; background:none; padding:0; font:inherit; font-weight:500; color:var(--primary); cursor:pointer; }
+.lifecycle-merge-row > button:hover { text-decoration:underline; }
+.lifecycle-panel .settings-reference-panel-body > p.muted { margin:0; font-size:0.875rem; line-height:1.25rem; }
+.lifecycle-footer:empty { min-height:24px; }
+.lifecycle-loading { display:flex; justify-content:center; padding:16px 0; color:var(--muted); }
+.lifecycle-reference .spin { animation:lifecycle-spin 0.8s linear infinite; }
+@keyframes lifecycle-spin { to { transform:rotate(360deg); } }
+.lifecycle-warning { display:grid; gap:8px; padding:12px; border:1px solid rgb(217 160 66 / 0.4); border-radius:8px; background:rgb(217 160 66 / 0.05); font-size:0.875rem; line-height:1.25rem; color:var(--secondary); }
+.lifecycle-warning p { display:flex; gap:6px; margin:0; font-weight:500; color:var(--text); }
+.lifecycle-warning p svg { color:rgb(217 160 66); }
+.lifecycle-warning ul { margin:0; padding-left:24px; display:grid; gap:4px; list-style:disc; }
+.lifecycle-warning strong { color:var(--text); }
+.lifecycle-note, .lifecycle-text { margin:0; font-size:0.75rem; color:var(--muted); }
+.lifecycle-text { font-size:0.875rem; color:var(--secondary); }
+.lifecycle-fields { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:760px) {
+  .lifecycle-fields { grid-template-columns:1fr; }
+  .lifecycle-footer { padding:12px 16px; flex-wrap:wrap; }
+  .lifecycle-panel .settings-reference-panel-head { flex-wrap:wrap; }
+  .lifecycle-panel .settings-reference-panel-head > .badge { margin-left:44px; }
+}
+.privacy-reference .lifecycle-panel .settings-reference-panel-body { gap:20px; }
+.privacy-reference .toggle-row { flex-direction:row-reverse; justify-content:flex-end; align-items:flex-start; gap:12px; padding:0; border:0; min-height:0; }
+.privacy-reference .toggle-row strong { font-size:0.875rem; line-height:1.25rem; font-weight:500; }
+.privacy-reference .toggle-row small { display:block; margin:0; font-size:0.875rem; line-height:1.25rem; }
+.privacy-reference .toggle-row > span { display:grid; gap:0; }
+.privacy-reference .toggle-row input[type=checkbox][role=switch] { width:44px; min-width:44px; height:24px; min-height:24px; padding:0; flex:none; }
+.lifecycle-footer .lifecycle-save.btn.primary { height:32px; min-height:32px; padding:0 12px; }

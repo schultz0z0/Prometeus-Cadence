@@ -151,6 +151,8 @@ export function Modal({
   useEffect(() => {
     const dialog = ref.current;
     dialog?.showModal();
+    // showModal moves focus to the dialog; React's autoFocus renders no attribute for it to honor.
+    dialog?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     return () => dialog?.close();
   }, []);
   return (
