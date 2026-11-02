@@ -7,8 +7,8 @@ import {WhatsappContentField} from '@/modules/settings/whatsapp-content-field';
 import {useMessagingReview} from './use-messaging-review';
 import type {WhatsappCapabilities} from '@/domain/whatsapp-capabilities';
 import {whatsappBlocker} from '@/client/whatsapp-copy';
-export function WhatsappReply({conversationId,client,templates,onQueued,capabilities}:{conversationId:string;client:MessagingClient;templates:TemplateView[];onQueued:()=>Promise<void>;capabilities?:WhatsappCapabilities}){
- const [content,setContent]=useState<OutboundContent>({kind:'text',text:''}),[prepared,setPrepared]=useState<ReplyReview|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState(''),pending=useRef(false);
+export function WhatsappReply({conversationId,client,templates,onQueued,capabilities,initialText=''}:{initialText?:string;conversationId:string;client:MessagingClient;templates:TemplateView[];onQueued:()=>Promise<void>;capabilities?:WhatsappCapabilities}){
+ const [content,setContent]=useState<OutboundContent>({kind:'text',text:initialText}),[prepared,setPrepared]=useState<ReplyReview|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState(''),pending=useRef(false);
  const fingerprint=JSON.stringify({conversationId,content}),{flow,state}=useMessagingReview<PreparedSend>(fingerprint);
  async function act(fn:()=>Promise<void>){if(pending.current)return;pending.current=true;setBusy(true);setError('');try{await fn();}catch(e){setError(e instanceof Error?e.message:'Não foi possível concluir.');}finally{pending.current=false;setBusy(false);}}
  function edit(v:OutboundContent){flow.reset();setPrepared(null);setContent(v);setMessage('');}

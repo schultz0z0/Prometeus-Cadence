@@ -4,9 +4,15 @@ export interface RouteTour{id:string;title:string;routes:string[];steps:TourStep
 export const routeTours:RouteTour[]=[
  {id:'overview',title:'Como tudo se liga',routes:[],steps:[
   {title:'Como tudo se liga',icon:'Compass',body:'Encontre empresas que podem comprar de você, escreva a mensagem e organize os próximos contatos. Você revisa e confirma antes de ligar.'},
+  {title:'O painel: seus resultados',icon:'LayoutDashboard',body:'Aqui você acompanha leads, qualificados, mensagens e respostas do seu workspace.'},
   {title:'O menu, na ordem do trabalho',icon:'Workflow',body:'Contatos guarda as empresas. Disparos em Massa organiza as cadências. Mensagens reúne as respostas. Automações repete o trabalho aprovado.'},
+  {title:'Pra quem: as listas',icon:'Users',body:'Agrupe seu público e qualifique cada empresa antes de colocá-la em uma cadência.'},
+  {title:'O que e quando: a cadência',icon:'Send',body:'Monte uma sequência com mensagens e intervalos. Revise o texto de cada etapa e salve como rascunho.'},
   {title:'Por onde sai: o canal',icon:'MessageSquare',body:'Conecte seus canais nas configurações. Cada remetente precisa estar pronto antes da ativação; o histórico mostra o estado real dos envios.'},
-  {title:'Seu próximo passo',icon:'CheckCircle2',body:'Siga o checklist de primeiros passos para revisar o contexto, a lista e sua primeira sequência.'}]},
+  {title:'Quem respondeu: Mensagens',icon:'Inbox',body:'O histórico do contato e suas respostas ficam juntos. Respostas e opt-outs devem interromper os próximos envios.'},
+  {title:'Pra não parar: automações',icon:'Workflow',body:'A busca encontra novos leads, a qualificação avalia o perfil e a cadência organiza o contato. Você escolhe o público e confirma a criação.'},
+  {title:'Seu próximo passo',icon:'Compass',body:'Siga o checklist de primeiros passos para revisar o contexto, a lista e sua primeira sequência.'},
+  {title:'Tudo pronto para explorar',icon:'CheckCircle2',body:'Explore os formulários, crie listas e edite cadências. Cada etapa de preparação fica salva no seu workspace.'}]},
  {id:'dashboard',title:'O painel',routes:['/dashboard'],steps:[
   {title:'Seus números do período',icon:'LayoutDashboard',body:'Os cartões mostram leads novos, qualificados, mensagens e respostas do período escolhido no seletor.'},
   {title:'O dia de hoje',icon:'Clock',body:'A faixa Hoje conta o que está previsto e o que já saiu desde a meia-noite no fuso do workspace.'},

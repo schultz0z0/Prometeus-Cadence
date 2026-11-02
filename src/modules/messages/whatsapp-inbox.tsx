@@ -11,11 +11,14 @@ import {ReconciliationReview} from './reconciliation-review';
 import {ConversationActions} from './conversation-actions';
 import {useLiveRefresh} from '@/client/use-live-refresh';
 import {mergeLiveItems} from '@/client/live-page';
+import {useAssistantDraft} from '@/client/use-assistant-draft';
 const stateNames:Record<MessageState,string>={received:'Recebida',pending:'Na fila',dispatching:'Tentativa em andamento',accepted:'Aceita pelo provedor',delivered:'Entregue',read:'Lida',failed:'Falhou',uncertain:'Resultado incerto',cancelled:'Cancelada',blocked:'Bloqueada'};
 export function WhatsappInbox(){
  const client=useMessaging(),channels=useChannels(),identity=useIdentity(),s=useDemo();
  const canManage=['owner','admin'].includes(identity?.workspaces.find(w=>w.id===identity.activeWorkspaceId)?.role??'');
  const [connections,setConnections]=useState<ConnectionView[]>([]),[items,setItems]=useState<ConversationView[]>([]),[nextCursor,setCursor]=useState<string|null>(null),[query,setQuery]=useState(''),[search,setSearch]=useState(''),[senderFilter,setSenderFilter]=useState(''),[selected,setSelected]=useState(''),[thread,setThread]=useState<ThreadView|null>(null),[templates,setTemplates]=useState<TemplateView[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false),[loaded,setLoaded]=useState(false),[reconcile,setReconcile]=useState('');
+ const draft=useAssistantDraft();
+ useEffect(()=>{if(draft)setSelected(draft.conversationId);},[draft]);
  const generation=useRef(0),listGeneration=useRef(0),selectedRef=useRef(selected);selectedRef.current=selected;
  const sender=connections.flatMap(c=>c.senders).find(s=>s.id===thread?.conversation.senderId);
  const connection=connections.find(c=>c.id===sender?.connectionId);
@@ -46,7 +49,7 @@ export function WhatsappInbox(){
  {thread.nextCursor&&<div className="panel-pad"><Button disabled={busy} onClick={()=>act(async()=>{const id=thread.conversation.id,page=await client.readConversation(id,thread.nextCursor!);if(selectedRef.current===id)setThread(old=>old?{...old,messages:[...page.messages.filter(m=>!old.messages.some(x=>x.id===m.id)),...old.messages],nextCursor:page.nextCursor}:old);})}>Carregar mensagens anteriores</Button></div>}
  <div className="whatsapp-history" aria-label="Histórico da conversa">{thread.messages.map(m=><article className={`whatsapp-message ${m.direction}`} key={m.id}><div className="row between wrap"><strong>{m.direction==='inbound'?'Contato':'Sua empresa'}</strong><Badge tone={m.state==='uncertain'||m.state==='failed'?'red':'neutral'}>{stateNames[m.state]}</Badge></div><p>{m.text??(m.mediaKind?'Mídia recebida · '+m.mediaKind:'Mensagem sem texto')}</p>{m.mediaKind&&m.text&&<small>Mídia: {m.mediaKind}</small>}<small>{new Date(m.createdAt).toLocaleString('pt-BR')}</small><DeliveryDetails evidence={m.delivery} remoteId={m.remoteId}/>{m.state==='uncertain'&&<><p>O provedor pode ter recebido a mensagem. Não há repetição automática.</p>{canManage&&connection?.provider!=='twilio'&&<Button onClick={()=>setReconcile(m.id)}>Reconciliar com evidência</Button>}</>}{m.state==='dispatching'&&<small>Uma tentativa em andamento não pode ser recolhida.</small>}</article>)}</div>
  {canManage&&<ConversationActions conversation={thread.conversation} client={client} onSaved={refreshThread}/>}
- {connection?.provider==='twilio'?<Notice>Conexão Twilio aposentada. Este histórico é somente para leitura.</Notice>:<WhatsappReply capabilities={sender?.capabilities} conversationId={thread.conversation.id} client={client} templates={templates} onQueued={refreshThread}/>}
+ {connection?.provider==='twilio'?<Notice>Conexão Twilio aposentada. Este histórico é somente para leitura.</Notice>:<WhatsappReply key={thread.conversation.id+(draft?.conversationId===thread.conversation.id?':draft':'')} initialText={draft?.conversationId===thread.conversation.id?draft.text:''} capabilities={sender?.capabilities} conversationId={thread.conversation.id} client={client} templates={templates} onQueued={refreshThread}/>}
  </div>}
  </section></div>{reconcile&&<ReconciliationReview messageId={reconcile} client={client} onClose={()=>setReconcile('')} onSaved={refreshThread}/>}
  </>;

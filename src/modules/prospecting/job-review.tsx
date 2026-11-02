@@ -2,7 +2,7 @@
 import {useState} from 'react';
 import type {Review} from '@/domain/prospecting';
 import {Button,Modal,Notice} from '@/components/ui/primitives';
-const units:Record<string,string>={candidates:'candidatos',apifyRuns:'execuções Apify',apolloPages:'páginas Apollo',jevCalls:'decisões JEV',codexCalls:'chamadas Codex',openaiCalls:'chamadas OpenAI',geminiCalls:'chamadas Gemini'};
+export const units:Record<string,string>={candidates:'candidatos',apifyRuns:'execuções Apify',apolloPages:'páginas Apollo',jevCalls:'decisões JEV',codexCalls:'chamadas Codex',openaiCalls:'chamadas OpenAI',geminiCalls:'chamadas Gemini'};
 export function JobReview({review,onClose,onConfirm}:{review:Review;onClose:()=>void;onConfirm:()=>Promise<void>}){
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
   async function confirm(){if(busy)return;setBusy(true);setError('');try{await onConfirm();}catch(e){setError(e instanceof Error?e.message:'Não foi possível confirmar.');}finally{setBusy(false);}}

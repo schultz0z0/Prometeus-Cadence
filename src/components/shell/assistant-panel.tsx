@@ -2,18 +2,38 @@
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {useEffect,useRef,useState} from 'react';
-import type {AssistantMessage,AssistantView} from '@/domain/assistant-actions';
+import {commandLabels,type AssistantMessage,type AssistantProposal,type AssistantView} from '@/domain/assistant-actions';
 import {helpArticles} from '@/domain/help-manifest';
-import {askAssistant,readAssistant} from '@/client/assistant-client';
+import {askAssistant,cancelProposal,confirmProposal,prepareProposal,readAssistant,type ProposalReview} from '@/client/assistant-client';
 import {Icon} from '../ui/icon';
-import {IconButton} from '../ui/primitives';
+import {Button,IconButton} from '../ui/primitives';
+import {units} from '@/modules/prospecting/job-review';
 const suggestions=['Por que minha cadência não saiu hoje?','Quais são os limites do meu plano?','Como conecto meu Gmail?'];
 const store={get:(k:string)=>{try{return sessionStorage.getItem(k)??'';}catch{return '';}},set:(k:string,v:string)=>{try{if(v)sessionStorage.setItem(k,v);else sessionStorage.removeItem(k);}catch{}}};
-function Message({m,onClose}:{m:AssistantMessage;onClose:()=>void}){
+// A proposal only opens the existing review of its area; confirming never sends or activates anything.
+function ProposalCard({proposal,workspaceId,onClose}:{proposal:AssistantProposal;workspaceId:string|null;onClose:()=>void}){
+ const [p,setP]=useState(proposal),[review,setReview]=useState<ProposalReview['review']|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),requestId=useRef(crypto.randomUUID());
+ const expired=p.state==='proposed'&&Date.parse(p.expiresAt)<=Date.now();
+ async function act(fn:(signal:AbortSignal)=>Promise<void>){if(!workspaceId||busy)return;setBusy(true);setError('');try{await fn(new AbortController().signal);}catch(e){setError((e as Error).message);if((e as {status?:number}).status===409)setReview(null);}finally{setBusy(false);}}
+ return <section className="assistant-proposal" aria-label={'Proposta: '+commandLabels[p.kind]}>
+  <small>{commandLabels[p.kind]}</small><strong>{p.summary}</strong>
+  {p.kind==='draft-reply'&&<blockquote>{String(p.payload.text)}</blockquote>}
+  {p.state==='confirmed'?<div className="assistant-proposal-actions"><span className="assistant-proposal-done"><Icon name="CheckCircle2" size={13}/>Confirmada</span>{p.href&&<Link href={p.href} onClick={onClose}>Abrir<Icon name="ArrowRight" size={12}/></Link>}</div>
+  :p.state==='cancelled'?<p className="assistant-proposal-note">Cancelada.</p>
+  :expired?<p className="assistant-proposal-note">A proposta venceu. Peça de novo ao assistente.</p>
+  :review?<>{review.warnings.map(w=><p key={w} className="assistant-proposal-note">{w}</p>)}{review.blockers.map(b=><p key={b} role="alert" className="assistant-proposal-blocker">{b}</p>)}
+    {!!review.usage?.length&&<p className="assistant-proposal-note">Uso estimado: {review.usage.map(u=>`até ${u.maxUnits} ${units[u.unit]??u.unit}`).join(', ')}</p>}
+    <div className="assistant-proposal-actions"><Button variant="compact" disabled={busy} onClick={()=>setReview(null)}>Voltar</Button><Button variant="primary compact" disabled={busy||review.blockers.length>0} onClick={()=>void act(async s=>{const r=await confirmProposal(workspaceId!,p.id,{token:review.token,requestId:requestId.current},s);setP(r.proposal);setReview(null);})}>{busy?'Confirmando…':'Confirmar'}</Button></div></>
+  :<div className="assistant-proposal-actions"><Button variant="primary compact" disabled={busy||!workspaceId} onClick={()=>void act(async s=>{const r=await prepareProposal(workspaceId!,p.id,s);setP(r.proposal);setReview(r.review);})}>{busy?'Preparando…':'Revisar'}</Button><Button variant="compact" disabled={busy||!workspaceId} onClick={()=>void act(async s=>setP(await cancelProposal(workspaceId!,p.id,s)))}>Cancelar</Button></div>}
+  {error&&<p role="alert" className="assistant-proposal-blocker">{error}</p>}
+ </section>;
+}
+function Message({m,onClose,workspaceId}:{m:AssistantMessage;onClose:()=>void;workspaceId:string|null}){
  const links=m.citations.flatMap(c=>c.kind==='help'?helpArticles.filter(a=>a.id===c.id):[]);
  return <div className={'assistant-message '+m.role}>
   <p>{m.text}</p>
   {m.role==='assistant'&&(links.length>0||m.fallback)&&<footer>{m.fallback&&<small>Central de Ajuda</small>}{links.map(a=><Link key={a.id} href={a.href} onClick={onClose}>{a.title}<Icon name="ArrowRight" size={12}/></Link>)}</footer>}
+ {m.proposal&&<ProposalCard proposal={m.proposal} workspaceId={workspaceId} onClose={onClose}/>}
  </div>;
 }
 export function AssistantPanel({onClose,onHelp,workspaceId}:{onClose:()=>void;onHelp:()=>void;workspaceId:string|null}){
@@ -66,7 +86,7 @@ export function AssistantPanel({onClose,onHelp,workspaceId}:{onClose:()=>void;on
    {empty&&<div className="assistant-welcome"><span className="assistant-welcome-icon"><Icon name="Bot" size={22}/></span><h4>Como posso ajudar?</h4>
     <p>Respondo com base na Central de Ajuda e nos dados da sua conta (plano, canais, cadências) e mostro onde resolver cada coisa.</p>
     {workspaceId&&<nav aria-label="Sugestões de pergunta">{suggestions.map(s=><button type="button" key={s} onClick={()=>void send(s)} disabled={!ready}>{s}</button>)}</nav>}</div>}
-   {view?.messages.map(m=><Message key={m.id} m={m} onClose={onClose}/>)}
+   {view?.messages.map(m=><Message key={m.id} m={m} onClose={onClose} workspaceId={workspaceId}/>)}
    {orphan&&<div className="assistant-message error" role="alert"><p>Esta pergunta ficou sem resposta.</p><button type="button" onClick={()=>void send(orphan.text,orphan.requestId)}>Tentar de novo</button></div>}
    {pending&&<>{!view?.messages.some(m=>m.requestId===pending.requestId)&&<div className="assistant-message user"><p>{pending.text}</p></div>}<div className="assistant-message assistant pending" role="status"><Icon name="LoaderCircle" size={14}/><p>Consultando a ajuda e a sua conta…</p></div></>}
    {failed&&<><div className="assistant-message user"><p>{failed.text}</p></div><div className="assistant-message error" role="alert"><p>{failed.message}</p><button type="button" onClick={()=>void send(failed.text,failed.requestId)}>Tentar de novo</button></div></>}

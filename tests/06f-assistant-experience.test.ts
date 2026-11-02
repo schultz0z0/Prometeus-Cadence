@@ -24,6 +24,8 @@ test('help manifest answers from local articles with real app destinations',()=>
  // Route context breaks ties toward the current area.
  assert.equal(matchHelp('como funciona','/settings/whatsapp')[0].id,'whatsapp-connect');
  assert.deepEqual(matchHelp('qwertyuiop zxcv','/dashboard'),[]);
+ // Verb forms match by stem: 'qualifica' finds the qualifier even on the contacts page.
+ assert.equal(matchHelp('Qualifica a lista de clínicas pra mim','/contacts')[0].id,'qualifier');
 });
 
 test('assistant input and model output are bounded and citations must belong to the sources',()=>{
@@ -68,4 +70,10 @@ test('06F.2 route tours: every tour has steps, the shell maps routes to tours, a
  assert.equal(tourForRoute('/contacts').id,'contacts');assert.equal(tourForRoute('/cadences/abc').id,'cadences');assert.equal(tourForRoute('/settings/email').id,'settings');
  assert.equal(tourForRoute('/rota-inexistente').id,'overview');
  assert.deepEqual([...tourIds].sort(),routeTours.map(t=>t.id).sort());
+});
+
+test('06F.2 inherited minors: research batch honors ?leadId and a later successful poll clears only the load error',()=>{
+ const research=readFileSync('src/modules/research/company-research.tsx','utf8'),evidence=readFileSync('src/modules/messages/delivery-details.tsx','utf8');
+ assert.match(research,/export function ResearchResults[\s\S]{0,400}get\('leadId'\)/);
+ assert.match(evidence,/setEvidence\(value\);setLoadError\(''\)/);assert.doesNotMatch(evidence,/setEvidence\(value\);setError\(''\)/);
 });

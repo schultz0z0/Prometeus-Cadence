@@ -59,3 +59,14 @@
 .help-center-list p{font-size:.8125rem;line-height:1.6;color:var(--secondary);margin:8px 0}
 @media(max-width:760px){.search-palette{margin-top:16px;max-height:calc(100dvh - 32px)}.search-palette>footer{display:none}}
 @keyframes assistant-spin{to{transform:rotate(360deg)}}
+.assistant-proposal{margin-top:8px;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--border));background:var(--surface);border-radius:10px;padding:10px;display:grid;gap:6px;text-align:left}
+.assistant-proposal>small{font-size:.625rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--primary)}
+.assistant-proposal>strong{font-size:.75rem;font-weight:600;color:var(--text)}
+.assistant-proposal blockquote{margin:0;padding:6px 8px;border-left:2px solid var(--primary);background:var(--background);font-size:.75rem;white-space:pre-wrap}
+.assistant-proposal-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.assistant-proposal-actions .btn{min-height:28px;padding:4px 10px;font-size:.6875rem}
+.assistant-proposal-actions a{display:inline-flex;align-items:center;gap:4px;color:var(--primary);font-size:.6875rem}
+.assistant-proposal-done{display:inline-flex;align-items:center;gap:4px;color:#15803d;font-size:.6875rem}
+.assistant-proposal-note{margin:0;font-size:.6875rem;color:var(--muted)}
+.assistant-proposal-blocker{margin:0;font-size:.6875rem;color:#b91c1c}
+.tour-progress-badge{display:inline-flex;align-items:center;gap:4px;font-size:.6875rem;color:#15803d}

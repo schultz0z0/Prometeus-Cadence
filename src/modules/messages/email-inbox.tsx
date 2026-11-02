@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {useIdentity,useMail,useMessaging} from '@/client/workspace-provider';
+import {useAssistantDraft} from '@/client/use-assistant-draft';
 import type {EmailConversationView,EmailThreadView,MailboxView} from '@/domain/mail';
 import {createInboxSelection,lastDisplayedMessage,mergeEmailHistory} from '@/client/mail-inbox-flow';
 import {Button,EmptyState,Field,LinkButton,Notice,PageHeader,Badge,Modal} from '@/components/ui/primitives';
@@ -19,6 +20,9 @@ export function EmailInbox(){
  const filters={search,...(senderId?{senderId}:{}),...(direction?{direction}:{})};
  useEffect(()=>{let active=true;mail?.list().then(value=>{if(active)setBoxes(value);}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[mail]);
  useEffect(()=>{if(!client)return;const ticket=++listEpoch.current;setLoaded(false);setItems([]);setCursor(null);setError('');selection.select('');setReconcile('');client.listEmailConversations({search,...(senderId?{senderId}:{}),...(direction?{direction}:{})}).then(value=>{if(ticket===listEpoch.current){setItems(value.items);setCursor(value.nextCursor);setLoaded(true);}}).catch(e=>{if(ticket===listEpoch.current)setError(e.message);});return()=>{listEpoch.current++;selection.select('');};},[client,search,senderId,direction,selection]);
+ const draft=useAssistantDraft(),draftOpened=useRef(false);
+ // The draft opens once, after the list load that would otherwise clear the selection.
+ useEffect(()=>{if(!draft||!loaded||draftOpened.current)return;draftOpened.current=true;drafts.current.set(draft.conversationId,draft.text);void open(draft.conversationId);},[draft,loaded]);
  async function open(id:string){if(!client)return;const ticket=selection.select(id);setReconcile('');setError('');try{selection.accept(ticket,await client.readEmailConversation(id));}catch(e){if(selection.ticket().epoch===ticket.epoch)setError(e instanceof Error?e.message:'Não foi possível abrir o histórico.');}}
  async function refresh(){if(!client)return;const ticket=selection.ticket();if(!ticket.id)return;const thread=await client.readEmailConversation(ticket.id);if(selection.accept(ticket,thread))setItems(old=>old.map(item=>item.id===ticket.id?thread.conversation:item));}
  async function act(run:()=>Promise<void>){if(pending.current)return;pending.current=true;setBusy(true);setError('');try{await run();}catch(e){setError(e instanceof Error?e.message:'Não foi possível concluir.');}finally{pending.current=false;setBusy(false);}}

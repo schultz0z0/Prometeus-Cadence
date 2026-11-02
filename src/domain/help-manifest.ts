@@ -15,7 +15,7 @@ export const helpArticles:HelpArticle[]=[
   body:'Em Contatos › Importar, envie um CSV ou XLSX, associe as colunas e revise a prévia. Contatos repetidos na mesma lista são ignorados e você confirma antes de gravar.'},
  {id:'generator',title:'Encontrar empresas no Gerador',href:'/leads/generator',routes:['/leads/generator'],keywords:['gerador','encontrar empresas','buscar empresas','maps','cnpj','prospectar','novos leads','leads novos'],
   body:'No Gerador você busca empresas por Google Maps, CNPJ ou web, ou descreve o público para a IA montar um plano. Cada busca mostra o custo estimado e só roda depois da sua confirmação.'},
- {id:'qualifier',title:'Qualificar leads com IA',href:'/leads/qualifier',routes:['/leads/qualifier'],keywords:['qualificar','qualificacao','qualificador','avaliar leads','fit'],
+ {id:'qualifier',title:'Qualificar leads com IA',href:'/leads/qualifier',routes:['/leads/qualifier'],keywords:['qualifica','avaliar leads','fit'],
   body:'No Qualificador você escolhe a lista e os módulos. A IA avalia cada empresa pelo seu contexto e pelas evidências públicas; sem evidência suficiente, o lead fica como pendente em vez de ser aprovado.'},
  {id:'context',title:'Contexto de IA',href:'/settings/context',routes:['/settings/context'],keywords:['contexto','produto','oferta','cliente ideal','empresa','ia escreve'],
   body:'Em Configurações › Contexto de IA você descreve a empresa, a oferta, o cliente ideal e os produtos. A IA só usa o contexto aprovado para escrever mensagens e qualificar leads.'},

@@ -9,6 +9,8 @@ import { AccountControls } from "./account-controls";
 import {AssistantPanel} from './assistant-panel';
 import {SearchPalette} from './search-palette';
 import {HelpCenter} from './help-center';
+import {Tour} from '../onboarding/tour-dialog';
+import {tourForRoute} from '@/domain/route-tours';
 import{NotificationProvider}from'@/client/notification-provider';
 import{NotificationBell}from'./notifications';
 import { navigation, allPages, pageTitle, type NavigationItem } from "./navigation";
@@ -209,7 +211,8 @@ function AppShellContent({children}:{children:React.ReactNode}){
       {search && <SearchPalette workspaceId={identity?.activeWorkspaceId??null} onClose={()=>setSearch(false)}/>}
       {info==='Assistente'&&<AssistantPanel workspaceId={identity?.activeWorkspaceId??null} onClose={closeInfo} onHelp={()=>setInfo('Central de Ajuda')}/>}
       {info==='Central de Ajuda'&&<HelpCenter onClose={closeInfo}/>}
-      {info && !['Assistente','Central de Ajuda'].includes(info) && (<Modal title={info} onClose={() => setInfo("")}>
+      {info==='Como funciona esta área'&&<Tour key={path} tour={tourForRoute(path)} onClose={closeInfo}/>}
+      {info && !['Assistente','Central de Ajuda','Como funciona esta área'].includes(info) && (<Modal title={info} onClose={() => setInfo("")}>
           {info === "Notificações" ? (<p>O feed de notificações será disponibilizado no marco 06C.3. Acompanhe por enquanto o estado nas áreas de mensagens e execuções.</p>) : (<>
               <p>
                 Encontre empresas, qualifique quem combina com o seu negócio e

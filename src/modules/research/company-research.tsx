@@ -40,7 +40,7 @@ export function CompanyResearchCard({id,anchor}:{id:string;anchor:string}){
 }
 
 export function ResearchResults({id,revision}:{id:string;revision:number}){
- const client=useResearch(),identity=useIdentity(),refreshWorkspace=useWorkspaceRefresh(),state=useDemo(),[leadId,setLeadId]=useState(''),[refresh,setRefresh]=useState(0),[error,setError]=useState(''),[busy,setBusy]=useState(false),[selected,setSelected]=useState<string[]>([]),[review,setReview]=useState<Reviewed<ResearchApplication>|null>(null),[message,setMessage]=useState('');
+ const client=useResearch(),identity=useIdentity(),refreshWorkspace=useWorkspaceRefresh(),state=useDemo(),[leadId,setLeadId]=useState(()=>typeof window==='undefined'?'':new URLSearchParams(window.location.search).get('leadId')??''),[refresh,setRefresh]=useState(0),[error,setError]=useState(''),[busy,setBusy]=useState(false),[selected,setSelected]=useState<string[]>([]),[review,setReview]=useState<Reviewed<ResearchApplication>|null>(null),[message,setMessage]=useState('');
  const [loaded,setLoaded]=useState<{client:ResearchClient;id:string;leadId:string;data:ResearchCaseView}|null>(null);
  useEffect(()=>{let current=true;setError('');client?.get(id,leadId||undefined).then(data=>{if(current)setLoaded({client,id,leadId,data});}).catch(e=>{if(current)setError(e.message);});return()=>{current=false;};},[client,id,leadId,revision,refresh]);
  const result=loaded?.client===client&&loaded.id===id&&loaded.leadId===leadId?loaded.data:null;
