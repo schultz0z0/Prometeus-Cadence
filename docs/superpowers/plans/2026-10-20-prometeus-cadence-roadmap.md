@@ -195,3 +195,13 @@ Busca global e assistente de ajuda e conta concluídos local/controlado:
 - nenhuma mutação pelo chat.
 
 Uma revisão independente e três Important corrigidos RED→GREEN. Resposta real da IA não observada (cota da assinatura da plataforma esgotada). [Aceite](../../validation/06f1-assistant-search.md). Próximo **06F.2 — comandos revisados do assistente, onboarding e tours**.
+
+### Continuidade 02/11 — 06F.2
+
+Comandos revisados do assistente, passeios por área e progresso concluídos local/controlado:
+- 4 propostas fechadas que abrem a revisão real de cada área, com confirmação idempotente e 0 envios;
+- rascunho de resposta que preenche o compositor sem enviar;
+- "Como funciona" por área e passeios vistos em Primeiros passos;
+- menores 06B.3 e 06D.2 fechados.
+
+Uma revisão independente e seis Important corrigidos RED→GREEN. **06F concluído.** [Aceite](../../validation/06f2-assistant-commands.md). Próximo **07C.1 — API, eventos e webhooks de saída**.

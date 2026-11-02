@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-02 · Session: s20 · Phase:6 Busca/assistente 06F.1 concluídos local/controlado; próximo 06F.2; paridade integral não aceita
+Updated: 2026-11-02 · Session: s21 · Phase:6 06F concluído local/controlado (06F.1+06F.2); próximo 07C.1; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s21: 06F.2 com card de proposta (revisão real, cancelado sem confirmar), passeio por área com progresso e selo em Primeiros passos; QA L030 removed, 0 envios. Revisão independente: seis Important corrigidos RED→GREEN (094a). EV-283. 06F concluído; próximo 07C.1.
+- Not covered s21: proposta da IA ao vivo (cota esgotada), QA visual do rascunho de resposta (sem canal conectado), comandos pelo chat na referência.
 
 - Covered s20: 06F.1 comparado às capturas retidas do assistente e da busca (L4, sem escrita); geometria 1920/390/320, três capturas `[RE]`, QA L029 removed, 0 envios. Revisão independente: três Important corrigidos RED→GREEN (093a). EV-282. Próximo 06F.2.
 - Not covered s20: respostas/modelo/backend do assistente da referência; resposta real da IA (cota da assinatura da plataforma esgotada); comandos revisados, onboarding_progress e tours (06F.2).
@@ -73,7 +76,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s20: 06F.2 — comandos revisados do assistente, onboarding e tours. 06F.1 concluído local/controlado; menores→08A.
+Fila vigente s21: 07C.1 — API, eventos e webhooks de saída. 06F concluído local/controlado; menores→08A.
+
+Fila s20 (histórica): 06F.2 — comandos revisados do assistente, onboarding e tours.
 
 Fila s19 (histórica): 06F — assistente, busca, onboarding e ajuda. 06E.2 concluído local/controlado; exportação privada e menores→08A.
 

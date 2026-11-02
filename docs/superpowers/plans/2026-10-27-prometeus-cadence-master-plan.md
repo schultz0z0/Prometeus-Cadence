@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **06F.2** (atualizado 02/11; 06F.1 concluído).
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07C.1** (atualizado 02/11; 06F concluído).
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -27,7 +27,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 06C.3 | Notificações, preferências e resumos | 06C.2 | [tarefas](2026-10-27-prometeus-cadence-06c3-notifications.md) | Concluído local/controlado30/10; [aceite](../../validation/06c3-notifications.md) |
 | 06E.1 | Autenticador, sessões e administração de membros | 02, 06A-P, 06A-H | [tarefas](2026-10-27-prometeus-cadence-06e1-security-members.md) | Concluído local/controlado02/11; [aceite](../../validation/06e1-security-members.md) |
 | 06E.2 | Duplicados, fusão, privacidade e ciclo dos dados | 06E.1, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-06e2-data-lifecycle.md) | Concluído local/controlado02/11; [aceite](../../validation/06e2-data-lifecycle.md) |
-| 06F | Assistente, busca, onboarding e ajuda | 06C.3, 06E.2, 06IA | [tarefas](2026-10-27-prometeus-cadence-06f-assistant-experience.md) | Em execução: 06F.1 concluído local/controlado ([plano](2026-11-02-prometeus-cadence-06f1-assistant-search.md)); 06F.2 planejado |
+| 06F | Assistente, busca, onboarding e ajuda | 06C.3, 06E.2, 06IA | [tarefas](2026-10-27-prometeus-cadence-06f-assistant-experience.md) | Concluído local/controlado em dois pacotes: [06F.1](2026-11-02-prometeus-cadence-06f1-assistant-search.md) e [06F.2](2026-11-02-prometeus-cadence-06f2-assistant-commands.md) |
 | 07C.1 | API, eventos e webhooks de saída | 06E.2, 06C.2 | [tarefas](2026-10-27-prometeus-cadence-07c1-api-webhooks.md) | Planejado; não executado |
 | 07C.2 | Conectores de cliente e agenda/CRM | 07C.1 | [tarefas](2026-10-27-prometeus-cadence-07c2-customer-connectors.md) | Planejado; não executado |
 | 07A.0 | Viabilidade e capacidades do LinkedIn | 06IA, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07a0-linkedin-feasibility.md) | Planejado; não executado |
@@ -117,3 +117,5 @@ Continuidade 06F.1 em 02/11: 06F dividido em dois pacotes. 06F.1 entrega:
 - Central de Ajuda local.
 
 Uma revisão independente encontrou três Important, corrigidos RED→GREEN na 093a; menores→08A. A IA real da plataforma estava sem cota da assinatura, então nenhuma resposta da IA foi observada na QA. Próximo **06F.2**: comandos revisados, `onboarding_progress`, tours e os menores herdados (06B.3, 06B.5, 06D.2). [Aceite](../../validation/06f1-assistant-search.md).
+
+Continuidade 06F.2 em 02/11: o assistente propõe 4 ações fechadas (público com automações pausadas, opções de cadência, qualificação de lista e rascunho de resposta). Cada uma passa pela revisão do serviço da área, com confirmação idempotente e 0 envios. "Como funciona" abre o passeio da área, e o progresso de passeios é gravado por usuário. Os menores 06B.3 e 06D.2 foram fechados. Uma revisão independente encontrou seis Important, corrigidos RED→GREEN na 094a; menores→08A. A IA real seguiu sem cota da assinatura da plataforma. **06F concluído.** Próximo **07C.1 — API, eventos e webhooks de saída**. [Aceite](../../validation/06f2-assistant-commands.md).
