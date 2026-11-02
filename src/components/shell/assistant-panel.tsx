@@ -18,7 +18,10 @@ function ProposalCard({proposal,workspaceId,onClose}:{proposal:AssistantProposal
  return <section className="assistant-proposal" aria-label={'Proposta: '+commandLabels[p.kind]}>
   <small>{commandLabels[p.kind]}</small><strong>{p.summary}</strong>
   {p.kind==='draft-reply'&&<blockquote>{String(p.payload.text)}</blockquote>}
-  {p.state==='confirmed'?<div className="assistant-proposal-actions"><span className="assistant-proposal-done"><Icon name="CheckCircle2" size={13}/>Confirmada</span>{p.href&&<Link href={p.href} onClick={onClose}>Abrir<Icon name="ArrowRight" size={12}/></Link>}</div>
+  {p.state==='confirmed'?<div className="assistant-proposal-actions"><span className="assistant-proposal-done"><Icon name="CheckCircle2" size={13}/>Confirmada</span>{p.href&&(p.kind==='draft-reply'
+   // A full navigation: the inbox reads the draft from the URL when it mounts, also when it is already open.
+   ?<a href={p.href}>Abrir<Icon name="ArrowRight" size={12}/></a>
+   :<Link href={p.href} onClick={onClose}>Abrir<Icon name="ArrowRight" size={12}/></Link>)}</div>
   :p.state==='cancelled'?<p className="assistant-proposal-note">Cancelada.</p>
   :expired?<p className="assistant-proposal-note">A proposta venceu. Peça de novo ao assistente.</p>
   :review?<>{review.warnings.map(w=><p key={w} className="assistant-proposal-note">{w}</p>)}{review.blockers.map(b=><p key={b} role="alert" className="assistant-proposal-blocker">{b}</p>)}

@@ -35,15 +35,17 @@ async function lock(p:Principal,id:string,forConfirm:boolean){
  return withWorkspaceTransaction(p,async c=>{const r=(await c.query('SELECT * FROM app.assistant_proposal_lock($1,$2)',[id,forConfirm])).rows[0] as Row;await authorized(c,p,r.kind);return r;});
 }
 // Inputs are rebuilt from the stored proposal on every call; the client never supplies the command body.
-async function underlying(p:Principal,r:Row):Promise<{kind:'planning';input:PlanningInput}|{kind:'job';input:JobInput}|{kind:'draft';conversationId:string;channel:string;text:string}>{
+const QUALIFY_CAP=500;
+async function underlying(p:Principal,r:Row):Promise<{kind:'planning';input:PlanningInput}|{kind:'job';input:JobInput;total:number}|{kind:'draft';conversationId:string;channel:string;text:string}>{
  const v=commandSchemas[r.kind].parse(r.payload) as Record<string,any>;
  if(r.kind==='create-audience-automation')return{kind:'planning',input:{kind:'planning',task:'audience_plan',description:v.description,channel:v.channel,timezone:'America/Sao_Paulo'} as PlanningInput};
  if(r.kind==='create-cadence')return{kind:'planning',input:{kind:'planning',task:'cadence_options',listId:v.listId,objective:v.objective,channels:v.channels,tone:v.tone,rhythm:'Padrão',highlight:'',avoid:'',decisionMaker:''} as PlanningInput};
  return withWorkspaceTransaction(p,async c=>{
   if(r.kind==='qualify-list'){
-   const ids=(await c.query("SELECT id FROM app.lead WHERE list_id=$1 ORDER BY payload->>'createdAt',id LIMIT 500",[v.listId])).rows.map(x=>x.id as string);
+   const ids=(await c.query("SELECT id FROM app.lead WHERE list_id=$1 ORDER BY payload->>'createdAt',id LIMIT $2",[v.listId,QUALIFY_CAP])).rows.map(x=>x.id as string);
    if(!ids.length)throw new AppError(409,'A lista não tem contatos para qualificar.');
-   return{kind:'job' as const,input:{kind:'qualification',listId:v.listId,leadIds:ids,modules:['email','phone'],summaryPolicy:'fits',escalation:'off',options:{skipProcessed:true,language:'pt-BR'}} as JobInput};
+   const total=Number((await c.query('SELECT count(*) n FROM app.lead WHERE list_id=$1',[v.listId])).rows[0].n);
+   return{kind:'job' as const,total,input:{kind:'qualification',listId:v.listId,leadIds:ids,modules:['email','phone'],summaryPolicy:'fits',escalation:'off',options:{skipProcessed:true,language:'pt-BR'}} as JobInput};
   }
   const conv=(await c.query('SELECT id,channel FROM app.channel_conversation WHERE id=$1',[v.conversationId])).rows[0];
   if(!conv)throw new AppError(404,'A conversa não existe mais neste workspace.');
@@ -54,25 +56,47 @@ const draftProof=(p:Principal,r:Row,u:{conversationId:string;text:string})=>({pu
 export async function prepareAssistantAction(p:Principal,id:string){
  try{
   const r=await lock(p,id,false),u=await underlying(p,r);
-  const review=u.kind==='planning'?await preparePlanning(p,u.input):u.kind==='job'?await prepareJob(p,u.input)
+  const review=u.kind==='planning'?await preparePlanning(p,u.input):u.kind==='job'?await withCap(await prepareJob(p,u.input),u.total)
    :{input:{conversationId:u.conversationId,text:u.text},token:createReviewToken(draftProof(p,r,u),secret()),expiresAt:new Date(Date.now()+600000).toISOString(),blockers:[] as string[],warnings:['Confirmar só guarda o rascunho e abre a conversa. Nada é enviado: a resposta ainda passa pela revisão de envio.'],usage:[]};
+  // The review never shows a deadline past the proposal's own.
+  if(Date.parse(review.expiresAt)>r.expires_at.getTime())review.expiresAt=r.expires_at.toISOString();
   return{proposal:proposalView(r),review};
  }catch(e){throw proposalError(e);}
+}
+async function withCap<T extends {warnings:string[]}>(review:T,total:number){
+ if(total>QUALIFY_CAP)review.warnings=[`Esta qualificação cobre ${QUALIFY_CAP} de ${total} contatos da lista (os mais antigos). Peça de novo depois para o restante.`,...review.warnings];
+ return review;
+}
+// A job already committed for a claimed confirmation (crash before finish) is the proposal's entity; it is never created twice.
+async function committed(p:Principal,r:Row,requestId:string){
+ if(r.kind==='draft-reply')return null;
+ const job=(await withWorkspaceTransaction(p,c=>c.query('SELECT id,input FROM app.prospecting_job WHERE request_id=$1 AND actor_id=$2',[requestId,p.userId]))).rows[0];
+ if(!job)return null;
+ return{entityId:job.id as string,href:job.input?.task==='audience_plan'?'/automations/new/ai?job='+encodeURIComponent(job.id):job.input?.task==='cadence_options'?'/cadences/new/ai?job='+encodeURIComponent(job.id):'/executions/'+encodeURIComponent(job.id)};
+}
+async function finish(p:Principal,id:string,requestId:string,e:{entityId:string;href:string}){
+ const done=await withWorkspaceTransaction(p,async c=>(await c.query("SELECT * FROM app.assistant_proposal_finish($1,'confirmed',$2,$3,$4)",[id,requestId,e.entityId,e.href])).rows[0] as Row);
+ return{proposal:proposalView(done),entityId:done.entity_id!,href:done.href!};
 }
 export async function confirmAssistantAction(p:Principal,id:string,raw:unknown):Promise<{proposal:AssistantProposal;entityId:string;href:string}>{
  const parsed=confirmSchema.safeParse(raw);if(!parsed.success)throw new AppError(422,'Revise a proposta antes de confirmar.');const body=parsed.data;
  try{
-  const claimed=await withWorkspaceTransaction(p,async c=>{const r=(await c.query('SELECT * FROM app.assistant_proposal_claim($1,$2)',[id,body.requestId])).rows[0] as Row;await authorized(c,p,r.kind);return r;});
-  if(claimed.state==='confirmed')return{proposal:proposalView(claimed),entityId:claimed.entity_id!,href:claimed.href!};
+  const current=await lock(p,id,true);
+  if(current.state==='confirmed'){if(current.confirm_request_id!==body.requestId)throw new AppError(409,'Esta proposta já foi confirmada.','PROPOSAL_DONE');return{proposal:proposalView(current),entityId:current.entity_id!,href:current.href!};}
+  if(current.confirm_request_id){const prior=await committed(p,current,current.confirm_request_id);if(prior)return finish(p,id,current.confirm_request_id,prior);}
+  const claimed=await withWorkspaceTransaction(p,async c=>(await c.query('SELECT * FROM app.assistant_proposal_claim($1,$2)',[id,body.requestId])).rows[0] as Row);
   let entityId:string,href:string;
   try{
    const u=await underlying(p,claimed);
    if(u.kind==='planning'){const job=await confirmPlanning(p,{requestId:body.requestId,input:u.input,reviewToken:body.token});entityId=job.id;href=(u.input.task==='audience_plan'?'/automations/new/ai?job=':'/cadences/new/ai?job=')+encodeURIComponent(job.id);}
    else if(u.kind==='job'){const job=await confirmJob(p,{requestId:body.requestId,input:u.input,reviewToken:body.token});entityId=job.id;href='/executions/'+encodeURIComponent(job.id);}
    else{verifyReviewToken(body.token,draftProof(p,claimed,u),secret());entityId=claimed.id;href=(u.channel==='EMAIL'?'/messages/email':'/messages/whatsapp')+'?conversation='+encodeURIComponent(u.conversationId)+'&draft='+encodeURIComponent(claimed.id);}
-  }catch(e){await withWorkspaceTransaction(p,c=>c.query('SELECT app.assistant_proposal_release($1,$2)',[id,body.requestId])).catch(()=>{});throw e;}
-  const done=await withWorkspaceTransaction(p,async c=>(await c.query("SELECT * FROM app.assistant_proposal_finish($1,'confirmed',$2,$3,$4)",[id,body.requestId,entityId,href])).rows[0] as Row);
-  return{proposal:proposalView(done),entityId:done.entity_id!,href:done.href!};
+  }catch(e){
+   // Release only when nothing was committed for this id; a committed job keeps the claim and is finished on retry.
+   if(!await committed(p,claimed,body.requestId).catch(()=>null))await withWorkspaceTransaction(p,c=>c.query('SELECT app.assistant_proposal_release($1,$2)',[id,body.requestId])).catch(()=>{});
+   throw e;
+  }
+  return finish(p,id,body.requestId,{entityId,href});
  }catch(e){throw proposalError(e);}
 }
 export async function cancelAssistantAction(p:Principal,id:string):Promise<AssistantProposal>{

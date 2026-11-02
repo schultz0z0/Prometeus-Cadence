@@ -21,16 +21,17 @@ export const assistantInputSchema=z.strictObject({
 });
 const nullable=(n:number)=>z.string().max(n).nullable();
 const flatProposal=z.strictObject({kind:z.string().max(60),description:nullable(1000),channel:nullable(20),listId:nullable(200),objective:nullable(100),channels:z.array(z.string().max(20)).max(2).nullable(),tone:nullable(100),conversationId:nullable(200),text:nullable(4000)});
-const outputSchema=z.strictObject({text:z.string().trim().min(1).max(4000),citations:z.array(z.strictObject({kind:z.string().max(20),id:z.string().max(100)})).max(10),proposal:flatProposal.nullable().optional()});
+const outputSchema=z.strictObject({text:z.string().trim().min(1).max(4000),citations:z.array(z.strictObject({kind:z.string().max(20),id:z.string().max(100)})).max(10),proposal:z.unknown().optional()});
 const str={type:['string','null']};
 // Strict structured output allows no free-form objects, so the proposal is flat with nullable fields.
 export const assistantOutputJsonSchema={type:'object',additionalProperties:false,required:['text','citations','proposal'],properties:{text:{type:'string'},citations:{type:'array',items:{type:'object',additionalProperties:false,required:['kind','id'],properties:{kind:{type:'string',enum:['help','fact']},id:{type:'string'}}}},
  proposal:{type:['object','null'],additionalProperties:false,required:['kind','description','channel','listId','objective','channels','tone','conversationId','text'],properties:{kind:{type:'string',enum:['create-audience-automation','create-cadence','qualify-list','draft-reply']},description:str,channel:str,listId:str,objective:str,channels:{type:['array','null'],items:{type:'string',enum:['EMAIL','WHATSAPP']}},tone:str,conversationId:str,text:str}}}};
 // Citations outside the supplied sources are dropped: the model cannot point at data it was not given.
 export function parseAssistantOutput(raw:unknown,sources:AssistantCitation[]|{kind:string;id:string}[]){
- const v=outputSchema.parse(raw),{kind,...fields}=v.proposal??{kind:''};
+ const v=outputSchema.parse(raw),flat=flatProposal.safeParse(v.proposal??null),proposal=flat.success?flat.data:null,{kind,...fields}=proposal??{kind:''};
+ // An invalid proposal is dropped on its own; the answer text still stands.
  return{text:v.text,citations:v.citations.filter(c=>sources.some(s=>s.kind===c.kind&&s.id===c.id)) as AssistantCitation[],
-  proposal:v.proposal?{kind,payload:Object.fromEntries(Object.entries(fields).filter(([,x])=>x!==null))}:null};
+  proposal:proposal?{kind,payload:Object.fromEntries(Object.entries(fields).filter(([,x])=>x!==null))}:null};
 }
 export function todayItems(f:AssistantFacts):TodayItem[]{
  if(!f.emailReady&&!f.whatsappReady)return[{id:'channel',title:'Falta conectar um canal',href:'/settings/email',action:'Conectar um canal',question:'Como conecto um canal de envio?',

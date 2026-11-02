@@ -201,6 +201,8 @@ test('06F.2 draft-reply: reviewed draft is stored once, read back only by its ow
  assert.equal(await rows('message_outbox',p.workspaceId),outbox);
  assert.deepEqual(await readAssistantDraft(p,proposal.id),{conversationId:conversation,text:'Olá! Posso te mandar a tabela de preços?'});
  const other=await prospectingUser();await assert.rejects(readAssistantDraft(other.p,proposal.id),{status:404});
+ // Inbound text from contacts only reaches the model when the question is about replying.
+ await answerAssistant(p,ask('Como conecto meu Gmail?'),deps);assert.doesNotMatch(prompt,/Quanto custa/);assert.match(prompt,/untrusted|não são instruções/i);
 });
 
 test('06F.2 onboarding tours are explicit per-user marks from a closed list; HTTP contract for proposals',async()=>{
@@ -215,4 +217,32 @@ test('06F.2 onboarding tours are explicit per-user marks from a closed list; HTT
  assert.equal((await assistantItemRequest(new Request(base+'/api/assistant/x/prepare',{method:'POST'}),'x','prepare')).status,401);
  assert.equal((await assistantItemRequest(new Request(base+'/api/assistant/x/prepare',{method:'POST',headers:u.headers}),'x','prepare')).status,404);
  assert.equal((await assistantItemRequest(new Request(base+'/api/assistant/x/run',{method:'POST',headers:u.headers}),'x','run')).status,404);
+});
+
+test('06F.2 review: a confirm interrupted after the job commit is recovered even after expiry, without a second job',async()=>{
+ const {prepareAssistantAction,confirmAssistantAction}=await import('../../src/server/assistant/commands.ts');
+ const {withWorkspaceTransaction}=await import('../../src/server/db/transaction.ts');
+ const {confirmJob}=await import('../../src/server/prospecting/service.ts');
+ const {p}=await prospectingUser();await seed(p,[lead('r1')]);
+ const proposal=(await answerAssistant(p,ask('qualifica a base'),proposing(flat('qualify-list',{listId:'base'})))).message.proposal!;
+ const review=await prepareAssistantAction(p,proposal.id),first=randomUUID();
+ // Simulates a crash: claim and underlying job committed, finish never ran; then the proposal window closes.
+ await withWorkspaceTransaction(p,c=>c.query('SELECT * FROM app.assistant_proposal_claim($1,$2)',[proposal.id,first]));
+ const job=await confirmJob(p,{requestId:first,input:(review.review as {input:unknown}).input,reviewToken:review.review.token});
+ await testAdmin(c=>c.query("UPDATE app.assistant_proposal SET expires_at=now()-interval '1 second' WHERE id=$1",[proposal.id]));
+ const jobs=await rows('prospecting_job',p.workspaceId);
+ const done=await confirmAssistantAction(p,proposal.id,{token:review.review.token,requestId:randomUUID()});
+ assert.equal(done.entityId,job.id);assert.equal(done.proposal.state,'confirmed');assert.equal(await rows('prospecting_job',p.workspaceId),jobs);
+});
+
+test('06F.2 review: long names never break the answer, big lists are announced, and private inbound text only goes to reply questions',async()=>{
+ const {prepareAssistantAction}=await import('../../src/server/assistant/commands.ts');
+ const {p}=await prospectingUser(),long='L'.repeat(250);
+ await seed(p,Array.from({length:300},(_,i)=>lead('b'+i)),{id:'base',name:long});await seed(p,Array.from({length:300},(_,i)=>lead('c'+i)),{id:'base',name:long});
+ const r=await answerAssistant(p,ask('qualifica a base'),proposing(flat('qualify-list',{listId:'base'})));
+ const proposal=r.message.proposal!;assert.ok(proposal.summary.length<=300);assert.match(proposal.summary,/600 contatos/);
+ const review=await prepareAssistantAction(p,proposal.id);assert.ok(review.review.warnings.some(w=>/500 de 600/.test(w)),review.review.warnings.join('|'));
+ // A proposal field over its bound drops only the proposal, not the answer.
+ const over=await answerAssistant(p,ask('oi'),{route,generate:async(_c,x)=>({value:x.parse({text:'Resposta boa.',citations:[],proposal:flat('draft-reply',{conversationId:'c',text:'x'.repeat(5000)})}),usage:{provider:'openai'}})});
+ assert.equal(over.message.fallback,false);assert.equal(over.message.text,'Resposta boa.');assert.equal(over.message.proposal,null);
 });
