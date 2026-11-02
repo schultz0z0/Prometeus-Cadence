@@ -171,3 +171,70 @@ test('review: a test is refused while the destination needs attention, failures 
  await testAdmin(c=>c.query("UPDATE app.webhook_destination SET attention='unauthorized' WHERE workspace_id=$1",[ws]));
  const [v]=await listWebhooks(p);await assert.rejects(webhookAction(p,d.id,{action:'test',expectedRevision:v.revision}),{status:409,code:'WEBHOOK_ATTENTION'});
 });
+
+// 07C.1b — public read API with scoped keys.
+const v1=async(path:string,token?:string,extra:Record<string,string>={})=>{const {apiLeadsRequest,apiEventsRequest}=await import('../../src/server/integrations/public-api.ts');const req=new Request(base+path,{headers:{...(token?{authorization:'Bearer '+token}:{}),...extra}});return path.startsWith('/api/v1/leads')?apiLeadsRequest(req):apiEventsRequest(req);};
+
+test('07C.1b keys: token shown once and stored as digest; scopes, pagination and tenant isolation; cookies never authenticate',async()=>{
+ const {createApiKey,listApiKeys}=await import('../../src/server/integrations/api-auth.ts');
+ const a=await prospectingUser(),b=await prospectingUser();
+ await seed(a.p,Array.from({length:5},(_,i)=>lead('k'+i)));await seed(b.p,[lead('theirs')]);
+ const {key,token}=await createApiKey(a.p,{name:'[RE] n8n',scopes:['leads:read']});
+ assert.match(token,/^pcak_/);assert.equal(key.prefix,token.slice(0,12));
+ assert.doesNotMatch(JSON.stringify(await listApiKeys(a.p)),new RegExp(token.slice(12)));
+ const stored=await testAdmin(async c=>(await c.query('SELECT digest FROM app.api_credential WHERE workspace_id=$1',[a.p.workspaceId])).rows[0].digest);
+ assert.notEqual(stored,token);assert.equal(stored.length,64);
+ const first=await v1('/api/v1/leads?limit=3',token);assert.equal(first.status,200);const one=await first.json();assert.equal(one.data.length,3);
+ const second=await (await v1('/api/v1/leads?limit=3&cursor='+one.nextCursor,token)).json();
+ const ids=[...one.data,...second.data].map((l:{id:string})=>l.id);assert.equal(new Set(ids).size,5);assert.ok(!ids.includes('theirs'));assert.equal(second.nextCursor,null);
+ const noScope=await v1('/api/v1/events',token);assert.equal(noScope.status,403);
+ assert.equal((await v1('/api/v1/leads')).status,401);assert.equal((await v1('/api/v1/leads')).headers.get('www-authenticate'),'Bearer');
+ assert.equal((await v1('/api/v1/leads',undefined,{cookie:a.headers.get('cookie')!})).status,401);
+ assert.equal((await v1('/api/v1/leads','pcak_'+'Z'.repeat(43))).status,401);
+ assert.equal((await v1('/api/v1/leads?limit=500',token)).status,422);
+});
+
+test('07C.1b rotation invalidates the old token at once, revocation ends the key, and a demoted or removed creator disables it',async()=>{
+ const {createApiKey,rotateApiKey,revokeApiKey,listApiKeys}=await import('../../src/server/integrations/api-auth.ts');
+ const u=await prospectingUser();await seed(u.p,[lead('r1')]);
+ const {key,token}=await createApiKey(u.p,{name:'[RE] CRM',scopes:['leads:read','events:read']});
+ const rotated=await rotateApiKey(u.p,key.id,{expectedRevision:key.revision});
+ assert.notEqual(rotated.token,token);assert.doesNotMatch(JSON.stringify(rotated),new RegExp(token.slice(12)));
+ assert.equal((await v1('/api/v1/leads',token)).status,401);assert.equal((await v1('/api/v1/leads',rotated.token)).status,200);
+ await assert.rejects(rotateApiKey(u.p,key.id,{expectedRevision:key.revision}),{status:409});
+ await testAdmin(c=>c.query(`UPDATE auth.member SET role='operator' WHERE "organizationId"=$1 AND "userId"=$2`,[u.p.workspaceId,u.p.userId]));
+ assert.equal((await v1('/api/v1/leads',rotated.token)).status,401);
+ await testAdmin(c=>c.query(`UPDATE auth.member SET role='owner' WHERE "organizationId"=$1 AND "userId"=$2`,[u.p.workspaceId,u.p.userId]));
+ assert.equal((await v1('/api/v1/leads',rotated.token)).status,200);
+ await revokeApiKey(u.p,key.id,{expectedRevision:rotated.key.revision});assert.equal((await v1('/api/v1/leads',rotated.token)).status,401);assert.deepEqual(await listApiKeys(u.p),[]);
+ const again=await createApiKey(u.p,{name:'[RE] outra',scopes:['leads:read']});
+ await testAdmin(c=>c.query('DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',[u.p.workspaceId,u.p.userId]));
+ assert.equal((await v1('/api/v1/leads',again.token)).status,401);
+});
+
+test('07C.1b events feed: recorded for an events:read key, own workspace only, cursor across pages; rate limit answers 429 with Retry-After',async()=>{
+ const {createApiKey}=await import('../../src/server/integrations/api-auth.ts');
+ const a=await prospectingUser(),b=await prospectingUser();
+ const {token}=await createApiKey(a.p,{name:'[RE] feed',scopes:['events:read']});const other=await createApiKey(b.p,{name:'[RE] b',scopes:['events:read']});
+ await seed(a.p,[lead('e1'),lead('e2'),lead('e3')]);await seed(b.p,[lead('x1')]);
+ const p1=await (await v1('/api/v1/events?limit=2',token)).json();const p2=await (await v1('/api/v1/events?limit=2&cursor='+p1.nextCursor,token)).json();
+ const ids=[...p1.data,...p2.data].map((e:{entity:{id:string}})=>e.entity.id).sort();assert.deepEqual(ids,['e1','e2','e3']);
+ assert.equal(p1.data[0].type,'lead.created');assert.equal(p1.data[0].idempotencyKey,p1.data[0].id);
+ const theirs=await (await v1('/api/v1/events',other.token)).json();assert.deepEqual(theirs.data.map((e:{entity:{id:string}})=>e.entity.id),['x1']);
+ // No consumer, no copy: a workspace without destinations or event keys records nothing.
+ const c=await prospectingUser();await seed(c.p,[lead('n1')]);assert.equal(await count('integration_event',c.p.workspaceId),0);
+ await testAdmin(x=>x.query("UPDATE app.api_rate SET hits=120 WHERE workspace_id=$1",[a.p.workspaceId]));
+ const limited=await v1('/api/v1/events',token);assert.equal(limited.status,429);assert.ok(Number(limited.headers.get('retry-after'))>=1);
+});
+
+test('07C.1b key management is owner/admin only and limited; HTTP contract',async()=>{
+ const {createApiKey}=await import('../../src/server/integrations/api-auth.ts');
+ const u=await prospectingUser(),v=await prospectingUser(),mate={...v.p,workspaceId:u.p.workspaceId,role:'operator' as const};
+ await testAdmin(c=>c.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),mate.workspaceId,mate.userId,'operator']));
+ await assert.rejects(createApiKey(mate,{name:'x',scopes:['leads:read']}),{status:403});
+ for(let n=0;n<10;n++)await createApiKey(u.p,{name:'K'+n,scopes:['leads:read']});
+ await assert.rejects(createApiKey(u.p,{name:'Onze',scopes:['leads:read']}),{status:409});
+ await assert.rejects(createApiKey(u.p,{name:'x',scopes:['leads:write']}),{status:422});
+ const created=await integrationsRequest(new Request(base+'/api/integrations',{method:'POST',headers:u.headers,body:JSON.stringify({action:'create-key',input:{name:'x',scopes:['leads:read']}})}));assert.equal(created.status,409);
+ const listed=await (await integrationsRequest(new Request(base+'/api/integrations',{headers:u.headers}))).json();assert.equal(listed.keys.length,10);assert.doesNotMatch(JSON.stringify(listed),/digest|pcak_[A-Za-z0-9_-]{20}/);
+});

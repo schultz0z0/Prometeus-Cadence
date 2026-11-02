@@ -41,3 +41,16 @@ test('07C.1 destination input is bounded and events are a closed list; delivery 
  assert.equal(deliveryFor({events:['lead.connected'],listIds:['b']},{type:'lead.connected',channel:'WHATSAPP',listId:'a'}),false);
  assert.equal(deliveryFor({events:['lead.created'],listIds:['a']},{type:'lead.created',listId:'a'}),true);
 });
+
+test('07C.1b bearer parsing accepts only well-formed API keys; scopes are a closed list',async()=>{
+ const {parseBearer,apiKeyInputSchema,apiScopes,tokenPrefix}=await import('../src/domain/api-credentials.ts');
+ const token='pcak_'+'A'.repeat(43);
+ assert.equal(parseBearer('Bearer '+token),token);assert.equal(parseBearer('bearer '+token),token);
+ assert.equal(parseBearer(null),null);assert.equal(parseBearer('Basic abc'),null);assert.equal(parseBearer('Bearer pcak_short'),null);assert.equal(parseBearer('Bearer '+token+' extra'),null);
+ assert.equal(tokenPrefix(token),'pcak_AAAAAAA');
+ assert.deepEqual([...apiScopes],['leads:read','events:read']);
+ assert.equal(apiKeyInputSchema.safeParse({name:'n8n',scopes:['leads:read']}).success,true);
+ assert.equal(apiKeyInputSchema.safeParse({name:'n8n',scopes:['leads:write']}).success,false);
+ assert.equal(apiKeyInputSchema.safeParse({name:'',scopes:['leads:read']}).success,false);
+ assert.equal(apiKeyInputSchema.safeParse({name:'n8n',scopes:[]}).success,false);
+});
