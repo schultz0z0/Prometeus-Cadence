@@ -185,3 +185,42 @@
 .privacy-reference .toggle-row > span { display:grid; gap:0; }
 .privacy-reference .toggle-row input[type=checkbox][role=switch] { width:44px; min-width:44px; height:24px; min-height:24px; padding:0; flex:none; }
 .lifecycle-footer .lifecycle-save.btn.primary { height:32px; min-height:32px; padding:0 12px; }
+/* 07C.1a: outbound webhooks list, dialog and delivery history. */
+.webhook-reference>header .grow{flex:1;min-width:0}
+.webhook-message{padding:12px 24px 0}
+.webhook-items{list-style:none;margin:0;padding:0}
+.webhook-items>li{border-top:1px solid var(--border);padding:16px 24px;display:grid;gap:10px}
+.webhook-items>li:first-child{border-top:0}
+.webhook-row{display:flex;gap:16px;align-items:flex-start;justify-content:space-between}
+.webhook-main{display:grid;gap:6px;min-width:0;flex:1}
+.webhook-title{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.875rem}
+.webhook-url{font-size:.75rem;color:var(--muted);font-family:ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.webhook-badges{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.webhook-count{display:inline-flex;align-items:center;gap:4px;font-size:.6875rem;color:var(--muted)}
+.webhook-actions{display:flex;align-items:center;gap:4px;flex:none}
+.webhook-actions input[role=switch]{margin-right:6px}
+.webhook-alert,.webhook-secret{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.75rem;border-radius:8px;padding:8px 10px}
+.webhook-alert{background:#fef2f2;color:#991b1b}
+.webhook-secret{background:var(--primary-subtle);color:var(--secondary)}
+.webhook-secret.muted{background:transparent;padding:0;color:var(--muted)}
+.webhook-alert>span,.webhook-secret>span{flex:1;min-width:180px}
+.webhook-secret code{font-size:.75rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:2px 6px;word-break:break-all}
+.webhook-history{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--background)}
+.webhook-history h4{display:flex;align-items:center;gap:6px;font-size:.75rem;margin:0 0 8px;color:var(--secondary)}
+.webhook-history p{font-size:.75rem;color:var(--muted);margin:0}
+.webhook-history ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.webhook-history li{display:grid;grid-template-columns:8px auto 1fr auto;gap:8px;align-items:center;font-size:.75rem}
+.webhook-history li small{grid-column:3/4;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.webhook-history li time{color:var(--muted);grid-row:1;grid-column:4}
+.webhook-history .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.webhook-history .delivered .dot{background:#16a34a}.webhook-history .failed .dot,.webhook-history .held .dot{background:#dc2626}.webhook-history .pending .dot,.webhook-history .delivering .dot{background:#f59e0b}
+.webhook-events{border:0;padding:0;margin:0;display:grid;gap:8px}
+.webhook-events legend{font-size:.875rem;font-weight:600;margin-bottom:6px}
+.webhook-events label{display:flex;gap:10px;align-items:flex-start;font-size:.8125rem}
+.webhook-events label span{display:grid;gap:1px}
+.webhook-events code{font-size:.6875rem;color:var(--muted)}
+.webhook-events.disabled{opacity:.6}
+.webhook-events.disabled p{font-size:.75rem;color:var(--muted);margin:0}
+.webhook-list-picks{display:grid;gap:6px;padding-left:24px;max-height:180px;overflow:auto}
+@media(max-width:700px){.webhook-row{flex-direction:column}.webhook-items>li{padding:14px 16px}}
+.webhook-reference>header .btn{min-height:32px;height:32px;padding:0 12px;font-size:.875rem}

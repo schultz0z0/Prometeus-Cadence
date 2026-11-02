@@ -897,7 +897,8 @@ kbd {
   display: block;
   margin-top: 3px;
 }
-.toggle-row input {
+.toggle-row input,
+.webhook-switch {
   appearance: none;
   width: 35px;
   height: 20px;
@@ -907,7 +908,8 @@ kbd {
   cursor: pointer;
   flex-shrink: 0;
 }
-.toggle-row input:after {
+.toggle-row input:after,
+.webhook-switch:after {
   content: "";
   height: 14px;
   width: 14px;
@@ -918,10 +920,12 @@ kbd {
   left: 3px;
   transition: transform 0.15s;
 }
-.toggle-row input:checked {
+.toggle-row input:checked,
+.webhook-switch:checked {
   background: var(--primary);
 }
-.toggle-row input:checked:after {
+.toggle-row input:checked:after,
+.webhook-switch:checked:after {
   transform: translateX(15px);
 }
 .mobile-menu {

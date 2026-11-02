@@ -108,6 +108,7 @@ import {
   Flame,
   LoaderCircle,
   Lightbulb,
+  KeyRound,
   CornerDownLeft,
   type LucideIcon,
 } from "lucide-react";
@@ -218,6 +219,7 @@ const icons: Record<string, LucideIcon> = {
   Flame,
   LoaderCircle,
   Lightbulb,
+  KeyRound,
   CornerDownLeft,
 };
 export function Icon({
