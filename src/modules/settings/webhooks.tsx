@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useIdentity} from '@/client/workspace-provider';
 import {useDemo} from '@/demo/provider';
+import {apiScopeLabels,apiScopes,MAX_API_KEYS,type ApiKeyView,type ApiScope} from '@/domain/api-credentials';
 import {agentEvents,MAX_DESTINATIONS,webhookEventLabels,webhookEvents,type DeliveryView,type WebhookEvent,type WebhookView} from '@/domain/integration-delivery';
 import {Badge,Button,Field,IconButton,Modal,Notice} from '@/components/ui/primitives';
 import {Icon} from '@/components/ui/icon';
@@ -66,13 +67,14 @@ function Deliveries({id}:{id:string}){
  </div>;
 }
 // Shown once, outside any live region (screen readers must not announce it); focus moves here when it appears.
-function SecretBanner({value,onClose}:{value:string;onClose:()=>void}){
+function SecretBanner({value,onClose,label='Segredo gerado'}:{value:string;onClose:()=>void;label?:string}){
  const ref=useRef<HTMLDivElement>(null);useEffect(()=>{ref.current?.focus();},[]);
- return <div className="webhook-secret shown" tabIndex={-1} ref={ref} aria-label="Segredo gerado"><span>Segredo gerado. Copie agora: ele aparece uma vez só.</span><code>{value}</code><Button variant="compact" onClick={()=>void navigator.clipboard?.writeText(value)}>Copiar</Button><Button variant="compact ghost" onClick={onClose}>Fechar</Button></div>;
+ return <div className="webhook-secret shown" tabIndex={-1} ref={ref} aria-label={label}><span>{label}. Copie agora: ele aparece uma vez só.</span><code>{value}</code><Button variant="compact" onClick={()=>void navigator.clipboard?.writeText(value)}>Copiar</Button><Button variant="compact ghost" onClick={onClose}>Fechar</Button></div>;
 }
 export function WebhookSettings(){
  const api=useApi(),{lists}=useDemo(),[items,setItems]=useState<WebhookView[]|null>(null),[error,setError]=useState(''),[form,setForm]=useState<{initial:Draft;editing:WebhookView|null}|null>(null),[open,setOpen]=useState(''),[busy,setBusy]=useState(''),[secrets,setSecrets]=useState<Record<string,string>>({}),[message,setMessage]=useState(''),[confirmDelete,setConfirmDelete]=useState<WebhookView|null>(null),[rotate,setRotate]=useState<WebhookView|null>(null);
- const load=useCallback(()=>{setError('');api<{webhooks:WebhookView[]}>('/api/integrations').then(r=>setItems(r.webhooks)).catch(e=>setError(e.message));},[api]);
+ const [keys,setKeys]=useState<ApiKeyView[]|null>(null);
+ const load=useCallback(()=>{setError('');api<{webhooks:WebhookView[];keys:ApiKeyView[]}>('/api/integrations').then(r=>{setItems(r.webhooks);setKeys(r.keys);}).catch(e=>setError(e.message));},[api]);
  useEffect(load,[load]);
  const listName=(id:string)=>lists.find(l=>l.id===id)?.name??'Lista removida';
  async function act(w:WebhookView,action:string){
@@ -110,8 +112,46 @@ export function WebhookSettings(){
      {open===w.id&&<Deliveries key={w.id+':'+w.revision+':'+w.deliveries} id={w.id}/>}
     </li>)}</ul>}
   </section>
+  <ApiKeys keys={keys} onChanged={load} loadError={error}/>
   {form&&<WebhookForm initial={form.initial} editing={form.editing} onClose={()=>setForm(null)} onSaved={()=>{setForm(null);load();}}/>}
   {rotate&&<Modal title="Gerar um segredo novo?" description={rotate.name} onClose={()=>setRotate(null)}><div className="stack"><p>O segredo atual deixa de valer na hora: o sistema que recebe precisa do novo para conferir as próximas entregas.</p><div className="form-actions"><Button type="button" onClick={()=>setRotate(null)}>Cancelar</Button><Button type="button" variant="primary" onClick={()=>{const w=rotate;setRotate(null);void act(w,'secret');}}>Gerar novo</Button></div></div></Modal>}
   {confirmDelete&&<Modal title="Excluir este webhook?" description={confirmDelete.name} onClose={()=>setConfirmDelete(null)}><div className="stack"><p>As entregas pendentes são canceladas e o histórico deste destino é apagado.</p><div className="form-actions"><Button type="button" onClick={()=>setConfirmDelete(null)}>Cancelar</Button><Button type="button" variant="danger" onClick={()=>{const w=confirmDelete;setConfirmDelete(null);void act(w,'delete');}}>Excluir</Button></div></div></Modal>}
  </div>;
+}
+// Read-only API keys (own design: the reference shows no API keys). The token appears once, after creating or rotating.
+function ApiKeys({keys,onChanged,loadError}:{keys:ApiKeyView[]|null;onChanged:()=>void;loadError:string}){
+ const api=useApi(),[form,setForm]=useState(false),[name,setName]=useState(''),[scopes,setScopes]=useState<ApiScope[]>(['leads:read']),[busy,setBusy]=useState(false),[error,setError]=useState(''),[token,setToken]=useState(''),[confirm,setConfirm]=useState<{key:ApiKeyView;op:'rotate'|'revoke'}|null>(null);
+ async function create(){
+  if(!name.trim()||!scopes.length)return setError('Dê um nome e escolha pelo menos um escopo.');
+  setBusy(true);setError('');
+  try{const r=await api<{token:string}>('/api/integrations',{action:'create-key',input:{name:name.trim(),scopes}});setToken(r.token);setForm(false);setName('');onChanged();}
+  catch(e){setError((e as Error).message);}finally{setBusy(false);}
+ }
+ async function run(key:ApiKeyView,op:'rotate'|'revoke'){
+  setBusy(true);setError('');
+  try{const r=await api<{token?:string}>(`/api/integrations/${key.id}/key-${op}`,{expectedRevision:key.revision});if(r.token)setToken(r.token);onChanged();}
+  catch(e){setError((e as Error).message);onChanged();}finally{setBusy(false);}
+ }
+ const date=(v:string)=>new Date(v).toLocaleDateString('pt-BR');
+ return <section className="reference-panel webhook-reference api-keys"><header><Icon name="KeyRound"/><div className="grow"><h2>API de leitura</h2><p>Leia leads e eventos de outros sistemas com <code>Authorization: Bearer</code>. Somente leitura, até 120 requisições por minuto por chave.</p></div>
+  <Button variant="primary" icon="Plus" disabled={!keys||keys.length>=MAX_API_KEYS||busy} onClick={()=>{setForm(true);setError('');}}>Nova chave</Button></header>
+  {token&&<div className="webhook-message"><SecretBanner value={token} label="Chave criada" onClose={()=>setToken('')}/></div>}
+  {error&&!form&&<div className="webhook-message"><Notice tone="error">{error}</Notice></div>}
+  {loadError?null:!keys?<div className="reference-empty" role="status"><p>Carregando chaves…</p></div>
+  :!keys.length?<div className="reference-empty"><Icon name="KeyRound" size={28}/><strong>Nenhuma chave</strong><p>Crie uma para consultar <code>GET /api/v1/leads</code> e <code>GET /api/v1/events</code> do seu CRM ou automação.</p></div>
+  :<ul className="webhook-items">{keys.map(k=><li key={k.id}><div className="webhook-row"><div className="webhook-main">
+    <div className="webhook-title"><strong>{k.name}</strong></div><span className="webhook-url">{k.prefix}…</span>
+    <div className="webhook-badges">{k.scopes.map(sc=><Badge key={sc} tone="orange">{apiScopeLabels[sc]}</Badge>)}<span className="webhook-count">Criada em {date(k.createdAt)} · {k.lastUsedAt?'último uso '+date(k.lastUsedAt):'nunca usada'}</span></div>
+   </div><div className="webhook-actions"><Button variant="compact" disabled={busy} onClick={()=>setConfirm({key:k,op:'rotate'})}>Gerar nova</Button><Button variant="compact ghost" disabled={busy} onClick={()=>setConfirm({key:k,op:'revoke'})}>Revogar</Button></div></div></li>)}</ul>}
+  {form&&<Modal title="Nova chave de API" description="A chave aparece uma vez só. Guarde no sistema que vai consultar a API." onClose={()=>{if(!busy)setForm(false);}}><div className="stack">
+   <Field label="Nome"><input data-autofocus value={name} maxLength={60} onChange={e=>{setName(e.target.value);setError('');}} placeholder="Ex.: n8n, planilha, CRM"/></Field>
+   <fieldset className="webhook-events"><legend>Escopos</legend>{apiScopes.map(sc=><label key={sc}><input type="checkbox" checked={scopes.includes(sc)} onChange={()=>setScopes(v=>v.includes(sc)?v.filter(x=>x!==sc):[...v,sc])}/><span><code>{sc}</code>{apiScopeLabels[sc]}</span></label>)}</fieldset>
+   {error&&<Notice tone="error">{error}</Notice>}
+   <div className="form-actions"><Button type="button" disabled={busy} onClick={()=>setForm(false)}>Cancelar</Button><Button type="button" variant="primary" disabled={busy} onClick={()=>void create()}>{busy?'Criando…':'Criar chave'}</Button></div>
+  </div></Modal>}
+  {confirm&&<Modal title={confirm.op==='rotate'?'Gerar uma chave nova?':'Revogar esta chave?'} description={confirm.key.name} onClose={()=>setConfirm(null)}><div className="stack">
+   <p>{confirm.op==='rotate'?'A chave atual para de funcionar na hora. Atualize o sistema que consulta a API com a nova.':'A chave para de funcionar na hora e não pode ser reativada.'}</p>
+   <div className="form-actions"><Button type="button" onClick={()=>setConfirm(null)}>Cancelar</Button><Button type="button" variant={confirm.op==='rotate'?'primary':'danger'} onClick={()=>{const c=confirm;setConfirm(null);void run(c.key,c.op);}}>{confirm.op==='rotate'?'Gerar nova':'Revogar'}</Button></div>
+  </div></Modal>}
+ </section>;
 }

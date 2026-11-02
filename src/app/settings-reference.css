@@ -224,3 +224,4 @@
 .webhook-list-picks{display:grid;gap:6px;padding-left:24px;max-height:180px;overflow:auto}
 @media(max-width:700px){.webhook-row{flex-direction:column}.webhook-items>li{padding:14px 16px}}
 .webhook-reference>header .btn{min-height:32px;height:32px;padding:0 12px;font-size:.875rem}
+.api-keys{margin-top:24px}.api-keys header code,.api-keys .reference-empty code{font-size:.75rem;background:var(--background);border:1px solid var(--border);border-radius:4px;padding:0 4px}
