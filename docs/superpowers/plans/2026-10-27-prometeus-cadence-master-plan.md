@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **06E.2** (atualizado02/11).
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **06F** (atualizado02/11).
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -26,7 +26,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 06C.2 | Dashboard, relatórios e execuções reconciliados | 06D.2, 06B.5, 06C.1 | [tarefas](2026-10-27-prometeus-cadence-06c2-reconciled-reports.md) | Concluído local/controlado29/10; [aceite](../../validation/06c2-reconciled-reports.md) |
 | 06C.3 | Notificações, preferências e resumos | 06C.2 | [tarefas](2026-10-27-prometeus-cadence-06c3-notifications.md) | Concluído local/controlado30/10; [aceite](../../validation/06c3-notifications.md) |
 | 06E.1 | Autenticador, sessões e administração de membros | 02, 06A-P, 06A-H | [tarefas](2026-10-27-prometeus-cadence-06e1-security-members.md) | Concluído local/controlado02/11; [aceite](../../validation/06e1-security-members.md) |
-| 06E.2 | Duplicados, fusão, privacidade e ciclo dos dados | 06E.1, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-06e2-data-lifecycle.md) | Planejado; não executado |
+| 06E.2 | Duplicados, fusão, privacidade e ciclo dos dados | 06E.1, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-06e2-data-lifecycle.md) | Concluído local/controlado02/11; [aceite](../../validation/06e2-data-lifecycle.md) |
 | 06F | Assistente, busca, onboarding e ajuda | 06C.3, 06E.2, 06IA | [tarefas](2026-10-27-prometeus-cadence-06f-assistant-experience.md) | Planejado; não executado |
 | 07C.1 | API, eventos e webhooks de saída | 06E.2, 06C.2 | [tarefas](2026-10-27-prometeus-cadence-07c1-api-webhooks.md) | Planejado; não executado |
 | 07C.2 | Conectores de cliente e agenda/CRM | 07C.1 | [tarefas](2026-10-27-prometeus-cadence-07c2-customer-connectors.md) | Planejado; não executado |
@@ -108,3 +108,5 @@ Continuidade06IA-H em28/10: 351/351 unitários,421/421 integrações completas,1
 Continuidade06C.3 em30/10:363unitários/447integrações/15focadas,48capturas mascaradas, uma revisão independente e sete Important corrigidos com RED→GREEN. Um menor de prova positiva de isolamento semanal→08A. Preferências/feed/resumos privados e serviço contínuo; entrega externa/políticas da referência não observadas seguem gates. Próximo06E.1 — autenticador, sessões e membros. [Aceite](../../validation/06c3-notifications.md).
 
 Continuidade06E.1 em02/11: TOTP/backup BetterAuth com guardas de prova/replay, sessões pendentes bloqueadas em todas as entradas, convites/papéis/remoção serializados com revisão/idempotência e último owner por trigger. 466/466 integrações; uma revisão independente/um Important corrigido RED→GREEN; dois menores→08A. Diferenças de código por e-mail/confiança30dias/senha8 da referência permanecem na matriz08A. Próximo06E.2 — duplicados, fusão, privacidade e ciclo dos dados. [Aceite](../../validation/06e1-security-members.md).
+
+Continuidade06E.2 em02/11: duplicados por chave forte na base inteira, fusão revisada por grupo com consentimento mais restritivo e desfazer de7 dias com 409 sobre trabalho novo; retenção do texto somente do dono com APAGAR e purga em lotes; exclusão com tombstone sem conteúdo e purga de IA. 477/477 integrações; uma revisão independente/seis Important corrigidos RED→GREEN (092a); menores→08A. Exportação privada do desenho não implementada e não anunciada. Próximo06F — assistente, busca, onboarding e ajuda. [Aceite](../../validation/06e2-data-lifecycle.md).

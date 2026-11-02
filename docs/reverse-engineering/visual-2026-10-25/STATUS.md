@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-02 · Session: s18 · Phase:6 Segurança/membros06E.1 concluídos local/controlado; próximo06E.2; paridade integral não aceita
+Updated: 2026-11-02 · Session: s19 · Phase:6 Duplicados/privacidade06E.2 concluídos local/controlado; próximo06F; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s19:06E.2 com fluxos da referência lidos do cliente preservado (sem escrita L4), geometria medida 1920/390/320 e QA local L028removed;0envios/chamadas pagas. Revisão independente: seis Important corrigidos RED→GREEN (092a). 477/477 integrações. EV-281. Próximo06F.
+- Not covered s19: backend da referência para fusão/desfazer/purga; capturas de tela (painel oculto); exportação privada.
 
 - Covered s18:06E.1 com RESL4/REA passivo em Segurança/Membros/login/reset,15capturas da referência e47locais mascaradas. QA local L026removed/L027restored;0envios/chamadas pagas. Revisão independente02/11: um Important corrigido RED→GREEN, dois menores→08A. 466/466 integrações. EV-280. Próximo06E.2.
 - Not covered s18: popup de pareamento/backup/convite válido/múltiplos membros da referência; código por e-mail e confiança30dias anunciados pela referência não implementados.
@@ -66,6 +69,8 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 - Decide: nenhuma decisão comercial reaberta; preservar trial7 dias, créditos pré-pagos, OpenWA gerenciado e billing aprovado. Sem100% e sem aceite do marco enquanto restar cobertura exigida.
 
 ## Next actions
+
+Fila vigente s19:06F — assistente, busca, onboarding e ajuda.06E.2 concluído local/controlado; exportação privada e menores→08A.
 
 Fila vigente s18:06E.2 — duplicados, fusão, privacidade e ciclo dos dados.06E.1 concluído local/controlado; diferenças de2FA da referência→08A.
 

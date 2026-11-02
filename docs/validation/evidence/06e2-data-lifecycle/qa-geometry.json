@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-02",
+  "environment": "localhost:3210 next dev, disposable QA identity and workspace with [RE] fake contacts (ledger L-028, removed after QA)",
+  "method": "DOM getBoundingClientRect in the built-in browser; reference values from EV-222/EV-252 and EV-248 (same 1920x855 viewport). The browser pane was hidden, so no screenshots were archived for this package.",
+  "reference": {
+    "settings/dados": {"panel1": [532, 80, 1152, 210], "panel2": [532, 314, 1152, 137], "searchButton": [553, 176, 189, 36]},
+    "settings/privacy": {"panel": [532, 194, 1152, 438], "switch": [553, 310, 44, 24], "warning": [553, 368, 1110, 186], "save": [1583, 587, 80, 32]},
+    "settings/seats": {"panel1": [532, 194, 1152, 189]}
+  },
+  "local_1920x855": {
+    "settings/dados": {"panel1": [532, 116, 1152, 210], "panel2": [532, 350, 1152, 137], "searchButton": [553, 212, 181, 36], "gapBetweenPanels": 24},
+    "settings/privacy": {"panel": [532, 194, 1152, 418], "switchRow": [553, 308, 1110, 40], "switch": [557, 311, 44, 24], "warning": [553, 368, 1110, 166], "save": [1571, 567, 92, 32]},
+    "settings/seats": {"panel1": [532, 194, 1152, 191]}
+  },
+  "differences": [
+    "dados panels start 36px lower than EV-222 while seats/privacy panels match exactly; the cause was not isolated (candidate: trial banner state at capture time). Heights, widths and inter-panel gap match.",
+    "privacy warning is 20px shorter because the bullets were adapted: the reference mentions LinkedIn, Chatwoot and the SDR agent, which do not exist in Prometeus; the backup-copy sentence does not promise a 30-day window the product has not verified.",
+    "privacy save button is 12px narrower (label width) and the switch sits 4px right of the reference (input inset)."
+  ],
+  "responsive": {
+    "390x844": {"dados": {"scrollWidth": 390, "overflowingElements": 0, "groupsListed": 2}, "privacy": {"scrollWidth": 390, "panelWidth": 358, "overflowingElements": 0}},
+    "320x844": {"dados": {"scrollWidth": 320, "overflowingElements": 0}, "privacy": {"scrollWidth": 320, "overflowingElements": 0}}
+  },
+  "journey": [
+    "scan on mount showed '3 grupos possíveis' (CNPJ, e-mail, telefone); equal name+city+site pair was not grouped",
+    "merged 2 of 3 groups after review dialog; DB: target kept own e-mail and received empty phone/site; second target kept its own e-mail",
+    "undo of the CNPJ merge restored the contact, summary returned to 2 groups, history shows 'desfeita'",
+    "privacy: enabling 30/90 required typing APAGAR; badge 'Ligada' and author/date note persisted after reload; lengthening to 60 saved without confirmation; shortening opened 'Encurtar o prazo e apagar mais texto?' with focus in the confirmation field after the Modal fix"
+  ],
+  "findings_during_qa": [
+    "Modal.showModal stole focus from the confirmation input (React autoFocus renders no attribute); fixed with [data-autofocus] in the shared Modal",
+    "first panel needed the always-rendered SecaoConfig footer to reach 210px; privacy needed block layout (not grid) to start at y=194"
+  ]
+}

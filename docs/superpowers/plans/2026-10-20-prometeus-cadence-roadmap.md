@@ -182,3 +182,7 @@ Notificações, preferências e resumos concluídos local/controlado:363unitári
 ### Continuidade02/11 —06E.1
 
 Autenticador, sessões e administração de membros concluídos local/controlado: TOTP/backup BetterAuth com guardas próprias, sessão pendente bloqueada em app/API/transação, convites com assento sob lock e papéis/remoção com revisão, idempotência e último owner por trigger. 466/466 integrações;62capturas mascaradas; uma revisão independente e um Important corrigido RED→GREEN. QA L026removed/L027restored;0envios externos/chamadas pagas. Dois menores→08A; diferenças da referência (código por e-mail, confiança30dias, senha8) preservadas na matriz08A. [Aceite](../../validation/06e1-security-members.md). Próximo **06E.2 — duplicados, fusão, privacidade e ciclo dos dados**.
+
+### Continuidade02/11 —06E.2
+
+Duplicados, fusão, privacidade e ciclo dos dados concluídos local/controlado: varredura da base inteira por CNPJ/e-mail/telefone, fusão revisada que mantém o mais antigo, move vínculos e preserva opt-out, desfazer de7 dias só com bases intactas; retenção do texto das mensagens (30/90 dias mínimos da referência, dono, APAGAR) executada pelo runtime; exclusão com tombstone e purga de conteúdo de IA. 477/477 integrações; uma revisão independente e seis Important corrigidos RED→GREEN. QA L028removed;0envios/chamadas pagas. Exportação privada→pendência explícita. [Aceite](../../validation/06e2-data-lifecycle.md). Próximo **06F — assistente, busca, onboarding e ajuda**.

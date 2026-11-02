@@ -11,7 +11,9 @@ const secret=()=>{if(!process.env.BETTER_AUTH_SECRET)throw Error('Review signing
 const failures:Record<string,[number,string]>={
  LIFECYCLE_ACCESS:[403,'Você não tem mais acesso a este workspace.'],
  MERGE_CHANGED:[409,'Os contatos mudaram desde a busca. Procure duplicados de novo.'],
- MERGE_INVALID:[422,'Grupo de fusão inválido.'],
+ MERGE_INVALID:[422,'Grupo de fusão inválido. O contato mais antigo do grupo é o que fica.'],
+ MERGE_CONFLICT_CADENCE_ACTIVE:[409,'Um contato que seria apagado está em uma cadência ativa. Espere ela terminar ou pare a matrícula antes de fundir.'],
+ MERGE_CONFLICT_CONSENT:[409,'Um contato que seria apagado pediu descadastro por um telefone que o contato principal não compartilha. Revise-os manualmente para não perder o descadastro.'],
  MERGE_REPLAY_CHANGED:[409,'Esta operação já foi utilizada com outros dados.'],
  MERGE_CONFLICT_CADENCE:[409,'Dois contatos do grupo estão na mesma cadência. Remova um deles da cadência antes de fundir.'],
  MERGE_CONFLICT_ENRICHMENT:[409,'Mais de um contato do grupo veio do enriquecimento de decisores. Revise-os manualmente.'],
@@ -53,9 +55,9 @@ export async function confirmMerge(p:Principal,raw:unknown){
  const parsed=mergeConfirmSchema.safeParse(raw);if(!parsed.success)throw new AppError(422,'Revise os grupos antes de fundir.');const body=parsed.data;
  requirePermission(p,'data.write');
  await withWorkspaceTransaction(p,async c=>{const b=await basis(c,body.groups);
-  // A replay after success finds the merged sources gone; the merge records themselves prove it.
-  const done=(await c.query('SELECT count(*)::int n FROM app.merge_record WHERE request_id=$1 AND actor_id=$2',[body.requestId,p.userId])).rows[0].n;
-  if(!done){try{verifyReviewToken(body.token,proof(p,body.groups,b.hash),secret());}catch{throw new AppError(409,'Os contatos mudaram desde a revisão. Procure duplicados de novo.','MERGE_CHANGED');}if(b.blockers.length)throw new AppError(409,b.blockers[0],'MERGE_CHANGED');}
+  // A replay after success finds the merged sources gone; only records of every requested group prove it was reviewed.
+  const done=(await c.query('SELECT count(*)::int n FROM app.merge_record WHERE request_id=$1 AND actor_id=$2 AND target_id=ANY($3::text[])',[body.requestId,p.userId,body.groups.map(g=>g.targetId)])).rows[0].n;
+  if(done!==body.groups.length){try{verifyReviewToken(body.token,proof(p,body.groups,b.hash),secret());}catch{throw new AppError(409,'Os contatos mudaram desde a revisão. Procure duplicados de novo.','MERGE_CHANGED');}if(b.blockers.length)throw new AppError(409,b.blockers[0],'MERGE_CHANGED');}
  });
  const merged:string[]=[],failed:{targetId:string;message:string}[]=[];
  // One transaction per group: a conflicting group fails alone and never leaves a partial merge.

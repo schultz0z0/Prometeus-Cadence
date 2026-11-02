@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "06E.2",
+  "next": "06F",
   "end": "08B",
   "packages": [
     {
@@ -532,7 +532,14 @@
         "/settings/privacy",
         "/contacts",
         "/leads/[id]"
-      ]
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-02",
+      "review": "docs/validation/06e2-data-lifecycle-review.md",
+      "followUpMigrations": [
+        "db/migrations/092a-data-lifecycle-review.sql"
+      ],
+      "deferredMinorOwner": "08A"
     },
     {
       "id": "06F",

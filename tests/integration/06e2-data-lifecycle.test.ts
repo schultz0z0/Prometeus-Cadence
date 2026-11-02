@@ -61,14 +61,15 @@ test('merge fills empty fields, moves links, extends opt-out, replays without ne
  await assert.rejects(undoMerge(p,result.mergeIds[0],{requestId:randomUUID()}),{status:409,code:'MERGE_ALREADY_UNDONE'});
 });
 
-test('the most restrictive consent survives a merge and is removed again by undo',async()=>{
+test('the most restrictive consent survives a merge and is kept after undo',async()=>{
  const{p}=await prospectingUser(),ws=p.workspaceId;
  await seed(p,[lead('t','base',day(0),{cnpj:'12.345.678/0001-95',email:'t@example.com'})]);await seed(p,[lead('s','other',day(1),{cnpj:'12345678000195',email:'s@example.com'})],other);
  const sid=randomUUID();await testAdmin(async c=>{await c.query("INSERT INTO app.channel_identity(workspace_id,id,scope,external_id) VALUES($1,$2,'email','s@example.com')",[ws,sid]);await c.query("INSERT INTO app.contact_suppression(workspace_id,identity_id,scope,reason) VALUES($1,$2,'all','QA opt-out')",[ws,sid]);});
  const{result}=await merge(p,[{targetId:'t',sourceIds:['s'],kind:'cnpj',value:'12345678000195'}]);
  const suppressed=()=>testAdmin(async c=>Number((await c.query("SELECT count(*) FROM app.contact_suppression cs JOIN app.channel_identity ci ON ci.workspace_id=cs.workspace_id AND ci.id=cs.identity_id WHERE cs.workspace_id=$1 AND ci.external_id='t@example.com'",[ws])).rows[0].count));
  assert.equal(await suppressed(),1);
- await undoMerge(p,result.mergeIds[0],{requestId:randomUUID()});assert.equal(await suppressed(),0);
+ // An opt-out arriving after the merge collides with the merge row; undo must never lift a suppression.
+ await undoMerge(p,result.mergeIds[0],{requestId:randomUUID()});assert.equal(await suppressed(),1);
  assert.equal(await testAdmin(async c=>Number((await c.query("SELECT count(*) FROM app.contact_suppression WHERE workspace_id=$1 AND identity_id=$2",[ws,sid])).rows[0].count)),1);
 });
 
@@ -146,4 +147,55 @@ test('HTTP contract: anonymous 401, wrong workspace 409, invalid input 422 and i
  const requestId=randomUUID(),undo=()=>dataLifecycleItemRequest(new Request(base+'/api/data-lifecycle/'+done.mergeIds[0]+'/undo',{method:'POST',headers,body:JSON.stringify({requestId})}),done.mergeIds[0],'undo');
  assert.equal((await undo()).status,200);assert.equal((await undo()).status,200);
  const merges=await(await dataLifecycleRequest(new Request(base+'/api/data-lifecycle?view=merges',{headers}))).json();assert.equal(merges.merges[0].state,'undone');
+});
+
+const replica=<T>(fn:(c:import('pg').PoolClient)=>Promise<T>)=>testAdmin(async c=>{await c.query("SET session_replication_role=replica");try{return await fn(c);}finally{await c.query("SET session_replication_role=origin");}});
+
+test('deleting an enriched company keeps the decision-maker deliveries that reference its resolution',async()=>{
+ const{p}=await prospectingUser(),ws=p.workspaceId;await seed(p,[lead('company','base',day(0),{cnpj:'11222333000181'}),lead('person','base',day(1),{email:'p@example.com'})]);
+ const jobId=await job(ws,p.userId),res=randomUUID();
+ await replica(async c=>{await c.query("INSERT INTO app.enrichment_resolution(workspace_id,id,cnpj,contract,job_id,lead_id,people,expires_at) VALUES($1,$2,'11222333000181','qa',$3,'company','[]',now()+interval '1 day')",[ws,res,jobId]);
+  await c.query("INSERT INTO app.enrichment_delivery(workspace_id,job_id,cache_id,person_key,lead_id,list_id,payload) VALUES($1,$2,$3,'k','person','base','{}')",[ws,jobId,res]);});
+ const s=await readWorkspaceSnapshot(p);await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'leads.delete',ids:['company']}});
+ assert.deepEqual((await readWorkspaceSnapshot(p)).data.leads.map(l=>l.id),['person']);
+});
+
+test('undo restores dropped automation assignments, applied people and list identities exactly',async()=>{
+ const{p}=await prospectingUser(),ws=p.workspaceId;
+ await seed(p,[lead('t','base',day(0),{email:'same@example.com'})]);await seed(p,[lead('s','other',day(1),{email:'same@example.com',phone:'+5511977776666'})],other);
+ const identities=()=>testAdmin(async c=>(await c.query("SELECT list_id,identity FROM app.lead_identity WHERE workspace_id=$1 AND lead_id='s' ORDER BY 1,2",[ws])).rows);
+ const before=await identities(),jobId=await job(ws,p.userId),occ=randomUUID(),caseId=randomUUID(),person=randomUUID();
+ await replica(async c=>{
+  await c.query("INSERT INTO app.automation(workspace_id,id,list_id,payload) VALUES($1,'auto','base','{}')",[ws]);
+  await c.query("INSERT INTO app.automation_definition(workspace_id,automation_id,revision,payload) VALUES($1,'auto',1,'{}')",[ws]);
+  await c.query("INSERT INTO app.automation_occurrence(workspace_id,id,automation_id,definition_revision,authorization_id,origin,scheduled_at,state) VALUES($1,$2,'auto',1,'qa','manual',now(),'completed')",[ws,occ]);
+  for(const id of['t','s'])await c.query("INSERT INTO app.automation_lead_assignment(workspace_id,automation_id,lead_id,definition_revision,contract_version,occurrence_id,state) VALUES($1,'auto',$2,1,'qa',$3,'attempted')",[ws,id,occ]);
+  await c.query("INSERT INTO app.research_case(workspace_id,id,job_id,lead_id,case_version,name,basis) VALUES($1,$2,$3,'t',1,'Caso','{}')",[ws,caseId,jobId]);
+  await c.query("INSERT INTO app.research_person_company(workspace_id,case_id,person_id,relationship,current_state,applied_lead_id,applied_payload,applied_list_id) VALUES($1,$2,$3,'partner','supported','s','{}','other')",[ws,caseId,person]);
+ });
+ const assignment=()=>testAdmin(async c=>(await c.query("SELECT lead_id,definition_revision::int,contract_version,occurrence_id,state FROM app.automation_lead_assignment WHERE workspace_id=$1 ORDER BY lead_id",[ws])).rows);
+ const applied=()=>testAdmin(async c=>(await c.query("SELECT applied_lead_id FROM app.research_person_company WHERE workspace_id=$1",[ws])).rows[0].applied_lead_id);
+ const original=await assignment();assert.equal(original.length,2);
+ const{result}=await merge(p,[{targetId:'t',sourceIds:['s'],kind:'email',value:'same@example.com'}]);assert.equal(result.merged,1);
+ assert.equal(await applied(),'t');
+ await undoMerge(p,result.mergeIds[0],{requestId:randomUUID()});
+ assert.deepEqual(await assignment(),original);assert.equal(await applied(),'s');assert.deepEqual(await identities(),before);
+});
+
+test('a suppressed phone that cannot follow to the target blocks that group instead of losing the opt-out',async()=>{
+ const{p}=await prospectingUser(),ws=p.workspaceId;
+ await seed(p,[lead('t','base',day(0),{email:'x@example.com',phone:'+5511911112222'})]);await seed(p,[lead('s','other',day(1),{email:'x@example.com',phone:'+5511933334444'})],other);
+ const id=randomUUID();await testAdmin(async c=>{await c.query("INSERT INTO app.channel_identity(workspace_id,id,scope,external_id,phone) VALUES($1,$2,'openwa:qa','5511933334444','+5511933334444')",[ws,id]);await c.query("INSERT INTO app.contact_suppression(workspace_id,identity_id,scope,reason) VALUES($1,$2,'all','QA opt-out')",[ws,id]);});
+ const{result}=await merge(p,[{targetId:'t',sourceIds:['s'],kind:'email',value:'x@example.com'}]);
+ assert.equal(result.merged,0);assert.match(result.failures[0].message,/descadastr/i);
+});
+
+test('a replayed request id cannot merge groups that were never reviewed, and the oldest contact must stay',async()=>{
+ const{p}=await prospectingUser();
+ await seed(p,[lead('a1','base',day(0),{email:'a@example.com'}),lead('b1','base',day(0),{email:'b@example.com'})]);await seed(p,[lead('a2','other',day(1),{email:'a@example.com'}),lead('b2','other',day(1),{email:'b@example.com'})],other);
+ const{requestId,review}=await merge(p,[{targetId:'a1',sourceIds:['a2'],kind:'email',value:'a@example.com'}]);
+ await assert.rejects(confirmMerge(p,{groups:[{targetId:'b1',sourceIds:['b2'],kind:'email',value:'b@example.com'}],token:review.token,requestId}),{status:409});
+ const newer=await prepareMerge(p,{groups:[{targetId:'b2',sourceIds:['b1'],kind:'email',value:'b@example.com'}]});
+ const r=await confirmMerge(p,{groups:[{targetId:'b2',sourceIds:['b1'],kind:'email',value:'b@example.com'}],token:newer.token,requestId:randomUUID()});
+ assert.equal(r.merged,0);assert.equal(r.failures.length,1);
 });
