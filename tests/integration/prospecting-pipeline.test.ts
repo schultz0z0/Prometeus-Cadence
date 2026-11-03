@@ -145,7 +145,7 @@ test('JEV remains a proposal, omitted summary makes no generative call, and cont
 });
 
 test('recovery after the last receipt finishes without reading page zero again',async()=>{
-  process.env.APOLLO_API_KEY='fixture-not-live';process.env.APOLLO_MAX_PAGES='5';
+  process.env.APOLLO_API_KEY='fixture-not-live';process.env.APOLLO_MAX_PAGES='5';process.env.APOLLO_CENTRAL_WORKSPACE_IDS='*';
   for(const provider of ['MAPS','APOLLO'] as const){
   const {p,job,lease}=await setup(5,provider);let reads=0,starts=0;
   await withLeasedTransaction(lease,async c=>{

@@ -57,7 +57,7 @@ export async function prospectingReviewState(c:PoolClient,p:Principal,input:Pros
   blockers.push(...requirements(config,input,p.workspaceId,aiRoute,enrichment?.reserveCredits));
   const profileVersion=hashValue({config:config.version,apolloConnection:config.apolloConnection,policy:policy??null,contextVersion:context?.version??0,aiRoute,...(enrichment?{enrichment}: {})});
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};
-  return {config,blockers,proof,profileVersion,aiRoute,enrichment,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:apolloMaxPages(!!config.apolloConnection),apolloConnection:config.apolloConnection}}};
+  return {config,blockers,proof,profileVersion,aiRoute,enrichment,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:apolloMaxPages(!!config.apolloConnection),apolloConnection:config.apolloConnection,apolloCredential:config.apolloCredential}}};
 }
 function parseInput(input:unknown):ProspectingInput{const parsed=jobInputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise fonte, filtros, destino e quantidade.');return parsed.data;}
 export async function prepareJob(p:Principal,input:unknown):Promise<Review>{

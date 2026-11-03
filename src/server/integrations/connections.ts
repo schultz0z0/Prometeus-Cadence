@@ -8,6 +8,7 @@ import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
 import {decryptCredential,encryptCredential,type EncryptedCredential} from '../channels/crypto.ts';
 import type {Fetch} from '../prospecting/providers/types.ts';
+import {ProviderError} from '../prospecting/providers/transport.ts';
 const failures:Record<string,[number,string]>={
  CONNECTOR_ACCESS:[403,'Somente proprietário ou administrador conecta apps.'],
  CREDENTIAL_FORBIDDEN:[403,'Esta credencial não pertence a você, a este workspace ou a este app. Cole a chave de novo.'],
@@ -46,7 +47,9 @@ export async function connectIntegration(p:Principal,raw:unknown,deps:{verify?:(
   if(verdict==='unavailable')throw new AppError(503,'Não foi possível confirmar a chave com o Apollo agora. Tente de novo em instantes.','CONNECTOR_UNAVAILABLE');
   // Membership and role are checked again after the external call; a revoked admin saves nothing.
   return await withWorkspaceTransaction(p,async c=>{await admin(c);
-   const live=(await c.query('SELECT * FROM app.live_connection($1)',[input.kind])).rows[0] as {id:string;revision:string}|undefined;
+   // Take the workspace connector lock before reading the revision the key is sealed for.
+   await c.query('SELECT app.connector_actor()');
+   const live=(await c.query("SELECT id,revision FROM app.integration_connection WHERE kind=$1 AND state<>'revoked'",[input.kind])).rows[0] as {id:string;revision:string}|undefined;
    const id=live?.id??randomUUID(),next=live?Number(live.revision)+1:1;
    const caps=connectorCatalog.find(x=>x.kind===input.kind)!.capabilities;
    await c.query('SELECT app.save_connection($1,$2,$3,$4,$5,$6)',[id,input.kind,input.name,encryptCredential({secret:key},connectionAad(p.workspaceId,id,next)),caps,input.expectedRevision]);
@@ -67,5 +70,5 @@ export async function disconnectIntegration(p:Principal,id:string,raw:unknown){
 // Worker side: decrypt the key of the job's own workspace for the reviewed revision, right before the call.
 export async function workerApolloKey(c:PoolClient,workspaceId:string,connection:{id:string;revision:number}){
  const sealed=(await c.query('SELECT app.connector_secret($1,$2) v',[connection.id,connection.revision])).rows[0].v as EncryptedCredential;
- return decryptCredential(sealed,connectionAad(workspaceId,connection.id,connection.revision)).secret;
+ try{return decryptCredential(sealed,connectionAad(workspaceId,connection.id,connection.revision)).secret;}catch{throw new ProviderError('CONNECTION_KEY_UNREADABLE');}
 }

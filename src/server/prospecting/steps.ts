@@ -42,7 +42,9 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
       // A workspace connection supplies its own key, read for the reviewed revision just before the call: a revoked or replaced key stops here.
       const own=job.checkpoint.execution?.apolloConnection as {id:string;revision:number}|null|undefined;
       const page=await performStep(lease,'apollo-page:'+pageNo,'apollo',{apolloPages:1},async()=>{
-        const credential=own?await withLeasedTransaction(lease,c=>workerApolloKey(c,lease.workspaceId,own)).catch(()=>{throw new ProviderError('CONNECTION_REVOKED');}):ctx.credential;
+        // Only a changed or revoked connection maps to CONNECTION_REVOKED; lost leases and timeouts keep their own handling.
+        const credential=own?await withLeasedTransaction(lease,c=>workerApolloKey(c,lease.workspaceId,own)).catch(e=>{if(e instanceof Error&&e.message==='CONNECTION_CHANGED')throw new ProviderError('CONNECTION_REVOKED');throw e;})
+          :job.checkpoint.execution?.apolloCredential==='central'?ctx.credential:(()=>{throw new ProviderError('CONNECTION_REQUIRED');})();
         return apollo.search({...ctx,credential},input,pageNo);
       });
       await withLeasedTransaction(lease,c=>ingestPage(c,lease,page));
