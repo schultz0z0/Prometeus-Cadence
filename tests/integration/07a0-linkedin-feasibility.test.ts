@@ -15,6 +15,7 @@ const attestation=(over:Record<string,unknown>={})=>({adapterId:'linkedin-offici
  capabilities:{...NO_LINKEDIN,version:'oidc-1',connect:true,verifiedAt:new Date().toISOString()},evidenceRefs:{connect:['docs/validation/07a0-linkedin-feasibility.md']},expectedRevision:0,...over});
 const gate=(p:Principal,key:Parameters<typeof requireLinkedinCapability>[1])=>withWorkspaceTransaction(p,c=>requireLinkedinCapability(c,key));
 const code=async(fn:()=>Promise<unknown>)=>{try{await fn();return 'ok';}catch(e){const x=e as {status?:number;code?:string};return `${x.status}${x.code?' '+x.code:''}`;}};
+const pgCode=async(fn:()=>Promise<unknown>)=>{try{await fn();return 'ok';}catch(e){return (e as {code?:string}).code;}};
 
 test('07A.0 no adapter: every LinkedIn action is blocked with a reason; nothing is a success',async()=>{
  const {p}=await user();const view=await readLinkedinCapabilities(p);
@@ -28,7 +29,7 @@ test('07A.0 OAuth login alone leaves invite and message off for every workspace'
  const saved=await attestLinkedinAdapter(admin.p,attestation());assert.equal(saved.adapter?.revision,1);
  const view=await readLinkedinCapabilities(other.p);
  assert.equal(view.capabilities.connect,true);assert.equal(view.capabilities.invite,false);assert.equal(view.capabilities.sendMessage,'unavailable');
- assert.equal(JSON.stringify(view).includes('Sign In with LinkedIn'),false,'agreement and evidence stay on the server');
+ for(const secret of ['Sign In with LinkedIn','docs/validation',admin.p.userId])assert.equal(JSON.stringify(view).includes(secret),false,'agreement, evidence and verifier stay on the server');
  assert.equal(await code(()=>gate(other.p,'connect')),'ok');
  for(const k of ['audience','invite','acceptance','readMessages','sendMessage','scheduledMessage','profileVisit','like','comment'] as const)assert.equal(await code(()=>gate(other.p,k)),'409 LINKEDIN_UNAVAILABLE',k);
 });
@@ -67,8 +68,8 @@ test('07A.0 expired or revoked attestation blocks the gate at once; revisions an
 
 test('07A.0 the app role cannot read or write the profile table directly',async()=>{
  const {p}=await user();
- assert.match(await code(()=>withWorkspaceTransaction(p,c=>c.query('SELECT * FROM app.linkedin_capability_profile'))),/undefined/);
- assert.match(await code(()=>withWorkspaceTransaction(p,c=>c.query("INSERT INTO app.linkedin_capability_profile(adapter_id) VALUES('x')"))),/undefined/);
+ assert.equal(await pgCode(()=>withWorkspaceTransaction(p,c=>c.query('SELECT * FROM app.linkedin_capability_profile'))),'42501');
+ assert.equal(await pgCode(()=>withWorkspaceTransaction(p,c=>c.query("INSERT INTO app.linkedin_capability_profile(adapter_id,kind,agreement_ref,capabilities,evidence_refs,expires_at,verified_by) VALUES('x','account-connector','abc','{}','{}',now()+interval '1 day','u')"))),'42501');
 });
 
 test('07A.0 HTTP contract: 401 anonymous, 403 non-admin, 422 invalid, 409 workspace changed, member GET without secrets',async()=>{
@@ -84,4 +85,25 @@ test('07A.0 HTTP contract: 401 anonymous, 403 non-admin, 422 invalid, 409 worksp
  const ok=await call(admin.headers,'POST',{action:'attest',input:attestation()});assert.equal(ok.status,200);
  assert.equal((await call(admin.headers,'POST',{action:'revoke',input:{adapterId:'linkedin-official',expectedRevision:1}})).status,200);
  assert.equal(await rows(),1,'revocation keeps the record');
+});
+
+test('07A.0 review: expiry during a running transaction blocks the second gate check',async()=>{
+ const admin=await user({platformAi:true}),{p}=await user();
+ await attestLinkedinAdapter(admin.p,attestation());
+ const second=await withWorkspaceTransaction(p,async c=>{await requireLinkedinCapability(c,'connect');
+  await testAdmin(x=>x.query('UPDATE app.linkedin_capability_profile SET expires_at=clock_timestamp()'));
+  return code(()=>requireLinkedinCapability(c,'connect'));});
+ assert.equal(second,'409 LINKEDIN_UNAVAILABLE');
+});
+
+test('07A.0 review: strict attest body, database CHECK for official automatic, malformed stored profile fails closed',async()=>{
+ const admin=await user({platformAi:true}),{p}=await user();
+ assert.equal(await code(()=>attestLinkedinAdapter(admin.p,{...attestation(),extra:1})),'422');
+ const automatic={...NO_LINKEDIN,version:'x',sendMessage:'automatic'};
+ assert.equal(await pgCode(()=>withWorkspaceTransaction(admin.p,c=>c.query("SELECT app.attest_linkedin_adapter($1,'linkedin-official','official','abc',$2,'{}',now()+interval '1 day',0)",[process.env.PLATFORM_AI_WORKSPACE_ID,automatic]))),'23514');
+ await attestLinkedinAdapter(admin.p,attestation());
+ await testAdmin(c=>c.query(`UPDATE app.linkedin_capability_profile SET capabilities='{"connect":true}'`));
+ const v=await readLinkedinCapabilities(p);assert.deepEqual(v.capabilities,NO_LINKEDIN);assert.equal(v.adapter,null);
+ assert.equal(await code(()=>gate(p,'connect')),'409 LINKEDIN_UNAVAILABLE');
+ assert.equal(await code(()=>gate(p,'sendMessage')),'409 LINKEDIN_UNAVAILABLE');
 });

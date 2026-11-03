@@ -11,10 +11,11 @@ export function linkedinMessageMode(input:{approved:boolean;humanActionRequired:
 }
 export function linkedinActionAllowed(c:LinkedinCapabilities,key:LinkedinCapabilityKey):boolean{
  switch(key){
-  case 'sendMessage':return c.sendMessage!=='unavailable';
+  // Allow-list values only: a malformed stored profile must fail closed.
+  case 'sendMessage':return c.sendMessage==='assisted'||c.sendMessage==='automatic';
   case 'scheduledMessage':return c.sendMessage==='automatic';
-  case 'profileVisit':return c.profileActions.includes('visit');
-  case 'like':case 'comment':return c.profileActions.includes(key);
+  case 'profileVisit':return Array.isArray(c.profileActions)&&c.profileActions.includes('visit');
+  case 'like':case 'comment':return Array.isArray(c.profileActions)&&c.profileActions.includes(key);
   default:return c[key]===true;
  }
 }
@@ -45,13 +46,15 @@ export function linkedinFeasibility(c:LinkedinCapabilities,reason:string){
  return linkedinInventory.map(a=>{const allowed=a.capability==='local'||linkedinActionAllowed(c,a.capability);return {...a,allowed,reason:allowed?'':reason};});
 }
 const MAX_DAYS=400;
-const capabilitiesSchema=z.object({version:z.string().trim().min(1).max(40),connect:z.boolean(),audience:z.boolean(),invite:z.boolean(),acceptance:z.boolean(),readMessages:z.boolean(),
+export const capabilitiesSchema=z.object({version:z.string().trim().min(1).max(40),connect:z.boolean(),audience:z.boolean(),invite:z.boolean(),acceptance:z.boolean(),readMessages:z.boolean(),
  sendMessage:z.enum(['unavailable','assisted','automatic']),profileActions:z.array(z.enum(['visit','like','comment'])).max(3),verifiedAt:z.string().nullable()}).strict();
-export const attestationSchema=z.object({
- adapterId:z.string().regex(/^[a-z0-9][a-z0-9-]{1,59}$/),kind:z.enum(['official','account-connector']),agreementRef:z.string().trim().min(3).max(300),
+export const adapterIdSchema=z.string().regex(/^[a-z0-9][a-z0-9-]{1,59}$/);
+export const attestationBase=z.object({
+ adapterId:adapterIdSchema,kind:z.enum(['official','account-connector']),agreementRef:z.string().trim().min(3).max(300),
  expiresAt:z.string().datetime({offset:true}),capabilities:capabilitiesSchema,
  evidenceRefs:z.record(z.string(),z.array(z.string().trim().min(1).max(300)).min(1).max(10)),
-}).strict().superRefine((a,ctx)=>{
+});
+export function refineAttestation(a:z.infer<typeof attestationBase>,ctx:z.RefinementCtx){
  const days=(Date.parse(a.expiresAt)-Date.now())/864e5;
  if(!(days>0&&days<=MAX_DAYS))ctx.addIssue({code:'custom',path:['expiresAt'],message:`A validade precisa estar entre agora e ${MAX_DAYS} dias.`});
  // LinkedIn Messages API requires a specific member action and excludes scheduled sends (BR-001, SRC-005).
@@ -59,6 +62,7 @@ export const attestationSchema=z.object({
  const enabled=[...(['connect','audience','invite','acceptance','readMessages'] as const).filter(k=>a.capabilities[k]),...(a.capabilities.sendMessage!=='unavailable'?['sendMessage']:[]),...a.capabilities.profileActions];
  for(const k of enabled)if(!a.evidenceRefs[k]?.length)ctx.addIssue({code:'custom',path:['evidenceRefs',k],message:`Falta evidência para ${k}.`});
  for(const k of Object.keys(a.evidenceRefs))if(!enabled.includes(k))ctx.addIssue({code:'custom',path:['evidenceRefs',k],message:`Evidência para capacidade desligada: ${k}.`});
-});
+}
+export const attestationSchema=attestationBase.strict().superRefine(refineAttestation);
 export type AdapterAttestation=z.infer<typeof attestationSchema>;
 export type LinkedinCapabilityView={capabilities:LinkedinCapabilities;adapter:{id:string;kind:'official'|'account-connector';expiresAt:string;revision:number}|null;reason:string;actions:ReturnType<typeof linkedinFeasibility>};

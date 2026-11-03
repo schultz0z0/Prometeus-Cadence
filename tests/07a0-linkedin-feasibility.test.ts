@@ -48,3 +48,8 @@ test('07A.0 attestation: evidence for every enabled capability, official cannot 
  assert.equal(attestationSchema.safeParse({...ok,adapterId:'Bad Id'}).success,false);
  assert.equal(attestationSchema.safeParse({...ok,capabilities:{...ok.capabilities,profileActions:['dance']}}).success,false);
 });
+
+test('07A.0 review: a malformed stored profile fails closed instead of allowing or throwing',()=>{
+ const bad={...NO_LINKEDIN,sendMessage:undefined,profileActions:undefined} as never;
+ for(const k of LINKEDIN_CAPABILITY_KEYS)assert.equal(linkedinActionAllowed(bad,k),false,k);
+});
