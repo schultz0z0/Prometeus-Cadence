@@ -22,7 +22,7 @@ Launch blockers first. One row per barrier; details below.
   - **Alternativa:** um conector de conta (Unipile e similares) opera tudo o que a referência mostra. Custa a partir de 49 EUR/mês, mais 3 a 5 EUR por conta.
   - **Risco contratual:** o Contrato do Usuário do LinkedIn proíbe automação, e a conta do cliente pode ser restringida.
   - **Gate:** o Prometeus mantém tudo bloqueado até um atestado da plataforma.
-  - **Decisão pendente com o usuário**, com questão jurídica sobre termos, responsabilidade e aviso ao cliente.
+  - **Decisão do usuário (03/11):** conector de conta, com a Unipile. Continua em aberto a questão jurídica sobre termos, responsabilidade e aviso ao cliente.
 
 ### BR-002 Cadastro empresarial e busca pública não garantem contato pessoal
 

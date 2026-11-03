@@ -1,6 +1,6 @@
 # 07A.0 — Viabilidade e capacidades do LinkedIn
 
-Data: 03/11/2026. Estado: gate concluído local/controlado. A decisão de fornecedor está **pendente com o usuário** ([revisão](07a0-linkedin-feasibility-review.md)). [Plano de execução](../superpowers/plans/2026-11-03-prometeus-cadence-07a0-linkedin-execution.md).
+Data: 03/11/2026. Estado: gate concluído local/controlado. **Rota decidida pelo usuário em 03/11: conector de conta, com a Unipile** ([revisão](07a0-linkedin-feasibility-review.md)). [Plano de execução](../superpowers/plans/2026-11-03-prometeus-cadence-07a0-linkedin-execution.md).
 
 Este pacote não conecta contas, não contrata fornecedor e não envia nada. Ele entrega três coisas:
 - a matriz de capacidades;
@@ -61,13 +61,14 @@ Recomendo a **rota 2 (conector de conta), com Unipile como primeira avaliação*
 
 A rota 1 continua possível como modo "assistido". Com a API oficial a trava aceita só `connect` e `sendMessage: assisted`, e recusa `automatic`.
 
-**Decisão pendente com o usuário:**
-- a rota;
-- o fornecedor;
-- a conta de teste;
-- o aceite jurídico do risco.
+**Decisão do usuário (03/11/2026):** rota 2, conector de conta, com a Unipile.
 
-Sem ela, o 07A.1 não começa e o módulo continua mostrando "Nenhum fornecedor do LinkedIn está habilitado na plataforma."
+Antes de ligar qualquer capacidade de verdade, ainda faltam:
+- **contrato e chave da Unipile**, a cargo do usuário; o agente não contrata;
+- **uma conta LinkedIn de teste** do próprio usuário, para comprovar cada capacidade;
+- **leitura jurídica** do termo de risco que o cliente aceita ao conectar.
+
+O 07A.1 pode ser construído antes, com a Unipile simulada nos testes. A habilitação na plataforma só acontece depois que esses itens estiverem atendidos. Até lá o módulo continua mostrando "Nenhum fornecedor do LinkedIn está habilitado na plataforma."
 
 ## Contrato entregue
 

@@ -1068,7 +1068,7 @@
       "followUpMigrations": [
         "db/migrations/100a-linkedin-capabilities-review.sql"
       ],
-      "decision": "pending-user: route (official assisted vs account connector), vendor, test account and legal acceptance; recommendation account connector (Unipile first evaluation)",
+      "decision": "user-decided 2026-11-03: account connector, Unipile. Pending before attestation: Unipile contract/API key (user), own LinkedIn test account, legal reading of the customer risk term. 07A.1 may be built with a simulated Unipile.",
       "deferredMinorOwner": "07A.1"
     },
     {

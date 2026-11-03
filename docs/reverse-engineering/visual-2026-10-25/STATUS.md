@@ -1,5 +1,5 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-03 · Session: s27 · Phase:6 07A.0 concluído local/controlado; decisão de fornecedor LinkedIn pendente; paridade integral não aceita
+Updated: 2026-11-03 · Session: s27 · Phase:6 07A.0 concluído local/controlado; rota LinkedIn decidida (conector Unipile); paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
@@ -13,8 +13,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
   - **Revisão:** três Important corrigidos RED→GREEN (100a).
   - **Evidência:** EV-289.
 - Not covered s27: backend LinkedIn da referência (não observável); capacidades reais de conector (exigem conta de teste e contrato).
+- Decided s27: rota do LinkedIn é o conector de conta, com a Unipile (usuário, 03/11).
 - Needs human s27:
-  - escolher a rota do LinkedIn (oficial assistida ou conector de conta) e o fornecedor;
+  - contratar a Unipile e entregar a chave da API;
   - conta LinkedIn de teste própria;
   - aceite jurídico do risco ao Contrato do Usuário (barreira LinkedIn em clone/barriers.md).
 
@@ -103,7 +104,7 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s27: 07A.1 — conexão LinkedIn, bloqueado pela decisão de fornecedor. 07A.0 concluído; menores→07A.1/08A.
+Fila vigente s27: 07A.1 — conexão LinkedIn pela Unipile (simulada nos testes; habilitação real aguarda contrato, conta de teste e aceite jurídico). 07A.0 concluído; menores→07A.1/08A.
 
 Fila s26 (histórica): 07A.0 — viabilidade do LinkedIn.
 
