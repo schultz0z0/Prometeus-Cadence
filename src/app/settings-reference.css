@@ -225,3 +225,6 @@
 @media(max-width:700px){.webhook-row{flex-direction:column}.webhook-items>li{padding:14px 16px}}
 .webhook-reference>header .btn{min-height:32px;height:32px;padding:0 12px;font-size:.875rem}
 .api-keys{margin-top:24px}.api-keys header code,.api-keys .reference-empty code{font-size:.75rem;background:var(--background);border:1px solid var(--border);border-radius:4px;padding:0 4px}
+/* 07C.2a: Apollo key connection. */
+.apollo-key-row{display:flex;gap:6px;align-items:center}.apollo-key-row input{flex:1;min-width:0}
+.apollo-connected{display:grid;gap:10px;justify-items:start}.apollo-connected p{margin:0;color:var(--secondary);font-size:.875rem}
