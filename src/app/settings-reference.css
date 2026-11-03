@@ -228,3 +228,10 @@
 /* 07C.2a: Apollo key connection. */
 .apollo-key-row{display:flex;gap:6px;align-items:center}.apollo-key-row input{flex:1;min-width:0}
 .apollo-connected{display:grid;gap:10px;justify-items:start}.apollo-connected p{margin:0;color:var(--secondary);font-size:.875rem}
+.integration-google>.reference-panel.sheets-config{display:block;text-align:left;padding:0}.integration-google>.reference-panel.sheets-config>header{display:flex;gap:12px;padding:16px 20px;align-items:flex-start}
+.integration-google>.reference-panel.sheets-config p{max-width:none}.sheets-config .reference-panel-body{padding:20px;display:grid;gap:14px}
+.sheets-summary{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0;font-size:.875rem}.sheets-summary dt{color:var(--secondary)}.sheets-summary dd{margin:0}
+.sheets-columns{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.sheets-columns legend,.sheets-columns>p{grid-column:1/-1}.sheets-footer{margin-top:12px}
+.integration-google>.notice{margin-bottom:12px}
+.integration-google>header{margin-bottom:8px!important}
+.integration-google>.reference-panel:not(.sheets-config) h2{margin:0;line-height:1.75rem}

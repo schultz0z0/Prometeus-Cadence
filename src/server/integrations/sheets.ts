@@ -128,7 +128,7 @@ async function liveSheets(c:PoolClient,id?:string){
 }
 async function adminToken(p:Principal,live:{id:string;revision:number},deps:SheetsDeps){
  const sealed=await withWorkspaceTransaction(p,async c=>(await c.query('SELECT app.sheets_admin_secret($1,$2) v',[live.id,live.revision])).rows[0].v as EncryptedCredential);
- let tokens:Tokens;try{tokens=decryptCredential(sealed,aad(p.workspaceId,live.id,live.revision)) as unknown as Tokens;}catch{throw new SheetsAttention('reconnect',attentionText.reconnect);}
+ let tokens:Tokens;try{tokens=decryptCredential(sealed,aad(p.workspaceId,live.id,live.revision)) as unknown as Tokens;}catch{throw new SheetsAttention('reconnect','O acesso guardado não pôde ser lido. Reconecte a conta Google.');}
  const fresh=await refresh(tokens,deps);
  if(fresh)await withWorkspaceTransaction(p,c=>c.query('SELECT app.save_sheets_tokens($1,$2,$3,$4)',[live.id,live.revision,encryptCredential({...fresh},aad(p.workspaceId,live.id,live.revision)),fresh.expiresAt]));
  return (fresh??tokens).accessToken;
