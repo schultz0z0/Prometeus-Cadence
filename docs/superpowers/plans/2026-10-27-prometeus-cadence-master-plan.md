@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07A.1**, com o conector Unipile decidido pelo usuário em 03/11; a habilitação real depende de contrato, conta de teste e aceite jurídico.
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07A.2** (atualizado 03/11; 07A.1 concluído com a Unipile simulada). A habilitação real do LinkedIn depende de contrato e chave da Unipile, conta de teste e aceite jurídico.
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -31,7 +31,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 07C.1 | API, eventos e webhooks de saída | 06E.2, 06C.2 | [tarefas](2026-10-27-prometeus-cadence-07c1-api-webhooks.md) | Concluído local/controlado em dois pacotes: [07C.1a](2026-11-02-prometeus-cadence-07c1a-webhooks.md) e [07C.1b](2026-11-02-prometeus-cadence-07c1b-public-api.md) |
 | 07C.2 | Conectores de cliente e agenda/CRM | 07C.1 | [tarefas](2026-10-27-prometeus-cadence-07c2-customer-connectors.md) | Concluídos local/controlado: [07C.2a](2026-11-02-prometeus-cadence-07c2a-connectors.md), [07C.2b](2026-11-03-prometeus-cadence-07c2b-google-sheets.md) e [07C.2c](2026-11-03-prometeus-cadence-07c2c-google-calendar.md); FunnelsFlow/MeetFlow sem contrato oficial |
 | 07A.0 | Viabilidade e capacidades do LinkedIn | 06IA, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07a0-linkedin-feasibility.md) | Concluído local/controlado em 03/11; rota decidida: conector Unipile ([aceite](../../validation/07a0-linkedin-feasibility.md)) |
-| 07A.1 | Conexão, saúde e sincronização LinkedIn | 07A.0, 07C.2 | [tarefas](2026-10-27-prometeus-cadence-07a1-linkedin-connection.md) | Planejado; não executado |
+| 07A.1 | Conexão, saúde e sincronização LinkedIn | 07A.0, 07C.2 | [tarefas](2026-10-27-prometeus-cadence-07a1-linkedin-connection.md) | Concluído local/controlado em 03/11 com a Unipile simulada ([aceite](../../validation/07a1-linkedin-connection.md)) |
 | 07A.2 | Públicos, campanhas, convites e aceites LinkedIn | 07A.1, 06B.5 | [tarefas](2026-10-27-prometeus-cadence-07a2-linkedin-campaigns.md) | Planejado; não executado |
 | 07A.3 | Pessoas, pipeline, mensagens e aprovações LinkedIn | 07A.2, 06D.2, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-07a3-linkedin-conversations.md) | Planejado; não executado |
 | 07C.3 | MCP autenticado e comandos revisados | 07C.1, 06F, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07c3-mcp.md) | Planejado; não executado |
@@ -164,3 +164,10 @@ Continuidade 07A.0 em 03/11: entregue o gate de capacidades do LinkedIn.
 - **UI:** mostra o motivo vindo do servidor.
 
 A revisão independente encontrou três Important, corrigidos RED→GREEN na 100a. A decisão está com o usuário: a API oficial, só assistida, não opera o módulo; um conector de conta (recomendada a Unipile como primeira avaliação) reproduz a referência, mas fere o Contrato do Usuário do LinkedIn. O **07A.1 só começa com a rota, o fornecedor, a conta de teste e o aceite jurídico definidos**. [Aceite](../../validation/07a0-linkedin-feasibility.md).
+
+Continuidade 07A.1 em 03/11: conexão da conta LinkedIn pela Unipile, com o fornecedor simulado nos testes.
+- **Conexão:** termo de risco versionado e login hospedado. A conta só é vinculada com o aviso do fornecedor mais o retorno da sessão que iniciou.
+- **Conta:** uma por workspace e nunca compartilhada entre workspaces.
+- **Manutenção:** verificação com lease e backoff; desconexão imediata, com remoção da sessão no fornecedor; limpeza de sessões órfãs; lane `linkedin` no worker.
+
+A revisão independente encontrou quatro Important, corrigidos RED→GREEN na 101a. Os principais eram o link encaminhado e as sessões órfãs. A habilitação real aguarda o contrato e a chave da Unipile, a conta de teste e a leitura jurídica do termo. [Aceite](../../validation/07a1-linkedin-connection.md).

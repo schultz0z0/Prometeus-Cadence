@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07A.1",
+  "next": "07A.2",
   "end": "08B",
   "packages": [
     {
@@ -1088,26 +1088,44 @@
       "create": [
         "src/domain/linkedin-connection.ts",
         "src/server/linkedin/connections.ts",
-        "src/server/linkedin/sync.ts",
-        "src/server/linkedin/http.ts",
-        "src/app/api/linkedin/[resource]/route.ts",
-        "src/app/api/linkedin/[resource]/[id]/[action]/route.ts",
+        "src/server/linkedin/unipile.ts",
+        "src/app/api/linkedin/accounts/route.ts",
+        "src/app/api/linkedin/accounts/[id]/[action]/route.ts",
         "src/app/api/linkedin/oauth/callback/route.ts",
-        "src/client/linkedin-client.ts",
-        "db/migrations/097-linkedin-connections.sql"
+        "src/app/api/linkedin/oauth/notify/route.ts",
+        "db/migrations/101-linkedin-connections.sql"
       ],
       "modify": [
         "src/modules/settings/linkedin-sdr.tsx",
-        "scripts/runtime-supervisor.ts"
+        "src/app/(app)/linkedin/[[...section]]/page.tsx",
+        "src/server/linkedin/http.ts",
+        "src/server/linkedin/capabilities.ts",
+        "src/app/linkedin-reference.css",
+        "scripts/runtime-lane.ts",
+        "scripts/runtime-supervisor.ts",
+        "scripts/runtime-control.mjs",
+        "scripts/test-integration.mjs"
       ],
       "unit": "tests/07a1-linkedin-connection.test.ts",
       "integration": "tests/integration/07a1-linkedin-connection.test.ts",
       "evidence": "docs/validation/07a1-linkedin-connection.md",
       "routes": [
         "/linkedin/dashboard",
-        "/linkedin/campaigns",
-        "/linkedin/people"
-      ]
+        "GET/POST /api/linkedin/accounts",
+        "POST /api/linkedin/accounts/:id/{sync,reconnect,revoke}",
+        "GET /api/linkedin/oauth/callback",
+        "POST /api/linkedin/oauth/notify"
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-03",
+      "executionPlan": "docs/superpowers/plans/2026-11-03-prometeus-cadence-07a1-linkedin-execution.md",
+      "review": "docs/validation/07a1-linkedin-connection-review.md",
+      "validation": "docs/validation/07a1-linkedin-connection.md",
+      "followUpMigrations": [
+        "db/migrations/101a-linkedin-connections-review.sql"
+      ],
+      "deviations": "migration 101 (097 taken); accounts/* routes and a separate notify route; sync returns {state,lastSyncAt} (paginated cursor moves to 07A.2/07A.3 with its feed); no customer OAuth/PKCE: the vendor holds the session",
+      "externalGate": "Unipile contract and key (user), own LinkedIn test account, legal reading of the risk term; vendor field names and notify retry to confirm with the test account"
     },
     {
       "id": "07A.2",

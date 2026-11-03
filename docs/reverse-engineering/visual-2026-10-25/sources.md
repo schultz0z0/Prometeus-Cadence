@@ -12,3 +12,5 @@
 | SRC-006 | Comparação de APIs LinkedIn (Unipile, fornecedor) | https://www.unipile.com/best-linkedin-api/ | docs | 2026-11-03 | Conectores de conta enviam convite e mensagem; preço por conta; a API oficial não envia na prática. Fonte com viés comercial |
 | SRC-007 | Limites LinkedIn via Unipile | https://www.unipile.com/linkedin-api-rate-limits/ | docs | 2026-11-03 | ~80–100 convites/dia e ~200/semana em conta paga; erro 422 no excesso |
 | SRC-008 | Contrato do Usuário LinkedIn e software proibido | https://www.linkedin.com/legal/user-agreement | docs | 2026-11-03 | Proíbe bots e métodos automatizados para adicionar contatos e enviar mensagens; risco de restrição da conta |
+| SRC-009 | Unipile Hosted Auth Wizard | https://developer.unipile.com/docs/hosted-auth | docs | 2026-11-03 | Link hospedado (create/reconnect), notify_url com status, account_id e name; não usar iframe; links vencem no restart diário |
+| SRC-010 | Unipile account status e GET account | https://developer.unipile.com/docs/account-lifecycle | docs | 2026-11-03 | Estados OK, CREDENTIALS, ERROR/STOPPED, CONNECTING, DELETED; conta com sources[].status e connection_params.im.id |

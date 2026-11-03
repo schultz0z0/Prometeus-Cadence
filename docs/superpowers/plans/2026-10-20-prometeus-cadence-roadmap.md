@@ -261,3 +261,11 @@ Viabilidade do LinkedIn concluída local/controlado:
 - **Comparação:** API oficial contra conectores de conta.
 
 Revisão independente: três Important corrigidos RED→GREEN. **Decisão pendente com o usuário** (rota, fornecedor, conta de teste e aceite jurídico) antes do 07A.1. [Aceite](../../validation/07a0-linkedin-feasibility.md).
+
+### Continuidade 03/11 — 07A.1
+
+Conexão LinkedIn concluída local/controlado, com a Unipile simulada:
+- **Conexão:** termo, login hospedado e vínculo em duas partes (aviso do fornecedor mais retorno da sessão).
+- **Manutenção:** verificação, desconexão e limpeza de sessões órfãs.
+
+Revisão independente: quatro Important corrigidos RED→GREEN. Próximo: 07A.2. [Aceite](../../validation/07a1-linkedin-connection.md).
