@@ -26,7 +26,7 @@ export function SheetsConnection(){
  async function run(fn:()=>Promise<unknown>,done?:string){setBusy(true);setError('');setMessage('');try{await fn();if(done)setMessage(done);}catch(e){setError((e as Error).message);}finally{setBusy(false);load();}}
  async function authorize(){setBusy(true);setError('');try{const r=await api<{authorizationUrl:string}>('/api/integrations',{action:'sheets-authorize'});window.location.assign(r.authorizationUrl);}catch(e){setError((e as Error).message);setBusy(false);}}
  const act=(action:'pause'|'activate'|'retry'|'repair',done:string)=>live&&run(()=>api(`/api/integrations/${live.id}/sheets`,{action,expectedRevision:live.configRevision}),done);
- const alerts=<>{oauth&&<Notice tone={oauthNotice[oauth][1]}>{oauthNotice[oauth][0]}</Notice>}{error&&<div role="alert"><Notice tone="error">{error}</Notice></div>}
+ const alerts=<>{oauth&&<div role={oauthNotice[oauth][1]==='error'?'alert':'status'}><Notice tone={oauthNotice[oauth][1]}>{oauthNotice[oauth][0]}</Notice></div>}{error&&<div role="alert"><Notice tone="error">{error}</Notice></div>}
   <p className="sr-only" role="status">{message}</p>{message&&<Notice tone="success">{message}</Notice>}</>;
  if(loadError)return <div className="reference-settings integration-google"><Header/><Notice tone="error">{loadError} <button type="button" className="text-button" onClick={load}>Tentar de novo</button></Notice></div>;
  if(!items)return <div className="reference-settings integration-google"><Header/><p role="status">Consultando a conexão…</p></div>;
@@ -60,7 +60,7 @@ export function SheetsConnection(){
  </div>;
 }
 function SheetsSetup({live,busy,canManage,onSubmit,onCancel}:{live:ConnectionView;busy:boolean;canManage:boolean;onSubmit:(input:{spreadsheetName:string;sheetTitle:string;columns:SheetColumn[];events:SheetEvent[]})=>void;onCancel?:()=>void}){
- const [name,setName]=useState('Prometeus Cadence — Leads'),[title,setTitle]=useState('Leads'),[columns,setColumns]=useState<SheetColumn[]>(live.config?.columns??defaultColumns),[events,setEvents]=useState<SheetEvent[]>(live.config?.events??['lead.created','lead.qualified','lead.connected']);
+ const [name,setName]=useState(live.config?.spreadsheetName??'Prometeus Cadence — Leads'),[title,setTitle]=useState(live.config?.sheetTitle??'Leads'),[columns,setColumns]=useState<SheetColumn[]>(live.config?.columns??defaultColumns),[events,setEvents]=useState<SheetEvent[]>(live.config?.events??['lead.created','lead.qualified','lead.connected']);
  const toggle=<T,>(list:T[],v:T)=>list.includes(v)?list.filter(x=>x!==v):[...list,v];
  const valid=name.trim()&&/^[\p{L}\p{N} _-]+$/u.test(title.trim())&&columns.length&&events.length;
  if(!canManage)return <section className="reference-panel sheets-config"><div className="reference-panel-body"><p className="muted">A conta Google está conectada. Somente proprietário ou administrador escolhe a planilha.</p></div></section>;

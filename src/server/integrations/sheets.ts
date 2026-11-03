@@ -3,7 +3,7 @@ import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
 import {connectorCatalog,sheetActionSchema,sheetHeaders,sheetRow,sheetSetupSchema,type SheetAttention,type SheetConfig,type SheetEvent} from '../../domain/connector-capabilities.ts';
-import {nextRetryDelay} from '../../domain/integration-delivery.ts';
+import {nextRetryDelay,parseRetryAfter} from '../../domain/integration-delivery.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
 import {decryptCredential,encryptCredential,type EncryptedCredential} from '../channels/crypto.ts';
@@ -29,6 +29,7 @@ export function sheetsOAuthSettings(env:Record<string,string|undefined>=process.
 }
 /** Kinds of failure the sheet itself causes: a person must act, so the queue waits. */
 export class SheetsAttention extends Error{readonly attention:SheetAttention;constructor(attention:SheetAttention,message:string){super(message);this.attention=attention;}}
+class SheetsUnauthorized extends SheetsAttention{}
 class SheetsRetry extends Error{readonly retryAfterMs?:number;constructor(message:string,retryAfterMs?:number){super(message);this.retryAfterMs=retryAfterMs;}}
 const attentionText:Record<SheetAttention,string>={
  schema:'Os cabeçalhos da planilha foram alterados. Restaure o cabeçalho para continuar.',
@@ -36,25 +37,33 @@ const attentionText:Record<SheetAttention,string>={
  reconnect:'O Google recusou o acesso. Reconecte a conta Google.',
  forbidden:'A conta Google perdeu acesso a esta planilha. Reconecte ou crie uma planilha nova.',
 };
-async function refresh(tokens:Tokens,deps:SheetsDeps):Promise<Tokens|null>{
- const now=(deps.now??Date.now)();if(Date.parse(tokens.expiresAt)>now+60000)return null;
+async function refresh(tokens:Tokens,deps:SheetsDeps,force=false):Promise<Tokens|null>{
+ const now=(deps.now??Date.now)();if(!force&&Date.parse(tokens.expiresAt)>now+60000)return null;
  const s=sheetsOAuthSettings();let data:Record<string,any>;
  try{data=await tokenRequest(new URLSearchParams({grant_type:'refresh_token',client_id:s.clientId,client_secret:s.clientSecret,refresh_token:tokens.refreshToken}),{fetch:deps.fetch});}
  catch(e){if(e instanceof Error&&e.message==='GMAIL_INVALID_GRANT')throw new SheetsAttention('reconnect',attentionText.reconnect);throw new SheetsRetry('Não foi possível renovar o acesso ao Google.');}
  // shortcut: two concurrent refreshes both succeed and the last write wins; Google keeps both access tokens valid.
  return {accessToken:data.access_token,refreshToken:typeof data.refresh_token==='string'&&data.refresh_token?data.refresh_token:tokens.refreshToken,expiresAt:new Date(now+data.expires_in*1000).toISOString()};
 }
+// A 401 with a token that looked valid (early revocation, clock skew) gets one forced refresh before asking for a reconnect.
+async function withAccess<T>(tokens:Tokens,save:(t:Tokens)=>Promise<unknown>,fn:(token:string)=>Promise<T>,deps:SheetsDeps):Promise<T>{
+ const fresh=await refresh(tokens,deps);if(fresh)await save(fresh);const current=fresh??tokens;
+ try{return await fn(current.accessToken);}
+ catch(e){if(!(e instanceof SheetsUnauthorized)||fresh)throw e;const forced=(await refresh(current,deps,true))!;await save(forced);return fn(forced.accessToken);}
+}
 async function google(method:'GET'|'POST'|'PUT',url:string,token:string,body:unknown,deps:SheetsDeps):Promise<any>{
- let r:Response;
+ let r:Response;url+=(url.includes('?')?'&':'?')+'prettyPrint=false';
  try{r=await(deps.fetch??fetch)(url,{method,headers:{authorization:'Bearer '+token,...(body===undefined?{}:{'content-type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(15000)});}
  catch{throw new SheetsRetry('Sem resposta do Google (rede ou tempo esgotado).');}
- let data:any=null;try{data=JSON.parse(Buffer.from(await readBoundedBody(r,4194304)).toString('utf8'));}catch{data=null;}
- if(r.ok)return data;
+ let data:any=null,readable=true;try{data=JSON.parse(Buffer.from(await readBoundedBody(r,4194304)).toString('utf8'));}catch{readable=false;}
+ // An answer we cannot read proves nothing about the sheet: retry rather than infer a changed header.
+ if(r.ok){if(!readable)throw new SheetsRetry('A resposta do Google não pôde ser lida.');return data;}
  const reason=String(data?.error?.message??'');
- if(r.status===401)throw new SheetsAttention('reconnect',attentionText.reconnect);
- if(r.status===403&&data?.error?.status!=='RESOURCE_EXHAUSTED')throw new SheetsAttention('forbidden',attentionText.forbidden);
+ if(r.status===401)throw new SheetsUnauthorized('reconnect',attentionText.reconnect);
+ // Quota and a disabled API on the platform project are not the customer's sheet losing access.
+ if(r.status===403&&data?.error?.status==='PERMISSION_DENIED'&&!/SERVICE_DISABLED|RATE_LIMIT/.test(JSON.stringify(data)))throw new SheetsAttention('forbidden',attentionText.forbidden);
  if(r.status===404||(r.status===400&&/parse range/i.test(reason)))throw new SheetsAttention('missing',attentionText.missing);
- if(r.status===429||r.status===403||r.status>=500){const after=Number(r.headers.get('retry-after'));throw new SheetsRetry(`O Google respondeu ${r.status}.`,Number.isFinite(after)&&after>0?after*1000:undefined);}
+ if(r.status===429||r.status===403||r.status>=500)throw new SheetsRetry(`O Google respondeu ${r.status}.`,parseRetryAfter(r.headers.get('retry-after')??undefined,(deps.now??Date.now)()));
  throw new SheetsRetry(`O Google recusou a requisição (${r.status}).`);
 }
 const range=(title:string,a1:string)=>encodeURIComponent(`'${title.replace(/'/g,"''")}'!${a1}`);
@@ -67,6 +76,7 @@ export async function createSpreadsheet(token:string,input:{spreadsheetName:stri
 const writeHeader=(token:string,c:SheetConfig,deps:SheetsDeps)=>google('PUT',`${API}/${c.spreadsheetId}/values/${range(c.sheetTitle,'A1')}?valueInputOption=RAW`,token,{values:[sheetHeaders(c.columns)]},deps);
 // Upsert by the technical id in column A: a retry after a lost response finds the row instead of appending a second one.
 export async function exportRow(token:string,c:SheetConfig,row:string[],deps:SheetsDeps):Promise<void>{
+ if(!row[0])throw Error('Lead id missing');
  const got=await google('GET',`${API}/${c.spreadsheetId}/values:batchGet?ranges=${range(c.sheetTitle,'1:1')}&ranges=${range(c.sheetTitle,'A:A')}&majorDimension=ROWS`,token,undefined,deps);
  const header:string[]=got?.valueRanges?.[0]?.values?.[0]??[],ids:string[][]=got?.valueRanges?.[1]?.values??[],expected=sheetHeaders(c.columns);
  if(expected.some((h,i)=>header[i]!==h))throw new SheetsAttention('schema',attentionText.schema);
@@ -126,12 +136,10 @@ async function liveSheets(c:PoolClient,id?:string){
  if(!r)throw new AppError(404,'Conecte a conta Google primeiro.','CONNECTION_NOT_FOUND');
  return{id:r.id as string,revision:Number(r.revision),config:r.config as SheetConfig|null,configRevision:Number(r.config_revision)};
 }
-async function adminToken(p:Principal,live:{id:string;revision:number},deps:SheetsDeps){
+async function asAdmin<T>(p:Principal,live:{id:string;revision:number},fn:(token:string)=>Promise<T>,deps:SheetsDeps):Promise<T>{
  const sealed=await withWorkspaceTransaction(p,async c=>(await c.query('SELECT app.sheets_admin_secret($1,$2) v',[live.id,live.revision])).rows[0].v as EncryptedCredential);
  let tokens:Tokens;try{tokens=decryptCredential(sealed,aad(p.workspaceId,live.id,live.revision)) as unknown as Tokens;}catch{throw new SheetsAttention('reconnect','O acesso guardado não pôde ser lido. Reconecte a conta Google.');}
- const fresh=await refresh(tokens,deps);
- if(fresh)await withWorkspaceTransaction(p,c=>c.query('SELECT app.save_sheets_tokens($1,$2,$3,$4)',[live.id,live.revision,encryptCredential({...fresh},aad(p.workspaceId,live.id,live.revision)),fresh.expiresAt]));
- return (fresh??tokens).accessToken;
+ return withAccess(tokens,t=>withWorkspaceTransaction(p,c=>c.query('SELECT app.save_sheets_tokens($1,$2,$3,$4)',[live.id,live.revision,encryptCredential({...t},aad(p.workspaceId,live.id,live.revision)),t.expiresAt])),fn,deps);
 }
 const googleError=(e:unknown)=>e instanceof SheetsAttention?new AppError(e.attention==='reconnect'?409:422,e.message,'SHEETS_'+e.attention.toUpperCase()):e instanceof SheetsRetry?new AppError(503,e.message+' Tente de novo em instantes.','SHEETS_UNAVAILABLE'):e;
 export async function configureSheets(p:Principal,raw:unknown,deps:SheetsDeps={}){
@@ -139,9 +147,8 @@ export async function configureSheets(p:Principal,raw:unknown,deps:SheetsDeps={}
  try{
   const live=await withWorkspaceTransaction(p,async c=>{await c.query('SELECT app.connector_actor()');return liveSheets(c);});
   if(live.configRevision!==input.expectedRevision)throw new AppError(409,'A conexão mudou em outra aba. Recarregue antes de continuar.','CONNECTION_CONFLICT');
-  const token=await adminToken(p,live,deps);
   // shortcut: a spreadsheet created right before a conflicting save is left in the customer's Drive; it is empty apart from the header.
-  const spreadsheetId=await createSpreadsheet(token,{spreadsheetName:input.spreadsheetName,sheetTitle:input.sheetTitle,headers:sheetHeaders(input.columns)},deps);
+  const spreadsheetId=await asAdmin(p,live,token=>createSpreadsheet(token,{spreadsheetName:input.spreadsheetName,sheetTitle:input.sheetTitle,headers:sheetHeaders(input.columns)},deps),deps);
   const config:SheetConfig={spreadsheetId,spreadsheetName:input.spreadsheetName,sheetTitle:input.sheetTitle,columns:input.columns,events:input.events};
   await withWorkspaceTransaction(p,c=>c.query('SELECT app.configure_sheets($1,$2,$3,$4)',[live.id,live.revision,input.expectedRevision,config]));
   return config;
@@ -153,7 +160,7 @@ export async function sheetsAction(p:Principal,id:string,raw:unknown,deps:Sheets
   if(parsed.data.action==='repair'){
    const live=await withWorkspaceTransaction(p,async c=>{await c.query('SELECT app.connector_actor()');return liveSheets(c,id);});
    if(!live.config||live.configRevision!==parsed.data.expectedRevision)throw new AppError(409,'A conexão mudou em outra aba. Recarregue antes de continuar.','CONNECTION_CONFLICT');
-   await writeHeader(await adminToken(p,live,deps),live.config,deps);
+   const config=live.config;await asAdmin(p,live,token=>writeHeader(token,config,deps),deps);
   }
   const configRevision=await withWorkspaceTransaction(p,async c=>Number((await c.query('SELECT app.sheets_action($1,$2,$3) v',[id,parsed.data.expectedRevision,parsed.data.action])).rows[0].v));
   return{configRevision};
@@ -165,19 +172,21 @@ type Claimed={workspace_id:string;connection_id:string;lead_id:string;attempts:n
  secret:EncryptedCredential;config:SheetConfig;token_expires_at:Date|null;lead:Record<string,unknown>|null;list_name:string|null};
 export async function dispatchSheetsTick(input:{limit:number;signal:AbortSignal},deps:SheetsDeps={}):Promise<{exported:number;deferred:number}>{
  if(!Number.isInteger(input.limit)||input.limit<1||input.limit>100)throw Error('Invalid sheets batch');
- const token=randomUUID(),c=await workerPool().connect(),now=deps.now??Date.now;let exported=0,deferred=0;
+ const token=randomUUID(),c=await workerPool().connect(),now=deps.now??Date.now,stopAt=Date.now()+20000;let exported=0,deferred=0;
  try{
-  for(let i=0;i<input.limit&&!input.signal.aborted;i++){
+  // Bounded per tick so slow Google answers do not hold the lane past its next interval.
+  for(let i=0;i<input.limit&&!input.signal.aborted&&Date.now()<stopAt;i++){
    const row=(await c.query('SELECT * FROM app.claim_sheet_export($1)',[token])).rows[0] as Claimed|undefined;if(!row)break;
    const revision=Number(row.revision);
-   let state:'done'|'pending'|'failed'|'held'='done',error:string|null=null,next:Date|null=null,attention:SheetAttention|null=null;
+   let state:'done'|'pending'|'failed'|'held'|'cancelled'=row.lead?'done':'cancelled',error:string|null=null,next:Date|null=null,attention:SheetAttention|null=null;
    try{
     // A deleted lead has nothing left to export.
     if(row.lead){
      let tokens:Tokens;try{tokens=decryptCredential(row.secret,aad(row.workspace_id,row.connection_id,revision)) as unknown as Tokens;}catch{throw new SheetsAttention('reconnect','O acesso guardado não pôde ser lido. Reconecte a conta Google.');}
-     const fresh=await refresh(tokens,deps);
-     if(fresh)await c.query('SELECT app.worker_save_sheets_tokens($1,$2,$3,$4,$5)',[row.workspace_id,row.connection_id,revision,encryptCredential({...fresh},aad(row.workspace_id,row.connection_id,revision)),fresh.expiresAt]);
-     await exportRow((fresh??tokens).accessToken,row.config,sheetRow(row.lead,row.config.columns,{list:row.list_name,event:row.event,channel:row.channel,exportedAt:new Date(now()).toISOString()}),deps);
+     const save=(t:Tokens)=>c.query('SELECT app.worker_save_sheets_tokens($1,$2,$3,$4,$5,$6,$7)',[row.workspace_id,row.connection_id,revision,encryptCredential({...t},aad(row.workspace_id,row.connection_id,revision)),t.expiresAt,row.lead_id,token]);
+     // Column A comes from the queue row, never from the payload, so a malformed payload cannot match another lead's row.
+     const values=sheetRow({...row.lead,id:row.lead_id},row.config.columns,{list:row.list_name,event:row.event,channel:row.channel,exportedAt:new Date(now()).toISOString()});
+     await withAccess(tokens,save,access=>exportRow(access,row.config,values,deps),deps);
     }
    }catch(e){
     if(e instanceof SheetsAttention){state='held';error=e.message;attention=e.attention;}
@@ -186,7 +195,7 @@ export async function dispatchSheetsTick(input:{limit:number;signal:AbortSignal}
      if(delay===null){state='failed';error=label+' Prazo de 24 h esgotado.';}else{state='pending';error=label;next=new Date(now()+delay);}
     }
    }
-   const applied=(await c.query('SELECT app.finish_sheet_export($1,$2,$3,$4,$5,$6,$7,$8,$9) v',[row.workspace_id,row.connection_id,row.lead_id,token,Number(row.config_revision),state,error,next,attention])).rows[0].v;
+   const applied=(await c.query('SELECT app.finish_sheet_export($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) v',[row.workspace_id,row.connection_id,row.lead_id,token,revision,Number(row.config_revision),state,error,next,attention])).rows[0].v;
    if(state==='done'&&applied)exported++;else deferred++;
   }
  }finally{c.release();}
