@@ -11,7 +11,8 @@ export type Source =
   | "APOLLO"
   | "QUALIFY"
   | "REENGAGE"
-  | "MANUAL";
+  | "MANUAL"
+  | "LINKEDIN";
 export interface Lead {
   id: string;
   listId: string;
@@ -230,6 +231,7 @@ export const sourceLabels: Record<Source, string> = {
   QUALIFY: "Qualificar lista",
   REENGAGE: "Reengajamento",
   MANUAL: "Cadastro manual",
+  LINKEDIN: "Campanha LinkedIn",
 };
 export const qualificationLabels: Record<Qualification, string> = {
   qualified: "Qualificado",

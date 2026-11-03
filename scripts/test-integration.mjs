@@ -18,7 +18,7 @@ const known = [
   "06e2-data-lifecycle",
   "06f-assistant-experience",
   "07c1-api-webhooks",
-  "07c2-customer-connectors","07c2b-google-sheets","07c2c-google-calendar","07a0-linkedin-feasibility","07a1-linkedin-connection",
+  "07c2-customer-connectors","07c2b-google-sheets","07c2c-google-calendar","07a0-linkedin-feasibility","07a1-linkedin-connection","07a2-linkedin-campaigns",
   "06e1-security-members",
   "06c3-notifications",
   "06iah-intelligence-homologation",

@@ -28,7 +28,7 @@ const sqlError=(e:unknown)=>{const k=e instanceof Error?failures[e.message]:unde
 const fail=(code:string)=>new AppError(failures[code][0],failures[code][1],code);
 const digest=(text:string)=>createHash('sha256').update(text).digest('hex');
 const secret=()=>randomBytes(32).toString('base64url');
-const capsVersion=(v:LinkedinCapabilityView)=>v.adapter?`${v.adapter.id}:${v.adapter.revision}:${v.capabilities.verifiedAt}`:'none';
+export const capsVersion=(v:LinkedinCapabilityView)=>v.adapter?`${v.adapter.id}:${v.adapter.revision}:${v.capabilities.verifiedAt}`:'none';
 const unsupported='O fornecedor habilitado na plataforma ainda não é suportado pela conexão de contas.';
 const connectable=(v:LinkedinCapabilityView)=>linkedinActionAllowed(v.capabilities,'connect')&&v.adapter?.id==='unipile';
 function origin(raw:string){

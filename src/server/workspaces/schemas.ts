@@ -11,6 +11,7 @@ const source = z.enum([
     "QUALIFY",
     "REENGAGE",
     "MANUAL",
+    "LINKEDIN",
   ]),
   qual = z.enum(["qualified", "pending", "warning", "disqualified"]),
   channel = z.enum(["EMAIL", "WHATSAPP", "LINKEDIN"]);

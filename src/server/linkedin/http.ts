@@ -2,6 +2,7 @@ import {authorizeProspectingRequest,readProspectingBody} from '../prospecting/ht
 import {AppError,errorResponse} from '../errors.ts';
 import {requirePrincipal} from '../auth/principal.ts';
 import {attestLinkedinAdapter,readLinkedinCapabilities,revokeLinkedinAdapter} from './capabilities.ts';
+import {confirmLinkedinCampaign,exploreLinkedinAudience,linkedinCampaignAction,listLinkedinCampaigns,prepareLinkedinCampaign,saveLinkedinCampaign} from './campaigns.ts';
 import {confirmLinkedinConnection,finishLinkedinReturn,prepareLinkedinConnection,readLinkedinAccount,receiveLinkedinNotify,revokeLinkedinAccount,syncLinkedinAccount} from './connections.ts';
 const json=(value:unknown)=>Response.json(value,{headers:{'cache-control':'no-store'}});
 export async function linkedinCapabilitiesRequest(request:Request){
@@ -48,5 +49,22 @@ export async function linkedinNotifyRequest(request:Request){
   const text=await request.text();if(new TextEncoder().encode(text).byteLength>8192)throw new AppError(422,'Aviso muito grande.');
   let body:unknown;try{body=JSON.parse(text);}catch{throw new AppError(422,'Aviso inválido.');}
   return json(await receiveLinkedinNotify(new URL(request.url).searchParams.get('token')??'',body));
+ }catch(e){return errorResponse(e);}
+}
+export async function linkedinCampaignsRequest(request:Request){
+ try{const p=await authorizeProspectingRequest(request);
+  if(request.method==='GET')return json(await listLinkedinCampaigns(p));
+  const body=await readProspectingBody(request) as {action?:unknown;input?:unknown};
+  if(body?.action==='save')return json(await saveLinkedinCampaign(p,body.input));
+  if(body?.action==='explore')return json(await exploreLinkedinAudience(p,body.input));
+  if(body?.action==='prepare')return json(await prepareLinkedinCampaign(p,body.input));
+  if(body?.action==='confirm')return json(await confirmLinkedinCampaign(p,body.input));
+  throw new AppError(422,'Ação inválida.');
+ }catch(e){return errorResponse(e);}
+}
+export async function linkedinCampaignActionRequest(request:Request,id:string,action:string){
+ try{const p=await authorizeProspectingRequest(request);
+  if(request.method!=='POST'||!['pause','resume','cancel'].includes(action))throw new AppError(404,'Operação não encontrada.');
+  return json(await linkedinCampaignAction(p,id,action,await readProspectingBody(request)));
  }catch(e){return errorResponse(e);}
 }
