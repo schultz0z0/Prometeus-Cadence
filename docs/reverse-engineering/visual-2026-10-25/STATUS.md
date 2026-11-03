@@ -1,10 +1,22 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-03 · Session: s26 · Phase:6 07C.2c concluído local/controlado; próximo 07A.0; paridade integral não aceita
+Updated: 2026-11-03 · Session: s27 · Phase:6 07A.0 concluído local/controlado; decisão de fornecedor LinkedIn pendente; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s27: 07A.0, viabilidade do LinkedIn.
+  - **Inventário:** 20 ações da referência (EV-235 a EV-244), cada uma com sua capacidade.
+  - **Atestado e trava:** a plataforma atesta, a trava bloqueia, e a UI mostra o motivo do servidor.
+  - **QA:** L-036 removed, 0 chamadas externas.
+  - **Revisão:** três Important corrigidos RED→GREEN (100a).
+  - **Evidência:** EV-289.
+- Not covered s27: backend LinkedIn da referência (não observável); capacidades reais de conector (exigem conta de teste e contrato).
+- Needs human s27:
+  - escolher a rota do LinkedIn (oficial assistida ou conector de conta) e o fornecedor;
+  - conta LinkedIn de teste própria;
+  - aceite jurídico do risco ao Contrato do Usuário (barreira LinkedIn em clone/barriers.md).
 
 - Covered s26: 07C.2c Google Agenda. O grid de Apps seguiu idêntico ao EV-204 (a referência não tem cartão de agenda; ela aparece só no SDR, EV-256). A página da conexão segue o padrão da página Sheets, em L4, sem escrita na referência. QA L-035 removed, 0 chamadas ao Google. Revisão independente: três Important corrigidos RED→GREEN (099a). EV-288. Próximo 07A.0.
 - Not covered s26: consentimento Google real e evento numa agenda real (sem cliente OAuth e conta de teste autorizados); a configuração de agenda dentro do SDR da referência não foi observada.
@@ -91,7 +103,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s26: 07A.0 — viabilidade do LinkedIn. 07C.2 concluído (07C.2a, 07C.2b e 07C.2c); menores→08A/08B.
+Fila vigente s27: 07A.1 — conexão LinkedIn, bloqueado pela decisão de fornecedor. 07A.0 concluído; menores→07A.1/08A.
+
+Fila s26 (histórica): 07A.0 — viabilidade do LinkedIn.
 
 Fila s25 (histórica): 07C.2c — agenda.
 

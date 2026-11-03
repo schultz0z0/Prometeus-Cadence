@@ -252,3 +252,12 @@ Google Agenda do cliente concluída local/controlado:
 - cancelamento idempotente.
 
 A página não entra no grid de Apps (a referência não tem esse cartão); quem vai usar a agenda é o 07B.3. Uma revisão independente encontrou três Important, corrigidos RED→GREEN. Com isso, o 07C.2 está fechado. [Aceite](../../validation/07c2c-google-calendar.md). Próximo **07A.0 — viabilidade do LinkedIn**.
+
+### Continuidade 03/11 — 07A.0
+
+Viabilidade do LinkedIn concluída local/controlado:
+- **Matriz:** capacidades por ação observada na referência.
+- **Atestado e trava:** a plataforma atesta e revoga; a trava bloqueia toda ação sem capacidade comprovada.
+- **Comparação:** API oficial contra conectores de conta.
+
+Revisão independente: três Important corrigidos RED→GREEN. **Decisão pendente com o usuário** (rota, fornecedor, conta de teste e aceite jurídico) antes do 07A.1. [Aceite](../../validation/07a0-linkedin-feasibility.md).

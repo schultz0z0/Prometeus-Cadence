@@ -18,6 +18,11 @@ Launch blockers first. One row per barrier; details below.
 - Convites e mensagens exigem programas/permissões aprovados. Mensagens requerem ação afirmativa específica do usuário e excluem eventos programados/automatizados; OAuth self-service não substitui esses direitos.
 - Mitigação no07A: comprovar capacidades reais do aplicativo aprovado; bloquear ações não habilitadas, manter rascunho/ação humana quando compatível. Não prometer convite ou cadência automática pela API oficial sem suporte do contrato concedido. Apify para fonte pública não concede direitos de envio pela API oficial.
 - Prazo/custo: não confirmados; não inventar aprovação ou fornecedor alternativo. Isso descreve documentação pública, não o backend do CadenceFlow.
+- 07A.0 (03/11) [doc SRC-006] [doc SRC-007] [doc SRC-008] [obs EV-289]:
+  - **Alternativa:** um conector de conta (Unipile e similares) opera tudo o que a referência mostra. Custa a partir de 49 EUR/mês, mais 3 a 5 EUR por conta.
+  - **Risco contratual:** o Contrato do Usuário do LinkedIn proíbe automação, e a conta do cliente pode ser restringida.
+  - **Gate:** o Prometeus mantém tudo bloqueado até um atestado da plataforma.
+  - **Decisão pendente com o usuário**, com questão jurídica sobre termos, responsabilidade e aviso ao cliente.
 
 ### BR-002 Cadastro empresarial e busca pública não garantem contato pessoal
 
