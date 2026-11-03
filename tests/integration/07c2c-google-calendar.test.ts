@@ -16,7 +16,7 @@ const user=async()=>{await resetRateLimits();return createUser();};
 /** In-memory Google Agenda: token endpoint, free/busy, and create/get/delete of events by id. */
 function fakeCalendar(){
  const events=new Map<string,{start:string;end:string;status:string;summary:string}>(),calls:string[]=[];let n=0;
- const hooks:{busy:{start:string;end:string}[];scope?:string;afterCreate?:()=>void;beforeFreeBusy?:()=>Response|undefined}={busy:[]};
+ const hooks:{busy:{start:string;end:string}[];scope?:string;afterCreate?:()=>Promise<unknown>|void;beforeFreeBusy?:()=>Response|undefined;lagGet?:number}={busy:[]};
  const fakeFetch:typeof fetch=(async(input:RequestInfo|URL,init?:RequestInit)=>{
   const url=new URL(String(input)),method=init?.method??'GET',body=init?.body?String(init.body):'';
   if(url.host==='oauth2.googleapis.com')return Response.json({access_token:'access-qa-'+(++n),token_type:'Bearer',expires_in:3600,scope:hooks.scope??CALENDAR_SCOPES.join(' '),refresh_token:'refresh-qa-'+'r'.repeat(12)});
@@ -28,8 +28,9 @@ function fakeCalendar(){
   const m=url.pathname.match(/^\/calendar\/v3\/calendars\/primary\/events(?:\/([a-v0-9]+))?$/);if(!m)return Response.json({error:{message:'not found'}},{status:404});
   if(method==='POST'){assert.equal(url.searchParams.get('sendUpdates'),'none');const b=JSON.parse(body);
    if(events.has(b.id))return Response.json({error:{code:409,message:'The requested identifier already exists.'}},{status:409});
-   events.set(b.id,{start:b.start.dateTime,end:b.end.dateTime,status:'confirmed',summary:b.summary});hooks.afterCreate?.();return Response.json({id:b.id,status:'confirmed'});}
+   events.set(b.id,{start:b.start.dateTime,end:b.end.dateTime,status:'confirmed',summary:b.summary});await hooks.afterCreate?.();return Response.json({id:b.id,status:'confirmed'});}
   const e=events.get(m[1]);
+  if(method==='GET'&&hooks.lagGet){hooks.lagGet--;return Response.json({error:{message:'Not Found'}},{status:404});}
   if(method==='GET')return e?Response.json({id:m[1],status:e.status}):Response.json({error:{message:'Not Found'}},{status:404});
   if(method==='DELETE'){if(!e)return Response.json({error:{message:'Not Found'}},{status:404});if(e.status==='cancelled')return Response.json({error:{message:'Resource has been deleted'}},{status:410});e.status='cancelled';return new Response(null,{status:204});}
   return Response.json({},{status:405});
@@ -57,7 +58,7 @@ test('connect asks both calendar scopes; a missing one connects nothing; configu
  await assert.rejects(finishCalendarAuthorization(u.p,u.p.sessionId,new URL(callback+'?state='+url.searchParams.get('state')+'&code=c'),g.deps),{status:422,code:'CALENDAR_SCOPE_DENIED'});
  assert.equal((await listConnections(u.p)).connections.some(c=>c.kind==='google-calendar'),false);
  g.hooks.scope=undefined;await authorize(u.p,g);
- const live=await calendar(u.p);assert.equal(live.state,'setup');assert.equal(live.calendar,null);assert.equal(JSON.stringify(live).includes('refresh-qa'),false);
+ const live=await calendar(u.p);assert.equal(live.state,'setup');assert.equal(live.calendar,null);assert.equal(JSON.stringify(live).includes('refresh-qa'),false);assert.equal(JSON.stringify(live).includes('access-qa'),false);
  // An operator cannot configure, and nothing reaches Google.
  const op={...(await user()).p,workspaceId:u.p.workspaceId};
  await testAdmin(c=>c.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),op.workspaceId,op.userId,'operator']));
@@ -148,4 +149,34 @@ test('HTTP contract: authorize and validation through the API; a refused grant m
  await assert.rejects(readCalendarSlots(p,window(),g.deps),{status:409,code:'CALENDAR_ATTENTION'});
  delete process.env.GOOGLE_CALENDAR_CLIENT_ID;
  try{assert.equal((await post({action:'calendar-authorize'})).status,503);}finally{process.env.GOOGLE_CALENDAR_CLIENT_ID=env.GOOGLE_CALENDAR_CLIENT_ID;}
+});
+
+test('review: a repeat while the first attempt is in flight waits; a repeat whose lookup lags still settles as booked, not as taken by its own event',async()=>{
+ const {p,g}=await ready(),[s1,s2]=(await readCalendarSlots(p,window(),g.deps)).slots,requestId=randomUUID();
+ let replay:Promise<unknown>|undefined;
+ g.hooks.afterCreate=()=>{g.hooks.afterCreate=undefined;replay=reserveCalendarSlot(p,{slotId:s1.id,leadId:'m1',requestId},g.deps).then(()=>'ok',e=>e);return replay;};
+ assert.equal((await reserveCalendarSlot(p,{slotId:s1.id,leadId:'m1',requestId},g.deps)).state,'accepted');
+ const second=await replay as {status?:number;code?:string};assert.equal(second.status,409);assert.equal(second.code,'RESERVATION_PENDING');
+ assert.equal(g.count('POST /calendars/primary/events'),1);
+ // Lost answer, then Google's lookup lags behind free/busy: the repeat must not call its own event a conflict.
+ const req2=randomUUID(),real=g.deps.fetch!;let drop=true;
+ const lossy:CalendarDeps={fetch:(async(i:RequestInfo|URL,init?:RequestInit)=>{const res=await real(i,init);if(drop&&init?.method==='POST'&&String(i).includes('/events')){drop=false;throw new TypeError('reset');}return res;}) as typeof fetch};
+ await assert.rejects(reserveCalendarSlot(p,{slotId:s2.id,leadId:'m1',requestId:req2},lossy),{status:503});
+ g.hooks.lagGet=1;
+ const v=await reserveCalendarSlot(p,{slotId:s2.id,leadId:'m1',requestId:req2},g.deps);
+ assert.equal(v.state,'accepted');assert.equal(g.events.size,2);
+});
+
+test('review: reconnecting clears a lost-calendar attention so slots come back; a deleted lead does not hide a stored reservation',async()=>{
+ const {p,g}=await ready();
+ const [slot]=(await readCalendarSlots(p,window(),g.deps)).slots,requestId=randomUUID();
+ const v=await reserveCalendarSlot(p,{slotId:slot.id,leadId:'m1',requestId},g.deps);
+ g.hooks.beforeFreeBusy=()=>Response.json({calendars:{primary:{errors:[{domain:'global',reason:'notFound'}]}}});
+ await assert.rejects(readCalendarSlots(p,window(),g.deps),{status:422,code:'CALENDAR_MISSING'});
+ assert.equal((await calendar(p)).attention,'missing');
+ g.hooks.beforeFreeBusy=undefined;await authorize(p,g);
+ assert.equal((await calendar(p)).attention,null);
+ assert.ok((await readCalendarSlots(p,window(),g.deps)).slots.length>0);
+ await testAdmin(c=>c.query("DELETE FROM app.lead WHERE workspace_id=$1 AND id='m1'",[p.workspaceId]));
+ assert.deepEqual(await reserveCalendarSlot(p,{slotId:slot.id,leadId:'m1',requestId},g.deps),v);
 });

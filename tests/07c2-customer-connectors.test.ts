@@ -52,3 +52,14 @@ test('07C.2c slots follow weekdays, hours, duration, notice and horizon; busy in
  for(const bad of[{timezone:'Mars/Base'},{weekdays:[]},{weekdays:[7]},{start:'18:00',end:'09:00'},{start:'9h'},{durationMinutes:20},{horizonDays:90},{noticeHours:-1}])
   assert.equal(calendarSetupSchema.safeParse({...ok,...bad}).success,false,JSON.stringify(bad));
 });
+
+test('07C.2c review: a time skipped by DST resolves to the later instant; the transition day keeps its slots in order',()=>{
+ // New York springs forward at 02:00 on 2026-03-08: 02:30 does not exist and becomes 03:30 EDT.
+ assert.equal(zonedTime('2026-03-08','02:30','America/New_York').toISOString(),'2026-03-08T07:30:00.000Z');
+ // Fall back on 2026-11-01: 01:30 happens twice; the first (EDT) is used.
+ assert.equal(zonedTime('2026-11-01','01:30','America/New_York').toISOString(),'2026-11-01T05:30:00.000Z');
+ const c={timezone:'America/New_York',weekdays:[0],start:'00:00',end:'04:00',durationMinutes:60 as const,noticeHours:0,horizonDays:30};
+ const now=Date.parse('2026-03-01T00:00:00Z'),slots=candidateSlots(c,now,Date.parse('2026-03-09T00:00:00Z'),now).filter(s=>s.start>=Date.parse('2026-03-08T00:00:00Z'));
+ assert.ok(slots.every((s,i)=>i===0||s.start>=slots[i-1].end),'no overlapping slots on the transition day');
+ assert.ok(slots.every(s=>s.end<=Date.parse('2026-03-08T08:00:00Z')));
+});

@@ -19,6 +19,7 @@ const failures:Record<string,[number,string]>={
  SLOT_TAKEN:[409,'Este horário acabou de ser reservado. Escolha outro.'],
  REQUEST_REUSED:[409,'Este pedido já foi usado para outra reserva.'],
  RESERVATION_CHANGED:[409,'A reserva mudou em outra aba. Recarregue antes de continuar.'],
+ RESERVATION_PENDING:[409,'A reserva ainda está sendo criada. Tente de novo em instantes.'],
  LEAD_NOT_FOUND:[404,'Lead não encontrado.'],
 };
 const calendarError=(e:unknown)=>{
@@ -124,14 +125,16 @@ export async function reserveCalendarSlot(p:Principal,raw:unknown,deps:CalendarD
    outcome=await call(p,a,async token=>{
     // A repeated request first asks Google: the event may exist from the attempt whose answer was lost.
     if(r.replay&&await findEvent(token,calendarId,r.event_id,deps))return'accepted';
-    if((await busy(token,{calendarId,timezone:slot.z},slot.s,slot.e,deps)).length)return'failed';
+    // A repeat may see its own event as busy before Google's lookup catches up: ask once more before calling it taken.
+    if((await busy(token,{calendarId,timezone:slot.z},slot.s,slot.e,deps)).length)return r.replay&&await findEvent(token,calendarId,r.event_id,deps)?'accepted':'failed';
     // The event id is fixed by the reservation: a second create answers 409 instead of booking twice.
     try{await google('POST',eventUrl(calendarId)+'?sendUpdates=none',token,event,deps,texts);return'accepted';}
     catch(e){if(e instanceof GoogleRequestError&&e.status===409)return await findEvent(token,calendarId,r.event_id,deps)?'accepted':'failed';throw e;}
    },deps);
   }catch(e){
    // No answer: the event may exist. The reservation stays uncertain until a repeat or a cancel asks Google.
-   await finish(p,r.id,revision,e instanceof GoogleRetry?'uncertain':'failed',e instanceof Error?e.message:null);
+   // The Google error is what the caller needs; a lost race on the local row must not hide it.
+   await finish(p,r.id,revision,e instanceof GoogleRetry?'uncertain':'failed',e instanceof Error?e.message:null).catch(()=>undefined);
    throw e;
   }
   const next=await finish(p,r.id,revision,outcome,outcome==='failed'?'O horário foi ocupado na agenda.':null);
@@ -147,7 +150,7 @@ export async function cancelCalendarReservation(p:Principal,id:string,raw:unknow
   // Already settled: answer from the local record, with no second call to Google.
   if(r.state==='cancelled'||r.state==='failed')return view(r);
   if(Number(r.revision)!==parsed.data.expectedRevision)throw Error('RESERVATION_CHANGED');
-  if(r.state==='prepared')throw new AppError(409,'A reserva ainda está sendo criada. Tente de novo em instantes.','RESERVATION_PENDING');
+  if(r.state==='prepared')throw Error('RESERVATION_PENDING');
   const a=await access(p);
   if(a.id!==r.connection_id)throw new AppError(409,'A conta Google desta reserva foi desconectada. Apague o evento direto na agenda.','CALENDAR_DISCONNECTED');
   // Delete is the authoritative check for an uncertain reservation: 404/410 means no event exists.

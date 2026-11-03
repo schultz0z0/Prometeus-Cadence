@@ -61,10 +61,13 @@ function zoneOffset(ms:number,timeZone:string){
  const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).formatToParts(ms).map(x=>[x.type,x.value]));
  return Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second)-Math.floor(ms/1000)*1000;
 }
-/** The instant a wall-clock date and time happen in a zone. */
+/** The instant a wall-clock date and time happen in a zone: the first one when it repeats (fall back), the later one when DST skips it. */
 export function zonedTime(ymd:string,time:string,timeZone:string):Date{
  const [y,m,d]=ymd.split('-').map(Number),[h,mi]=time.split(':').map(Number),guess=Date.UTC(y,m-1,d,h,mi);
- const first=guess-zoneOffset(guess,timeZone);return new Date(guess-zoneOffset(first,timeZone));
+ // Try the offsets in force half a day before and after; a candidate is valid when its own offset matches.
+ const tries=[...new Set([zoneOffset(guess-43200000,timeZone),zoneOffset(guess+43200000,timeZone)])].map(o=>guess-o);
+ const valid=tries.filter(t=>t+zoneOffset(t,timeZone)===guess);
+ return new Date(valid.length?Math.min(...valid):Math.max(...tries));
 }
 const localDate=(ms:number,timeZone:string)=>new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).format(ms);
 export function candidateSlots(c:Pick<CalendarConfig,'timezone'|'weekdays'|'start'|'end'|'durationMinutes'|'noticeHours'|'horizonDays'>,from:number,to:number,now:number){
