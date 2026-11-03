@@ -242,3 +242,13 @@ Google Sheets do cliente concluído local/controlado:
 - recuperação para cabeçalho alterado, planilha apagada e acesso perdido.
 
 Uma revisão independente e quatro Important corrigidos RED→GREEN. [Aceite](../../validation/07c2b-google-sheets.md). Próximo **07C.2c — agenda**.
+
+### Continuidade 03/11 — 07C.2c
+
+Google Agenda do cliente concluída local/controlado:
+- OAuth com PKCE;
+- disponibilidade no fuso, com horários livres que descontam o ocupado no Google;
+- reserva sem duplicata, reconciliada pelo id do evento;
+- cancelamento idempotente.
+
+A página não entra no grid de Apps (a referência não tem esse cartão); quem vai usar a agenda é o 07B.3. Uma revisão independente encontrou três Important, corrigidos RED→GREEN. Com isso, o 07C.2 está fechado. [Aceite](../../validation/07c2c-google-calendar.md). Próximo **07A.0 — viabilidade do LinkedIn**.

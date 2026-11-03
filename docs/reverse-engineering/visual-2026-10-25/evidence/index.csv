@@ -94,3 +94,4 @@ id,date,session,route,shows,masked
 "EV-286","2026-11-03","s24","/settings/apps/apollo","07C2a Apollo API key panel in the retained reference layout; fake key refused by Apollo health check; zero connections; no reference writes","yes; fake [RE] data only; no real key"
 
 "EV-287","2026-11-03","s25","/settings/apps/google-sheets; /settings/apps","07C2b Google Sheets disconnected panel compared with EV-258; setup, attention and paused states with local fixtures; overview connected card per retained component; zero Google calls; no reference writes","yes; fake [RE] data only; no real tokens"
+"EV-288","2026-11-03","s26","/settings/apps/google-calendar; /settings/apps","07C2c Google Calendar page following the Sheets page pattern; Apps grid unchanged vs EV-204 (reference has no calendar card); setup and attention states with a local fixture; zero Google calls; no reference writes","yes; fake [RE] data only; no real tokens"

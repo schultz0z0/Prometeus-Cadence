@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07C.2c",
+  "next": "07A.0",
   "end": "08B",
   "packages": [
     {
@@ -926,6 +926,52 @@
       "continuousLane": "sheets"
     },
     {
+      "id": "07C.2c",
+      "title": "Google Agenda do cliente",
+      "requirements": [
+        "R16"
+      ],
+      "dependencies": [
+        "07C.2b"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-03-prometeus-cadence-07c2c-google-calendar.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-integrations-design.md",
+      "create": [
+        "src/server/integrations/google.ts",
+        "src/server/integrations/calendar.ts",
+        "src/modules/settings/calendar-connection.tsx",
+        "src/app/api/integration-oauth/google-calendar/callback/route.ts",
+        "db/migrations/099-google-calendar.sql",
+        "tests/integration/07c2c-google-calendar.test.ts"
+      ],
+      "modify": [
+        "src/domain/connector-capabilities.ts",
+        "src/server/integrations/sheets.ts",
+        "src/server/integrations/connections.ts",
+        "src/server/integrations/http.ts",
+        "src/server/channels/crypto.ts",
+        "src/modules/settings/reference-integrations.tsx",
+        "src/app/(app)/settings/[[...section]]/page.tsx"
+      ],
+      "unit": "tests/07c2-customer-connectors.test.ts",
+      "integration": "tests/integration/07c2c-google-calendar.test.ts",
+      "evidence": "docs/validation/07c2c-google-calendar.md",
+      "routes": [
+        "/settings/apps/google-calendar",
+        "GET /api/integration-oauth/google-calendar/callback"
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-03",
+      "review": "docs/validation/07c2c-google-calendar-review.md",
+      "followUpMigrations": [
+        "db/migrations/099a-google-calendar-review.sql"
+      ],
+      "deferredMinorOwner": "08A",
+      "consumer": "07B.3"
+    },
+    {
       "id": "07C.2",
       "title": "Conectores de cliente e agenda/CRM",
       "requirements": [
@@ -974,9 +1020,11 @@
       "executionSplit": {
         "07C.2a": "completed-local-controlled",
         "07C.2b": "completed-local-controlled",
-        "07C.2c": "planned: calendar connector (slots, reservation idempotency, origin-id reconcile)",
+        "07C.2c": "completed-local-controlled",
         "FunnelsFlow/MeetFlow": "barrier: no official API contract; not offered"
-      }
+      },
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-03"
     },
     {
       "id": "07A.0",
