@@ -233,3 +233,12 @@ O 07C.2 foi dividido em três pacotes. O 07C.2a, cofre de credenciais e Apollo d
 - chave central opcional por workspace, e `APOLLO_MAX_PAGES` prevalece.
 
 Uma revisão independente e quatro Important corrigidos RED→GREEN. FunnelsFlow e MeetFlow seguem sem contrato oficial. [Aceite](../../validation/07c2a-connectors.md). Próximo **07C.2b — Google Sheets**.
+
+### Continuidade 03/11 — 07C.2b
+
+Google Sheets do cliente concluído local/controlado:
+- OAuth com PKCE e escopo `drive.file`;
+- planilha criada na conta do cliente, uma linha por lead, atualizada a cada evento;
+- recuperação para cabeçalho alterado, planilha apagada e acesso perdido.
+
+Uma revisão independente e quatro Important corrigidos RED→GREEN. [Aceite](../../validation/07c2b-google-sheets.md). Próximo **07C.2c — agenda**.

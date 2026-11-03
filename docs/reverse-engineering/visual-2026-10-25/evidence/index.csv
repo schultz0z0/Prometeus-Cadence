@@ -92,3 +92,5 @@ id,date,session,route,shows,masked
 "EV-285","2026-11-02","s23","/settings/webhooks; GET /api/v1/leads","07C1b own API keys section and read API exercised locally with fake data; reference shows no API keys; no reference writes","yes; fake [RE] data only; token never captured"
 
 "EV-286","2026-11-03","s24","/settings/apps/apollo","07C2a Apollo API key panel in the retained reference layout; fake key refused by Apollo health check; zero connections; no reference writes","yes; fake [RE] data only; no real key"
+
+"EV-287","2026-11-03","s25","/settings/apps/google-sheets; /settings/apps","07C2b Google Sheets disconnected panel compared with EV-258; setup, attention and paused states with local fixtures; overview connected card per retained component; zero Google calls; no reference writes","yes; fake [RE] data only; no real tokens"

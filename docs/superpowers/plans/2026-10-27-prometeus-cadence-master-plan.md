@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07C.2b** (atualizado 03/11; 07C.2a concluído).
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07C.2c** (atualizado 03/11; 07C.2a e 07C.2b concluídos).
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -29,7 +29,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 06E.2 | Duplicados, fusão, privacidade e ciclo dos dados | 06E.1, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-06e2-data-lifecycle.md) | Concluído local/controlado02/11; [aceite](../../validation/06e2-data-lifecycle.md) |
 | 06F | Assistente, busca, onboarding e ajuda | 06C.3, 06E.2, 06IA | [tarefas](2026-10-27-prometeus-cadence-06f-assistant-experience.md) | Concluído local/controlado em dois pacotes: [06F.1](2026-11-02-prometeus-cadence-06f1-assistant-search.md) e [06F.2](2026-11-02-prometeus-cadence-06f2-assistant-commands.md) |
 | 07C.1 | API, eventos e webhooks de saída | 06E.2, 06C.2 | [tarefas](2026-10-27-prometeus-cadence-07c1-api-webhooks.md) | Concluído local/controlado em dois pacotes: [07C.1a](2026-11-02-prometeus-cadence-07c1a-webhooks.md) e [07C.1b](2026-11-02-prometeus-cadence-07c1b-public-api.md) |
-| 07C.2 | Conectores de cliente e agenda/CRM | 07C.1 | [tarefas](2026-10-27-prometeus-cadence-07c2-customer-connectors.md) | Em execução: [07C.2a](2026-11-02-prometeus-cadence-07c2a-connectors.md) concluído local/controlado; 07C.2b (Google Sheets) e 07C.2c (agenda) planejados; FunnelsFlow/MeetFlow sem contrato oficial |
+| 07C.2 | Conectores de cliente e agenda/CRM | 07C.1 | [tarefas](2026-10-27-prometeus-cadence-07c2-customer-connectors.md) | Em execução: [07C.2a](2026-11-02-prometeus-cadence-07c2a-connectors.md) e [07C.2b](2026-11-03-prometeus-cadence-07c2b-google-sheets.md) concluídos local/controlado; 07C.2c (agenda) planejado; FunnelsFlow/MeetFlow sem contrato oficial |
 | 07A.0 | Viabilidade e capacidades do LinkedIn | 06IA, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07a0-linkedin-feasibility.md) | Planejado; não executado |
 | 07A.1 | Conexão, saúde e sincronização LinkedIn | 07A.0, 07C.2 | [tarefas](2026-10-27-prometeus-cadence-07a1-linkedin-connection.md) | Planejado; não executado |
 | 07A.2 | Públicos, campanhas, convites e aceites LinkedIn | 07A.1, 06B.5 | [tarefas](2026-10-27-prometeus-cadence-07a2-linkedin-campaigns.md) | Planejado; não executado |
@@ -142,3 +142,10 @@ Continuidade 07C.2a em 03/11: o 07C.2 foi dividido em 07C.2a (cofre e Apollo), 0
 - a chave central passa a ser opcional por workspace.
 
 Uma revisão independente encontrou quatro Important, corrigidos RED→GREEN na 097a; menores→08A. Próximo **07C.2b — Google Sheets**. [Aceite](../../validation/07c2a-connectors.md).
+
+Continuidade 07C.2b em 03/11: Google Sheets com a conta Google do cliente:
+- OAuth com PKCE e só `drive.file`; tokens cifrados;
+- uma linha por lead pela coluna "ID Cadence", sem duplicata em repetições;
+- falhas da planilha seguram a fila com ação de recuperação; lane próprio `sheets`.
+
+Uma revisão independente encontrou quatro Important, corrigidos RED→GREEN na 098a; menores→08A/08B. Próximo **07C.2c — agenda**. [Aceite](../../validation/07c2b-google-sheets.md).
