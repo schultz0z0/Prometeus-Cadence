@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { MeetFlowPreview } from "./meetflow-preview";
 import { ApolloConnection, useConnections } from "./apollo-connection";
 import { SheetsConnection } from "./sheets-connection";
+import { CalendarConnection } from "./calendar-connection";
 const apps=[
   {name:'FunnelsFlow CRM',slug:'funnelsflow',icon:'Workflow',color:'#ff6b00',description:'Leads gerados, qualificados ou que responderam viram contatos e negócios no CRM.'},
   {name:'Google Planilhas',slug:'google-sheets',icon:'Sheet',color:'#16a765',description:'Cada lead gerado, qualificado ou que respondeu vira uma linha na sua planilha.'},
@@ -17,6 +18,8 @@ export function Integrations({subpage}:{subpage?:string}) {
   if(subpage==='meetflow')return <MeetFlowPreview/>;
   if(subpage==='funnelsflow')return <div className="reference-settings funnelsflow-reference"><Link className="back-link" href="/settings/apps"><Icon name="ArrowLeft" size={14}/>Integrações</Link><div className="funnelsflow-heading"><span><Icon name="Workflow" size={26}/></span><div><h1>Nova Conta FunnelsFlow</h1><p>Conecte sua conta CRM para sincronizar leads e negócios</p></div></div><section className="funnelsflow-connection"><h2>Conexão</h2><Field label="Apelido da conta"><input disabled placeholder="Ex.: Conta principal"/></Field><Field label="Chave de API"><input disabled type="password" placeholder="Cole a chave de API da sua conta"/></Field><p className="muted">Este adaptador ainda não está disponível. Não informe credenciais nesta tela.</p><div className="form-actions"><Button disabled variant="primary">Conectar</Button></div></section></div>;
   if(subpage==='google-sheets')return <SheetsConnection/>;
+  // Not on the Apps grid (the reference has no calendar card); the SDR setup links here.
+  if(subpage==='google-calendar')return <CalendarConnection/>;
   if(subpage==='apollo')return <div className="reference-settings integration-detail"><Link className="back-link" href="/settings/apps"><Icon name="ArrowLeft" size={14}/>CRM e apps</Link><h1>Apollo</h1><p className="subtitle">{app?.description}</p>
     <ApolloConnection/>
     <section className="reference-panel"><header><Icon name="Upload"/><h2>Prefere planilha?</h2></header><div className="reference-panel-body"><p>Importe os contatos que você já exportou do Apollo.</p><LinkButton href="/leads/import">Importar planilha do Apollo</LinkButton></div></section>

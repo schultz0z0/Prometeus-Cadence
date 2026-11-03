@@ -235,3 +235,7 @@
 .integration-google>.notice{margin-bottom:12px}
 .integration-google>header{margin-bottom:8px!important}
 .integration-google>.reference-panel:not(.sheets-config) h2{margin:0;line-height:1.75rem}
+.calendar-days{grid-template-columns:repeat(7,minmax(56px,1fr))}.calendar-days legend{grid-column:1/-1}
+.calendar-hours{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.calendar-slots{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}.calendar-slots li{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.875rem}
+@media(max-width:520px){.calendar-days{grid-template-columns:repeat(4,1fr)}}
