@@ -224,3 +224,12 @@ API pública somente leitura concluída local/controlado:
 - leads e eventos com cursor retomável e limite por chave.
 
 Uma revisão independente e quatro Important corrigidos RED→GREEN. **07C.1 concluído.** [Aceite](../../validation/07c1b-public-api.md). Próximo **07C.2**.
+
+### Continuidade 03/11 — 07C.2a
+
+O 07C.2 foi dividido em três pacotes. O 07C.2a, cofre de credenciais e Apollo do cliente, está concluído local/controlado:
+- referência de credencial de uso único, chave conferida no Apollo e cifrada;
+- buscas e automações usam a conexão revisada; revogar impede a chamada;
+- chave central opcional por workspace, e `APOLLO_MAX_PAGES` prevalece.
+
+Uma revisão independente e quatro Important corrigidos RED→GREEN. FunnelsFlow e MeetFlow seguem sem contrato oficial. [Aceite](../../validation/07c2a-connectors.md). Próximo **07C.2b — Google Sheets**.

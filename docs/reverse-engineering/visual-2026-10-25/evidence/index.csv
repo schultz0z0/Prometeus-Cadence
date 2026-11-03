@@ -90,3 +90,5 @@ id,date,session,route,shows,masked
 "EV-284","2026-11-02","s22","/settings/webhooks","07C1a webhooks page compared with retained reference text and client component; local geometry and fake-data capture; no reference writes; no external POST","yes; fake [RE] data only"
 
 "EV-285","2026-11-02","s23","/settings/webhooks; GET /api/v1/leads","07C1b own API keys section and read API exercised locally with fake data; reference shows no API keys; no reference writes","yes; fake [RE] data only; token never captured"
+
+"EV-286","2026-11-03","s24","/settings/apps/apollo","07C2a Apollo API key panel in the retained reference layout; fake key refused by Apollo health check; zero connections; no reference writes","yes; fake [RE] data only; no real key"

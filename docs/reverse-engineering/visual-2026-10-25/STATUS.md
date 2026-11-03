@@ -1,10 +1,13 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-02 · Session: s23 · Phase:6 07C.1 concluído local/controlado (07C.1a+07C.1b); próximo 07C.2; paridade integral não aceita
+Updated: 2026-11-03 · Session: s24 · Phase:6 07C.2a concluído local/controlado; próximo 07C.2b; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s24: 07C.2a conexão Apollo do cliente na página Apollo de Apps, no layout retido (L4, sem escrita na referência); QA L033 removed, chave fictícia recusada, 0 conexões. Revisão independente: quatro Important corrigidos RED→GREEN (097a). EV-286. Próximo 07C.2b.
+- Not covered s24: conexão aceita com chave Apollo real (sem chave de teste autorizada); FunnelsFlow/MeetFlow sem contrato oficial.
 
 - Covered s23: 07C.1b API pública somente leitura (seção própria; a referência não mostra chaves); QA L032 removed, 0 chamadas externas. Revisão independente: quatro Important corrigidos RED→GREEN (096a). EV-285. Próximo 07C.2.
 - Not covered s23: documentação pública/OpenAPI; 320 px não emulado pelo painel.
@@ -82,7 +85,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s23: 07C.2. 07C.1 concluído local/controlado; menores→08A.
+Fila vigente s24: 07C.2b — Google Sheets. 07C.2a concluído local/controlado; menores→08A.
+
+Fila s23 (histórica): 07C.2.
 
 Fila s22 (histórica): 07C.1b — API pública com tokens escopados.
 

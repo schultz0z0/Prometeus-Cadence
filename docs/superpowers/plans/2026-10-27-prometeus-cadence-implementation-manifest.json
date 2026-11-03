@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07C.2",
+  "next": "07C.2b",
   "end": "08B",
   "packages": [
     {
@@ -833,6 +833,52 @@
       "completedAt": "2026-11-02"
     },
     {
+      "id": "07C.2a",
+      "title": "Cofre de credenciais e conexão Apollo do cliente",
+      "requirements": [
+        "R16"
+      ],
+      "dependencies": [
+        "07C.1"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-02-prometeus-cadence-07c2a-connectors.md",
+      "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-integrations-design.md",
+      "create": [
+        "src/domain/connector-capabilities.ts",
+        "src/server/integrations/connections.ts",
+        "src/app/api/integrations/credentials/route.ts",
+        "src/modules/settings/apollo-connection.tsx",
+        "db/migrations/097-customer-connectors.sql"
+      ],
+      "modify": [
+        "src/modules/settings/reference-integrations.tsx",
+        "src/server/integrations/http.ts",
+        "src/server/channels/crypto.ts",
+        "src/server/prospecting/workspace-config.ts",
+        "src/server/prospecting/service.ts",
+        "src/server/prospecting/steps.ts",
+        "src/server/automations/state.ts",
+        "src/server/automations/dispatch.ts"
+      ],
+      "unit": "tests/07c2-customer-connectors.test.ts",
+      "integration": "tests/integration/07c2-customer-connectors.test.ts",
+      "evidence": "docs/validation/07c2a-connectors.md",
+      "routes": [
+        "/settings/apps",
+        "/settings/apps/apollo",
+        "POST /api/integrations/credentials"
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-03",
+      "review": "docs/validation/07c2a-connectors-review.md",
+      "followUpMigrations": [
+        "db/migrations/097a-customer-connectors-review.sql"
+      ],
+      "deferredMinorOwner": "08A"
+    },
+    {
       "id": "07C.2",
       "title": "Conectores de cliente e agenda/CRM",
       "requirements": [
@@ -877,7 +923,13 @@
         "/settings/apps/funnelsflow",
         "/settings/apps/apollo",
         "/settings/apps/meetflow"
-      ]
+      ],
+      "executionSplit": {
+        "07C.2a": "completed-local-controlled",
+        "07C.2b": "planned: Google Sheets OAuth connector (export/import mapping, refresh, revocation)",
+        "07C.2c": "planned: calendar connector (slots, reservation idempotency, origin-id reconcile)",
+        "FunnelsFlow/MeetFlow": "barrier: no official API contract; not offered"
+      }
     },
     {
       "id": "07A.0",
