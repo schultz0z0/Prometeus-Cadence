@@ -23,7 +23,7 @@ export function CalendarConnection(){
  const live=items?.find(c=>c.kind==='google-calendar')??null;
  async function run(fn:()=>Promise<unknown>,done?:string){setBusy(true);setError('');setMessage('');try{await fn();if(done)setMessage(done);}catch(e){setError((e as Error).message);}finally{setBusy(false);load();}}
  async function authorize(){setBusy(true);setError('');try{const r=await api<{authorizationUrl:string}>('/api/integrations',{action:'calendar-authorize'});window.location.assign(r.authorizationUrl);}catch(e){setError((e as Error).message);setBusy(false);}}
- const alerts=<>{oauth&&<div role={oauthNotice[oauth][1]==='error'?'alert':'status'}><Notice tone={oauthNotice[oauth][1]}>{oauthNotice[oauth][0]}</Notice></div>}{error&&<div role="alert"><Notice tone="error">{error}</Notice></div>}
+ const alerts=<>{oauth&&<div role={oauthNotice[oauth][1]==='error'?'alert':'status'}><Notice tone={oauthNotice[oauth][1]}>{oauthNotice[oauth][0]}</Notice></div>}{error&&!(live?.attention&&error===live.lastError)&&<div role="alert"><Notice tone="error">{error}</Notice></div>}
   <p className="sr-only" role="status">{message}</p>{message&&<Notice tone="success">{message}</Notice>}</>;
  if(loadError)return <div className="reference-settings integration-google"><Header/><Notice tone="error">{loadError} <button type="button" className="text-button" onClick={load}>Tentar de novo</button></Notice></div>;
  if(!items)return <div className="reference-settings integration-google"><Header/><p role="status">Consultando a conexão…</p></div>;
@@ -52,7 +52,7 @@ export function CalendarConnection(){
     <dt>Antecedência mínima</dt><dd>{c.noticeHours} h</dd>
     <dt>Janela</dt><dd>{c.horizonDays} {c.horizonDays===1?'dia':'dias'}</dd>
    </dl>
-   <small className="muted">A reserva automática de reuniões chega com o agente SDR. Os horários abaixo já descontam o que está ocupado na sua agenda.</small>
+   <small className="muted">A reserva automática de reuniões chega com o agente SDR.{canRead&&!live.attention&&' Os horários livres já descontam o que está ocupado na sua agenda.'}</small>
    {canRead&&!live.attention&&<div className="stack"><div><Button type="button" disabled={busy} onClick={()=>void showSlots()}>{slots?'Atualizar horários livres':'Ver horários livres'}</Button></div>
     {slots&&(slots.length?<ul className="calendar-slots" aria-label="Próximos horários livres">{slots.slice(0,8).map(s=><li key={s.start}>{when(s.start,c.timezone)}</li>)}</ul>:<p className="muted">Nenhum horário livre nos próximos 7 dias.</p>)}</div>}
    <div className="form-actions">{canManage&&<Button type="button" disabled={busy} onClick={()=>{setEditing(true);setMessage('');}}>Editar disponibilidade</Button>}{disconnect}</div></div></section>
