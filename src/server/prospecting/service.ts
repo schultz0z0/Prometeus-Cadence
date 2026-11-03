@@ -8,7 +8,7 @@ import {requirePermission} from '../auth/permissions.ts';
 import {AppError} from '../errors.ts';
 import {jobInputSchema,confirmationSchema,pageSchema,jobPageSchema} from './schemas.ts';
 import {prospectingConfig,requirements,estimateUsage} from './config.ts';
-import {workspaceProspectingConfig} from './workspace-config.ts';
+import {workspaceProspectingConfig,apolloMaxPages} from './workspace-config.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from './review.ts';
 import {jobView,itemView,encodeCursor,decodeCursor} from './repository.ts';
 import {releaseUnused} from './usage.ts';
@@ -55,9 +55,9 @@ export async function prospectingReviewState(c:PoolClient,p:Principal,input:Pros
   const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);
   const enrichment=input.kind==='qualification'?input.companyPeople?await peopleCheckpoint(c,input,bases,config,aiRoute,context):await enrichmentCheckpoint(c,input,bases,config,aiRoute):null;
   blockers.push(...requirements(config,input,p.workspaceId,aiRoute,enrichment?.reserveCredits));
-  const profileVersion=hashValue({config:config.version,policy:policy??null,contextVersion:context?.version??0,aiRoute,...(enrichment?{enrichment}: {})});
+  const profileVersion=hashValue({config:config.version,apolloConnection:config.apolloConnection,policy:policy??null,contextVersion:context?.version??0,aiRoute,...(enrichment?{enrichment}: {})});
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};
-  return {config,blockers,proof,profileVersion,aiRoute,enrichment,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:Number(process.env.APOLLO_MAX_PAGES??0)}}};
+  return {config,blockers,proof,profileVersion,aiRoute,enrichment,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:apolloMaxPages(!!config.apolloConnection),apolloConnection:config.apolloConnection}}};
 }
 function parseInput(input:unknown):ProspectingInput{const parsed=jobInputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise fonte, filtros, destino e quantidade.');return parsed.data;}
 export async function prepareJob(p:Principal,input:unknown):Promise<Review>{

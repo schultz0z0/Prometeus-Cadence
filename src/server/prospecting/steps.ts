@@ -8,6 +8,7 @@ import {readLeasedJob,performStep,finishJob,handleStepFailure,UncertainStep} fro
 import {ingestPage} from './ingestion.ts';
 import {ProviderError} from './providers/transport.ts';
 import {hashValue} from './review.ts';
+import {workerApolloKey} from '../integrations/connections.ts';
 export {runQualification} from './qualification.ts';
 export interface GenerationAdapters{apify?:SourceAdapter;apollo?:ApolloAdapter;signal?:AbortSignal}
 export function providerContext(job:any,source:'MAPS'|'WEB'|'CNPJ'|'APOLLO',operationId:string,signal:AbortSignal):ProviderContext{
@@ -38,7 +39,12 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
     if(job.checkpoint.exhausted===true||job.counts.found>=input.limit){await finishJob(lease,'completed');return;}
     if(input.source==='APOLLO'){
       const pageNo=Number(job.checkpoint.cursor??1),apollo=adapters.apollo??new ApolloAdapter();
-      const page=await performStep(lease,'apollo-page:'+pageNo,'apollo',{apolloPages:1},()=>apollo.search(ctx,input,pageNo));
+      // A workspace connection supplies its own key, read for the reviewed revision just before the call: a revoked or replaced key stops here.
+      const own=job.checkpoint.execution?.apolloConnection as {id:string;revision:number}|null|undefined;
+      const page=await performStep(lease,'apollo-page:'+pageNo,'apollo',{apolloPages:1},async()=>{
+        const credential=own?await withLeasedTransaction(lease,c=>workerApolloKey(c,lease.workspaceId,own)).catch(()=>{throw new ProviderError('CONNECTION_REVOKED');}):ctx.credential;
+        return apollo.search({...ctx,credential},input,pageNo);
+      });
       await withLeasedTransaction(lease,c=>ingestPage(c,lease,page));
       if(page.exhausted||job.counts.found+page.rawCount>=input.limit)await finishJob(lease,'completed');return;
     }
