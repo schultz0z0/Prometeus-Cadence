@@ -9,7 +9,7 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ section?: string[] }>;
-  searchParams: Promise<{ linkedin?: string }>;
+  searchParams: Promise<{ linkedin?: string; id?: string }>;
 }) {
   const section = (await params).section?.join("/") || "dashboard";
   if (!["dashboard", "campaigns", "campaigns/new", "people", "pipeline", "enrichment", "approvals", "cadences", "templates"].includes(section)) notFound();
@@ -18,6 +18,6 @@ export default async function Page({
   const p = process.env.APP_DATA_MODE === "demo" ? null : await requirePrincipal(await headers()).catch(() => null);
   // shortcut: a failed account read shows the gate without an account; the next reload reads it again.
   const [view, account] = p ? await Promise.all([readLinkedinCapabilities(p).catch(() => null), readLinkedinAccount(p).then(r => r.account).catch(() => null)]) : [null, null];
-  const returned = (await searchParams).linkedin;
-  return <LinkedinSdr key={section} section={section} availability={view && { reason: view.reason, connect: view.capabilities.connect, account, returned: section === "dashboard" ? returned : undefined }} />;
+  const query = await searchParams, returned = query.linkedin;
+  return <LinkedinSdr key={section} section={section} campaignId={section === "campaigns/new" && typeof query.id === "string" && /^[0-9a-f-]{36}$/.test(query.id) ? query.id : null} availability={view && { reason: view.reason, connect: view.capabilities.connect, account, returned: section === "dashboard" ? returned : undefined }} />;
 }
