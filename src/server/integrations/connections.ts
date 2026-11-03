@@ -66,7 +66,8 @@ async function list(c:PoolClient):Promise<ConnectionView[]>{
   (SELECT count(*) FROM app.sheet_export s WHERE s.workspace_id=c.workspace_id AND s.connection_id=c.id AND s.state='failed') failed
   FROM app.integration_connection c WHERE state<>'revoked' ORDER BY kind,id`)).rows
   .map(r=>({id:r.id,kind:r.kind,name:r.name,state:r.state,capabilities:r.capabilities,revision:Number(r.revision),verifiedAt:r.verified_at?.toISOString()??null,lastError:r.last_error,
-   ...(r.kind==='google-sheets'?{config:r.config,configRevision:Number(r.config_revision),active:r.active,attention:r.attention,lastSuccessAt:r.last_success_at?.toISOString()??null,queue:{pending:Number(r.pending),failed:Number(r.failed)}}:{})}));
+   ...(r.kind==='google-sheets'?{config:r.config,configRevision:Number(r.config_revision),active:r.active,attention:r.attention,lastSuccessAt:r.last_success_at?.toISOString()??null,queue:{pending:Number(r.pending),failed:Number(r.failed)}}
+    :r.kind==='google-calendar'?{calendar:r.config,configRevision:Number(r.config_revision),attention:r.attention}:{})}));
 }
 export async function listConnections(p:Principal){return withWorkspaceTransaction(p,async c=>({connections:await list(c),catalog:connectorCatalog}));}
 export async function disconnectIntegration(p:Principal,id:string,raw:unknown){
