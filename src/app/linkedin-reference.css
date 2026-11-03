@@ -24,6 +24,10 @@
 .li-prerequisites .li-next{background:#fff8f2;border-color:#f5cba9;color:#111827}
 .li-prerequisites .li-next>span{background:#ff6b00;color:white}
 .li-prerequisites .li-next small{color:#c45600}
+.li-step-link{display:flex;width:fit-content;align-items:center;gap:4px;padding:0;border:0;background:none;font:inherit;font-size:0.75rem;line-height:1rem;color:#c45600;cursor:pointer}.li-step-link:hover{text-decoration:underline}.li-step-link:disabled{opacity:.6;cursor:default;text-decoration:none}.li-step-link:focus-visible{outline:2px solid #ff6b00;outline-offset:2px;border-radius:4px}
+/* The account modals render inside a step <li>; undo the step card styles there. */
+.li-prerequisites .modal.li-account-modal{color:var(--text)}.li-prerequisites .modal.li-account-modal .li-terms>li{display:list-item;min-height:0;padding:0;border:0;border-radius:0;box-shadow:none;background:none;color:inherit}.li-prerequisites .modal.li-account-modal small{color:var(--muted)}
+.li-step-actions{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px}.li-step-actions>.li-step-link{display:inline-flex}.li-prerequisites li small.li-step-attention,.li-prerequisites li small.li-step-error{color:#b42318}.li-return-notice{margin-bottom:8px}.li-terms{margin:0;padding-left:18px;display:grid;gap:8px;font-size:0.875rem;line-height:1.25rem}
 .linkedin-reference .li-footnote{font-size:0.75rem;line-height:1rem;color:#6b7280;margin-top:12px}
 .li-four-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .li-three-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}

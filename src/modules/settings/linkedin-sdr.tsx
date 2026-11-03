@@ -1,5 +1,9 @@
 "use client";
 import { createContext, useContext, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useIdentity } from "@/client/workspace-provider";
+import { useConnectorApi } from "./apollo-connection";
+import { LINKEDIN_TERMS, type LinkedinAccountView } from "@/domain/linkedin-connection";
 import { SdrOverview } from './sdr-overview';
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
@@ -12,8 +16,8 @@ import {
   Field,
   Badge,
 } from "@/components/ui/primitives";
-// Why LinkedIn is unavailable, read on the server from the platform attestation (07A.0). null = not read (demo).
-export type LinkedinAvailability = { reason: string; connect: boolean } | null;
+// Why LinkedIn is unavailable (07A.0 attestation) and the workspace's account (07A.1), read on the server. null = not read (demo).
+export type LinkedinAvailability = { reason: string; connect: boolean; account?: LinkedinAccountView | null; returned?: string } | null;
 const Availability = createContext<LinkedinAvailability>(null);
 const pendingReason = "A integração LinkedIn ainda não está disponível.";
 export function LinkedinSdr({
@@ -29,16 +33,56 @@ export function LinkedinSdr({
   return <SdrOverview />;
 }
 const campaignPath = "/linkedin/campaigns/new";
+const returnedCopy: Record<string, [string, "success" | "info" | "error"]> = {
+  connected: ["Conta LinkedIn conectada.", "success"],
+  connecting: ["Login concluído. Aguardando a confirmação do fornecedor; atualize a página em instantes.", "info"],
+  cancelled: ["Conexão cancelada. Nenhuma conta foi conectada.", "info"],
+  failed: ["Não foi possível concluir a conexão. Tente de novo.", "error"],
+};
+const stateLabel: Record<string, string> = { ready: "conectada", connecting: "conectando", restricted: "precisa reconectar", error: "sincronização parada", revoked: "desconectada" };
 function LinkedinPrerequisites() {
-  const a = useContext(Availability), ready = !!a?.connect;
+  const a = useContext(Availability), ready = !!a?.connect, account = a?.account ?? null, done = !!account?.ready, notice = a?.returned ? returnedCopy[a.returned] : undefined;
   return <div className="li-prerequisites">
     <small>PRA OS CONVITES SAÍREM, NESTA ORDEM</small>
+    {notice && <div role="status" className="li-return-notice"><Notice tone={notice[1]}>{notice[0]}</Notice></div>}
     <ol>
       <li className={ready ? undefined : "li-next"}><span>{ready ? <Icon name="Check" size={13}/> : 1}</span><div>Disponibilizar a integração<small>{ready ? "Fornecedor do LinkedIn habilitado na plataforma" : a?.reason || "LinkedIn ainda não está disponível neste workspace"}</small></div></li>
-      <li className={ready ? "li-next" : undefined}><span>2</span><div>Conectar o seu LinkedIn<small>{ready ? "A conexão da conta ainda não está disponível" : "depois do passo 1"}</small></div></li>
-      <li><span>3</span><div>Ligar a campanha<small>depois do passo 2</small></div></li>
+      <li className={ready && !done ? "li-next" : undefined}><span>{done ? <Icon name="Check" size={13}/> : 2}</span><div>Conectar o seu LinkedIn{ready ? <LinkedinAccountStep account={account}/> : <small>depois do passo 1</small>}</div></li>
+      <li><span>3</span><div>Ligar a campanha<small>{done ? "As campanhas de convite ainda não estão disponíveis" : "depois do passo 2"}</small></div></li>
     </ol>
   </div>;
+}
+// Step 2: connect (terms, then the vendor's hosted login), state with the last check, check again, reconnect, disconnect.
+function LinkedinAccountStep({account}: {account: LinkedinAccountView | null}) {
+  const identity = useIdentity(), canManage = ["owner", "admin"].includes(identity?.workspaces.find(w => w.id === identity.activeWorkspaceId)?.role ?? "");
+  const api = useConnectorApi(), router = useRouter(), [modal, setModal] = useState<"" | "connect" | "revoke">(""), [accepted, setAccepted] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState("");
+  async function run(fn: () => Promise<void>) { setBusy(true); setError(""); try { await fn(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
+  const connect = () => run(async () => {
+    const input = { termsVersion: LINKEDIN_TERMS.version, acceptTerms: true, expectedRevision: account?.revision ?? 0 };
+    const r = await api<{url: string}>(account ? `/api/linkedin/accounts/${account.id}/reconnect` : "/api/linkedin/accounts", account ? input : { action: "confirm-connect", input });
+    window.location.assign(r.url);
+  });
+  const check = () => run(async () => { try { await api(`/api/linkedin/accounts/${account!.id}/sync`, { requestId: crypto.randomUUID() }); } finally { router.refresh(); } });
+  const revoke = () => run(async () => { await api(`/api/linkedin/accounts/${account!.id}/revoke`, { expectedRevision: account!.revision }); setModal(""); router.refresh(); });
+  const open = () => { setAccepted(false); setError(""); setModal("connect"); };
+  return <>
+    {!account ? canManage ? <button type="button" className="li-step-link" onClick={open}>Conectar o LinkedIn <Icon name="ArrowRight" size={12}/></button> : <small>Peça a um administrador para conectar o LinkedIn</small>
+      : <><small>{account.displayName} · {stateLabel[account.state]} · {account.lastSyncAt ? `verificada em ${new Date(account.lastSyncAt).toLocaleString("pt-BR", {dateStyle: "short", timeStyle: "short"})}` : "ainda não verificada"}</small>
+        {account.attention && <small className="li-step-attention">{account.attention}</small>}
+        {canManage && <span className="li-step-actions"><button type="button" className="li-step-link" disabled={busy} onClick={check}>{busy && !modal ? "Verificando…" : "Verificar agora"}</button>{!account.ready && account.state !== "connecting" && <button type="button" className="li-step-link" disabled={busy} onClick={open}>Reconectar</button>}<button type="button" className="li-step-link" disabled={busy} onClick={() => { setError(""); setModal("revoke"); }}>Desconectar</button></span>}</>}
+    {error && !modal && !account?.attention?.includes(error) && <small role="alert" className="li-step-error">{error}</small>}
+    {modal === "connect" && <Modal title={LINKEDIN_TERMS.title} className="li-account-modal" onClose={() => setModal("")}><div className="stack">
+      <ul className="li-terms">{LINKEDIN_TERMS.items.map(item => <li key={item}>{item}</li>)}</ul>
+      <label className="li-check"><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)}/><span><strong>Li e aceito estas condições para a minha conta</strong><small>Versão {LINKEDIN_TERMS.version}. Fica registrado quem aceitou e quando.</small></span></label>
+      {error && <div role="alert"><Notice tone="error">{error}</Notice></div>}
+      <div className="form-actions"><Button onClick={() => setModal("")}>Cancelar</Button><Button variant="primary" disabled={!accepted || busy} onClick={connect}>{busy ? "Abrindo…" : "Continuar para o login"}</Button></div>
+    </div></Modal>}
+    {modal === "revoke" && <Modal title="Desconectar o LinkedIn?" className="li-account-modal" onClose={() => setModal("")}><div className="stack">
+      <p>O acesso à conta para na hora e a sessão é removida do fornecedor. O histórico da conexão continua aqui.</p>
+      {error && <div role="alert"><Notice tone="error">{error}</Notice></div>}
+      <div className="form-actions"><Button onClick={() => setModal("")}>Cancelar</Button><Button variant="danger" disabled={busy} onClick={revoke}>{busy ? "Desconectando…" : "Desconectar"}</Button></div>
+    </div></Modal>}
+  </>;
 }
 function LinkedinReference({section}: {section: string}) {
   return <div className="linkedin-reference">

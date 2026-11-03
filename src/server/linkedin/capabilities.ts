@@ -18,17 +18,17 @@ const sqlError=(e:unknown)=>{const k=e instanceof Error?failures[(e as {code?:st
 const reasons={none:'Nenhum fornecedor do LinkedIn está habilitado na plataforma.',expired:'A habilitação do fornecedor do LinkedIn venceu.',revoked:'O fornecedor do LinkedIn foi revogado.',missing:'O fornecedor habilitado não oferece esta ação.',invalid:'A habilitação do fornecedor do LinkedIn está inválida.'};
 type State={adapterId:string;kind:'official'|'account-connector';capabilities:unknown;expiresAt:string;verifiedAt:string;revision:number|string;state:'active'|'expired'|'revoked'}|null;
 
-async function view(c:PoolClient):Promise<LinkedinCapabilityView>{
+export async function linkedinCapabilityView(c:PoolClient):Promise<LinkedinCapabilityView>{
  const s=(await c.query('SELECT app.linkedin_capability_state() s')).rows[0].s as State;
  const stored=s?.state==='active'?capabilitiesSchema.safeParse(s.capabilities):null;
  if(s?.state!=='active'||!stored?.success){const reason=reasons[!s?'none':s.state==='active'?'invalid':s.state];return {capabilities:NO_LINKEDIN,adapter:null,reason,actions:linkedinFeasibility(NO_LINKEDIN,reason)};}
  const capabilities:LinkedinCapabilities={...stored.data,verifiedAt:new Date(s.verifiedAt).toISOString()};
  return {capabilities,adapter:{id:s.adapterId,kind:s.kind,expiresAt:new Date(s.expiresAt).toISOString(),revision:Number(s.revision)},reason:'',actions:linkedinFeasibility(capabilities,reasons.missing)};
 }
-export const readLinkedinCapabilities=(p:Principal)=>withWorkspaceTransaction(p,view);
+export const readLinkedinCapabilities=(p:Principal)=>withWorkspaceTransaction(p,linkedinCapabilityView);
 /** Gate every LinkedIn executor calls before and after each I/O; it reads the attestation in the caller's transaction, so expiry and revocation apply at once. */
 export async function requireLinkedinCapability(c:PoolClient,key:LinkedinCapabilityKey){
- const v=await view(c);if(!linkedinActionAllowed(v.capabilities,key))throw new AppError(409,v.reason||reasons.missing,'LINKEDIN_UNAVAILABLE');
+ const v=await linkedinCapabilityView(c);if(!linkedinActionAllowed(v.capabilities,key))throw new AppError(409,v.reason||reasons.missing,'LINKEDIN_UNAVAILABLE');
 }
 const scope=()=>{const s=platformAiWorkspace();if(!s)throw new AppError(403,failures.PLATFORM_ADMIN_REQUIRED[1],'PLATFORM_ADMIN_REQUIRED');return s;};
 const attestInput=attestationBase.extend({expectedRevision:z.number().int().min(0)}).strict().superRefine(refineAttestation);
@@ -37,12 +37,12 @@ export async function attestLinkedinAdapter(p:Principal,input:unknown){
  const a=parsed.data;
  return withWorkspaceTransaction(p,async c=>{await requireAiAdmin(c);
   await c.query('SELECT app.attest_linkedin_adapter($1,$2,$3,$4,$5,$6,$7,$8)',[scope(),a.adapterId,a.kind,a.agreementRef,{...a.capabilities,verifiedAt:null},a.evidenceRefs,a.expiresAt,a.expectedRevision]).catch(e=>{throw sqlError(e);});
-  return view(c);});
+  return linkedinCapabilityView(c);});
 }
 const revokeInput=z.object({adapterId:adapterIdSchema,expectedRevision:z.number().int().min(1)}).strict();
 export async function revokeLinkedinAdapter(p:Principal,input:unknown){
  const parsed=revokeInput.safeParse(input);if(!parsed.success)throw new AppError(422,'Revogação inválida.');
  return withWorkspaceTransaction(p,async c=>{await requireAiAdmin(c);
   await c.query('SELECT app.revoke_linkedin_adapter($1,$2,$3)',[scope(),parsed.data.adapterId,parsed.data.expectedRevision]).catch(e=>{throw sqlError(e);});
-  return view(c);});
+  return linkedinCapabilityView(c);});
 }
