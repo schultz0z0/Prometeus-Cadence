@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { SdrOverview } from './sdr-overview';
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
@@ -12,23 +12,30 @@ import {
   Field,
   Badge,
 } from "@/components/ui/primitives";
+// Why LinkedIn is unavailable, read on the server from the platform attestation (07A.0). null = not read (demo).
+export type LinkedinAvailability = { reason: string; connect: boolean } | null;
+const Availability = createContext<LinkedinAvailability>(null);
+const pendingReason = "A integração LinkedIn ainda não está disponível.";
 export function LinkedinSdr({
   sdr = false,
   section = "dashboard",
+  availability = null,
 }: {
   sdr?: boolean;
   section?: string;
+  availability?: LinkedinAvailability;
 }) {
-  if (!sdr) return <LinkedinReference section={section} />;
+  if (!sdr) return <Availability.Provider value={availability}><LinkedinReference section={section} /></Availability.Provider>;
   return <SdrOverview />;
 }
 const campaignPath = "/linkedin/campaigns/new";
 function LinkedinPrerequisites() {
+  const a = useContext(Availability), ready = !!a?.connect;
   return <div className="li-prerequisites">
     <small>PRA OS CONVITES SAÍREM, NESTA ORDEM</small>
     <ol>
-      <li className="li-next"><span>1</span><div>Disponibilizar a integração<small>LinkedIn ainda não está disponível neste workspace</small></div></li>
-      <li><span>2</span><div>Conectar o seu LinkedIn<small>depois do passo 1</small></div></li>
+      <li className={ready ? undefined : "li-next"}><span>{ready ? <Icon name="Check" size={13}/> : 1}</span><div>Disponibilizar a integração<small>{ready ? "Fornecedor do LinkedIn habilitado na plataforma" : a?.reason || "LinkedIn ainda não está disponível neste workspace"}</small></div></li>
+      <li className={ready ? "li-next" : undefined}><span>2</span><div>Conectar o seu LinkedIn<small>{ready ? "A conexão da conta ainda não está disponível" : "depois do passo 1"}</small></div></li>
       <li><span>3</span><div>Ligar a campanha<small>depois do passo 2</small></div></li>
     </ol>
   </div>;
@@ -97,7 +104,8 @@ function LinkedinTemplates() {
   </>;
 }
 function LinkedinUnavailable({title,onClose}: {title:string;onClose:()=>void}) {
-  return <Modal title={title} onClose={onClose}><Notice>A integração LinkedIn ainda não está disponível. Nenhum registro será criado e nenhuma mensagem será enviada.</Notice><div className="form-actions"><Button onClick={onClose}>Fechar</Button></div></Modal>;
+  const a = useContext(Availability);
+  return <Modal title={title} onClose={onClose}><Notice>{a?.reason || pendingReason} Nenhum registro será criado e nenhuma mensagem será enviada.</Notice><div className="form-actions"><Button onClick={onClose}>Fechar</Button></div></Modal>;
 }
 
 function LinkedinCampaignDraft() {
