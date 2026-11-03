@@ -44,6 +44,7 @@ export async function linkedinCallbackRequest(request:Request){
 export async function linkedinNotifyRequest(request:Request){
  try{
   if(request.method!=='POST')throw new AppError(405,'Método não permitido.');
+  if(Number(request.headers.get('content-length'))>8192)throw new AppError(422,'Aviso muito grande.');
   const text=await request.text();if(new TextEncoder().encode(text).byteLength>8192)throw new AppError(422,'Aviso muito grande.');
   let body:unknown;try{body=JSON.parse(text);}catch{throw new AppError(422,'Aviso inválido.');}
   return json(await receiveLinkedinNotify(new URL(request.url).searchParams.get('token')??'',body));

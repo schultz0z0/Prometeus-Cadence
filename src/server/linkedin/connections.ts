@@ -30,12 +30,16 @@ const digest=(text:string)=>createHash('sha256').update(text).digest('hex');
 const secret=()=>randomBytes(32).toString('base64url');
 const capsVersion=(v:LinkedinCapabilityView)=>v.adapter?`${v.adapter.id}:${v.adapter.revision}:${v.capabilities.verifiedAt}`:'none';
 const unsupported='O fornecedor habilitado na plataforma ainda não é suportado pela conexão de contas.';
-// The vendor reaches notify_url from the internet; the browser comes back to the same origin.
-function publicBase(env:Record<string,string|undefined>=process.env){
- const u=URL.parse(env.LINKEDIN_PUBLIC_URL??env.BETTER_AUTH_URL??'http://127.0.0.1:3210');
+const connectable=(v:LinkedinCapabilityView)=>linkedinActionAllowed(v.capabilities,'connect')&&v.adapter?.id==='unipile';
+function origin(raw:string){
+ const u=URL.parse(raw);
  if(!u||!(u.protocol==='https:'||(u.protocol==='http:'&&['127.0.0.1','localhost','[::1]'].includes(u.hostname))))throw new AppError(503,'O endereço público do LinkedIn está mal configurado.','LINKEDIN_NOT_CONFIGURED');
  return u.origin;
 }
+// The browser comes back where its session cookie lives; the vendor reaches notify_url from the internet.
+const browserBase=(env:Record<string,string|undefined>=process.env)=>origin(env.BETTER_AUTH_URL??'http://127.0.0.1:3210');
+const notifyBase=(env:Record<string,string|undefined>=process.env)=>origin(env.LINKEDIN_PUBLIC_URL??env.BETTER_AUTH_URL??'http://127.0.0.1:3210');
+const publicBase=()=>{browserBase();return notifyBase();};
 function connectBlockers(v:LinkedinCapabilityView){
  const out:string[]=[];
  if(!linkedinActionAllowed(v.capabilities,'connect'))out.push(v.reason||'O fornecedor habilitado não oferece a conexão de contas.');
@@ -60,7 +64,7 @@ export async function confirmLinkedinConnection(p:Principal,sessionId:string,raw
  if(!sessionId)throw new AppError(401,'Entre novamente para conectar o LinkedIn.');
  const parsed=confirmConnectSchema.safeParse(raw);if(!parsed.success)throw new AppError(422,'Leia e aceite o termo antes de conectar.');
  const input=parsed.data;if(input.termsVersion!==LINKEDIN_TERMS.version)throw new AppError(409,'O termo mudou. Leia a versão atual antes de conectar.','LINKEDIN_TERMS_CHANGED');
- const state=secret(),notify=secret(),attemptId=randomUUID(),base=publicBase();
+ const state=secret(),notify=secret(),attemptId=randomUUID(),base=browserBase(),notifyAt=notifyBase();
  const begun=await withWorkspaceTransaction(p,async c=>{
   const cap=await linkedinCapabilityView(c);
   if(!linkedinActionAllowed(cap.capabilities,'connect'))throw new AppError(409,cap.reason||'O fornecedor habilitado não oferece a conexão de contas.','LINKEDIN_UNAVAILABLE');
@@ -70,16 +74,26 @@ export async function confirmLinkedinConnection(p:Principal,sessionId:string,raw
  }).catch(e=>{throw sqlError(e);});
  const expiresAt=new Date(begun.expiresAt).toISOString();
  try{
-  const url=await hostedLink({type:begun.kind,reconnectAccount:begun.external??undefined,name:attemptId,notifyUrl:`${base}/api/linkedin/oauth/notify?token=${notify}`,
+  const url=await hostedLink({type:begun.kind,reconnectAccount:begun.external??undefined,name:attemptId,notifyUrl:`${notifyAt}/api/linkedin/oauth/notify?token=${notify}`,
    successUrl:`${base}/api/linkedin/oauth/callback?state=${state}&result=success`,failureUrl:`${base}/api/linkedin/oauth/callback?state=${state}&result=failure`,expiresOn:expiresAt},deps);
   return {url,expiresAt};
  }catch(e){if(e instanceof UnipileRetry||e instanceof UnipileMissing)throw new AppError(503,'Não foi possível abrir a conexão com o LinkedIn agora. Tente de novo.','LINKEDIN_LINK_FAILED');throw e;}
 }
-/** The browser coming back from the hosted login: same user, session and workspace; a failure closes the attempt. */
+/** The starter's browser coming back: same user, session and workspace. A failure closes the attempt; with the vendor's
+ * confirmation already in, this binds the account (a forwarded hosted link completed by someone else never comes back here). */
 export async function finishLinkedinReturn(p:Principal,sessionId:string,url:URL):Promise<'connected'|'connecting'|'cancelled'>{
  const state=url.searchParams.get('state')??'',result=url.searchParams.get('result');
  if(url.searchParams.getAll('state').length!==1||!/^[A-Za-z0-9_-]{43}$/.test(state)||!['success','failure'].includes(result??'')||!sessionId)throw new AppError(422,'Retorno da conexão inválido.');
- return withWorkspaceTransaction(p,async c=>(await c.query('SELECT app.return_linkedin_connect($1,$2,$3) v',[digest(state),digest(sessionId),result==='failure'])).rows[0].v).catch(e=>{throw sqlError(e);});
+ return withWorkspaceTransaction(p,async c=>{const cap=await linkedinCapabilityView(c);
+  return (await c.query('SELECT app.return_linkedin_connect($1,$2,$3,$4) v',[digest(state),digest(sessionId),result==='failure',connectable(cap)?capsVersion(cap):null])).rows[0].v;}).catch(e=>{throw sqlError(e);});
+}
+const LEFT_BEHIND=new Set(['LINKEDIN_NOTIFY_USED','LINKEDIN_AUTHOR_REMOVED','LINKEDIN_UNAVAILABLE','LINKEDIN_ACCOUNT_EXISTS']);
+// A rejected create login still left a session in the platform's vendor account: remove it unless someone owns it.
+async function discardVendorAccount(external:string,deps:UnipileDeps){
+ const pool=ingressPool();
+ try{if(!(await pool.query('SELECT app.linkedin_orphan_mark($1) v',[external])).rows[0].v)return;
+  await deleteUnipileAccount(external,deps);await pool.query('SELECT app.linkedin_orphan_done($1)',[external]);}
+ catch{/* queued: the worker retries */}
 }
 /** Server-to-server notify from the vendor. Binds only after the vendor confirms the account, with the gate re-read in the same transaction. */
 export async function receiveLinkedinNotify(token:string,body:unknown,deps:UnipileDeps={}):Promise<{ok:true}>{
@@ -89,28 +103,30 @@ export async function receiveLinkedinNotify(token:string,body:unknown,deps:Unipi
  const attempt=(await pool.query('SELECT app.linkedin_notify_attempt($1,$2) v',[hash,name])).rows[0].v as {kind:'create'|'reconnect';external:string|null;boundExternal:string|null;closed:boolean}|null;
  if(!attempt)throw fail('LINKEDIN_NOTIFY_INVALID');
  if(attempt.boundExternal){if(attempt.boundExternal===external)return {ok:true};throw fail('LINKEDIN_NOTIFY_USED');}
- if(attempt.closed)throw fail('LINKEDIN_NOTIFY_USED');
+ if(attempt.closed){if(attempt.kind==='create')await discardVendorAccount(external,deps);throw fail('LINKEDIN_NOTIFY_USED');}
  if((attempt.kind==='create')!==(status==='CREATION_SUCCESS'))throw new AppError(422,'Aviso inválido.');
  if(attempt.kind==='reconnect'&&attempt.external!==external)throw fail('LINKEDIN_ACCOUNT_MISMATCH');
  let remote:Awaited<ReturnType<typeof unipileAccount>>;
  try{remote=await unipileAccount(external,deps);}
  catch(e){if(e instanceof UnipileMissing)throw new AppError(422,'A conta informada não existe no fornecedor.');throw new AppError(503,'Não foi possível confirmar a conta com o fornecedor agora.','LINKEDIN_NOTIFY_RETRY');}
- const c=await pool.connect();
+ const c=await pool.connect();let failure:unknown;
  try{
   await c.query('BEGIN');
   const cap=await linkedinCapabilityView(c);
-  if(!linkedinActionAllowed(cap.capabilities,'connect')||cap.adapter?.id!=='unipile')throw new AppError(409,cap.reason||unsupported,'LINKEDIN_UNAVAILABLE');
+  if(!connectable(cap))throw new AppError(409,cap.reason||unsupported,'LINKEDIN_UNAVAILABLE');
   await c.query('SELECT app.bind_linkedin_account($1,$2,$3,$4,$5,$6)',[hash,external,remote.memberId,remote.name,remote.state,capsVersion(cap)]);
   await c.query('COMMIT');return {ok:true};
- }catch(e){await c.query('ROLLBACK').catch(()=>{});throw sqlError(e);}finally{c.release();}
+ }catch(e){await c.query('ROLLBACK').catch(()=>{});failure=sqlError(e);}finally{c.release();}
+ if(attempt.kind==='create'&&failure instanceof AppError&&LEFT_BEHIND.has(failure.code??''))await discardVendorAccount(external,deps);
+ throw failure;
 }
 
-type Probe={state:LinkedinAccountState;name:string|null;error:string|null}|{state:null;name:null;error:string};
+type Probe={state:LinkedinAccountState;name:string|null;error:string|null;retryMs?:undefined}|{state:null;name:null;error:string;retryMs?:number};
 async function probe(external:string,deps:UnipileDeps):Promise<Probe>{
  try{const a=await unipileAccount(external,deps);return {state:a.state,name:a.name,error:attentionFor[a.state]};}
  catch(e){
   if(e instanceof UnipileMissing)return {state:'error',name:null,error:'A conta não existe mais no fornecedor. Conecte de novo.'};
-  if(e instanceof UnipileRetry||e instanceof AppError)return {state:null,name:null,error:e.message};
+  if(e instanceof UnipileRetry||e instanceof AppError)return {state:null,name:null,error:e.message,retryMs:e instanceof UnipileRetry?e.retryAfterMs:undefined};
   throw e;
  }
 }
@@ -122,8 +138,9 @@ export async function syncLinkedinAccount(p:Principal,raw:unknown,deps:UnipileDe
  if(!claim.replay){
   const r=await probe(claim.external,deps);
   const out=await withWorkspaceTransaction(p,async c=>{const cap=await linkedinCapabilityView(c);
-   return (await c.query('SELECT app.finish_linkedin_sync($1,$2,$3,$4,$5,$6,$7) v',[accountId,token,claim.epoch,r.state,r.name,r.error,capsVersion(cap)])).rows[0].v as string;}).catch(e=>{throw sqlError(e);});
+   return (await c.query('SELECT app.finish_linkedin_sync($1,$2,$3,$4,$5,$6,$7,$8) v',[accountId,token,claim.epoch,r.state,r.name,r.error,capsVersion(cap),r.retryMs??null])).rows[0].v as string;}).catch(e=>{throw sqlError(e);});
   if(out==='revoked')throw new AppError(409,'A conta foi desconectada durante a verificação.','LINKEDIN_REVOKED');
+  if(out==='changed')throw new AppError(409,'A conta foi reconectada durante a verificação. Verifique de novo.','LINKEDIN_CHANGED');
   if(out==='lost')throw fail('LINKEDIN_SYNC_BUSY');
   if(out==='failed')throw new AppError(503,r.error??'A verificação falhou.','LINKEDIN_SYNC_FAILED');
  }
@@ -138,7 +155,7 @@ export async function revokeLinkedinAccount(p:Principal,accountId:string,raw:unk
  catch{/* remote_delete_pending stays; the worker retries */}
  return {revoked:true};
 }
-/** Worker lane: due health checks and pending vendor removals, each workspace's row on its own. */
+/** Worker lane: due health checks (only while the gate allows connecting), pending vendor removals and orphaned vendor sessions. */
 export async function runLinkedinTick(o:{limit:number;signal?:AbortSignal},deps:UnipileDeps={}){
  const pool=workerPool(),token=randomUUID();
  const items=(await pool.query('SELECT app.claim_linkedin_work($1,$2) v',[o.limit,token])).rows[0].v as {workspaceId:string;id:string;external:string;epoch:string;kind:'sync'|'delete'}[];
@@ -147,10 +164,19 @@ export async function runLinkedinTick(o:{limit:number;signal?:AbortSignal},deps:
   if(o.signal?.aborted)break;
   if(it.kind==='delete'){let ok=true;try{await deleteUnipileAccount(it.external,deps);}catch{ok=false;failed++;}
    await pool.query('SELECT app.finish_linkedin_remote_delete($1,$2,$3,$4)',[it.workspaceId,it.id,token,ok]);continue;}
-  const r=await probe(it.external,deps);if(r.state===null)failed++;
   const c=await pool.connect();
-  try{const cap=await linkedinCapabilityView(c);await c.query('SELECT app.finish_linkedin_work($1,$2,$3,$4,$5,$6,$7,$8)',[it.workspaceId,it.id,token,it.epoch,r.state,r.name,r.error,capsVersion(cap)]);}
-  finally{c.release();}
+  try{
+   const cap=await linkedinCapabilityView(c);
+   const r:Probe=connectable(cap)?await probe(it.external,deps):{state:null,name:null,error:'O fornecedor do LinkedIn está desabilitado na plataforma.'};
+   if(r.state===null)failed++;
+   await c.query('SELECT app.finish_linkedin_work($1,$2,$3,$4,$5,$6,$7,$8,$9)',[it.workspaceId,it.id,token,it.epoch,r.state,r.name,r.error,capsVersion(cap),r.retryMs??null]);
+  }finally{c.release();}
  }
- return {done:items.length,failed};
+ const orphans=(await pool.query('SELECT app.claim_linkedin_orphans($1,$2) v',[o.limit,token])).rows[0].v as string[];
+ for(const external of orphans){
+  if(o.signal?.aborted)break;
+  let ok=true;try{await deleteUnipileAccount(external,deps);}catch{ok=false;failed++;}
+  await pool.query('SELECT app.finish_linkedin_orphan($1,$2,$3)',[external,token,ok]);
+ }
+ return {done:items.length+orphans.length,failed};
 }

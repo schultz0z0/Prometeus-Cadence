@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useIdentity } from "@/client/workspace-provider";
 import { useConnectorApi } from "./apollo-connection";
@@ -33,15 +33,16 @@ export function LinkedinSdr({
   return <SdrOverview />;
 }
 const campaignPath = "/linkedin/campaigns/new";
-const returnedCopy: Record<string, [string, "success" | "info" | "error"]> = {
-  connected: ["Conta LinkedIn conectada.", "success"],
-  connecting: ["Login concluído. Aguardando a confirmação do fornecedor; atualize a página em instantes.", "info"],
-  cancelled: ["Conexão cancelada. Nenhuma conta foi conectada.", "info"],
-  failed: ["Não foi possível concluir a conexão. Tente de novo.", "error"],
-};
+// The return query string is only a hint: "connected" is said only when the server shows the account.
+const returnedCopy = (returned: string, account: LinkedinAccountView | null): [string, "success" | "info" | "error"] | undefined =>
+  returned === "connected" || returned === "connecting" ? account ? ["Conta LinkedIn conectada.", "success"] : ["Login concluído. Aguardando a confirmação do fornecedor; verifique em instantes.", "info"]
+  : returned === "cancelled" ? ["Conexão cancelada. Nenhuma conta foi conectada.", "info"]
+  : returned === "failed" ? ["Não foi possível concluir a conexão. Tente de novo.", "error"] : undefined;
 const stateLabel: Record<string, string> = { ready: "conectada", connecting: "conectando", restricted: "precisa reconectar", error: "sincronização parada", revoked: "desconectada" };
 function LinkedinPrerequisites() {
-  const a = useContext(Availability), ready = !!a?.connect, account = a?.account ?? null, done = !!account?.ready, notice = a?.returned ? returnedCopy[a.returned] : undefined;
+  const a = useContext(Availability), router = useRouter(), [returned] = useState(a?.returned), ready = !!a?.connect, account = a?.account ?? null, done = !!account?.ready, notice = returned ? returnedCopy(returned, account) : undefined;
+  // Drop the hint from the address so a reload or a shared link does not repeat it; the notice stays for this visit.
+  useEffect(() => { if (a?.returned) router.replace("/linkedin/dashboard", { scroll: false }); }, [a?.returned, router]);
   return <div className="li-prerequisites">
     <small>PRA OS CONVITES SAÍREM, NESTA ORDEM</small>
     {notice && <div role="status" className="li-return-notice"><Notice tone={notice[1]}>{notice[0]}</Notice></div>}

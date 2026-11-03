@@ -4,7 +4,7 @@ import{base,resetRateLimits}from'./helpers.ts';
 import{withWorkspaceTransaction}from'../../src/server/db/transaction.ts';
 import{attestLinkedinAdapter}from'../../src/server/linkedin/capabilities.ts';
 import{readLinkedinAccount,prepareLinkedinConnection,confirmLinkedinConnection,finishLinkedinReturn,receiveLinkedinNotify,syncLinkedinAccount,revokeLinkedinAccount,runLinkedinTick}from'../../src/server/linkedin/connections.ts';
-import{linkedinAccountsRequest,linkedinAccountActionRequest,linkedinNotifyRequest}from'../../src/server/linkedin/http.ts';
+import{linkedinAccountsRequest,linkedinAccountActionRequest,linkedinNotifyRequest,linkedinCallbackRequest}from'../../src/server/linkedin/http.ts';
 import{NO_LINKEDIN}from'../../src/domain/linkedin-capabilities.ts';
 import{LINKEDIN_TERMS}from'../../src/domain/linkedin-connection.ts';
 import{closeIngressPool}from'../../src/server/channels/ingress-db.ts';
@@ -25,9 +25,9 @@ async function enable(adapterId='unipile',expectedRevision=0){
 const accept=(o:Record<string,unknown>={})=>({termsVersion:LINKEDIN_TERMS.version,acceptTerms:true,expectedRevision:0,...o});
 
 /** In-memory Unipile: hosted links, accounts by id, delete. Every call is recorded. */
-function fakeUnipile(){
+function fakeUnipile(owner?:Principal){
  const accounts=new Map<string,{name:string;memberId:string;statuses:string[];type?:string}>(),links:Record<string,any>[]=[],calls:string[]=[];
- const hooks:{offline?:boolean;duringGet?:()=>Promise<unknown>;deleteFails?:boolean;linkFails?:boolean}={};
+ const hooks:{offline?:boolean;duringGet?:()=>Promise<unknown>;deleteFails?:boolean;linkFails?:boolean;retryAfter?:string}={};
  const fakeFetch=(async(input:RequestInfo|URL,init?:RequestInit)=>{
   const url=new URL(String(input)),method=init?.method??'GET';
   assert.equal(url.origin,'https://api9.unipile.com:13111');assert.equal((init?.headers as Record<string,string>)['x-api-key'],env.UNIPILE_API_KEY);
@@ -37,22 +37,24 @@ function fakeUnipile(){
   const a=accounts.get(m[1]);
   if(method==='DELETE'){if(hooks.deleteFails)return Response.json({},{status:500});accounts.delete(m[1]);return Response.json({object:'AccountDeleted'});}
   await hooks.duringGet?.();
+  if(hooks.retryAfter)return Response.json({},{status:429,headers:{'retry-after':hooks.retryAfter}});
   if(!a)return Response.json({status:404,type:'errors/resource_not_found'},{status:404});
   return Response.json({object:'Account',type:a.type??'LINKEDIN',id:m[1],name:a.name,created_at:new Date().toISOString(),connection_params:{im:{id:a.memberId,publicIdentifier:'re-'+a.memberId}},groups:[],sources:a.statuses.map((status,i)=>({id:m[1]+'_'+i,status}))});
  }) as typeof fetch;
- return{accounts,links,calls,hooks,deps:{fetch:fakeFetch},count:(c:string)=>calls.filter(x=>x===c).length};
+ return{owner,accounts,links,calls,hooks,deps:{fetch:fakeFetch},count:(c:string)=>calls.filter(x=>x===c).length};
 }
 const notifyToken=(link:Record<string,any>)=>new URL(link.notify_url).searchParams.get('token')!;
 const returnState=(link:Record<string,any>)=>new URL(link.success_redirect_url).searchParams.get('state')!;
-/** The person finishes the Unipile login: the vendor creates the account and calls notify_url. */
+/** The person finishes the Unipile login: the vendor creates the account and calls notify_url, and the starter's browser comes back. */
 async function completeLogin(u:ReturnType<typeof fakeUnipile>,link:Record<string,any>,o:{id?:string;memberId?:string;status?:string}={}){
  const id=o.id??'acc_'+randomUUID().replaceAll('-','').slice(0,18);
  if(!u.accounts.has(id))u.accounts.set(id,{name:'[RE] Pessoa LinkedIn',memberId:o.memberId??'ACo'+randomUUID().slice(0,8),statuses:['OK']});
  await receiveLinkedinNotify(notifyToken(link),{status:o.status??'CREATION_SUCCESS',account_id:id,name:link.name},u.deps);
+ if(u.owner)await finishLinkedinReturn(u.owner,u.owner.sessionId,new URL(link.success_redirect_url));
  return id;
 }
 async function connected(platform=true){
- if(platform)await enable();const owner=await user(),u=fakeUnipile();
+ if(platform)await enable();const owner=await user(),u=fakeUnipile(owner.p);
  await confirmLinkedinConnection(owner.p,owner.p.sessionId,accept(),u.deps);
  const externalId=await completeLogin(u,u.links[0]);
  const account=(await readLinkedinAccount(owner.p)).account!;
@@ -91,13 +93,48 @@ test('07A.1 connect: hosted link for LinkedIn only, notify binds after the vendo
  assert.equal((await readLinkedinAccount(owner.p)).account,null,'nothing is connected before the vendor notifies');
  const externalId=await completeLogin(u,link);
  assert.equal(u.count('GET /api/v1/accounts/'+externalId),1,'the account is read from the vendor before binding');
+ assert.equal((await readLinkedinAccount(owner.p)).account,null,'the vendor notify alone binds nothing');
+ assert.equal(await code(()=>finishLinkedinReturn(owner.p,'another-session',new URL(link.success_redirect_url))),'403 OAUTH_INVALID');
+ assert.equal(await finishLinkedinReturn(owner.p,owner.p.sessionId,new URL(link.success_redirect_url)),'connected');
  const view=await readLinkedinAccount(owner.p),a=view.account!;
  assert.equal(a.state,'ready');assert.equal(a.ready,true);assert.equal(a.displayName,'[RE] Pessoa LinkedIn');assert.ok(a.lastSyncAt);
  assert.equal(a.capabilities.connect,true);
  for(const secret of [externalId,notifyToken(link),returnState(link),env.UNIPILE_API_KEY])assert.equal(JSON.stringify(view).includes(secret),false);
  const row=await accountRow(owner.p.workspaceId);assert.equal(row.terms_version,LINKEDIN_TERMS.version);assert.equal(row.terms_accepted_by,owner.p.userId);
- assert.equal(await finishLinkedinReturn(owner.p,owner.p.sessionId,new URL(link.success_redirect_url)),'connected');
+ assert.equal(await finishLinkedinReturn(owner.p,owner.p.sessionId,new URL(link.success_redirect_url)),'connected','returning again is harmless');
  assert.deepEqual(await events(owner.p.workspaceId),['connected']);
+});
+
+test('07A.1 a forwarded hosted link cannot attach someone else\'s login; the browser may come back before the notify',async()=>{
+ await enable();const owner=await user(),victim=await user(),u=fakeUnipile();
+ await confirmLinkedinConnection(owner.p,owner.p.sessionId,accept(),u.deps);
+ const link=u.links[0],id=await completeLogin(u,link);
+ // The victim finished the login, so the victim's browser holds the return; it is not the starter's session.
+ assert.equal(await code(()=>finishLinkedinReturn(victim.p,victim.p.sessionId,new URL(link.success_redirect_url))),'403 OAUTH_INVALID');
+ await testAdmin(c=>c.query("UPDATE app.linkedin_connect_attempt SET expires_at=clock_timestamp()-interval '1 second' WHERE workspace_id=$1",[owner.p.workspaceId]));
+ assert.equal(await finishLinkedinReturn(owner.p,owner.p.sessionId,new URL(link.success_redirect_url)),'cancelled');
+ assert.equal(await accountRow(owner.p.workspaceId),undefined,'never bound');
+ await runLinkedinTick({limit:10},u.deps);
+ assert.equal(u.count('DELETE /api/v1/accounts/'+id),1,'the unclaimed vendor session is removed');
+ // Return first, notify second: binds on the notify.
+ await confirmLinkedinConnection(owner.p,owner.p.sessionId,accept(),u.deps);
+ const l2=u.links[1];
+ assert.equal(await finishLinkedinReturn(owner.p,owner.p.sessionId,new URL(l2.success_redirect_url)),'connecting');
+ await completeLogin(u,l2);
+ assert.equal((await readLinkedinAccount(owner.p)).account!.state,'ready');
+});
+
+test('07A.1 a rejected create notify removes the vendor session it created, but never one that belongs to another workspace',async()=>{
+ const c1=await connected(),owner=await user(),u=fakeUnipile(owner.p);u.accounts.set(c1.externalId,c1.u.accounts.get(c1.externalId)!);
+ await confirmLinkedinConnection(owner.p,owner.p.sessionId,accept(),u.deps);
+ await confirmLinkedinConnection(owner.p,owner.p.sessionId,accept(),u.deps);
+ const stale=await code(()=>completeLogin(u,u.links[0],{id:'acc_stale00000001'}));
+ assert.equal(stale,'409 LINKEDIN_NOTIFY_USED');assert.equal(u.count('DELETE /api/v1/accounts/acc_stale00000001'),1);
+ assert.equal(await code(()=>completeLogin(u,u.links[1],{id:c1.externalId})),'409 LINKEDIN_ACCOUNT_TAKEN');
+ assert.equal(u.count('DELETE /api/v1/accounts/'+c1.externalId),0,'another workspace\'s account is never removed');
+ await testAdmin(x=>x.query('UPDATE app.linkedin_capability_profile SET revoked_at=clock_timestamp()'));
+ assert.equal(await code(()=>completeLogin(u,u.links[1],{id:'acc_gateoff000001'})),'409 LINKEDIN_UNAVAILABLE');
+ assert.equal(u.count('DELETE /api/v1/accounts/acc_gateoff000001'),1);
 });
 
 test('07A.1 replayed, forged, stale and cross-tenant notifies change nothing',async()=>{
@@ -159,6 +196,10 @@ test('07A.1 check: one I/O per request id and per lease, offline keeps state and
  c.u.hooks.offline=false;const off=await accountRow(c.p.workspaceId);
  assert.equal(off.state,kept.state);assert.equal(off.last_sync_at.toISOString(),kept.last_sync_at.toISOString());assert.equal(off.sync_failures,1);
  assert.ok(off.next_sync_at>new Date(Date.now()+4*60e3));assert.ok(off.last_error);assert.equal(c.u.links.length,1,'no reconnect link was requested');
+ // A 429 waits at least what the vendor asked.
+ c.u.hooks.retryAfter='7200';
+ assert.equal(await code(()=>syncLinkedinAccount(c.p,{accountId:id,requestId:randomUUID()},c.u.deps)),'503 LINKEDIN_SYNC_FAILED');
+ c.u.hooks.retryAfter=undefined;assert.ok((await accountRow(c.p.workspaceId)).next_sync_at>new Date(Date.now()+7100e3));
  // Revoked while the vendor answers: the answer is dropped.
  c.u.accounts.get(c.externalId)!.statuses=['OK'];
  c.u.hooks.duringGet=async()=>{c.u.hooks.duringGet=undefined;const r=await accountRow(c.p.workspaceId);await revokeLinkedinAccount(c.p,id,{expectedRevision:Number(r.revision)},c.u.deps);};
@@ -178,7 +219,11 @@ test('07A.1 a new attestation voids readiness until the next check; reconnect ke
  const link=c.u.links.at(-1)!;assert.equal(link.type,'reconnect');assert.equal(link.reconnect_account,c.externalId);
  c.u.accounts.set('acc_wrong00000001',{name:'Outra',memberId:'ACoW',statuses:['OK']});
  assert.equal(await code(()=>receiveLinkedinNotify(notifyToken(link),{status:'RECONNECTED',account_id:'acc_wrong00000001',name:link.name},c.u.deps)),'409 LINKEDIN_ACCOUNT_MISMATCH');
- c.u.accounts.get(c.externalId)!.statuses=['OK'];
+ const original=c.u.accounts.get(c.externalId)!;c.u.accounts.set(c.externalId,{...original,memberId:'ACoSomeoneElse',statuses:['OK']});
+ await confirmLinkedinConnection(c.p,c.p.sessionId,accept({accountId:c.account.id,expectedRevision:Number(restricted.revision)}),c.u.deps);
+ assert.equal(await code(()=>completeLogin(c.u,c.u.links.at(-1)!,{id:c.externalId,status:'RECONNECTED'})),'409 LINKEDIN_ACCOUNT_MISMATCH','another LinkedIn member in the same vendor account');
+ assert.equal(c.u.count('DELETE /api/v1/accounts/'+c.externalId),0,'a reconnect never removes the live account');
+ c.u.accounts.set(c.externalId,{...original,statuses:['OK']});
  await confirmLinkedinConnection(c.p,c.p.sessionId,accept({accountId:c.account.id,expectedRevision:Number(restricted.revision)}),c.u.deps);
  await completeLogin(c.u,c.u.links.at(-1)!,{id:c.externalId,status:'RECONNECTED'});
  const after=await accountRow(c.p.workspaceId);
@@ -217,6 +262,18 @@ test('07A.1 worker checks only due, live accounts and never crosses workspaces',
  assert.equal(a.u.count(path(a.externalId)),ba+1);assert.equal(b.u.count(path(b.externalId)),bb,'not due: not checked');
  assert.equal((await accountRow(a.p.workspaceId)).state,'error');assert.equal((await accountRow(b.p.workspaceId)).state,'ready');
  assert.ok((await accountRow(a.p.workspaceId)).next_sync_at>new Date(Date.now()+3600e3));
+ // The worker role reads the gate: a re-attestation voids readiness and a worker check restores it.
+ a.u.accounts.get(a.externalId)!.statuses=['OK'];
+ await testAdmin(x=>x.query('DELETE FROM app.linkedin_capability_profile'));await enable();
+ assert.equal((await readLinkedinAccount(a.p)).account!.ready,false);
+ await testAdmin(x=>x.query('UPDATE app.linkedin_account SET next_sync_at=clock_timestamp() WHERE workspace_id=$1',[a.p.workspaceId]));
+ await runLinkedinTick({limit:10},a.u.deps);
+ assert.equal((await readLinkedinAccount(a.p)).account!.ready,true);
+ // Gate off: no vendor call for health checks.
+ await testAdmin(x=>x.query('UPDATE app.linkedin_capability_profile SET revoked_at=clock_timestamp()'));
+ await testAdmin(x=>x.query('UPDATE app.linkedin_account SET next_sync_at=clock_timestamp() WHERE workspace_id=$1',[a.p.workspaceId]));
+ const n=a.u.count(path(a.externalId));await runLinkedinTick({limit:10},a.u.deps);
+ assert.equal(a.u.count(path(a.externalId)),n);
 });
 
 test('07A.1 HTTP and SQL boundaries: auth, roles, input, workspace, no-store; app role cannot bind or read vendor ids',async()=>{
@@ -235,6 +292,9 @@ test('07A.1 HTTP and SQL boundaries: auth, roles, input, workspace, no-store; ap
  const n=await linkedinNotifyRequest(new Request(base+'/api/linkedin/oauth/notify?token='+'y'.repeat(43),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({status:'CREATION_SUCCESS',account_id:'acc_000000000001',name:'n'})}));
  assert.equal(n.status,404);assert.equal(await n.text().then(t=>t.includes('token')),false);
  assert.equal((await linkedinNotifyRequest(new Request(base+'/api/linkedin/oauth/notify?token=z',{method:'POST',body:'x'.repeat(20000)}))).status,422);
+ const back=await linkedinCallbackRequest(new Request(base+'/api/linkedin/oauth/callback?state='+'s'.repeat(43)+'&result=success'));
+ assert.equal(back.status,303);assert.equal(new URL(back.headers.get('location')!).searchParams.get('linkedin'),'failed');assert.equal(back.headers.get('cache-control'),'no-store');
+ assert.equal((await linkedinNotifyRequest(new Request(base+'/api/linkedin/oauth/notify?token=z',{method:'POST',headers:{'content-length':'999999'},body:'{}'}))).status,422);
  const denied:string[]=[];
  for(const sql of ["SELECT app.bind_linkedin_account('a','b','c','d','ready','v')","SELECT external_account_id FROM app.linkedin_account","SELECT * FROM app.linkedin_connect_attempt"])
   denied.push(await withWorkspaceTransaction(owner.p,c=>c.query(sql)).then(()=>'ok',(e:{code?:string})=>e.code!));
