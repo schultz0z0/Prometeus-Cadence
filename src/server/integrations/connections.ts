@@ -15,8 +15,11 @@ const failures:Record<string,[number,string]>={
  CREDENTIAL_USED:[409,'Esta credencial venceu ou já foi usada. Cole a chave de novo.'],
  CONNECTION_CONFLICT:[409,'A conexão mudou em outra aba. Recarregue antes de continuar.'],
  CONNECTION_NOT_FOUND:[404,'Conexão não encontrada.'],
+ CONNECTION_CHANGED:[409,'A conexão mudou. Recarregue antes de continuar.'],
+ OAUTH_INVALID:[403,'Esta autorização não pertence a você, a esta sessão ou a este workspace. Conecte de novo.'],
+ OAUTH_USED:[409,'Esta autorização venceu ou já foi usada. Conecte de novo.'],
 };
-const connectorError=(e:unknown)=>{const k=e instanceof Error?failures[e.message]:undefined;return k?new AppError(k[0],k[1],e instanceof Error?e.message:undefined):e;};
+export const connectorError=(e:unknown)=>{const k=e instanceof Error?failures[e.message]:undefined;return k?new AppError(k[0],k[1],e instanceof Error?e.message:undefined):e;};
 export const connectionAad=(workspaceId:string,id:string,revision:number)=>({workspaceId,connectionId:id,provider:'apollo' as const,revision});
 const refAad=(workspaceId:string,id:string)=>({workspaceId,connectionId:'ref:'+id,provider:'apollo' as const,revision:0});
 async function admin(c:PoolClient){const role=(await c.query('SELECT app.current_role() AS role')).rows[0].role;if(!['owner','admin'].includes(role))throw new AppError(403,failures.CONNECTOR_ACCESS[1],'CONNECTOR_ACCESS');}
@@ -58,8 +61,12 @@ export async function connectIntegration(p:Principal,raw:unknown,deps:{verify?:(
  }catch(e){throw connectorError(e);}
 }
 async function list(c:PoolClient):Promise<ConnectionView[]>{
- return(await c.query("SELECT id,kind,name,state,capabilities,revision,verified_at,last_error FROM app.integration_connection WHERE state<>'revoked' ORDER BY kind,id")).rows
-  .map(r=>({id:r.id,kind:r.kind,name:r.name,state:r.state,capabilities:r.capabilities,revision:Number(r.revision),verifiedAt:r.verified_at?.toISOString()??null,lastError:r.last_error}));
+ return(await c.query(`SELECT id,kind,name,state,capabilities,revision,verified_at,last_error,config,config_revision,active,attention,last_success_at,
+  (SELECT count(*) FROM app.sheet_export s WHERE s.workspace_id=c.workspace_id AND s.connection_id=c.id AND s.state IN('pending','exporting','held')) pending,
+  (SELECT count(*) FROM app.sheet_export s WHERE s.workspace_id=c.workspace_id AND s.connection_id=c.id AND s.state='failed') failed
+  FROM app.integration_connection c WHERE state<>'revoked' ORDER BY kind,id`)).rows
+  .map(r=>({id:r.id,kind:r.kind,name:r.name,state:r.state,capabilities:r.capabilities,revision:Number(r.revision),verifiedAt:r.verified_at?.toISOString()??null,lastError:r.last_error,
+   ...(r.kind==='google-sheets'?{config:r.config,configRevision:Number(r.config_revision),active:r.active,attention:r.attention,lastSuccessAt:r.last_success_at?.toISOString()??null,queue:{pending:Number(r.pending),failed:Number(r.failed)}}:{})}));
 }
 export async function listConnections(p:Principal){return withWorkspaceTransaction(p,async c=>({connections:await list(c),catalog:connectorCatalog}));}
 export async function disconnectIntegration(p:Principal,id:string,raw:unknown){
