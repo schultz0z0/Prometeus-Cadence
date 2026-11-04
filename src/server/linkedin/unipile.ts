@@ -17,7 +17,7 @@ export class UnipileRetry extends Error{readonly retryAfterMs?:number;readonly s
 /** One call to the platform's Unipile account. Network failures carry no status: the effect is unknown. */
 export async function unipileRequest(method:'GET'|'POST'|'DELETE',path:string,body:unknown,deps:UnipileDeps,env:Env=process.env):Promise<any>{
  const s=unipileSettings(env);let r:Response;
- try{r=await(deps.fetch??fetch)(s.base+path,{method,headers:{'x-api-key':s.key,accept:'application/json',...(body===undefined?{}:{'content-type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(15000)});}
+ try{r=await(deps.fetch??fetch)(s.base+path,{method,headers:{'x-api-key':s.key,accept:'application/json',...(body===undefined||body instanceof FormData?{}:{'content-type':'application/json'})},body:body===undefined?undefined:body instanceof FormData?body:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(15000)});}
  catch{throw new UnipileRetry('Sem resposta do fornecedor do LinkedIn (rede ou tempo esgotado).');}
  if(r.status===404)throw new UnipileMissing('A conta não existe mais no fornecedor.');
  // 401/403 are the platform key, not the customer's account.

@@ -2,6 +2,8 @@ import {authorizeProspectingRequest,readProspectingBody} from '../prospecting/ht
 import {AppError,errorResponse} from '../errors.ts';
 import {requirePrincipal} from '../auth/principal.ts';
 import {attestLinkedinAdapter,readLinkedinCapabilities,revokeLinkedinAdapter} from './capabilities.ts';
+import {listLinkedinPeople,linkedinPipeline,moveLinkedinPerson,optOutLinkedinPerson} from './people.ts';
+import {getLinkedinThread,prepareLinkedinReply,confirmLinkedinReply} from './conversations.ts';
 import {confirmLinkedinCampaign,exploreLinkedinAudience,linkedinCampaignAction,listLinkedinCampaigns,prepareLinkedinCampaign,saveLinkedinCampaign} from './campaigns.ts';
 import {confirmLinkedinConnection,finishLinkedinReturn,prepareLinkedinConnection,readLinkedinAccount,receiveLinkedinNotify,revokeLinkedinAccount,syncLinkedinAccount} from './connections.ts';
 const json=(value:unknown)=>Response.json(value,{headers:{'cache-control':'no-store'}});
@@ -66,5 +68,29 @@ export async function linkedinCampaignActionRequest(request:Request,id:string,ac
  try{const p=await authorizeProspectingRequest(request);
   if(request.method!=='POST'||!['pause','resume','cancel'].includes(action))throw new AppError(404,'Operação não encontrada.');
   return json(await linkedinCampaignAction(p,id,action,await readProspectingBody(request)));
+ }catch(e){return errorResponse(e);}
+}
+export async function linkedinPeopleRequest(request:Request){
+ try{const p=await authorizeProspectingRequest(request);if(request.method!=='GET')throw new AppError(405,'Método não permitido.');
+  return json(await listLinkedinPeople(p,Object.fromEntries(new URL(request.url).searchParams)));}catch(e){return errorResponse(e);}
+}
+export async function linkedinPipelineRequest(request:Request){
+ try{const p=await authorizeProspectingRequest(request);if(request.method!=='GET')throw new AppError(405,'Método não permitido.');return json(await linkedinPipeline(p));}catch(e){return errorResponse(e);}
+}
+export async function linkedinPersonActionRequest(request:Request,id:string,action:string){
+ try{const p=await authorizeProspectingRequest(request);
+  if(request.method!=='POST'||!['move','opt-out'].includes(action))throw new AppError(404,'Operação não encontrada.');
+  if(action==='opt-out')return json(await optOutLinkedinPerson(p,id));
+  const body=await readProspectingBody(request) as Record<string,unknown>;return json(await moveLinkedinPerson(p,{...body,personId:id}));
+ }catch(e){return errorResponse(e);}
+}
+export async function linkedinConversationRequest(request:Request,id:string){
+ try{const p=await authorizeProspectingRequest(request);if(request.method!=='GET')throw new AppError(405,'Método não permitido.');return json(await getLinkedinThread(p,id));}catch(e){return errorResponse(e);}
+}
+export async function linkedinConversationActionRequest(request:Request,id:string,action:string){
+ try{const p=await authorizeProspectingRequest(request);
+  if(request.method!=='POST'||!['prepare-reply','confirm-reply'].includes(action))throw new AppError(404,'Operação não encontrada.');
+  const body=await readProspectingBody(request) as Record<string,unknown>;
+  return json(action==='prepare-reply'?await prepareLinkedinReply(p,{...body,threadId:id}):await confirmLinkedinReply(p,{...body,threadId:id}));
  }catch(e){return errorResponse(e);}
 }
