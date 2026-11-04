@@ -2,6 +2,7 @@ import {authorizeProspectingRequest,readProspectingBody} from '../prospecting/ht
 import {AppError,errorResponse} from '../errors.ts';
 import {requirePrincipal} from '../auth/principal.ts';
 import {attestLinkedinAdapter,readLinkedinCapabilities,revokeLinkedinAdapter} from './capabilities.ts';
+import {listLinkedinApprovals,approveLinkedinComment,rejectLinkedinComment} from './approvals.ts';
 import {listLinkedinTemplates,saveLinkedinTemplate,archiveLinkedinTemplate} from './templates.ts';
 import {listLinkedinSequences,saveLinkedinSequence,linkedinSequenceAction} from './sequences.ts';
 import {listLinkedinPeople,linkedinPipeline,moveLinkedinPerson,optOutLinkedinPerson} from './people.ts';
@@ -119,6 +120,19 @@ export async function linkedinSequenceActionRequest(request:Request,id:string,ac
  try{const p=await authorizeProspectingRequest(request);
   if(request.method!=='POST'||!['activate','pause','resume','archive'].includes(action))throw new AppError(404,'Operação não encontrada.');
   return json(await linkedinSequenceAction(p,id,action,await readProspectingBody(request)));
+ }catch(e){return errorResponse(e);}
+}
+export async function linkedinApprovalsRequest(request:Request){
+ try{const p=await authorizeProspectingRequest(request);
+  if(request.method!=='GET')throw new AppError(405,'Método não suportado.');
+  return json(await listLinkedinApprovals(p,{tab:new URL(request.url).searchParams.get('tab')??undefined}));
+ }catch(e){return errorResponse(e);}
+}
+export async function linkedinApprovalActionRequest(request:Request,id:string,action:string){
+ try{const p=await authorizeProspectingRequest(request);
+  if(request.method!=='POST'||!['approve','reject'].includes(action))throw new AppError(404,'Operação não encontrada.');
+  const body=await readProspectingBody(request);
+  return json(action==='approve'?await approveLinkedinComment(p,id,body):await rejectLinkedinComment(p,id,body));
  }catch(e){return errorResponse(e);}
 }
 

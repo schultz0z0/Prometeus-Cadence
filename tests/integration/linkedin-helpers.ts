@@ -25,7 +25,7 @@ export const FULL={...NO_LINKEDIN,version:'unipile-qa',connect:true,audience:tru
 export async function enable(caps:Record<string,unknown>=FULL){
  await resetRateLimits();const admin=await createUser({platformAi:true});
  const evidence=Object.fromEntries(['connect','audience','invite','acceptance'].filter(k=>(caps as Record<string,unknown>)[k]===true).map(k=>[k,['qa']]));
- if(Array.isArray(caps.profileActions)&&caps.profileActions.length)Object.assign(evidence,{profileVisit:['qa'],like:['qa']});
+ if(Array.isArray(caps.profileActions))for(const a of caps.profileActions as string[])Object.assign(evidence,{[a==='visit'?'profileVisit':a]:['qa']});
  if(caps.readMessages===true)Object.assign(evidence,{readMessages:['qa']});
  if(caps.sendMessage&&caps.sendMessage!=='unavailable')Object.assign(evidence,{sendMessage:['qa']});
  const live=await testAdmin(async c=>Number((await c.query('SELECT coalesce(max(revision),0) r FROM app.linkedin_capability_profile WHERE revoked_at IS NULL')).rows[0].r));
@@ -40,7 +40,9 @@ export function fakeUnipile(owner:Principal){
  const params:Record<string,Record<string,string>>={LOCATION:{'São Paulo':'105871508'},INDUSTRY:{'Software':'4'}};
  // A partial match: the provider answers with a different title; it must be refused, never used silently.
  const loose:Record<string,{title:string;id:string}>={'Varejo':{title:'Venda a varejo de alimentos',id:'9'}};
- const hooks:{invite?:'timeout'|'429'|'422'|'500';reactions?:string[];goneInvites?:Set<string>;send?:'timeout'}={};
+ const hooks:{invite?:'timeout'|'429'|'422'|'500';reactions?:string[];goneInvites?:Set<string>;send?:'timeout';comment?:'timeout'|'403'}={};
+ type Post={social_id:string;text:string;parsed_datetime:string;share_url:string;is_repost?:boolean;permissions?:{can_post_comments:boolean}};
+ const posts=new Map<string,Post[]>(),comments:{post:string;text:string;account:string}[]=[];
  const chats=new Map<string,{attendee:string;messages:{id:string;text:string;timestamp:string;is_sender:0|1;sender_id:string}[]}>(),sent:{chat:string;text:string}[]=[];let seq=0;
  const f=(async(input:RequestInfo|URL,init?:RequestInit)=>{
   const url=new URL(String(input)),method=init?.method??'GET',body=init?.body instanceof FormData?Object.fromEntries(init.body):init?.body?JSON.parse(String(init.body)):undefined;
@@ -52,6 +54,13 @@ export function fakeUnipile(owner:Principal){
   if(url.pathname==='/api/v1/linkedin/search'){searches.push(body);const start=Number(url.searchParams.get('cursor')??0),page=people.slice(start,start+10);
    return Response.json({object:'LinkedinSearch',items:page.map(p=>({type:'PEOPLE',id:p.id,name:p.name,headline:p.headline,location:p.location,network_distance:p.network_distance,pending_invitation:!!p.pending_invitation,current_positions:p.company?[{company:p.company,role:p.headline}]:[]})),
     paging:{start,page_count:page.length,total_count:people.length},cursor:start+10<people.length?String(start+10):null});}
+  m=url.pathname.match(/^\/api\/v1\/users\/([A-Za-z0-9_-]+)\/posts$/);
+  if(m)return Response.json({object:'PostList',items:(posts.get(m[1])??[]).slice(0,Number(url.searchParams.get('limit')??10)).map(x=>({object:'Post',permissions:{can_post_comments:true},is_repost:false,...x})),cursor:null});
+  m=url.pathname.match(/^\/api\/v1\/posts\/([^/]+)\/comments$/);
+  if(m&&method==='POST'){
+   if(hooks.comment==='timeout'){comments.push({post:decodeURIComponent(m[1]),text:String(body.text),account:String(body.account_id)});throw new TypeError('fetch failed');}
+   if(hooks.comment==='403')return Response.json({type:'errors/forbidden'},{status:403});
+   comments.push({post:decodeURIComponent(m[1]),text:String(body.text),account:String(body.account_id)});return Response.json({object:'CommentSent',comment_id:'cmt_'+(++seq)},{status:201});}
   m=url.pathname.match(/^\/api\/v1\/posts\/([^/]+)(\/reactions|\/comments)?$/);
   if(m){if(!m[2])return Response.json({object:'Post',social_id:'urn:li:activity:'+m[1],reaction_counter:(hooks.reactions??[]).length,comment_counter:0});
    const authors=m[2]==='/reactions'?(hooks.reactions??[]):[];return Response.json({items:authors.map(id=>{const p=people.find(x=>x.id===id)!;return {author:{id:p.id,name:p.name,headline:p.headline,network_distance:p.network_distance}};}),cursor:null});}
@@ -82,7 +91,7 @@ export function fakeUnipile(owner:Principal){
     return Response.json({object:'MessageSent',message_id:id},{status:201});}}
   return Response.json({},{status:404});
  }) as typeof fetch;
- return{owner,accounts,links,calls,searches,invites,people,relations,withdrawn,params,hooks,chats,sent,deps:{fetch:f},count:(c:string)=>calls.filter(x=>x===c).length};
+ return{owner,accounts,links,calls,searches,invites,people,relations,withdrawn,params,hooks,chats,sent,posts,comments,deps:{fetch:f},count:(c:string)=>calls.filter(x=>x===c).length};
 }
 export type Fake=ReturnType<typeof fakeUnipile>;
 export async function connect(u:Fake,memberId='ACoME'+randomUUID().slice(0,6)){

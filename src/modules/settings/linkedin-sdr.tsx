@@ -5,7 +5,8 @@ import { useIdentity } from "@/client/workspace-provider";
 import { useConnectorApi } from "./apollo-connection";
 import { LINKEDIN_TERMS, type LinkedinAccountView } from "@/domain/linkedin-connection";
 import { PIPELINE_COLUMNS, type LinkedinMessageView, type LinkedinPersonView, type PipelineStage } from "@/domain/linkedin-message-action";
-import { type LinkedinSequenceView, type LinkedinTemplateView } from "@/domain/linkedin-sequence";
+import { type LinkedinSequenceStep, type LinkedinSequenceView, type LinkedinTemplateView } from "@/domain/linkedin-sequence";
+import { COMMENT_MAX, type LinkedinApprovalView } from "@/domain/linkedin-approval";
 import { defaultCampaignDraft, LINKEDIN_DAILY_CAP, type AudienceSample, type LinkedinCampaignDraft, type LinkedinCampaignView } from "@/domain/linkedin-campaign";
 import { SdrOverview } from './sdr-overview';
 import Link from "next/link";
@@ -92,7 +93,7 @@ function LinkedinAccountStep({account}: {account: LinkedinAccountView | null}) {
 }
 function LinkedinReference({section, campaignId}: {section: string; campaignId: string | null}) {
   return <div className="linkedin-reference">
-    {section === "dashboard" ? <LinkedinOverview /> : section === "campaigns/new" ? <LinkedinCampaignDraft campaignId={campaignId} /> : section === "campaigns" ? <LinkedinCampaigns /> : section === "enrichment" ? <LinkedinEnrichment /> : section === "cadences" ? <LinkedinCadences /> : section === "templates" ? <LinkedinTemplates /> : section === "people" ? <LinkedinPeople /> : section === "pipeline" ? <LinkedinPipeline /> : <LinkedinWaiting section={section} />}
+    {section === "dashboard" ? <LinkedinOverview /> : section === "campaigns/new" ? <LinkedinCampaignDraft campaignId={campaignId} /> : section === "campaigns" ? <LinkedinCampaigns /> : section === "enrichment" ? <LinkedinEnrichment /> : section === "cadences" ? <LinkedinCadences /> : section === "templates" ? <LinkedinTemplates /> : section === "people" ? <LinkedinPeople /> : section === "pipeline" ? <LinkedinPipeline /> : section === "approvals" ? <LinkedinApprovals /> : <LinkedinWaiting section={section} />}
   </div>;
 }
 function LinkedinOverview() {
@@ -150,6 +151,40 @@ const waitingCopy: Record<string, {title:string;description:string;icon:string}>
   pipeline: {title:"Aqui fica o pipeline do LinkedIn",description:"Cada pessoa da campanha aparece na coluna do estágio dela: na fila, aquecida, convidada, aceitou, respondeu. Preenche assim que a sua primeira campanha ligar.",icon:"Columns3"},
   approvals: {title:"Comentários que a IA escreve, você aprova",description:"Quando um passo da campanha comenta num post, o texto para aqui antes de sair: você lê, ajusta e aprova. É a única ação pública do módulo, por isso ninguém publica sem a sua palavra.",icon:"MessageSquare"},
 };
+const approvalState: Record<string, [string, string]> = { posted: ["Publicado", "green"], uncertain: ["Sem confirmação", "amber"], failed: ["Recusado pelo LinkedIn", "red"], rejected: ["Rejeitado", "neutral"], expired: ["Venceu", "neutral"], cancelled: ["Cancelado", "neutral"], posting: ["Publicando", "amber"], pending: ["Pendente", "amber"] };
+function LinkedinApprovals() {
+  const api = useConnectorApi(), [tab, setTab] = useState<"pending" | "history">("pending"), [data, setData] = useState<Record<string, LinkedinApprovalView[]>>({}), [error, setError] = useState(""), [message, setMessage] = useState("");
+  const load = () => { setError(""); Promise.all((["pending", "history"] as const).map(t => api<{approvals: LinkedinApprovalView[]}>(`/api/linkedin/approvals?tab=${t}`).then(r => [t, r.approvals] as const))).then(r => setData(Object.fromEntries(r))).catch(e => setError(e.message)); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(load, [api]);
+  const pending = data.pending, history = data.history;
+  if (pending && history && !pending.length && !history.length && !error) return <LinkedinWaiting section="approvals" />;
+  return <><PageHeader title="Aprovações" description="Comentários que a IA escreve, você aprova. Nada é publicado sem a sua palavra."/>
+    <div className="li-view" role="tablist" aria-label="Aprovações">{([["pending", `Pendentes${pending ? ` (${pending.length})` : ""}`], ["history", "Histórico"]] as const).map(([k, label]) => <Button key={k} role="tab" aria-selected={tab === k} aria-pressed={tab === k} onClick={() => setTab(k)}>{label}</Button>)}</div>
+    {error && <div role="alert"><Notice tone="error">{error} <button type="button" className="text-button" onClick={load}>Tentar de novo</button></Notice></div>}
+    {message && <p role="status" className="li-muted">{message}</p>}
+    {!pending || !history ? <p role="status" className="li-muted">Carregando aprovações…</p>
+    // Both tabs stay mounted so an edited comment survives a look at the history.
+    : <><div hidden={tab !== "pending"}>{!pending.length ? <section className="li-panel li-campaign-empty"><Icon name="MessageSquare" size={24}/><h2>Nada esperando por você</h2><p>Quando um passo de comentário vencer, o texto aparece aqui antes de sair.</p></section>
+      : <div className="li-campaign-list">{pending.map(a => <LinkedinApprovalCard key={a.id} approval={a} onDone={(m) => { setMessage(m); load(); }}/>)}</div>}</div>
+    <div hidden={tab !== "history"}>{!history.length ? <section className="li-panel li-campaign-empty"><h2>Nenhuma decisão ainda</h2><p>Os comentários aprovados, rejeitados ou vencidos ficam aqui.</p></section>
+      : <div className="li-campaign-list">{history.map(a => <section key={a.id} className="li-panel li-campaign-row"><div><h2>{a.person.name}</h2><Badge tone={approvalState[a.state]?.[1]}>{approvalState[a.state]?.[0] ?? a.state}</Badge></div><p className="li-muted">Campanha {a.campaign.name} · {when(a.decidedAt ?? a.createdAt)}</p><p className="li-template-body">{a.body}</p></section>)}</div>}</div></>}
+  </>;
+}
+function LinkedinApprovalCard({approval: a, onDone}: {approval: LinkedinApprovalView; onDone: (message: string) => void}) {
+  const api = useConnectorApi(), [body, setBody] = useState(a.body), [confirm, setConfirm] = useState<{requestId: string} | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState("");
+  async function publish() { if (!confirm) return; setBusy(true); setError(""); try { const r = await api<{state: string}>(`/api/linkedin/approvals/${a.id}/approve`, {body, expectedRevision: a.revision, requestId: confirm.requestId}); setConfirm(null); onDone(r.state === "posted" ? `Comentário publicado no post de ${a.person.name}.` : "Sem confirmação do LinkedIn. O comentário não será publicado de novo; confira o post no LinkedIn."); } catch (e) { setError((e as Error).message); setConfirm(null); } finally { setBusy(false); } }
+  async function reject() { setBusy(true); setError(""); try { await api(`/api/linkedin/approvals/${a.id}/reject`, {expectedRevision: a.revision}); onDone("Comentário rejeitado. A cadência segue para o próximo passo."); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
+  return <section className="li-panel li-approval">
+    <div className="row wrap"><div><h2>{a.person.name}</h2><small className="li-muted">{[a.person.headline, a.person.company].filter(Boolean).join(" · ")} · Campanha {a.campaign.name}</small></div><small className="li-muted">Vence em {when(a.expiresAt)}</small></div>
+    <blockquote className="li-approval-post"><p>{a.post.text}</p>{a.post.url && <a href={a.post.url} target="_blank" rel="noopener noreferrer">Ver o post no LinkedIn</a>}</blockquote>
+    <Field label={`Comentário · ${body.length} / ${COMMENT_MAX}`}><textarea rows={3} maxLength={COMMENT_MAX} value={body} disabled={busy} onChange={e => setBody(e.target.value)}/></Field>
+    {body !== a.aiBody && <small className="li-muted">Você editou o texto da IA. <button type="button" className="text-button" onClick={() => setBody(a.aiBody)}>Voltar ao original</button></small>}
+    {error && <div role="alert"><Notice tone="error">{error}</Notice></div>}
+    <div className="form-actions"><Button variant="ghost" disabled={busy} onClick={reject}>Rejeitar</Button><Button variant="primary" disabled={busy || !body.trim()} onClick={() => setConfirm({requestId: crypto.randomUUID()})}>Aprovar e publicar</Button></div>
+    {confirm && <Modal title="Publicar este comentário?" onClose={() => !busy && setConfirm(null)}><div className="stack"><p>O comentário sai pelo seu LinkedIn no post de {a.person.name} e fica público:</p><blockquote>{body}</blockquote><div className="form-actions"><Button disabled={busy} onClick={() => setConfirm(null)}>Voltar</Button><Button variant="primary" disabled={busy} onClick={publish}>{busy ? "Publicando…" : "Publicar comentário"}</Button></div></div></Modal>}
+  </section>;
+}
 function LinkedinWaiting({section}: {section:string}) {
   const copy=waitingCopy[section]??waitingCopy.people;
   return <div className="li-waiting-layout"><section className="li-panel li-waiting"><Icon name="Linkedin" size={32}/><h1>{copy.title}</h1><p>{copy.description}</p><div className="row"><LinkButton href={campaignPath} variant="primary">Montar uma campanha <Icon name="ArrowRight" size={15}/></LinkButton><LinkButton href="/linkedin/dashboard">Como funciona</LinkButton></div></section><LinkedinPrerequisites/></div>;
@@ -244,7 +279,7 @@ function LinkedinCadences() {
     : <div className={view === "Cards" ? "li-sequence-cards" : "li-campaign-list"}>{shown.map(q => <section className="li-panel li-campaign-row" key={q.id}>
         <div><h2>{q.name}</h2><Badge tone={sequenceState[q.state][1]}>{sequenceState[q.state][0]}</Badge></div>
         <p className="li-muted">Campanha {q.campaign.name} · {q.steps.length} {q.steps.length === 1 ? "passo" : "passos"}</p>
-        <p className="li-campaign-counts">{([["active","Em andamento"],["waiting","Rascunho para revisar"],["done","Concluídos"],["stopped_replied","Responderam"],["stopped_opted_out","Pediram para sair"]] as const).filter(([k]) => q.counts[k]).map(([k, label]) => <span key={k}>{label} <strong>{q.counts[k]}</strong></span>)}{!total(q.counts) && <span>{q.state === "draft" ? "Ainda não ativada." : "Ninguém entrou ainda."}</span>}</p>
+        <p className="li-campaign-counts">{([["active","Em andamento"],["waiting","Aguardando você"],["done","Concluídos"],["stopped_replied","Responderam"],["stopped_opted_out","Pediram para sair"]] as const).filter(([k]) => q.counts[k]).map(([k, label]) => <span key={k}>{label} <strong>{q.counts[k]}</strong></span>)}{!total(q.counts) && <span>{q.state === "draft" ? "Ainda não ativada." : "Ninguém entrou ainda."}</span>}</p>
         <div className="row wrap">{q.state === "draft" && <Button onClick={() => setEditing(q)}>Editar</Button>}
           {canManage && q.state === "draft" && <Button variant="primary" disabled={busy === q.id || !data.mode} onClick={() => act(q, "activate")}>Ativar</Button>}
           {canManage && q.state === "active" && <Button disabled={busy === q.id} onClick={() => act(q, "pause")}>Pausar</Button>}
@@ -262,19 +297,23 @@ function useLinkedinTemplates(kind?: "invite" | "message") {
 }
 function LinkedinSequenceEditor({sequence, mode, onClose}: {sequence: LinkedinSequenceView | null; mode: "automatic" | "assisted" | null; onClose: (saved: boolean) => void}) {
   const api = useConnectorApi(), templates = useLinkedinTemplates("message"), [campaigns, setCampaigns] = useState<LinkedinCampaignView[] | null>(null);
-  const [name, setName] = useState(sequence?.name ?? ""), [campaignId, setCampaignId] = useState(sequence?.campaign.id ?? ""), [steps, setSteps] = useState(sequence?.steps ?? [{delayDays: 0, body: ""}]), [id] = useState(() => sequence?.id ?? crypto.randomUUID()), [revision, setRevision] = useState(sequence?.revision ?? 0), [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const [name, setName] = useState(sequence?.name ?? ""), [campaignId, setCampaignId] = useState(sequence?.campaign.id ?? ""), [steps, setSteps] = useState<LinkedinSequenceStep[]>(sequence?.steps ?? [{delayDays: 0, body: ""}]), [id] = useState(() => sequence?.id ?? crypto.randomUUID()), [revision, setRevision] = useState(sequence?.revision ?? 0), [busy, setBusy] = useState(false), [error, setError] = useState("");
   useEffect(() => { api<{campaigns: LinkedinCampaignView[]}>("/api/linkedin/campaigns").then(r => setCampaigns(r.campaigns.filter(c => c.state !== "cancelled"))).catch(e => setError(e.message)); }, [api]);
-  const setStep = (i: number, patch: Partial<{delayDays: number; body: string}>) => setSteps(x => x.map((st, j) => j === i ? {...st, ...patch} : st));
+  const setStep = (i: number, patch: Partial<{delayDays: number; body: string; guidance: string}>) => setSteps(x => x.map((st, j) => j === i ? {...st, ...patch} as LinkedinSequenceStep : st));
+  const setKind = (i: number, kind: "message" | "comment") => setSteps(x => x.map((st, j) => j !== i || (st.kind ?? "message") === kind ? st : kind === "comment" ? {kind, delayDays: st.delayDays, guidance: ""} : {delayDays: st.delayDays, body: ""}));
   async function save() { setBusy(true); setError(""); try { const r = await api<{revision: number}>("/api/linkedin/sequences", {action: "save", input: {id, expectedRevision: revision, sequence: {name, campaignId, steps}}}); setRevision(r.revision); onClose(true); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
   return <Modal title={sequence ? "Editar cadência" : "Nova cadência"} onClose={() => onClose(false)} wide><form className="stack" onSubmit={e => { e.preventDefault(); void save(); }}>
     <p className="li-muted">{modeCopy[mode ?? "none"]}</p>
     <div className="li-two-grid"><Field label="Nome da cadência"><input required maxLength={100} value={name} onChange={e => setName(e.target.value)} placeholder="Ex.: Boas-vindas a quem aceitou"/></Field>
       <Field label="Campanha" help="Quem aceitar o convite desta campanha entra na cadência."><select required value={campaignId} onChange={e => setCampaignId(e.target.value)}><option value="">{campaigns ? "Escolha uma campanha" : "Carregando…"}</option>{campaigns?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field></div>
     <ol className="li-sequence-steps">{steps.map((st, i) => <li key={i} className="li-panel"><div className="row wrap"><strong>Passo {i + 1}</strong><Field label={i === 0 ? "Dias depois do aceite" : "Dias depois do passo anterior"}><input type="number" min={0} max={60} required value={st.delayDays} onChange={e => setStep(i, {delayDays: Number(e.target.value)})}/></Field>
-        {templates.length > 0 && <Field label="Usar um template"><select value="" onChange={e => { const t = templates.find(x => x.id === e.target.value); if (t) setStep(i, {body: t.body}); }}><option value="">Escolher…</option>{templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></Field>}
+        <div className="li-view" role="group" aria-label={`Tipo do passo ${i + 1}`}>{([["message","Mensagem"],["comment","Comentar o post mais recente"]] as const).map(([k, label]) => <Button type="button" key={k} aria-pressed={(st.kind ?? "message") === k} onClick={() => setKind(i, k)}>{label}</Button>)}</div>
+        {st.kind !== "comment" && templates.length > 0 && <Field label="Usar um template"><select value="" onChange={e => { const t = templates.find(x => x.id === e.target.value); if (t) setStep(i, {body: t.body}); }}><option value="">Escolher…</option>{templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></Field>}
         {steps.length > 1 && <Button type="button" variant="ghost" icon="Trash2" aria-label={`Remover o passo ${i + 1}`} onClick={() => setSteps(x => x.filter((_, j) => j !== i))}/>}</div>
-      <div className="li-tokens"><span>Inserir:</span>{["{nome}","{empresa}","{cargo}","{setor}","{prova}"].map(token => <Button type="button" key={token} onClick={() => setStep(i, {body: (st.body + (st.body && !st.body.endsWith(" ") ? " " : "") + token).slice(0, 8000)})}>{token}</Button>)}</div>
-      <Field label={`Mensagem · ${st.body.length} / 8000`}><textarea required rows={4} maxLength={8000} value={st.body} onChange={e => setStep(i, {body: e.target.value})}/></Field></li>)}</ol>
+      {st.kind === "comment" ? <><Notice>A IA escreve um comentário sobre o post mais recente da pessoa (até 30 dias). Ele espera em <Link href="/linkedin/approvals">Aprovações</Link> e só é publicado com a sua aprovação. Sem post recente, o passo é pulado.</Notice>
+        <Field label={`Orientação para a IA (opcional) · ${(st.guidance ?? "").length} / 300`}><input maxLength={300} value={st.guidance ?? ""} onChange={e => setStep(i, {guidance: e.target.value})} placeholder="Ex.: tom curioso, sem vender"/></Field></>
+      : <><div className="li-tokens"><span>Inserir:</span>{["{nome}","{empresa}","{cargo}","{setor}","{prova}"].map(token => <Button type="button" key={token} onClick={() => setStep(i, {body: (st.body + (st.body && !st.body.endsWith(" ") ? " " : "") + token).slice(0, 8000)})}>{token}</Button>)}</div>
+      <Field label={`Mensagem · ${st.body.length} / 8000`}><textarea required rows={4} maxLength={8000} value={st.body} onChange={e => setStep(i, {body: e.target.value})}/></Field></>}</li>)}</ol>
     {steps.length < 10 && <Button type="button" icon="Plus" onClick={() => setSteps(x => [...x, {delayDays: 2, body: ""}])}>Adicionar passo</Button>}
     <small className="li-muted">Quem responder, pedir para sair ou tiver a conta desconectada sai da cadência. Se faltar no perfil um dado usado no texto, a pessoa sai em vez de receber um texto inventado.</small>
     {error && <div role="alert"><Notice tone="error">{error}</Notice></div>}

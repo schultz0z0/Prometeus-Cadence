@@ -4,7 +4,9 @@ import {z} from 'zod';
 import type {Pool} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
 import {inviteWindowOpen} from '../../domain/linkedin-campaign.ts';
-import {renderLinkedinText,sequenceDraftSchema,sequenceMode,type LinkedinSequenceView} from '../../domain/linkedin-sequence.ts';
+import {pickCommentPost,renderLinkedinText,sequenceDraftSchema,sequenceMode,type LinkedinSequenceView} from '../../domain/linkedin-sequence.ts';
+import {linkedinActionAllowed} from '../../domain/linkedin-capabilities.ts';
+import {platformCommentGenerator,type CommentGenerator} from './approvals.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
 import {workerPool} from '../prospecting/worker-db.ts';
@@ -41,21 +43,24 @@ export async function linkedinSequenceAction(p:Principal,id:string,action:string
  if(!parsed.success||!z.uuid().safeParse(id).success||!['activate','pause','resume','archive'].includes(action))throw new AppError(422,'Operação inválida.');
  return withWorkspaceTransaction(p,async c=>{
   if(action==='activate'||action==='resume'){const cap=await linkedinCapabilityView(c);
-   if(!sequenceMode(cap.capabilities))throw new AppError(409,cap.reason||'O fornecedor habilitado não oferece o envio de mensagens.','LINKEDIN_UNAVAILABLE');}
+   if(!sequenceMode(cap.capabilities))throw new AppError(409,cap.reason||'O fornecedor habilitado não oferece o envio de mensagens.','LINKEDIN_UNAVAILABLE');
+   const steps=(await c.query('SELECT steps FROM app.linkedin_sequence WHERE id=$1',[id])).rows[0]?.steps as {kind?:string}[]|undefined;
+   if(steps?.some(x=>x.kind==='comment')&&!linkedinActionAllowed(cap.capabilities,'comment'))throw new AppError(409,cap.reason||'O fornecedor habilitado não oferece comentários em posts.','LINKEDIN_UNAVAILABLE');}
   return {revision:Number((await c.query('SELECT app.linkedin_sequence_action($1,$2,$3) v',[id,action,parsed.data.expectedRevision])).rows[0].v)};
  }).catch(e=>{throw sqlError(e);});
 }
 
-type Claim={workspaceId:string;runId:string;stepIndex:number;body:string;name:string;company:string|null;headline:string|null;industry:string|null;proof:string|null;attendee:string;chat:string|null;external:string;epoch:string;capabilitiesVersion:string};
-async function gate(pool:Pool){const c=await pool.connect();try{const v=await linkedinCapabilityView(c);return {mode:sequenceMode(v.capabilities),version:capsVersion(v)};}finally{c.release();}}
+type Claim={workspaceId:string;runId:string;stepIndex:number;body:string;kind:'message'|'comment';guidance:string|null;name:string;company:string|null;headline:string|null;industry:string|null;proof:string|null;attendee:string;chat:string|null;external:string;epoch:string;capabilitiesVersion:string};
+async function gate(pool:Pool){const c=await pool.connect();try{const v=await linkedinCapabilityView(c);return {mode:sequenceMode(v.capabilities),comment:linkedinActionAllowed(v.capabilities,'comment'),version:capsVersion(v)};}finally{c.release();}}
 /** Worker: one due step per LinkedIn member per round, in business hours. Assisted mode never sends: it leaves a draft. */
-export async function runLinkedinSequenceTick(o:{limit:number;now?:Date;signal?:AbortSignal},deps:UnipileDeps={}){
- const pool=workerPool(),token=randomUUID(),now=o.now??new Date(),out={sent:0,drafted:0,stopped:0,uncertain:0};
+export async function runLinkedinSequenceTick(o:{limit:number;now?:Date;signal?:AbortSignal},deps:UnipileDeps&{generateComment?:CommentGenerator}={}){
+ const pool=workerPool(),token=randomUUID(),now=o.now??new Date(),out={sent:0,drafted:0,stopped:0,uncertain:0,comments:0};
  if(!inviteWindowOpen(now))return out;
  for(let i=0;i<Math.max(1,o.limit)*2;i++){
   if(o.signal?.aborted)break;
   const claim=(await pool.query('SELECT app.claim_linkedin_sequence_step($1,$2) v',[token,now])).rows[0].v as Claim|null;if(!claim)break;
   const finish=(outcome:string,body:string|null,remote:string|null=null,chat:string|null=null,reason:string|null=null)=>pool.query('SELECT app.finish_linkedin_sequence_step($1,$2,$3,$4,$5,$6,$7,$8,$9)',[claim.workspaceId,claim.runId,token,outcome,body,remote,chat,reason,now]);
+  if(claim.kind==='comment'){await commentStep(pool,claim,token,now,deps,finish).then(r=>{if(r)out.comments++;});continue;}
   const text=renderLinkedinText(claim.body,{nome:claim.name,empresa:claim.company??undefined,cargo:claim.headline??undefined,setor:claim.industry??undefined,prova:claim.proof??undefined},8000);
   if(text===null){await finish('stopped',null,null,null,'missing_fact');out.stopped++;continue;}
   const g=await gate(pool);
@@ -80,3 +85,22 @@ export async function runLinkedinSequenceTick(o:{limit:number;now?:Date;signal?:
  }
  return out;
 }
+type Finish=(outcome:string,body:string|null)=>Promise<unknown>;
+/** A comment step: the latest valid post, an AI draft, then the approval queue. Nothing is published here. */
+async function commentStep(pool:Pool,claim:Claim,token:string,now:Date,deps:UnipileDeps&{generateComment?:CommentGenerator},finish:Finish):Promise<boolean>{
+ const done=(post:unknown,body:string|null,usage:unknown)=>pool.query('SELECT app.finish_linkedin_sequence_comment($1,$2,$3,$4,$5,$6,$7,$8)',[claim.workspaceId,claim.runId,token,post===null?null:JSON.stringify(post),body,usage===null?null:JSON.stringify(usage),null,now]);
+ const g=await gate(pool);if(!g.comment){await finish('held',null);return false;}
+ try{unipileSettings();}catch{await finish('held',null);return false;}
+ let items:unknown;
+ try{items=(await unipileRequest('GET',`/api/v1/users/${encodeURIComponent(claim.attendee)}/posts?account_id=${encodeURIComponent(claim.external)}&limit=5`,undefined,deps))?.items;}
+ catch(e){if(e instanceof UnipileMissing){await done(null,null,null);return false;}await finish('held',null);return false;}
+ const post=pickCommentPost(items,now.getTime());
+ if(!post){await done(null,null,null);return false;}
+ let draft:Awaited<ReturnType<CommentGenerator>>=null;
+ const c=await pool.connect();
+ try{draft=await(deps.generateComment??platformCommentGenerator(c))({workspaceId:claim.workspaceId,runId:claim.runId,postText:post.text,guidance:claim.guidance??null,person:{name:claim.name,headline:claim.headline,company:claim.company}});}
+ catch{draft=null;}finally{c.release();}
+ if(!draft){await finish('held',null);return false;}
+ await done(post,draft.text,draft.usage);return true;
+}
+
