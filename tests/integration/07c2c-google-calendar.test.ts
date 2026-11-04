@@ -47,7 +47,8 @@ async function ready(){const u=await user(),g=fakeCalendar();await authorize(u.p
  const s=await readWorkspaceSnapshot(u.p);await executeWorkspaceCommand(u.p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'leads.import',dedupScope:'list',list:{id:'base',name:'Base QA'},
   leads:[{id:'m1',listId:'base',name:'[RE] Contato Agenda',companyName:'[RE] Empresa',email:'m1@example.com',qualification:'pending',source:'MANUAL',createdAt:new Date().toISOString()}]}});
  return{...u,g};}
-const window=()=>{const from=Date.now()+86400000;return{from:new Date(from).toISOString(),to:new Date(from+6*3600000).toISOString()};};
+// Tomorrow at noon in Brasília: a fixed time of day, so the 23:30 cut-off and slot alignment never depend on when the suite runs.
+const window=()=>{const t=new Date(Date.now()+86400000);const from=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate(),15);return{from:new Date(from).toISOString(),to:new Date(from+6*3600000).toISOString()};};
 const reservation=(ws:string,id:string)=>testAdmin(async c=>(await c.query('SELECT state,revision,last_error FROM app.calendar_reservation WHERE workspace_id=$1 AND id=$2',[ws,id])).rows[0]);
 
 test('connect asks both calendar scopes; a missing one connects nothing; configuring is admin-only and proves access; operators read slots without the busy ones',async()=>{

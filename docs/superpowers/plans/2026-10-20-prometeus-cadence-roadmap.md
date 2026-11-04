@@ -269,3 +269,11 @@ Conexão LinkedIn concluída local/controlado, com a Unipile simulada:
 - **Manutenção:** verificação, desconexão e limpeza de sessões órfãs.
 
 Revisão independente: quatro Important corrigidos RED→GREEN. Próximo: 07A.2. [Aceite](../../validation/07a1-linkedin-connection.md).
+
+### Continuidade 03/11 — 07A.2
+
+Campanhas de convite LinkedIn concluídas local/controlado, com a Unipile simulada:
+- **Rascunho e público:** rascunho completo, exploração real e revisão com os bloqueios.
+- **Execução:** coleta, convites com teto e ritmo, aceites e expiração.
+
+Revisão independente: seis Important corrigidos RED→GREEN. Próximo: 07A.3. [Aceite](../../validation/07a2-linkedin-campaigns.md).

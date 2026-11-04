@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07A.2",
+  "next": "07A.3",
   "end": "08B",
   "packages": [
     {
@@ -1146,14 +1146,22 @@
         "src/server/linkedin/campaigns.ts",
         "src/server/linkedin/audience.ts",
         "src/server/linkedin/invites.ts",
-        "src/modules/linkedin/campaign-editor.tsx",
-        "src/modules/linkedin/campaign-list.tsx",
-        "db/migrations/098-linkedin-campaigns.sql"
+        "src/app/api/linkedin/campaigns/route.ts",
+        "src/app/api/linkedin/campaigns/[id]/[action]/route.ts",
+        "db/migrations/102-linkedin-campaigns.sql"
       ],
       "modify": [
         "src/modules/settings/linkedin-sdr.tsx",
+        "src/app/(app)/linkedin/[[...section]]/page.tsx",
+        "src/app/linkedin-reference.css",
         "src/server/linkedin/http.ts",
-        "src/domain/operation-events.ts"
+        "src/server/linkedin/unipile.ts",
+        "src/server/linkedin/connections.ts",
+        "src/domain/model.ts",
+        "src/domain/contacts-query.ts",
+        "src/server/workspaces/schemas.ts",
+        "scripts/runtime-lane.ts",
+        "scripts/test-integration.mjs"
       ],
       "unit": "tests/07a2-linkedin-campaigns.test.ts",
       "integration": "tests/integration/07a2-linkedin-campaigns.test.ts",
@@ -1161,8 +1169,21 @@
       "routes": [
         "/linkedin/campaigns",
         "/linkedin/campaigns/new",
-        "/linkedin/dashboard"
-      ]
+        "/linkedin/dashboard",
+        "GET/POST /api/linkedin/campaigns {save,explore,prepare,confirm}",
+        "POST /api/linkedin/campaigns/:id/{pause,resume,cancel}"
+      ],
+      "status": "completed-local-controlled",
+      "completedAt": "2026-11-03",
+      "executionPlan": "docs/superpowers/plans/2026-11-03-prometeus-cadence-07a2-linkedin-execution.md",
+      "review": "docs/validation/07a2-linkedin-campaigns-review.md",
+      "validation": "docs/validation/07a2-linkedin-campaigns.md",
+      "followUpMigrations": [
+        "db/migrations/102a-linkedin-campaigns-review.sql"
+      ],
+      "deviations": "migration 102 (098 taken); explore is POST action with the unsaved draft; review uses the campaign revision without a separate token; AI filter/note helpers, warming and decision-maker triage blocked with reason",
+      "billingDecision": "LinkedIn accept/expiry leads do not consume prepaid credits (worker-only exemption into the campaign lists); per-connected-account pricing pending user decision",
+      "externalGate": "Unipile contract/key, own LinkedIn test account, platform attestation with audience/invite/acceptance proven; vendor field names to confirm"
     },
     {
       "id": "07A.3",

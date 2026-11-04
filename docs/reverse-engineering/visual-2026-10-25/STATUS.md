@@ -1,10 +1,21 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-03 · Session: s28 · Phase:6 07A.1 concluído local/controlado (Unipile simulada); próximo 07A.2; paridade integral não aceita
+Updated: 2026-11-03 · Session: s29 · Phase:6 07A.2 concluído local/controlado (Unipile simulada); próximo 07A.3; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s29: 07A.2, campanhas de convite LinkedIn.
+  - **Editor e público:** rascunho com todos os controles do editor (EV-241); exploração real recusando filtros que não chegam ao LinkedIn; revisão com o público real separado da estimativa.
+  - **Execução:** worker de coleta, convites (12 por dia por membro, 1 por pessoa, horário comercial, sem reenvio de incerto), aceites (1 lead e 1 evento) e expiração.
+  - **QA:** L-038 removed, 0 chamadas externas.
+  - **Revisão:** seis Important corrigidos RED→GREEN (102a).
+  - **Evidência:** EV-291.
+- Not covered s29: estados da referência com campanha ativa e resultado de exploração (não observáveis); Unipile real.
+- Needs human s29:
+  - os mesmos itens de s27/s28 (contrato e chave da Unipile, conta LinkedIn de teste, leitura jurídica do termo);
+  - decidir a cobrança do LinkedIn por conta conectada (hoje os leads de aceite não consomem crédito pré-pago).
 
 - Covered s28: 07A.1, conexão da conta LinkedIn pela Unipile.
   - **Conexão:** termo de risco versionado e login hospedado. O vínculo exige o aviso do fornecedor mais o retorno da sessão que iniciou.
@@ -113,7 +124,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s28: 07A.2 — públicos, campanhas, convites e aceites LinkedIn (Unipile simulada). 07A.1 concluído; menores→07A.2/08A.
+Fila vigente s29: 07A.3 — pessoas, pipeline, mensagens e aprovações LinkedIn (Unipile simulada). 07A.2 concluído; menores→07A.3/08A.
+
+Fila s28 (histórica): 07A.2 — campanhas LinkedIn.
 
 Fila s27 (histórica): 07A.1 — conexão LinkedIn pela Unipile.
 
