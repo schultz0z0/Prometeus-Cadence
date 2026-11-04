@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07B.1** (atualizado 04/11; 07C.3 concluído local/controlado). A habilitação real do LinkedIn depende de contrato e chave da Unipile, conta de teste e aceite jurídico.
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07B.2** (atualizado 04/11; 07B.1 concluído local/controlado). A habilitação real do LinkedIn depende de contrato e chave da Unipile, conta de teste e aceite jurídico.
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -36,7 +36,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 07A.3 | Pessoas, pipeline, mensagens e aprovações LinkedIn | 07A.2, 06D.2, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-07a3-linkedin-conversations.md) | Dividido: 07A.3a concluído local/controlado em 03/11 ([aceite](../../validation/07a3a-linkedin-conversations.md)); 07A.3b concluído em 04/11 ([aceite](../../validation/07a3b-linkedin-sequences.md)); 07A.3c concluído em 04/11 ([aceite](../../validation/07a3c-linkedin-approvals.md)). Pacote concluído local/controlado |
 | 07C.3 | MCP autenticado e comandos revisados | 07C.1, 06F, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07c3-mcp.md) | Concluído local/controlado em 04/11, em duas partes: 07C.3a ([aceite](../../validation/07c3a-mcp.md)) e 07C.3b ([aceite](../../validation/07c3b-mcp-commands.md)); clientes reais não homologados |
 | 07D | Descoberta condicional de scoring e Hot Now | 06C.2, 06B.5 | [tarefas](2026-10-27-prometeus-cadence-07d-scoring-discovery.md) | Planejado; gate include/exclude |
-| 07B.1 | Configuração e ativação do agente SDR | 06F, 07C.2, 07A.3, 07C.3 | [tarefas](2026-10-27-prometeus-cadence-07b1-sdr-configuration.md) | Planejado; não executado |
+| 07B.1 | Configuração e ativação do agente SDR | 06F, 07C.2, 07A.3, 07C.3 | [tarefas](2026-10-27-prometeus-cadence-07b1-sdr-configuration.md) | Concluído local/controlado em 04/11 ([aceite](../../validation/07b1-sdr-configuration.md)); atendimento real no 07B.2 |
 | 07B.2 | Atendimento, memória e intervenção humana SDR | 07B.1, 06D.2 | [tarefas](2026-10-27-prometeus-cadence-07b2-sdr-conversation.md) | Planejado; não executado |
 | 07B.3 | Agenda, CRM, acompanhamento e piloto SDR | 07B.2, 07C.2, 06C.3 | [tarefas](2026-10-27-prometeus-cadence-07b3-sdr-actions-pilot.md) | Planejado; não executado |
 | 06G | Catálogo completo, anual, cupom e capacidade | 06A-H, 07A.3, 07B.3 | [tarefas](2026-10-27-prometeus-cadence-06g-commercial-catalog.md) | Planejado; não executado |
@@ -209,3 +209,9 @@ Continuidade 07C.3b em 04/11 (concluído local/controlado):
 - **Confirmação:** pelo link `/mcp/review/<id>` no app ou, se a pessoa marcar o escopo opcional `actions.confirm` no consentimento, pelo próprio cliente com o token da revisão.
 
 A revisão independente encontrou três Medium e oito Low, corrigidos na 107a e no serviço. Com isso o 07C.3 está completo. Próximo: 07B.1. [Aceite](../../validation/07c3b-mcp-commands.md).
+
+Continuidade 07B.1 em 04/11 (concluído local/controlado):
+- **Configuração:** agentes do SDR em workspaces Pro, nos quatro blocos da referência (definição, script, canal e passagem), com horário, limites e base de conhecimento privada aprovada.
+- **Simulação e ativação:** simulação sem envio e ativação revisada com snapshot imutável, que vira pausa ou perde validade quando algo muda.
+
+A revisão independente encontrou dois High, oito Medium e oito Low, corrigidos na 108a. O atendimento das conversas é o 07B.2. Próximo: 07B.2. [Aceite](../../validation/07b1-sdr-configuration.md).

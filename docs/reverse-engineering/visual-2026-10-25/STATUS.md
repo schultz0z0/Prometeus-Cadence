@@ -1,10 +1,25 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-04 · Session: s34 · Phase:6 07C.3 concluído local/controlado; próximo 07B.1; paridade integral não aceita
+Updated: 2026-11-04 · Session: s35 · Phase:6 07B.1 concluído local/controlado; próximo 07B.2; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s35: 07B.1, configuração e ativação do Agente SDR.
+  - **Gate:** sem Pro, `/sdr` mostra o gate no padrão da referência, sem oferta de compra.
+  - **Configuração:** com Pro, agentes com definição, script, canal, passagem, horário e limites; base de conhecimento aprovada.
+  - **Ativação:** simulação sem envio; ativação revisada com snapshot; pausa.
+  - **QA:** L-044 removed.
+  - **Revisão:** dois High, oito Medium e oito Low corrigidos (108a).
+  - **Evidência:** EV-297.
+- Not covered s35:
+  - telas operacionais do SDR na referência (nunca observadas; contrato próprio);
+  - simulação com IA real (a única tentativa local falhou);
+  - atendimento das conversas (07B.2).
+- Needs human s35:
+  - os de s34;
+  - a simulação usou a rota de IA central local (ChatGPT por OAuth conectado por você), que falhou uma vez; confirmar se essa rota deve ser usada em QA.
 
 - Covered s34: 07C.3b, comandos revisados no MCP.
   - **Ferramentas:** preparar cadência, qualificação, público com automações pausadas e rascunho de resposta; confirmar e cancelar; listas e conversas.
@@ -170,7 +185,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s34: 07B.1 — configuração e ativação do agente SDR. 07C.3 concluído; menores→08A.
+Fila vigente s35: 07B.2 — atendimento, memória e intervenção humana do SDR. 07B.1 concluído; menores→08A.
+
+Fila s34 (histórica): 07B.1 — configuração e ativação do agente SDR.
 
 Fila s33 (histórica): 07C.3b — comandos revisados no MCP.
 

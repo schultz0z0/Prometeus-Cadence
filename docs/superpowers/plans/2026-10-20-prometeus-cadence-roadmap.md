@@ -311,3 +311,9 @@ Revisão independente: dois Medium e sete Low corrigidos. Próximo: 07C.3b (coma
 Comandos revisados no MCP concluídos local/controlado: preparar cadência, qualificação, público e rascunho de resposta, com revisão no app ou confirmação opcional pelo cliente; leitura de conversas em escopo próprio.
 
 Revisão independente: três Medium e oito Low corrigidos. 07C.3 completo. Próximo: 07B.1. [Aceite](../../validation/07c3b-mcp-commands.md).
+
+### Continuidade 04/11 — 07B.1
+
+Configuração e ativação do Agente SDR concluídas local/controlado: agentes com definição, script, canal e passagem, base de conhecimento aprovada, simulação sem envio e ativação revisada; um agente ativo ainda não responde conversas.
+
+Revisão independente: dois High, oito Medium e oito Low corrigidos. Próximo: 07B.2. [Aceite](../../validation/07b1-sdr-configuration.md).
