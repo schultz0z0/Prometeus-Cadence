@@ -277,3 +277,11 @@ Campanhas de convite LinkedIn concluídas local/controlado, com a Unipile simula
 - **Execução:** coleta, convites com teto e ritmo, aceites e expiração.
 
 Revisão independente: seis Important corrigidos RED→GREEN. Próximo: 07A.3. [Aceite](../../validation/07a2-linkedin-campaigns.md).
+
+### Continuidade 03/11 — 07A.3a
+
+Pessoas, pipeline e conversas LinkedIn concluídos local/controlado, com a Unipile simulada:
+- **Conversas:** sincronização com cursor e deduplicação; resposta revisada e confirmada pelo mesmo usuário em até um minuto.
+- **Pessoas:** opt-out e pipeline com movimento manual só depois do aceite.
+
+Revisão independente: cinco Important corrigidos RED→GREEN. Próximo: 07A.3b. [Aceite](../../validation/07a3a-linkedin-conversations.md).

@@ -21,7 +21,9 @@ async function accepted(caps:Record<string,unknown>=MSG){
  const people=(await listLinkedinPeople(s.p,{})).people;
  return{...s,p1,p2,campaign,me:people.find(x=>x.name==='[RE] Pessoa 1')!,other:people.find(x=>x.name==='[RE] Pessoa 2')!};
 }
-const sync=(u:Fake,min:number)=>runLinkedinMessageTick({limit:10,now:new Date(WED+min*60e3)},u.deps);
+// Accounts of other suites sharing this database are parked so the round-robin (20 accounts a tick) reaches this one now.
+const sync=async(u:Fake,min:number)=>{await testAdmin(c=>c.query("UPDATE app.linkedin_account SET messages_checked_at='2999-01-01' WHERE workspace_id<>$1",[u.owner!.workspaceId]));
+ return runLinkedinMessageTick({limit:10,now:new Date(WED+min*60e3)},u.deps);};
 function chat(u:Fake,id:string,attendee:string,messages:[string,string,0|1,number][]){u.chats.set(id,{attendee,messages:messages.map(([mid,text,is_sender,min])=>({id:mid,text,timestamp:at(min),is_sender,sender_id:is_sender?'ME':attendee}))});}
 const count=(ws:string)=>rows(ws,'SELECT count(*)::int n FROM app.linkedin_message WHERE workspace_id=$1').then(r=>r[0].n);
 async function reply(p:Principal,threadId:string,body:string,u:Fake,requestId:string=randomUUID()){
@@ -153,7 +155,8 @@ test('07A.3 review: more than 300 new messages are all kept across ticks; a chat
  s.u.people.push(later);
  await testAdmin(c=>c.query("INSERT INTO app.linkedin_campaign_person(workspace_id,campaign_id,id,external_id,name,state,invited_at,accepted_at) VALUES($1,$2,gen_random_uuid()::text,$3,'[RE] Pessoa 7','accepted',$4,$4)",[s.p.workspaceId,s.campaign,later.id,at(300)]));
  s.u.chats.get('chat_later')!.messages.push({id:'l2',text:'[RE] Respondendo agora',timestamp:at(360),is_sender:0,sender_id:later.id});
- await sync(s.u,380);
+ // A paging walk still open finishes first; the newer message comes on the next tick (delayed, never lost).
+ await sync(s.u,380);await sync(s.u,400);
  const p7=(await listLinkedinPeople(s.p,{})).people.find(x=>x.name==='[RE] Pessoa 7')!;
  assert.ok(p7.threadId,'the cached chat is linked once the person is in a campaign');assert.equal(p7.stage,'replied');
 });

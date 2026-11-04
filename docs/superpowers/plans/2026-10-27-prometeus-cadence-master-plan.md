@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07A.3** (atualizado 03/11; 07A.2 concluído com a Unipile simulada). A habilitação real do LinkedIn depende de contrato e chave da Unipile, conta de teste e aceite jurídico.
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07A.3b** (atualizado 03/11; 07A.3a concluído com a Unipile simulada). A habilitação real do LinkedIn depende de contrato e chave da Unipile, conta de teste e aceite jurídico.
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -33,7 +33,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 07A.0 | Viabilidade e capacidades do LinkedIn | 06IA, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07a0-linkedin-feasibility.md) | Concluído local/controlado em 03/11; rota decidida: conector Unipile ([aceite](../../validation/07a0-linkedin-feasibility.md)) |
 | 07A.1 | Conexão, saúde e sincronização LinkedIn | 07A.0, 07C.2 | [tarefas](2026-10-27-prometeus-cadence-07a1-linkedin-connection.md) | Concluído local/controlado em 03/11 com a Unipile simulada ([aceite](../../validation/07a1-linkedin-connection.md)) |
 | 07A.2 | Públicos, campanhas, convites e aceites LinkedIn | 07A.1, 06B.5 | [tarefas](2026-10-27-prometeus-cadence-07a2-linkedin-campaigns.md) | Concluído local/controlado em 03/11 com a Unipile simulada ([aceite](../../validation/07a2-linkedin-campaigns.md)) |
-| 07A.3 | Pessoas, pipeline, mensagens e aprovações LinkedIn | 07A.2, 06D.2, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-07a3-linkedin-conversations.md) | Planejado; não executado |
+| 07A.3 | Pessoas, pipeline, mensagens e aprovações LinkedIn | 07A.2, 06D.2, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-07a3-linkedin-conversations.md) | Dividido: 07A.3a concluído local/controlado em 03/11 ([aceite](../../validation/07a3a-linkedin-conversations.md)); 07A.3b (cadência pós-aceite e templates) e 07A.3c (aprovações) pendentes |
 | 07C.3 | MCP autenticado e comandos revisados | 07C.1, 06F, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07c3-mcp.md) | Planejado; não executado |
 | 07D | Descoberta condicional de scoring e Hot Now | 06C.2, 06B.5 | [tarefas](2026-10-27-prometeus-cadence-07d-scoring-discovery.md) | Planejado; gate include/exclude |
 | 07B.1 | Configuração e ativação do agente SDR | 06F, 07C.2, 07A.3, 07C.3 | [tarefas](2026-10-27-prometeus-cadence-07b1-sdr-configuration.md) | Planejado; não executado |
@@ -178,3 +178,9 @@ Continuidade 07A.2 em 03/11: campanhas de convite no LinkedIn, com o fornecedor 
 - **Aceite e expiração:** o aceite comprovado gera um lead e um evento. O convite vencido é retirado, e o perfil é conferido antes de virar não aceite.
 
 A revisão independente encontrou seis Important, corrigidos RED→GREEN na 102a. Os principais eram o livro de convites que zerava na reconexão e o aceite que virava não aceite. Os leads de aceite não consomem crédito; a cobrança por conta conectada é decisão pendente do usuário. [Aceite](../../validation/07a2-linkedin-campaigns.md).
+
+Continuidade 07A.3a em 03/11: o 07A.3 foi dividido em três partes.
+- **07A.3a (concluído com a Unipile simulada):** pessoas e pipeline reais, conversas sincronizadas e resposta revisada (token de 60 s pelo mesmo usuário, sem reenvio), opt-out que interrompe convites e mensagens.
+- **Pendentes:** 07A.3b (cadência pós-aceite e templates) e 07A.3c (aprovações).
+
+A revisão independente encontrou cinco Important, corrigidos RED→GREEN na 103a. [Aceite](../../validation/07a3a-linkedin-conversations.md).

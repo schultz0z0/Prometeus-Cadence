@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07A.3",
+  "next": "07A.3b",
   "end": "08B",
   "packages": [
     {
@@ -1227,7 +1227,42 @@
         "/linkedin/approvals",
         "/linkedin/cadences",
         "/linkedin/templates"
-      ]
+      ],
+      "status": "in-progress-split",
+      "split": {
+        "07A.3a": {
+          "status": "completed-local-controlled",
+          "completedAt": "2026-11-03",
+          "scope": "people, pipeline, conversation sync, reviewed replies, opt-out",
+          "executionPlan": "docs/superpowers/plans/2026-11-03-prometeus-cadence-07a3a-linkedin-execution.md",
+          "validation": "docs/validation/07a3a-linkedin-conversations.md",
+          "review": "docs/validation/07a3a-linkedin-conversations-review.md",
+          "migrations": [
+            "db/migrations/103-linkedin-conversations.sql",
+            "db/migrations/103a-linkedin-conversations-review.sql"
+          ],
+          "create": [
+            "src/domain/linkedin-message-action.ts",
+            "src/server/linkedin/people.ts",
+            "src/server/linkedin/conversations.ts",
+            "src/app/api/linkedin/people/route.ts",
+            "src/app/api/linkedin/people/[id]/[action]/route.ts",
+            "src/app/api/linkedin/pipeline/route.ts",
+            "src/app/api/linkedin/conversations/[id]/route.ts",
+            "src/app/api/linkedin/conversations/[id]/[action]/route.ts",
+            "tests/integration/linkedin-helpers.ts"
+          ],
+          "deviations": "migration 103 (099 taken); LinkedIn opt-out on the campaign person (suppression exists only for phone/e-mail identities); 06B.4 enrichment not wired (accept enrichment from 07A.2)"
+        },
+        "07A.3b": {
+          "status": "planned",
+          "scope": "post-accept cadence (LINKEDIN steps executable in publication/dispatch through Unipile, stopped by replies and opt-out) and LinkedIn templates"
+        },
+        "07A.3c": {
+          "status": "planned",
+          "scope": "approvals of AI-written post comments (needs a comment step and the comment capability)"
+        }
+      }
     },
     {
       "id": "07C.3",

@@ -1,10 +1,19 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-03 · Session: s29 · Phase:6 07A.2 concluído local/controlado (Unipile simulada); próximo 07A.3; paridade integral não aceita
+Updated: 2026-11-03 · Session: s30 · Phase:6 07A.3a concluído local/controlado (Unipile simulada); próximo 07A.3b; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s30: 07A.3a, pessoas, pipeline e conversas LinkedIn.
+  - **Pessoas e pipeline:** lista real com etapa e última atividade; pipeline com as cinco colunas da referência.
+  - **Conversas:** sincronização com cursor e deduplicação; resposta revisada (60 s, mesmo usuário, sem reenvio); opt-out.
+  - **QA:** L-039 removed, 0 chamadas externas.
+  - **Revisão:** cinco Important corrigidos RED→GREEN (103a).
+  - **Evidência:** EV-292.
+- Not covered s30: a referência só mostra Pessoas, Pipeline e Aprovações vazios; a tela de revisão da resposta depende da chave real; Unipile real.
+- Needs human s30: os mesmos de s29 (contrato e chave da Unipile, conta de teste, leitura jurídica, decisão de cobrança).
 
 - Covered s29: 07A.2, campanhas de convite LinkedIn.
   - **Editor e público:** rascunho com todos os controles do editor (EV-241); exploração real recusando filtros que não chegam ao LinkedIn; revisão com o público real separado da estimativa.
@@ -124,7 +133,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s29: 07A.3 — pessoas, pipeline, mensagens e aprovações LinkedIn (Unipile simulada). 07A.2 concluído; menores→07A.3/08A.
+Fila vigente s30: 07A.3b — cadência pós-aceite e templates LinkedIn; depois 07A.3c — aprovações. 07A.3a concluído; menores→07A.3b/08A.
+
+Fila s29 (histórica): 07A.3 — dividido em 07A.3a/b/c.
 
 Fila s28 (histórica): 07A.2 — campanhas LinkedIn.
 
