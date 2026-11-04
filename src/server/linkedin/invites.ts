@@ -7,6 +7,7 @@ import {workerPool} from '../prospecting/worker-db.ts';
 import {linkedinCapabilityView} from './capabilities.ts';
 import {capsVersion} from './connections.ts';
 import {audiencePage,audienceQuery} from './audience.ts';
+import {AppError} from '../errors.ts';
 import {unipileRequest,UnipileMissing,UnipileRetry,type UnipileDeps} from './unipile.ts';
 // 07A.2 worker: collect audiences, send invites one at a time per account, detect acceptances, withdraw expired invites.
 export interface CampaignTickDeps extends UnipileDeps{afterClaim?:()=>Promise<unknown>}
@@ -48,6 +49,8 @@ async function invite(pool:Pool,token:string,now:Date,deps:CampaignTickDeps){
    const r=await unipileRequest('POST','/api/v1/users/invite',{provider_id:claim.providerId,account_id:claim.external,...(message?{message}:{})},deps);
    await finish('sent',null,typeof r?.invitation_id==='string'?r.invitation_id.slice(0,200):null);out.sent++;
   }catch(e){
+   // A configuration error happens before any request: nothing left. Back to the queue, account held an hour.
+   if(e instanceof AppError){await finish('held','A conexão com o LinkedIn não está configurada.',null,new Date(now.getTime()+3600e3));continue;}
    const status=e instanceof UnipileRetry?e.status:e instanceof UnipileMissing?404:undefined;
    // No status (network, timeout) or a 5xx: the invite may have left. Never resend.
    if(status===undefined||status>=500){await finish('uncertain','Sem confirmação do LinkedIn; o convite não será reenviado.');out.uncertain++;}

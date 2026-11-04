@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useIdentity } from "@/client/workspace-provider";
 import { useConnectorApi } from "./apollo-connection";
 import { LINKEDIN_TERMS, type LinkedinAccountView } from "@/domain/linkedin-connection";
+import { PIPELINE_COLUMNS, type LinkedinMessageView, type LinkedinPersonView, type PipelineStage } from "@/domain/linkedin-message-action";
 import { defaultCampaignDraft, LINKEDIN_DAILY_CAP, type AudienceSample, type LinkedinCampaignDraft, type LinkedinCampaignView } from "@/domain/linkedin-campaign";
 import { SdrOverview } from './sdr-overview';
 import Link from "next/link";
@@ -90,7 +91,7 @@ function LinkedinAccountStep({account}: {account: LinkedinAccountView | null}) {
 }
 function LinkedinReference({section, campaignId}: {section: string; campaignId: string | null}) {
   return <div className="linkedin-reference">
-    {section === "dashboard" ? <LinkedinOverview /> : section === "campaigns/new" ? <LinkedinCampaignDraft campaignId={campaignId} /> : section === "campaigns" ? <LinkedinCampaigns /> : section === "enrichment" ? <LinkedinEnrichment /> : section === "cadences" ? <LinkedinCadences /> : section === "templates" ? <LinkedinTemplates /> : <LinkedinWaiting section={section} />}
+    {section === "dashboard" ? <LinkedinOverview /> : section === "campaigns/new" ? <LinkedinCampaignDraft campaignId={campaignId} /> : section === "campaigns" ? <LinkedinCampaigns /> : section === "enrichment" ? <LinkedinEnrichment /> : section === "cadences" ? <LinkedinCadences /> : section === "templates" ? <LinkedinTemplates /> : section === "people" ? <LinkedinPeople /> : section === "pipeline" ? <LinkedinPipeline /> : <LinkedinWaiting section={section} />}
   </div>;
 }
 function LinkedinOverview() {
@@ -151,6 +152,62 @@ const waitingCopy: Record<string, {title:string;description:string;icon:string}>
 function LinkedinWaiting({section}: {section:string}) {
   const copy=waitingCopy[section]??waitingCopy.people;
   return <div className="li-waiting-layout"><section className="li-panel li-waiting"><Icon name="Linkedin" size={32}/><h1>{copy.title}</h1><p>{copy.description}</p><div className="row"><LinkButton href={campaignPath} variant="primary">Montar uma campanha <Icon name="ArrowRight" size={15}/></LinkButton><LinkButton href="/linkedin/dashboard">Como funciona</LinkButton></div></section><LinkedinPrerequisites/></div>;
+}
+const stageText: Record<PipelineStage, string> = { queued: "Na fila", warming: "Aquecida", invited: "Convidada", accepted: "Aceitou", replied: "Respondeu" };
+const when = (iso: string) => new Date(iso).toLocaleString("pt-BR", {dateStyle: "short", timeStyle: "short"});
+function LinkedinPeople() {
+  const api = useConnectorApi(), [stage, setStage] = useState(""), [search, setSearch] = useState(""), [data, setData] = useState<{people: LinkedinPersonView[]; total: number} | null>(null), [error, setError] = useState(""), [open, setOpen] = useState<LinkedinPersonView | null>(null), [optOut, setOptOut] = useState<LinkedinPersonView | null>(null), [busy, setBusy] = useState(false);
+  const load = () => { setError(""); api<{people: LinkedinPersonView[]; total: number}>("/api/linkedin/people?" + new URLSearchParams({...(stage ? {stage} : {}), ...(search.trim() ? {search: search.trim()} : {})})).then(setData).catch(e => setError(e.message)); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(load, [api, stage]);
+  if (data && !data.total && !stage && !search.trim()) return <LinkedinWaiting section="people" />;
+  async function confirmOptOut() { if (!optOut) return; setBusy(true); try { await api(`/api/linkedin/people/${optOut.id}/opt-out`, {}); setOptOut(null); load(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
+  return <><PageHeader title="Pessoas" description="Quem entrou nas suas campanhas do LinkedIn, no estágio de cada um."/>
+    <div className="li-toolbar"><form className="li-people-search" onSubmit={e => { e.preventDefault(); load(); }}><input aria-label="Buscar pessoa" placeholder="Buscar por nome ou empresa…" value={search} maxLength={100} onChange={e => setSearch(e.target.value)}/></form><select aria-label="Etapa" value={stage} onChange={e => setStage(e.target.value)}><option value="">Etapa: todas</option>{PIPELINE_COLUMNS.filter(([id]) => id !== "warming").map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></div>
+    {error && <div role="alert"><Notice tone="error">{error} <button type="button" className="text-button" onClick={load}>Tentar de novo</button></Notice></div>}
+    {!data ? <p role="status" className="li-muted">Carregando pessoas…</p> : !data.people.length ? <section className="li-panel li-campaign-empty"><Icon name="Search" size={24}/><h2>Ninguém com esses filtros</h2><p>Tire um filtro ou mude a busca.</p></section>
+    : <section className="li-panel li-people"><table><thead><tr><th>Pessoa</th><th>Campanha</th><th>Etapa</th><th>Última atividade</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{data.people.map(x => <tr key={x.id}>
+        <td><strong>{x.name}</strong><small>{[x.headline, x.company].filter(Boolean).join(" · ")}</small></td><td>{x.campaign.name}</td>
+        <td>{x.stage ? <Badge tone={x.stage === "replied" ? "green" : "neutral"}>{stageText[x.stage]}</Badge> : <Badge>{({expired: "Expirado", skipped: "Pulado", failed: "Recusado"} as Record<string, string>)[x.state] ?? x.state}</Badge>}{x.optedOut && <small>Não contatar</small>}</td>
+        <td>{when(x.lastActivityAt)}</td>
+        <td className="li-people-actions">{x.threadId && <Button onClick={() => setOpen(x)}>Conversa</Button>}{!x.optedOut && <Button variant="ghost" onClick={() => setOptOut(x)}>Não contatar mais</Button>}</td></tr>)}</tbody></table>
+      {data.total > data.people.length && <p className="li-muted">Mostrando {data.people.length} de {data.total}. Use a busca para achar alguém.</p>}</section>}
+    {open && <LinkedinConversation person={open} onClose={() => { setOpen(null); load(); }}/>}
+    {optOut && <Modal title="Não contatar mais?" onClose={() => setOptOut(null)}><div className="stack"><p>{optOut.name} sai da fila de convites e nenhuma mensagem será enviada a essa pessoa pelo Prometeus.</p><div className="form-actions"><Button onClick={() => setOptOut(null)}>Cancelar</Button><Button variant="danger" disabled={busy} onClick={confirmOptOut}>Não contatar mais</Button></div></div></Modal>}
+  </>;
+}
+// A reply is reviewed, then sent by the same person within a minute; an edit after the review needs a new one.
+function LinkedinConversation({person, onClose}: {person: LinkedinPersonView; onClose: () => void}) {
+  const api = useConnectorApi(), [thread, setThread] = useState<{thread: {optedOut: boolean}; messages: LinkedinMessageView[]} | null>(null), [error, setError] = useState(""), [text, setText] = useState(""), [review, setReview] = useState<{token: string; expiresAt: string; body: string; requestId: string} | null>(null), [busy, setBusy] = useState(false), [message, setMessage] = useState("");
+  const load = () => api<{thread: {optedOut: boolean}; messages: LinkedinMessageView[]}>(`/api/linkedin/conversations/${person.threadId}`).then(setThread).catch(e => setError(e.message));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { void load(); }, [api, person.threadId]);
+  async function prepare() { setBusy(true); setError(""); setMessage(""); try { const r = await api<{token: string; expiresAt: string; body: string}>(`/api/linkedin/conversations/${person.threadId}/prepare-reply`, {body: text}); setReview({...r, requestId: crypto.randomUUID()}); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
+  async function send() { if (!review) return; setBusy(true); setError(""); try { const r = await api<{state: string}>(`/api/linkedin/conversations/${person.threadId}/confirm-reply`, {body: review.body, token: review.token, requestId: review.requestId}); setMessage(r.state === "sent" ? "Mensagem enviada." : "Sem confirmação do LinkedIn. A mensagem não será reenviada; confira a conversa no LinkedIn."); setReview(null); setText(""); await load(); } catch (e) { setError((e as Error).message); setReview(null); } finally { setBusy(false); } }
+  return <Modal title={`Conversa com ${person.name}`} onClose={onClose} wide><div className="stack">
+    {!thread ? <p role="status" className="li-muted">{error || "Carregando a conversa…"}</p> : <ol className="li-thread">{thread.messages.map(m => <li key={m.id} className={m.direction === "out" ? "li-out" : "li-in"}><p>{m.body}</p><small>{m.direction === "out" ? "Você" : person.name} · {when(m.sentAt)}</small></li>)}</ol>}
+    {thread?.thread.optedOut ? <Notice>Esta pessoa pediu para não ser contatada. Nenhuma mensagem pode ser enviada.</Notice> : thread && <>
+      {!review ? <><Field label="Sua resposta"><textarea rows={4} maxLength={8000} value={text} disabled={busy} onChange={e => { setText(e.target.value); setMessage(""); }}/></Field><div className="form-actions"><Button variant="primary" disabled={!text.trim() || busy} onClick={prepare}>{busy ? "Revisando…" : "Revisar resposta"}</Button></div></>
+      : <div className="li-reply-review"><strong>Você vai enviar pelo seu LinkedIn:</strong><blockquote>{review.body}</blockquote><small>Envie em até um minuto. Para mudar o texto, volte e revise de novo.</small><div className="form-actions"><Button disabled={busy} onClick={() => setReview(null)}>Voltar e editar</Button><Button variant="primary" disabled={busy} onClick={send}>{busy ? "Enviando…" : "Enviar agora"}</Button></div></div>}
+    </>}
+    {error && thread && <div role="alert"><Notice tone="error">{error}</Notice></div>}{message && <p role="status" className="li-muted">{message}</p>}
+  </div></Modal>;
+}
+function LinkedinPipeline() {
+  const api = useConnectorApi(), [data, setData] = useState<{columns: {id: PipelineStage; label: string; total: number; people: LinkedinPersonView[]}[]} | null>(null), [error, setError] = useState(""), [busy, setBusy] = useState("");
+  const load = () => { setError(""); api<typeof data & object>("/api/linkedin/pipeline").then(setData).catch(e => setError(e.message)); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(load, [api]);
+  if (data && data.columns.every(c => !c.total)) return <LinkedinWaiting section="pipeline" />;
+  async function move(x: LinkedinPersonView, stage: "accepted" | "replied") { setBusy(x.id); setError(""); try { await api(`/api/linkedin/people/${x.id}/move`, {stage, expectedRevision: x.stageRevision, requestId: crypto.randomUUID()}); } catch (e) { setError((e as Error).message); } finally { setBusy(""); load(); } }
+  return <><PageHeader title="Pipeline do LinkedIn" description="Cada pessoa na coluna do estágio dela. Só a resposta muda à mão, para quem respondeu fora do LinkedIn."/>
+    {error && <div role="alert"><Notice tone="error">{error} <button type="button" className="text-button" onClick={load}>Tentar de novo</button></Notice></div>}
+    {!data ? <p role="status" className="li-muted">Carregando o pipeline…</p> : <div className="li-pipeline">{data.columns.map(col => <section key={col.id} className="li-panel li-pipeline-column" aria-label={col.label}><h2>{col.label} <span>{col.total}</span></h2>
+      {col.id === "warming" && <p className="li-muted">O aquecimento ainda não está disponível.</p>}
+      {col.people.map(x => <article key={x.id} className="li-pipeline-card"><strong>{x.name}</strong><small>{[x.company, x.campaign.name].filter(Boolean).join(" · ")}</small>
+        {col.id === "accepted" && <Button disabled={busy === x.id} onClick={() => move(x, "replied")}>Marcar como respondeu</Button>}</article>)}
+      {col.total > col.people.length && <small className="li-muted">+{col.total - col.people.length} em Pessoas</small>}</section>)}</div>}
+  </>;
 }
 function LinkedinEnrichment() {
   return <><PageHeader title="Enriquecimento" description="O que o sistema descobre sozinho, e o que você pode aprofundar antes de contactar."/>

@@ -11,7 +11,7 @@ import {workerPool} from '../prospecting/worker-db.ts';
 import {linkedinCapabilityView} from './capabilities.ts';
 import {capsVersion} from './connections.ts';
 import {linkedinSqlError} from './people.ts';
-import {unipileRequest,UnipileMissing,UnipileRetry,type UnipileDeps} from './unipile.ts';
+import {unipileRequest,unipileSettings,UnipileMissing,UnipileRetry,type UnipileDeps} from './unipile.ts';
 // 07A.3a: conversations with campaign people. Replies are reviewed text confirmed by the same person within a minute.
 const failures:Record<string,[number,string]>={
  LINKEDIN_CAMPAIGN_ACCESS:[403,'Somente proprietário, administrador ou operador responde no LinkedIn.'],
@@ -29,6 +29,8 @@ const digest=(t:string)=>createHash('sha256').update(t).digest('hex');
 async function sendGate(c:PoolClient){
  const cap=await linkedinCapabilityView(c);
  if(!linkedinActionAllowed(cap.capabilities,'sendMessage'))throw new AppError(409,cap.reason||'O fornecedor habilitado não oferece o envio de mensagens.','LINKEDIN_UNAVAILABLE');
+ // A missing key fails here, before any claim: nothing left, so nothing is uncertain.
+ unipileSettings();
  return capsVersion(cap);
 }
 export async function getLinkedinThread(p:Principal,threadId:string):Promise<{thread:{id:string;personId:string;name:string;optedOut:boolean};messages:LinkedinMessageView[]}>{

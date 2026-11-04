@@ -119,3 +119,21 @@ test('07A.3 HTTP and SQL boundaries',async()=>{
   denied.push(await withWorkspaceTransaction(s.p,c=>c.query(sql)).then(()=>'ok',(e:{code?:string})=>e.code!));
  assert.deepEqual(denied,['42501','42501','42501']);
 });
+
+test('07A.3 review: a missing vendor key sends nothing and leaves nothing uncertain (reply and invite)',async()=>{
+ const s=await accepted();chat(s.u,'chat_p1',s.p1.id,[['m1','[RE] Oi!',0,240]]);await sync(s.u,300);
+ const threadId=(await listLinkedinPeople(s.p,{})).people.find(x=>x.id===s.me.id)!.threadId!;
+ const review=await prepareLinkedinReply(s.p,{threadId,body:'[RE] Sem chave'});
+ const dsn=process.env.UNIPILE_DSN;delete process.env.UNIPILE_DSN;
+ try{
+  assert.equal(await code(()=>confirmLinkedinReply(s.p,{threadId,body:'[RE] Sem chave',token:review.token,requestId:randomUUID()},s.u.deps)),'503 LINKEDIN_NOT_CONFIGURED');
+  assert.deepEqual((await rows(s.p.workspaceId,'SELECT state FROM app.linkedin_reply WHERE workspace_id=$1')).map(r=>r.state),['prepared']);
+  // A queued invite with no key goes back to the queue instead of becoming uncertain.
+  const before=(await rows(s.p.workspaceId,"SELECT count(*)::int n FROM app.linkedin_campaign_person WHERE workspace_id=$1 AND state='uncertain'"))[0].n;
+  s.u.people.push(person(9));await testAdmin(c=>c.query("UPDATE app.linkedin_campaign SET collect_done=false,collect_cursor=NULL WHERE workspace_id=$1",[s.p.workspaceId]));
+  process.env.UNIPILE_DSN=dsn;await ticks(s.u,1,WED+24*3600e3);delete process.env.UNIPILE_DSN;
+  await ticks(s.u,2,WED+25*3600e3);
+  assert.equal((await rows(s.p.workspaceId,"SELECT count(*)::int n FROM app.linkedin_campaign_person WHERE workspace_id=$1 AND state='uncertain'"))[0].n,before);
+ }finally{process.env.UNIPILE_DSN=dsn;}
+ assert.equal(s.u.sent.length,0);
+});
