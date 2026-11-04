@@ -1,10 +1,25 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-04 · Session: s35 · Phase:6 07B.1 concluído local/controlado; próximo 07B.2; paridade integral não aceita
+Updated: 2026-11-04 · Session: s36 · Phase:6 07B.2 concluído local/controlado; próximo 07B.3; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s36: 07B.2, atendimento supervisionado do SDR.
+  - **Fluxo:** rascunho por mensagem recebida, aprovação na inbox do WhatsApp, assumir e devolver.
+  - **QA:** L-045 removed, nenhuma mensagem de saída.
+  - **Revisão:** dois High, nove Medium e onze Low tratados (109a).
+  - **Evidência:** EV-298.
+- Not covered s36:
+  - telas operacionais da referência (contrato próprio);
+  - conversa real e IA real;
+  - clique final em "Aprovar e enviar" no navegador, porque o worker de disparo estava ativo (coberto na integração);
+  - e-mail.
+- Needs human s36:
+  - os de s35;
+  - reiniciar o runtime para subir a lane `sdr`;
+  - autorizar um piloto com número e contato próprios.
 
 - Covered s35: 07B.1, configuração e ativação do Agente SDR.
   - **Gate:** sem Pro, `/sdr` mostra o gate no padrão da referência, sem oferta de compra.
@@ -185,7 +200,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s35: 07B.2 — atendimento, memória e intervenção humana do SDR. 07B.1 concluído; menores→08A.
+Fila vigente s36: 07B.3 — agenda, CRM, acompanhamento e piloto SDR. 07B.2 concluído; menores→08A.
+
+Fila s35 (histórica): 07B.2 — atendimento, memória e intervenção humana do SDR.
 
 Fila s34 (histórica): 07B.1 — configuração e ativação do agente SDR.
 

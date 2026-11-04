@@ -317,3 +317,9 @@ Revisão independente: três Medium e oito Low corrigidos. 07C.3 completo. Próx
 Configuração e ativação do Agente SDR concluídas local/controlado: agentes com definição, script, canal e passagem, base de conhecimento aprovada, simulação sem envio e ativação revisada; um agente ativo ainda não responde conversas.
 
 Revisão independente: dois High, oito Medium e oito Low corrigidos. Próximo: 07B.2. [Aceite](../../validation/07b1-sdr-configuration.md).
+
+### Continuidade 04/11 — 07B.2
+
+Atendimento supervisionado do SDR concluído local/controlado: rascunho por mensagem recebida, aprovação na inbox do WhatsApp, assumir e devolver, e cobrança por turno. Sem piloto real.
+
+Revisão independente: dois High, nove Medium e onze Low tratados. Próximo: 07B.3. [Aceite](../../validation/07b2-sdr-conversation.md).
