@@ -1,10 +1,18 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-04 · Session: s31 · Phase:6 07A.3b concluído local/controlado (Unipile simulada); próximo 07A.3c; paridade integral não aceita
+Updated: 2026-11-04 · Session: s32 · Phase:6 07A.3 concluído local/controlado (Unipile simulada); próximo 07C.3; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s32: 07A.3c, aprovações de comentários LinkedIn.
+  - **Fluxo:** passo de comentário na cadência pós-aceite; a IA escreve, o texto espera em Aprovações e só é publicado com aprovação.
+  - **QA:** L-041 removed, 0 chamadas externas.
+  - **Revisão:** dois High, um Medium e dois Low corrigidos RED→GREEN (105a).
+  - **Evidência:** EV-294.
+- Not covered s32: a referência só mostra Aprovações vazia e não mostra onde o passo de comentário é configurado; Unipile e IA reais.
+- Needs human s32: os mesmos de s31 (contrato e chave da Unipile, conta de teste, leitura jurídica, decisão de cobrança).
 
 - Covered s31: 07A.3b, templates e cadência pós-aceite LinkedIn.
   - **Templates:** convite e mensagem, com seletor no editor de campanha.
@@ -142,7 +150,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s31: 07A.3c — aprovações de comentários LinkedIn. 07A.3b concluído; menores→08A.
+Fila vigente s32: 07C.3 — MCP autenticado e comandos revisados. 07A.3 concluído; menores→08A.
+
+Fila s31 (histórica): 07A.3c — aprovações de comentários LinkedIn.
 
 Fila s30 (histórica): 07A.3b — cadência pós-aceite e templates LinkedIn.
 

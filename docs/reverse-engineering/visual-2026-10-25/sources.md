@@ -19,3 +19,4 @@
 | SRC-013 | Unipile detecção de convites aceitos | https://developer.unipile.com/docs/detecting-accepted-invitations | docs | 2026-11-03 | Webhook new_relation (até 8 h de atraso) ou leitura periódica de relações, poucas vezes por dia |
 | SRC-014 | Unipile envio de mensagens | https://developer.unipile.com/docs/send-messages | docs | 2026-11-03 | POST /chats/{chat_id}/messages em multipart com text; novo chat só com relações (ou InMail) |
 | SRC-015 | Unipile leitura de mensagens | https://developer.unipile.com/docs/get-messages | docs | 2026-11-03 | Histórico do chat mais recente primeiro; GET /messages periódico com folga e deduplicação pelo id; webhook em tempo real como alternativa |
+| SRC-016 | Unipile posts e comentários | https://developer.unipile.com/docs/posts-and-comments | docs | 2026-11-04 | Posts do usuário com social_id, texto, data, permissões; POST /posts/{social_id}/comments com account_id e text devolve comment_id |

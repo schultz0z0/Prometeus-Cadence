@@ -293,3 +293,9 @@ Templates e cadência pós-aceite do LinkedIn concluídos local/controlado, com 
 - **Paradas:** resposta (inclusive manual), opt-out, campanha pausada, cancelada ou encerrada.
 
 Revisão independente: um High e quatro menores corrigidos RED→GREEN. Próximo: 07A.3c. [Aceite](../../validation/07a3b-linkedin-sequences.md).
+
+### Continuidade 04/11 — 07A.3c
+
+Aprovações de comentários do LinkedIn concluídas local/controlado. O comentário escrito pela IA só é publicado depois da aprovação humana, mesmo no envio automático. O 07A.3 está completo.
+
+Revisão independente: dois High, um Medium e dois Low corrigidos RED→GREEN. Próximo: 07C.3. [Aceite](../../validation/07a3c-linkedin-approvals.md).
