@@ -39,7 +39,8 @@ export async function getLinkedinThread(p:Principal,threadId:string):Promise<{th
   await c.query('SELECT app.linkedin_campaign_actor(false)');
   const t=(await c.query(`SELECT t.id,p.id person_id,p.name,p.opted_out_at FROM app.linkedin_thread t JOIN app.linkedin_campaign_person p ON p.workspace_id=t.workspace_id AND p.id=t.person_id WHERE t.id=$1`,[threadId])).rows[0];
   if(!t)throw new AppError(...failures.LINKEDIN_THREAD_NOT_FOUND,'LINKEDIN_THREAD_NOT_FOUND');
-  const m=(await c.query('SELECT id,direction,body,sent_at FROM app.linkedin_message WHERE thread_id=$1 ORDER BY sent_at,id LIMIT 500',[threadId])).rows;
+  // The 500 newest, shown oldest first.
+  const m=(await c.query('SELECT id,direction,body,sent_at FROM app.linkedin_message WHERE thread_id=$1 ORDER BY sent_at DESC,id DESC LIMIT 500',[threadId])).rows.reverse();
   return {thread:{id:t.id,personId:t.person_id,name:t.name,optedOut:!!t.opted_out_at},messages:m.map(r=>({id:r.id,direction:r.direction,body:r.body,sentAt:r.sent_at.toISOString()}))};
  });
 }
@@ -80,21 +81,22 @@ export async function runLinkedinMessageTick(o:{limit:number;now?:Date;signal?:A
  const c0=await pool.connect();let version:string|null;
  try{const v=await linkedinCapabilityView(c0);version=linkedinActionAllowed(v.capabilities,'readMessages')?capsVersion(v):null;}finally{c0.release();}
  if(!version)return {accounts:0,stored:0};
- const accounts=(await pool.query('SELECT app.claim_linkedin_messages($1,$2,$3) v',[now,o.limit,token])).rows[0].v as {workspaceId:string;accountId:string;external:string;memberId:string;after:string;capabilitiesVersion:string}[];
+ const accounts=(await pool.query('SELECT app.claim_linkedin_messages($1,$2,$3) v',[now,o.limit,token])).rows[0].v as {workspaceId:string;accountId:string;external:string;memberId:string;after:string;pageCursor:string|null;capabilitiesVersion:string}[];
  let stored=0;
  for(const a of accounts){
   if(o.signal?.aborted)break;
-  const items:Record<string,unknown>[]=[];let newest=Date.parse(a.after),ok=a.capabilitiesVersion===version;
+  const items:Record<string,unknown>[]=[];let newest=Date.parse(a.after),ok=a.capabilitiesVersion===version,cursor:string|null=a.pageCursor;
   // One hour of overlap: ids make the repeat harmless, a gap would lose messages.
   const after=new Date(Date.parse(a.after)-3600e3).toISOString();
   try{
-   let cursor:string|null=null;
+   // Three pages a tick; an unfinished walk keeps its page cursor (and the same 'after') for the next tick.
    for(let page=0;ok&&page<3;page++){
     const r=await unipileRequest('GET','/api/v1/messages?'+new URLSearchParams({account_id:a.external,after,limit:'100',...(cursor?{cursor}:{})}),undefined,deps);
     for(const m of Array.isArray(r?.items)?r.items:[]){
      if(typeof m?.id!=='string'||typeof m?.chat_id!=='string')continue;
      const ts=Date.parse(m.timestamp);if(!Number.isFinite(ts))continue;newest=Math.max(newest,ts);
-     items.push({chat:m.chat_id.slice(0,200),remoteId:String(m.provider_id??m.id).slice(0,200),direction:m.is_sender===1||m.is_sender===true?'out':'in',body:String(m.text??'').slice(0,8000),sentAt:new Date(ts).toISOString()});
+     // The Unipile id: the same id a sent reply returns, so a reply is never stored twice.
+     items.push({chat:m.chat_id.slice(0,200),remoteId:m.id.slice(0,200),direction:m.is_sender===1||m.is_sender===true?'out':'in',body:String(m.text??'').slice(0,8000),sentAt:new Date(ts).toISOString()});
     }
     cursor=typeof r?.cursor==='string'&&r.cursor?r.cursor:null;if(!cursor)break;
    }
@@ -108,7 +110,7 @@ export async function runLinkedinMessageTick(o:{limit:number;now?:Date;signal?:A
    }
    for(const it of items)it.attendee=known.has(it.chat as string)?null:attendee.get(it.chat as string)??'';
   }catch{ok=false;}
-  stored+=(await pool.query('SELECT app.finish_linkedin_messages($1,$2,$3,$4,$5) v',[a.workspaceId,a.accountId,token,JSON.stringify(ok?items:[]),ok?new Date(newest).toISOString():a.after])).rows[0].v;
+  stored+=(await pool.query('SELECT app.finish_linkedin_messages($1,$2,$3,$4,$5,$6,$7) v',[a.workspaceId,a.accountId,token,JSON.stringify(ok?items:[]),new Date(newest).toISOString(),ok?cursor:a.pageCursor,!ok])).rows[0].v;
  }
  return {accounts:accounts.length,stored};
 }

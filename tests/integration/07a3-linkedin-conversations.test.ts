@@ -7,6 +7,7 @@ import{listLinkedinPeople,linkedinPipeline,moveLinkedinPerson,optOutLinkedinPers
 import{getLinkedinThread,prepareLinkedinReply,confirmLinkedinReply,runLinkedinMessageTick}from'../../src/server/linkedin/conversations.ts';
 import{linkedinPeopleRequest,linkedinPersonActionRequest,linkedinConversationActionRequest}from'../../src/server/linkedin/http.ts';
 import{useLinkedinTestEnv,user,code,FULL,enable,setup,person,draft,activate,WED,ticks,rows,type Fake}from'./linkedin-helpers.ts';
+import{runLinkedinCampaignTick}from'../../src/server/linkedin/invites.ts';
 import type{Principal}from'../../src/domain/workspace.ts';
 useLinkedinTestEnv();
 const MSG={...FULL,readMessages:true,sendMessage:'assisted'};
@@ -137,3 +138,43 @@ test('07A.3 review: a missing vendor key sends nothing and leaves nothing uncert
  }finally{process.env.UNIPILE_DSN=dsn;}
  assert.equal(s.u.sent.length,0);
 });
+
+test('07A.3 review: more than 300 new messages are all kept across ticks; a chat cached before the person joined is linked later',async()=>{
+ const s=await accepted();
+ const filler:[string,string,0|1,number][]=Array.from({length:349},(_,i)=>[`f${i}`,`[RE] mensagem ${i}`,1,250+i*0.1]);
+ chat(s.u,'chat_p1',s.p1.id,[['old','[RE] Resposta antiga ao convite',0,245],...filler]);
+ await sync(s.u,300);await sync(s.u,320);
+ assert.equal(await count(s.p.workspaceId),350,'nothing older than the third page is lost');
+ assert.equal((await listLinkedinPeople(s.p,{})).people.find(x=>x.id===s.me.id)!.stage,'replied');
+ // p2 was invited but had not accepted when its chat first synced? Here: a chat with someone not yet in any campaign.
+ const later=person(7);
+ chat(s.u,'chat_later',later.id,[['l1','[RE] Oi, vi seu perfil',0,330]]);await sync(s.u,340);
+ assert.equal(await count(s.p.workspaceId),350,'not a campaign person yet: not kept');
+ s.u.people.push(later);
+ await testAdmin(c=>c.query("INSERT INTO app.linkedin_campaign_person(workspace_id,campaign_id,id,external_id,name,state,invited_at,accepted_at) VALUES($1,$2,gen_random_uuid()::text,$3,'[RE] Pessoa 7','accepted',$4,$4)",[s.p.workspaceId,s.campaign,later.id,at(300)]));
+ s.u.chats.get('chat_later')!.messages.push({id:'l2',text:'[RE] Respondendo agora',timestamp:at(360),is_sender:0,sender_id:later.id});
+ await sync(s.u,380);
+ const p7=(await listLinkedinPeople(s.p,{})).people.find(x=>x.name==='[RE] Pessoa 7')!;
+ assert.ok(p7.threadId,'the cached chat is linked once the person is in a campaign');assert.equal(p7.stage,'replied');
+});
+
+test('07A.3 review: the sent reply never comes back twice; a message older than the invite is not a reply',async()=>{
+ const s=await accepted();
+ chat(s.u,'chat_p1',s.p1.id,[['before','[RE] Conversa de antes do convite',0,-120],['out0','[RE] Olá',1,240]]);await sync(s.u,300);
+ const me=(await listLinkedinPeople(s.p,{})).people.find(x=>x.id===s.me.id)!;
+ assert.equal(me.stage,'accepted','an old message is history, not a reply to the campaign');
+ await reply(s.p,me.threadId!,'[RE] Tudo bem?',s.u);
+ await sync(s.u,330);
+ assert.equal(await count(s.p.workspaceId),3,'the reply is stored once even though the list carries another provider id');
+});
+
+test('07A.3 review: an opt-out during an invite in flight stops it for good',async()=>{
+ const s=await setup(MSG);const p1=person(1);s.u.people.push(p1);
+ const campaign=await activate(s.p,draft());
+ await runLinkedinCampaignTick({limit:10,now:new Date(WED)},{...s.u.deps,afterClaim:async()=>{
+  const id=(await rows(s.p.workspaceId,"SELECT id FROM app.linkedin_campaign_person WHERE workspace_id=$1 AND state='sending'"))[0].id;await optOutLinkedinPerson(s.p,id);}});
+ await ticks(s.u,3,WED+3600e3);
+ assert.equal(s.u.invites.length,0,'never invited after the opt-out');
+ assert.equal((await rows(s.p.workspaceId,'SELECT state FROM app.linkedin_campaign_person WHERE workspace_id=$1 AND campaign_id=$2',[campaign]))[0].state,'skipped');
+});
+

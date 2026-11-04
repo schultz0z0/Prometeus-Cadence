@@ -67,8 +67,9 @@ export function fakeUnipile(owner:Principal){
   if(m){const p=people.find(x=>x.id===m![1]);if(!p)return Response.json({},{status:404});const [first,...last]=p.name.split(' ');
    return Response.json({object:'UserProfile',provider:'LINKEDIN',provider_id:p.id,public_identifier:'re-'+p.id.toLowerCase(),first_name:first,last_name:last.join(' '),headline:p.headline,location:p.location,contact_info:p.email?{emails:[p.email]}:{},network_distance:p.network_distance});}
   if(url.pathname==='/api/v1/messages'){const after=Date.parse(url.searchParams.get('after')??'1970-01-01');
-   const all=[...chats].flatMap(([chat_id,c])=>c.messages.map(m=>({object:'Message',chat_id,...m}))).filter(m=>Date.parse(m.timestamp)>after).sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
-   return Response.json({object:'MessageList',items:all,cursor:null});}
+   const all=[...chats].flatMap(([chat_id,c])=>c.messages.map(m=>({object:'Message',chat_id,provider_id:'li-'+m.id,...m}))).filter(m=>Date.parse(m.timestamp)>after).sort((a,b)=>b.timestamp.localeCompare(a.timestamp)||b.id.localeCompare(a.id));
+   const start=Number(url.searchParams.get('cursor')??0),limit=Number(url.searchParams.get('limit')??100);
+   return Response.json({object:'MessageList',items:all.slice(start,start+limit),cursor:start+limit<all.length?String(start+limit):null});}
   m=url.pathname.match(/^\/api\/v1\/chats\/([A-Za-z0-9_-]+)(\/messages)?$/);
   if(m){const c=chats.get(m[1]);if(!c)return Response.json({},{status:404});
    if(!m[2])return Response.json({object:'Chat',id:m[1],attendee_provider_id:c.attendee});
