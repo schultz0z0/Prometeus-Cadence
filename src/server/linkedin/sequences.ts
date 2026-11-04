@@ -61,7 +61,7 @@ export async function runLinkedinSequenceTick(o:{limit:number;now?:Date;signal?:
   const g=await gate(pool);
   if(!g.mode){await finish('held',null);continue;}
   if(g.mode==='assisted'){await finish('drafted',text);out.drafted++;continue;}
-  if(!(await pool.query('SELECT app.linkedin_sequence_recheck($1,$2,$3,$4,$5) v',[claim.workspaceId,claim.runId,token,claim.epoch,g.version])).rows[0].v)continue;
+  if(!(await pool.query('SELECT app.linkedin_sequence_recheck($1,$2,$3,$4,$5,$6) v',[claim.workspaceId,claim.runId,token,claim.epoch,g.version,now])).rows[0].v)continue;
   try{unipileSettings();}catch{await finish('held',null);continue;}
   try{
    const form=new FormData();form.set('text',text);

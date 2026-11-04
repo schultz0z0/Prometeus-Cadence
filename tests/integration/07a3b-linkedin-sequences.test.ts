@@ -5,7 +5,9 @@ import{withWorkspaceTransaction}from'../../src/server/db/transaction.ts';
 import{revokeLinkedinAccount}from'../../src/server/linkedin/connections.ts';
 import{listLinkedinTemplates,saveLinkedinTemplate,archiveLinkedinTemplate}from'../../src/server/linkedin/templates.ts';
 import{listLinkedinSequences,saveLinkedinSequence,linkedinSequenceAction,runLinkedinSequenceTick}from'../../src/server/linkedin/sequences.ts';
-import{listLinkedinPeople,optOutLinkedinPerson}from'../../src/server/linkedin/people.ts';
+import{linkedinCampaignAction}from'../../src/server/linkedin/campaigns.ts';
+import{workerPool}from'../../src/server/prospecting/worker-db.ts';
+import{listLinkedinPeople,optOutLinkedinPerson,moveLinkedinPerson}from'../../src/server/linkedin/people.ts';
 import{prepareLinkedinReply,confirmLinkedinReply,runLinkedinMessageTick}from'../../src/server/linkedin/conversations.ts';
 import{linkedinTemplatesRequest,linkedinSequencesRequest}from'../../src/server/linkedin/http.ts';
 import{useLinkedinTestEnv,user,code,FULL,enable,setup,draft,activate,WED,rows,type Fake}from'./linkedin-helpers.ts';
@@ -63,7 +65,7 @@ test('07A.3b automatic: first step starts the chat, the next one waits its days;
  const s=await base0();const [p1]=await accepted(s,s.campaign,1);await accepted(s,s.campaign,1,{company:null,offset:1});
  await start(s.p,s.campaign);
  await ticks(s.u,0,2);
- assert.deepEqual(s.u.sent.map(x=>x.text),['[RE] Obrigado por aceitar, [RE] Aceite 0!','[RE] Obrigado por aceitar, [RE] Aceite 1!']);
+ assert.deepEqual(s.u.sent.map(x=>x.text).sort(),['[RE] Obrigado por aceitar, [RE] Aceite 0!','[RE] Obrigado por aceitar, [RE] Aceite 1!'],'same due time: any order');
  assert.equal(s.u.count('POST /api/v1/chats'),2,'a new chat with each relation');
  assert.ok((await listLinkedinPeople(s.p,{})).people.find(x=>x.id===p1)!.threadId,'the started chat is a conversation');
  await ticks(s.u,24*60,2);assert.equal(s.u.sent.length,2,'step 2 waits two days');
@@ -131,4 +133,44 @@ test('07A.3b HTTP and SQL boundaries',async()=>{
  for(const sql of ["SELECT app.claim_linkedin_sequence_step('t',now())",'SELECT body FROM app.linkedin_sequence_send'])
   denied.push(await withWorkspaceTransaction(s.p,c=>c.query(sql)).then(()=>'ok',(e:{code?:string})=>e.code!));
  assert.deepEqual(denied,['42501','42501']);
+});
+
+// Review findings (104a).
+const campRev=async(ws:string,id:string)=>Number((await rows(ws,'SELECT revision FROM app.linkedin_campaign WHERE workspace_id=$1 AND id=$2',[id]))[0].revision);
+test('07A.3b review: a paused campaign holds the sequence, a cancelled one ends it',async()=>{
+ const s=await base0();await accepted(s,s.campaign,2);await start(s.p,s.campaign);
+ await linkedinCampaignAction(s.p,s.campaign,'pause',{expectedRevision:await campRev(s.p.workspaceId,s.campaign)});
+ await ticks(s.u,0,3);assert.equal(s.u.sent.length,0,'paused campaign: no sequence step');
+ await linkedinCampaignAction(s.p,s.campaign,'resume',{expectedRevision:await campRev(s.p.workspaceId,s.campaign)});
+ await ticks(s.u,20,3);assert.equal(s.u.sent.length,2);
+ await linkedinCampaignAction(s.p,s.campaign,'cancel',{expectedRevision:await campRev(s.p.workspaceId,s.campaign)});
+ await ticks(s.u,2*24*60+30,3);assert.equal(s.u.sent.length,2,'cancelled campaign: step 2 never goes');
+ assert.deepEqual((await runs(s.p.workspaceId)).map(x=>x.reason),['campaign_ended','campaign_ended']);
+});
+test('07A.3b review: a manual "replied" mark stops the sequence',async()=>{
+ const s=await base0();const [p1]=await accepted(s,s.campaign,1);await start(s.p,s.campaign);
+ await ticks(s.u,0,1);assert.equal(s.u.sent.length,1);
+ const me=(await listLinkedinPeople(s.p,{})).people.find(x=>x.id===p1)!;
+ await moveLinkedinPerson(s.p,{personId:p1,stage:'replied',expectedRevision:me.stageRevision,requestId:randomUUID()});
+ await ticks(s.u,2*24*60+30,2);assert.equal(s.u.sent.length,1);
+ assert.deepEqual((await runs(s.p.workspaceId)).map(x=>x.reason),['replied']);
+});
+test('07A.3b review: a failed recheck defers that run instead of retrying it all tick',async()=>{
+ const s=await base0();await accepted(s,s.campaign,1);await start(s.p,s.campaign);
+ await testAdmin(c=>c.query("UPDATE app.linkedin_account SET capabilities_version='stale' WHERE workspace_id=$1",[s.p.workspaceId]));
+ await tick(s.u,0);
+ const [r]=await rows(s.p.workspaceId,'SELECT next_at FROM app.linkedin_sequence_run WHERE workspace_id=$1');
+ assert.ok(new Date(r.next_at).getTime()>=WED+15*60e3,'deferred at least 15 minutes');
+});
+test('07A.3b review: archiving during a send keeps the delivered message',async()=>{
+ const s=await base0();const [p1]=await accepted(s,s.campaign,1);const sq=await start(s.p,s.campaign);
+ const now=new Date(WED),w=workerPool();
+ const claim=(await w.query('SELECT app.claim_linkedin_sequence_step($1,$2) v',['tok-a',now])).rows[0].v as {workspaceId:string;runId:string};
+ await linkedinSequenceAction(s.p,sq.id,'archive',{expectedRevision:sq.revision});
+ await w.query('SELECT app.finish_linkedin_sequence_step($1,$2,$3,$4,$5,$6,$7,$8,$9)',[claim.workspaceId,claim.runId,'tok-a','sent','[RE] entregue','m-1','chat-a',null,now]);
+ const msg=await rows(s.p.workspaceId,"SELECT m.body FROM app.linkedin_message m JOIN app.linkedin_thread t ON t.workspace_id=m.workspace_id AND t.id=m.thread_id WHERE m.workspace_id=$1 AND t.person_id=$2",[p1]);
+ assert.deepEqual(msg.map(x=>x.body),['[RE] entregue']);
+ await ticks(s.u,10,1);
+ assert.deepEqual((await runs(s.p.workspaceId)).map(x=>x.reason),['archived']);
+ const [send]=await rows(s.p.workspaceId,'SELECT state FROM app.linkedin_sequence_send WHERE workspace_id=$1');assert.equal(send.state,'sent');
 });
