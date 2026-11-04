@@ -173,7 +173,7 @@ function LinkedinPeople() {
         <td className="li-people-actions">{x.threadId && <Button onClick={() => setOpen(x)}>Conversa</Button>}{!x.optedOut && <Button variant="ghost" onClick={() => setOptOut(x)}>Não contatar mais</Button>}</td></tr>)}</tbody></table>
       {data.total > data.people.length && <p className="li-muted">Mostrando {data.people.length} de {data.total}. Use a busca para achar alguém.</p>}</section>}
     {open && <LinkedinConversation person={open} onClose={() => { setOpen(null); load(); }}/>}
-    {optOut && <Modal title="Não contatar mais?" onClose={() => setOptOut(null)}><div className="stack"><p>{optOut.name} sai da fila de convites e nenhuma mensagem será enviada a essa pessoa pelo Prometeus.</p><div className="form-actions"><Button onClick={() => setOptOut(null)}>Cancelar</Button><Button variant="danger" disabled={busy} onClick={confirmOptOut}>Não contatar mais</Button></div></div></Modal>}
+    {optOut && <Modal title="Não contatar mais?" onClose={() => setOptOut(null)}><div className="stack"><p>A partir de agora, {optOut.name} não recebe convite nem mensagem pelo Prometeus. O histórico da conversa continua aqui.</p><div className="form-actions"><Button onClick={() => setOptOut(null)}>Cancelar</Button><Button variant="danger" disabled={busy} onClick={confirmOptOut}>Não contatar mais</Button></div></div></Modal>}
   </>;
 }
 // A reply is reviewed, then sent by the same person within a minute; an edit after the review needs a new one.
@@ -205,7 +205,7 @@ function LinkedinPipeline() {
     {!data ? <p role="status" className="li-muted">Carregando o pipeline…</p> : <div className="li-pipeline">{data.columns.map(col => <section key={col.id} className="li-panel li-pipeline-column" aria-label={col.label}><h2>{col.label} <span>{col.total}</span></h2>
       {col.id === "warming" && <p className="li-muted">O aquecimento ainda não está disponível.</p>}
       {col.people.map(x => <article key={x.id} className="li-pipeline-card"><strong>{x.name}</strong><small>{[x.company, x.campaign.name].filter(Boolean).join(" · ")}</small>
-        {col.id === "accepted" && <Button disabled={busy === x.id} onClick={() => move(x, "replied")}>Marcar como respondeu</Button>}</article>)}
+        {col.id === "accepted" && <Button disabled={busy === x.id} onClick={() => move(x, "replied")}>Marcar como respondeu</Button>}{col.id === "replied" && x.manualReply && <Button variant="ghost" disabled={busy === x.id} onClick={() => move(x, "accepted")}>Voltar para Aceitou</Button>}</article>)}
       {col.total > col.people.length && <small className="li-muted">+{col.total - col.people.length} em Pessoas</small>}</section>)}</div>}
   </>;
 }

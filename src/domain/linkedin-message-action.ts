@@ -15,5 +15,5 @@ export const canMoveStage=(from:string,to:string)=>['accepted','replied'].includ
 export const REPLY_WINDOW_MS=60000;
 export const replyInputSchema=z.strictObject({threadId:z.uuid(),body:z.string().trim().min(1).max(8000)});
 export const confirmReplySchema=z.strictObject({threadId:z.uuid(),body:z.string().trim().min(1).max(8000),token:z.string().regex(/^[A-Za-z0-9_-]{43}$/),requestId:z.uuid()});
-export interface LinkedinPersonView{id:string;name:string;headline:string|null;company:string|null;location:string|null;campaign:{id:string;name:string};stage:PipelineStage|null;state:string;stageRevision:number;threadId:string|null;lastActivityAt:string;optedOut:boolean}
+export interface LinkedinPersonView{id:string;name:string;headline:string|null;company:string|null;location:string|null;campaign:{id:string;name:string};stage:PipelineStage|null;state:string;stageRevision:number;manualReply:boolean;threadId:string|null;lastActivityAt:string;optedOut:boolean}
 export interface LinkedinMessageView{id:string;direction:'in'|'out';body:string;sentAt:string}
