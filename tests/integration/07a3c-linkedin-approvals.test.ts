@@ -5,6 +5,7 @@ import{withWorkspaceTransaction}from'../../src/server/db/transaction.ts';
 import{saveLinkedinSequence,linkedinSequenceAction,runLinkedinSequenceTick}from'../../src/server/linkedin/sequences.ts';
 import{listLinkedinApprovals,approveLinkedinComment,rejectLinkedinComment}from'../../src/server/linkedin/approvals.ts';
 import{listLinkedinPeople,optOutLinkedinPerson,moveLinkedinPerson}from'../../src/server/linkedin/people.ts';
+import{prepareLinkedinReply,confirmLinkedinReply}from'../../src/server/linkedin/conversations.ts';
 import{linkedinApprovalsRequest,linkedinApprovalActionRequest}from'../../src/server/linkedin/http.ts';
 import{useLinkedinTestEnv,user,code,FULL,setup,draft,activate,WED,rows,type Fake}from'./linkedin-helpers.ts';
 import type{Principal}from'../../src/domain/workspace.ts';
@@ -124,4 +125,35 @@ test('07A.3c boundaries: workspaces, roles, HTTP and SQL',async()=>{
  for(const sql of ["SELECT app.finish_linkedin_sequence_comment('w','r','t',null,null,null,null,now())",'SELECT remote_comment_id FROM app.linkedin_approval'])
   denied.push(await withWorkspaceTransaction(s.p,c=>c.query(sql)).then(()=>'ok',(e:{code?:string})=>e.code!));
  assert.deepEqual(denied,['42501','42501']);
+});
+
+// Review findings (105a).
+test('07A.3c review: approve refuses expired approvals and stopped sequences even before the worker sweeps',async()=>{
+ const s=await base0(),g=gen();const [a,b,c]=await accepted(s,s.campaign,3);const sq=await start(s.p,s.campaign);
+ for(let i=0;i<3;i++)await tick(s.u,g,i*6);
+ const list=await pending(s.p),of=(id:string)=>list.find(x=>x.person.id===id)!;
+ await testAdmin(q=>q.query("UPDATE app.linkedin_approval SET expires_at=clock_timestamp()-interval '1 minute' WHERE workspace_id=$1 AND person_id=$2",[s.p.workspaceId,a.id]));
+ assert.equal(await code(()=>approveLinkedinComment(s.p,of(a.id).id,{body:'x',expectedRevision:of(a.id).revision,requestId:randomUUID()},s.u.deps)),'409 LINKEDIN_APPROVAL_CLOSED');
+ const me=(await listLinkedinPeople(s.p,{})).people.find(x=>x.id===b.id)!;
+ await moveLinkedinPerson(s.p,{personId:b.id,stage:'replied',expectedRevision:me.stageRevision,requestId:randomUUID()});
+ assert.equal(await code(()=>approveLinkedinComment(s.p,of(b.id).id,{body:'x',expectedRevision:of(b.id).revision,requestId:randomUUID()},s.u.deps)),'409 LINKEDIN_APPROVAL_CLOSED');
+ await linkedinSequenceAction(s.p,sq.id,'archive',{expectedRevision:sq.revision});
+ assert.equal(await code(()=>approveLinkedinComment(s.p,of(c.id).id,{body:'x',expectedRevision:of(c.id).revision,requestId:randomUUID()},s.u.deps)),'409 LINKEDIN_APPROVAL_CLOSED');
+ assert.equal(s.u.comments.length,0);
+ assert.deepEqual((await pending(s.p)).map(x=>x.person.id).filter(x=>x===a.id),[],'an expired approval leaves the pending list');
+});
+test('07A.3c review: a manual reply does not skip a comment waiting for approval',async()=>{
+ const s=await base0({...CAPS,sendMessage:'assisted'}),g=gen();const [a]=await accepted(s,s.campaign,1);await start(s.p,s.campaign);
+ await tick(s.u,g,0);const [x]=await pending(s.p);
+ const review=await prepareLinkedinReply(s.p,{personId:a.id,body:'[RE] Oi!'});
+ await confirmLinkedinReply(s.p,{personId:a.id,body:'[RE] Oi!',token:review.token,requestId:randomUUID()},s.u.deps);
+ assert.deepEqual((await rows(s.p.workspaceId,'SELECT state,step_index FROM app.linkedin_sequence_run WHERE workspace_id=$1')).map(r=>[r.state,r.step_index]),[['waiting',0]]);
+ assert.equal((await pending(s.p))[0]?.id,x.id);
+});
+test('07A.3c review: an AI that keeps failing skips the comment step after three tries',async()=>{
+ const s=await base0(),g=gen();g.reply=null;await accepted(s,s.campaign,1);await start(s.p,s.campaign);
+ for(const m of [0,61,122])await tick(s.u,g,m);
+ assert.equal(g.calls.length,3);assert.equal((await pending(s.p)).length,0);
+ assert.deepEqual((await rows(s.p.workspaceId,'SELECT state,step_index FROM app.linkedin_sequence_run WHERE workspace_id=$1')).map(r=>[r.state,r.step_index]),[['active',1]]);
+ await tick(s.u,g,183);assert.equal(g.calls.length,3,'not tried again');
 });

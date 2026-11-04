@@ -21,3 +21,13 @@ test('07A.3c AI comment output and the approval input',()=>{
  assert.ok(approveSchema.safeParse({body:'Texto',expectedRevision:1,requestId:id}).success);
  assert.equal(approveSchema.safeParse({body:'a'.repeat(1251),expectedRevision:1,requestId:id}).success,false);
 });
+
+test('07A.3c the platform AI request is accepted by the conventional runner',async()=>{
+ const saved={...process.env};Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'w',PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',BETTER_AUTH_URL:'http://127.0.0.1:3210',OPENAI_API_KEY:'private-fixture',OPENAI_MODEL:'fixture'});
+ try{const {conventionalConfig}=await import('../src/server/prospecting/ai/config.ts');const {generateCommentWithRoute}=await import('../src/server/linkedin/comment-ai.ts');
+  const route=conventionalConfig('w').conventional.openai.route;let prompt='';
+  const r=await generateCommentWithRoute(route,{workspaceId:'w',runId:'r',postText:'[RE] Logística',guidance:null,person:{name:'[RE] Ana',headline:null,company:null}},{fetcher:async(_u,init)=>{prompt=String(init!.body);
+   return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({comment:'[RE] Bom ponto.'})}]}],usage:{input_tokens:5,output_tokens:3}});}});
+  assert.equal(r.text,'[RE] Bom ponto.');assert.ok(prompt.includes('[RE] Logística'));
+ }finally{process.env=saved;}
+});

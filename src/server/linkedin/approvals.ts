@@ -5,12 +5,11 @@ import type {Principal} from '../../domain/workspace.ts';
 import {resolveAiRoute,type ConventionalRoute} from '../../domain/ai-routing.ts';
 import {linkedinActionAllowed} from '../../domain/linkedin-capabilities.ts';
 import {approveSchema,rejectSchema,type LinkedinApprovalView} from '../../domain/linkedin-approval.ts';
-import {commentOutputJsonSchema,commentOutputSchema} from '../../domain/linkedin-sequence.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
 import {readAiPolicy} from '../prospecting/ai/settings.ts';
 import {conventionalConfig} from '../prospecting/ai/config.ts';
-import {runConventionalJson} from '../prospecting/ai/json.ts';
+import {generateCommentWithRoute,type CommentInput} from './comment-ai.ts';
 import {linkedinCapabilityView} from './capabilities.ts';
 import {capsVersion} from './connections.ts';
 import {linkedinSqlError} from './people.ts';
@@ -32,8 +31,8 @@ export async function listLinkedinApprovals(p:Principal,raw:unknown):Promise<{ap
   const rows=(await c.query(`SELECT a.id,a.revision,a.state,a.body,a.ai_body,a.post_text,a.post_url,a.post_date,a.created_at,a.expires_at,a.decided_at,
     p.id person_id,p.name,p.headline,p.company,c.id campaign_id,c.name campaign_name
    FROM app.linkedin_approval a JOIN app.linkedin_campaign_person p ON p.workspace_id=a.workspace_id AND p.id=a.person_id JOIN app.linkedin_campaign c ON c.workspace_id=a.workspace_id AND c.id=a.campaign_id
-   WHERE ${q.data.tab==='pending'?"a.state='pending'":"a.state<>'pending'"} ORDER BY ${q.data.tab==='pending'?'a.created_at,a.id':'a.updated_at DESC,a.id'} LIMIT 200`)).rows;
-  return {approvals:rows.map(r=>({id:r.id,revision:Number(r.revision),state:r.state,body:r.body,aiBody:r.ai_body,post:{text:r.post_text,url:r.post_url,date:iso(r.post_date)},
+   WHERE ${q.data.tab==='pending'?"a.state='pending' AND a.expires_at>clock_timestamp()":"(a.state<>'pending' OR a.expires_at<=clock_timestamp())"} ORDER BY ${q.data.tab==='pending'?'a.created_at,a.id':'a.updated_at DESC,a.id'} LIMIT 200`)).rows;
+  return {approvals:rows.map(r=>({id:r.id,revision:Number(r.revision),state:r.state==='pending'&&r.expires_at<=new Date()?'expired':r.state,body:r.body,aiBody:r.ai_body,post:{text:r.post_text,url:r.post_url,date:iso(r.post_date)},
    person:{id:r.person_id,name:r.name,headline:r.headline,company:r.company},campaign:{id:r.campaign_id,name:r.campaign_name},createdAt:r.created_at.toISOString(),expiresAt:r.expires_at.toISOString(),decidedAt:iso(r.decided_at)}))};
  });
 }
@@ -63,18 +62,12 @@ export async function rejectLinkedinComment(p:Principal,id:string,raw:unknown):P
  return tx(p,async c=>({revision:Number((await c.query('SELECT app.reject_linkedin_comment($1,$2) v',[id,parsed.data.expectedRevision])).rows[0].v)}));
 }
 
-export interface CommentInput{workspaceId:string;runId:string;postText:string;guidance:string|null;person:{name:string;headline:string|null;company:string|null}}
 export type CommentGenerator=(i:CommentInput)=>Promise<{text:string;usage:{provider:string;inputTokens?:number;outputTokens?:number}}|null>;
-/** Platform AI, conventional HTTP route of the platform policy; null when no route is configured (the step is held). */
+/** Platform AI, conventional HTTP route of the platform policy; null when no route is configured. */
 export function platformCommentGenerator(c:PoolClient):CommentGenerator{
  return async i=>{
   const policy=await readAiPolicy(c),resolved=resolveAiRoute({...policy,mode:'conventional-only',jevEnabled:false},conventionalConfig(i.workspaceId),null);
   const route:ConventionalRoute|null=resolved.route&&resolved.route.conventional.provider!=='codex-local'?resolved.route.conventional:null;
-  if(!route)return null;
-  const prompt=JSON.stringify({task:'Escreva um comentário curto (1 a 3 frases, até 600 caracteres) em português do Brasil para o post do LinkedIn abaixo, como quem leu o post e quer contribuir. Seja específico sobre o conteúdo do post. Não use links, hashtags, emojis em excesso nem peça reunião, ligação ou demonstração. Não invente fatos sobre a pessoa.',
-   guidance:i.guidance,author:i.person,post:i.postText});
-  const r=await runConventionalJson({operationId:'linkedin-comment:'+i.runId,workspaceId:i.workspaceId,signal:AbortSignal.timeout(60e3),route},
-   {prompt,schema:commentOutputJsonSchema,maxOutputTokens:600,parse:v=>{const o=commentOutputSchema.safeParse(v);if(!o.success)throw new Error('LINKEDIN_COMMENT_INVALID');return o.data.comment;}});
-  return {text:r.value,usage:r.usage};
+  return route?generateCommentWithRoute(route,i):null;
  };
 }

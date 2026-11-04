@@ -88,7 +88,7 @@ export async function runLinkedinSequenceTick(o:{limit:number;now?:Date;signal?:
 type Finish=(outcome:string,body:string|null)=>Promise<unknown>;
 /** A comment step: the latest valid post, an AI draft, then the approval queue. Nothing is published here. */
 async function commentStep(pool:Pool,claim:Claim,token:string,now:Date,deps:UnipileDeps&{generateComment?:CommentGenerator},finish:Finish):Promise<boolean>{
- const done=(post:unknown,body:string|null,usage:unknown)=>pool.query('SELECT app.finish_linkedin_sequence_comment($1,$2,$3,$4,$5,$6,$7,$8)',[claim.workspaceId,claim.runId,token,post===null?null:JSON.stringify(post),body,usage===null?null:JSON.stringify(usage),null,now]);
+ const done=(post:unknown,body:string|null,usage:unknown,reason:string|null=null)=>pool.query('SELECT app.finish_linkedin_sequence_comment($1,$2,$3,$4,$5,$6,$7,$8)',[claim.workspaceId,claim.runId,token,post===null?null:JSON.stringify(post),body,usage===null?null:JSON.stringify(usage),reason,now]);
  const g=await gate(pool);if(!g.comment){await finish('held',null);return false;}
  try{unipileSettings();}catch{await finish('held',null);return false;}
  let items:unknown;
@@ -100,7 +100,7 @@ async function commentStep(pool:Pool,claim:Claim,token:string,now:Date,deps:Unip
  const c=await pool.connect();
  try{draft=await(deps.generateComment??platformCommentGenerator(c))({workspaceId:claim.workspaceId,runId:claim.runId,postText:post.text,guidance:claim.guidance??null,person:{name:claim.name,headline:claim.headline,company:claim.company}});}
  catch{draft=null;}finally{c.release();}
- if(!draft){await finish('held',null);return false;}
+ if(!draft){await done(null,null,null,'ai_failed');return false;}
  await done(post,draft.text,draft.usage);return true;
 }
 
