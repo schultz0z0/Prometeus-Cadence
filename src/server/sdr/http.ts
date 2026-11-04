@@ -1,6 +1,7 @@
 import 'server-only';
 import {requirePrincipal} from '../auth/principal.ts';
 import {AppError,checkOrigin,errorResponse} from '../errors.ts';
+import {approveSdrReply,listSdrPending,prepareSdrReply,readSdrConversation,rejectSdrReply,resumeSdr,retrySdrTurn,takeOverSdr} from './conversation.ts';
 import {confirmSdrActivation,pauseSdrAgent,prepareSdrActivation,readSdr,saveSdrAgent,saveSdrKnowledge,setSdrKnowledgeState,simulateSdr} from './configuration.ts';
 // 07B.1: /api/sdr/{agents,knowledge} and /api/sdr/agents/:id/{prepare-activate,confirm-activate,pause,simulate}, /api/sdr/knowledge/:id/state.
 const json=(value:unknown)=>Response.json(value,{headers:{'cache-control':'no-store'}});
@@ -10,6 +11,7 @@ export async function sdrRequest(request:Request,resource:string){
  try{
   const p=await principal(request);
   if(request.method==='GET'&&resource==='agents')return json(await readSdr(p));
+  if(request.method==='GET'&&resource==='conversations')return json(await listSdrPending(p));
   if(request.method!=='POST')throw new AppError(405,'Método não permitido.');
   if(resource==='agents')return json(await saveSdrAgent(p,await body(request)));
   if(resource==='knowledge')return json(await saveSdrKnowledge(p,await body(request)));
@@ -28,6 +30,21 @@ export async function sdrItemRequest(request:Request,resource:string,id:string,a
    if(action==='simulate')return json(await simulateSdr(p,{...input,agentId:id},{signal:request.signal}));
   }
   if(resource==='knowledge'&&action==='state')return json(await setSdrKnowledgeState(p,{...input,id}));
+  if(resource==='conversations'){
+   if(action==='takeover')return json(await takeOverSdr(p,id,input));
+   if(action==='resume')return json(await resumeSdr(p,id,input));
+   if(action==='retry')return json(await retrySdrTurn(p,id,input));
+   if(action==='prepare-reply')return json(await prepareSdrReply(p,id,input));
+   if(action==='approve-reply')return json(await approveSdrReply(p,id,input));
+   if(action==='reject-reply')return json(await rejectSdrReply(p,id,input));
+  }
   throw new AppError(404,'Operação não encontrada.');
+ }catch(e){return errorResponse(e);}
+}
+export async function sdrConversationRequest(request:Request){
+ try{
+  const p=await principal(request);if(request.method!=='GET')throw new AppError(405,'Método não permitido.');
+  const parts=new URL(request.url).pathname.split('/');if(parts.at(-2)!=='conversations')throw new AppError(404,'Recurso não encontrado.');
+  return json(await readSdrConversation(p,decodeURIComponent(parts.at(-1)!)));
  }catch(e){return errorResponse(e);}
 }

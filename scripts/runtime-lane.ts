@@ -3,7 +3,7 @@ import {randomUUID} from 'node:crypto';
 import {runtimeConfig,runSerialLoop} from './runtime-core.ts';
 process.loadEnvFile('.env.local');
 const name=process.argv[2],config=runtimeConfig(process.env),controller=new AbortController(),workerId=randomUUID();
-if(!['dispatch','sync','jobs','scheduler','channels','billing','notifications','integrations','sheets','linkedin'].includes(name))throw Error('Invalid runtime lane');
+if(!['dispatch','sync','jobs','scheduler','channels','billing','notifications','integrations','sheets','linkedin','sdr'].includes(name))throw Error('Invalid runtime lane');
 for(const signal of ['SIGINT','SIGTERM'] as const)process.on(signal,()=>controller.abort());
 process.on('message',message=>{if(message==='shutdown')controller.abort();});
 process.on('disconnect',()=>controller.abort());
@@ -35,6 +35,9 @@ if(name==='dispatch'){
  // LinkedIn account health and vendor session removals: Unipile latency stays out of the other lanes.
  const [{runLinkedinTick},{runLinkedinCampaignTick},{runLinkedinMessageTick},{runLinkedinSequenceTick}]=await Promise.all([import('../src/server/linkedin/connections.ts'),import('../src/server/linkedin/invites.ts'),import('../src/server/linkedin/conversations.ts'),import('../src/server/linkedin/sequences.ts')]);
  tick=async()=>{await runLinkedinTick({limit:config.integrationBatch,signal:controller.signal});await runLinkedinCampaignTick({limit:config.integrationBatch,signal:controller.signal});await runLinkedinMessageTick({limit:config.integrationBatch,signal:controller.signal});await runLinkedinSequenceTick({limit:config.integrationBatch,signal:controller.signal});};intervalMs=config.integrationMs;
+}else if(name==='sdr'){
+ // Conversation turns wait on the LLM: their own lane, so it never delays dispatch or integrations.
+ const {runSdrTick}=await import('../src/server/sdr/worker.ts');tick=async()=>{await runSdrTick({limit:config.integrationBatch,signal:controller.signal});};intervalMs=config.integrationMs;
 }else if(name==='jobs'){
  const {runWorkerOnce}=await import('../src/server/prospecting/worker.ts');tick=()=>runWorkerOnce({},{workerId,signal:controller.signal});intervalMs=config.jobMs;
 }else{
@@ -48,6 +51,6 @@ try{
  const [{closeDispatchPool},{closeIngressPool}]=await Promise.all([import('../src/server/messaging/worker-db.ts'),import('../src/server/channels/ingress-db.ts')]);
  await Promise.allSettled([closeDispatchPool(),closeIngressPool()]);
  if(name==='billing'){const {closeBillingPool}=await import('../src/server/billing/db.ts');await closeBillingPool();}
- if(name==='jobs'||name==='scheduler'||name==='notifications'||name==='integrations'||name==='sheets'||name==='linkedin'){const {workerPool}=await import('../src/server/prospecting/worker-db.ts');await workerPool().end();}
+ if(name==='jobs'||name==='scheduler'||name==='notifications'||name==='integrations'||name==='sheets'||name==='linkedin'||name==='sdr'){const {workerPool}=await import('../src/server/prospecting/worker-db.ts');await workerPool().end();}
  process.disconnect?.();
 }

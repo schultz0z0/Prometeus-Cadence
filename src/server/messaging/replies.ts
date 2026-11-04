@@ -63,11 +63,14 @@ async function prepare(p:Principal,target:{conversationId:string}|{connectionId:
  const parsed=('connectionId'in target?channelTestSchema:replySchema).safeParse(input);if(!parsed.success)throw new AppError(422,'Revise destinatário, conteúdo e consentimento.');
  return withWorkspaceTransaction(p,async c=>{const state=await replyState(c,p,target,parsed.data);return {token:createReviewToken(state.proof,secret()),expiresAt:new Date(Date.now()+600000).toISOString(),snapshot:state.snapshot,blockers:state.blockers,preview:state.preview};});
 }
-async function confirm(p:Principal,target:{conversationId:string}|{connectionId:string},input:unknown):Promise<MessageView>{
+// before/after run inside the enqueue's transaction and are skipped on a replay of the same request.
+export type ReplyHooks={before?:(c:PoolClient)=>Promise<unknown>;after?:(c:PoolClient,message:MessageView)=>Promise<unknown>};
+async function confirm(p:Principal,target:{conversationId:string}|{connectionId:string},input:unknown,hooks:ReplyHooks={}):Promise<MessageView>{
  const parsed=('connectionId'in target?channelTestSchema.extend(confirmation):replySchema.extend(confirmation)).safeParse(input);if(!parsed.success)throw new AppError(422,'Confirmação da mensagem inválida.');const {requestId,reviewToken,...body}=parsed.data;
  return withWorkspaceTransaction(p,async c=>{
   if('connectionId'in target)await requireChannelAdmin(c);else await requireReplyMember(c);await lockWorkspace(c);
   const hash=commandHash({action:'message.confirm',target,input:body}),old=await priorCommand<MessageView>(c,p,requestId,hash);if(old)return old;
+  await hooks.before?.(c);
   const state=await replyState(c,p,target,body);verifyReviewToken(reviewToken,state.proof,secret());if(state.blockers.length)throw new AppError(409,'Envio bloqueado: '+state.blockers[0]);
   const identity=state.identity??await ensurePhoneIdentity(c,p,state.snapshot.identity.scope,state.snapshot.identity.phone!);
   if(state.declared)await c.query('INSERT INTO app.consent_evidence(workspace_id,id,identity_id,purpose,source,occurred_at,evidence,actor_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.workspaceId,randomUUID(),identity.id,'test',state.declared.source,state.declared.occurredAt,state.declared.evidence,p.userId]);
@@ -78,10 +81,10 @@ async function confirm(p:Principal,target:{conversationId:string}|{connectionId:
   }
   const proof={senderRevision:state.sender.revision,replyEpoch:Number(identity.reply_epoch),templateHash:state.template?.hash??null,leadId:state.lead?.id??null,leadHash:state.lead?hashValue(state.lead):null};
   const id=(await c.query('SELECT app.enqueue_reviewed_message($1,$2,$3,$4,$5,$6) AS id',[state.sender.id,identity.id,conversation.id,state.snapshot,proof,state.preview])).rows[0].id;
-  const result=messageView((await c.query('SELECT * FROM app.channel_message WHERE id=$1',[id])).rows[0]);await completeCommand(c,p,requestId,hash,result,'message.confirm');return result;
+  const result=messageView((await c.query('SELECT * FROM app.channel_message WHERE id=$1',[id])).rows[0]);await hooks.after?.(c,result);await completeCommand(c,p,requestId,hash,result,'message.confirm');return result;
  });
 }
 export const prepareReply=(p:Principal,conversationId:string,input:unknown)=>prepare(p,{conversationId},input);
-export const confirmReply=(p:Principal,conversationId:string,input:unknown)=>confirm(p,{conversationId},input);
+export const confirmReply=(p:Principal,conversationId:string,input:unknown,hooks?:ReplyHooks)=>confirm(p,{conversationId},input,hooks);
 export const prepareChannelTest=(p:Principal,connectionId:string,input:unknown)=>prepare(p,{connectionId},input);
 export const confirmChannelTest=(p:Principal,connectionId:string,input:unknown)=>confirm(p,{connectionId},input);

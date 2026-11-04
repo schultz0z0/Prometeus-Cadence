@@ -12,7 +12,7 @@ type Knowledge = { id: string; revision: number; kind: "faq" | "note"; title: st
 type Channel = { id: string; name: string; channel: string; provider: string; agentId: string | null; agentName: string | null; ready: boolean };
 type View = { entitled: boolean; canManage: boolean; agents: Agent[]; channels: Channel[]; members: { id: string; name: string }[]; knowledge: Knowledge[]; context: { approved: boolean }; simulationsLeft: number };
 type Review = { revision: number; summary: { name: string; channels: { id: string; name: string; provider: string }[]; hours: SdrDraft["hours"]; maxRepliesPerDay: number; approvalMode: string; questions: number; handoff: { member: string | null; rules: number }; knowledge: number }; blockers: string[]; warnings: string[]; token: string };
-const stateLabel = { draft: ["Rascunho", "neutral"], active: ["Ativo", "success"], paused: ["Pausado", "warning"] } as const;
+const stateLabel = { draft: ["Rascunho", "neutral"], active: ["Ativo", "green"], paused: ["Pausado", "orange"] } as const;
 const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const zones = ["America/Sao_Paulo", "America/Manaus", "America/Belem", "America/Fortaleza", "America/Recife", "America/Cuiaba", "America/Rio_Branco", "America/Noronha"];
 // Key-sorted, so the server's jsonb key order does not count as an edit.
@@ -29,9 +29,10 @@ export function SdrArea() {
   const agent = open && open !== "new" ? view.agents.find(a => a.id === open) ?? null : null;
   return <div className="reference-settings sdr-config">
     <h1>Agente SDR</h1>
-    <p className="subtitle">Monte o agente que responde quem respondeu às suas cadências, qualifica e passa para o seu time.</p>
+    <p className="subtitle">Monte o agente que responde quem escreve no seu número, qualifica e passa para o seu time.</p>
     {!view.entitled && <Notice tone="warning">Este workspace não está no plano Pro com assinatura ativa: os agentes não podem ser editados nem ativados, só pausados.</Notice>}
-    <Notice>Aqui você monta, simula e ativa o agente. O atendimento das conversas chega na próxima etapa do módulo: até lá, um agente ativo não responde ninguém.</Notice>
+    <Notice>A cada mensagem recebida no WhatsApp, um agente ativo prepara um rascunho e espera o seu ok na caixa de mensagens. Nada sai sem a sua aprovação.</Notice>
+    <PendingPanel />
     {!view.context.approved && <Notice tone="warning">O contexto da empresa ainda não foi aprovado. O agente usa esse contexto para falar em nome da sua empresa. <LinkButton href="/settings/context">Revisar contexto</LinkButton></Notice>}
     {open ? <AgentEditor key={open} view={view} agent={agent} onClose={() => setOpen(null)} onSaved={a => { setView(v => v && ({ ...v, agents: v.agents.some(x => x.id === a.id) ? v.agents.map(x => x.id === a.id ? a : x) : [...v.agents, a] })); setOpen(a.id); load(); }} onReload={load} />
       : <section className="reference-panel"><header><Icon name="Headphones" /><div><h2>Agentes</h2><p>Cada agente atende os canais que você escolher, no horário e com as regras dele.</p></div></header>
@@ -42,6 +43,14 @@ export function SdrArea() {
         </div></section>}
     <KnowledgePanel view={view} onChange={load} />
   </div>;
+}
+function PendingPanel() {
+  const api = useConnectorApi(), [items, setItems] = useState<{ id: string; conversationId: string; state: string; text: string | null; contact: string }[] | null>(null);
+  useEffect(() => { api<{ items: NonNullable<typeof items> }>("/api/sdr/conversations").then(r => setItems(r.items)).catch(() => setItems([])); }, [api]);
+  if (!items?.length) return null;
+  return <section className="reference-panel"><header><Icon name="MessageSquare" /><div><h2>Aguardando seu ok</h2><p>Rascunhos do agente que ainda não saíram. A aprovação acontece na própria conversa.</p></div></header><div className="reference-panel-body">
+    <ul className="sdr-agent-list">{items.map(t => <li key={t.id}><div><strong>{t.contact}</strong><small className="muted">{t.state === "uncertain" ? "A IA não respondeu: tente de novo ou assuma" : (t.text ?? "").slice(0, 120)}</small></div><LinkButton href={"/messages/whatsapp?conversation=" + encodeURIComponent(t.conversationId)}>Abrir conversa</LinkButton></li>)}</ul>
+  </div></section>;
 }
 function AgentEditor({ view, agent, onClose, onSaved, onReload }: { view: View; agent: Agent | null; onClose: () => void; onSaved: (a: Agent) => void; onReload: () => void }) {
   const api = useConnectorApi(), [d, setD] = useState<SdrDraft>(() => agent?.draft ?? { ...defaultSdrDraft(), channelIds: view.channels.filter(c => c.ready && c.channel === "WHATSAPP" && !c.agentId).slice(0, 1).map(c => c.id) });
@@ -62,7 +71,7 @@ function AgentEditor({ view, agent, onClose, onSaved, onReload }: { view: View; 
         <Button variant="ghost" aria-label={`Remover pergunta ${i + 1}`} icon="Trash2" onClick={() => set("qualification", q.filter((_, j) => j !== i))} /></div>)}
       {q.length < 10 && <div><Button icon="Plus" onClick={() => set("qualification", [...q, { question: "", field: `campo_${q.length + 1}`, required: false }])}>Adicionar pergunta</Button></div>}
     </div></section>
-    <section className="reference-panel"><header><Icon name="MessageSquare" /><div><h2>Conexão do canal</h2><p>O número de WhatsApp ou a caixa por onde ele responde. Só canais prontos para enviar e receber.</p></div></header><div className="reference-panel-body">
+    <section className="reference-panel"><header><Icon name="MessageSquare" /><div><h2>Conexão do canal</h2><p>O número de WhatsApp por onde ele responde. Só canais prontos para enviar e receber.</p></div></header><div className="reference-panel-body">
       {!view.channels.length ? <p className="muted">Nenhum canal conectado. <LinkButton href="/settings/whatsapp">Conectar WhatsApp</LinkButton></p>
         : null}
       {d.channelIds.filter(id => !view.channels.some(c => c.id === id)).map(id => <label key={id} className="checkbox-row"><input type="checkbox" checked onChange={() => set("channelIds", d.channelIds.filter(x => x !== id))} /><span>Canal removido <small className="muted">· desmarque para tirar do agente</small></span></label>)}
@@ -74,7 +83,7 @@ function AgentEditor({ view, agent, onClose, onSaved, onReload }: { view: View; 
       <Field label="Responsável"><select value={d.handoff.memberId} onChange={e => set("handoff", { ...d.handoff, memberId: e.target.value })}><option value="">Escolha um membro</option>{view.members.map(m => <option key={m.id} value={m.id}>{m.name || "Sem nome"}</option>)}</select></Field>
       <Field label="Regras (uma por linha)" help="Ex.: pediu proposta fechada; reclamou; perguntou algo que não está na base."><textarea rows={4} value={d.handoff.rules.join("\n")} onChange={e => set("handoff", { ...d.handoff, rules: e.target.value.split("\n").map(s => s.slice(0, 200)).slice(0, 10) })} onBlur={() => set("handoff", { ...d.handoff, rules: d.handoff.rules.map(s => s.trim()).filter(Boolean) })} /></Field>
     </div></section>
-    <section className="reference-panel"><header><Icon name="Clock" /><div><h2>Horário e limites</h2><p>Fora do horário, nenhuma resposta sai.</p></div></header><div className="reference-panel-body">
+    <section className="reference-panel"><header><Icon name="Clock" /><div><h2>Horário e limites</h2><p>Fora do horário, o agente não prepara respostas.</p></div></header><div className="reference-panel-body">
       <div className="field-grid">
         <Field label="Fuso horário"><select value={d.hours.timezone} onChange={e => set("hours", { ...d.hours, timezone: e.target.value })}>{zones.map(z => <option key={z}>{z}</option>)}</select></Field>
         <Field label="Respostas por dia" help="Até 200; no WhatsApp gerenciado, até 20."><input type="number" min={1} max={200} value={d.maxRepliesPerDay} onChange={e => set("maxRepliesPerDay", Math.max(1, Math.min(200, Number(e.target.value) || 1)))} /></Field>
@@ -136,7 +145,7 @@ function KnowledgePanel({ view, onChange }: { view: View; onChange: () => void }
   return <section className="reference-panel"><header><Icon name="BookOpen" /><div><h2>Base de conhecimento</h2><p>Perguntas frequentes e notas que o agente pode usar. É privada deste workspace e entra como informação, nunca como ordem.</p></div></header><div className="reference-panel-body">
     {!view.knowledge.length && !edit && <p className="muted">Nenhum item ainda.</p>}
     {!!view.knowledge.length && <ul className="sdr-agent-list">{view.knowledge.map(k => <li key={k.id}><div><strong>{k.title}</strong><small className="muted">{k.kind === "faq" ? "Pergunta frequente" : "Nota"} · {k.body.slice(0, 120)}{k.body.length > 120 ? "…" : ""}</small></div>
-      <Badge tone={k.state === "approved" ? "success" : "neutral"}>{k.state === "approved" ? "Aprovado" : "Rascunho"}</Badge>
+      <Badge tone={k.state === "approved" ? "green" : "neutral"}>{k.state === "approved" ? "Aprovado" : "Rascunho"}</Badge>
       <div className="row">{k.state !== "approved" && view.canManage && <Button disabled={busy} onClick={() => act(() => api(`/api/sdr/knowledge/${k.id}/state`, { expectedRevision: k.revision, state: "approved" }))}>Aprovar</Button>}
         <Button variant="ghost" disabled={busy} onClick={() => setEdit(k)}>Editar</Button><Button variant="ghost" disabled={busy} onClick={() => act(() => api(`/api/sdr/knowledge/${k.id}/state`, { expectedRevision: k.revision, state: "archived" }))}>Arquivar</Button></div></li>)}</ul>}
     {edit ? <div className="stack">

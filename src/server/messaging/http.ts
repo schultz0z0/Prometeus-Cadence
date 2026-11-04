@@ -8,6 +8,7 @@ import {recordConsent,recordLeadConsent,recordEmailConsent,suppressIdentity} fro
 import {prepareMailReply,confirmMailReply} from './email-replies.ts';
 import {preparePublication,confirmPublication,listPublications,pausePublication} from './publication.ts';
 import {prepareReply,confirmReply} from './replies.ts';
+import {manualReplyHooks} from '../sdr/conversation.ts';
 import {prepareReconciliation,confirmReconciliation} from './reconciliation.ts';
 import {readMessageUsage} from './usage.ts';
 import {acknowledgeMailThread} from '../mail/thread-review.ts';
@@ -46,7 +47,7 @@ export function messagingRequestHandler(request:Request,params:Record<string,str
     const channel=await withWorkspaceTransaction(p,async c=>(await c.query('SELECT channel FROM app.channel_conversation WHERE id=$1',[id])).rows[0]?.channel);
     if(channel==='EMAIL')return action==='reply-prepare'?prepareMailReply(p,id,body):confirmMailReply(p,id,body);
    }
-   if(action==='read')return markConversationRead(p,id,body);if(action==='link-lead')return linkConversationLead(p,id,body);if(action==='reply-prepare')return prepareReply(p,id,body);if(action==='reply-confirm')return confirmReply(p,id,body);
+   if(action==='read')return markConversationRead(p,id,body);if(action==='link-lead')return linkConversationLead(p,id,body);if(action==='reply-prepare')return prepareReply(p,id,body);if(action==='reply-confirm')return confirmReply(p,id,body,manualReplyHooks(id));
   }
   if(resource==='publications'&&action==='pause')return pausePublication(p,{...(body as Record<string,unknown>),publicationId:id});
   if(resource==='messages'&&action==='reconciliation-prepare')return prepareReconciliation(p,id,body);
