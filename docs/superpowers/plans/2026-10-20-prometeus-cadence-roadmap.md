@@ -285,3 +285,11 @@ Pessoas, pipeline e conversas LinkedIn concluídos local/controlado, com a Unipi
 - **Pessoas:** opt-out e pipeline com movimento manual só depois do aceite.
 
 Revisão independente: cinco Important corrigidos RED→GREEN. Próximo: 07A.3b. [Aceite](../../validation/07a3a-linkedin-conversations.md).
+
+### Continuidade 04/11 — 07A.3b
+
+Templates e cadência pós-aceite do LinkedIn concluídos local/controlado, com a Unipile simulada:
+- **Envio:** automático só com o envio habilitado; no modo assistido, cada passo vira um rascunho que a pessoa revisa e envia.
+- **Paradas:** resposta (inclusive manual), opt-out, campanha pausada, cancelada ou encerrada.
+
+Revisão independente: um High e quatro menores corrigidos RED→GREEN. Próximo: 07A.3c. [Aceite](../../validation/07a3b-linkedin-sequences.md).

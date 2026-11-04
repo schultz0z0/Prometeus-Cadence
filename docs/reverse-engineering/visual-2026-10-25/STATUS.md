@@ -1,10 +1,19 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-03 · Session: s30 · Phase:6 07A.3a concluído local/controlado (Unipile simulada); próximo 07A.3b; paridade integral não aceita
+Updated: 2026-11-04 · Session: s31 · Phase:6 07A.3b concluído local/controlado (Unipile simulada); próximo 07A.3c; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s31: 07A.3b, templates e cadência pós-aceite LinkedIn.
+  - **Templates:** convite e mensagem, com seletor no editor de campanha.
+  - **Cadência:** por campanha, automática ou assistida, com mensagem por pessoa que começa a conversa.
+  - **QA:** L-040 removed, 0 chamadas externas.
+  - **Revisão:** um High e quatro menores corrigidos RED→GREEN (104a).
+  - **Evidência:** EV-293.
+- Not covered s31: a referência só mostra Cadências e Templates do LinkedIn vazios; o envio real depende da chave; Unipile real.
+- Needs human s31: os mesmos de s30 (contrato e chave da Unipile, conta de teste, leitura jurídica, decisão de cobrança).
 
 - Covered s30: 07A.3a, pessoas, pipeline e conversas LinkedIn.
   - **Pessoas e pipeline:** lista real com etapa e última atividade; pipeline com as cinco colunas da referência.
@@ -133,7 +142,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s30: 07A.3b — cadência pós-aceite e templates LinkedIn; depois 07A.3c — aprovações. 07A.3a concluído; menores→07A.3b/08A.
+Fila vigente s31: 07A.3c — aprovações de comentários LinkedIn. 07A.3b concluído; menores→08A.
+
+Fila s30 (histórica): 07A.3b — cadência pós-aceite e templates LinkedIn.
 
 Fila s29 (histórica): 07A.3 — dividido em 07A.3a/b/c.
 
