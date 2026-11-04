@@ -23,8 +23,8 @@ async function collect(pool:Pool,token:string,limit:number,deps:UnipileDeps){
   if(it.capabilitiesVersion!==version)error='A conta LinkedIn precisa ser verificada de novo.';
   else try{
    const source=campaignSourceSchema.parse(it.source),page=await audiencePage(it.external,await audienceQuery(it.external,source,deps),it.cursor,deps);
-   // Collection only keeps who can be invited: never a 1st-degree connection or someone with a pending invite.
-   found=page.people.filter(p=>linkedinInviteEligible({connectedAlready:p.degree===1,pendingInvite:p.pending,approved:true}));cursor=page.cursor;people+=found.length;
+   // Collection only keeps who can be invited and matches the chosen degrees; an unknown degree could be a 1st-degree connection.
+   found=page.people.filter(p=>p.degree!==null&&(source.degrees as number[]).includes(p.degree)&&linkedinInviteEligible({connectedAlready:p.degree===1,pendingInvite:p.pending,approved:true}));cursor=page.cursor;people+=found.length;
   }catch(e){error=msg(e);}
   await pool.query('SELECT app.finish_linkedin_collect($1,$2,$3,$4,$5,$6,$7)',[it.workspaceId,it.id,token,JSON.stringify(found),cursor,cursor===null,error]);
  }
@@ -68,12 +68,10 @@ async function relationIds(external:string,deps:UnipileDeps){
  }
  return ids;
 }
-async function contactOf(external:string,providerId:string,deps:UnipileDeps){
- try{const r=await unipileRequest('GET',`/api/v1/users/${encodeURIComponent(providerId)}?`+new URLSearchParams({account_id:external}),undefined,deps);
-  const email=r?.contact_info?.emails?.[0],phone=r?.contact_info?.phones?.[0];
-  return {...(typeof email==='string'&&email.includes('@')?{email:email.slice(0,250)}:{}),...(typeof phone==='string'?{phone:phone.slice(0,50)}:{})};}
- catch{return {};}
-}
+const profileOf=(external:string,providerId:string,deps:UnipileDeps)=>unipileRequest('GET',`/api/v1/users/${encodeURIComponent(providerId)}?`+new URLSearchParams({account_id:external}),undefined,deps);
+const contactFrom=(r:any)=>{const email=r?.contact_info?.emails?.[0],phone=r?.contact_info?.phones?.[0];
+ return {...(typeof email==='string'&&email.includes('@')?{email:email.slice(0,250)}:{}),...(typeof phone==='string'?{phone:phone.slice(0,50)}:{})};};
+async function contactOf(external:string,providerId:string,deps:UnipileDeps){try{return contactFrom(await profileOf(external,providerId,deps));}catch{return {};}}
 async function accept(pool:Pool,now:Date,limit:number,deps:UnipileDeps){
  const version=await gate(pool,'acceptance');if(!version)return 0;
  const accounts=(await pool.query('SELECT app.claim_linkedin_accept($1,$2) v',[now,limit])).rows[0].v as {workspaceId:string;external:string;capabilitiesVersion:string;waiting:{personId:string;providerId:string;enrich:boolean}[]}[];
@@ -91,12 +89,16 @@ async function accept(pool:Pool,now:Date,limit:number,deps:UnipileDeps){
 }
 async function expire(pool:Pool,now:Date,limit:number,deps:UnipileDeps){
  const version=await gate(pool,'invite');if(!version)return 0;
- const items=(await pool.query('SELECT app.claim_linkedin_expired($1,$2) v',[now,limit])).rows[0].v as {workspaceId:string;personId:string;invitationId:string;external:string;capabilitiesVersion:string}[];
+ const items=(await pool.query('SELECT app.claim_linkedin_expired($1,$2) v',[now,limit])).rows[0].v as {workspaceId:string;personId:string;invitationId:string|null;providerId:string;enrich:boolean;external:string;capabilitiesVersion:string}[];
  let expired=0;
  for(const it of items){
   if(it.capabilitiesVersion!==version)continue;
-  try{await unipileRequest('DELETE',`/api/v1/users/invite/sent/${encodeURIComponent(it.invitationId)}?`+new URLSearchParams({account_id:it.external}),undefined,deps);}
-  catch(e){if(!(e instanceof UnipileMissing))continue;}
+  let gone=!it.invitationId;
+  if(it.invitationId)try{await unipileRequest('DELETE',`/api/v1/users/invite/sent/${encodeURIComponent(it.invitationId)}?`+new URLSearchParams({account_id:it.external}),undefined,deps);}
+  catch(e){if(!(e instanceof UnipileMissing))continue;gone=true;}
+  // No invite to withdraw (gone or never confirmed): it may have been accepted beyond the relations read. Ask the profile.
+  if(gone){let profile:any;try{profile=await profileOf(it.external,it.providerId,deps);}catch(e){if(!(e instanceof UnipileMissing))continue;}
+   if(profile?.network_distance==='DISTANCE_1'){if((await pool.query('SELECT app.accept_linkedin_person($1,$2,$3,$4) v',[it.workspaceId,it.personId,it.enrich?contactFrom(profile):{},now])).rows[0].v)continue;}}
   if((await pool.query('SELECT app.expire_linkedin_person($1,$2,$3) v',[it.workspaceId,it.personId,now])).rows[0].v)expired++;
  }
  return expired;

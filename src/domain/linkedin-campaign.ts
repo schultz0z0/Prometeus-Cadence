@@ -44,7 +44,8 @@ export function campaignBlockers(d:LinkedinCampaignDraft,ctx:{accountReady:boole
  const out:string[]=[],c=ctx.capabilities;
  if(!ctx.accountReady)out.push('Conecte uma conta LinkedIn pronta antes de ativar.');
  if(!(['audience','invite','acceptance'] as const).every(k=>linkedinActionAllowed(c,k)))out.push('O fornecedor habilitado ainda não oferece busca, convite e aceite.');
- if(d.warming&&!(linkedinActionAllowed(c,'profileVisit')&&linkedinActionAllowed(c,'like')))out.push('O aquecimento social precisa da visita e da curtida habilitadas na plataforma. Desmarque-o para ativar.');
+ // shortcut: warming has no executor yet, so it always blocks; wire visit/like (capabilities profileVisit, like) before lifting this.
+ if(d.warming)out.push('O aquecimento social ainda não está disponível. Desmarque-o para ativar.');
  if(d.decisionMakerOnly)out.push('A triagem de decisor ainda não está disponível. Desmarque-a para ativar.');
  return out;
 }

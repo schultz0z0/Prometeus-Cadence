@@ -34,14 +34,16 @@ function fakeUnipile(owner:Principal){
  const accounts=new Map<string,{name:string;memberId:string}>(),links:Record<string,any>[]=[],calls:string[]=[],searches:Record<string,any>[]=[],invites:{provider_id:string;message?:string}[]=[];
  const people:Person[]=[],relations:{member_id:string;public_identifier:string;first_name:string;last_name:string}[]=[],withdrawn:string[]=[];
  const params:Record<string,Record<string,string>>={LOCATION:{'São Paulo':'105871508'},INDUSTRY:{'Software':'4'}};
- const hooks:{invite?:'timeout'|'429'|'422'|'500';reactions?:string[]}={};
+ // A partial match: the provider answers with a different title; it must be refused, never used silently.
+ const loose:Record<string,{title:string;id:string}>={'Varejo':{title:'Venda a varejo de alimentos',id:'9'}};
+ const hooks:{invite?:'timeout'|'429'|'422'|'500';reactions?:string[];goneInvites?:Set<string>}={};
  const f=(async(input:RequestInfo|URL,init?:RequestInit)=>{
   const url=new URL(String(input)),method=init?.method??'GET',body=init?.body?JSON.parse(String(init.body)):undefined;
   assert.equal(url.origin,'https://api9.unipile.com:13111');calls.push(method+' '+url.pathname);
   if(url.pathname==='/api/v1/hosted/accounts/link'){links.push(body);return Response.json({object:'HostedAuthURL',url:'https://account.unipile.com/qa'},{status:201});}
   let m=url.pathname.match(/^\/api\/v1\/accounts\/([A-Za-z0-9_-]+)$/);
   if(m){const a=accounts.get(m[1]);return a?Response.json({object:'Account',type:'LINKEDIN',id:m[1],name:a.name,connection_params:{im:{id:a.memberId}},sources:[{id:'s',status:'OK'}]}):Response.json({},{status:404});}
-  if(url.pathname==='/api/v1/linkedin/search/parameters'){const id=params[url.searchParams.get('type')!]?.[url.searchParams.get('keywords')!];return Response.json({object:'LinkedinSearchParametersList',items:id?[{object:'LinkedinSearchParameter',title:url.searchParams.get('keywords'),id}]:[]});}
+  if(url.pathname==='/api/v1/linkedin/search/parameters'){const k=url.searchParams.get('keywords')!,id=params[url.searchParams.get('type')!]?.[k];return Response.json({object:'LinkedinSearchParametersList',items:id?[{object:'LinkedinSearchParameter',title:k,id}]:loose[k]?[loose[k]]:[]});}
   if(url.pathname==='/api/v1/linkedin/search'){searches.push(body);const start=Number(url.searchParams.get('cursor')??0),page=people.slice(start,start+10);
    return Response.json({object:'LinkedinSearch',items:page.map(p=>({type:'PEOPLE',id:p.id,name:p.name,headline:p.headline,location:p.location,network_distance:p.network_distance,pending_invitation:!!p.pending_invitation,current_positions:p.company?[{company:p.company,role:p.headline}]:[]})),
     paging:{start,page_count:page.length,total_count:people.length},cursor:start+10<people.length?String(start+10):null});}
@@ -54,24 +56,24 @@ function fakeUnipile(owner:Principal){
    if(hooks.invite==='422')return Response.json({type:'errors/already_invited_recently'},{status:422});
    if(hooks.invite==='500'){invites.push(body);return Response.json({},{status:500});}
    invites.push(body);return Response.json({object:'UserInvitationSent',invitation_id:'inv_'+body.provider_id},{status:201});}
-  m=url.pathname.match(/^\/api\/v1\/users\/invite\/sent\/([^/]+)$/);if(m&&method==='DELETE'){withdrawn.push(m[1]);return Response.json({object:'UserInvitationCanceled'});}
+  m=url.pathname.match(/^\/api\/v1\/users\/invite\/sent\/([^/]+)$/);if(m&&method==='DELETE'){if(hooks.goneInvites?.has(m[1]))return Response.json({},{status:404});withdrawn.push(m[1]);return Response.json({object:'UserInvitationCanceled'});}
   if(url.pathname==='/api/v1/users/relations')return Response.json({object:'UserRelationsList',items:[...relations].reverse(),cursor:null});
   m=url.pathname.match(/^\/api\/v1\/users\/([A-Za-z0-9_-]+)$/);
   if(m){const p=people.find(x=>x.id===m![1]);if(!p)return Response.json({},{status:404});const [first,...last]=p.name.split(' ');
-   return Response.json({object:'UserProfile',provider:'LINKEDIN',provider_id:p.id,public_identifier:'re-'+p.id.toLowerCase(),first_name:first,last_name:last.join(' '),headline:p.headline,location:p.location,contact_info:p.email?{emails:[p.email]}:{}});}
+   return Response.json({object:'UserProfile',provider:'LINKEDIN',provider_id:p.id,public_identifier:'re-'+p.id.toLowerCase(),first_name:first,last_name:last.join(' '),headline:p.headline,location:p.location,contact_info:p.email?{emails:[p.email]}:{},network_distance:p.network_distance});}
   return Response.json({},{status:404});
  }) as typeof fetch;
  return{owner,accounts,links,calls,searches,invites,people,relations,withdrawn,params,hooks,deps:{fetch:f},count:(c:string)=>calls.filter(x=>x===c).length};
 }
 type Fake=ReturnType<typeof fakeUnipile>;
-async function connect(u:Fake){
+async function connect(u:Fake,memberId='ACoME'+randomUUID().slice(0,6)){
  const p=u.owner;await confirmLinkedinConnection(p,p.sessionId,{termsVersion:LINKEDIN_TERMS.version,acceptTerms:true,expectedRevision:0},u.deps);
- const link=u.links.at(-1)!,external='acc_'+randomUUID().replaceAll('-','').slice(0,16);u.accounts.set(external,{name:'[RE] Conta',memberId:'ACoME'+randomUUID().slice(0,6)});
+ const link=u.links.at(-1)!,external='acc_'+randomUUID().replaceAll('-','').slice(0,16);u.accounts.set(external,{name:'[RE] Conta',memberId});
  await receiveLinkedinNotify(new URL(link.notify_url).searchParams.get('token')!,{status:'CREATION_SUCCESS',account_id:external,name:link.name},u.deps);
  await finishLinkedinReturn(p,p.sessionId,new URL(link.success_redirect_url));
  return external;
 }
-async function setup(caps:Record<string,unknown>=FULL){await enable(caps);const owner=await user(),u=fakeUnipile(owner.p);const external=await connect(u);return{...owner,u,external};}
+async function setup(caps:Record<string,unknown>=FULL){await enable(caps);const owner=await user(),u=fakeUnipile(owner.p),memberId='ACoME'+randomUUID().slice(0,6);const external=await connect(u,memberId);return{...owner,u,external,memberId};}
 const person=(n:number,o:Partial<Person>={}):Person=>({id:'ACoP'+String(n).padStart(4,'0')+randomUUID().slice(0,4),name:`[RE] Pessoa ${n}`,headline:'Diretor Comercial',company:`[RE] Empresa ${n}`,location:'São Paulo',network_distance:'DISTANCE_2',...o});
 const draft=(o:Partial<LinkedinCampaignDraft>={}):LinkedinCampaignDraft=>{const d=defaultCampaignDraft();return {...d,name:'[RE] Campanha QA',warming:false,decisionMakerOnly:false,note:'Olá, {nome}! Vi a {empresa}.',
  source:{...d.source,mode:'filters',roles:['CEO','Diretor'],locations:['São Paulo'],industries:['Software'],keyword:'vendas'},...o};};
@@ -105,6 +107,7 @@ test('07A.2 explore: every filter reaches the provider, or nothing is called',as
  const before=s.u.searches.length;
  assert.equal(await code(()=>exploreLinkedinAudience(s.p,{...draft().source,locations:['Atlântida Perdida']},s.u.deps)),'422 LINKEDIN_FILTER_UNSUPPORTED');
  assert.equal(await code(()=>exploreLinkedinAudience(s.p,{...draft().source,mode:'url',searchUrl:'https://www.linkedin.com/search/results/companies/?keywords=x'},s.u.deps)),'422 LINKEDIN_FILTER_UNSUPPORTED');
+ assert.equal(await code(()=>exploreLinkedinAudience(s.p,{...draft().source,industries:['Varejo']},s.u.deps)),'422 LINKEDIN_FILTER_UNSUPPORTED','a different industry is never used in its place');
  assert.equal(s.u.searches.length,before,'a refused filter never calls the search');
  await exploreLinkedinAudience(s.p,{...draft().source,mode:'url',searchUrl:'https://www.linkedin.com/search/results/people/?keywords=ceo'},s.u.deps);
  assert.equal(s.u.searches.at(-1)!.url,'https://www.linkedin.com/search/results/people/?keywords=ceo');
@@ -218,4 +221,40 @@ test('07A.2 authority: a revoked account or gate stops sending at once; HTTP and
  for(const sql of ['SELECT * FROM app.linkedin_invite_operation',"SELECT app.claim_linkedin_invite('t',now())",'SELECT external_id FROM app.linkedin_campaign_person'])
   denied.push(await withWorkspaceTransaction(s.p,c=>c.query(sql)).then(()=>'ok',(e:{code?:string})=>e.code!));
  assert.deepEqual(denied,['42501','42501','42501']);
+});
+
+test('07A.2 review: reconnecting the same LinkedIn member keeps its invite ledger; old campaigns end',async()=>{
+ const s=await setup();const p1=person(1);s.u.people.push(p1);
+ const old=await activate(s.p,draft());await ticks(s.u,2);assert.equal(s.u.invites.length,1);
+ const acc=await rows(s.p.workspaceId,"SELECT id,revision FROM app.linkedin_account WHERE workspace_id=$1 AND state<>'revoked'");
+ await revokeLinkedinAccount(s.p,acc[0].id,{expectedRevision:Number(acc[0].revision)},s.u.deps);
+ assert.equal((await listLinkedinCampaigns(s.p)).campaigns.find(c=>c.id===old)!.state,'completed','a campaign on a disconnected account ends');
+ await connect(s.u,s.memberId);
+ await activate(s.p,draft({name:'[RE] De novo'}));await ticks(s.u,3,WED+3600e3);
+ assert.equal(s.u.invites.filter(i=>i.provider_id===p1.id).length,1,'the same person is not invited again by the same LinkedIn member');
+});
+
+test('07A.2 review: an accepted invite found gone at expiry is an acceptance, not a non-accept',async()=>{
+ const s=await setup();const p1=person(1);s.u.people.push(p1);
+ const id=await activate(s.p,draft({otherList:'new',expireDays:7}));await ticks(s.u,2);assert.equal(s.u.invites.length,1);
+ // Accepted long ago, beyond the relations the check reads: the invite no longer exists and the profile is 1st degree.
+ s.u.hooks.goneInvites=new Set(['inv_'+p1.id]);p1.network_distance='DISTANCE_1';
+ await ticks(s.u,1,WED+8*864e5);
+ const st=await states(s.p.workspaceId,id);assert.equal(st.accepted,1);assert.equal(st.expired,undefined);
+ const c=(await listLinkedinCampaigns(s.p)).campaigns.find(x=>x.id===id)!;
+ assert.equal((await rows(s.p.workspaceId,'SELECT count(*)::int n FROM app.lead WHERE workspace_id=$1 AND list_id=$2',[c.otherListId]))[0].n,0);
+ assert.equal((await rows(s.p.workspaceId,'SELECT count(*)::int n FROM app.lead WHERE workspace_id=$1 AND list_id=$2',[c.acceptListId]))[0].n,1);
+});
+
+test('07A.2 review: post audiences honour the chosen degrees; a crash left in sending becomes uncertain, never resent',async()=>{
+ const s=await setup();const p2=person(2),p3=person(3,{network_distance:'DISTANCE_3'}),pn=person(4,{network_distance:''});s.u.people.push(p2,p3,pn);
+ s.u.hooks.reactions=[p2.id,p3.id,pn.id];
+ const d=draft();const id=await activate(s.p,{...d,note:'',source:{...d.source,mode:'post',postUrl:'https://www.linkedin.com/posts/ana_x-activity-7236734771807019010-3qVO',degrees:[2]}});
+ await runLinkedinCampaignTick({limit:10,now:new Date(WED-3600e3)},s.u.deps);
+ const names=(await rows(s.p.workspaceId,'SELECT name FROM app.linkedin_campaign_person WHERE workspace_id=$1 AND campaign_id=$2',[id])).map(r=>r.name);
+ assert.deepEqual(names,['[RE] Pessoa 2'],'3rd degree and unknown degree are left out when only 2nd was chosen');
+ await testAdmin(c=>c.query("UPDATE app.linkedin_campaign_person SET state='sending',op_token='crashed',updated_at=clock_timestamp()-interval '10 minutes' WHERE workspace_id=$1",[s.p.workspaceId]));
+ await testAdmin(c=>c.query("INSERT INTO app.linkedin_invite_operation(workspace_id,account_id,member_id,external_id,campaign_id,person_id,state,day) SELECT p.workspace_id,c.account_id,$2,p.external_id,p.campaign_id,p.id,'sending',current_date FROM app.linkedin_campaign_person p JOIN app.linkedin_campaign c ON c.workspace_id=p.workspace_id AND c.id=p.campaign_id WHERE p.workspace_id=$1",[s.p.workspaceId,s.memberId]));
+ await ticks(s.u,2);
+ assert.equal((await states(s.p.workspaceId,id)).uncertain,1);assert.equal(s.u.invites.length,0,'never sent after the crash');
 });

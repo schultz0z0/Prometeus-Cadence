@@ -2,14 +2,17 @@ import {degreeOf,isPeopleSearchUrl,parsePostId,type AudienceSample,type Campaign
 import {AppError} from '../errors.ts';
 import {unipileRequest,type UnipileDeps} from './unipile.ts';
 // The campaign's audience, read through the customer's account. A filter the provider cannot take is refused before any search.
-export interface AudiencePerson{external:string;name:string;headline:string;company:string|null;location:string;profileUrl:string|null;degree:number|null;pending:boolean}
+export interface AudiencePerson{external:string;name:string;headline:string;company:string|null;industry:string|null;location:string;profileUrl:string|null;degree:number|null;pending:boolean}
 const unsupported=(message:string)=>new AppError(422,message,'LINKEDIN_FILTER_UNSUPPORTED');
+const fold=(v:string)=>v.normalize('NFD').replace(/\p{M}/gu,'').trim().toLowerCase();
 const q=(account:string,extra:Record<string,string>={})=>'?'+new URLSearchParams({account_id:account,...extra}).toString();
 async function parameterId(account:string,type:'LOCATION'|'INDUSTRY',label:string,deps:UnipileDeps){
  const r=await unipileRequest('GET','/api/v1/linkedin/search/parameters'+q(account,{type,keywords:label,limit:'10'}),undefined,deps);
  const items:{title?:string;id?:string}[]=Array.isArray(r?.items)?r.items:[];
- const hit=items.find(i=>i.title?.toLowerCase()===label.toLowerCase())??items[0];
- if(!hit?.id)throw unsupported(`${type==='LOCATION'?'Localização':'Setor'} "${label}" não encontrado no LinkedIn. Escolha outro termo.`);
+ // Only the same term is used; a near match would silently change the audience.
+ const hit=items.find(i=>i.title!==undefined&&fold(i.title)===fold(label));
+ if(!hit?.id){const near=items.map(i=>i.title).filter(Boolean).slice(0,3);
+  throw unsupported(`${type==='LOCATION'?'Localização':'Setor'} "${label}" não existe com esse nome no LinkedIn.${near.length?` Termos do LinkedIn: ${near.join('; ')}.`:' Escolha outro termo.'}`);}
  return String(hit.id);
 }
 export type AudienceQuery={kind:'search';body:Record<string,unknown>}|{kind:'post';postId:string};
@@ -27,12 +30,13 @@ export async function audienceQuery(account:string,s:CampaignSource,deps:Unipile
 const text=(v:unknown,max:number)=>typeof v==='string'?v.slice(0,max):'';
 function fromSearch(i:any):AudiencePerson|null{
  if(i?.type!=='PEOPLE'||typeof i.id!=='string'||!i.id)return null;
- return {external:i.id.slice(0,200),name:text(i.name,200)||'Perfil do LinkedIn',headline:text(i.headline,300),company:text(i.current_positions?.[0]?.company,200)||null,
+ return {external:i.id.slice(0,200),name:text(i.name,200)||'Perfil do LinkedIn',headline:text(i.headline,300),company:text(i.current_positions?.[0]?.company,200)||null,industry:text(i.industry,200)||null,
   location:text(i.location,200),profileUrl:text(i.public_profile_url??i.profile_url,500)||null,degree:degreeOf(i.network_distance),pending:i.pending_invitation===true};
 }
 function fromAuthor(a:any):AudiencePerson|null{
- if(typeof a?.id!=='string'||!a.id)return null;
- return {external:a.id.slice(0,200),name:text(a.name,200)||'Perfil do LinkedIn',headline:text(a.headline,300),company:null,location:'',profileUrl:text(a.profile_url,500)||null,degree:degreeOf(a.network_distance),pending:false};
+ // Companies react too; only people can be invited.
+ if(typeof a?.id!=='string'||!a.id||a.is_company===true||a.type==='COMPANY')return null;
+ return {external:a.id.slice(0,200),name:text(a.name,200)||'Perfil do LinkedIn',headline:text(a.headline,300),company:null,industry:null,location:'',profileUrl:text(a.profile_url,500)||null,degree:degreeOf(a.network_distance),pending:false};
 }
 /** One page of the audience. The post cursor walks reactions, then comments. */
 export async function audiencePage(account:string,query:AudienceQuery,cursor:string|null,deps:UnipileDeps):Promise<{people:AudiencePerson[];total:number|null;cursor:string|null}>{
