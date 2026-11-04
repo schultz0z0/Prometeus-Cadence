@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07C.3",
+  "next": "07C.3b",
   "end": "08B",
   "packages": [
     {
@@ -1335,7 +1335,43 @@
         "/settings/mcp",
         "/settings/security",
         "shell:assistant"
-      ]
+      ],
+      "status": "in-progress-split",
+      "split": {
+        "07C.3a": {
+          "status": "completed-local-controlled",
+          "completedAt": "2026-11-04",
+          "scope": "own OAuth server (DCR, PKCE S256, rotating refresh), Streamable HTTP MCP endpoint, read tools, /settings/mcp connections and revoke",
+          "executionPlan": "docs/superpowers/plans/2026-11-04-prometeus-cadence-07c3a-mcp-execution.md",
+          "validation": "docs/validation/07c3a-mcp.md",
+          "review": "docs/validation/07c3a-mcp-review.md",
+          "migrations": [
+            "db/migrations/106-mcp-authorization.sql",
+            "db/migrations/106a-mcp-authorization-review.sql"
+          ],
+          "create": [
+            "src/domain/mcp-authorization.ts",
+            "src/server/mcp/authorization.ts",
+            "src/server/mcp/service.ts",
+            "src/server/mcp/tools.ts",
+            "src/server/mcp/http.ts",
+            "src/app/api/mcp/route.ts",
+            "src/app/api/mcp/oauth/[action]/route.ts",
+            "src/app/api/mcp/connections/route.ts",
+            "src/app/api/mcp/connections/[id]/revoke/route.ts",
+            "src/app/.well-known/oauth-protected-resource/[[...path]]/route.ts",
+            "src/app/.well-known/oauth-authorization-server/route.ts",
+            "src/app/mcp/authorize/page.tsx",
+            "src/modules/settings/mcp-consent.tsx",
+            "src/modules/settings/mcp-settings.tsx"
+          ],
+          "deviations": "migration 106 (100 taken); tool names with underscores; Client ID Metadata Documents not implemented (DCR covers Claude/ChatGPT); real clients not yet homologated"
+        },
+        "07C.3b": {
+          "status": "planned",
+          "scope": "reviewed write tools (prepare/confirm cadence, reply, qualification) reusing assistant proposals"
+        }
+      }
     },
     {
       "id": "07D",

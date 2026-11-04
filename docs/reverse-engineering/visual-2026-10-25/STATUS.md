@@ -1,10 +1,21 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-04 · Session: s32 · Phase:6 07A.3 concluído local/controlado (Unipile simulada); próximo 07C.3; paridade integral não aceita
+Updated: 2026-11-04 · Session: s33 · Phase:6 07C.3a concluído local/controlado; próximo 07C.3b; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s33: 07C.3a, MCP autenticado.
+  - **Autorização:** OAuth próprio (registro dinâmico, PKCE, refresh rotativo) com consentimento por workspace.
+  - **Endpoint e página:** endpoint MCP com ferramentas de leitura; `/settings/mcp` com a URL real, as conexões e a revogação.
+  - **QA:** L-042 removed, 0 chamadas externas.
+  - **Revisão:** dois Medium e sete Low corrigidos (106a).
+  - **Evidência:** EV-295.
+- Not covered s33: Claude e ChatGPT reais não conectados; referência sem lista de conexões; comandos que mudam dados (07C.3b).
+- Needs human s33:
+  - os de s32;
+  - homologar o conector no Claude e no ChatGPT com uma conta própria quando houver uma URL pública.
 
 - Covered s32: 07A.3c, aprovações de comentários LinkedIn.
   - **Fluxo:** passo de comentário na cadência pós-aceite; a IA escreve, o texto espera em Aprovações e só é publicado com aprovação.
@@ -150,7 +161,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s32: 07C.3 — MCP autenticado e comandos revisados. 07A.3 concluído; menores→08A.
+Fila vigente s33: 07C.3b — comandos revisados no MCP. 07C.3a concluído; menores→08A.
+
+Fila s32 (histórica): 07C.3 — dividido em 07C.3a/b.
 
 Fila s31 (histórica): 07A.3c — aprovações de comentários LinkedIn.
 

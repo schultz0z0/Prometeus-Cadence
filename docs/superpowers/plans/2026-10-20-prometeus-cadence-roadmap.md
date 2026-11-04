@@ -299,3 +299,9 @@ Revisão independente: um High e quatro menores corrigidos RED→GREEN. Próximo
 Aprovações de comentários do LinkedIn concluídas local/controlado. O comentário escrito pela IA só é publicado depois da aprovação humana, mesmo no envio automático. O 07A.3 está completo.
 
 Revisão independente: dois High, um Medium e dois Low corrigidos RED→GREEN. Próximo: 07C.3. [Aceite](../../validation/07a3c-linkedin-approvals.md).
+
+### Continuidade 04/11 — 07C.3a
+
+MCP autenticado concluído local/controlado: OAuth próprio com consentimento por workspace, endpoint MCP e ferramentas de leitura, além das conexões e da revogação em Configurações.
+
+Revisão independente: dois Medium e sete Low corrigidos. Próximo: 07C.3b (comandos revisados). [Aceite](../../validation/07c3a-mcp.md).
