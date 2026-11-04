@@ -33,8 +33,8 @@ if(name==='dispatch'){
  const {dispatchSheetsTick}=await import('../src/server/integrations/sheets.ts');tick=async()=>{await dispatchSheetsTick({limit:config.integrationBatch,signal:controller.signal});};intervalMs=config.integrationMs;
 }else if(name==='linkedin'){
  // LinkedIn account health and vendor session removals: Unipile latency stays out of the other lanes.
- const [{runLinkedinTick},{runLinkedinCampaignTick},{runLinkedinMessageTick}]=await Promise.all([import('../src/server/linkedin/connections.ts'),import('../src/server/linkedin/invites.ts'),import('../src/server/linkedin/conversations.ts')]);
- tick=async()=>{await runLinkedinTick({limit:config.integrationBatch,signal:controller.signal});await runLinkedinCampaignTick({limit:config.integrationBatch,signal:controller.signal});await runLinkedinMessageTick({limit:config.integrationBatch,signal:controller.signal});};intervalMs=config.integrationMs;
+ const [{runLinkedinTick},{runLinkedinCampaignTick},{runLinkedinMessageTick},{runLinkedinSequenceTick}]=await Promise.all([import('../src/server/linkedin/connections.ts'),import('../src/server/linkedin/invites.ts'),import('../src/server/linkedin/conversations.ts'),import('../src/server/linkedin/sequences.ts')]);
+ tick=async()=>{await runLinkedinTick({limit:config.integrationBatch,signal:controller.signal});await runLinkedinCampaignTick({limit:config.integrationBatch,signal:controller.signal});await runLinkedinMessageTick({limit:config.integrationBatch,signal:controller.signal});await runLinkedinSequenceTick({limit:config.integrationBatch,signal:controller.signal});};intervalMs=config.integrationMs;
 }else if(name==='jobs'){
  const {runWorkerOnce}=await import('../src/server/prospecting/worker.ts');tick=()=>runWorkerOnce({},{workerId,signal:controller.signal});intervalMs=config.jobMs;
 }else{

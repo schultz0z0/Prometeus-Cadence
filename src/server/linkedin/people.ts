@@ -19,14 +19,15 @@ const stageSql=`CASE WHEN p.state IN('queued','sending') THEN 'queued' WHEN p.st
  WHEN p.state='accepted' AND (p.replied_at IS NOT NULL OR p.stage_override='replied') THEN 'replied' WHEN p.state='accepted' THEN 'accepted' END`;
 const select=`SELECT p.id,p.name,p.headline,p.company,p.location,p.state,p.replied_at,p.invited_at,p.accepted_at,p.stage_override,p.stage_revision,p.opted_out_at,p.updated_at,c.id campaign_id,c.name campaign_name,
  (SELECT t.id FROM app.linkedin_thread t WHERE t.workspace_id=p.workspace_id AND t.person_id=p.id ORDER BY t.last_message_at DESC NULLS LAST LIMIT 1) thread_id,
- (SELECT max(t.last_message_at) FROM app.linkedin_thread t WHERE t.workspace_id=p.workspace_id AND t.person_id=p.id) last_message_at
+ (SELECT max(t.last_message_at) FROM app.linkedin_thread t WHERE t.workspace_id=p.workspace_id AND t.person_id=p.id) last_message_at,
+ (SELECT x.draft_body FROM app.linkedin_sequence_run x WHERE x.workspace_id=p.workspace_id AND x.person_id=p.id AND x.state='waiting' ORDER BY x.updated_at DESC LIMIT 1) draft
  FROM app.linkedin_campaign_person p JOIN app.linkedin_campaign c ON c.workspace_id=p.workspace_id AND c.id=p.campaign_id`;
 function view(r:any):LinkedinPersonView{
  // The latest real fact: invited, accepted, replied or the last message; the row's own update when none happened yet.
  const last=([r.invited_at,r.accepted_at,r.replied_at,r.last_message_at].filter(Boolean).sort((a:Date,b:Date)=>b.getTime()-a.getTime())[0]??r.updated_at) as Date;
  return {id:r.id,name:r.name,headline:r.headline,company:r.company,location:r.location,campaign:{id:r.campaign_id,name:r.campaign_name},
   stage:pipelineStage({state:r.state,repliedAt:r.replied_at?.toISOString()??null,stageOverride:r.stage_override}),state:r.state,stageRevision:Number(r.stage_revision),manualReply:r.stage_override==='replied'&&!r.replied_at,
-  threadId:r.thread_id,lastActivityAt:last.toISOString(),optedOut:!!r.opted_out_at};
+  threadId:r.thread_id,draft:r.draft??null,lastActivityAt:last.toISOString(),optedOut:!!r.opted_out_at};
 }
 const query=z.object({stage:z.enum(['queued','warming','invited','accepted','replied']).optional(),campaignId:z.uuid().optional(),search:z.string().trim().max(100).optional(),page:z.coerce.number().int().min(1).max(1000).default(1)});
 export async function listLinkedinPeople(p:Principal,raw:unknown):Promise<{people:LinkedinPersonView[];total:number;page:number}>{

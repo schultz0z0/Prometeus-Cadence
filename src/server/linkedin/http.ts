@@ -2,6 +2,8 @@ import {authorizeProspectingRequest,readProspectingBody} from '../prospecting/ht
 import {AppError,errorResponse} from '../errors.ts';
 import {requirePrincipal} from '../auth/principal.ts';
 import {attestLinkedinAdapter,readLinkedinCapabilities,revokeLinkedinAdapter} from './capabilities.ts';
+import {listLinkedinTemplates,saveLinkedinTemplate,archiveLinkedinTemplate} from './templates.ts';
+import {listLinkedinSequences,saveLinkedinSequence,linkedinSequenceAction} from './sequences.ts';
 import {listLinkedinPeople,linkedinPipeline,moveLinkedinPerson,optOutLinkedinPerson} from './people.ts';
 import {getLinkedinThread,prepareLinkedinReply,confirmLinkedinReply} from './conversations.ts';
 import {confirmLinkedinCampaign,exploreLinkedinAudience,linkedinCampaignAction,listLinkedinCampaigns,prepareLinkedinCampaign,saveLinkedinCampaign} from './campaigns.ts';
@@ -79,8 +81,10 @@ export async function linkedinPipelineRequest(request:Request){
 }
 export async function linkedinPersonActionRequest(request:Request,id:string,action:string){
  try{const p=await authorizeProspectingRequest(request);
-  if(request.method!=='POST'||!['move','opt-out'].includes(action))throw new AppError(404,'Operação não encontrada.');
+  if(request.method!=='POST'||!['move','opt-out','prepare-reply','confirm-reply'].includes(action))throw new AppError(404,'Operação não encontrada.');
   if(action==='opt-out')return json(await optOutLinkedinPerson(p,id));
+  if(action==='prepare-reply'||action==='confirm-reply'){const b=await readProspectingBody(request) as Record<string,unknown>;
+   return json(action==='prepare-reply'?await prepareLinkedinReply(p,{...b,personId:id}):await confirmLinkedinReply(p,{...b,personId:id}));}
   const body=await readProspectingBody(request) as Record<string,unknown>;return json(await moveLinkedinPerson(p,{...body,personId:id}));
  }catch(e){return errorResponse(e);}
 }
@@ -94,3 +98,27 @@ export async function linkedinConversationActionRequest(request:Request,id:strin
   return json(action==='prepare-reply'?await prepareLinkedinReply(p,{...body,threadId:id}):await confirmLinkedinReply(p,{...body,threadId:id}));
  }catch(e){return errorResponse(e);}
 }
+export async function linkedinTemplatesRequest(request:Request){
+ try{const p=await authorizeProspectingRequest(request);
+  if(request.method==='GET')return json(await listLinkedinTemplates(p));
+  const body=await readProspectingBody(request) as {action?:unknown;input?:unknown;id?:unknown};
+  if(body?.action==='save')return json(await saveLinkedinTemplate(p,body.input));
+  if(body?.action==='archive')return json(await archiveLinkedinTemplate(p,String(body.id??''),body.input));
+  throw new AppError(422,'Ação inválida.');
+ }catch(e){return errorResponse(e);}
+}
+export async function linkedinSequencesRequest(request:Request){
+ try{const p=await authorizeProspectingRequest(request);
+  if(request.method==='GET')return json(await listLinkedinSequences(p));
+  const body=await readProspectingBody(request) as {action?:unknown;input?:unknown};
+  if(body?.action==='save')return json(await saveLinkedinSequence(p,body.input));
+  throw new AppError(422,'Ação inválida.');
+ }catch(e){return errorResponse(e);}
+}
+export async function linkedinSequenceActionRequest(request:Request,id:string,action:string){
+ try{const p=await authorizeProspectingRequest(request);
+  if(request.method!=='POST'||!['activate','pause','resume','archive'].includes(action))throw new AppError(404,'Operação não encontrada.');
+  return json(await linkedinSequenceAction(p,id,action,await readProspectingBody(request)));
+ }catch(e){return errorResponse(e);}
+}
+

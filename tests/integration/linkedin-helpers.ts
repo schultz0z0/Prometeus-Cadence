@@ -70,6 +70,10 @@ export function fakeUnipile(owner:Principal){
    const all=[...chats].flatMap(([chat_id,c])=>c.messages.map(m=>({object:'Message',chat_id,provider_id:'li-'+m.id,...m}))).filter(m=>Date.parse(m.timestamp)>after).sort((a,b)=>b.timestamp.localeCompare(a.timestamp)||b.id.localeCompare(a.id));
    const start=Number(url.searchParams.get('cursor')??0),limit=Number(url.searchParams.get('limit')??100);
    return Response.json({object:'MessageList',items:all.slice(start,start+limit),cursor:start+limit<all.length?String(start+limit):null});}
+  if(url.pathname==='/api/v1/chats'&&method==='POST'){const text=String(body.text);
+   if(hooks.send==='timeout'){sent.push({chat:'new',text});throw new TypeError('fetch failed');}
+   const id='chat_new_'+(++seq),mid='msg_out_'+(++seq);chats.set(id,{attendee:String(body.attendees_ids),messages:[{id:mid,text,timestamp:new Date().toISOString(),is_sender:1,sender_id:'ME'}]});
+   sent.push({chat:id,text});return Response.json({object:'ChatStarted',chat_id:id,message_id:mid},{status:201});}
   m=url.pathname.match(/^\/api\/v1\/chats\/([A-Za-z0-9_-]+)(\/messages)?$/);
   if(m){const c=chats.get(m[1]);if(!c)return Response.json({},{status:404});
    if(!m[2])return Response.json({object:'Chat',id:m[1],attendee_provider_id:c.attendee});

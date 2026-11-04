@@ -28,12 +28,14 @@ export interface AudienceSample{name:string;headline:string;location:string;degr
 export const defaultCampaignDraft=():LinkedinCampaignDraft=>({name:'',source:{mode:'filters',description:'',roles:[],locations:[],industries:[],keyword:'',searchUrl:'',postUrl:'',degrees:[2,3]},
  decisionMakerOnly:true,proof:'',extraProof:'',note:'',dailyLimit:LINKEDIN_DAILY_CAP,expireDays:30,warming:true,enrichOnAccept:false,otherList:'none'});
 export const linkedinInviteEligible=(i:{connectedAlready:boolean;pendingInvite:boolean;approved:boolean})=>!i.connectedAlready&&!i.pendingInvite&&i.approved;
-/** Fills the note only with facts from the profile; a missing fact (or a note over 300 characters) means this person is skipped. */
-export function renderInviteNote(note:string,vars:Partial<Record<'nome'|'empresa'|'cargo'|'setor'|'prova',string>>):string|null{
+export type TextVars=Partial<Record<'nome'|'empresa'|'cargo'|'setor'|'prova',string>>;
+/** Fills a text only with facts from the profile; a missing fact (or a text over `max`) means nothing is sent to this person. */
+export function renderLinkedinText(text:string,vars:TextVars,max:number):string|null{
  let missing=false;
- const out=note.replace(/\{(nome|empresa|cargo|setor|prova)\}/g,(_,k:keyof typeof vars)=>{const v=vars[k]?.trim();if(!v){missing=true;return '';}return v;});
- return missing||out.length>300?null:out;
+ const out=text.replace(/\{(nome|empresa|cargo|setor|prova)\}/g,(_,k:keyof TextVars)=>{const v=vars[k]?.trim();if(!v){missing=true;return '';}return v;});
+ return missing||out.length>max?null:out;
 }
+export const renderInviteNote=(note:string,vars:TextVars)=>renderLinkedinText(note,vars,300);
 const brt=new Intl.DateTimeFormat('en-US',{timeZone:'America/Sao_Paulo',weekday:'short',hour:'numeric',hourCycle:'h23'});
 /** Weekdays, 9h to 18h in Brasília. */
 export function inviteWindowOpen(at:Date){

@@ -47,31 +47,33 @@ export async function getLinkedinThread(p:Principal,threadId:string):Promise<{th
 /** The review: a one-minute token bound to this user, this conversation and this exact text. */
 export async function prepareLinkedinReply(p:Principal,raw:unknown):Promise<{token:string;expiresAt:string;body:string}>{
  const parsed=replyInputSchema.safeParse(raw);if(!parsed.success)throw new AppError(422,'Escreva a mensagem (até 8.000 caracteres).');
- const {threadId,body}=parsed.data,token=randomBytes(32).toString('base64url');
+ const i=parsed.data,body=i.body,token=randomBytes(32).toString('base64url');
  return tx(p,async c=>{await sendGate(c);
-  const at=(await c.query('SELECT app.prepare_linkedin_reply($1,$2,$3,$4) v',[randomUUID(),threadId,digest(body),digest(token)])).rows[0].v as Date;
+  const at=(await c.query('threadId' in i?'SELECT app.prepare_linkedin_reply($1,$2,$3,$4) v':'SELECT app.prepare_linkedin_person_reply($1,$2,$3,$4) v',[randomUUID(),'threadId' in i?i.threadId:i.personId,digest(body),digest(token)])).rows[0].v as Date;
   return {token,expiresAt:new Date(at).toISOString(),body};});
 }
 /** The human action: sends at most once per request; an uncertain send is never repeated. */
 export async function confirmLinkedinReply(p:Principal,raw:unknown,deps:UnipileDeps={}):Promise<{state:'sent'|'uncertain'|'failed'}>{
  const parsed=confirmReplySchema.safeParse(raw);if(!parsed.success)throw new AppError(422,'Confirmação inválida.');const i=parsed.data;
  const claim=await tx(p,async c=>{const version=await sendGate(c);
-  const r=(await c.query('SELECT app.claim_linkedin_reply($1,$2,$3,$4) v',[i.threadId,digest(i.token),digest(i.body),i.requestId])).rows[0].v as {replay:boolean;state?:string;replyId:string;chat:string;external:string;capabilitiesVersion:string};
+  const r=(await c.query('threadId' in i?'SELECT app.claim_linkedin_reply($1,$2,$3,$4) v':'SELECT app.claim_linkedin_person_reply($1,$2,$3,$4) v',['threadId' in i?i.threadId:i.personId,digest(i.token),digest(i.body),i.requestId])).rows[0].v as {replay:boolean;state?:string;replyId:string;chat:string|null;attendee?:string;external:string;capabilitiesVersion:string};
   if(!r.replay&&r.capabilitiesVersion!==version)throw new AppError(409,'A conta LinkedIn precisa ser verificada de novo. Nada foi enviado.','LINKEDIN_ACCOUNT_NOT_READY');
   return r;});
  if(claim.replay)return {state:(claim.state==='sending'?'uncertain':claim.state) as 'sent'|'uncertain'|'failed'};
- let outcome:'sent'|'uncertain'|'failed',remote:string|null=null,error:string|null=null;
+ let outcome:'sent'|'uncertain'|'failed',remote:string|null=null,error:string|null=null,started:string|null=null;
  try{
   const form=new FormData();form.set('text',i.body);
-  const r=await unipileRequest('POST',`/api/v1/chats/${encodeURIComponent(claim.chat)}/messages`,form,deps);
-  outcome='sent';remote=typeof r?.message_id==='string'?r.message_id.slice(0,200):null;
+  if(claim.chat){const r=await unipileRequest('POST',`/api/v1/chats/${encodeURIComponent(claim.chat)}/messages`,form,deps);remote=typeof r?.message_id==='string'?r.message_id.slice(0,200):null;}
+  else{form.set('account_id',claim.external);form.set('attendees_ids',claim.attendee!);
+   const r=await unipileRequest('POST','/api/v1/chats',form,deps);started=typeof r?.chat_id==='string'?r.chat_id.slice(0,200):null;remote=typeof r?.message_id==='string'?r.message_id.slice(0,200):null;}
+  outcome='sent';
  }catch(e){
   const status=e instanceof UnipileRetry?e.status:e instanceof UnipileMissing?404:undefined;
   // No status or a 5xx: the message may have left. Never resend.
   if(status===undefined||status>=500){outcome='uncertain';error='Sem confirmação do LinkedIn; a mensagem não será reenviada.';}
   else{outcome='failed';error=`O LinkedIn recusou a mensagem (${status}).`;}
  }
- await tx(p,c=>c.query('SELECT app.finish_linkedin_reply($1,$2,$3,$4,$5)',[claim.replyId,outcome,remote,i.body,error]));
+ await tx(p,c=>c.query('SELECT app.finish_linkedin_reply($1,$2,$3,$4,$5,$6)',[claim.replyId,outcome,remote,i.body,error,started]));
  if(outcome==='failed')throw new AppError(422,error!,'LINKEDIN_REPLY_FAILED');
  return {state:outcome};
 }
