@@ -1,9 +1,10 @@
-import test,{after} from 'node:test';import assert from 'node:assert/strict';import {createHash,randomBytes,randomUUID} from 'node:crypto';
-import {base} from './helpers.ts';
+import test,{after,beforeEach} from 'node:test';import assert from 'node:assert/strict';import {createHash,randomBytes,randomUUID} from 'node:crypto';
+import {base,resetRateLimits} from './helpers.ts';
 import {prospectingUser,testAdmin,closeProspectingPools} from './prospecting-helpers.ts';
 import {readMcpAuthorizationRequest,decideMcpAuthorization,listMcpConnections,revokeMcpConnection} from '../../src/server/mcp/authorization.ts';
 import {mcpRequest,mcpOauthRequest,mcpMetadataRequest,mcpConsentRequest} from '../../src/server/mcp/http.ts';
 after(closeProspectingPools);
+beforeEach(resetRateLimits);
 const RES=base+'/api/mcp',CB='https://client.example.com/oauth/callback';
 type U=Awaited<ReturnType<typeof prospectingUser>>;
 const code=async(fn:()=>Promise<unknown>)=>{try{await fn();return 'ok';}catch(e){const x=e as {status?:number;code?:string};return `${x.status}${x.code?' '+x.code:''}`;}};
@@ -127,4 +128,42 @@ test('07C.3a HTTP: 401 with metadata, 405, Origin, versions, batch',async()=>{
  const unknown=await rpc(t.access_token,'tools/call',{name:'admin_dump',arguments:{}});assert.equal(unknown.body.error.code,-32602);
  const ping=await rpc(t.access_token,'ping');assert.deepEqual(ping.body.result,{});
  const leak=JSON.stringify(await listMcpConnections(u.p));assert.ok(!leak.includes(t.access_token)&&!leak.includes(t.refresh_token));
+});
+
+// Review findings (106a).
+const regFrom=async(ip:string)=>(await mcpOauthRequest(new Request(base+'/api/mcp/oauth/register',{method:'POST',headers:{'content-type':'application/json','x-forwarded-for':ip+', 10.0.0.1'},body:JSON.stringify({client_name:'[RE] Cliente QA',redirect_uris:[CB]})}),'register')).status;
+test('07C.3a review: registration is limited per address and unused clients are swept',async()=>{
+ for(let i=0;i<20;i++)assert.equal(await regFrom('203.0.113.7'),201);
+ assert.equal(await regFrom('203.0.113.7'),429);
+ assert.equal(await regFrom('203.0.113.8'),201,'another address is not blocked');
+ const stale=(await register()).body.client_id;
+ await testAdmin(q=>q.query("UPDATE app.mcp_client SET created_at=clock_timestamp()-interval '2 days' WHERE id=$1",[stale]));
+ await regFrom('203.0.113.9');
+ assert.equal((await testAdmin(q=>q.query('SELECT 1 FROM app.mcp_client WHERE id=$1',[stale]))).rowCount,0,'a client never authorized is removed after a day');
+});
+test('07C.3a review: open authorization requests per client are capped; expired ones are purged',async()=>{
+ const c=(await register()).body,k=pkce();
+ for(let i=0;i<20;i++)assert.equal((await startAuth(c.client_id,{challenge:k.challenge})).headers.get('location')!.startsWith(base+'/mcp/authorize'),true);
+ const full=new URL((await startAuth(c.client_id,{challenge:k.challenge})).headers.get('location')!);
+ assert.equal(full.searchParams.get('error'),'temporarily_unavailable');assert.equal(full.searchParams.get('iss'),base,'error redirects carry iss');
+ await testAdmin(q=>q.query("UPDATE app.mcp_auth_request SET expires_at=clock_timestamp()-interval '1 second' WHERE client_id=$1",[c.client_id]));
+ assert.ok((await startAuth(c.client_id,{challenge:k.challenge})).headers.get('location')!.startsWith(base+'/mcp/authorize'));
+ assert.equal((await testAdmin(q=>q.query('SELECT 1 FROM app.mcp_auth_request WHERE client_id=$1',[c.client_id]))).rowCount,1);
+});
+test('07C.3a review: only live connections are listed; removal revokes; expired tokens are purged',async()=>{
+ const u=await prospectingUser({billing:false}),c=(await register()).body,k=pkce();
+ const rq=new URL((await startAuth(c.client_id,{challenge:k.challenge})).headers.get('location')!,base).searchParams.get('request')!;
+ await decideMcpAuthorization(u.p,{requestId:rq,workspaceId:u.p.workspaceId,decision:'allow'});
+ assert.equal((await listMcpConnections(u.p)).length,0,'a consent whose code was never exchanged is not a connection');
+ const t=await connect(u);assert.equal((await listMcpConnections(u.p)).length,1);
+ await testAdmin(q=>q.query("UPDATE app.mcp_token SET expires_at=clock_timestamp()-interval '1 second' WHERE kind='access'"));
+ const r=await token({grant_type:'refresh_token',refresh_token:t.refresh_token,client_id:t.client.client_id,resource:RES});assert.equal(r.status,200);
+ assert.equal((await testAdmin(q=>q.query("SELECT 1 FROM app.mcp_token t JOIN app.mcp_grant g ON g.id=t.grant_id WHERE g.workspace_id=$1 AND t.expires_at<=clock_timestamp()",[u.p.workspaceId]))).rowCount,0);
+ const owner=await prospectingUser({billing:false}),mate=await prospectingUser({billing:false}),mp={...mate.p,workspaceId:owner.p.workspaceId};
+ const add=()=>testAdmin(q=>q.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),owner.p.workspaceId,mate.p.userId,'operator']));
+ await add();const m=await connect({...mate,p:mp});
+ await testAdmin(q=>q.query('DELETE FROM auth.member WHERE "organizationId"=$1 AND "userId"=$2',[owner.p.workspaceId,mate.p.userId]));
+ assert.equal((await rpc(m.access_token,'tools/list')).status,403);
+ await add();
+ assert.equal((await rpc(m.access_token,'tools/list')).status,401,'invited back: the old connection does not come back');
 });

@@ -27,7 +27,8 @@ export function McpConsent({ requestId }: { requestId: string }) {
       {done && <p role="status">{done}</p>}
       {!view && !error && <p role="status">Carregando o pedido de acesso…</p>}
       {view && !done && <>
-        <p><strong>{view.client.name}</strong> quer usar o Prometeus Cadence em seu nome. Depois de permitir, você volta para <strong>{view.redirectHost}</strong>.</p>
+        <p>Um aplicativo quer usar o Prometeus Cadence em seu nome. Depois de permitir, você volta para <strong>{view.redirectHost}</strong>.</p>
+        <p className="muted">Nome informado pelo próprio aplicativo: <strong>{view.client.name}</strong>. Confira se o endereço de retorno é do aplicativo que você está conectando, como claude.ai ou chatgpt.com.</p>
         <dl className="mcp-consent-who"><dt>Conta</dt><dd>{view.user.name ? `${view.user.name} · ` : ""}{view.user.email}</dd><dt>Workspace</dt><dd>{view.workspace.name}</dd></dl>
         <p>Esta conexão poderá:</p>
         <ul className="mcp-consent-scopes">{view.scopes.map(s => <li key={s.id}>{s.label}</li>)}</ul>

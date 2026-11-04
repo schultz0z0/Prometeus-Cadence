@@ -26,12 +26,13 @@ const app=()=>getPools().appPool;
 
 const registration=z.object({client_name:z.string().trim().min(1).max(100).optional(),redirect_uris:z.array(z.string()).min(1).max(5),
  token_endpoint_auth_method:z.string().optional(),grant_types:z.array(z.string()).optional(),response_types:z.array(z.string()).optional()});
-export async function registerMcpClient(raw:unknown){
+/** `source` is the caller's address as the proxy reports it; without one only the global cap applies. */
+export async function registerMcpClient(raw:unknown,source:string|null=null){
  const r=registration.safeParse(raw);if(!r.success)throw new OAuthError(400,'invalid_client_metadata','Informe redirect_uris.');
  if(!r.data.redirect_uris.every(validMcpRedirectUri))throw new OAuthError(400,'invalid_redirect_uri','Use https, ou http só em localhost.');
  if(r.data.token_endpoint_auth_method&&r.data.token_endpoint_auth_method!=='none')throw new OAuthError(400,'invalid_client_metadata','Somente clientes públicos (PKCE).');
  const id='mcp_'+randomUUID(),name=r.data.client_name??'Cliente MCP';
- if(!(await app().query('SELECT app.mcp_register_client($1,$2,$3) ok',[id,name,r.data.redirect_uris])).rows[0].ok)throw new OAuthError(429,'temporarily_unavailable');
+ if(!(await app().query('SELECT app.mcp_register_client($1,$2,$3,$4) ok',[id,name,r.data.redirect_uris,source?digest(source):null])).rows[0].ok)throw new OAuthError(429,'temporarily_unavailable');
  return {client_id:id,client_name:name,redirect_uris:r.data.redirect_uris,token_endpoint_auth_method:'none',grant_types:['authorization_code','refresh_token'],response_types:['code'],client_id_issued_at:Math.floor(Date.now()/1000)};
 }
 /**
@@ -42,14 +43,15 @@ export async function startMcpAuthorization(q:URLSearchParams):Promise<{location
  const client=q.get('client_id')??'',redirect=q.get('redirect_uri')??'';
  const check=(await app().query('SELECT app.mcp_start_request(NULL,$1,$2,NULL,NULL,NULL,NULL) v',[client,redirect])).rows[0].v as string;
  if(check!=='ok')throw new OAuthError(400,check==='unknown_client'?'invalid_client':'invalid_redirect_uri');
- const back=(error:string)=>{const u=new URL(redirect);u.searchParams.set('error',error);const st=q.get('state');if(st)u.searchParams.set('state',st);return {location:u.toString()};};
+ const back=(error:string)=>{const u=new URL(redirect);u.searchParams.set('error',error);const st=q.get('state');if(st)u.searchParams.set('state',st);u.searchParams.set('iss',mcpBase());return {location:u.toString()};};
  const challenge=q.get('code_challenge')??'';
  if(q.get('response_type')!=='code')return back('unsupported_response_type');
  if(q.get('code_challenge_method')!=='S256'||!/^[A-Za-z0-9_-]{43}$/.test(challenge))return back('invalid_request');
  if((q.get('resource')??mcpResource())!==mcpResource())return back('invalid_target');
  const scopes=normalizeMcpScopes(q.get('scope'));if(!scopes.length)return back('invalid_scope');
  const id=randomUUID(),state=q.get('state');if(state&&state.length>500)return back('invalid_request');
- await app().query('SELECT app.mcp_start_request($1,$2,$3,$4,$5,$6,$7)',[id,client,redirect,challenge,scopes,state,mcpResource()]);
+ const kept=(await app().query('SELECT app.mcp_start_request($1,$2,$3,$4,$5,$6,$7) v',[id,client,redirect,challenge,scopes,state,mcpResource()])).rows[0].v;
+ if(kept==='busy')return back('temporarily_unavailable');
  return {location:mcpBase()+'/mcp/authorize?request='+id};
 }
 export async function readMcpAuthorizationRequest(p:Principal,id:string){

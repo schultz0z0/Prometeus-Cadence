@@ -22,7 +22,7 @@ export async function mcpRequest(request:Request){
  if(!token)return json({error:'invalid_token'},401,{'www-authenticate':challenge()});
  let ctx;
  try{const r=await resolveMcpToken(token);ctx={principal:r.principal,scopes:r.scopes};}
- catch(e){if(e instanceof McpAuthFailure)return e.status===429?json({error:'rate_limited'},429,{'retry-after':String(e.retryAfter??60)}):json({error:e.status===401?'invalid_token':'Você não tem mais acesso a este workspace.'},e.status,e.status===401?{'www-authenticate':challenge(', error="invalid_token"')}:{});throw e;}
+ catch(e){if(!(e instanceof McpAuthFailure))return json(rpcError(null,-32603,'Erro interno.'),500);return e.status===429?json({error:'rate_limited'},429,{'retry-after':String(e.retryAfter??60)}):json({error:e.status===401?'invalid_token':'Você não tem mais acesso a este workspace.'},e.status,e.status===401?{'www-authenticate':challenge(', error="invalid_token"')}:{});}
  if(request.method!=='POST')return json({error:'Este endpoint não oferece fluxo SSE.'},405,{allow:'POST'});
  const version=request.headers.get('mcp-protocol-version');
  if(version&&!(MCP_VERSIONS as readonly string[]).includes(version))return json(rpcError(null,-32600,'Versão do protocolo não suportada.'),400);
@@ -52,7 +52,7 @@ export async function mcpOauthRequest(request:Request,action:string){
    catch(e){if(e instanceof OAuthError)return new Response('Pedido de autorização inválido: '+e.error+'. Volte ao aplicativo e conecte de novo.',{status:400,headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'}});throw e;}
   }
   if(request.method!=='POST')return json({error:'invalid_request'},405);
-  if(action==='register')return json(await registerMcpClient(await request.json().catch(()=>null)),201);
+  if(action==='register')return json(await registerMcpClient(await request.json().catch(()=>null),request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()||null),201);
   const f=new URLSearchParams(await request.text());
   if(action==='token')return json(await exchangeMcpToken(f));
   if(action==='revoke')return json(await revokeMcpToken(f));
