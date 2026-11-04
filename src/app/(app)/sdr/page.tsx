@@ -1,4 +1,4 @@
-import { LinkedinSdr } from "@/modules/settings/linkedin-sdr";
+import { SdrArea } from "@/modules/sdr/agent-settings";
 export default function Page() {
-  return <LinkedinSdr sdr />;
+  return <SdrArea />;
 }
