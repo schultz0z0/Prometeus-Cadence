@@ -2,7 +2,9 @@ import 'server-only';
 import type {PoolClient} from 'pg';import type {Principal} from '../../domain/workspace.ts';
 import {parseReportQuery,reportSqlTimezone,type ReportQuery} from '../../domain/reporting.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';import {AppError} from '../errors.ts';
-export async function authorizeReport(c:PoolClient,p:Principal){const session=(await c.query('SELECT app.lock_channel_pilot_session($1) value',[p.sessionId])).rows[0].value;if(session?.workspaceId!==p.workspaceId)throw new AppError(403,'A sessão do relatório mudou ou venceu.');}
+// A browser session must still have this workspace active. A bearer principal (MCP, 07C.3a) has no session: its workspace
+// is fixed by the grant and its membership was just re-checked by the transaction, so there is no tab to have changed.
+export async function authorizeReport(c:PoolClient,p:Principal){if(p.sessionId==='')return;const session=(await c.query('SELECT app.lock_channel_pilot_session($1) value',[p.sessionId])).rows[0].value;if(session?.workspaceId!==p.workspaceId)throw new AppError(403,'A sessão do relatório mudou ou venceu.');}
 export async function ensureReportProjection(c:PoolClient,q:ReportQuery,force=false):Promise<{period:string;revision:number;asOf:string}>{
  const result=(await c.query('SELECT app.ensure_report_projection($1,$2,$3,$4,$5) value',[q.from,q.to,reportSqlTimezone(q.timezone),q.cadenceId??null,force])).rows[0].value;return{...result,revision:Number(result.revision),asOf:new Date(result.asOf).toISOString()};
 }
