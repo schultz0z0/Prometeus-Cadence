@@ -1,10 +1,19 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-04 · Session: s33 · Phase:6 07C.3a concluído local/controlado; próximo 07C.3b; paridade integral não aceita
+Updated: 2026-11-04 · Session: s34 · Phase:6 07C.3 concluído local/controlado; próximo 07B.1; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s34: 07C.3b, comandos revisados no MCP.
+  - **Ferramentas:** preparar cadência, qualificação, público com automações pausadas e rascunho de resposta; confirmar e cancelar; listas e conversas.
+  - **Confirmação:** no link de revisão do app ou, com o escopo opcional marcado no consentimento, pelo cliente.
+  - **QA:** L-043 removed, 0 chamadas externas.
+  - **Revisão:** três Medium e oito Low corrigidos (107a).
+  - **Evidência:** EV-296.
+- Not covered s34: Claude e ChatGPT reais não conectados; a referência não mostra os comandos por dentro; confirmação com teste de 7 dias ativo só na integração.
+- Needs human s34: os de s33.
 
 - Covered s33: 07C.3a, MCP autenticado.
   - **Autorização:** OAuth próprio (registro dinâmico, PKCE, refresh rotativo) com consentimento por workspace.
@@ -161,7 +170,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s33: 07C.3b — comandos revisados no MCP. 07C.3a concluído; menores→08A.
+Fila vigente s34: 07B.1 — configuração e ativação do agente SDR. 07C.3 concluído; menores→08A.
+
+Fila s33 (histórica): 07C.3b — comandos revisados no MCP.
 
 Fila s32 (histórica): 07C.3 — dividido em 07C.3a/b.
 

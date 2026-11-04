@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07C.3b",
+  "next": "07B.1",
   "end": "08B",
   "packages": [
     {
@@ -1336,7 +1336,7 @@
         "/settings/security",
         "shell:assistant"
       ],
-      "status": "in-progress-split",
+      "status": "completed-local-controlled-split",
       "split": {
         "07C.3a": {
           "status": "completed-local-controlled",
@@ -1368,8 +1368,22 @@
           "deviations": "migration 106 (100 taken); tool names with underscores; Client ID Metadata Documents not implemented (DCR covers Claude/ChatGPT); real clients not yet homologated"
         },
         "07C.3b": {
-          "status": "planned",
-          "scope": "reviewed write tools (prepare/confirm cadence, reply, qualification) reusing assistant proposals"
+          "status": "completed-local-controlled",
+          "completedAt": "2026-11-04",
+          "scope": "reviewed write tools (cadence, qualification, audience with paused automations, reply draft) as assistant proposals owned by the MCP grant; opt-in actions.confirm; messages.read; /mcp/review/<id> in-app review",
+          "executionPlan": "docs/superpowers/plans/2026-11-04-prometeus-cadence-07c3b-mcp-commands-execution.md",
+          "validation": "docs/validation/07c3b-mcp-commands.md",
+          "review": "docs/validation/07c3b-mcp-commands-review.md",
+          "migrations": [
+            "db/migrations/107-mcp-commands.sql",
+            "db/migrations/107a-mcp-commands-review.sql"
+          ],
+          "create": [
+            "src/server/mcp/commands.ts",
+            "src/app/mcp/review/[id]/page.tsx",
+            "src/modules/settings/mcp-review.tsx"
+          ],
+          "deviations": "no publish/activate tools (commands never send or activate); messages.read scope added by review; editing an existing cadence and account setup stay unavailable; real clients not yet homologated"
         }
       }
     },

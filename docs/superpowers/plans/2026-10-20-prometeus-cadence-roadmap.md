@@ -305,3 +305,9 @@ Revisão independente: dois High, um Medium e dois Low corrigidos RED→GREEN. P
 MCP autenticado concluído local/controlado: OAuth próprio com consentimento por workspace, endpoint MCP e ferramentas de leitura, além das conexões e da revogação em Configurações.
 
 Revisão independente: dois Medium e sete Low corrigidos. Próximo: 07C.3b (comandos revisados). [Aceite](../../validation/07c3a-mcp.md).
+
+### Continuidade 04/11 — 07C.3b
+
+Comandos revisados no MCP concluídos local/controlado: preparar cadência, qualificação, público e rascunho de resposta, com revisão no app ou confirmação opcional pelo cliente; leitura de conversas em escopo próprio.
+
+Revisão independente: três Medium e oito Low corrigidos. 07C.3 completo. Próximo: 07B.1. [Aceite](../../validation/07c3b-mcp-commands.md).

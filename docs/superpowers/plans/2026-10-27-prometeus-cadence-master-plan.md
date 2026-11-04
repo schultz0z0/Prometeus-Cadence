@@ -1,6 +1,6 @@
 # Prometeus Cadence — índice mestre de implementação até 08B
 
-**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07C.3b** (atualizado 04/11; 07C.3a concluído local/controlado). A habilitação real do LinkedIn depende de contrato e chave da Unipile, conta de teste e aceite jurídico.
+**Baseline:**27/10/2026. **Origem:** escopo aprovado + solicitação expressa de escrever todos os planos antes de retomar implementação. **Status:** baseline técnica consolidada;06IA-H implementado e validado no escopo local/controlado. Próxima implementação: **07B.1** (atualizado 04/11; 07C.3 concluído local/controlado). A habilitação real do LinkedIn depende de contrato e chave da Unipile, conta de teste e aceite jurídico.
 
 **PRD:** [produto completo](../specs/2026-10-27-prometeus-cadence-complete-prd.md). **Contratos técnicos:** [arquitetura compartilhada](../specs/2026-10-27-prometeus-cadence-technical-contracts.md). **Roteiro histórico e vigente:** [roadmap](2026-10-20-prometeus-cadence-roadmap.md). **Manifesto:** [JSON](2026-10-27-prometeus-cadence-implementation-manifest.json).
 
@@ -34,7 +34,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 07A.1 | Conexão, saúde e sincronização LinkedIn | 07A.0, 07C.2 | [tarefas](2026-10-27-prometeus-cadence-07a1-linkedin-connection.md) | Concluído local/controlado em 03/11 com a Unipile simulada ([aceite](../../validation/07a1-linkedin-connection.md)) |
 | 07A.2 | Públicos, campanhas, convites e aceites LinkedIn | 07A.1, 06B.5 | [tarefas](2026-10-27-prometeus-cadence-07a2-linkedin-campaigns.md) | Concluído local/controlado em 03/11 com a Unipile simulada ([aceite](../../validation/07a2-linkedin-campaigns.md)) |
 | 07A.3 | Pessoas, pipeline, mensagens e aprovações LinkedIn | 07A.2, 06D.2, 06B.4 | [tarefas](2026-10-27-prometeus-cadence-07a3-linkedin-conversations.md) | Dividido: 07A.3a concluído local/controlado em 03/11 ([aceite](../../validation/07a3a-linkedin-conversations.md)); 07A.3b concluído em 04/11 ([aceite](../../validation/07a3b-linkedin-sequences.md)); 07A.3c concluído em 04/11 ([aceite](../../validation/07a3c-linkedin-approvals.md)). Pacote concluído local/controlado |
-| 07C.3 | MCP autenticado e comandos revisados | 07C.1, 06F, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07c3-mcp.md) | Dividido: 07C.3a concluído local/controlado em 04/11 ([aceite](../../validation/07c3a-mcp.md)); 07C.3b (comandos revisados) pendente |
+| 07C.3 | MCP autenticado e comandos revisados | 07C.1, 06F, 06E.1 | [tarefas](2026-10-27-prometeus-cadence-07c3-mcp.md) | Concluído local/controlado em 04/11, em duas partes: 07C.3a ([aceite](../../validation/07c3a-mcp.md)) e 07C.3b ([aceite](../../validation/07c3b-mcp-commands.md)); clientes reais não homologados |
 | 07D | Descoberta condicional de scoring e Hot Now | 06C.2, 06B.5 | [tarefas](2026-10-27-prometeus-cadence-07d-scoring-discovery.md) | Planejado; gate include/exclude |
 | 07B.1 | Configuração e ativação do agente SDR | 06F, 07C.2, 07A.3, 07C.3 | [tarefas](2026-10-27-prometeus-cadence-07b1-sdr-configuration.md) | Planejado; não executado |
 | 07B.2 | Atendimento, memória e intervenção humana SDR | 07B.1, 06D.2 | [tarefas](2026-10-27-prometeus-cadence-07b2-sdr-conversation.md) | Planejado; não executado |
@@ -203,3 +203,9 @@ Continuidade 07C.3a em 04/11 (concluído local/controlado):
 - **Endpoint e página:** endpoint MCP Streamable HTTP com ferramentas de leitura (contatos, execuções e métricas), e `/settings/mcp` com a URL real, as conexões e a revogação.
 
 A revisão independente encontrou dois Medium e sete Low, corrigidos na 106a. Clientes reais não foram homologados. Próximo: 07C.3b. [Aceite](../../validation/07c3a-mcp.md).
+
+Continuidade 07C.3b em 04/11 (concluído local/controlado):
+- **Comandos revisados:** o MCP prepara cadência, qualificação, público com automações pausadas e rascunho de resposta como propostas do assistente, ligadas à conexão; nada envia, publica ou ativa.
+- **Confirmação:** pelo link `/mcp/review/<id>` no app ou, se a pessoa marcar o escopo opcional `actions.confirm` no consentimento, pelo próprio cliente com o token da revisão.
+
+A revisão independente encontrou três Medium e oito Low, corrigidos na 107a e no serviço. Com isso o 07C.3 está completo. Próximo: 07B.1. [Aceite](../../validation/07c3b-mcp-commands.md).
