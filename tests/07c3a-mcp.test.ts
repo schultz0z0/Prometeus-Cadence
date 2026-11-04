@@ -1,13 +1,13 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {createHash} from 'node:crypto';
-import {mcpScopeAllowed,normalizeMcpScopes,validMcpRedirectUri,pkceS256Matches,negotiateMcpVersion,MCP_READ_SCOPES} from '../src/domain/mcp-authorization.ts';
+import {mcpScopeAllowed,normalizeMcpScopes,validMcpRedirectUri,pkceS256Matches,negotiateMcpVersion,MCP_SCOPES} from '../src/domain/mcp-authorization.ts';
 test('07C.3a a scope only grants itself, and only to a current member',()=>{
  assert.equal(mcpScopeAllowed({required:'cadences.publish',granted:['contacts.read'],membershipActive:true}),false);
  assert.equal(mcpScopeAllowed({required:'contacts.read',granted:['contacts.read'],membershipActive:true}),true);
  assert.equal(mcpScopeAllowed({required:'contacts.read',granted:['contacts.read'],membershipActive:false}),false);
 });
-test('07C.3a requested scopes keep only the known ones; none asked means every read scope',()=>{
+test('07C.3a requested scopes keep only the known ones; none asked means every scope (07C.3b)',()=>{
  assert.deepEqual(normalizeMcpScopes('contacts.read admin.all jobs.read'),['contacts.read','jobs.read']);
- assert.deepEqual(normalizeMcpScopes(undefined),[...MCP_READ_SCOPES]);
+ assert.deepEqual(normalizeMcpScopes(undefined),[...MCP_SCOPES],'07C.3b: nothing requested offers every scope');
  assert.deepEqual(normalizeMcpScopes('admin.all'),[],'nothing known: nothing granted');
 });
 test('07C.3a redirect URIs: https, or http on the loopback only',()=>{

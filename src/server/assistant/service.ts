@@ -74,7 +74,7 @@ async function catalog(c:PoolClient,withText:boolean):Promise<Catalog>{
   FROM app.channel_conversation cc LEFT JOIN app.lead ld ON ld.workspace_id=cc.workspace_id AND ld.id=cc.lead_id ORDER BY cc.last_message_at DESC NULLS LAST,cc.id LIMIT 5`,[withText])).rows;
  return{lists,conversations};
 }
-function summary(command:AssistantCommand,cat:Catalog){
+export function proposalSummary(command:AssistantCommand,cat:Pick<Catalog,'lists'|'conversations'>){
  const p=command.payload as Record<string,any>,list=cat.lists.find(l=>l.id===p.listId),conv=cat.conversations.find(x=>x.id===p.conversationId);
  // Names have no length bound in the database; the stored summary does (300).
  const listName=list?.name.slice(0,80),contact=conv?.contact.slice(0,80);
@@ -114,7 +114,7 @@ export async function answerAssistant(p:Principal,raw:unknown,deps:AssistantDeps
    await c.query('SELECT app.assistant_reply($1,$2,$3,$4,$5,$6,$7)',[input.requestId,answer.text,JSON.stringify(answer.citations),!usage,usage?.provider??null,usage?.inputTokens??null,usage?.outputTokens??null]);
    // Only allowlisted kinds with catalog references survive; the summary is written here, never by the model.
    const command=parseProposal(answer.proposal,{lists:ctx.catalog.lists.map(l=>l.id),conversations:ctx.catalog.conversations.map(x=>x.id)});
-   if(command)await c.query('SELECT app.assistant_propose($1,$2,$3,$4)',[input.requestId,command.kind,command.payload,summary(command,ctx.catalog)]);
+   if(command)await c.query('SELECT app.assistant_propose($1,$2,$3,$4)',[input.requestId,command.kind,command.payload,proposalSummary(command,ctx.catalog)]);
    const rows=(await c.query(`SELECT m.*,${proposalJoin} FROM app.assistant_message m WHERE m.request_id=$1 ORDER BY m.role DESC`,[input.requestId])).rows;
    return{threadId:ask.asked.threadId,question:view(rows[0]),message:view(rows[1]),remaining:await remaining(c)};
   });

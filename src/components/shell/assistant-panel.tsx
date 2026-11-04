@@ -11,7 +11,7 @@ import {units} from '@/modules/prospecting/job-review';
 const suggestions=['Por que minha cadência não saiu hoje?','Quais são os limites do meu plano?','Como conecto meu Gmail?'];
 const store={get:(k:string)=>{try{return sessionStorage.getItem(k)??'';}catch{return '';}},set:(k:string,v:string)=>{try{if(v)sessionStorage.setItem(k,v);else sessionStorage.removeItem(k);}catch{}}};
 // A proposal only opens the existing review of its area; confirming never sends or activates anything.
-function ProposalCard({proposal,workspaceId,onClose}:{proposal:AssistantProposal;workspaceId:string|null;onClose:()=>void}){
+export function ProposalCard({proposal,workspaceId,onClose}:{proposal:AssistantProposal;workspaceId:string|null;onClose:()=>void}){
  const [p,setP]=useState(proposal),[review,setReview]=useState<ProposalReview['review']|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),requestId=useRef(crypto.randomUUID());
  const expired=p.state==='proposed'&&Date.parse(p.expiresAt)<=Date.now();
  async function act(fn:(signal:AbortSignal)=>Promise<void>){if(!workspaceId||busy)return;setBusy(true);setError('');try{await fn(new AbortController().signal);}catch(e){setError((e as Error).message);if((e as {status?:number}).status===409)setReview(null);}finally{setBusy(false);}}

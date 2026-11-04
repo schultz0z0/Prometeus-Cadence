@@ -1,5 +1,5 @@
 import 'server-only';
-import {MCP_READ_SCOPES,MCP_VERSIONS,type McpRequest} from '../../domain/mcp-authorization.ts';
+import {MCP_SCOPES,MCP_VERSIONS,type McpRequest} from '../../domain/mcp-authorization.ts';
 import {requirePrincipal} from '../auth/principal.ts';
 import {AppError,checkOrigin} from '../errors.ts';
 import {decideMcpAuthorization,exchangeMcpToken,listMcpConnections,mcpBase,mcpResource,McpAuthFailure,OAuthError,readMcpAuthorizationRequest,
@@ -21,7 +21,7 @@ export async function mcpRequest(request:Request){
  const auth=request.headers.get('authorization')??'',token=/^Bearer ([A-Za-z0-9_-]{20,200})$/.exec(auth)?.[1];
  if(!token)return json({error:'invalid_token'},401,{'www-authenticate':challenge()});
  let ctx;
- try{const r=await resolveMcpToken(token);ctx={principal:r.principal,scopes:r.scopes};}
+ try{const r=await resolveMcpToken(token);ctx={principal:r.principal,scopes:r.scopes,grantId:r.grantId};}
  catch(e){if(!(e instanceof McpAuthFailure))return json(rpcError(null,-32603,'Erro interno.'),500);return e.status===429?json({error:'rate_limited'},429,{'retry-after':String(e.retryAfter??60)}):json({error:e.status===401?'invalid_token':'Você não tem mais acesso a este workspace.'},e.status,e.status===401?{'www-authenticate':challenge(', error="invalid_token"')}:{});}
  if(request.method!=='POST')return json({error:'Este endpoint não oferece fluxo SSE.'},405,{allow:'POST'});
  const version=request.headers.get('mcp-protocol-version');
@@ -38,10 +38,10 @@ export async function mcpRequest(request:Request){
 }
 export async function mcpMetadataRequest(_request:Request,kind:'resource'|'server'){
  const base=mcpBase();
- if(kind==='resource')return json({resource:mcpResource(),authorization_servers:[base],scopes_supported:[...MCP_READ_SCOPES],bearer_methods_supported:['header'],resource_name:'Prometeus Cadence'});
+ if(kind==='resource')return json({resource:mcpResource(),authorization_servers:[base],scopes_supported:[...MCP_SCOPES],bearer_methods_supported:['header'],resource_name:'Prometeus Cadence'});
  return json({issuer:base,authorization_endpoint:base+'/api/mcp/oauth/authorize',token_endpoint:base+'/api/mcp/oauth/token',registration_endpoint:base+'/api/mcp/oauth/register',
   revocation_endpoint:base+'/api/mcp/oauth/revoke',response_types_supported:['code'],grant_types_supported:['authorization_code','refresh_token'],code_challenge_methods_supported:['S256'],
-  token_endpoint_auth_methods_supported:['none'],revocation_endpoint_auth_methods_supported:['none'],scopes_supported:[...MCP_READ_SCOPES],authorization_response_iss_parameter_supported:true});
+  token_endpoint_auth_methods_supported:['none'],revocation_endpoint_auth_methods_supported:['none'],scopes_supported:[...MCP_SCOPES],authorization_response_iss_parameter_supported:true});
 }
 const oauthFailure=(e:unknown)=>e instanceof OAuthError?json({error:e.error,...(e.description?{error_description:e.description}:{})},e.status):json({error:'server_error'},500);
 export async function mcpOauthRequest(request:Request,action:string){

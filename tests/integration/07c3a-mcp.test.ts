@@ -50,7 +50,7 @@ test('07C.3a full flow: consent, token, initialize, tools; only the authorized w
  assert.equal(init.body.result.protocolVersion,'2025-06-18');assert.ok(init.body.result.capabilities.tools);
  assert.equal((await rpc(t.access_token,'notifications/initialized')).status,202);
  const tools=(await rpc(t.access_token,'tools/list')).body.result.tools.map((x:{name:string})=>x.name).sort();
- assert.deepEqual(tools,['contacts_search','jobs_list','metrics_read']);
+ assert.deepEqual(tools,['contacts_search','jobs_list','lists_list','metrics_read'],'07C.3b added lists_list under contacts.read');
  const found=await rpc(t.access_token,'tools/call',{name:'contacts_search',arguments:{query:'Lead'}});
  const text=found.body.result.content[0].text;assert.ok(text.includes('[RE] Lead MCP Visível'));assert.ok(!text.includes('outro workspace'));
  assert.equal((await rpc(t.access_token,'tools/call',{name:'metrics_read',arguments:{days:7}})).body.result.isError,undefined);

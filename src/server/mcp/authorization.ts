@@ -2,7 +2,7 @@ import 'server-only';
 import {createHash,randomBytes,randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import type {Principal} from '../../domain/workspace.ts';
-import {MCP_SCOPE_LABELS,normalizeMcpScopes,pkceChallenge,validMcpRedirectUri,type McpScope} from '../../domain/mcp-authorization.ts';
+import {MCP_OPT_IN,MCP_SCOPE_LABELS,chooseMcpScopes,normalizeMcpScopes,pkceChallenge,validMcpRedirectUri,type McpScope} from '../../domain/mcp-authorization.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {getPools} from '../db/pool.ts';
 import {AppError} from '../errors.ts';
@@ -19,6 +19,7 @@ const failures:Record<string,[number,string]>={
  MCP_REQUEST_USED:[409,'Este pedido de acesso já foi respondido. Volte ao Claude ou ao ChatGPT e conecte de novo.'],
  MCP_REQUEST_EXPIRED:[409,'Este pedido de acesso venceu (10 minutos). Volte ao Claude ou ao ChatGPT e conecte de novo.'],
  MCP_CONNECTION_NOT_FOUND:[404,'Conexão não encontrada.'],
+ MCP_SCOPE_EMPTY:[422,'Escolha pelo menos uma permissão. Confirmar ações só vale junto com preparar ações.'],
 };
 const sqlError=(e:unknown)=>{const k=e instanceof Error?failures[e.message]:undefined;return k?new AppError(k[0],k[1],e instanceof Error?e.message:undefined):e;};
 const tx=<T,>(p:Principal,fn:(c:import('pg').PoolClient)=>Promise<T>)=>withWorkspaceTransaction(p,fn).catch(e=>{throw sqlError(e);});
@@ -61,16 +62,23 @@ export async function readMcpAuthorizationRequest(p:Principal,id:string){
  if(r.used)throw new AppError(409,failures.MCP_REQUEST_USED[1],'MCP_REQUEST_USED');
  if(r.expired)throw new AppError(409,failures.MCP_REQUEST_EXPIRED[1],'MCP_REQUEST_EXPIRED');
  const who=(await getPools().authPool.query('SELECT o.name workspace,u.email,u.name FROM organization o,"user" u WHERE o.id=$1 AND u.id=$2',[p.workspaceId,p.userId])).rows[0];
- return {client:{name:r.client},redirectHost:new URL(r.redirectUri).host,scopes:r.scopes.map(s=>({id:s,label:MCP_SCOPE_LABELS[s]})),
+ return {client:{name:r.client},redirectHost:new URL(r.redirectUri).host,scopes:r.scopes.map(s=>({id:s,label:MCP_SCOPE_LABELS[s],checked:!MCP_OPT_IN.includes(s)})),
   workspace:{id:p.workspaceId,name:who?.workspace??''},user:{name:who?.name??'',email:who?.email??''}};
 }
-const decision=z.strictObject({requestId:z.uuid(),workspaceId:z.string().min(1).max(200),decision:z.enum(['allow','deny'])});
+const decision=z.strictObject({requestId:z.uuid(),workspaceId:z.string().min(1).max(200),decision:z.enum(['allow','deny']),scopes:z.array(z.string().max(40)).max(10).optional()});
 /** The member's answer, for the workspace of their session only. */
 export async function decideMcpAuthorization(p:Principal,raw:unknown):Promise<{redirectTo:string}>{
  const d=decision.safeParse(raw);if(!d.success)throw new AppError(422,'Pedido de acesso inválido.');
  if(d.data.workspaceId!==p.workspaceId)throw new AppError(409,'O workspace mudou. Recarregue antes de continuar.','WORKSPACE_CHANGED');
  const code=secret('pcmc_'),allow=d.data.decision==='allow';
- const r=await tx(p,async c=>(await c.query('SELECT app.mcp_decide($1,$2,$3,$4) v',[d.data.requestId,allow,randomUUID(),digest(code)])).rows[0].v as {redirectUri:string;state:string|null});
+ const r=await tx(p,async c=>{
+  // The grant is what the person ticked within what the client asked; an empty choice leaves the request open.
+  const asked=(await c.query('SELECT app.mcp_read_request($1) v',[d.data.requestId])).rows[0].v as {scopes:string[];used:boolean;expired:boolean}|null;
+  // A request already answered or expired reports that, not the empty choice (the decide below raises it).
+  const chosen=asked&&allow&&!asked.used&&!asked.expired?chooseMcpScopes(asked.scopes,d.data.scopes):null;
+  if(chosen&&!chosen.length)throw new AppError(422,failures.MCP_SCOPE_EMPTY[1],'MCP_SCOPE_EMPTY');
+  return (await c.query('SELECT app.mcp_decide($1,$2,$3,$4,$5) v',[d.data.requestId,allow,randomUUID(),digest(code),chosen])).rows[0].v as {redirectUri:string;state:string|null};
+ });
  const u=new URL(r.redirectUri);
  if(allow)u.searchParams.set('code',code);else u.searchParams.set('error','access_denied');
  if(r.state)u.searchParams.set('state',r.state);

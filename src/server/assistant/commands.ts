@@ -20,8 +20,9 @@ const failures:Record<string,[number,string]>={
  PROPOSAL_EXPIRED:[409,'A proposta venceu. Peça de novo ao assistente.'],
  PROPOSAL_BUSY:[409,'Esta proposta já está sendo confirmada.'],
  PROPOSAL_INVALID:[422,'Operação inválida para a proposta.'],
+ PROPOSAL_LIMIT:[429,'Há 20 ações esperando revisão nesta conexão. Confirme ou cancele algumas antes de preparar outra.'],
 };
-function proposalError(e:unknown){const k=e instanceof Error?failures[e.message]:undefined;return k?new AppError(k[0],k[1],e instanceof Error?e.message:undefined):e;}
+export function proposalError(e:unknown){const k=e instanceof Error?failures[e.message]:undefined;return k?new AppError(k[0],k[1],e instanceof Error?e.message:undefined):e;}
 const idSchema=z.string().min(1).max(200),confirmSchema=z.strictObject({token:z.string().min(1).max(8192),requestId:z.uuid()});
 type Row={id:string;kind:CommandKind;payload:Record<string,any>;summary:string;state:AssistantProposal['state'];expires_at:Date;entity_id:string|null;href:string|null;confirm_request_id:string|null};
 export const proposalView=(r:Row):AssistantProposal=>({id:r.id,kind:r.kind,payload:r.payload,summary:r.summary,state:r.state,expiresAt:r.expires_at.toISOString(),entityId:r.entity_id,href:r.href});
@@ -103,6 +104,13 @@ export async function cancelAssistantAction(p:Principal,id:string):Promise<Assis
  if(!idSchema.safeParse(id).success)throw new AppError(404,'Proposta não encontrada.');
  try{return await withWorkspaceTransaction(p,async c=>proposalView((await c.query("SELECT * FROM app.assistant_proposal_finish($1,'cancelled',NULL,NULL,NULL)",[id])).rows[0]));}
  catch(e){throw proposalError(e);}
+}
+// The review page of an MCP proposal: its owner only, in the session's workspace.
+export async function readAssistantProposal(p:Principal,id:string):Promise<{proposal:AssistantProposal;workspaceId:string}>{
+ if(!idSchema.safeParse(id).success)throw new AppError(404,'Ação não encontrada.');
+ const r=await withWorkspaceTransaction(p,async c=>(await c.query('SELECT * FROM app.assistant_proposal WHERE id=$1',[id])).rows[0] as Row|undefined);
+ if(!r)throw new AppError(404,'Ação não encontrada.');
+ return {proposal:proposalView(r),workspaceId:p.workspaceId};
 }
 // A confirmed draft is read back only by its owner, for the conversation it was written for.
 export async function readAssistantDraft(p:Principal,id:string):Promise<{conversationId:string;text:string}>{

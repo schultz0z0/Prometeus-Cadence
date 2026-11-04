@@ -26,6 +26,8 @@ export function entryDestination(value:unknown):string {
     if(url.pathname==='/accept-invitation'&&[...url.searchParams.keys()].join()==='id'&&/^[\w-]{1,120}$/.test(url.searchParams.get('id')??''))return url.pathname+url.search;
     // 07C.3a: back to the MCP consent screen after signing in.
     if(url.pathname==='/mcp/authorize'&&[...url.searchParams.keys()].join()==='request'&&/^[0-9a-f-]{36}$/.test(url.searchParams.get('request')??''))return url.pathname+url.search;
+    // 07C.3b: back to the review of an action an MCP client prepared.
+    if(/^\/mcp\/review\/[0-9a-f-]{36}$/.test(url.pathname)&&!url.search)return url.pathname;
     if(url.pathname==='/onboarding/workspace'&&[...url.searchParams.keys()].every(k=>['signupPlan','signupMode'].includes(k))) {
       if(!url.search)return url.pathname;
       const dest=signupDestination(url.searchParams.get('signupPlan'),url.searchParams.get('signupMode'));

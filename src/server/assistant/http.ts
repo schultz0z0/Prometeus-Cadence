@@ -3,7 +3,7 @@ import{requirePrincipal}from'../auth/principal.ts';
 import{AppError,checkOrigin,errorResponse}from'../errors.ts';
 import{answerAssistant,readAssistant}from'./service.ts';
 import{searchWorkspace}from'../search/service.ts';
-import{prepareAssistantAction,confirmAssistantAction,cancelAssistantAction,readAssistantDraft}from'./commands.ts';
+import{prepareAssistantAction,confirmAssistantAction,cancelAssistantAction,readAssistantDraft,readAssistantProposal}from'./commands.ts';
 import{readOnboarding,markOnboarding}from'./onboarding.ts';
 const json=(value:unknown)=>Response.json(value,{headers:{'cache-control':'no-store'}});
 // A reply computed for one workspace is refused when the client already switched to another.
@@ -27,6 +27,7 @@ export async function assistantItemRequest(request:Request,id:string,action:stri
  try{
   const p=await principal(request);
   if(request.method==='GET'&&action==='draft')return json(await readAssistantDraft(p,id));
+  if(request.method==='GET'&&action==='view')return json(await readAssistantProposal(p,id));
   if(request.method!=='POST')throw new AppError(405,'Método não permitido.');
   const input=await body(request);
   if(action==='prepare')return json(await prepareAssistantAction(p,id));
