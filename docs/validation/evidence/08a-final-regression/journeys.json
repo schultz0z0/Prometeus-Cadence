@@ -1,0 +1,251 @@
+{
+ "date": "2026-11-05T12:43:49.129Z",
+ "sourceHash": "4df160ea104291a664d576f797ee6e8ce9bd0de13bab80451c321901a36f7ac0",
+ "note": "Navegador sem acesso a outros hosts; contas sem canais; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
+ "runs": [
+  {
+   "id": "signup",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "preenche o cadastro",
+     "ok": true
+    },
+    {
+     "name": "verifica o e-mail e cria o workspace",
+     "ok": true
+    },
+    {
+     "name": "ativa o teste de 7 dias",
+     "ok": true
+    },
+    {
+     "name": "o menu deixa de oferecer o teste",
+     "ok": true
+    },
+    {
+     "name": "revisa a assinatura anual, sem confirmar",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "pack",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "revisa um pacote com o preço do servidor, sem confirmar",
+     "ok": true
+    },
+    {
+     "name": "cupom inexistente é recusado na tela e o rascunho fica",
+     "ok": true
+    },
+    {
+     "name": "nada foi cobrado nem criado",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "data",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "encontra e funde os duplicados",
+     "ok": true
+    },
+    {
+     "name": "desfaz a fusão",
+     "ok": true
+    },
+    {
+     "name": "exporta os contatos",
+     "ok": true
+    },
+    {
+     "name": "apagar texto antigo exige confirmação digitada",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "api",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "cria uma chave e a API responde",
+     "ok": true
+    },
+    {
+     "name": "o escopo limita a chave: só leitura de leads não lê eventos",
+     "ok": true
+    },
+    {
+     "name": "chave falsa é recusada",
+     "ok": true
+    },
+    {
+     "name": "revogar corta o acesso",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "popups",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "busca abre com Ctrl+K e fecha com Escape",
+     "ok": true
+    },
+    {
+     "name": "Central de Ajuda abre e fecha",
+     "ok": true
+    },
+    {
+     "name": "Como funciona abre e fecha",
+     "ok": true
+    },
+    {
+     "name": "notificações abrem",
+     "ok": true
+    },
+    {
+     "name": "novo lead abre e fecha",
+     "ok": true
+    },
+    {
+     "name": "a 320 px o menu abre e fecha",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "keyboard",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "o foco fica preso no diálogo e volta ao botão",
+     "ok": true
+    },
+    {
+     "name": "todo diálogo devolve o foco a quem abriu",
+     "ok": true
+    },
+    {
+     "name": "Tab anda sempre com foco visível",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "network",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "503 mostra o erro e não perde o rascunho",
+     "ok": true
+    },
+    {
+     "name": "offline também não perde, e a nova tentativa salva",
+     "ok": true
+    },
+    {
+     "name": "resposta lenta não permite salvar duas vezes",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "roles",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "entra no workspace do dono",
+     "ok": true
+    },
+    {
+     "name": "a tela de plano não oferece gestão ao operador",
+     "ok": true
+    },
+    {
+     "name": "a API de cobrança recusa o operador",
+     "ok": true
+    },
+    {
+     "name": "dono pode preparar a mesma ação",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "cadence-editor",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "abre a cadência existente, sem erro",
+     "ok": true
+    },
+    {
+     "name": "o editor segura 320 px",
+     "ok": true
+    },
+    {
+     "name": "a lista mostra a cadência como rascunho",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "execution-detail",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "abre o detalhe de uma execução concluída",
+     "ok": true
+    },
+    {
+     "name": "a lista de execuções mostra o resultado",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "onboarding",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "cadastro incompleto vai para o complemento",
+     "ok": true
+    },
+    {
+     "name": "não sai de lá sem aceitar",
+     "ok": true
+    }
+   ]
+  }
+ ]
+}

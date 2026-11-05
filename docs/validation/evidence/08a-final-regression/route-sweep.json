@@ -1,6 +1,6 @@
 {
- "date": "2026-11-05T06:26:43.250Z",
- "sourceHash": "858b5ef852e108e71f0d97d2f13ec7376dc389df27c4c9a3587e83912ab910ab",
+ "date": "2026-11-05T13:11:30.766Z",
+ "sourceHash": "4df160ea104291a664d576f797ee6e8ce9bd0de13bab80451c321901a36f7ac0",
  "note": "Só navegação; hosts externos bloqueados; contas descartáveis removidas ao fim.",
  "results": [
   {
@@ -10,7 +10,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations",
@@ -19,7 +20,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations",
@@ -28,7 +30,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations",
@@ -37,7 +40,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations",
@@ -46,7 +50,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations",
@@ -55,7 +60,28 @@
    "status": 200,
    "ok": true,
    "path": "/automations",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/automations",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/automations",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/automations/new",
@@ -64,7 +90,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new",
@@ -73,7 +100,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new",
@@ -82,7 +110,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new",
@@ -91,7 +120,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new",
@@ -100,7 +130,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new",
@@ -109,7 +140,28 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/automations/new",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/automations/new",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/automations/new/ai",
@@ -118,7 +170,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new/ai",
@@ -127,7 +180,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new/ai",
@@ -136,7 +190,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new/ai",
@@ -145,7 +200,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new/ai",
@@ -154,7 +210,8 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/automations/new/ai",
@@ -163,7 +220,28 @@
    "status": 200,
    "ok": true,
    "path": "/automations/new/ai",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/automations/new/ai",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new/ai",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/automations/new/ai",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new/ai",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/cadences",
@@ -172,7 +250,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences",
@@ -181,7 +260,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences",
@@ -190,7 +270,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences",
@@ -199,7 +280,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences",
@@ -208,7 +290,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences",
@@ -217,7 +300,28 @@
    "status": 200,
    "ok": true,
    "path": "/cadences",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/cadences/new",
@@ -226,7 +330,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new",
@@ -235,7 +340,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new",
@@ -244,7 +350,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new",
@@ -253,7 +360,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new",
@@ -262,7 +370,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new",
@@ -271,7 +380,28 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences/new",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences/new",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/cadences/new/ai",
@@ -280,7 +410,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new/ai",
@@ -289,7 +420,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new/ai",
@@ -298,7 +430,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new/ai",
@@ -307,7 +440,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new/ai",
@@ -316,7 +450,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/new/ai",
@@ -325,7 +460,28 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/new/ai",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences/new/ai",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new/ai",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences/new/ai",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new/ai",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/cadences/pipeline",
@@ -334,7 +490,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/pipeline",
@@ -343,7 +500,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/pipeline",
@@ -352,7 +510,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/pipeline",
@@ -361,7 +520,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/pipeline",
@@ -370,7 +530,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/pipeline",
@@ -379,7 +540,28 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/pipeline",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences/pipeline",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/pipeline",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences/pipeline",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/pipeline",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/dashboard",
@@ -388,7 +570,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/dashboard",
@@ -397,7 +580,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/dashboard",
@@ -406,7 +590,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/dashboard",
@@ -415,7 +600,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/dashboard",
@@ -424,7 +610,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/dashboard",
@@ -433,7 +620,28 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/dashboard",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/dashboard",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/executions",
@@ -442,7 +650,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions",
@@ -451,7 +660,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions",
@@ -460,7 +670,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions",
@@ -469,7 +680,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions",
@@ -478,7 +690,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions",
@@ -487,7 +700,28 @@
    "status": 200,
    "ok": true,
    "path": "/executions",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/executions",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/executions",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/first-steps",
@@ -496,7 +730,8 @@
    "status": 200,
    "ok": true,
    "path": "/first-steps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/first-steps",
@@ -505,7 +740,8 @@
    "status": 200,
    "ok": true,
    "path": "/first-steps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/first-steps",
@@ -514,7 +750,8 @@
    "status": 200,
    "ok": true,
    "path": "/first-steps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/first-steps",
@@ -523,7 +760,8 @@
    "status": 200,
    "ok": true,
    "path": "/first-steps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/first-steps",
@@ -532,7 +770,8 @@
    "status": 200,
    "ok": true,
    "path": "/first-steps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/first-steps",
@@ -541,7 +780,28 @@
    "status": 200,
    "ok": true,
    "path": "/first-steps",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/first-steps",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/first-steps",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/first-steps",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/first-steps",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/inbox",
@@ -550,7 +810,8 @@
    "status": 200,
    "ok": true,
    "path": "/inbox",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/inbox",
@@ -559,7 +820,8 @@
    "status": 200,
    "ok": true,
    "path": "/inbox",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/inbox",
@@ -568,7 +830,8 @@
    "status": 200,
    "ok": true,
    "path": "/inbox",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/inbox",
@@ -577,7 +840,8 @@
    "status": 200,
    "ok": true,
    "path": "/inbox",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/inbox",
@@ -586,7 +850,8 @@
    "status": 200,
    "ok": true,
    "path": "/inbox",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/inbox",
@@ -595,7 +860,28 @@
    "status": 200,
    "ok": true,
    "path": "/inbox",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/inbox",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/inbox",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/inbox",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/inbox",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/leads/enrich",
@@ -604,7 +890,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/enrich",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/enrich",
@@ -613,7 +900,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/enrich",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/enrich",
@@ -622,7 +910,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/enrich",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/enrich",
@@ -631,7 +920,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/enrich",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/enrich",
@@ -640,7 +930,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/enrich",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/enrich",
@@ -649,7 +940,28 @@
    "status": 200,
    "ok": true,
    "path": "/leads/enrich",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/enrich",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/enrich",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/enrich",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/enrich",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/leads/generator",
@@ -658,7 +970,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/generator",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/generator",
@@ -667,7 +980,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/generator",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/generator",
@@ -676,7 +990,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/generator",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/generator",
@@ -685,7 +1000,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/generator",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/generator",
@@ -694,7 +1010,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/generator",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/generator",
@@ -703,7 +1020,28 @@
    "status": 200,
    "ok": true,
    "path": "/leads/generator",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/generator",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/generator",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/generator",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/generator",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/leads/import",
@@ -712,7 +1050,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/import",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/import",
@@ -721,7 +1060,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/import",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/import",
@@ -730,7 +1070,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/import",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/import",
@@ -739,7 +1080,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/import",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/import",
@@ -748,7 +1090,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/import",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/import",
@@ -757,7 +1100,28 @@
    "status": 200,
    "ok": true,
    "path": "/leads/import",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/import",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/import",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/import",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/import",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/leads/qualifier",
@@ -766,7 +1130,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/qualifier",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/qualifier",
@@ -775,7 +1140,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/qualifier",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/qualifier",
@@ -784,7 +1150,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/qualifier",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/qualifier",
@@ -793,7 +1160,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/qualifier",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/qualifier",
@@ -802,7 +1170,8 @@
    "status": 200,
    "ok": true,
    "path": "/leads/qualifier",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/qualifier",
@@ -811,7 +1180,28 @@
    "status": 200,
    "ok": true,
    "path": "/leads/qualifier",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/qualifier",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/qualifier",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/qualifier",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/qualifier",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/messages/email",
@@ -820,7 +1210,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/email",
@@ -829,7 +1220,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/email",
@@ -838,7 +1230,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/email",
@@ -847,7 +1240,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/email",
@@ -856,7 +1250,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/email",
@@ -865,7 +1260,28 @@
    "status": 200,
    "ok": true,
    "path": "/messages/email",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/messages/email",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/email",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/messages/email",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/email",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/messages/whatsapp",
@@ -874,7 +1290,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/whatsapp",
@@ -883,7 +1300,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/whatsapp",
@@ -892,7 +1310,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/whatsapp",
@@ -901,7 +1320,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/whatsapp",
@@ -910,7 +1330,8 @@
    "status": 200,
    "ok": true,
    "path": "/messages/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/messages/whatsapp",
@@ -919,7 +1340,28 @@
    "status": 200,
    "ok": true,
    "path": "/messages/whatsapp",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/messages/whatsapp",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/whatsapp",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/messages/whatsapp",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/whatsapp",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/reports",
@@ -928,7 +1370,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports",
@@ -937,7 +1380,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports",
@@ -946,7 +1390,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports",
@@ -955,7 +1400,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports",
@@ -964,7 +1410,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports",
@@ -973,7 +1420,28 @@
    "status": 200,
    "ok": true,
    "path": "/reports",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/reports",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/reports",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/sdr",
@@ -982,7 +1450,8 @@
    "status": 200,
    "ok": true,
    "path": "/sdr",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/sdr",
@@ -991,7 +1460,8 @@
    "status": 200,
    "ok": true,
    "path": "/sdr",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/sdr",
@@ -1000,7 +1470,8 @@
    "status": 200,
    "ok": true,
    "path": "/sdr",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/sdr",
@@ -1009,7 +1480,8 @@
    "status": 200,
    "ok": true,
    "path": "/sdr",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/sdr",
@@ -1018,7 +1490,8 @@
    "status": 200,
    "ok": true,
    "path": "/sdr",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/sdr",
@@ -1027,7 +1500,28 @@
    "status": 200,
    "ok": true,
    "path": "/sdr",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/sdr",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/sdr",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/sdr",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/sdr",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/templates",
@@ -1036,7 +1530,8 @@
    "status": 200,
    "ok": true,
    "path": "/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/templates",
@@ -1045,7 +1540,8 @@
    "status": 200,
    "ok": true,
    "path": "/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/templates",
@@ -1054,7 +1550,8 @@
    "status": 200,
    "ok": true,
    "path": "/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/templates",
@@ -1063,7 +1560,8 @@
    "status": 200,
    "ok": true,
    "path": "/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/templates",
@@ -1072,7 +1570,8 @@
    "status": 200,
    "ok": true,
    "path": "/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/templates",
@@ -1081,7 +1580,28 @@
    "status": 200,
    "ok": true,
    "path": "/templates",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/templates",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/templates",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/templates",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/templates",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/contacts",
@@ -1090,7 +1610,8 @@
    "status": 200,
    "ok": true,
    "path": "/contacts",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/contacts",
@@ -1099,7 +1620,8 @@
    "status": 200,
    "ok": true,
    "path": "/contacts",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/contacts",
@@ -1108,7 +1630,8 @@
    "status": 200,
    "ok": true,
    "path": "/contacts",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/contacts",
@@ -1117,7 +1640,8 @@
    "status": 200,
    "ok": true,
    "path": "/contacts",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/contacts",
@@ -1126,7 +1650,8 @@
    "status": 200,
    "ok": true,
    "path": "/contacts",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/contacts",
@@ -1135,7 +1660,28 @@
    "status": 200,
    "ok": true,
    "path": "/contacts",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/contacts",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/contacts",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/contacts",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/contacts",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/accept-invitation",
@@ -1144,7 +1690,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/accept-invitation",
@@ -1153,7 +1700,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/accept-invitation",
@@ -1162,7 +1710,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/accept-invitation",
@@ -1171,7 +1720,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/accept-invitation",
@@ -1180,7 +1730,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/accept-invitation",
@@ -1189,7 +1740,28 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/accept-invitation",
+   "viewport": "zoom200",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/accept-invitation",
+   "viewport": "font-large",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/forgot-password",
@@ -1198,7 +1770,8 @@
    "status": 200,
    "ok": true,
    "path": "/forgot-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/forgot-password",
@@ -1207,7 +1780,8 @@
    "status": 200,
    "ok": true,
    "path": "/forgot-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/forgot-password",
@@ -1216,7 +1790,8 @@
    "status": 200,
    "ok": true,
    "path": "/forgot-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/forgot-password",
@@ -1225,7 +1800,8 @@
    "status": 200,
    "ok": true,
    "path": "/forgot-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/forgot-password",
@@ -1234,7 +1810,8 @@
    "status": 200,
    "ok": true,
    "path": "/forgot-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/forgot-password",
@@ -1243,7 +1820,28 @@
    "status": 200,
    "ok": true,
    "path": "/forgot-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "zoom200",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/forgot-password",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "font-large",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/forgot-password",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/login",
@@ -1252,7 +1850,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/login",
@@ -1261,7 +1860,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/login",
@@ -1270,7 +1870,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/login",
@@ -1279,7 +1880,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/login",
@@ -1288,7 +1890,8 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/login",
@@ -1297,7 +1900,28 @@
    "status": 200,
    "ok": true,
    "path": "/login",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/login",
+   "viewport": "zoom200",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/login",
+   "viewport": "font-large",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/privacy",
@@ -1306,7 +1930,8 @@
    "status": 200,
    "ok": true,
    "path": "/privacy",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/privacy",
@@ -1315,7 +1940,8 @@
    "status": 200,
    "ok": true,
    "path": "/privacy",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/privacy",
@@ -1324,7 +1950,8 @@
    "status": 200,
    "ok": true,
    "path": "/privacy",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/privacy",
@@ -1333,7 +1960,8 @@
    "status": 200,
    "ok": true,
    "path": "/privacy",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/privacy",
@@ -1342,7 +1970,8 @@
    "status": 200,
    "ok": true,
    "path": "/privacy",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/privacy",
@@ -1351,7 +1980,28 @@
    "status": 200,
    "ok": true,
    "path": "/privacy",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/privacy",
+   "viewport": "zoom200",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/privacy",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/privacy",
+   "viewport": "font-large",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/privacy",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/register",
@@ -1360,7 +2010,8 @@
    "status": 200,
    "ok": true,
    "path": "/register",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/register",
@@ -1369,7 +2020,8 @@
    "status": 200,
    "ok": true,
    "path": "/register",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/register",
@@ -1378,7 +2030,8 @@
    "status": 200,
    "ok": true,
    "path": "/register",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/register",
@@ -1387,7 +2040,8 @@
    "status": 200,
    "ok": true,
    "path": "/register",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/register",
@@ -1396,7 +2050,8 @@
    "status": 200,
    "ok": true,
    "path": "/register",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/register",
@@ -1405,7 +2060,28 @@
    "status": 200,
    "ok": true,
    "path": "/register",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/register",
+   "viewport": "zoom200",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/register",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/register",
+   "viewport": "font-large",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/register",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/reset-password",
@@ -1414,7 +2090,8 @@
    "status": 200,
    "ok": true,
    "path": "/reset-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/reset-password",
@@ -1423,7 +2100,8 @@
    "status": 200,
    "ok": true,
    "path": "/reset-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/reset-password",
@@ -1432,7 +2110,8 @@
    "status": 200,
    "ok": true,
    "path": "/reset-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/reset-password",
@@ -1441,7 +2120,8 @@
    "status": 200,
    "ok": true,
    "path": "/reset-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/reset-password",
@@ -1450,7 +2130,8 @@
    "status": 200,
    "ok": true,
    "path": "/reset-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/reset-password",
@@ -1459,7 +2140,28 @@
    "status": 200,
    "ok": true,
    "path": "/reset-password",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/reset-password",
+   "viewport": "zoom200",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/reset-password",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/reset-password",
+   "viewport": "font-large",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/reset-password",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/terms",
@@ -1468,7 +2170,8 @@
    "status": 200,
    "ok": true,
    "path": "/terms",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/terms",
@@ -1477,7 +2180,8 @@
    "status": 200,
    "ok": true,
    "path": "/terms",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/terms",
@@ -1486,7 +2190,8 @@
    "status": 200,
    "ok": true,
    "path": "/terms",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/terms",
@@ -1495,7 +2200,8 @@
    "status": 200,
    "ok": true,
    "path": "/terms",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/terms",
@@ -1504,7 +2210,8 @@
    "status": 200,
    "ok": true,
    "path": "/terms",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/terms",
@@ -1513,7 +2220,28 @@
    "status": 200,
    "ok": true,
    "path": "/terms",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/terms",
+   "viewport": "zoom200",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/terms",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/terms",
+   "viewport": "font-large",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/terms",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/verify-email",
@@ -1522,7 +2250,8 @@
    "status": 200,
    "ok": true,
    "path": "/verify-email",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/verify-email",
@@ -1531,7 +2260,8 @@
    "status": 200,
    "ok": true,
    "path": "/verify-email",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/verify-email",
@@ -1540,7 +2270,8 @@
    "status": 200,
    "ok": true,
    "path": "/verify-email",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/verify-email",
@@ -1549,7 +2280,8 @@
    "status": 200,
    "ok": true,
    "path": "/verify-email",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/verify-email",
@@ -1558,7 +2290,8 @@
    "status": 200,
    "ok": true,
    "path": "/verify-email",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/verify-email",
@@ -1567,7 +2300,28 @@
    "status": 200,
    "ok": true,
    "path": "/verify-email",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/verify-email",
+   "viewport": "zoom200",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/verify-email",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/verify-email",
+   "viewport": "font-large",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/verify-email",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/unsubscribe/qa-token",
@@ -1576,7 +2330,8 @@
    "status": 200,
    "ok": true,
    "path": "/unsubscribe/qa-token",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/unsubscribe/qa-token",
@@ -1585,7 +2340,8 @@
    "status": 200,
    "ok": true,
    "path": "/unsubscribe/qa-token",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/unsubscribe/qa-token",
@@ -1594,7 +2350,8 @@
    "status": 200,
    "ok": true,
    "path": "/unsubscribe/qa-token",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/unsubscribe/qa-token",
@@ -1603,7 +2360,8 @@
    "status": 200,
    "ok": true,
    "path": "/unsubscribe/qa-token",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/unsubscribe/qa-token",
@@ -1612,7 +2370,8 @@
    "status": 200,
    "ok": true,
    "path": "/unsubscribe/qa-token",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/unsubscribe/qa-token",
@@ -1621,7 +2380,28 @@
    "status": 200,
    "ok": true,
    "path": "/unsubscribe/qa-token",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/unsubscribe/qa-token",
+   "viewport": "zoom200",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/unsubscribe/qa-token",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/unsubscribe/qa-token",
+   "viewport": "font-large",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/unsubscribe/qa-token",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/authorize",
@@ -1630,7 +2410,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/authorize",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/authorize",
@@ -1639,7 +2420,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/authorize",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/authorize",
@@ -1648,7 +2430,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/authorize",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/authorize",
@@ -1657,7 +2440,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/authorize",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/authorize",
@@ -1666,7 +2450,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/authorize",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/authorize",
@@ -1675,7 +2460,28 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/authorize",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/mcp/authorize",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/authorize",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/mcp/authorize",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/authorize",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/review/qa-missing",
@@ -1684,7 +2490,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/review/qa-missing",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/review/qa-missing",
@@ -1693,7 +2500,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/review/qa-missing",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/review/qa-missing",
@@ -1702,7 +2510,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/review/qa-missing",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/review/qa-missing",
@@ -1711,7 +2520,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/review/qa-missing",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/review/qa-missing",
@@ -1720,7 +2530,8 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/review/qa-missing",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/mcp/review/qa-missing",
@@ -1729,7 +2540,28 @@
    "status": 200,
    "ok": true,
    "path": "/mcp/review/qa-missing",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/mcp/review/qa-missing",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/review/qa-missing",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/mcp/review/qa-missing",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/review/qa-missing",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/entry",
@@ -1738,7 +2570,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/entry",
@@ -1747,7 +2580,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/entry",
@@ -1756,7 +2590,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/entry",
@@ -1765,7 +2600,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/entry",
@@ -1774,7 +2610,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/entry",
@@ -1783,7 +2620,28 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/onboarding/entry",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/onboarding/entry",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/onboarding/profile",
@@ -1792,7 +2650,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/profile",
@@ -1801,7 +2660,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/profile",
@@ -1810,7 +2670,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/profile",
@@ -1819,7 +2680,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/profile",
@@ -1828,7 +2690,8 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/profile",
@@ -1837,7 +2700,28 @@
    "status": 200,
    "ok": true,
    "path": "/dashboard",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/onboarding/profile",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/onboarding/profile",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/onboarding/workspace",
@@ -1846,7 +2730,8 @@
    "status": 200,
    "ok": true,
    "path": "/onboarding/workspace",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/workspace",
@@ -1855,7 +2740,8 @@
    "status": 200,
    "ok": true,
    "path": "/onboarding/workspace",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/workspace",
@@ -1864,7 +2750,8 @@
    "status": 200,
    "ok": true,
    "path": "/onboarding/workspace",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/workspace",
@@ -1873,7 +2760,8 @@
    "status": 200,
    "ok": true,
    "path": "/onboarding/workspace",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/workspace",
@@ -1882,7 +2770,8 @@
    "status": 200,
    "ok": true,
    "path": "/onboarding/workspace",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/onboarding/workspace",
@@ -1891,7 +2780,28 @@
    "status": 200,
    "ok": true,
    "path": "/onboarding/workspace",
-   "theme": "n/a"
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/onboarding/workspace",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/onboarding/workspace",
+   "theme": "n/a",
+   "fontSize": 16
+  },
+  {
+   "route": "/onboarding/workspace",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/onboarding/workspace",
+   "theme": "n/a",
+   "fontSize": 16
   },
   {
    "route": "/cadences/qa-missing",
@@ -1900,7 +2810,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/qa-missing",
@@ -1909,7 +2820,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/qa-missing",
@@ -1918,7 +2830,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/qa-missing",
@@ -1927,7 +2840,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/qa-missing",
@@ -1936,7 +2850,8 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/cadences/qa-missing",
@@ -1945,7 +2860,28 @@
    "status": 200,
    "ok": true,
    "path": "/cadences/qa-missing",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences/qa-missing",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/qa-missing",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/cadences/qa-missing",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/qa-missing",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/executions/qa-missing",
@@ -1954,7 +2890,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions/qa-missing",
@@ -1963,7 +2900,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions/qa-missing",
@@ -1972,7 +2910,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions/qa-missing",
@@ -1981,7 +2920,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions/qa-missing",
@@ -1990,7 +2930,8 @@
    "status": 200,
    "ok": true,
    "path": "/executions/qa-missing",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/executions/qa-missing",
@@ -1999,7 +2940,28 @@
    "status": 200,
    "ok": true,
    "path": "/executions/qa-missing",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/executions/qa-missing",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions/qa-missing",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/executions/qa-missing",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions/qa-missing",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/leads/:seed",
@@ -2007,8 +2969,9 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
-   "theme": "light"
+   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/:seed",
@@ -2016,8 +2979,9 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
-   "theme": "light"
+   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/:seed",
@@ -2025,8 +2989,9 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
-   "theme": "light"
+   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/:seed",
@@ -2034,8 +2999,9 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
-   "theme": "light"
+   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/:seed",
@@ -2043,8 +3009,9 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
-   "theme": "light"
+   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/leads/:seed",
@@ -2052,8 +3019,29 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
-   "theme": "dark"
+   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/:seed",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/leads/:seed",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin",
@@ -2062,7 +3050,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin",
@@ -2071,7 +3060,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin",
@@ -2080,7 +3070,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin",
@@ -2089,7 +3080,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin",
@@ -2098,7 +3090,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin",
@@ -2107,7 +3100,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin/dashboard",
@@ -2116,7 +3130,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/dashboard",
@@ -2125,7 +3140,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/dashboard",
@@ -2134,7 +3150,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/dashboard",
@@ -2143,7 +3160,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/dashboard",
@@ -2152,7 +3170,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/dashboard",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/dashboard",
@@ -2161,7 +3180,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/dashboard",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/dashboard",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/dashboard",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/dashboard",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/dashboard",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin/campaigns",
@@ -2170,7 +3210,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns",
@@ -2179,7 +3220,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns",
@@ -2188,7 +3230,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns",
@@ -2197,7 +3240,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns",
@@ -2206,7 +3250,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns",
@@ -2215,7 +3260,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/campaigns",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/campaigns",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin/campaigns/new",
@@ -2224,7 +3290,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns/new",
@@ -2233,7 +3300,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns/new",
@@ -2242,7 +3310,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns/new",
@@ -2251,7 +3320,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns/new",
@@ -2260,7 +3330,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns/new",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/campaigns/new",
@@ -2269,7 +3340,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/campaigns/new",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/campaigns/new",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns/new",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/campaigns/new",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns/new",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin/people",
@@ -2278,7 +3370,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/people",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/people",
@@ -2287,7 +3380,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/people",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/people",
@@ -2296,7 +3390,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/people",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/people",
@@ -2305,7 +3400,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/people",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/people",
@@ -2314,7 +3410,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/people",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/people",
@@ -2323,7 +3420,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/people",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/people",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/people",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/people",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/people",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin/pipeline",
@@ -2332,7 +3450,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/pipeline",
@@ -2341,7 +3460,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/pipeline",
@@ -2350,7 +3470,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/pipeline",
@@ -2359,7 +3480,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/pipeline",
@@ -2368,7 +3490,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/pipeline",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/pipeline",
@@ -2377,7 +3500,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/pipeline",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/pipeline",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/pipeline",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/pipeline",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/pipeline",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin/enrichment",
@@ -2386,7 +3530,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/enrichment",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/enrichment",
@@ -2395,7 +3540,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/enrichment",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/enrichment",
@@ -2404,7 +3550,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/enrichment",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/enrichment",
@@ -2413,7 +3560,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/enrichment",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/enrichment",
@@ -2422,7 +3570,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/enrichment",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/enrichment",
@@ -2431,7 +3580,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/enrichment",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/enrichment",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/enrichment",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/enrichment",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/enrichment",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin/approvals",
@@ -2440,7 +3610,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/approvals",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/approvals",
@@ -2449,7 +3620,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/approvals",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/approvals",
@@ -2458,7 +3630,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/approvals",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/approvals",
@@ -2467,7 +3640,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/approvals",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/approvals",
@@ -2476,7 +3650,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/approvals",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/approvals",
@@ -2485,7 +3660,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/approvals",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/approvals",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/approvals",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/approvals",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/approvals",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin/cadences",
@@ -2494,7 +3690,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/cadences",
@@ -2503,7 +3700,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/cadences",
@@ -2512,7 +3710,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/cadences",
@@ -2521,7 +3720,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/cadences",
@@ -2530,7 +3730,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/cadences",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/cadences",
@@ -2539,7 +3740,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/cadences",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/cadences",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/cadences",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/cadences",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/cadences",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/linkedin/templates",
@@ -2548,7 +3770,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/templates",
@@ -2557,7 +3780,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/templates",
@@ -2566,7 +3790,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/templates",
@@ -2575,7 +3800,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/templates",
@@ -2584,7 +3810,8 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/templates",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/linkedin/templates",
@@ -2593,7 +3820,28 @@
    "status": 200,
    "ok": true,
    "path": "/linkedin/templates",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/templates",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/templates",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/linkedin/templates",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/templates",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings",
@@ -2602,7 +3850,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings",
@@ -2611,7 +3860,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings",
@@ -2620,7 +3870,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings",
@@ -2629,7 +3880,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings",
@@ -2638,7 +3890,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings",
@@ -2647,7 +3900,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/account",
@@ -2656,7 +3930,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/account",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/account",
@@ -2665,7 +3940,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/account",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/account",
@@ -2674,7 +3950,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/account",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/account",
@@ -2683,7 +3960,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/account",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/account",
@@ -2692,7 +3970,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/account",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/account",
@@ -2701,7 +3980,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/account",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/account",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/account",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/account",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/account",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/ai",
@@ -2710,7 +4010,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/ai",
@@ -2719,7 +4020,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/ai",
@@ -2728,7 +4030,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/ai",
@@ -2737,7 +4040,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/ai",
@@ -2746,7 +4050,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/ai",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/ai",
@@ -2755,7 +4060,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/ai",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/ai",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/ai",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/ai",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/ai",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/context",
@@ -2764,7 +4090,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/context",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/context",
@@ -2773,7 +4100,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/context",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/context",
@@ -2782,7 +4110,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/context",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/context",
@@ -2791,7 +4120,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/context",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/context",
@@ -2800,7 +4130,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/context",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/context",
@@ -2809,7 +4140,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/context",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/context",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/context",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/context",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/context",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/email",
@@ -2818,7 +4170,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/email",
@@ -2827,7 +4180,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/email",
@@ -2836,7 +4190,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/email",
@@ -2845,7 +4200,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/email",
@@ -2854,7 +4210,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/email",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/email",
@@ -2863,7 +4220,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/email",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/email",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/email",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/email",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/email",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/whatsapp",
@@ -2872,7 +4250,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/whatsapp",
@@ -2881,7 +4260,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/whatsapp",
@@ -2890,7 +4270,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/whatsapp",
@@ -2899,7 +4280,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/whatsapp",
@@ -2908,7 +4290,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/whatsapp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/whatsapp",
@@ -2917,7 +4300,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/whatsapp",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/whatsapp",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/whatsapp",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/whatsapp",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/whatsapp",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/dispatch-limits",
@@ -2926,7 +4330,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dispatch-limits",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dispatch-limits",
@@ -2935,7 +4340,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dispatch-limits",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dispatch-limits",
@@ -2944,7 +4350,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dispatch-limits",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dispatch-limits",
@@ -2953,7 +4360,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dispatch-limits",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dispatch-limits",
@@ -2962,7 +4370,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dispatch-limits",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dispatch-limits",
@@ -2971,7 +4380,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dispatch-limits",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/dispatch-limits",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dispatch-limits",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/dispatch-limits",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dispatch-limits",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/apps",
@@ -2980,7 +4410,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps",
@@ -2989,7 +4420,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps",
@@ -2998,7 +4430,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps",
@@ -3007,7 +4440,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps",
@@ -3016,7 +4450,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps",
@@ -3025,7 +4460,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/apps/google-sheets",
@@ -3034,7 +4490,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-sheets",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-sheets",
@@ -3043,7 +4500,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-sheets",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-sheets",
@@ -3052,7 +4510,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-sheets",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-sheets",
@@ -3061,7 +4520,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-sheets",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-sheets",
@@ -3070,7 +4530,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-sheets",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-sheets",
@@ -3079,7 +4540,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-sheets",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/google-sheets",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-sheets",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/google-sheets",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-sheets",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/apps/google-calendar",
@@ -3088,7 +4570,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-calendar",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-calendar",
@@ -3097,7 +4580,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-calendar",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-calendar",
@@ -3106,7 +4590,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-calendar",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-calendar",
@@ -3115,7 +4600,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-calendar",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-calendar",
@@ -3124,7 +4610,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-calendar",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/google-calendar",
@@ -3133,7 +4620,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/google-calendar",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/google-calendar",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-calendar",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/google-calendar",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-calendar",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/apps/apollo",
@@ -3142,7 +4650,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/apollo",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/apollo",
@@ -3151,7 +4660,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/apollo",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/apollo",
@@ -3160,7 +4670,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/apollo",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/apollo",
@@ -3169,7 +4680,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/apollo",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/apollo",
@@ -3178,7 +4690,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/apollo",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/apollo",
@@ -3187,7 +4700,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/apollo",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/apollo",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/apollo",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/apollo",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/apollo",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/apps/funnelsflow",
@@ -3196,7 +4730,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/funnelsflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/funnelsflow",
@@ -3205,7 +4740,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/funnelsflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/funnelsflow",
@@ -3214,7 +4750,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/funnelsflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/funnelsflow",
@@ -3223,7 +4760,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/funnelsflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/funnelsflow",
@@ -3232,7 +4770,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/funnelsflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/funnelsflow",
@@ -3241,7 +4780,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/funnelsflow",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/funnelsflow",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/funnelsflow",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/funnelsflow",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/funnelsflow",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/apps/meetflow",
@@ -3250,7 +4810,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/meetflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/meetflow",
@@ -3259,7 +4820,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/meetflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/meetflow",
@@ -3268,7 +4830,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/meetflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/meetflow",
@@ -3277,7 +4840,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/meetflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/meetflow",
@@ -3286,7 +4850,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/meetflow",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/apps/meetflow",
@@ -3295,7 +4860,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/apps/meetflow",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/meetflow",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/meetflow",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/apps/meetflow",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/meetflow",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/plan",
@@ -3304,7 +4890,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/plan",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/plan",
@@ -3313,7 +4900,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/plan",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/plan",
@@ -3322,7 +4910,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/plan",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/plan",
@@ -3331,7 +4920,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/plan",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/plan",
@@ -3340,7 +4930,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/plan",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/plan",
@@ -3349,7 +4940,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/plan",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/plan",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/plan",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/plan",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/plan",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/notifications",
@@ -3358,7 +4970,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/notifications",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/notifications",
@@ -3367,7 +4980,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/notifications",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/notifications",
@@ -3376,7 +4990,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/notifications",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/notifications",
@@ -3385,7 +5000,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/notifications",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/notifications",
@@ -3394,7 +5010,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/notifications",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/notifications",
@@ -3403,7 +5020,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/notifications",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/notifications",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/notifications",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/notifications",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/notifications",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/seats",
@@ -3412,7 +5050,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/seats",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/seats",
@@ -3421,7 +5060,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/seats",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/seats",
@@ -3430,7 +5070,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/seats",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/seats",
@@ -3439,7 +5080,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/seats",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/seats",
@@ -3448,7 +5090,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/seats",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/seats",
@@ -3457,7 +5100,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/seats",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/seats",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/seats",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/seats",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/seats",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/security",
@@ -3466,7 +5130,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/security",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/security",
@@ -3475,7 +5140,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/security",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/security",
@@ -3484,7 +5150,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/security",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/security",
@@ -3493,7 +5160,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/security",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/security",
@@ -3502,7 +5170,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/security",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/security",
@@ -3511,7 +5180,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/security",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/security",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/security",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/security",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/security",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/mcp",
@@ -3520,7 +5210,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/mcp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/mcp",
@@ -3529,7 +5220,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/mcp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/mcp",
@@ -3538,7 +5230,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/mcp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/mcp",
@@ -3547,7 +5240,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/mcp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/mcp",
@@ -3556,7 +5250,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/mcp",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/mcp",
@@ -3565,7 +5260,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/mcp",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/mcp",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/mcp",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/mcp",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/mcp",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/privacy",
@@ -3574,7 +5290,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/privacy",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/privacy",
@@ -3583,7 +5300,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/privacy",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/privacy",
@@ -3592,7 +5310,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/privacy",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/privacy",
@@ -3601,7 +5320,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/privacy",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/privacy",
@@ -3610,7 +5330,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/privacy",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/privacy",
@@ -3619,7 +5340,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/privacy",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/privacy",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/privacy",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/privacy",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/privacy",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/dados",
@@ -3628,7 +5370,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dados",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dados",
@@ -3637,7 +5380,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dados",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dados",
@@ -3646,7 +5390,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dados",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dados",
@@ -3655,7 +5400,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dados",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dados",
@@ -3664,7 +5410,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dados",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/dados",
@@ -3673,7 +5420,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/dados",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/dados",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dados",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/dados",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dados",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/settings/webhooks",
@@ -3682,7 +5450,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/webhooks",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/webhooks",
@@ -3691,7 +5460,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/webhooks",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/webhooks",
@@ -3700,7 +5470,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/webhooks",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/webhooks",
@@ -3709,7 +5480,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/webhooks",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/webhooks",
@@ -3718,7 +5490,8 @@
    "status": 200,
    "ok": true,
    "path": "/settings/webhooks",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/settings/webhooks",
@@ -3727,7 +5500,28 @@
    "status": 200,
    "ok": true,
    "path": "/settings/webhooks",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/webhooks",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/webhooks",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/settings/webhooks",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/webhooks",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/reports/funnel",
@@ -3736,7 +5530,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/funnel",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/funnel",
@@ -3745,7 +5540,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/funnel",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/funnel",
@@ -3754,7 +5550,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/funnel",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/funnel",
@@ -3763,7 +5560,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/funnel",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/funnel",
@@ -3772,7 +5570,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/funnel",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/funnel",
@@ -3781,7 +5580,28 @@
    "status": 200,
    "ok": true,
    "path": "/reports/funnel",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/reports/funnel",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/funnel",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/reports/funnel",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/funnel",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/reports/negocios",
@@ -3790,7 +5610,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/negocios",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/negocios",
@@ -3799,7 +5620,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/negocios",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/negocios",
@@ -3808,7 +5630,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/negocios",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/negocios",
@@ -3817,7 +5640,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/negocios",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/negocios",
@@ -3826,7 +5650,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/negocios",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/negocios",
@@ -3835,7 +5660,28 @@
    "status": 200,
    "ok": true,
    "path": "/reports/negocios",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/reports/negocios",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/negocios",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/reports/negocios",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/negocios",
+   "theme": "light",
+   "fontSize": 18
   },
   {
    "route": "/reports/performance",
@@ -3844,7 +5690,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/performance",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/performance",
@@ -3853,7 +5700,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/performance",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/performance",
@@ -3862,7 +5710,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/performance",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/performance",
@@ -3871,7 +5720,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/performance",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/performance",
@@ -3880,7 +5730,8 @@
    "status": 200,
    "ok": true,
    "path": "/reports/performance",
-   "theme": "light"
+   "theme": "light",
+   "fontSize": 16
   },
   {
    "route": "/reports/performance",
@@ -3889,7 +5740,28 @@
    "status": 200,
    "ok": true,
    "path": "/reports/performance",
-   "theme": "dark"
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/reports/performance",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/performance",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/reports/performance",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/performance",
+   "theme": "light",
+   "fontSize": 18
   }
  ],
  "isolation": [

@@ -347,3 +347,7 @@ Anual, adicionais e cupom homologados no modo de teste do Stripe. A rodada real 
 ### Continuidade 05/11 — 08A.1
 
 Registro de cobertura com auditor e varredura de 72 rotas em 6 configurações, com duas contas. O 08A foi dividido em 08A.1 e 08A.2 (jornadas clicadas). A revisão invalidou a primeira varredura, inflada, e a medição foi refeita. Aceite integral negado em 73 de 103: 6 itens dependem do usuário e 24 do 08A.2. [Relatório](../../validation/08a1-coverage-sweep.md).
+
+### Continuidade 05/11 — 08A.2
+
+Onze jornadas clicadas, sem envio, sem fornecedor pago e sem confirmação no Stripe. Acharam dois defeitos globais: mensagens escondidas atrás dos diálogos e foco perdido ao fechá-los. A revisão dividiu o registro para nenhum item prometer mais do que rodou. Aceite integral negado em 92 de 119; próximo: 08A.3. [Relatório](../../validation/08a2-journeys.md).

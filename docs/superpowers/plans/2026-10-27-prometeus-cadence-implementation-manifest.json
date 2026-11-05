@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "08A.2",
+  "next": "08A.3",
   "end": "08B",
   "packages": [
     {
@@ -1634,7 +1634,7 @@
       "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-08a-final-regression.md",
       "status": "partial-08a1-done",
       "partialAt": "2026-11-05",
-      "packages": {"08A.1": {"status": "done","executionPlan": "docs/superpowers/plans/2026-11-05-prometeus-cadence-08a1-coverage-sweep-execution.md","validation": "docs/validation/08a1-coverage-sweep.md","review": "docs/validation/08a1-coverage-sweep-review.md","matrix": "docs/validation/08-release-matrix.json","deviations": "split from 08A; navigation only, no flows"},"08A.2": {"status": "pending","scope": "clicked journeys, keyboard, zoom, delays, offline and 503"}},
+      "packages": {"08A.1": {"status": "done","executionPlan": "docs/superpowers/plans/2026-11-05-prometeus-cadence-08a1-coverage-sweep-execution.md","validation": "docs/validation/08a1-coverage-sweep.md","review": "docs/validation/08a1-coverage-sweep-review.md","matrix": "docs/validation/08-release-matrix.json","deviations": "split from 08A; navigation only, no flows"},"08A.2": {"status": "done","executionPlan": "docs/superpowers/plans/2026-11-05-prometeus-cadence-08a2-journeys-execution.md","validation": "docs/validation/08a2-journeys.md","review": "docs/validation/08a2-journeys-review.md","deviations": "no paid provider, no outbound, no Stripe confirmation in the journeys"},"08A.3": {"status": "pending","scope": "remaining journeys, module popups, roles, network, data states, module proof and reference comparison"}},
       "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-release-design.md",
       "create": [
         "scripts/lib/release-coverage.ts",
