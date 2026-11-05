@@ -1,0 +1,269 @@
+{
+ "annualCreate": {
+  "reason": "subscription_create",
+  "amount": 381120
+ },
+ "addNewItem": {
+  "reviewAmount": 58800,
+  "state": "awaiting_payment",
+  "sku": "capacity-whatsapp-annual"
+ },
+ "addNewItemInvoice": {
+  "reason": "subscription_update",
+  "status": "paid",
+  "amountDue": 58800,
+  "matchesReview": true,
+  "lines": [
+   {
+    "amount": 58800,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": true
+   }
+  ]
+ },
+ "addExistingItemInvoice": {
+  "reason": "subscription_update",
+  "matchesReview": true,
+  "lines": [
+   {
+    "amount": -58800,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": true
+   },
+   {
+    "amount": 117600,
+    "quantity": 2,
+    "hasPrice": true,
+    "proration": true
+   }
+  ]
+ },
+ "upgradeInvoice": {
+  "reason": "subscription_update",
+  "matchesReview": true,
+  "lines": [
+   {
+    "amount": -381120,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": true
+   },
+   {
+    "amount": 861119,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": true
+   }
+  ]
+ },
+ "annualRenewal": {
+  "reason": "subscription_cycle",
+  "status": "paid",
+  "amountDue": 919920,
+  "lines": [
+   {
+    "amount": 861120,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": false
+   },
+   {
+    "amount": 58800,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": false
+   }
+  ]
+ },
+ "cycleSchedule": {
+  "attached": true,
+  "items": 2
+ },
+ "cyclePhases": [
+  2,
+  2
+ ],
+ "cycleInvoices": [
+  {
+   "reason": "subscription_update",
+   "status": "paid",
+   "due": 403920,
+   "created": 1796445802,
+   "lines": [
+    {
+     "amount": 381120,
+     "quantity": 1,
+     "hasPrice": true,
+     "proration": false
+    },
+    {
+     "amount": 22800,
+     "quantity": 1,
+     "hasPrice": true,
+     "proration": false
+    }
+   ],
+   "isLatest": false
+  },
+  {
+   "reason": "subscription_update",
+   "status": "paid",
+   "due": 1900,
+   "created": 1793853802,
+   "lines": [
+    {
+     "amount": 1900,
+     "quantity": 1,
+     "hasPrice": true,
+     "proration": true
+    }
+   ],
+   "isLatest": false
+  },
+  {
+   "reason": "subscription_create",
+   "status": "paid",
+   "due": 39700,
+   "created": 1793853802,
+   "lines": [
+    {
+     "amount": 39700,
+     "quantity": 1,
+     "hasPrice": true,
+     "proration": false
+    }
+   ],
+   "isLatest": false
+  }
+ ],
+ "cyclePeriod": {
+  "start": 1796445802,
+  "end": 1827981802,
+  "schedule": true,
+  "status": "active",
+  "clock": 1796453002,
+  "latest": true
+ },
+ "cycleRenewal": {
+  "reason": "subscription_update",
+  "status": "paid",
+  "amountDue": 403920,
+  "expected": 403920,
+  "lines": [
+   {
+    "amount": 381120,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": false
+   },
+   {
+    "amount": 22800,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": false
+   }
+  ],
+  "intervals": [
+   "year",
+   "year"
+  ]
+ },
+ "toMonthly": {
+  "reason": "subscription_update",
+  "status": "paid",
+  "amountDue": 45600,
+  "expected": 45600,
+  "lines": [
+   {
+    "amount": 39700,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": false
+   },
+   {
+    "amount": 5900,
+    "quantity": 1,
+    "hasPrice": true,
+    "proration": false
+   }
+  ],
+  "startsAtBoundary": true,
+  "days": 30
+ },
+ "declined": {
+  "pendingUpdate": true,
+  "items": 1,
+  "invoiceStatus": "open",
+  "reason": "subscription_update"
+ },
+ "declinedExpired": {
+  "pendingUpdate": false,
+  "oldInvoiceStatus": "void",
+  "latestIsSame": true
+ },
+ "declinedOperation": {
+  "state": "failed",
+  "error_code": "UPGRADE_EXPIRED"
+ },
+ "couponRounding": [
+  {
+   "params": {
+    "percent_off": "33.5"
+   },
+   "review": 1795,
+   "total": 1795,
+   "lineTotal": 1795,
+   "lineSubtotal": 2700,
+   "expires": 3599,
+   "status": "open"
+  },
+  {
+   "params": {
+    "percent_off": "12.5"
+   },
+   "review": 4112,
+   "total": 4112,
+   "lineTotal": 4112,
+   "lineSubtotal": 4700,
+   "expires": 3599,
+   "status": "open"
+  },
+  {
+   "params": {
+    "amount_off": "1000",
+    "currency": "brl"
+   },
+   "review": 20900,
+   "total": 20900,
+   "lineTotal": 20900,
+   "lineSubtotal": 21900,
+   "expires": 3599,
+   "status": "open"
+  }
+ ],
+ "couponShape": {
+  "valid": true,
+  "percent_off": 10,
+  "amount_off": null,
+  "currency": null,
+  "computed": 8730
+ },
+ "couponPaid": {
+  "review": 8730,
+  "total": 8730,
+  "subtotal": 9700,
+  "paymentStatus": "paid"
+ },
+ "annualCheckout": {
+  "total": 381120,
+  "subscription": true
+ },
+ "annualCheckoutView": {
+  "status": "active",
+  "plan": "essential",
+  "interval": "year",
+  "franchise": 5000
+ }
+}

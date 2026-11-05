@@ -67,3 +67,7 @@ Conta descartável `[RE] QA Plano Anual`, com conta anual marcada por fixture e 
 - **06G.2 e 06G.3:** capacidade adicional e cupom continuam não implementados, e os cards seguem "Em breve".
 - **Sem paridade integral:** esta entrega não declara paridade.
 - **Entrega:** sem push, merge ou deploy.
+
+## Atualização de 05/11
+
+A parte de Stripe dos limites acima foi homologada em modo de teste, e dois defeitos foram corrigidos. Veja o [relatório da homologação](06g-stripe-homologation.md).

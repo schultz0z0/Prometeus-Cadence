@@ -71,3 +71,7 @@ Conta descartável `[RE] QA Cupom`, com teste de 7 dias marcado por fixture e ne
 - **Runtime em execução:** roda o código antigo até ser reiniciado.
 - **Sem paridade integral:** esta entrega não declara paridade.
 - **Entrega:** sem push, merge ou deploy.
+
+## Atualização de 05/11
+
+A parte de Stripe dos limites acima foi homologada em modo de teste, e dois defeitos foram corrigidos. Veja o [relatório da homologação](06g-stripe-homologation.md).

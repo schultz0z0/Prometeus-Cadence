@@ -339,3 +339,7 @@ Contas de e-mail, números de WhatsApp e usuários extras entregues como itens d
 ### Continuidade 04/11 — 06G.3
 
 Cupom nos pacotes de créditos, com campanha no servidor e valor confirmado pelo Stripe, entregue com o Stripe simulado. Revisão independente: três Medium e oito Low, parte aceita com registro. Com isso o 06G fecha no escopo local; falta homologar no Stripe de teste, e o LinkedIn não é vendido. Próximo no índice: 08A, que depende de 07B.3, ainda parcial. [Relatório](../../validation/06g3-coupon.md).
+
+### Continuidade 05/11 — homologação do 06G
+
+Anual, adicionais e cupom homologados no modo de teste do Stripe. A rodada real achou e corrigiu dois defeitos: a troca de ciclo não cobrava na virada, e o agendamento aplicado travava alterações por até um ano. Cobrança live continua no 08B. Próximo no índice: 08A, que depende de 07B.3, ainda parcial. [Relatório](../../validation/06g-stripe-homologation.md).
