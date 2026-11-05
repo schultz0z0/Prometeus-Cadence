@@ -49,7 +49,15 @@ export function createStripeAdapter(fetcher:typeof fetch=fetch,config=billingCon
    const now=s.items.data.map((i:any)=>({price:stripeId(i.price.id,'price'),quantity:i.quantity as number})),next=[{price:stripeId(price,'price'),quantity:1},...extras];
    const phase=(n:number,list:{price:string;quantity:number}[])=>Object.fromEntries(list.flatMap((e,i)=>[[`phases[${n}][items][${i}][price]`,e.price],[`phases[${n}][items][${i}][quantity]`,String(e.quantity)]]));
    if((s.schedule&&priceId(s.schedule)!==schedule.id)||(current.metadata?.cadence_operation&&current.metadata.cadence_operation!==key)||priceId(current.subscription)!==s.id||current.status!=='active'||current.end_behavior!=='release'||current.current_phase?.start_date!==item.current_period_start||current.current_phase?.end_date!==item.current_period_end||!Array.isArray(phases)||phases.length<1||phases.length>2||phases[0].start_date!==item.current_period_start||phases[0].end_date!==item.current_period_end||!sameItems(phases[0],now)||(phases.length===2&&(current.metadata?.cadence_operation!==key||phases[1].start_date!==item.current_period_end||!sameItems(phases[1],next))))throw new StripeFailure(false);
-   return request('POST','/subscription_schedules/'+stripeId(schedule.id,'sub_sched'),{'metadata[cadence_operation]':key,end_behavior:'release',proration_behavior:'none','phases[0][start_date]':String(item.current_period_start),'phases[0][end_date]':String(item.current_period_end),...phase(0,now),...phase(1,next),'phases[1][duration][interval]':interval,'phases[1][duration][interval_count]':'1','phases[1][proration_behavior]':'none'},'billing:'+key+':downgrade');
+   return request('POST','/subscription_schedules/'+stripeId(schedule.id,'sub_sched'),{'metadata[cadence_operation]':key,end_behavior:'release',proration_behavior:'none','phases[0][start_date]':String(item.current_period_start),'phases[0][end_date]':String(item.current_period_end),...phase(0,now),...phase(1,next),
+    // Changing the interval without this stretches the paid period to the new length, with no invoice.
+    ...(item.price?.recurring?.interval&&item.price.recurring.interval!==interval?{'phases[1][billing_cycle_anchor]':'phase_start'}:{}),'phases[1][duration][interval]':interval,'phases[1][duration][interval_count]':'1','phases[1][proration_behavior]':'none'},'billing:'+key+':downgrade');
+  },
+  // Only our own schedule, and only once its last phase is running: the change has happened and nothing is left to apply.
+  async releaseFinishedSchedule(id:string,key:string){
+   const current=await request('GET','/subscription_schedules/'+stripeId(id,'sub_sched')),last=current.phases?.at(-1);
+   if(!current.metadata?.cadence_operation||current.status!=='active'||!last||current.current_phase?.start_date!==last.start_date)return false;
+   await request('POST','/subscription_schedules/'+current.id+'/release',{},'billing:'+key+':release');return true;
   },
   createCustomer:(workspaceId:string,key:string,contact:{email:string|null;phone:string|null})=>request('POST','/customers',{'metadata[workspace_id]':workspaceId,...(contact.email?{email:contact.email}:{}),...(contact.phone?{phone:contact.phone}:{})},'billing:'+key+':customer'),
   readCoupon:(id:string)=>{if(!/^[A-Za-z0-9_]{1,100}$/.test(id))throw Error('Identificador Stripe inválido.');return request('GET','/coupons/'+id);},

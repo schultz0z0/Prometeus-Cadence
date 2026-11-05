@@ -21,16 +21,17 @@ async function fixture(o:{amount?:number;interval?:string}={}){
  const line=(price:string,value:number,start=now,end=now+days*DAY,quantity=1)=>({amount:value,quantity,pricing:{price_details:{price}},period:{start,end}});
  const invoice:any={id:rid('in'),customer,currency:'brl',status:'paid',amount_paid:amount,amount_due:amount,amount_remaining:0,billing_reason:'subscription_create',created:now,parent:{subscription_details:{subscription:subid}},lines:{has_more:false,data:[line('price_cur',amount)]},payments:{has_more:false,data:[{status:'paid',payment:{type:'payment_intent',payment_intent:pi}}]}};
  const sub:any={id:subid,customer,status:'active',metadata:{workspace_id:u.p.workspaceId,catalog_version:BILLING_VERSION},items:{has_more:false,data:[{id:'si_plan',quantity:1,price:priceOf('price_cur',amount,interval),current_period_start:now,current_period_end:now+days*DAY}]},latest_invoice:invoice.id,cancel_at_period_end:false};
- const posts:{path:string;form:URLSearchParams}[]=[];const stored:Record<string,any>={};let onPost:((form:URLSearchParams)=>Promise<void>)|null=null,failPost:number|null=null,payment=pi,preview=2500,refunded=false,voided:string|null=null;
+ const posts:{path:string;form:URLSearchParams}[]=[];const stored:Record<string,any>={};let schedMeta:any={},onPost:((form:URLSearchParams)=>Promise<void>)|null=null,failPost:number|null=null,payment=pi,preview=2500,refunded=false,voided:string|null=null;
  const adapter=createStripeAdapter(async(input,init)=>{const url=new URL(String(input)),path=url.pathname,form=new URLSearchParams(String(init?.body));
   if(init?.method==='POST'){posts.push({path,form});
    if(path.endsWith('/create_preview'))return Response.json({id:'upcoming',currency:'brl',amount_due:preview});
    if(path.endsWith('/subscription_schedules'))return Response.json({id:'sub_sched_fixture'});
-   if(path.endsWith('/sub_sched_fixture'))return Response.json({id:'sub_sched_fixture'});
+   if(path.endsWith('/sub_sched_fixture/release')){sub.schedule=null;return Response.json({id:'sub_sched_fixture',status:'released'});}
+   if(path.endsWith('/sub_sched_fixture')){sub.schedule='sub_sched_fixture';schedMeta={cadence_operation:form.get('metadata[cadence_operation]')};return Response.json({id:'sub_sched_fixture'});}
    if(path.endsWith('/'+subid)){await onPost?.(form);if(failPost){const status=failPost;failPost=null;return new Response('{}',{status});}return Response.json(sub);}
    throw Error('Unexpected POST '+path);}
   if(path.endsWith('/prices')){const code=(url.searchParams.get('lookup_keys[0]')??'').replace('prometeus-'+BILLING_VERSION+'-','');const offer:any=code.startsWith('capacity-')?capacityOffer(code.replace('capacity-','').replace('-annual','') as CapacityUnit,code.endsWith('-annual')?'year':'month'):getSku(code);return Response.json({data:[priceOf('price_'+code.replaceAll('-','_'),offer.amount,offer.interval??offer.cycle)]});}
-  if(path.endsWith('/sub_sched_fixture')){const first=sub.items.data[0];return Response.json({id:'sub_sched_fixture',subscription:sub.id,status:'active',end_behavior:'release',metadata:{},current_phase:{start_date:first.current_period_start,end_date:first.current_period_end},phases:[{start_date:first.current_period_start,end_date:first.current_period_end,items:sub.items.data.map((i:any)=>({quantity:i.quantity,price:i.price.id}))}]});}
+  if(path.endsWith('/sub_sched_fixture')){const first=sub.items.data[0];return Response.json({id:'sub_sched_fixture',subscription:sub.id,status:'active',end_behavior:'release',metadata:schedMeta,current_phase:{start_date:first.current_period_start,end_date:first.current_period_end},phases:[{start_date:first.current_period_start,end_date:first.current_period_end,items:sub.items.data.map((i:any)=>({quantity:i.quantity,price:i.price.id}))}]});}
   if(path.endsWith('/'+subid))return Response.json(sub);
   if(path.includes('/invoices/')){const asked=path.split('/').at(-1)!;return Response.json(asked===voided?{...invoice,id:voided,status:'void'}:stored[asked]??invoice);}
   if(path.includes('/payment_intents/')){const asked=path.split('/').at(-1);return Response.json({id:asked,status:'succeeded',currency:'brl',latest_charge:{id:'ch_fixture',disputed:false,refunded:refunded&&asked===payment,amount_refunded:refunded&&asked===payment?1:0}});}
@@ -134,12 +135,12 @@ test('06G.2 plan and cycle changes keep add-ons, and annual subscribers pay the 
  await confirmBilling(f.u.p,{requestId:randomUUID(),review:d},{adapter:f.adapter});
  let s=f.posts.find(p=>p.form.has('phases[1][items][0][price]'))!;
  assert.equal(s.form.get('phases[1][items][0][price]'),'price_essential');assert.equal(s.form.get('phases[1][items][1][price]'),'price_capacity_whatsapp');assert.equal(s.form.get('phases[1][items][1][quantity]'),'2');
- assert.equal(s.form.get('phases[0][items][1][quantity]'),'2','the current period is preserved');
+ assert.equal(s.form.get('phases[0][items][1][quantity]'),'2','the current period is preserved');assert.equal(s.form.get('phases[1][billing_cycle_anchor]'),null,'same cycle: the anchor stays');
  await assert.rejects(prepareBilling(f.u.p,{kind:'capacity',sku:'capacity-whatsapp',quantity:3},{adapter:f.adapter}),{status:409},'not while a change is scheduled');
  // Monthly to annual moves the add-on to its annual price.
  const m=await fixture();await pay(m);await buy(m,'mailboxes',1);
  const c=await prepareBilling(m.u.p,{kind:'downgrade',sku:'essential-annual'},{adapter:m.adapter});await confirmBilling(m.u.p,{requestId:randomUUID(),review:c},{adapter:m.adapter});
- s=m.posts.find(p=>p.form.has('phases[1][items][0][price]'))!;assert.equal(s.form.get('phases[1][items][1][price]'),'price_capacity_mailboxes_annual');assert.equal(s.form.get('phases[1][duration][interval]'),'year');
+ s=m.posts.find(p=>p.form.has('phases[1][items][0][price]'))!;assert.equal(s.form.get('phases[1][items][1][price]'),'price_capacity_mailboxes_annual');assert.equal(s.form.get('phases[1][duration][interval]'),'year');assert.equal(s.form.get('phases[1][billing_cycle_anchor]'),'phase_start','otherwise Stripe stretches the paid period without an invoice');
  // Annual subscriber.
  const y=await fixture({amount:381120,interval:'year'});await pay(y);
  const r=await prepareBilling(y.u.p,{kind:'capacity',sku:'capacity-seats',quantity:1},{adapter:y.adapter});assert.equal(r.sku,'capacity-seats-annual');assert.match(r.effects.join(' '),/708,00/);
@@ -223,6 +224,9 @@ test('06G.2 review: full journeys with add-ons: upgrade, scheduled change, annua
  const start=m.sub.items.data[0].current_period_end,end=start+365*DAY;m.sub.items.data=[{id:'si_plan',quantity:1,price:priceOf('price_essential_annual',381120,'year'),current_period_start:start,current_period_end:end},{id:'si_mailboxes',quantity:1,price:priceOf('price_capacity_mailboxes_annual',22800,'year'),current_period_start:start,current_period_end:end}];
  Object.assign(m.invoice,{id:rid('in'),billing_reason:'subscription_update',amount_due:403920,amount_paid:403920,lines:{has_more:false,data:[m.line('price_essential_annual',381120,start,end),m.line('price_capacity_mailboxes_annual',22800,start,end)]}});m.sub.latest_invoice=m.invoice.id;await pay(m);
  v=await readBilling(m.u.p);assert.equal(v.interval,'year');assert.equal(v.nextPlan,null);assert.equal(v.capacity?.mailboxes,4);
+ // An applied schedule would keep blocking every change for the whole new year.
+ assert.equal(m.posts.filter(p=>p.path.endsWith('/sub_sched_fixture/release')).length,1,'released once applied');assert.equal(m.sub.schedule,null);
+ await prepareBilling(m.u.p,{kind:'capacity',sku:'capacity-mailboxes',quantity:2},{adapter:m.adapter});
  // Annual: paid add-on, reduction, renewal.
  const y=await fixture({amount:381120,interval:'year'});await pay(y);await buy(y,'seats',2,30000);assert.equal((await readBilling(y.u.p)).capacity?.seats,4);
  const z=await prepareBilling(y.u.p,{kind:'capacity',sku:'capacity-seats',quantity:1},{adapter:y.adapter});await confirmBilling(y.u.p,{requestId:randomUUID(),review:z},{adapter:y.adapter});y.setExtra('seats',1);

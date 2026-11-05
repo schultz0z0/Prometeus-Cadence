@@ -23,6 +23,8 @@ export async function subscriptionSnapshot(a:any,subId:string,adapter:StripeAdap
  ensure(!s.items?.has_more);const items=parseSubscriptionItems(s.items?.data);ensure(items);const {plan,interval,sku,item,total,capacity}=items!,price=item.price,offer=getSku(sku);
  const quantities=Object.fromEntries(CAPACITY_UNITS.filter(u=>capacity[u]).map(u=>[u,capacity[u].quantity as number]));
  const start=item.current_period_start,end=item.current_period_end;ensure(Number.isSafeInteger(start)&&Number.isSafeInteger(end)&&start<end);
+ // An applied schedule stays attached for its whole last phase, a year on an annual plan, and would keep blocking every change.
+ if(s.schedule&&(a.next_plan===sku||!a.change_schedule_id))await adapter.releaseFinishedSchedule(id(s.schedule)!,s.id).catch(()=>false);
  const pending=(await billingPool().query("SELECT id,kind,sku,proof,result FROM app.billing_operation WHERE workspace_id=$1 AND kind IN('upgrade','capacity') AND remote_id=$2 AND state='awaiting_payment' ORDER BY created_at DESC LIMIT 1",[a.workspace_id,s.id])).rows[0];
  let expiry:Record<string,string>={};
  if(pending?.result?.invoiceId&&!s.pending_update&&pending.sku!==sku){const previous=await adapter.readInvoice(stripeId(pending.result.invoiceId,'in'));ensure(id(previous.customer)===a.customer_id&&id(previous.parent?.subscription_details?.subscription)===s.id);if(previous.status==='void')expiry={upgrade_expired_operation_id:pending.id,expired_invoice_id:previous.id};
