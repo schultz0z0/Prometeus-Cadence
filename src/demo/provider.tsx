@@ -12,7 +12,7 @@ import { decodeDemoState, STORAGE_KEY } from "./storage";
 import type { DemoRepository } from "../domain/repository";
 import type { AsyncRepository } from "../client/workspace-repository";
 import { runAction } from "../client/workspace-repository";
-import { Button } from "@/components/ui/primitives";
+import { Button, showAboveDialogs } from "@/components/ui/primitives";
 export const RepositoryContext = createContext<
   DemoRepository | AsyncRepository | null
 >(null);
@@ -84,7 +84,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           <div className="loading-screen">Carregando seu workspace…</div>
         )}
         {toast && (
-          <div className="toast" role="status">
+          <div className="toast" role="status" popover="manual" ref={showAboveDialogs}>
             {toast}
           </div>
         )}

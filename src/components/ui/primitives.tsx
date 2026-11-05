@@ -131,6 +131,8 @@ export function EmptyState({
     </div>
   );
 }
+/** Modal dialogs sit in the top layer, above any z-index; a popover joins it and stays visible over them. */
+export const showAboveDialogs = (el: HTMLElement | null) => { if (el && !el.matches(":popover-open")) el.showPopover?.(); };
 export function Modal({
   title,
   description,
@@ -149,11 +151,12 @@ export function Modal({
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   useEffect(() => {
-    const dialog = ref.current;
+    const dialog = ref.current, opener = document.activeElement as HTMLElement | null;
     dialog?.showModal();
     // showModal moves focus to the dialog; React's autoFocus renders no attribute for it to honor.
     dialog?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
-    return () => dialog?.close();
+    // By now React has removed the dialog, so the browser no longer restores the focus by itself.
+    return () => { dialog?.close(); if (opener?.isConnected) opener.focus({ preventScroll: true }); };
   }, []);
   return (
     <dialog

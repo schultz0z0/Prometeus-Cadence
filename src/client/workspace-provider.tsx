@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { WorkspaceSnapshot } from "@/domain/workspace";
+import { showAboveDialogs } from "@/components/ui/primitives";
 import { createWorkspaceRepository } from "./workspace-repository";
 import { createDraftRecovery } from "./draft-recovery";
 import { RepositoryContext, ToastContext } from "@/demo/provider";
@@ -173,7 +174,7 @@ export function WorkspaceProvider({
               </div>
             )}
             {toast && (
-              <div className="toast" role="status">
+              <div className="toast" role="status" popover="manual" ref={showAboveDialogs}>
                 {toast}
                 {toast.includes("sessão") && (
                   <a href="/login" target="_blank" rel="noreferrer">

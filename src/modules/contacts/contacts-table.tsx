@@ -118,7 +118,8 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
               {add && (
                 <div className="dropdown">
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.currentTarget.closest('.dropdown-wrap')?.querySelector('button')?.focus();
                       setImporting(true);
                       setAdd(false);
                     }}
@@ -130,7 +131,8 @@ export function ContactsTable({ initialList = "" }: { initialList?: string }) {
                     </span>
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.currentTarget.closest('.dropdown-wrap')?.querySelector('button')?.focus();
                       setManual(true);
                       setAdd(false);
                     }}
