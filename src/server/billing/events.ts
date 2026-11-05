@@ -62,13 +62,18 @@ export async function subscriptionSnapshot(a:any,subId:string,adapter:StripeAdap
  return {...base,paid:s.status==='active',whole_period:wholeInvoice,invoice_id:inv.id,payment_intent:pi,invoice:invoiceView(inv,s.id),...(inv.billing_reason==='subscription_update'&&pending?.result?.invoiceId===inv.id&&pending.sku===sku?{upgrade_paid_operation_id:pending.id}:{}),...(capacityOp?{capacity_invoice:true,...(capacityOp.state==='awaiting_payment'?{capacity_paid_operation_id:capacityOp.id}:{})}:{})};
 }
 function invoiceView(v:any,sub:string){return {id:v.id,subscription_id:sub,status:v.status,amount:v.amount_paid??0,url:v.hosted_invoice_url?stripeUrl(v.hosted_invoice_url,'invoice'):null,created:v.created};}
-async function checkoutSnapshot(a:any,sessionId:string,adapter:StripeAdapter){
+async function checkoutSnapshot(a:any,sessionId:string,adapter:StripeAdapter,type=''){
  const s=await adapter.readCheckout(sessionId);ensure(s.id===sessionId&&id(s.customer)===a.customer_id);
  const m=s.metadata;ensure(m?.workspace_id===a.workspace_id&&m.catalog_version===BILLING_VERSION);
  const o=(await billingPool().query('SELECT * FROM app.billing_operation WHERE workspace_id=$1 AND id=$2',[a.workspace_id,m.operation_id])).rows[0];ensure(o&&o.kind==='checkout'&&o.sku===m.sku&&o.remote_id===s.id);
  if(s.status==='expired')return {kind:'expired',session_id:s.id};
+ // A lapsed delayed payment (a boleto) never expires the session; the read also covers a lost webhook.
+ if(s.status==='complete'&&s.payment_status==='unpaid'&&(type==='checkout.session.async_payment_failed'||(s.payment_intent&&['canceled','requires_payment_method'].includes((await adapter.readPayment(stripeId(id(s.payment_intent),'pi'))).status))))return {kind:'expired',session_id:s.id};
  if(s.status!=='complete'||s.payment_status!=='paid')return {};
- const offer=getSku(String(m.sku));ensure(s.currency==='brl'&&s.amount_total===offer.amount&&!s.line_items?.has_more&&s.line_items?.data?.length===1&&s.line_items.data[0].quantity===1&&s.line_items.data[0].amount_total===offer.amount);
+ const offer=getSku(String(m.sku)),line=s.line_items?.data?.[0];
+ // With a coupon the session must be the full price discounted to the reviewed total; Stripe's rounding may differ by a cent.
+ const due=(n:unknown)=>o.proof?.coupon?typeof n==='number'&&Math.abs(n-o.proof.amount)<=1:n===offer.amount;
+ ensure(s.currency==='brl'&&due(s.amount_total)&&!s.line_items?.has_more&&s.line_items?.data?.length===1&&line.quantity===1&&due(line.amount_total)&&(!o.proof?.coupon||line.amount_subtotal===offer.amount));
  if('cycle' in offer){ensure(s.mode==='subscription');return {...await subscriptionSnapshot(a,stripeId(id(s.subscription),'sub'),adapter),approved_operation_id:o.id,approved_session_id:s.id};}
  ensure(s.mode==='payment'&&offer.available);const pi=stripeId(id(s.payment_intent),'pi');
  if(!await healthyPayment(pi,adapter))return {kind:'freeze',payment_intent:pi};
@@ -86,7 +91,7 @@ export async function processBillingEvent(eventId?:string,adapter:StripeAdapter=
    if(bound){await processBillingEvent(e.id,adapter);return true;}
   }
   if(!a)throw Error('CUSTOMER_NOT_MAPPED');
-  if(e.type.startsWith('checkout.session.')||e.type==='billing.checkout')data=await checkoutSnapshot(a,stripeId(e.object_id,'cs'),adapter);
+  if(e.type.startsWith('checkout.session.')||e.type==='billing.checkout')data=await checkoutSnapshot(a,stripeId(e.object_id,'cs'),adapter,e.type);
   else if(e.type.startsWith('customer.subscription.'))data=await subscriptionSnapshot(a,stripeId(e.object_id,'sub'),adapter);
   else if(e.type.startsWith('invoice.')){
    const invoice=await adapter.readInvoice(stripeId(e.object_id,'in'));ensure(id(invoice.customer)===a.customer_id);

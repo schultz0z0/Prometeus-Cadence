@@ -29,6 +29,16 @@ export function getSku(code:`${CommercialUnit}-${number}`):PackOffer;
 export function getSku(code:string):PlanOffer|PackOffer;
 export function getSku(code:string):PlanOffer|PackOffer {if(code==='essential'||code==='pro')return getPlan(code);if(code==='essential-annual'||code==='pro-annual')return annualOffer(code.slice(0,-7) as PlanCode);const p=packs.find(p=>p.code===code);if(!p)throw Error('Pacote inválido.');return {...p};}
 export function billingCatalog(){return {version:BILLING_VERSION,trialDays:TRIAL_DAYS,plans:Object.values(plans).map(p=>structuredClone(p)),annualPlans:(['essential','pro'] as const).map(annualOffer),packs:packs.map(p=>({...p}))};}
+export const couponCode=(value:string)=>{const code=value.trim().toUpperCase();return /^[A-Z0-9_-]{3,40}$/.test(code)?code:null;};
+const MIN_CHARGE=50;
+/** The total after the provider's coupon, or nothing when it cannot be applied; Stripe charges at least R$ 0,50. */
+export function couponAmount(amount:number,c:{valid?:unknown;percent_off?:unknown;amount_off?:unknown;currency?:unknown}):number|null{
+ if(c.valid!==true)return null;let net:number;
+ if(typeof c.percent_off==='number'&&c.percent_off>0)net=amount-Math.round(amount*c.percent_off/100);
+ else if(Number.isSafeInteger(c.amount_off)&&(c.amount_off as number)>0&&c.currency==='brl')net=amount-(c.amount_off as number);
+ else return null;
+ return net>=MIN_CHARGE?net:null;
+}
 export type CapacityUnit='mailboxes'|'whatsapp'|'seats';
 export const CAPACITY_UNITS:CapacityUnit[]=['mailboxes','whatsapp','seats'];
 export const CAPACITY_MAX=50;
@@ -80,4 +90,4 @@ export function monthlyWindow(anchor:string,now:string){
 export interface BillingBalance {unit:CommercialUnit;plan:number;purchased:number;reserved:number;consumed:number;nextReset:string|null;}
 export interface BillingOperation {id:string;kind:string;sku:string|null;state:'prepared'|'processing'|'uncertain'|'awaiting_payment'|'completed'|'failed';createdAt:string;url:string|null;error:string|null;}
 export interface BillingView {version:string;configured:boolean;canManage:boolean;status:BillingStatus;plan:PlanCode|null;interval:BillingInterval;nextPlan:PlanSku|null;periodEnd:string|null;cancelAtPeriodEnd:boolean;trialAvailable:boolean;revision:number;contact:{email:string|null;phone:string|null};balances:BillingBalance[];capacity:PlanOffer['capacity']|null;capacityExtras:Record<CapacityUnit,{active:number;scheduled:number|null}>;usage:Record<string,number>;operations:BillingOperation[];invoices:{id:string;status:string;amount:number;currency:string;url:string|null;createdAt:string}[];}
-export interface BillingReview {token:string;expiresAt:string;kind:'checkout'|'cancel'|'resume'|'upgrade'|'downgrade'|'payment-method'|'capacity';sku:string|null;amount:number;currency:'brl';effects:string[];revision:number;prorationDate?:number;priceId?:string;quantity?:number;fromQuantity?:number;}
+export interface BillingReview {token:string;expiresAt:string;kind:'checkout'|'cancel'|'resume'|'upgrade'|'downgrade'|'payment-method'|'capacity';sku:string|null;amount:number;currency:'brl';effects:string[];revision:number;prorationDate?:number;priceId?:string;quantity?:number;fromQuantity?:number;coupon?:string;couponId?:string;}

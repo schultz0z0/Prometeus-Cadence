@@ -2,7 +2,7 @@ import 'server-only';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import type {Principal} from '../../domain/workspace.ts';
-import {BILLING_VERSION,CAPACITY_MAX,CAPACITY_UNITS,capacityFromCode,capacityOffer,capacityReductionAllowed,getPlan,getSku,parseSubscriptionItems,planChange,planSku,type BillingReview,type PlanOffer} from '../../domain/billing.ts';
+import {BILLING_VERSION,CAPACITY_MAX,CAPACITY_UNITS,capacityFromCode,capacityOffer,capacityReductionAllowed,couponAmount,couponCode,getPlan,getSku,parseSubscriptionItems,planChange,planSku,type BillingReview,type PlanOffer} from '../../domain/billing.ts';
 import {AppError} from '../errors.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from '../prospecting/review.ts';
 import {billingPool,billingTransaction,billingError} from './db.ts';
@@ -12,8 +12,8 @@ import {operationView} from './repository.ts';
 const kinds=z.enum(['checkout','cancel','resume','upgrade','downgrade','payment-method','capacity']);
 const quantity=z.number().int().min(0).max(CAPACITY_MAX);
 const brl=(cents:number)=>(cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}).replace(/\s/g,' ');
-const inputSchema=z.strictObject({kind:kinds,sku:z.string().min(1).max(80).optional(),quantity:quantity.optional()});
-const reviewSchema=z.strictObject({kind:kinds,sku:z.string().max(80).nullable(),amount:z.number().int().nonnegative(),currency:z.literal('brl'),revision:z.number().int().nonnegative(),token:z.string().min(1).max(8192),expiresAt:z.string().max(40),effects:z.array(z.string().max(500)).max(8),prorationDate:z.number().int().optional(),priceId:z.string().max(200).optional(),quantity:quantity.optional(),fromQuantity:quantity.optional()});
+const inputSchema=z.strictObject({kind:kinds,sku:z.string().min(1).max(80).optional(),quantity:quantity.optional(),coupon:z.string().max(200).optional()});
+const reviewSchema=z.strictObject({kind:kinds,sku:z.string().max(80).nullable(),amount:z.number().int().nonnegative(),currency:z.literal('brl'),revision:z.number().int().nonnegative(),token:z.string().min(1).max(8192),expiresAt:z.string().max(40),effects:z.array(z.string().max(500)).max(8),prorationDate:z.number().int().optional(),priceId:z.string().max(200).optional(),quantity:quantity.optional(),fromQuantity:quantity.optional(),coupon:z.string().max(40).optional(),couponId:z.string().max(100).optional()});
 const confirmSchema=z.strictObject({requestId:z.uuid(),review:reviewSchema});
 const signing=()=>{const s=process.env.BETTER_AUTH_SECRET;if(!s||s.length<32)throw Error('Revisão de cobrança indisponível.');return s;};
 function proof(p:Principal,a:any,r:Omit<BillingReview,'token'|'expiresAt'|'effects'>){return {scope:'billing-review-v1',catalog:BILLING_VERSION,userId:p.userId,workspaceId:p.workspaceId,subscription:a.subscription_id,fromPlan:a.plan,fromInterval:a.billing_interval,...r};}
@@ -23,11 +23,20 @@ const samePeriod=(item:any,a:any)=>item?.current_period_start===new Date(a.perio
 export async function prepareBilling(p:Principal,input:unknown,deps:{adapter?:StripeAdapter}={}):Promise<BillingReview>{
  const parsed=inputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Operação de cobrança inválida.');if(!billingConfig().configured)throw new AppError(503,'Stripe de teste ainda não configurado.','BILLING_NOT_CONFIGURED');
  const a=await billingTransaction(p,account),b=parsed.data;
+ if(b.coupon!==undefined&&b.kind!=='checkout')throw new AppError(422,'O cupom vale para pacotes de créditos.');
  let amount=0,sku:string|null=b.sku??null;let effects:string[]=[];let change:Partial<BillingReview>={};
  if(b.kind==='checkout'){
   if(!sku)throw new AppError(422,'Escolha um plano ou pacote.');let offer;try{offer=getSku(sku);}catch{throw new AppError(422,'Plano ou pacote inválido.');}
   if('cycle'in offer){if(a.subscription_id&&['active','past_due','attention'].includes(a.state))throw new AppError(409,'Altere a assinatura existente para trocar de plano.');effects=[offer.cycle==='year'?'Assinatura anual em ambiente de teste, cobrada de uma vez. A franquia renova a cada mês, sem acumular.':'Assinatura mensal em ambiente de teste.','Acesso somente após pagamento confirmado.'];}
   else {if(!offer.available)throw new AppError(409,'Este recurso ainda não está disponível para compra.');await billingTransaction(p,c=>c.query('SELECT app.billing_require_execution()'));effects=['Compra única, sem renovação automática.','Créditos sem expiração; usados depois da franquia.'];}amount=offer.amount;
+  if(b.coupon!==undefined){
+   if('cycle'in offer)throw new AppError(422,'O cupom vale para pacotes de créditos.');
+   const code=couponCode(b.coupon);if(!code)throw new AppError(422,'Cupom inválido, vencido ou já utilizado.','BILLING_COUPON_INVALID');
+   const couponId:string=(await billingTransaction(p,c=>c.query('SELECT app.billing_check_coupon($1) AS id',[code]))).rows[0].id;
+   let remote;try{remote=await (deps.adapter??createStripeAdapter()).readCoupon(couponId);}catch(e){if(e instanceof StripeFailure&&e.status===404)throw new AppError(422,'Cupom inválido, vencido ou já utilizado.','BILLING_COUPON_INVALID');throw new AppError(409,'Não foi possível validar o cupom agora. Tente novamente.');}
+   const net=couponAmount(offer.amount,remote);if(net===null)throw new AppError(422,'Cupom inválido, vencido ou já utilizado.','BILLING_COUPON_INVALID');
+   amount=net;change={coupon:code,couponId};effects=[`Cupom ${code}: de ${brl(offer.amount)} por ${brl(net)}.`,...effects];
+  }
  }else{
   if(!a.subscription_id)throw new AppError(409,'É necessário ter uma assinatura para esta ação.');
   if(b.kind==='cancel'){sku=null;effects=['A renovação será cancelada.','O acesso permanece até o fim do período pago; dados e saldo comprado serão preservados.'];}
@@ -97,8 +106,12 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
    customer=value.id;await update('customer',{id:customer});
   }
   if(o.kind==='checkout'){
+   const couponId=o.proof?.couponId;
+   // A coupon changed since the review would charge another total, which grants nothing: stop before the session exists.
+   if(couponId&&o.stage!=='financial_requested'&&couponAmount((getSku(o.sku) as {amount:number}).amount,await adapter.readCoupon(couponId))!==o.proof.amount)throw new StripeFailure(false);
    await update('financial_request',{});
-   const session=await adapter.createCheckout({customer,sku:o.sku,workspaceId:o.workspace_id,operationId:o.id});
+   // From the operation's own clock: a retry must repeat the same body. An abandoned session gives the use back within the hour.
+   const session=await adapter.createCheckout({customer,sku:o.sku,workspaceId:o.workspace_id,operationId:o.id,coupon:couponId,...(couponId?{expiresAt:Math.floor(Date.parse(o.created_at)/1000)+3600}:{})});
    await update('awaiting_payment',{id:session.id,result:{url:session.url}});
   }else if(o.kind==='cancel'){
    await adapter.cancelSubscription(o.account.subscription_id,o.id);await update('completed',{id:o.account.subscription_id});
