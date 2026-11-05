@@ -327,3 +327,7 @@ Revisão independente: dois High, nove Medium e onze Low tratados. Próximo: 07B
 ### Continuidade 04/11 — 07B.3 (parcial)
 
 Agenda e follow-up do SDR entregues local/controlado. CRM sem conector e piloto pendente da autorização do usuário: o SDR não tem aceite nem venda. Revisão independente: cinco High, doze Medium e oito Low tratados. Próximo no índice: 06G, com os gates de venda do SDR fechados. [Relatório](../../validation/07b3-sdr-actions.md).
+
+### Continuidade 04/11 — 06G.1
+
+Plano anual com 20% de desconto e franquia mensal, entregue com o Stripe simulado; nada foi homologado no Stripe. O 06G foi dividido em 06G.1 anual, 06G.2 capacidade e 06G.3 cupom. Revisão independente: um Critical, um High, quatro Medium e oito Low tratados (111a). Próximo: 06G.2. [Relatório](../../validation/06g1-annual.md).
