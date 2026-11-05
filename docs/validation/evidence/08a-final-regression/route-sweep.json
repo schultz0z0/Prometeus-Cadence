@@ -1,0 +1,3912 @@
+{
+ "date": "2026-11-05T06:26:43.250Z",
+ "sourceHash": "858b5ef852e108e71f0d97d2f13ec7376dc389df27c4c9a3587e83912ab910ab",
+ "note": "Só navegação; hosts externos bloqueados; contas descartáveis removidas ao fim.",
+ "results": [
+  {
+   "route": "/automations",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations",
+   "theme": "light"
+  },
+  {
+   "route": "/automations",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations",
+   "theme": "light"
+  },
+  {
+   "route": "/automations",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations",
+   "theme": "light"
+  },
+  {
+   "route": "/automations",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations",
+   "theme": "light"
+  },
+  {
+   "route": "/automations",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations",
+   "theme": "light"
+  },
+  {
+   "route": "/automations",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations",
+   "theme": "dark"
+  },
+  {
+   "route": "/automations/new",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new",
+   "theme": "dark"
+  },
+  {
+   "route": "/automations/new/ai",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new/ai",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new/ai",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new/ai",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new/ai",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/automations/new/ai",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/automations/new/ai",
+   "theme": "dark"
+  },
+  {
+   "route": "/cadences",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences",
+   "theme": "dark"
+  },
+  {
+   "route": "/cadences/new",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new",
+   "theme": "dark"
+  },
+  {
+   "route": "/cadences/new/ai",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new/ai",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new/ai",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new/ai",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new/ai",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/new/ai",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/new/ai",
+   "theme": "dark"
+  },
+  {
+   "route": "/cadences/pipeline",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/pipeline",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/pipeline",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/pipeline",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/pipeline",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/pipeline",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/pipeline",
+   "theme": "dark"
+  },
+  {
+   "route": "/dashboard",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/dashboard",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/dashboard",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/dashboard",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/dashboard",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/dashboard",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "dark"
+  },
+  {
+   "route": "/executions",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions",
+   "theme": "light"
+  },
+  {
+   "route": "/executions",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions",
+   "theme": "light"
+  },
+  {
+   "route": "/executions",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions",
+   "theme": "light"
+  },
+  {
+   "route": "/executions",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions",
+   "theme": "light"
+  },
+  {
+   "route": "/executions",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions",
+   "theme": "light"
+  },
+  {
+   "route": "/executions",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions",
+   "theme": "dark"
+  },
+  {
+   "route": "/first-steps",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/first-steps",
+   "theme": "light"
+  },
+  {
+   "route": "/first-steps",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/first-steps",
+   "theme": "light"
+  },
+  {
+   "route": "/first-steps",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/first-steps",
+   "theme": "light"
+  },
+  {
+   "route": "/first-steps",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/first-steps",
+   "theme": "light"
+  },
+  {
+   "route": "/first-steps",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/first-steps",
+   "theme": "light"
+  },
+  {
+   "route": "/first-steps",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/first-steps",
+   "theme": "dark"
+  },
+  {
+   "route": "/inbox",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/inbox",
+   "theme": "light"
+  },
+  {
+   "route": "/inbox",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/inbox",
+   "theme": "light"
+  },
+  {
+   "route": "/inbox",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/inbox",
+   "theme": "light"
+  },
+  {
+   "route": "/inbox",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/inbox",
+   "theme": "light"
+  },
+  {
+   "route": "/inbox",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/inbox",
+   "theme": "light"
+  },
+  {
+   "route": "/inbox",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/inbox",
+   "theme": "dark"
+  },
+  {
+   "route": "/leads/enrich",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/enrich",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/enrich",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/enrich",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/enrich",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/enrich",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/enrich",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/enrich",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/enrich",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/enrich",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/enrich",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/enrich",
+   "theme": "dark"
+  },
+  {
+   "route": "/leads/generator",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/generator",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/generator",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/generator",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/generator",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/generator",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/generator",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/generator",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/generator",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/generator",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/generator",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/generator",
+   "theme": "dark"
+  },
+  {
+   "route": "/leads/import",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/import",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/import",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/import",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/import",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/import",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/import",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/import",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/import",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/import",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/import",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/import",
+   "theme": "dark"
+  },
+  {
+   "route": "/leads/qualifier",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/qualifier",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/qualifier",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/qualifier",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/qualifier",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/qualifier",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/qualifier",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/qualifier",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/qualifier",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/qualifier",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/qualifier",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/qualifier",
+   "theme": "dark"
+  },
+  {
+   "route": "/messages/email",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/email",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/email",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/email",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/email",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/email",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/email",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/email",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/email",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/email",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/email",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/email",
+   "theme": "dark"
+  },
+  {
+   "route": "/messages/whatsapp",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/whatsapp",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/whatsapp",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/whatsapp",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/whatsapp",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/messages/whatsapp",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/messages/whatsapp",
+   "theme": "dark"
+  },
+  {
+   "route": "/reports",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports",
+   "theme": "light"
+  },
+  {
+   "route": "/reports",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports",
+   "theme": "light"
+  },
+  {
+   "route": "/reports",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports",
+   "theme": "light"
+  },
+  {
+   "route": "/reports",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports",
+   "theme": "light"
+  },
+  {
+   "route": "/reports",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports",
+   "theme": "light"
+  },
+  {
+   "route": "/reports",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports",
+   "theme": "dark"
+  },
+  {
+   "route": "/sdr",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/sdr",
+   "theme": "light"
+  },
+  {
+   "route": "/sdr",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/sdr",
+   "theme": "light"
+  },
+  {
+   "route": "/sdr",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/sdr",
+   "theme": "light"
+  },
+  {
+   "route": "/sdr",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/sdr",
+   "theme": "light"
+  },
+  {
+   "route": "/sdr",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/sdr",
+   "theme": "light"
+  },
+  {
+   "route": "/sdr",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/sdr",
+   "theme": "dark"
+  },
+  {
+   "route": "/templates",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/templates",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/templates",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/templates",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/templates",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/templates",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/templates",
+   "theme": "dark"
+  },
+  {
+   "route": "/contacts",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/contacts",
+   "theme": "light"
+  },
+  {
+   "route": "/contacts",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/contacts",
+   "theme": "light"
+  },
+  {
+   "route": "/contacts",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/contacts",
+   "theme": "light"
+  },
+  {
+   "route": "/contacts",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/contacts",
+   "theme": "light"
+  },
+  {
+   "route": "/contacts",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/contacts",
+   "theme": "light"
+  },
+  {
+   "route": "/contacts",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/contacts",
+   "theme": "dark"
+  },
+  {
+   "route": "/accept-invitation",
+   "viewport": "320",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/accept-invitation",
+   "viewport": "390",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/accept-invitation",
+   "viewport": "768",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/accept-invitation",
+   "viewport": "1440",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/accept-invitation",
+   "viewport": "1920",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/accept-invitation",
+   "viewport": "390-dark",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "320",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/forgot-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "390",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/forgot-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "768",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/forgot-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "1440",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/forgot-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "1920",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/forgot-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "390-dark",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/forgot-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/login",
+   "viewport": "320",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/login",
+   "viewport": "390",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/login",
+   "viewport": "768",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/login",
+   "viewport": "1440",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/login",
+   "viewport": "1920",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/login",
+   "viewport": "390-dark",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/login",
+   "theme": "n/a"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "320",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/privacy",
+   "theme": "n/a"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "390",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/privacy",
+   "theme": "n/a"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "768",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/privacy",
+   "theme": "n/a"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "1440",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/privacy",
+   "theme": "n/a"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "1920",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/privacy",
+   "theme": "n/a"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "390-dark",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/privacy",
+   "theme": "n/a"
+  },
+  {
+   "route": "/register",
+   "viewport": "320",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/register",
+   "theme": "n/a"
+  },
+  {
+   "route": "/register",
+   "viewport": "390",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/register",
+   "theme": "n/a"
+  },
+  {
+   "route": "/register",
+   "viewport": "768",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/register",
+   "theme": "n/a"
+  },
+  {
+   "route": "/register",
+   "viewport": "1440",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/register",
+   "theme": "n/a"
+  },
+  {
+   "route": "/register",
+   "viewport": "1920",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/register",
+   "theme": "n/a"
+  },
+  {
+   "route": "/register",
+   "viewport": "390-dark",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/register",
+   "theme": "n/a"
+  },
+  {
+   "route": "/reset-password",
+   "viewport": "320",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/reset-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/reset-password",
+   "viewport": "390",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/reset-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/reset-password",
+   "viewport": "768",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/reset-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/reset-password",
+   "viewport": "1440",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/reset-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/reset-password",
+   "viewport": "1920",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/reset-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/reset-password",
+   "viewport": "390-dark",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/reset-password",
+   "theme": "n/a"
+  },
+  {
+   "route": "/terms",
+   "viewport": "320",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/terms",
+   "theme": "n/a"
+  },
+  {
+   "route": "/terms",
+   "viewport": "390",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/terms",
+   "theme": "n/a"
+  },
+  {
+   "route": "/terms",
+   "viewport": "768",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/terms",
+   "theme": "n/a"
+  },
+  {
+   "route": "/terms",
+   "viewport": "1440",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/terms",
+   "theme": "n/a"
+  },
+  {
+   "route": "/terms",
+   "viewport": "1920",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/terms",
+   "theme": "n/a"
+  },
+  {
+   "route": "/terms",
+   "viewport": "390-dark",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/terms",
+   "theme": "n/a"
+  },
+  {
+   "route": "/verify-email",
+   "viewport": "320",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/verify-email",
+   "theme": "n/a"
+  },
+  {
+   "route": "/verify-email",
+   "viewport": "390",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/verify-email",
+   "theme": "n/a"
+  },
+  {
+   "route": "/verify-email",
+   "viewport": "768",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/verify-email",
+   "theme": "n/a"
+  },
+  {
+   "route": "/verify-email",
+   "viewport": "1440",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/verify-email",
+   "theme": "n/a"
+  },
+  {
+   "route": "/verify-email",
+   "viewport": "1920",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/verify-email",
+   "theme": "n/a"
+  },
+  {
+   "route": "/verify-email",
+   "viewport": "390-dark",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/verify-email",
+   "theme": "n/a"
+  },
+  {
+   "route": "/unsubscribe/qa-token",
+   "viewport": "320",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/unsubscribe/qa-token",
+   "theme": "n/a"
+  },
+  {
+   "route": "/unsubscribe/qa-token",
+   "viewport": "390",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/unsubscribe/qa-token",
+   "theme": "n/a"
+  },
+  {
+   "route": "/unsubscribe/qa-token",
+   "viewport": "768",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/unsubscribe/qa-token",
+   "theme": "n/a"
+  },
+  {
+   "route": "/unsubscribe/qa-token",
+   "viewport": "1440",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/unsubscribe/qa-token",
+   "theme": "n/a"
+  },
+  {
+   "route": "/unsubscribe/qa-token",
+   "viewport": "1920",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/unsubscribe/qa-token",
+   "theme": "n/a"
+  },
+  {
+   "route": "/unsubscribe/qa-token",
+   "viewport": "390-dark",
+   "account": "anon",
+   "status": 200,
+   "ok": true,
+   "path": "/unsubscribe/qa-token",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/authorize",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/authorize",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/authorize",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/authorize",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/authorize",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/authorize",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/authorize",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/authorize",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/authorize",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/authorize",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/authorize",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/authorize",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/review/qa-missing",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/review/qa-missing",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/review/qa-missing",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/review/qa-missing",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/review/qa-missing",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/review/qa-missing",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/review/qa-missing",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/review/qa-missing",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/review/qa-missing",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/review/qa-missing",
+   "theme": "n/a"
+  },
+  {
+   "route": "/mcp/review/qa-missing",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/mcp/review/qa-missing",
+   "theme": "n/a"
+  },
+  {
+   "route": "/onboarding/entry",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/entry",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/entry",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/entry",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/entry",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/entry",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "dark"
+  },
+  {
+   "route": "/onboarding/profile",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/profile",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/profile",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/profile",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/profile",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/onboarding/profile",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/dashboard",
+   "theme": "dark"
+  },
+  {
+   "route": "/onboarding/workspace",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/onboarding/workspace",
+   "theme": "n/a"
+  },
+  {
+   "route": "/onboarding/workspace",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/onboarding/workspace",
+   "theme": "n/a"
+  },
+  {
+   "route": "/onboarding/workspace",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/onboarding/workspace",
+   "theme": "n/a"
+  },
+  {
+   "route": "/onboarding/workspace",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/onboarding/workspace",
+   "theme": "n/a"
+  },
+  {
+   "route": "/onboarding/workspace",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/onboarding/workspace",
+   "theme": "n/a"
+  },
+  {
+   "route": "/onboarding/workspace",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/onboarding/workspace",
+   "theme": "n/a"
+  },
+  {
+   "route": "/cadences/qa-missing",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/qa-missing",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/qa-missing",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/qa-missing",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/qa-missing",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/cadences/qa-missing",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/cadences/qa-missing",
+   "theme": "dark"
+  },
+  {
+   "route": "/executions/qa-missing",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/executions/qa-missing",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/executions/qa-missing",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/executions/qa-missing",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/executions/qa-missing",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions/qa-missing",
+   "theme": "light"
+  },
+  {
+   "route": "/executions/qa-missing",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/executions/qa-missing",
+   "theme": "dark"
+  },
+  {
+   "route": "/leads/:seed",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/:seed",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/:seed",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/:seed",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/:seed",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
+   "theme": "light"
+  },
+  {
+   "route": "/leads/:seed",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/leads/0491d12e-7693-4954-a4c7-9bb91f52f2d6",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin/dashboard",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/dashboard",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/dashboard",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/dashboard",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/dashboard",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/dashboard",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/dashboard",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/dashboard",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin/campaigns",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin/campaigns/new",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns/new",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns/new",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns/new",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns/new",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns/new",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns/new",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns/new",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns/new",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns/new",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/campaigns/new",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/campaigns/new",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin/people",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/people",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/people",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/people",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/people",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/people",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/people",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/people",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/people",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/people",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/people",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/people",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin/pipeline",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/pipeline",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/pipeline",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/pipeline",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/pipeline",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/pipeline",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/pipeline",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/pipeline",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin/enrichment",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/enrichment",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/enrichment",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/enrichment",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/enrichment",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/enrichment",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/enrichment",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/enrichment",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/enrichment",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/enrichment",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/enrichment",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/enrichment",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin/approvals",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/approvals",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/approvals",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/approvals",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/approvals",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/approvals",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/approvals",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/approvals",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/approvals",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/approvals",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/approvals",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/approvals",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin/cadences",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/cadences",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/cadences",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/cadences",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/cadences",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/cadences",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/cadences",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/cadences",
+   "theme": "dark"
+  },
+  {
+   "route": "/linkedin/templates",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/templates",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/templates",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/templates",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/templates",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/templates",
+   "theme": "light"
+  },
+  {
+   "route": "/linkedin/templates",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/linkedin/templates",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings",
+   "theme": "light"
+  },
+  {
+   "route": "/settings",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings",
+   "theme": "light"
+  },
+  {
+   "route": "/settings",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings",
+   "theme": "light"
+  },
+  {
+   "route": "/settings",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings",
+   "theme": "light"
+  },
+  {
+   "route": "/settings",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings",
+   "theme": "light"
+  },
+  {
+   "route": "/settings",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/account",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/account",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/account",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/account",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/account",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/account",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/account",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/account",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/account",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/account",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/account",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/account",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/ai",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/ai",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/ai",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/ai",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/ai",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/ai",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/ai",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/ai",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/context",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/context",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/context",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/context",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/context",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/context",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/context",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/context",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/context",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/context",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/context",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/context",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/email",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/email",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/email",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/email",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/email",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/email",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/email",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/email",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/email",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/email",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/email",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/email",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/whatsapp",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/whatsapp",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/whatsapp",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/whatsapp",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/whatsapp",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/whatsapp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/whatsapp",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/whatsapp",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/dispatch-limits",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dispatch-limits",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dispatch-limits",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dispatch-limits",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dispatch-limits",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dispatch-limits",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dispatch-limits",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dispatch-limits",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dispatch-limits",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dispatch-limits",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dispatch-limits",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dispatch-limits",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/apps",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/apps/google-sheets",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-sheets",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-sheets",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-sheets",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-sheets",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-sheets",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-sheets",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-sheets",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-sheets",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-sheets",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-sheets",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-sheets",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/apps/google-calendar",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-calendar",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-calendar",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-calendar",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-calendar",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-calendar",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-calendar",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-calendar",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-calendar",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-calendar",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/google-calendar",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/google-calendar",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/apps/apollo",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/apollo",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/apollo",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/apollo",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/apollo",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/apollo",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/apollo",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/apollo",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/apollo",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/apollo",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/apollo",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/apollo",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/apps/funnelsflow",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/funnelsflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/funnelsflow",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/funnelsflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/funnelsflow",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/funnelsflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/funnelsflow",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/funnelsflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/funnelsflow",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/funnelsflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/funnelsflow",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/funnelsflow",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/apps/meetflow",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/meetflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/meetflow",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/meetflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/meetflow",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/meetflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/meetflow",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/meetflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/meetflow",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/meetflow",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/apps/meetflow",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/apps/meetflow",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/plan",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/plan",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/plan",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/plan",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/plan",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/plan",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/plan",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/plan",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/plan",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/plan",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/plan",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/plan",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/notifications",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/notifications",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/notifications",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/notifications",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/notifications",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/notifications",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/notifications",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/notifications",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/notifications",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/notifications",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/notifications",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/notifications",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/seats",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/seats",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/seats",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/seats",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/seats",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/seats",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/seats",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/seats",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/seats",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/seats",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/seats",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/seats",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/security",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/security",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/security",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/security",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/security",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/security",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/security",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/security",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/security",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/security",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/security",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/security",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/mcp",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/mcp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/mcp",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/mcp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/mcp",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/mcp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/mcp",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/mcp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/mcp",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/mcp",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/mcp",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/mcp",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/privacy",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/privacy",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/privacy",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/privacy",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/privacy",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/privacy",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/privacy",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/privacy",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/privacy",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/privacy",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/privacy",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/privacy",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/dados",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dados",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dados",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dados",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dados",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dados",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dados",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dados",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dados",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dados",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/dados",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/dados",
+   "theme": "dark"
+  },
+  {
+   "route": "/settings/webhooks",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/webhooks",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/webhooks",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/webhooks",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/webhooks",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/webhooks",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/webhooks",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/webhooks",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/webhooks",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/webhooks",
+   "theme": "light"
+  },
+  {
+   "route": "/settings/webhooks",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/settings/webhooks",
+   "theme": "dark"
+  },
+  {
+   "route": "/reports/funnel",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/funnel",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/funnel",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/funnel",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/funnel",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/funnel",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/funnel",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/funnel",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/funnel",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/funnel",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/funnel",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/funnel",
+   "theme": "dark"
+  },
+  {
+   "route": "/reports/negocios",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/negocios",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/negocios",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/negocios",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/negocios",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/negocios",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/negocios",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/negocios",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/negocios",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/negocios",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/negocios",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/negocios",
+   "theme": "dark"
+  },
+  {
+   "route": "/reports/performance",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/performance",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/performance",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/performance",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/performance",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/performance",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/performance",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/performance",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/performance",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/performance",
+   "theme": "light"
+  },
+  {
+   "route": "/reports/performance",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/reports/performance",
+   "theme": "dark"
+  }
+ ],
+ "isolation": [
+  {
+   "account": "a",
+   "seesOwn": true,
+   "seesOwnById": true,
+   "seesOtherInList": false,
+   "seesOtherById": false
+  },
+  {
+   "account": "b",
+   "seesOwn": true,
+   "seesOwnById": true,
+   "seesOtherInList": false,
+   "seesOtherById": false
+  }
+ ],
+ "trialCta": "Gerenciar meu plano"
+}

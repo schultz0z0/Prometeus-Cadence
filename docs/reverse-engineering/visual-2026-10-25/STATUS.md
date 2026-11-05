@@ -1,11 +1,17 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-05 · Session: s41 · Phase:6 06G homologado no Stripe de teste; 07B.3 parcial; próximo 08A; paridade integral não aceita
+Updated: 2026-11-05 · Session: s42 · Phase:6 08A.1 concluído, aceite integral negado em 73 de 103; próximo 08A.2; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
 
+- Covered s42: 08A.1, registro de cobertura e varredura de rotas.
+  - **QA:** L-051 removed, resíduo 0.
+  - **Evidência:** EV-304.
+- Not covered s42:
+  - jornadas clicadas, popups, teclado, zoom e falhas de rede (08A.2);
+  - comparação visual com a referência.
 - Covered s41: homologação do 06G no Stripe de teste.
   - **QA:** L-050 removed; preços do catálogo mantidos no sandbox.
   - **Defeitos corrigidos:** troca de ciclo sem cobrança; agendamento aplicado travando alterações.
@@ -245,7 +251,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s41: 08A; SDR sem aceite até o piloto.
+Fila vigente s42: 08A.2; SDR sem aceite até o piloto.
+
+Fila s41 (histórica): 08A.
 
 Fila s40 (histórica): homologação do 06G.
 

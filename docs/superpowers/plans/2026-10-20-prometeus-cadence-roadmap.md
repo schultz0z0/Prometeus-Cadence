@@ -343,3 +343,7 @@ Cupom nos pacotes de créditos, com campanha no servidor e valor confirmado pelo
 ### Continuidade 05/11 — homologação do 06G
 
 Anual, adicionais e cupom homologados no modo de teste do Stripe. A rodada real achou e corrigiu dois defeitos: a troca de ciclo não cobrava na virada, e o agendamento aplicado travava alterações por até um ano. Cobrança live continua no 08B. Próximo no índice: 08A, que depende de 07B.3, ainda parcial. [Relatório](../../validation/06g-stripe-homologation.md).
+
+### Continuidade 05/11 — 08A.1
+
+Registro de cobertura com auditor e varredura de 72 rotas em 6 configurações, com duas contas. O 08A foi dividido em 08A.1 e 08A.2 (jornadas clicadas). A revisão invalidou a primeira varredura, inflada, e a medição foi refeita. Aceite integral negado em 73 de 103: 6 itens dependem do usuário e 24 do 08A.2. [Relatório](../../validation/08a1-coverage-sweep.md).
