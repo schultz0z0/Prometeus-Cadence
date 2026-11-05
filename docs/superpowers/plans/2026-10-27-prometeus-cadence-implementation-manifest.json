@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "07B.3",
+  "next": "06G",
   "end": "08B",
   "packages": [
     {
@@ -1558,7 +1558,14 @@
         "/messages/whatsapp",
         "/settings/apps",
         "/reports"
-      ]
+      ],
+      "status": "partial-pilot-pending",
+      "partialAt": "2026-11-04",
+      "executionPlan": "docs/superpowers/plans/2026-11-04-prometeus-cadence-07b3-sdr-actions-execution.md",
+      "validation": "docs/validation/07b3-sdr-actions.md",
+      "review": "docs/validation/07b3-sdr-actions-review.md",
+      "migrations": ["db/migrations/110-sdr-actions.sql","db/migrations/110a-sdr-booking-view.sql","db/migrations/110b-sdr-actions-review.sql"],
+      "deviations": "no CRM (no connector exists); pilot not run (needs user accounts and authorization), no smoke script; follow-up returns on managed WhatsApp only; cancellation without its own review token; no /reports card"
     },
     {
       "id": "06G",

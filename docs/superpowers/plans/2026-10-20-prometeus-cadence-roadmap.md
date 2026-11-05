@@ -323,3 +323,7 @@ Revisão independente: dois High, oito Medium e oito Low corrigidos. Próximo: 0
 Atendimento supervisionado do SDR concluído local/controlado: rascunho por mensagem recebida, aprovação na inbox do WhatsApp, assumir e devolver, e cobrança por turno. Sem piloto real.
 
 Revisão independente: dois High, nove Medium e onze Low tratados. Próximo: 07B.3. [Aceite](../../validation/07b2-sdr-conversation.md).
+
+### Continuidade 04/11 — 07B.3 (parcial)
+
+Agenda e follow-up do SDR entregues local/controlado. CRM sem conector e piloto pendente da autorização do usuário: o SDR não tem aceite nem venda. Revisão independente: cinco High, doze Medium e oito Low tratados. Próximo no índice: 06G, com os gates de venda do SDR fechados. [Relatório](../../validation/07b3-sdr-actions.md).

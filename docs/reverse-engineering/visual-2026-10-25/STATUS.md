@@ -1,10 +1,23 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-04 · Session: s36 · Phase:6 07B.2 concluído local/controlado; próximo 07B.3; paridade integral não aceita
+Updated: 2026-11-04 · Session: s37 · Phase:6 07B.3 parcial (sem CRM e sem piloto); próximo 06G; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- Covered s37: 07B.3 parcial, agenda e follow-up do SDR.
+  - **QA:** L-046 removed, nenhuma mensagem de saída.
+  - **Revisão:** cinco High, doze Medium e oito Low tratados (110b).
+  - **Evidência:** EV-299.
+- Not covered s37:
+  - CRM (não há conector);
+  - piloto real;
+  - reserva real no Google;
+  - telas operacionais da referência.
+- Needs human s37:
+  - os de s36;
+  - autorizar o piloto com número OpenWA, contato e conta Google próprios.
 
 - Covered s36: 07B.2, atendimento supervisionado do SDR.
   - **Fluxo:** rascunho por mensagem recebida, aprovação na inbox do WhatsApp, assumir e devolver.
@@ -200,7 +213,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s36: 07B.3 — agenda, CRM, acompanhamento e piloto SDR. 07B.2 concluído; menores→08A.
+Fila vigente s37: 06G; SDR sem aceite até o piloto; menores→08A.
+
+Fila s36 (histórica): 07B.3 — agenda, CRM, acompanhamento e piloto SDR.
 
 Fila s35 (histórica): 07B.2 — atendimento, memória e intervenção humana do SDR.
 
