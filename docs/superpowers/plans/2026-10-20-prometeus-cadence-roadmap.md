@@ -335,3 +335,7 @@ Plano anual com 20% de desconto e franquia mensal, entregue com o Stripe simulad
 ### Continuidade 04/11 — 06G.2
 
 Contas de e-mail, números de WhatsApp e usuários extras entregues como itens da assinatura, com o Stripe simulado; nada foi homologado no Stripe. LinkedIn segue indisponível. Revisão independente: dois High, três Medium e seis Low; um Medium aceito como decisão de produto. Próximo: 06G.3. [Relatório](../../validation/06g2-capacity.md).
+
+### Continuidade 04/11 — 06G.3
+
+Cupom nos pacotes de créditos, com campanha no servidor e valor confirmado pelo Stripe, entregue com o Stripe simulado. Revisão independente: três Medium e oito Low, parte aceita com registro. Com isso o 06G fecha no escopo local; falta homologar no Stripe de teste, e o LinkedIn não é vendido. Próximo no índice: 08A, que depende de 07B.3, ainda parcial. [Relatório](../../validation/06g3-coupon.md).

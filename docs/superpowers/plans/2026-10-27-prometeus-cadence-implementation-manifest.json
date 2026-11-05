@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "06G.3",
+  "next": "08A",
   "end": "08B",
   "packages": [
     {
@@ -1581,9 +1581,9 @@
       "conditional": false,
       "continuous": false,
       "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06g-commercial-catalog.md",
-      "status": "partial-06g1-done",
+      "status": "done-simulated-stripe",
       "partialAt": "2026-11-04",
-      "packages": {"06G.1": {"status": "done-simulated-stripe","executionPlan": "docs/superpowers/plans/2026-11-04-prometeus-cadence-06g1-annual-execution.md","validation": "docs/validation/06g1-annual.md","review": "docs/validation/06g1-annual-review.md","migrations": ["db/migrations/111-annual-billing.sql","db/migrations/111a-annual-billing-review.sql"],"deviations": "no Stripe call: annual checkout, proration and cycle change not homologated in test mode; invoice reason of a cycle change unconfirmed"},"06G.2": {"status": "done-simulated-stripe","executionPlan": "docs/superpowers/plans/2026-11-04-prometeus-cadence-06g2-capacity-execution.md","validation": "docs/validation/06g2-capacity.md","review": "docs/validation/06g2-capacity-review.md","migrations": ["db/migrations/112-capacity-addons.sql","db/migrations/112a-capacity-catalog.sql","db/migrations/112b-capacity-prepare.sql","db/migrations/112c-capacity-review.sql"],"deviations": "no Stripe call; LinkedIn add-on stays unavailable; annual add-on at 12x monthly is an own decision; domain rules in billing.ts instead of capacity-policy.ts"},"06G.3": {"status": "pending","scope": "server-validated coupon"}},
+      "packages": {"06G.1": {"status": "done-simulated-stripe","executionPlan": "docs/superpowers/plans/2026-11-04-prometeus-cadence-06g1-annual-execution.md","validation": "docs/validation/06g1-annual.md","review": "docs/validation/06g1-annual-review.md","migrations": ["db/migrations/111-annual-billing.sql","db/migrations/111a-annual-billing-review.sql"],"deviations": "no Stripe call: annual checkout, proration and cycle change not homologated in test mode; invoice reason of a cycle change unconfirmed"},"06G.2": {"status": "done-simulated-stripe","executionPlan": "docs/superpowers/plans/2026-11-04-prometeus-cadence-06g2-capacity-execution.md","validation": "docs/validation/06g2-capacity.md","review": "docs/validation/06g2-capacity-review.md","migrations": ["db/migrations/112-capacity-addons.sql","db/migrations/112a-capacity-catalog.sql","db/migrations/112b-capacity-prepare.sql","db/migrations/112c-capacity-review.sql"],"deviations": "no Stripe call; LinkedIn add-on stays unavailable; annual add-on at 12x monthly is an own decision; domain rules in billing.ts instead of capacity-policy.ts"},"06G.3": {"status": "done-simulated-stripe","executionPlan": "docs/superpowers/plans/2026-11-04-prometeus-cadence-06g3-coupon-execution.md","validation": "docs/validation/06g3-coupon.md","review": "docs/validation/06g3-coupon-review.md","migrations": ["db/migrations/113-billing-coupon.sql"],"deviations": "no Stripe call and no real coupon; only one-time credit packs; campaigns by operator script, no admin screen"}},
       "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-commercial-design.md",
       "create": [
         "src/domain/capacity-policy.ts",

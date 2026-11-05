@@ -1,11 +1,20 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-04 · Session: s39 · Phase:6 06G.1 e 06G.2 concluídos com Stripe simulado; 07B.3 parcial; próximo 06G.3; paridade integral não aceita
+Updated: 2026-11-04 · Session: s40 · Phase:6 06G concluído com Stripe simulado; 07B.3 parcial; próximo 08A; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
 
+- Covered s40: 06G.3, cupom nos pacotes de créditos.
+  - **QA:** L-049 removed, nenhuma chamada ao Stripe.
+  - **Revisão:** três Medium e oito Low; parte aceita com registro.
+  - **Evidência:** EV-302.
+- Not covered s40:
+  - homologação do 06G no Stripe de teste;
+  - comportamento do cupom na referência.
+- Needs human s40:
+  - autorizar a homologação do 06G no Stripe de teste.
 - Covered s39: 06G.2, capacidade adicional como itens da assinatura.
   - **QA:** L-048 removed.
   - **Revisão:** dois High, três Medium e seis Low (112c).
@@ -231,7 +240,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s39: 06G.3; SDR sem aceite até o piloto; menores→08A.
+Fila vigente s40: 08A; SDR sem aceite até o piloto.
+
+Fila s39 (histórica): 06G.3.
 
 Fila s38 (histórica): 06G.2.
 
