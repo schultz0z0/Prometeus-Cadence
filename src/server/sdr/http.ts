@@ -2,6 +2,7 @@ import 'server-only';
 import {requirePrincipal} from '../auth/principal.ts';
 import {AppError,checkOrigin,errorResponse} from '../errors.ts';
 import {approveSdrReply,listSdrPending,prepareSdrReply,readSdrConversation,rejectSdrReply,resumeSdr,retrySdrTurn,takeOverSdr} from './conversation.ts';
+import {cancelSdrBooking,confirmSdrBooking,prepareSdrBooking,recheckSdrBooking,recordSdrFollowup,revokeSdrFollowup,sdrSlots} from './business-actions.ts';
 import {confirmSdrActivation,pauseSdrAgent,prepareSdrActivation,readSdr,saveSdrAgent,saveSdrKnowledge,setSdrKnowledgeState,simulateSdr} from './configuration.ts';
 // 07B.1: /api/sdr/{agents,knowledge} and /api/sdr/agents/:id/{prepare-activate,confirm-activate,pause,simulate}, /api/sdr/knowledge/:id/state.
 const json=(value:unknown)=>Response.json(value,{headers:{'cache-control':'no-store'}});
@@ -37,6 +38,13 @@ export async function sdrItemRequest(request:Request,resource:string,id:string,a
    if(action==='prepare-reply')return json(await prepareSdrReply(p,id,input));
    if(action==='approve-reply')return json(await approveSdrReply(p,id,input));
    if(action==='reject-reply')return json(await rejectSdrReply(p,id,input));
+   if(action==='slots')return json(await sdrSlots(p,id));
+   if(action==='prepare-booking')return json(await prepareSdrBooking(p,id,input));
+   if(action==='confirm-booking')return json(await confirmSdrBooking(p,id,input));
+   if(action==='recheck-booking')return json(await recheckSdrBooking(p,id));
+   if(action==='cancel-booking')return json(await cancelSdrBooking(p,id,input));
+   if(action==='followup-record')return json(await recordSdrFollowup(p,id,input));
+   if(action==='followup-revoke')return json(await revokeSdrFollowup(p,id,input));
   }
   throw new AppError(404,'Operação não encontrada.');
  }catch(e){return errorResponse(e);}

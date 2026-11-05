@@ -2,6 +2,7 @@ import 'server-only';
 import {z} from 'zod';
 import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
+import type {SdrProposal} from '../../domain/sdr-turn.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
 import {requirePermission} from '../auth/permissions.ts';
@@ -12,20 +13,25 @@ const failures:Record<string,[number,string]>={
  SDR_NOT_FOUND:[404,'Não encontrado nesta conversa.'],
  SDR_CHANGED:[409,'A conversa mudou. Recarregue e tente de novo.'],
  SDR_STATE:[409,'Esta resposta já não está esperando o seu ok.'],
+ SDR_FOLLOWUP_TOO_SOON:[409,'Já saiu uma mensagem nas últimas 24 horas. O retorno precisa esperar esse intervalo.'],
 };
 const sdrError=(e:unknown)=>{const k=e instanceof Error?failures[e.message]:undefined;return k?new AppError(k[0],k[1],e instanceof Error?e.message:undefined):e;};
 const tx=<T,>(p:Principal,fn:(c:PoolClient)=>Promise<T>)=>withWorkspaceTransaction(p,async c=>{
  if(!(await c.query('SELECT app.current_role() r')).rows[0].r)throw new AppError(403,failures.SDR_ACCESS[1]);return fn(c);
 }).catch(e=>{throw sdrError(e);});
-export interface SdrTurnView{id:string;state:string;text:string|null;fields:{field:string;value:string}[];reason:string|null;messageId:string|null;createdAt:string}
-const turnView=(r:Record<string,any>):SdrTurnView=>({id:r.id,state:r.state,text:r.text,fields:r.fields,reason:r.reason,messageId:r.message_id,createdAt:r.created_at.toISOString()});
+export interface SdrTurnView{id:string;state:string;text:string|null;fields:{field:string;value:string}[];reason:string|null;messageId:string|null;createdAt:string;proposal:SdrProposal|null;followupAttempt:number}
+const turnView=(r:Record<string,any>):SdrTurnView=>({id:r.id,state:r.state,text:r.text,fields:r.fields,reason:r.reason,messageId:r.message_id,createdAt:r.created_at.toISOString(),proposal:r.proposal,followupAttempt:r.followup_attempt});
 export async function readSdrConversation(p:Principal,id:string){return tx(p,async c=>{
  const cc=(await c.query('SELECT connection_id FROM app.channel_conversation WHERE id=$1',[id])).rows[0];if(!cc)throw new AppError(404,failures.SDR_NOT_FOUND[1]);
  const thread=(await c.query('SELECT owner,revision FROM app.sdr_thread_state WHERE conversation_id=$1',[id])).rows[0];
- const agent=(await c.query(`SELECT a.id,a.name,app.sdr_within_hours(r.config->'hours',clock_timestamp()) in_hours,app.sdr_connection_in_service(b.connection_id) in_service FROM app.sdr_channel_binding b JOIN app.sdr_agent a ON a.workspace_id=b.workspace_id AND a.id=b.agent_id
-  JOIN app.sdr_agent_revision r ON r.workspace_id=b.workspace_id AND r.agent_id=b.agent_id AND r.revision=b.revision WHERE b.connection_id=$1`,[cc.connection_id])).rows[0];
+ const agent=(await c.query(`SELECT a.id,a.name,app.sdr_within_hours(r.config->'hours',clock_timestamp()) in_hours,app.sdr_connection_in_service(b.connection_id) in_service,(r.config->>'followupEnabled')::boolean AND cn.provider='openwa' followup FROM app.sdr_channel_binding b JOIN app.sdr_agent a ON a.workspace_id=b.workspace_id AND a.id=b.agent_id
+  JOIN app.sdr_agent_revision r ON r.workspace_id=b.workspace_id AND r.agent_id=b.agent_id AND r.revision=b.revision JOIN app.channel_connection cn ON cn.workspace_id=b.workspace_id AND cn.id=b.connection_id WHERE b.connection_id=$1`,[cc.connection_id])).rows[0];
  const turn=(await c.query('SELECT * FROM app.sdr_turn WHERE conversation_id=$1 ORDER BY created_at DESC,id LIMIT 1',[id])).rows[0];
- return {agent:agent?{id:agent.id as string,name:agent.name as string,withinHours:agent.in_hours as boolean,inService:agent.in_service as boolean}:null,owner:(thread?.owner??'agent') as 'agent'|'human',revision:Number(thread?.revision??0),turn:turn?turnView(turn):null};
+ const booking=(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {id:string;start:string;end:string;state:string;revision:number;timezone:string}|null;
+ const followup=(await c.query("SELECT id,quote,attempts,next_at,expires_at FROM app.sdr_followup WHERE conversation_id=$1 AND state='active'",[id])).rows[0];
+ return {booking,
+  followup:followup?{id:followup.id as string,quote:followup.quote as string,attempts:followup.attempts as number,nextAt:followup.next_at.toISOString() as string,expiresAt:followup.expires_at.toISOString() as string}:null,
+  agent:agent?{id:agent.id as string,name:agent.name as string,withinHours:agent.in_hours as boolean,inService:agent.in_service as boolean,followupAvailable:agent.followup as boolean}:null,canConsent:['owner','admin'].includes((await c.query('SELECT app.current_role() r')).rows[0].r),owner:(thread?.owner??'agent') as 'agent'|'human',revision:Number(thread?.revision??0),turn:turn?turnView(turn):null};
 });}
 export async function listSdrPending(p:Principal){return tx(p,async c=>({items:(await c.query(`SELECT t.id,t.conversation_id "conversationId",t.state,t.text,t.created_at "createdAt",coalesce(nullif(l.payload->>'name',''),i.phone,'Contato') contact
   FROM app.sdr_turn t JOIN app.channel_conversation cc ON cc.workspace_id=t.workspace_id AND cc.id=t.conversation_id JOIN app.channel_identity i ON i.workspace_id=cc.workspace_id AND i.id=cc.identity_id

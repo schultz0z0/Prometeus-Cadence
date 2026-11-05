@@ -44,6 +44,5 @@ export function sdrBlockers(d:SdrDraft,f:SdrFacts):string[]{
  const known=new Map(f.knowledge.map(k=>[k.id,k.state]));
  if(d.knowledgeIds.some(id=>known.get(id)!=='approved'))b.push('Aprove todos os itens de conhecimento escolhidos (ou tire os que não foram aprovados).');
  if(d.approvalMode==='bounded-auto')b.push('Responder sem aprovação só fica disponível depois do piloto supervisionado. Por enquanto, cada resposta pede o seu ok.');
- if(d.followupEnabled)b.push('O follow-up para quem não respondeu ainda não está disponível. Desligue para ativar.');
  return b;
 }

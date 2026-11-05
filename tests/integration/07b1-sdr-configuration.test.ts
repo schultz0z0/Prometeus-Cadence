@@ -84,7 +84,7 @@ test('07B.1 gates: no Pro, no approved context, no handoff member, bounded-auto 
  const {u,ch}=await ready(),p=u.p;
  const a=await saveSdrAgent(p,{expectedRevision:0,draft:draft(p,[ch],{approvalMode:'bounded-auto',followupEnabled:true,handoff:{memberId:'nobody',rules:[]}})});
  const r=await prepareSdrActivation(p,{agentId:a.id,revision:1});
- for(const re of[/piloto/i,/follow-up/i,/responsável/i])assert.ok(r.blockers.some(b=>re.test(b)),String(re));
+ for(const re of[/piloto/i,/responsável/i])assert.ok(r.blockers.some(b=>re.test(b)),String(re));
  await pro(p,false);
  assert.ok((await prepareSdrActivation(p,{agentId:a.id,revision:1})).blockers.some(b=>/Pro/.test(b)));
  assert.equal((await readSdr(p)).entitled,false);

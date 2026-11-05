@@ -32,7 +32,7 @@ test('07B.1 blockers name every missing prerequisite',()=>{
  assert.deepEqual(sdrBlockers(draft(),facts()),[]);
  const all=sdrBlockers({...draft(),approvalMode:'bounded-auto',followupEnabled:true,knowledgeIds:['k1']},
   facts({pro:false,contextApproved:false,channels:[{id:'c1',ready:false,provider:'meta',takenBy:null}],handoffIsMember:false,knowledge:[{id:'k1',state:'draft'}]}));
- for(const re of[/Pro/,/contexto/i,/canal/i,/responsável/i,/conhecimento/i,/piloto/i,/follow-up/i])assert.ok(all.some(b=>re.test(b)),String(re));
+ for(const re of[/Pro/,/contexto/i,/canal/i,/responsável/i,/conhecimento/i,/piloto/i])assert.ok(all.some(b=>re.test(b)),String(re));
  assert.ok(sdrBlockers(draft(),facts({channels:[{id:'c1',ready:true,provider:'meta',takenBy:'Outro agente'}]})).some(b=>/Outro agente/.test(b)));
  assert.ok(sdrBlockers({...draft(),maxRepliesPerDay:21},facts({channels:[{id:'c1',ready:true,provider:'openwa',takenBy:null}]})).some(b=>/20/.test(b)),'OpenWA shares the 20/day ceiling');
  assert.ok(sdrBlockers({...draft(),channelIds:[]},facts()).some(b=>/canal/i.test(b)));
