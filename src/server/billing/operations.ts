@@ -2,7 +2,7 @@ import 'server-only';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import type {Principal} from '../../domain/workspace.ts';
-import {BILLING_VERSION,getSku,getPlan,type BillingReview} from '../../domain/billing.ts';
+import {BILLING_VERSION,getSku,planChange,planSku,type BillingReview,type PlanOffer} from '../../domain/billing.ts';
 import {AppError} from '../errors.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from '../prospecting/review.ts';
 import {billingPool,billingTransaction,billingError} from './db.ts';
@@ -14,7 +14,7 @@ const inputSchema=z.strictObject({kind:kinds,sku:z.string().min(1).max(80).optio
 const reviewSchema=z.strictObject({kind:kinds,sku:z.string().max(80).nullable(),amount:z.number().int().nonnegative(),currency:z.literal('brl'),revision:z.number().int().nonnegative(),token:z.string().min(1).max(8192),expiresAt:z.string().max(40),effects:z.array(z.string().max(500)).max(8),prorationDate:z.number().int().optional(),priceId:z.string().max(200).optional()});
 const confirmSchema=z.strictObject({requestId:z.uuid(),review:reviewSchema});
 const signing=()=>{const s=process.env.BETTER_AUTH_SECRET;if(!s||s.length<32)throw Error('Revisão de cobrança indisponível.');return s;};
-function proof(p:Principal,a:any,r:Omit<BillingReview,'token'|'expiresAt'|'effects'>){return {scope:'billing-review-v1',catalog:BILLING_VERSION,userId:p.userId,workspaceId:p.workspaceId,subscription:a.subscription_id,fromPlan:a.plan,...r};}
+function proof(p:Principal,a:any,r:Omit<BillingReview,'token'|'expiresAt'|'effects'>){return {scope:'billing-review-v1',catalog:BILLING_VERSION,userId:p.userId,workspaceId:p.workspaceId,subscription:a.subscription_id,fromPlan:a.plan,fromInterval:a.billing_interval,...r};}
 async function account(c:import('pg').PoolClient){const row=(await c.query('SELECT *,app.current_role() AS role FROM app.billing_account')).rows[0];if(!row||!['owner','admin'].includes(row.role))throw new AppError(403,'Somente proprietário ou administrador pode gerenciar cobrança.');return row;}
 export async function prepareBilling(p:Principal,input:unknown,deps:{adapter?:StripeAdapter}={}):Promise<BillingReview>{
  const parsed=inputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Operação de cobrança inválida.');if(!billingConfig().configured)throw new AppError(503,'Stripe de teste ainda não configurado.','BILLING_NOT_CONFIGURED');
@@ -22,27 +22,27 @@ export async function prepareBilling(p:Principal,input:unknown,deps:{adapter?:St
  let amount=0,sku:string|null=b.sku??null;let effects:string[]=[];let change:Partial<BillingReview>={};
  if(b.kind==='checkout'){
   if(!sku)throw new AppError(422,'Escolha um plano ou pacote.');let offer;try{offer=getSku(sku);}catch{throw new AppError(422,'Plano ou pacote inválido.');}
-  if('cycle'in offer){if(a.subscription_id&&['active','past_due','attention'].includes(a.state))throw new AppError(409,'Altere a assinatura existente para trocar de plano.');effects=['Assinatura mensal em ambiente de teste.','Acesso somente após pagamento confirmado.'];}
+  if('cycle'in offer){if(a.subscription_id&&['active','past_due','attention'].includes(a.state))throw new AppError(409,'Altere a assinatura existente para trocar de plano.');effects=[offer.cycle==='year'?'Assinatura anual em ambiente de teste, cobrada de uma vez. A franquia renova a cada mês, sem acumular.':'Assinatura mensal em ambiente de teste.','Acesso somente após pagamento confirmado.'];}
   else {if(!offer.available)throw new AppError(409,'Este recurso ainda não está disponível para compra.');await billingTransaction(p,c=>c.query('SELECT app.billing_require_execution()'));effects=['Compra única, sem renovação automática.','Créditos sem expiração; usados depois da franquia.'];}amount=offer.amount;
  }else{
   if(!a.subscription_id)throw new AppError(409,'É necessário ter uma assinatura para esta ação.');
   if(b.kind==='cancel'){sku=null;effects=['A renovação será cancelada.','O acesso permanece até o fim do período pago; dados e saldo comprado serão preservados.'];}
   else if(b.kind==='resume'){
    if(a.state!=='active'||!a.cancel_at_period_end||Date.parse(a.period_end)<=Date.now())throw new AppError(409,'A assinatura não possui uma renovação cancelada que possa ser retomada.');
-   sku=null;effects=['A renovação automática da assinatura atual será retomada.','Nenhuma cobrança imediata ou crédito adicional. A mensalidade volta a ser cobrada na próxima renovação.'];
+   sku=null;effects=['A renovação automática da assinatura atual será retomada.',`Nenhuma cobrança imediata ou crédito adicional. A ${a.billing_interval==='year'?'anuidade':'mensalidade'} volta a ser cobrada na próxima renovação.`];
   }
   else if(b.kind==='payment-method'){sku=null;effects=['Atualize a forma de pagamento no ambiente seguro do Stripe.'];}
   else {
-   if(!sku||!['essential','pro'].includes(sku)||sku===a.plan||b.kind!==(sku==='pro'?'upgrade':'downgrade'))throw new AppError(422,'Troca de plano inválida.');
+   if(!sku||planChange(a.plan,a.billing_interval,sku)!==b.kind)throw new AppError(422,'Troca de plano inválida. Para mudar de plano e de ciclo, faça uma alteração de cada vez.');
    if(a.state!=='active'||a.cancel_at_period_end||a.change_schedule_id)throw new AppError(409,'Regularize a assinatura antes de alterar o plano.');
    const adapter=deps.adapter??createStripeAdapter(),sub=await adapter.readSubscription(a.subscription_id),item=sub.items?.data?.[0];
-   if(sub.customer!==a.customer_id||sub.status!=='active'||sub.pending_update||sub.schedule||sub.items?.data?.length!==1||item?.quantity!==1||item.price?.unit_amount!==getPlan(a.plan).amount)throw new AppError(409,'A assinatura mudou. Atualize o estado antes de trocar.');
+   if(sub.customer!==a.customer_id||sub.status!=='active'||sub.pending_update||sub.schedule||sub.items?.data?.length!==1||item?.quantity!==1||item.price?.unit_amount!==getSku(planSku(a.plan,a.billing_interval)).amount)throw new AppError(409,'A assinatura mudou. Atualize o estado antes de trocar.');
    const priceId=await adapter.ensurePrice(sku);change={priceId};
    if(b.kind==='upgrade'){
     const prorationDate=Math.floor(Date.now()/1000),preview=await adapter.previewChange(sub.id,item.id,priceId,prorationDate);
     if(preview.currency!=='brl'||!Number.isSafeInteger(preview.amount_due)||preview.amount_due<=0)throw new AppError(409,'Não foi possível confirmar o valor da alteração.');
     amount=preview.amount_due;change.prorationDate=prorationDate;effects=['Cobrança proporcional de teste, conforme esta prévia.','O plano e a diferença de franquia mudam somente após o pagamento.'];
-   }else effects=['O plano atual permanece até a próxima renovação.','O Essential será aplicado na renovação por R$ 397/mês. Dados e saldo comprado permanecem.'];
+   }else{const target=getSku(sku) as PlanOffer,total=(target.amount/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}).replace(/\s/g,' ');effects=['O plano atual permanece até a próxima renovação, sem cobrança agora.',`${target.name} será aplicado na renovação por ${total}/${target.cycle==='year'?'ano':'mês'}. Dados e saldo comprado permanecem.`];}
   }
  }
  const core={kind:b.kind,sku,amount,currency:'brl' as const,revision:Number(a.revision),...change},now=Date.now();
@@ -95,7 +95,7 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
     let changed=sub;
     // An acknowledged remote change is recovered by reading it, never by charging a second time.
     if(item.price?.id!==o.proof.priceId){
-     if(item.price?.unit_amount!==getPlan(o.account.plan).amount)throw new StripeFailure(false);
+     if(item.price?.unit_amount!==getSku(planSku(o.account.plan,o.account.billing_interval)).amount)throw new StripeFailure(false);
      if(o.stage!=='financial_requested'){const preview=await adapter.previewChange(sub.id,item.id,o.proof.priceId,o.proof.prorationDate);if(preview.currency!=='brl'||preview.amount_due!==o.proof.amount)throw new StripeFailure(false);}
      await update('financial_request',{});
      changed=await adapter.upgrade(sub.id,item.id,o.proof.priceId,o.proof.prorationDate,o.id);
@@ -103,7 +103,7 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
     const invoiceId=typeof changed.latest_invoice==='string'?changed.latest_invoice:changed.latest_invoice?.id;
     if(!invoiceId)throw new StripeFailure(true);
     await update('awaiting_payment',{id:sub.id,result:{invoiceId}});
-   }else {const schedule=await adapter.downgrade(sub,o.proof.priceId,o.id);await update('completed',{id:schedule.id});}
+   }else {if(item.price?.unit_amount!==getSku(planSku(o.account.plan,o.account.billing_interval)).amount)throw new StripeFailure(false);const schedule=await adapter.downgrade(sub,o.proof.priceId,o.id,(getSku(o.sku) as PlanOffer).cycle);await update('completed',{id:schedule.id});}
   }else throw new StripeFailure(false);
  }catch(error){
   try{await update(error instanceof StripeFailure&&!error.uncertain?'failed':'uncertain',{code:error instanceof StripeFailure&&!error.uncertain?'PROVIDER_REJECTED':'RECONCILIATION_REQUIRED'});}catch{}

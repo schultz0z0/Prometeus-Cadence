@@ -1,6 +1,6 @@
 import 'server-only';
 import {createHash} from 'node:crypto';
-import {BILLING_VERSION,getPlan,getSku} from '../../domain/billing.ts';
+import {BILLING_VERSION,getSku,planFromPrice} from '../../domain/billing.ts';
 import {billingPool} from './db.ts';
 import {billingConfig} from './config.ts';
 import {verifyStripeEvent} from './signature.ts';
@@ -21,25 +21,28 @@ async function healthyPayment(pi:string,adapter:StripeAdapter){const p=await ada
 export async function subscriptionSnapshot(a:any,subId:string,adapter:StripeAdapter){
  const s=await adapter.readSubscription(subId);ensure(s.id===subId&&id(s.customer)===a.customer_id&&s.metadata?.workspace_id===a.workspace_id&&s.metadata?.catalog_version===BILLING_VERSION);
  ensure(!s.items?.has_more&&s.items?.data?.length===1);const item=s.items.data[0],price=item.price;
- ensure(item.quantity===1&&price.currency==='brl'&&price.recurring?.interval==='month'&&(price.recurring.interval_count??1)===1);
- const plan=price.unit_amount===39700?'essential':price.unit_amount===89700?'pro':null;ensure(plan);const offer=getPlan(plan!);
+ ensure(item.quantity===1&&price.currency==='brl'&&(price.recurring?.interval_count??1)===1);
+ const matched=planFromPrice(price.unit_amount,price.recurring?.interval);ensure(matched);const {plan,interval,sku}=matched!,offer=getSku(sku);
  const start=item.current_period_start,end=item.current_period_end;ensure(Number.isSafeInteger(start)&&Number.isSafeInteger(end)&&start<end);
  const pending=(await billingPool().query("SELECT id,sku,proof,result FROM app.billing_operation WHERE workspace_id=$1 AND kind='upgrade' AND remote_id=$2 AND state='awaiting_payment' ORDER BY created_at DESC LIMIT 1",[a.workspace_id,s.id])).rows[0];
  let expiry:Record<string,string>={};
- if(pending?.result?.invoiceId&&!s.pending_update&&pending.sku!==plan){const previous=await adapter.readInvoice(stripeId(pending.result.invoiceId,'in'));ensure(id(previous.customer)===a.customer_id&&id(previous.parent?.subscription_details?.subscription)===s.id);if(previous.status==='void')expiry={upgrade_expired_operation_id:pending.id,expired_invoice_id:previous.id};}
- const base={kind:'subscription',subscription_id:s.id,plan,status:s.status,period_start:start,period_end:end,cancel_at_period_end:!!s.cancel_at_period_end,paid:false,...expiry};
+ if(pending?.result?.invoiceId&&!s.pending_update&&pending.sku!==sku){const previous=await adapter.readInvoice(stripeId(pending.result.invoiceId,'in'));ensure(id(previous.customer)===a.customer_id&&id(previous.parent?.subscription_details?.subscription)===s.id);if(previous.status==='void')expiry={upgrade_expired_operation_id:pending.id,expired_invoice_id:previous.id};}
+ const base={kind:'subscription',subscription_id:s.id,plan,sku,interval,status:s.status,period_start:start,period_end:end,cancel_at_period_end:!!s.cancel_at_period_end,paid:false,...expiry};
  if(!s.latest_invoice||!['active','past_due'].includes(s.status))return base;
  const inv=await adapter.readInvoice(stripeId(id(s.latest_invoice),'in'));
  ensure(inv.id===id(s.latest_invoice)&&id(inv.customer)===a.customer_id&&inv.currency==='brl'&&id(inv.parent?.subscription_details?.subscription)===s.id);
  if(inv.status!=='paid'||inv.amount_paid!==inv.amount_due||inv.amount_remaining!==0||!(inv.amount_paid>0))return {...base,invoice:invoiceView(inv,s.id)};
  ensure(!inv.lines?.has_more&&inv.lines?.data?.some((line:any)=>line.quantity===1&&line.pricing?.price_details?.price===price.id&&line.period?.end===end&&line.amount>0));
  if(inv.billing_reason==='subscription_update'){
-  const approved=(await billingPool().query("SELECT id,proof FROM app.billing_operation WHERE workspace_id=$1 AND kind='upgrade' AND sku=$2 AND result->>'invoiceId'=$3 AND state IN('awaiting_payment','completed') ORDER BY created_at DESC LIMIT 1",[a.workspace_id,plan,inv.id])).rows[0];
-  ensure(approved&&approved.proof.amount===inv.amount_due);
+  const approved=(await billingPool().query("SELECT id,proof FROM app.billing_operation WHERE workspace_id=$1 AND kind='upgrade' AND sku=$2 AND result->>'invoiceId'=$3 AND state IN('awaiting_payment','completed') ORDER BY created_at DESC LIMIT 1",[a.workspace_id,sku,inv.id])).rows[0];
+  const whole=inv.amount_due===offer.amount&&inv.lines.data.length===1&&inv.lines.data[0].period.start===start;
+  // A cycle change resets the anchor, so Stripe may call the renewal an update. Replays arrive after the schedule was cleared.
+  const scheduled=whole&&((a.change_schedule_id&&a.next_plan===sku)||(await billingPool().query('SELECT 1 FROM app.billing_payment WHERE workspace_id=$1 AND id=$2',[a.workspace_id,inv.id])).rowCount);
+  ensure(scheduled||(approved&&approved.proof.amount===inv.amount_due));
  }else ensure(['subscription_create','subscription_cycle'].includes(inv.billing_reason)&&inv.amount_due===offer.amount&&inv.lines.data.length===1&&inv.lines.data[0].period.start===start);
  ensure(!inv.payments?.has_more);const paid=inv.payments?.data?.filter((p:any)=>p.status==='paid'&&p.payment?.type==='payment_intent');ensure(paid?.length===1);const pi=stripeId(id(paid[0].payment.payment_intent),'pi');
  if(!await healthyPayment(pi,adapter))return {kind:'freeze',payment_intent:pi};
- return {...base,paid:s.status==='active',invoice_id:inv.id,payment_intent:pi,invoice:invoiceView(inv,s.id),...(inv.billing_reason==='subscription_update'&&pending?.result?.invoiceId===inv.id&&pending.sku===plan?{upgrade_paid_operation_id:pending.id}:{})};
+ return {...base,paid:s.status==='active',invoice_id:inv.id,payment_intent:pi,invoice:invoiceView(inv,s.id),...(inv.billing_reason==='subscription_update'&&pending?.result?.invoiceId===inv.id&&pending.sku===sku?{upgrade_paid_operation_id:pending.id}:{})};
 }
 function invoiceView(v:any,sub:string){return {id:v.id,subscription_id:sub,status:v.status,amount:v.amount_paid??0,url:v.hosted_invoice_url?stripeUrl(v.hosted_invoice_url,'invoice'):null,created:v.created};}
 async function checkoutSnapshot(a:any,sessionId:string,adapter:StripeAdapter){
@@ -82,7 +85,7 @@ export async function processBillingEvent(eventId?:string,adapter:StripeAdapter=
    const retired=(await billingPool().query('SELECT 1 FROM app.billing_subscription_history WHERE workspace_id=$1 AND subscription_id=$2',[a.workspace_id,data.subscription_id])).rowCount;
    if(retired)data={};
    else{
-    const checkout=(await billingPool().query("SELECT remote_id FROM app.billing_operation WHERE workspace_id=$1 AND kind='checkout' AND sku IN('essential','pro') AND state='awaiting_payment' AND remote_id IS NOT NULL LIMIT 1",[a.workspace_id])).rows[0];
+    const checkout=(await billingPool().query("SELECT remote_id FROM app.billing_operation WHERE workspace_id=$1 AND kind='checkout' AND sku IN('essential','pro','essential-annual','pro-annual') AND state='awaiting_payment' AND remote_id IS NOT NULL LIMIT 1",[a.workspace_id])).rows[0];
     if(!checkout)throw Error('UNAPPROVED_SUBSCRIPTION');
     const replacement:any=await checkoutSnapshot(a,checkout.remote_id,adapter);
     if(replacement.kind!=='subscription'||replacement.subscription_id!==data.subscription_id)throw Error('CHECKOUT_NOT_CONFIRMED');data=replacement;

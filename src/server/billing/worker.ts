@@ -7,6 +7,8 @@ import {createStripeAdapter,type StripeAdapter} from './stripe.ts';
 export async function processBillingTick(options:{limit?:number;signal?:AbortSignal;adapter?:StripeAdapter}={}){
  if(!billingConfig().configured)return {processed:0};const limit=Math.min(10,Math.max(1,Math.trunc(options.limit??5))),adapter=options.adapter??createStripeAdapter();let processed=0;
  await billingPool().query('SELECT app.billing_schedule_sync($1)',[limit]);
+ // A failed roll must not stop webhooks; the next tick retries and reservations open their own window.
+ await billingPool().query('SELECT app.billing_roll_annual($1,$2)',[25,new Date()]).catch((e:unknown)=>console.error('billing_roll_annual',e));
  // Alternate durable commands and incoming receipts; neither class can starve the other.
  for(let i=0;i<limit&&!options.signal?.aborted;i++){
   const operation=i%2===0;
