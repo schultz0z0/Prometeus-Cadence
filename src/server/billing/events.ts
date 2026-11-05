@@ -1,6 +1,6 @@
 import 'server-only';
 import {createHash} from 'node:crypto';
-import {BILLING_VERSION,getSku,planFromPrice} from '../../domain/billing.ts';
+import {BILLING_VERSION,CAPACITY_UNITS,getSku,parseSubscriptionItems} from '../../domain/billing.ts';
 import {billingPool} from './db.ts';
 import {billingConfig} from './config.ts';
 import {verifyStripeEvent} from './signature.ts';
@@ -20,29 +20,46 @@ export async function enqueueReconciliation(customer:string,object:string,type='
 async function healthyPayment(pi:string,adapter:StripeAdapter){const p=await adapter.readPayment(pi);ensure(p.id===pi&&p.status==='succeeded'&&p.currency==='brl'&&p.latest_charge&&typeof p.latest_charge==='object');return !p.latest_charge.disputed&&!p.latest_charge.refunded&&!p.latest_charge.amount_refunded;}
 export async function subscriptionSnapshot(a:any,subId:string,adapter:StripeAdapter){
  const s=await adapter.readSubscription(subId);ensure(s.id===subId&&id(s.customer)===a.customer_id&&s.metadata?.workspace_id===a.workspace_id&&s.metadata?.catalog_version===BILLING_VERSION);
- ensure(!s.items?.has_more&&s.items?.data?.length===1);const item=s.items.data[0],price=item.price;
- ensure(item.quantity===1&&price.currency==='brl'&&(price.recurring?.interval_count??1)===1);
- const matched=planFromPrice(price.unit_amount,price.recurring?.interval);ensure(matched);const {plan,interval,sku}=matched!,offer=getSku(sku);
+ ensure(!s.items?.has_more);const items=parseSubscriptionItems(s.items?.data);ensure(items);const {plan,interval,sku,item,total,capacity}=items!,price=item.price,offer=getSku(sku);
+ const quantities=Object.fromEntries(CAPACITY_UNITS.filter(u=>capacity[u]).map(u=>[u,capacity[u].quantity as number]));
  const start=item.current_period_start,end=item.current_period_end;ensure(Number.isSafeInteger(start)&&Number.isSafeInteger(end)&&start<end);
- const pending=(await billingPool().query("SELECT id,sku,proof,result FROM app.billing_operation WHERE workspace_id=$1 AND kind='upgrade' AND remote_id=$2 AND state='awaiting_payment' ORDER BY created_at DESC LIMIT 1",[a.workspace_id,s.id])).rows[0];
+ const pending=(await billingPool().query("SELECT id,kind,sku,proof,result FROM app.billing_operation WHERE workspace_id=$1 AND kind IN('upgrade','capacity') AND remote_id=$2 AND state='awaiting_payment' ORDER BY created_at DESC LIMIT 1",[a.workspace_id,s.id])).rows[0];
  let expiry:Record<string,string>={};
- if(pending?.result?.invoiceId&&!s.pending_update&&pending.sku!==sku){const previous=await adapter.readInvoice(stripeId(pending.result.invoiceId,'in'));ensure(id(previous.customer)===a.customer_id&&id(previous.parent?.subscription_details?.subscription)===s.id);if(previous.status==='void')expiry={upgrade_expired_operation_id:pending.id,expired_invoice_id:previous.id};}
- const base={kind:'subscription',subscription_id:s.id,plan,sku,interval,status:s.status,period_start:start,period_end:end,cancel_at_period_end:!!s.cancel_at_period_end,paid:false,...expiry};
+ if(pending?.result?.invoiceId&&!s.pending_update&&pending.sku!==sku){const previous=await adapter.readInvoice(stripeId(pending.result.invoiceId,'in'));ensure(id(previous.customer)===a.customer_id&&id(previous.parent?.subscription_details?.subscription)===s.id);if(previous.status==='void')expiry={upgrade_expired_operation_id:pending.id,expired_invoice_id:previous.id};
+  // A paid add-on whose event lost the race to the renewal. Its refund is then seen only through the account's later events.
+  else if(pending.kind==='capacity'&&previous.status==='paid'&&previous.id!==id(s.latest_invoice)&&previous.amount_paid===pending.proof.amount&&capacity[pending.sku.split('-')[1] as keyof typeof capacity]?.quantity===pending.proof.quantity)expiry={capacity_paid_operation_id:pending.id};}
+ const base={kind:'subscription',subscription_id:s.id,plan,sku,interval,status:s.status,period_start:start,period_end:end,cancel_at_period_end:!!s.cancel_at_period_end,paid:false,capacity:quantities,...expiry};
  if(!s.latest_invoice||!['active','past_due'].includes(s.status))return base;
  const inv=await adapter.readInvoice(stripeId(id(s.latest_invoice),'in'));
  ensure(inv.id===id(s.latest_invoice)&&id(inv.customer)===a.customer_id&&inv.currency==='brl'&&id(inv.parent?.subscription_details?.subscription)===s.id);
  if(inv.status!=='paid'||inv.amount_paid!==inv.amount_due||inv.amount_remaining!==0||!(inv.amount_paid>0))return {...base,invoice:invoiceView(inv,s.id)};
- ensure(!inv.lines?.has_more&&inv.lines?.data?.some((line:any)=>line.quantity===1&&line.pricing?.price_details?.price===price.id&&line.period?.end===end&&line.amount>0));
- if(inv.billing_reason==='subscription_update'){
-  const approved=(await billingPool().query("SELECT id,proof FROM app.billing_operation WHERE workspace_id=$1 AND kind='upgrade' AND sku=$2 AND result->>'invoiceId'=$3 AND state IN('awaiting_payment','completed') ORDER BY created_at DESC LIMIT 1",[a.workspace_id,sku,inv.id])).rows[0];
-  const whole=inv.amount_due===offer.amount&&inv.lines.data.length===1&&inv.lines.data[0].period.start===start;
-  // A cycle change resets the anchor, so Stripe may call the renewal an update. Replays arrive after the schedule was cleared.
-  const scheduled=whole&&((a.change_schedule_id&&a.next_plan===sku)||(await billingPool().query('SELECT 1 FROM app.billing_payment WHERE workspace_id=$1 AND id=$2',[a.workspace_id,inv.id])).rowCount);
-  ensure(scheduled||(approved&&approved.proof.amount===inv.amount_due));
- }else ensure(['subscription_create','subscription_cycle'].includes(inv.billing_reason)&&inv.amount_due===offer.amount&&inv.lines.data.length===1&&inv.lines.data[0].period.start===start);
+ ensure(!inv.lines?.has_more);
+ const recorded=!!(await billingPool().query('SELECT 1 FROM app.billing_payment WHERE workspace_id=$1 AND id=$2',[a.workspace_id,inv.id])).rowCount;
+ const capacityOp=inv.billing_reason==='subscription_update'?(await billingPool().query("SELECT id,sku,state,proof FROM app.billing_operation WHERE workspace_id=$1 AND kind='capacity' AND result->>'invoiceId'=$2 AND state IN('awaiting_payment','completed') LIMIT 1",[a.workspace_id,inv.id])).rows[0]:undefined;
+ const lines=inv.lines?.data??[],wholeInvoice=!capacityOp&&inv.amount_due===total&&lines.length===s.items.data.length&&lines.every((line:any)=>line.period?.start===start)&&s.items.data.every((i:any)=>lines.some((line:any)=>line.pricing?.price_details?.price===i.price.id&&line.quantity===i.quantity&&line.period?.end===end));
+ let verified=true;
+ try{
+  if(capacityOp){
+   // An add-on invoice carries only its own lines; the amount and quantity are the ones reviewed.
+   const added=capacity[capacityOp.sku.split('-')[1] as keyof typeof capacity];
+   ensure(capacityOp.proof.amount===inv.amount_due&&added?.quantity===capacityOp.proof.quantity&&lines.some((line:any)=>line.pricing?.price_details?.price===added.price.id&&line.period?.end===end&&line.amount>0));
+  }else{
+   ensure(lines.some((line:any)=>line.quantity===1&&line.pricing?.price_details?.price===price.id&&line.period?.end===end&&line.amount>0));
+   if(inv.billing_reason==='subscription_update'){
+    const approved=(await billingPool().query("SELECT id,proof FROM app.billing_operation WHERE workspace_id=$1 AND kind='upgrade' AND sku=$2 AND result->>'invoiceId'=$3 AND state IN('awaiting_payment','completed') ORDER BY created_at DESC LIMIT 1",[a.workspace_id,sku,inv.id])).rows[0];
+    // A cycle change resets the anchor, so Stripe may call the renewal an update. Replays arrive after the schedule was cleared.
+    const scheduled=wholeInvoice&&((a.change_schedule_id&&a.next_plan===sku)||recorded);
+    ensure(scheduled||(approved&&approved.proof.amount===inv.amount_due));
+   }else ensure(['subscription_create','subscription_cycle'].includes(inv.billing_reason)&&wholeInvoice);
+  }
+ }catch(error){
+  // A reduction has no invoice of its own, so the latest paid one no longer matches the items. It was verified when it was recorded.
+  if(!recorded||(error as Error).message!=='BILLING_REMOTE_MISMATCH')throw error;verified=false;
+ }
  ensure(!inv.payments?.has_more);const paid=inv.payments?.data?.filter((p:any)=>p.status==='paid'&&p.payment?.type==='payment_intent');ensure(paid?.length===1);const pi=stripeId(id(paid[0].payment.payment_intent),'pi');
  if(!await healthyPayment(pi,adapter))return {kind:'freeze',payment_intent:pi};
- return {...base,paid:s.status==='active',invoice_id:inv.id,payment_intent:pi,invoice:invoiceView(inv,s.id),...(inv.billing_reason==='subscription_update'&&pending?.result?.invoiceId===inv.id&&pending.sku===sku?{upgrade_paid_operation_id:pending.id}:{})};
+ if(!verified)return {...base,invoice:invoiceView(inv,s.id)};
+ return {...base,paid:s.status==='active',whole_period:wholeInvoice,invoice_id:inv.id,payment_intent:pi,invoice:invoiceView(inv,s.id),...(inv.billing_reason==='subscription_update'&&pending?.result?.invoiceId===inv.id&&pending.sku===sku?{upgrade_paid_operation_id:pending.id}:{}),...(capacityOp?{capacity_invoice:true,...(capacityOp.state==='awaiting_payment'?{capacity_paid_operation_id:capacityOp.id}:{})}:{})};
 }
 function invoiceView(v:any,sub:string){return {id:v.id,subscription_id:sub,status:v.status,amount:v.amount_paid??0,url:v.hosted_invoice_url?stripeUrl(v.hosted_invoice_url,'invoice'):null,created:v.created};}
 async function checkoutSnapshot(a:any,sessionId:string,adapter:StripeAdapter){

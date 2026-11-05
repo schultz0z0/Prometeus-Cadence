@@ -4,7 +4,7 @@ import {createStripeAdapter} from '../src/server/billing/stripe.ts';
 const config={key:'sk_test_fixture',webhookSecret:'whsec_fixture',origin:'http://127.0.0.1:3210',apiVersion:'2026-09-30.endive',mode:'test' as const,configured:true};
 test('downgrade creates from subscription alone, then marks the owned schedule with its operation',async()=>{
  const calls:{endpoint:string;form:URLSearchParams;key:string|null}[]=[];
- const sub={id:'sub_fixture',schedule:null,items:{data:[{price:{id:'price_pro'},current_period_start:100,current_period_end:200}]}};
+ const sub={id:'sub_fixture',schedule:null,items:{data:[{quantity:1,price:{id:'price_pro'},current_period_start:100,current_period_end:200}]}};
  let stored:any={id:'sub_sched_fixture',subscription:sub.id,status:'active',end_behavior:'release',metadata:{},current_phase:{start_date:100,end_date:200},phases:[{start_date:100,end_date:200,items:[{price:'price_pro',quantity:1}]}]};
  const adapter=createStripeAdapter(async(input,init)=>{
   const endpoint=new URL(String(input)).pathname,form=new URLSearchParams(String(init?.body??'')),key=new Headers(init?.headers).get('Idempotency-Key');

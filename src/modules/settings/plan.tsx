@@ -40,8 +40,8 @@ function BillingPage({ workspaceId }: {
     finally {
         setBusy(false);
     } }
-    const choose = (kind: BillingReview['kind'], sku?: string) => act(async () => { if (client)
-        setReview(await client.prepare({ kind, ...(sku ? { sku } : {}) })); });
+    const choose = (kind: BillingReview['kind'], sku?: string, quantity?: number) => act(async () => { if (client)
+        setReview(await client.prepare({ kind, ...(sku ? { sku } : {}), ...(quantity === undefined ? {} : { quantity }) })); });
     return <div className="billing-page"><h1 className="sr-only">Plano e cobrança</h1><div className="billing-tabs" role="tablist" aria-label="Plano e cobrança" ref={tablist} onKeyDown={e => { const at = tabs.indexOf(tab), next = e.key === 'ArrowRight' ? (at + 1) % tabs.length : e.key === 'ArrowLeft' ? (at + tabs.length - 1) % tabs.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null; if (next !== null) {
         e.preventDefault();
         setTab(tabs[next]);

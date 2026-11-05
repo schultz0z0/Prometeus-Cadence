@@ -42,7 +42,7 @@ const known = [
   "billing-storage",
   "billing-entitlements",
   "billing-operations",
-  "billing-events","06g1-annual",
+  "billing-events","06g1-annual","06g2-capacity",
   "billing-guards",
   "billing-http",
   "openwa-storage",

@@ -29,7 +29,18 @@ export function getSku(code:`${CommercialUnit}-${number}`):PackOffer;
 export function getSku(code:string):PlanOffer|PackOffer;
 export function getSku(code:string):PlanOffer|PackOffer {if(code==='essential'||code==='pro')return getPlan(code);if(code==='essential-annual'||code==='pro-annual')return annualOffer(code.slice(0,-7) as PlanCode);const p=packs.find(p=>p.code===code);if(!p)throw Error('Pacote inválido.');return {...p};}
 export function billingCatalog(){return {version:BILLING_VERSION,trialDays:TRIAL_DAYS,plans:Object.values(plans).map(p=>structuredClone(p)),annualPlans:(['essential','pro'] as const).map(annualOffer),packs:packs.map(p=>({...p}))};}
-export const skuTitle=(sku:string)=>{const o=getSku(sku);return o.name+('cycle'in o&&o.cycle==='year'?' anual':'');};
+export type CapacityUnit='mailboxes'|'whatsapp'|'seats';
+export const CAPACITY_UNITS:CapacityUnit[]=['mailboxes','whatsapp','seats'];
+export const CAPACITY_MAX=50;
+export interface CapacityOffer {code:string;unit:CapacityUnit;name:string;amount:number;currency:'brl';interval:BillingInterval;}
+const capacityCatalog:Record<CapacityUnit,{name:string;amount:number}>={mailboxes:{name:'Contas de E-mail',amount:1900},whatsapp:{name:'Números de WhatsApp',amount:4900},seats:{name:'Usuários Extras',amount:5900}};
+/** One subscription has one interval, so a yearly subscriber pays twelve months of the add-on, without the plan's discount. */
+export const capacityOffer=(unit:CapacityUnit,interval:BillingInterval):CapacityOffer=>({code:`capacity-${unit}${interval==='year'?'-annual':''}`,unit,name:capacityCatalog[unit].name,amount:capacityCatalog[unit].amount*(interval==='year'?12:1),currency:'brl',interval});
+export function capacityFromCode(code:string):CapacityOffer|null{const m=/^capacity-(mailboxes|whatsapp|seats)(-annual)?$/.exec(code);return m?capacityOffer(m[1] as CapacityUnit,m[2]?'year':'month'):null;}
+export function capacityFromPrice(amount:unknown,interval:unknown):CapacityOffer|null{if(interval!=='month'&&interval!=='year')return null;return CAPACITY_UNITS.map(u=>capacityOffer(u,interval)).find(o=>o.amount===amount)??null;}
+/** Capacity in use is never removed silently: the person frees it first. */
+export const capacityReductionAllowed=(input:{inUse:number;requested:number})=>input.inUse<=input.requested;
+export const skuTitle=(sku:string)=>{const c=capacityFromCode(sku);if(c)return c.name+(c.interval==='year'?' anual':'');const o=getSku(sku);return o.name+('cycle'in o&&o.cycle==='year'?' anual':'');};
 export const planSku=(plan:PlanCode,interval:BillingInterval):PlanSku=>interval==='year'?`${plan}-annual`:plan;
 /** The exact catalog combination of amount and interval, or nothing: a divergent Stripe price grants no rights. */
 export function planFromPrice(amount:unknown,interval:unknown):{plan:PlanCode;interval:BillingInterval;sku:PlanSku}|null{
@@ -38,6 +49,19 @@ export function planFromPrice(amount:unknown,interval:unknown):{plan:PlanCode;in
   if(interval==='year'&&amount===annualAmounts[plan])return {plan,interval,sku:`${plan}-annual`};
  }
  return null;
+}
+/** One plan item plus at most one item per add-on, in one interval, exactly as in the catalog; anything else grants no rights. */
+export function parseSubscriptionItems(items:unknown){
+ if(!Array.isArray(items))return null;let found:(NonNullable<ReturnType<typeof planFromPrice>>&{item:any})|null=null,total=0;const capacity:Partial<Record<CapacityUnit,any>>={};
+ for(const i of items){
+  const p=i?.price;if(p?.currency!=='brl'||(p?.recurring?.interval_count??1)!==1)return null;
+  const plan=planFromPrice(p.unit_amount,p.recurring?.interval),add=plan?null:capacityFromPrice(p.unit_amount,p.recurring?.interval);
+  if(plan){if(found||i.quantity!==1)return null;found={...plan,item:i};total+=p.unit_amount;}
+  else if(add){if(capacity[add.unit]||!Number.isInteger(i.quantity)||i.quantity<1||i.quantity>CAPACITY_MAX)return null;capacity[add.unit]=i;total+=p.unit_amount*i.quantity;}
+  else return null;
+ }
+ if(!found||items.some(i=>i.price.recurring?.interval!==found!.interval))return null;
+ return {...found,capacity,total};
 }
 /** Same cycle: up now, down at renewal. Same plan, other cycle: at renewal, so franchises never overlap. Both at once: not allowed. */
 export function planChange(plan:PlanCode,interval:BillingInterval,sku:string):'upgrade'|'downgrade'|null{
@@ -55,5 +79,5 @@ export function monthlyWindow(anchor:string,now:string){
 }
 export interface BillingBalance {unit:CommercialUnit;plan:number;purchased:number;reserved:number;consumed:number;nextReset:string|null;}
 export interface BillingOperation {id:string;kind:string;sku:string|null;state:'prepared'|'processing'|'uncertain'|'awaiting_payment'|'completed'|'failed';createdAt:string;url:string|null;error:string|null;}
-export interface BillingView {version:string;configured:boolean;canManage:boolean;status:BillingStatus;plan:PlanCode|null;interval:BillingInterval;nextPlan:PlanSku|null;periodEnd:string|null;cancelAtPeriodEnd:boolean;trialAvailable:boolean;revision:number;contact:{email:string|null;phone:string|null};balances:BillingBalance[];capacity:PlanOffer['capacity']|null;usage:Record<string,number>;operations:BillingOperation[];invoices:{id:string;status:string;amount:number;currency:string;url:string|null;createdAt:string}[];}
-export interface BillingReview {token:string;expiresAt:string;kind:'checkout'|'cancel'|'resume'|'upgrade'|'downgrade'|'payment-method';sku:string|null;amount:number;currency:'brl';effects:string[];revision:number;prorationDate?:number;priceId?:string;}
+export interface BillingView {version:string;configured:boolean;canManage:boolean;status:BillingStatus;plan:PlanCode|null;interval:BillingInterval;nextPlan:PlanSku|null;periodEnd:string|null;cancelAtPeriodEnd:boolean;trialAvailable:boolean;revision:number;contact:{email:string|null;phone:string|null};balances:BillingBalance[];capacity:PlanOffer['capacity']|null;capacityExtras:Record<CapacityUnit,{active:number;scheduled:number|null}>;usage:Record<string,number>;operations:BillingOperation[];invoices:{id:string;status:string;amount:number;currency:string;url:string|null;createdAt:string}[];}
+export interface BillingReview {token:string;expiresAt:string;kind:'checkout'|'cancel'|'resume'|'upgrade'|'downgrade'|'payment-method'|'capacity';sku:string|null;amount:number;currency:'brl';effects:string[];revision:number;prorationDate?:number;priceId?:string;quantity?:number;fromQuantity?:number;}

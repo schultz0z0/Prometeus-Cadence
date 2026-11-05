@@ -1,11 +1,12 @@
 import 'server-only';
 import {z} from 'zod';
 import type {Principal} from '../../domain/workspace.ts';
-import {BILLING_VERSION,getPlan,type BillingView,type BillingStatus,type CommercialUnit,type BillingOperation} from '../../domain/billing.ts';
+import {BILLING_VERSION,CAPACITY_UNITS,getPlan,type BillingView,type BillingStatus,type CommercialUnit,type BillingOperation} from '../../domain/billing.ts';
 import {billingTransaction} from './db.ts';
 import {billingConfig} from './config.ts';
 import {AppError} from '../errors.ts';
 const iso=(v:unknown)=>v?new Date(v as string).toISOString():null;
+const capacityWithExtras=(base:NonNullable<BillingView['capacity']>,a:any,active:boolean)=>{const out={...base};if(active&&a.state==='active')for(const u of CAPACITY_UNITS){const paid=a.capacity_extra?.[u]??0;out[u]+=Math.min(paid,a.capacity_scheduled?.[u]??paid);}return out;};
 export function operationView(r:Record<string,any>):BillingOperation{return {id:r.id,kind:r.kind,sku:r.sku,state:r.state,createdAt:iso(r.created_at)!,url:r.result?.url??null,error:r.error_code?'A operação aguarda revisão ou conciliação.':null};}
 export async function readBilling(p:Principal):Promise<BillingView>{return billingTransaction(p,async c=>{
  const account=(await c.query('SELECT *,app.current_role() AS role FROM app.billing_account')).rows[0];if(!account)throw new AppError(503,'O cadastro comercial está sendo preparado.');
@@ -17,7 +18,7 @@ export async function readBilling(p:Principal):Promise<BillingView>{return billi
  });
  const operations=canManage?(await c.query('SELECT * FROM app.billing_operation ORDER BY created_at DESC LIMIT 20')).rows.map(operationView):[];
  const invoices=canManage?(await c.query('SELECT * FROM app.billing_invoice ORDER BY created_at DESC LIMIT 30')).rows.map(r=>({id:r.id,status:r.status,amount:r.amount,currency:r.currency,url:r.url,createdAt:iso(r.created_at)!})):[];
- return {version:BILLING_VERSION,configured:billingConfig().configured,canManage,status:(active?account.state:['trial','pilot','active'].includes(account.state)?'inactive':account.state) as BillingStatus,plan:account.plan,interval:account.billing_interval,nextPlan:account.next_plan,periodEnd:iso(account.period_end),cancelAtPeriodEnd:account.cancel_at_period_end,trialAvailable:!account.trial_started_at&&!account.subscription_id&&account.role==='owner'&&account.state!=='active',revision:Number(account.revision),contact:canManage?{email:account.contact.email??null,phone:account.contact.phone??null}:{email:null,phone:null},balances,capacity:account.plan?getPlan(account.plan).capacity:null,usage:(await c.query('SELECT app.billing_capacity_usage() AS usage')).rows[0].usage,operations,invoices};
+ return {version:BILLING_VERSION,configured:billingConfig().configured,canManage,status:(active?account.state:['trial','pilot','active'].includes(account.state)?'inactive':account.state) as BillingStatus,plan:account.plan,interval:account.billing_interval,nextPlan:account.next_plan,periodEnd:iso(account.period_end),cancelAtPeriodEnd:account.cancel_at_period_end,trialAvailable:!account.trial_started_at&&!account.subscription_id&&account.role==='owner'&&account.state!=='active',revision:Number(account.revision),contact:canManage?{email:account.contact.email??null,phone:account.contact.phone??null}:{email:null,phone:null},balances,capacity:account.plan?capacityWithExtras(getPlan(account.plan).capacity,account,active):null,capacityExtras:Object.fromEntries(CAPACITY_UNITS.map(u=>[u,{active:account.capacity_extra?.[u]??0,scheduled:account.capacity_scheduled?.[u]??null}])) as BillingView['capacityExtras'],usage:(await c.query('SELECT app.billing_capacity_usage() AS usage')).rows[0].usage,operations,invoices};
 });}
 export async function startTrial(p:Principal,requestId:string){
  if(!z.uuid().safeParse(requestId).success)throw new AppError(422,'Identificador de operação inválido.');
