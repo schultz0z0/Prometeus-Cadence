@@ -29,7 +29,7 @@ const routes = new Set([
   "/inbox?channel=email",
   "/reports",
   "/reports/funnel",
-  "/reports/crm",
+  "/reports/negocios",
   "/executions",
   "/executions/qa-missing",
   "/first-steps",

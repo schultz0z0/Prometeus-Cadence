@@ -1,0 +1,603 @@
+{
+ "version": 2,
+ "note": "Rotas são decididas pelo relatório route-sweep.json, medido sobre o código atual; status digitado em rota é ignorado.",
+ "items": [
+  {
+   "id": "/automations",
+   "kind": "route",
+   "source": "/automations"
+  },
+  {
+   "id": "/automations/new",
+   "kind": "route",
+   "source": "/automations/new"
+  },
+  {
+   "id": "/automations/new/ai",
+   "kind": "route",
+   "source": "/automations/new/ai"
+  },
+  {
+   "id": "/cadences",
+   "kind": "route",
+   "source": "/cadences"
+  },
+  {
+   "id": "/cadences/new",
+   "kind": "route",
+   "source": "/cadences/new"
+  },
+  {
+   "id": "/cadences/new/ai",
+   "kind": "route",
+   "source": "/cadences/new/ai"
+  },
+  {
+   "id": "/cadences/pipeline",
+   "kind": "route",
+   "source": "/cadences/pipeline"
+  },
+  {
+   "id": "/dashboard",
+   "kind": "route",
+   "source": "/dashboard"
+  },
+  {
+   "id": "/executions",
+   "kind": "route",
+   "source": "/executions"
+  },
+  {
+   "id": "/first-steps",
+   "kind": "route",
+   "source": "/first-steps"
+  },
+  {
+   "id": "/inbox",
+   "kind": "route",
+   "source": "/inbox"
+  },
+  {
+   "id": "/leads/enrich",
+   "kind": "route",
+   "source": "/leads/enrich"
+  },
+  {
+   "id": "/leads/generator",
+   "kind": "route",
+   "source": "/leads/generator"
+  },
+  {
+   "id": "/leads/import",
+   "kind": "route",
+   "source": "/leads/import"
+  },
+  {
+   "id": "/leads/qualifier",
+   "kind": "route",
+   "source": "/leads/qualifier"
+  },
+  {
+   "id": "/messages/email",
+   "kind": "route",
+   "source": "/messages/email"
+  },
+  {
+   "id": "/messages/whatsapp",
+   "kind": "route",
+   "source": "/messages/whatsapp"
+  },
+  {
+   "id": "/reports",
+   "kind": "route",
+   "source": "/reports"
+  },
+  {
+   "id": "/sdr",
+   "kind": "route",
+   "source": "/sdr"
+  },
+  {
+   "id": "/templates",
+   "kind": "route",
+   "source": "/templates"
+  },
+  {
+   "id": "/contacts",
+   "kind": "route",
+   "source": "/contacts",
+   "expectText": "{marker}"
+  },
+  {
+   "id": "/accept-invitation",
+   "kind": "route",
+   "source": "/accept-invitation",
+   "public": true,
+   "expectPath": "/login",
+   "allow": [
+    401
+   ],
+   "note": "sem token e sem sessão, vai para o login"
+  },
+  {
+   "id": "/forgot-password",
+   "kind": "route",
+   "source": "/forgot-password",
+   "public": true
+  },
+  {
+   "id": "/login",
+   "kind": "route",
+   "source": "/login",
+   "public": true
+  },
+  {
+   "id": "/privacy",
+   "kind": "route",
+   "source": "/privacy",
+   "public": true
+  },
+  {
+   "id": "/register",
+   "kind": "route",
+   "source": "/register",
+   "public": true
+  },
+  {
+   "id": "/reset-password",
+   "kind": "route",
+   "source": "/reset-password",
+   "public": true
+  },
+  {
+   "id": "/terms",
+   "kind": "route",
+   "source": "/terms",
+   "public": true
+  },
+  {
+   "id": "/verify-email",
+   "kind": "route",
+   "source": "/verify-email",
+   "public": true
+  },
+  {
+   "id": "/unsubscribe/qa-token",
+   "kind": "route",
+   "source": "/unsubscribe/[token]",
+   "public": true
+  },
+  {
+   "id": "/mcp/authorize",
+   "kind": "route",
+   "source": "/mcp/authorize",
+   "allow": [
+    404
+   ],
+   "note": "sem pedido de consentimento válido: só o estado de pedido ausente",
+   "noShell": true
+  },
+  {
+   "id": "/mcp/review/qa-missing",
+   "kind": "route",
+   "source": "/mcp/review/[id]",
+   "allow": [
+    404
+   ],
+   "noShell": true
+  },
+  {
+   "id": "/onboarding/entry",
+   "kind": "route",
+   "source": "/onboarding/entry",
+   "expectPath": "/dashboard",
+   "note": "conta completa é redirecionada; a tela de cadastro incompleto é item próprio"
+  },
+  {
+   "id": "/onboarding/profile",
+   "kind": "route",
+   "source": "/onboarding/profile",
+   "expectPath": "/dashboard",
+   "note": "idem"
+  },
+  {
+   "id": "/onboarding/workspace",
+   "kind": "route",
+   "source": "/onboarding/workspace",
+   "note": "conta já com workspace",
+   "noShell": true
+  },
+  {
+   "id": "/cadences/qa-missing",
+   "kind": "route",
+   "source": "/cadences/[id]",
+   "allow": [
+    404
+   ],
+   "note": "só o estado de não encontrado; o editor é item próprio"
+  },
+  {
+   "id": "/executions/qa-missing",
+   "kind": "route",
+   "source": "/executions/[id]",
+   "allow": [
+    404
+   ],
+   "note": "só o estado de não encontrado; o detalhe é item próprio"
+  },
+  {
+   "id": "/leads/:seed",
+   "kind": "route",
+   "source": "/leads/[id]",
+   "expectPath": "^/leads/",
+   "expectText": "{marker}"
+  },
+  {
+   "id": "/linkedin",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/linkedin/dashboard",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/linkedin/campaigns",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/linkedin/campaigns/new",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/linkedin/people",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/linkedin/pipeline",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/linkedin/enrichment",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/linkedin/approvals",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/linkedin/cadences",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/linkedin/templates",
+   "kind": "route",
+   "source": "/linkedin/[[...section]]"
+  },
+  {
+   "id": "/settings",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/account",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/ai",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/context",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/email",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/whatsapp",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/dispatch-limits",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/apps",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/apps/google-sheets",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/apps/google-calendar",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/apps/apollo",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/apps/funnelsflow",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/apps/meetflow",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/plan",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/notifications",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/seats",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/security",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/mcp",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/privacy",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/dados",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/settings/webhooks",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
+   "id": "/reports/funnel",
+   "kind": "route",
+   "source": "/reports/[tab]"
+  },
+  {
+   "id": "/reports/negocios",
+   "kind": "route",
+   "source": "/reports/[tab]"
+  },
+  {
+   "id": "/reports/performance",
+   "kind": "route",
+   "source": "/reports/[tab]"
+  },
+  {
+   "id": "signup → trial → assinatura",
+   "kind": "journey",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "pesquisa → pessoas → qualificação → cadência → inbox e parada",
+   "kind": "journey",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "LinkedIn conectado → ação autorizada → conversa",
+   "kind": "journey",
+   "status": "blocked",
+   "blockedBy": "contrato e chave Unipile, conta de teste e leitura jurídica, do usuário"
+  },
+  {
+   "id": "SDR → handoff, agenda e CRM",
+   "kind": "journey",
+   "status": "blocked",
+   "blockedBy": "piloto com número OpenWA, contato e conta Google, e escolha do CRM, do usuário"
+  },
+  {
+   "id": "pacote, renovação e cancelamento",
+   "kind": "journey",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "apagar, exportar e fundir dados",
+   "kind": "journey",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "API e MCP: escopos e revogação",
+   "kind": "journey",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: popups e menus",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: papéis dono, administrador e operador",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: teclado e foco",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: zoom 200%",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: tamanho do texto",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: atraso, offline e 503 sem perder rascunho",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: editor de cadência existente",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: detalhe de execução existente",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: cadastro incompleto no onboarding",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "transversal: conversas e relatórios com dados",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.2"
+  },
+  {
+   "id": "módulo: cobrança, anual, adicionais e cupom",
+   "kind": "module",
+   "status": "passed",
+   "evidence": [
+    "docs/validation/06-billing-homologation.md",
+    "docs/validation/06g-stripe-homologation.md"
+   ],
+   "proof": {
+    "service": true,
+    "happy": true,
+    "failure": true,
+    "recovery": true,
+    "externalEffect": "Stripe em modo de teste; live no 08B"
+   },
+   "note": "Status digitado: a base são os dois relatórios citados"
+  },
+  {
+   "id": "módulo: LinkedIn",
+   "kind": "module",
+   "status": "blocked",
+   "blockedBy": "Unipile, do usuário"
+  },
+  {
+   "id": "módulo: Agente SDR",
+   "kind": "module",
+   "status": "blocked",
+   "blockedBy": "piloto, do usuário"
+  },
+  {
+   "id": "módulo: CRM",
+   "kind": "module",
+   "status": "blocked",
+   "blockedBy": "não há conector; escolha do usuário"
+  },
+  {
+   "id": "módulo: MCP em Claude e ChatGPT",
+   "kind": "module",
+   "status": "blocked",
+   "blockedBy": "URL pública, 08B"
+  },
+  {
+   "id": "módulo: pesquisa e enriquecimento",
+   "kind": "module",
+   "status": "pending",
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+  },
+  {
+   "id": "módulo: cadências e automações",
+   "kind": "module",
+   "status": "pending",
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+  },
+  {
+   "id": "módulo: e-mail e WhatsApp",
+   "kind": "module",
+   "status": "pending",
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+  },
+  {
+   "id": "módulo: relatórios e notificações",
+   "kind": "module",
+   "status": "pending",
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+  },
+  {
+   "id": "módulo: assistente, busca e ajuda",
+   "kind": "module",
+   "status": "pending",
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+  },
+  {
+   "id": "módulo: API e webhooks",
+   "kind": "module",
+   "status": "pending",
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+  },
+  {
+   "id": "módulo: Google Agenda e Sheets",
+   "kind": "module",
+   "status": "pending",
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+  },
+  {
+   "id": "módulo: identidade, membros e privacidade",
+   "kind": "module",
+   "status": "pending",
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+  },
+  {
+   "id": "referência: estados pagos e operacionais da conta sem assinatura",
+   "kind": "state",
+   "status": "pending",
+   "note": "classificar por estado no 08A.2"
+  }
+ ]
+}
