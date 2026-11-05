@@ -27,6 +27,8 @@ function AppShellContent({children}:{children:React.ReactNode}){
     const identity = useIdentity();
     const billing = useShellBilling(identity?.activeWorkspaceId ?? null);
     const paid = !!billing && ["active", "past_due", "attention", "canceled"].includes(billing.status);
+    // A running trial or pilot has nothing left to start.
+    const started = paid || billing?.status === "trial" || billing?.status === "pilot";
     const planLabel = billing?.plan === "pro" ? "Pro" : "Essential";
     const sidebar = useRef<HTMLElement>(null);
     const menu = useRef<HTMLButtonElement>(null);
@@ -167,7 +169,7 @@ function AppShellContent({children}:{children:React.ReactNode}){
             <span>Central de Ajuda</span>
           </button>
           <Link href="/first-steps" className="help-link onboarding-link"><Icon name="Compass" size={16}/><span>Primeiros passos</span></Link>
-          <Link href="/settings/plan" className="btn primary trial"><Icon name={paid ? "CreditCard" : "Sparkles"} size={17}/><span>{paid ? "Gerenciar meu plano" : "Começar o teste grátis"}</span></Link>
+          <Link href="/settings/plan" className="btn primary trial"><Icon name={started ? "CreditCard" : "Sparkles"} size={17}/><span>{started ? "Gerenciar meu plano" : "Começar o teste grátis"}</span></Link>
           <Link href="/settings/plan" className="help-link plan-link"><Icon name="CreditCard" size={16}/><span>{billing ? billing.status === "active" ? "Plano " + planLabel : billing.status === "past_due" ? "Pagamento pendente" : billing.status === "trial" ? "Teste de 7 dias" : billing.status === "pilot" ? "Piloto local" : billing.status === "attention" ? "Revisar assinatura" : billing.status === "canceled" ? "Assinatura encerrada" : "Teste por ativar" : identity ? "Consultando plano…" : "Demonstração local"}</span></Link>
           {!identity && <Link href="/settings/account" className="profile"><span className="avatar">{preferences.accountName[0] || "P"}</span><span>{preferences.accountName}<small>Workspace de demonstração</small></span></Link>}
           <AccountControls />
@@ -184,7 +186,7 @@ function AppShellContent({children}:{children:React.ReactNode}){
               <Icon name="Menu"/>
             </button>
             {path.startsWith("/settings") ? <nav className="topbar-breadcrumb" aria-label="Localização"><Link href="/settings/account">Configurações</Link><Icon name="ChevronRight" size={13}/><span>{integrationName&&path.startsWith("/settings/apps/")?<><Link href="/settings/apps">CRM e apps</Link><Icon name="ChevronRight" size={13}/>{integrationName}</>:path.endsWith("/plan") ? "Plano e cobrança" : ({ "account": "Conta", "context": "Contexto de IA", "ai": "Provedores de IA", "notifications": "Notificações", "seats": "Membros", "security": "Segurança", "mcp": "MCP", "email": "Contas de e-mail", "whatsapp": "WhatsApp", "dispatch-limits": "Limites de disparo", "dados": "Contatos duplicados", "privacy": "Privacidade", "apps": "CRM e apps", "webhooks": "Webhooks e API" } as Record<string, string>)[path.split("/").at(-1) ?? ""] ?? pageTitle(path)}</span></nav> : navParent ? <nav className="topbar-breadcrumb" aria-label="Localização"><span>{navParent}</span><Icon name="ChevronRight" size={13}/><span>{recordTitle??pageTitle(path)}</span></nav> : <span>{recordTitle??pageTitle(path)}</span>}
-            <button className="how-button" onClick={() => setInfo("Como funciona esta área")}>
+            <button className="how-button" aria-label="Como funciona" onClick={() => setInfo("Como funciona esta área")}>
               <Icon name="Play" size={13}/>
               <span>Como funciona</span>
             </button>

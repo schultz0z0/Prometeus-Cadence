@@ -181,7 +181,7 @@ export function CompanyContext() {
           Versão {s.companyProfile.version} ·{" "}
           {identity ? "persistência no servidor" : "salvo no navegador"}
         </small>
-        <div className="row">
+        <div className="row wrap">
           <Button
             onClick={async () => {
               if (

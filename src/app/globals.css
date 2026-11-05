@@ -1184,3 +1184,11 @@ kbd {
 @media(max-width:480px){.notification-sound-row{flex-wrap:wrap}.notification-sound-row>.toggle-row{flex:1 1 100%;min-width:0}.notification-sound-row>.btn{margin-left:56px}}
 
 @media(max-width:480px){.notification-sound-row{flex-wrap:wrap}.notification-sound-row>.toggle-row{flex:1 1 100%;min-width:0}.notification-sound-row>.btn{margin-left:56px}}
+
+/* With the sidebar visible, a tablet leaves about 500px for content: these must wrap instead of pushing the page sideways. */
+@media (max-width: 1100px) {
+  .page-content .period-selector, .page-content .manual-tabs, .reference-checklist-step, .reference-step-actions, .research-generator-entry { flex-wrap: wrap; max-width: 100%; }
+  .reference-step-actions { flex: 0 1 auto; }
+  .research-generator-entry .btn, .reference-screen-tours .btn { max-width: 100%; white-space: normal; }
+  .reference-onboarding-help { grid-template-columns: minmax(0, 1fr); }
+}

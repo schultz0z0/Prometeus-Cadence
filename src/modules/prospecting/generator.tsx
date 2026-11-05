@@ -113,7 +113,7 @@ function DemoGenerator({
           <div className="panel panel-pad section-gap stack">
             <div>
               <p className="field-label">Lista de destino</p>
-              <div className="row">
+              <div className="row wrap">
                 <Button
                   type="button"
                   variant={mode === "new" ? "soft" : ""}
@@ -164,7 +164,7 @@ function DemoGenerator({
                     : "Palavra-chave / Nicho"
                 }
               >
-                <div className="row">
+                <div className="row wrap">
                   <input
                     required
                     value={filters.term}
@@ -207,7 +207,7 @@ function DemoGenerator({
             </div>
             {source === "CNPJ" && (
               <>
-                <div className="row">
+                <div className="row wrap">
                   <Button
                     type="button"
                     variant={cnpjMode === "term" ? "soft" : ""}
