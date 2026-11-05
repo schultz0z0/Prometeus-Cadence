@@ -1,5 +1,5 @@
 {
- "version": 2,
+ "version": 3,
  "note": "Rotas são decididas pelo relatório route-sweep.json, medido sobre o código atual; status digitado em rota é ignorado.",
  "items": [
   {
@@ -403,16 +403,31 @@
    "source": "/reports/[tab]"
   },
   {
-   "id": "signup → trial → assinatura",
+   "id": "signup → trial → revisão de assinatura",
    "kind": "journey",
-   "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "run": "signup"
   },
   {
-   "id": "pesquisa → pessoas → qualificação → cadência → inbox e parada",
+   "id": "assinatura: pagamento e ativação",
+   "kind": "journey",
+   "status": "passed",
+   "evidence": [
+    "docs/validation/06g-stripe-homologation.md",
+    "docs/validation/06-billing-homologation.md"
+   ],
+   "note": "Status digitado; a prova são os pagamentos reais no Checkout de teste"
+  },
+  {
+   "id": "prospecção local: adicionar, importar e criar cadência",
    "kind": "journey",
    "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "note": "a ser executada no 08A.3"
+  },
+  {
+   "id": "pesquisa e IA reais → qualificação → envio → inbox e parada",
+   "kind": "journey",
+   "status": "blocked",
+   "blockedBy": "pesquisa e IA reais têm custo, e envio exige canal próprio: autorização do usuário"
   },
   {
    "id": "LinkedIn conectado → ação autorizada → conversa",
@@ -427,82 +442,142 @@
    "blockedBy": "piloto com número OpenWA, contato e conta Google, e escolha do CRM, do usuário"
   },
   {
-   "id": "pacote, renovação e cancelamento",
+   "id": "pacote: revisão e cupom recusado",
+   "kind": "journey",
+   "run": "pack"
+  },
+  {
+   "id": "pacote, renovação e cancelamento com efeito real",
+   "kind": "journey",
+   "status": "passed",
+   "evidence": [
+    "docs/validation/06-billing-homologation.md",
+    "docs/validation/06g-stripe-homologation.md"
+   ],
+   "note": "Status digitado; o 08A.2 não confirma nada no Stripe"
+  },
+  {
+   "id": "fundir, desfazer e exportar",
+   "kind": "journey",
+   "run": "data"
+  },
+  {
+   "id": "apagar texto antigo: execução",
    "kind": "journey",
    "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "note": "o 08A.2 só prova a confirmação digitada; a ser executada no 08A.3"
   },
   {
-   "id": "apagar, exportar e fundir dados",
+   "id": "API: chave, escopo e revogação",
    "kind": "journey",
-   "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "run": "api"
   },
   {
-   "id": "API e MCP: escopos e revogação",
+   "id": "MCP: escopos e revogação em cliente real",
    "kind": "journey",
-   "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "status": "blocked",
+   "blockedBy": "URL pública, 08B"
   },
   {
-   "id": "transversal: popups e menus",
+   "id": "transversal: popups do menu e da barra",
    "kind": "state",
-   "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "run": "popups"
   },
   {
-   "id": "transversal: papéis dono, administrador e operador",
+   "id": "transversal: popups por módulo",
    "kind": "state",
    "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "note": "Modal é usado em 59 arquivos; a ser executada no 08A.3"
   },
   {
-   "id": "transversal: teclado e foco",
+   "id": "transversal: operador recusado em cobrança",
+   "kind": "state",
+   "run": "roles"
+  },
+  {
+   "id": "transversal: administrador e demais áreas por papel",
    "kind": "state",
    "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "note": "a ser executada no 08A.3"
+  },
+  {
+   "id": "transversal: foco em Adicionar e Ajuda",
+   "kind": "state",
+   "run": "keyboard"
+  },
+  {
+   "id": "transversal: teclado nas demais telas",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.3"
   },
   {
    "id": "transversal: zoom 200%",
    "kind": "state",
-   "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "run": "zoom",
+   "note": "decidido pela varredura; só carregamento de página"
   },
   {
    "id": "transversal: tamanho do texto",
    "kind": "state",
-   "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "run": "text",
+   "note": "decidido pela varredura"
   },
   {
-   "id": "transversal: atraso, offline e 503 sem perder rascunho",
+   "id": "transversal: 503, offline e lentidão no formulário de lead",
    "kind": "state",
-   "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "run": "network"
   },
   {
-   "id": "transversal: editor de cadência existente",
+   "id": "transversal: rede nos demais formulários, leituras e foco após erro",
    "kind": "state",
    "status": "pending",
-   "note": "a ser executada no 08A.2"
-  },
-  {
-   "id": "transversal: detalhe de execução existente",
-   "kind": "state",
-   "status": "pending",
-   "note": "a ser executada no 08A.2"
-  },
-  {
-   "id": "transversal: cadastro incompleto no onboarding",
-   "kind": "state",
-   "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "note": "a ser executada no 08A.3"
   },
   {
    "id": "transversal: conversas e relatórios com dados",
    "kind": "state",
    "status": "pending",
-   "note": "a ser executada no 08A.2"
+   "note": "a ser executada no 08A.3"
+  },
+  {
+   "id": "cadência: abrir existente",
+   "kind": "state",
+   "run": "cadence-editor"
+  },
+  {
+   "id": "cadência: editar e salvar",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.3"
+  },
+  {
+   "id": "execução: detalhe concluído",
+   "kind": "state",
+   "run": "execution-detail"
+  },
+  {
+   "id": "execução: falha, parcial e em andamento",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.3"
+  },
+  {
+   "id": "onboarding: bloqueia sem aceite",
+   "kind": "state",
+   "run": "onboarding"
+  },
+  {
+   "id": "onboarding: concluir complemento",
+   "kind": "state",
+   "status": "pending",
+   "note": "a ser executada no 08A.3"
+  },
+  {
+   "id": "visual: comparação com a referência por área",
+   "kind": "state",
+   "status": "pending",
+   "note": "exigida pelo AGENTS.md; nenhuma comparação foi feita no 08A; a ser executada no 08A.3"
   },
   {
    "id": "módulo: cobrança, anual, adicionais e cupom",
@@ -549,55 +624,77 @@
    "id": "módulo: pesquisa e enriquecimento",
    "kind": "module",
    "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
   },
   {
    "id": "módulo: cadências e automações",
    "kind": "module",
    "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
   },
   {
    "id": "módulo: e-mail e WhatsApp",
    "kind": "module",
    "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
   },
   {
    "id": "módulo: relatórios e notificações",
    "kind": "module",
    "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
   },
   {
    "id": "módulo: assistente, busca e ajuda",
    "kind": "module",
    "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
   },
   {
    "id": "módulo: API e webhooks",
    "kind": "module",
    "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
   },
   {
    "id": "módulo: Google Agenda e Sheets",
    "kind": "module",
    "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
   },
   {
    "id": "módulo: identidade, membros e privacidade",
    "kind": "module",
    "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.2"
+   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
   },
   {
-   "id": "referência: estados pagos e operacionais da conta sem assinatura",
+   "id": "referência: assinatura ativa",
    "kind": "state",
-   "status": "pending",
-   "note": "classificar por estado no 08A.2"
+   "status": "reference-unknown",
+   "localProof": "docs/validation/06g-stripe-homologation.md",
+   "note": "estado não observado na referência, pois exigiria contratar lá; a função local está no relatório citado"
+  },
+  {
+   "id": "referência: pagamento pendente",
+   "kind": "state",
+   "status": "reference-unknown",
+   "localProof": "docs/validation/06-billing-homologation.md",
+   "note": "estado não observado na referência, pois exigiria contratar lá; a função local está no relatório citado"
+  },
+  {
+   "id": "referência: cancelada",
+   "kind": "state",
+   "status": "reference-unknown",
+   "localProof": "docs/validation/06-billing-homologation.md",
+   "note": "estado não observado na referência, pois exigiria contratar lá; a função local está no relatório citado"
+  },
+  {
+   "id": "referência: renovação cancelada",
+   "kind": "state",
+   "status": "reference-unknown",
+   "localProof": "docs/validation/06-billing-homologation.md",
+   "note": "estado não observado na referência, pois exigiria contratar lá; a função local está no relatório citado"
   }
  ]
 }
