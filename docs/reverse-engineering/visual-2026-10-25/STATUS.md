@@ -1,11 +1,22 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-04 · Session: s38 · Phase:6 06G.1 concluído com Stripe simulado; 07B.3 parcial; próximo 06G.2; paridade integral não aceita
+Updated: 2026-11-04 · Session: s39 · Phase:6 06G.1 e 06G.2 concluídos com Stripe simulado; 07B.3 parcial; próximo 06G.3; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
 
+- Covered s39: 06G.2, capacidade adicional como itens da assinatura.
+  - **QA:** L-048 removed.
+  - **Revisão:** dois High, três Medium e seis Low (112c).
+  - **Evidência:** EV-301.
+- Not covered s39:
+  - homologação no Stripe de teste;
+  - módulo LinkedIn como adicional;
+  - 06G.3.
+- Needs human s39:
+  - confirmar o preço do adicional para assinante anual;
+  - decidir se recursos acima do limite após recontratar devem ser impostos no envio.
 - Covered s38: 06G.1, plano anual e franquia mensal.
   - **QA:** L-047 removed, nenhuma chamada ao Stripe.
   - **Revisão:** um Critical, um High, quatro Medium e oito Low tratados (111a).
@@ -220,7 +231,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s38: 06G.2; SDR sem aceite até o piloto; menores→08A.
+Fila vigente s39: 06G.3; SDR sem aceite até o piloto; menores→08A.
+
+Fila s38 (histórica): 06G.2.
 
 Fila s37 (histórica): 06G.
 

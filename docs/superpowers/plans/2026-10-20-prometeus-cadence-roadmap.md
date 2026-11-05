@@ -331,3 +331,7 @@ Agenda e follow-up do SDR entregues local/controlado. CRM sem conector e piloto 
 ### Continuidade 04/11 — 06G.1
 
 Plano anual com 20% de desconto e franquia mensal, entregue com o Stripe simulado; nada foi homologado no Stripe. O 06G foi dividido em 06G.1 anual, 06G.2 capacidade e 06G.3 cupom. Revisão independente: um Critical, um High, quatro Medium e oito Low tratados (111a). Próximo: 06G.2. [Relatório](../../validation/06g1-annual.md).
+
+### Continuidade 04/11 — 06G.2
+
+Contas de e-mail, números de WhatsApp e usuários extras entregues como itens da assinatura, com o Stripe simulado; nada foi homologado no Stripe. LinkedIn segue indisponível. Revisão independente: dois High, três Medium e seis Low; um Medium aceito como decisão de produto. Próximo: 06G.3. [Relatório](../../validation/06g2-capacity.md).
