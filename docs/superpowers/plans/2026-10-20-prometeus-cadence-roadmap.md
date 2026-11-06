@@ -359,3 +359,7 @@ Dez jornadas novas, comparação visual por área, correção das diferenças ba
 ### Continuidade 05/11/2026 — 08A.4
 
 Execuções passou a mostrar as mensagens registradas de cada cadência, com busca, filtros, motivos e paginação. O histórico de jobs mantém seus próprios atalhos. A ordem atual é aplicar seletores próprios nas demais telas, tratar as diferenças visuais menores e completar as provas transversais locais antes de começar a prontidão do 08B. [Relatório do diário](../../validation/08a4-execution-diary.md)
+
+### Continuidade 06/11/2026 — 08A.5 e 08A.6
+
+Seletores próprios nas telas existentes, ajustes de fidelidade e provas de relatórios com mensagens terminais e de teclado nas telas iniciais. Primeiros passos ganhou orientação pela Central de Ajuda. O 08A permanece parcial com estados locais transversais, aceite visual e homologações externas em aberto. A ordem dos pré-requisitos públicos de MCP, SMTP e Google segue pendente. [Seletores](../../validation/08a5-selectors.md) · [Provas locais](../../validation/08a6-local-closure.md)

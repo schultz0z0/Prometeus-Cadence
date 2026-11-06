@@ -491,7 +491,7 @@
    "run": "popups"
   },
   {
-   "id": "transversal: 11 popups de módulo abertos e fechados",
+   "id": "transversal: 14 popups de módulo abertos e fechados",
    "kind": "state",
    "run": "module-popups"
   },
@@ -499,7 +499,7 @@
    "id": "transversal: demais popups, pelo mesmo componente",
    "kind": "state",
    "status": "pending",
-   "note": "Modal aparece em 59 arquivos; todos usam o mesmo componente, mas não foram abertos um a um"
+   "note": "Foram abertos 14 popups de módulo e o detalhe com dados de Relatórios. Permanecem usos condicionais do componente Modal sem prova individual."
   },
   {
    "id": "transversal: operador recusado em cobrança",
@@ -507,7 +507,7 @@
    "run": "roles"
   },
   {
-   "id": "transversal: operador recusado e administrador aceito em 4 chamadas de API",
+   "id": "transversal: 4 chamadas por papel e telas de Membros, Privacidade, E-mail e WhatsApp",
    "kind": "state",
    "run": "admin"
   },
@@ -515,7 +515,7 @@
    "id": "transversal: administrador e demais áreas por papel",
    "kind": "state",
    "status": "pending",
-   "note": "Falta exercer os papéis na tela, nas demais áreas"
+   "note": "A jornada admin cobre Membros, Privacidade, E-mail e WhatsApp. Permanecem as demais áreas por papel."
   },
   {
    "id": "transversal: foco em Adicionar e Ajuda",
@@ -528,10 +528,10 @@
    "run": "keyboard-more"
   },
   {
-   "id": "transversal: teclado nas demais telas",
+   "id": "transversal: Tab nos primeiros controles das telas iniciais",
    "kind": "state",
-   "status": "pending",
-   "note": "8 de 72 rotas; as demais não foram percorridas com Tab"
+   "run": "keyboard-initial-routes",
+   "note": "Varredura em 1440×900, até oito controles distintos no conteúdo inicial por rota. Fluxos condicionais têm provas próprias."
   },
   {
    "id": "transversal: zoom 200%",
@@ -551,7 +551,7 @@
    "run": "network"
   },
   {
-   "id": "transversal: rede em 1 formulário e 2 leituras, com foco após erro",
+   "id": "transversal: 503 em chave de API, template, contatos e relatórios",
    "kind": "state",
    "run": "network-more"
   },
@@ -559,7 +559,7 @@
    "id": "transversal: rede nos demais formulários, leituras e foco após erro",
    "kind": "state",
    "status": "pending",
-   "note": "Só a chave de API e as leituras de contatos e relatórios foram exercidas"
+   "note": "Chave de API, template e leituras de contatos e relatórios exercitados. O formulário de lead também cobre 503, offline e lentidão."
   },
   {
    "id": "transversal: funil conta os contatos reais",
@@ -569,8 +569,8 @@
   {
    "id": "transversal: relatórios com dados",
    "kind": "state",
-   "status": "pending",
-   "note": "O funil foi medido com contatos reais; os relatórios de envio exigem mensagens registradas, ainda não exercidas no navegador"
+   "run": "reports-data",
+   "note": "Mensagens terminais no banco local, total, filtro por cadência e detalhe de e-mails aceitos. Nenhum envio foi disparado."
   },
   {
    "id": "transversal: conversas com dados",
@@ -614,10 +614,21 @@
    "run": "onboarding-finish"
   },
   {
+   "id": "visual: seletores próprios no Pipeline, diálogo e lista obrigatória",
+   "kind": "state",
+   "run": "select-fields"
+  },
+  {
+   "id": "visual: ajustes em Cadências, nova cadência, fontes, importação, e-mail e Membros",
+   "kind": "state",
+   "run": "remaining-visual",
+   "note": "Inclui o cartão informativo de Primeiros passos e a abertura da Central de Ajuda nos dois viewports."
+  },
+  {
    "id": "visual: comparação com a referência por área",
    "kind": "state",
    "status": "pending",
-   "note": "Comparação por área em docs/validation/08a3-remaining.md e diário em docs/validation/08a4-execution-diary.md. Há diferenças abertas e o aceite visual é do usuário."
+   "note": "Comparações em docs/validation/08a3-remaining.md, 08a4-execution-diary.md, 08a5-selectors.md e 08a6-local-closure.md. Há diferenças abertas e o aceite visual é do usuário."
   },
   {
    "id": "módulo: cobrança, anual, adicionais e cupom",

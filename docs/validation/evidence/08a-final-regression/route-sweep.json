@@ -1,6 +1,6 @@
 {
- "date": "2026-11-06T02:24:39.300Z",
- "sourceHash": "190d44207c3ecea0fdf154a3f6ff3ee50fc4966a98db887c941b6d89c6556dcd",
+ "date": "2026-11-06T04:49:00.411Z",
+ "sourceHash": "59dfe325057b5124f0c6a23bff501987a442fbdc25af81329166ff358e3873a0",
  "note": "Só navegação; hosts externos bloqueados; contas descartáveis removidas ao fim.",
  "results": [
   {
@@ -41,7 +41,12 @@
    "ok": true,
    "path": "/automations",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 16,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/automations",
@@ -121,7 +126,12 @@
    "ok": true,
    "path": "/automations/new",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 12,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/automations/new",
@@ -201,7 +211,12 @@
    "ok": true,
    "path": "/automations/new/ai",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 13,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/automations/new/ai",
@@ -281,7 +296,12 @@
    "ok": true,
    "path": "/cadences",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 9,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/cadences",
@@ -361,7 +381,12 @@
    "ok": true,
    "path": "/cadences/new",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 19,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/cadences/new",
@@ -441,7 +466,12 @@
    "ok": true,
    "path": "/cadences/new/ai",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 23,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/cadences/new/ai",
@@ -521,7 +551,12 @@
    "ok": true,
    "path": "/cadences/pipeline",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 5,
+    "visited": 5,
+    "failures": []
+   }
   },
   {
    "route": "/cadences/pipeline",
@@ -601,7 +636,12 @@
    "ok": true,
    "path": "/dashboard",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 27,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/dashboard",
@@ -681,7 +721,12 @@
    "ok": true,
    "path": "/executions",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 12,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/executions",
@@ -761,7 +806,12 @@
    "ok": true,
    "path": "/first-steps",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 49,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/first-steps",
@@ -841,7 +891,12 @@
    "ok": true,
    "path": "/inbox",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 10,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/inbox",
@@ -921,7 +976,12 @@
    "ok": true,
    "path": "/leads/enrich",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 3,
+    "visited": 3,
+    "failures": []
+   }
   },
   {
    "route": "/leads/enrich",
@@ -1001,7 +1061,12 @@
    "ok": true,
    "path": "/leads/generator",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 18,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/leads/generator",
@@ -1081,7 +1146,12 @@
    "ok": true,
    "path": "/leads/import",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 7,
+    "visited": 7,
+    "failures": []
+   }
   },
   {
    "route": "/leads/import",
@@ -1161,7 +1231,12 @@
    "ok": true,
    "path": "/leads/qualifier",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 6,
+    "visited": 6,
+    "failures": []
+   }
   },
   {
    "route": "/leads/qualifier",
@@ -1241,7 +1316,12 @@
    "ok": true,
    "path": "/messages/email",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 10,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/messages/email",
@@ -1321,7 +1401,12 @@
    "ok": true,
    "path": "/messages/whatsapp",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 1,
+    "visited": 1,
+    "failures": []
+   }
   },
   {
    "route": "/messages/whatsapp",
@@ -1401,7 +1486,12 @@
    "ok": true,
    "path": "/reports",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 16,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/reports",
@@ -1481,7 +1571,12 @@
    "ok": true,
    "path": "/sdr",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 3,
+    "visited": 3,
+    "failures": []
+   }
   },
   {
    "route": "/sdr",
@@ -1561,7 +1656,12 @@
    "ok": true,
    "path": "/templates",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 8,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/templates",
@@ -1641,7 +1741,12 @@
    "ok": true,
    "path": "/contacts",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 51,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/contacts",
@@ -1721,7 +1826,12 @@
    "ok": true,
    "path": "/login",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 9,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/accept-invitation",
@@ -1801,7 +1911,12 @@
    "ok": true,
    "path": "/forgot-password",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 6,
+    "visited": 6,
+    "failures": []
+   }
   },
   {
    "route": "/forgot-password",
@@ -1881,7 +1996,12 @@
    "ok": true,
    "path": "/login",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 9,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/login",
@@ -1961,7 +2081,12 @@
    "ok": true,
    "path": "/privacy",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 1,
+    "visited": 1,
+    "failures": []
+   }
   },
   {
    "route": "/privacy",
@@ -2041,7 +2166,12 @@
    "ok": true,
    "path": "/register",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 9,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/register",
@@ -2121,7 +2251,12 @@
    "ok": true,
    "path": "/reset-password",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 4,
+    "visited": 4,
+    "failures": []
+   }
   },
   {
    "route": "/reset-password",
@@ -2201,7 +2336,12 @@
    "ok": true,
    "path": "/terms",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 1,
+    "visited": 1,
+    "failures": []
+   }
   },
   {
    "route": "/terms",
@@ -2281,7 +2421,12 @@
    "ok": true,
    "path": "/verify-email",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 6,
+    "visited": 6,
+    "failures": []
+   }
   },
   {
    "route": "/verify-email",
@@ -2361,7 +2506,12 @@
    "ok": true,
    "path": "/unsubscribe/qa-token",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 1,
+    "visited": 1,
+    "failures": []
+   }
   },
   {
    "route": "/unsubscribe/qa-token",
@@ -2441,7 +2591,12 @@
    "ok": true,
    "path": "/mcp/authorize",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 0,
+    "visited": 0,
+    "failures": []
+   }
   },
   {
    "route": "/mcp/authorize",
@@ -2521,7 +2676,12 @@
    "ok": true,
    "path": "/mcp/review/qa-missing",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 0,
+    "visited": 0,
+    "failures": []
+   }
   },
   {
    "route": "/mcp/review/qa-missing",
@@ -2601,7 +2761,12 @@
    "ok": true,
    "path": "/dashboard",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 27,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/onboarding/entry",
@@ -2681,7 +2846,12 @@
    "ok": true,
    "path": "/dashboard",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 27,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/onboarding/profile",
@@ -2761,7 +2931,12 @@
    "ok": true,
    "path": "/onboarding/workspace",
    "theme": "n/a",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 5,
+    "visited": 5,
+    "failures": []
+   }
   },
   {
    "route": "/onboarding/workspace",
@@ -2841,7 +3016,12 @@
    "ok": true,
    "path": "/cadences/qa-missing",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 1,
+    "visited": 1,
+    "failures": []
+   }
   },
   {
    "route": "/cadences/qa-missing",
@@ -2921,7 +3101,12 @@
    "ok": true,
    "path": "/executions/qa-missing",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 1,
+    "visited": 1,
+    "failures": []
+   }
   },
   {
    "route": "/executions/qa-missing",
@@ -2969,7 +3154,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/27af2375-c33d-461e-a5af-4f24de4ff749",
+   "path": "/leads/144f56b1-0a17-49ee-b07b-9a7cd6f80bc6",
    "theme": "light",
    "fontSize": 16
   },
@@ -2979,7 +3164,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/27af2375-c33d-461e-a5af-4f24de4ff749",
+   "path": "/leads/144f56b1-0a17-49ee-b07b-9a7cd6f80bc6",
    "theme": "light",
    "fontSize": 16
   },
@@ -2989,7 +3174,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/27af2375-c33d-461e-a5af-4f24de4ff749",
+   "path": "/leads/144f56b1-0a17-49ee-b07b-9a7cd6f80bc6",
    "theme": "light",
    "fontSize": 16
   },
@@ -2999,9 +3184,14 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/27af2375-c33d-461e-a5af-4f24de4ff749",
+   "path": "/leads/144f56b1-0a17-49ee-b07b-9a7cd6f80bc6",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 12,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/leads/:seed",
@@ -3009,7 +3199,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/27af2375-c33d-461e-a5af-4f24de4ff749",
+   "path": "/leads/144f56b1-0a17-49ee-b07b-9a7cd6f80bc6",
    "theme": "light",
    "fontSize": 16
   },
@@ -3019,7 +3209,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/27af2375-c33d-461e-a5af-4f24de4ff749",
+   "path": "/leads/144f56b1-0a17-49ee-b07b-9a7cd6f80bc6",
    "theme": "dark",
    "fontSize": 16
   },
@@ -3029,7 +3219,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/27af2375-c33d-461e-a5af-4f24de4ff749",
+   "path": "/leads/144f56b1-0a17-49ee-b07b-9a7cd6f80bc6",
    "theme": "light",
    "fontSize": 16
   },
@@ -3039,7 +3229,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/27af2375-c33d-461e-a5af-4f24de4ff749",
+   "path": "/leads/144f56b1-0a17-49ee-b07b-9a7cd6f80bc6",
    "theme": "light",
    "fontSize": 18
   },
@@ -3081,7 +3271,12 @@
    "ok": true,
    "path": "/linkedin",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 1,
+    "visited": 1,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin",
@@ -3161,7 +3356,12 @@
    "ok": true,
    "path": "/linkedin/dashboard",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 1,
+    "visited": 1,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin/dashboard",
@@ -3241,7 +3441,12 @@
    "ok": true,
    "path": "/linkedin/campaigns",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 2,
+    "visited": 2,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin/campaigns",
@@ -3321,7 +3526,12 @@
    "ok": true,
    "path": "/linkedin/campaigns/new",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 67,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin/campaigns/new",
@@ -3401,7 +3611,12 @@
    "ok": true,
    "path": "/linkedin/people",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 2,
+    "visited": 2,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin/people",
@@ -3481,7 +3696,12 @@
    "ok": true,
    "path": "/linkedin/pipeline",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 2,
+    "visited": 2,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin/pipeline",
@@ -3561,7 +3781,12 @@
    "ok": true,
    "path": "/linkedin/enrichment",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 1,
+    "visited": 1,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin/enrichment",
@@ -3641,7 +3866,12 @@
    "ok": true,
    "path": "/linkedin/approvals",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 2,
+    "visited": 2,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin/approvals",
@@ -3721,7 +3951,12 @@
    "ok": true,
    "path": "/linkedin/cadences",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 9,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin/cadences",
@@ -3801,7 +4036,12 @@
    "ok": true,
    "path": "/linkedin/templates",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 9,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/linkedin/templates",
@@ -3881,7 +4121,12 @@
    "ok": true,
    "path": "/settings",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 30,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings",
@@ -3961,7 +4206,12 @@
    "ok": true,
    "path": "/settings/account",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 30,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/account",
@@ -4041,7 +4291,12 @@
    "ok": true,
    "path": "/settings/ai",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 15,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/ai",
@@ -4121,7 +4376,12 @@
    "ok": true,
    "path": "/settings/context",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 30,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/context",
@@ -4201,7 +4461,12 @@
    "ok": true,
    "path": "/settings/email",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 19,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/email",
@@ -4281,7 +4546,12 @@
    "ok": true,
    "path": "/settings/whatsapp",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 17,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/whatsapp",
@@ -4361,7 +4631,12 @@
    "ok": true,
    "path": "/settings/dispatch-limits",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 16,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/dispatch-limits",
@@ -4441,7 +4716,12 @@
    "ok": true,
    "path": "/settings/apps",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 20,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/apps",
@@ -4521,7 +4801,12 @@
    "ok": true,
    "path": "/settings/apps/google-sheets",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 17,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/apps/google-sheets",
@@ -4601,7 +4886,12 @@
    "ok": true,
    "path": "/settings/apps/google-calendar",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 17,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/apps/google-calendar",
@@ -4681,7 +4971,12 @@
    "ok": true,
    "path": "/settings/apps/apollo",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 19,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/apps/apollo",
@@ -4761,7 +5056,12 @@
    "ok": true,
    "path": "/settings/apps/funnelsflow",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 16,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/apps/funnelsflow",
@@ -4841,7 +5141,12 @@
    "ok": true,
    "path": "/settings/apps/meetflow",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 17,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/apps/meetflow",
@@ -4921,7 +5226,12 @@
    "ok": true,
    "path": "/settings/plan",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 19,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/plan",
@@ -5001,7 +5311,12 @@
    "ok": true,
    "path": "/settings/notifications",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 27,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/notifications",
@@ -5081,7 +5396,12 @@
    "ok": true,
    "path": "/settings/seats",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 18,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/seats",
@@ -5161,7 +5481,12 @@
    "ok": true,
    "path": "/settings/security",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 23,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/security",
@@ -5241,7 +5566,12 @@
    "ok": true,
    "path": "/settings/mcp",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 23,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/mcp",
@@ -5321,7 +5651,12 @@
    "ok": true,
    "path": "/settings/privacy",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 16,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/privacy",
@@ -5401,7 +5736,12 @@
    "ok": true,
    "path": "/settings/dados",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 16,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/dados",
@@ -5481,7 +5821,12 @@
    "ok": true,
    "path": "/settings/webhooks",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 18,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/settings/webhooks",
@@ -5561,7 +5906,12 @@
    "ok": true,
    "path": "/reports/funnel",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 19,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/reports/funnel",
@@ -5641,7 +5991,12 @@
    "ok": true,
    "path": "/reports/negocios",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 15,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/reports/negocios",
@@ -5721,7 +6076,12 @@
    "ok": true,
    "path": "/reports/performance",
    "theme": "light",
-   "fontSize": 16
+   "fontSize": 16,
+   "keyboard": {
+    "available": 19,
+    "visited": 8,
+    "failures": []
+   }
   },
   {
    "route": "/reports/performance",

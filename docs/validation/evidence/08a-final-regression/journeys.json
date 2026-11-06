@@ -1,6 +1,6 @@
 {
- "date": "2026-11-06T02:22:57.332Z",
- "sourceHash": "190d44207c3ecea0fdf154a3f6ff3ee50fc4966a98db887c941b6d89c6556dcd",
+ "date": "2026-11-06T04:49:17.469Z",
+ "sourceHash": "59dfe325057b5124f0c6a23bff501987a442fbdc25af81329166ff358e3873a0",
  "note": "Navegador sem acesso a outros hosts; contas sem canais ativos; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
  "runs": [
   {
@@ -280,6 +280,74 @@
    ]
   },
   {
+   "id": "select-fields",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "Pipeline abre o menu do app e confirma cadência com teclado",
+     "ok": true
+    },
+    {
+     "name": "Escape fecha apenas o seletor e preserva a escolha no celular",
+     "ok": true
+    },
+    {
+     "name": "Tab confirma a opção destacada e avança o foco",
+     "ok": true
+    },
+    {
+     "name": "selecionar canal no formulário mantém a edição no diálogo",
+     "ok": true
+    },
+    {
+     "name": "lista obrigatória mantém validação sem submeter o gerador",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "remaining-visual",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "Cadências mostra a faixa de hoje e o filtro de arquivadas",
+     "ok": true
+    },
+    {
+     "name": "cadência nova mostra Sem conteúdo e abre a edição pelo nó",
+     "ok": true
+    },
+    {
+     "name": "fontes disponíveis mostram os ícones e preservam as opções desabilitadas",
+     "ok": true
+    },
+    {
+     "name": "Importar Leads mostra o limite real por lote no aviso",
+     "ok": true
+    },
+    {
+     "name": "E-mail sem caixa de entrada mostra aviso e ação de conexão",
+     "ok": true
+    },
+    {
+     "name": "caixa configurada em atenção mantém o aviso de falha de sincronização",
+     "ok": true
+    },
+    {
+     "name": "Membros exibe assentos usados e capacidade do plano",
+     "ok": true
+    },
+    {
+     "name": "Primeiros passos oferece orientação pela Central de Ajuda nos dois viewports",
+     "ok": true
+    }
+   ]
+  },
+  {
    "id": "execution-diary",
    "ok": true,
    "crash": null,
@@ -364,6 +432,18 @@
     {
      "name": "operador trabalha nos contatos",
      "ok": true
+    },
+    {
+     "name": "nas caixas, a ação de conexão aparece para administrador e some para operador",
+     "ok": true
+    },
+    {
+     "name": "Membros bloqueia o formulário para operador e habilita para administrador",
+     "ok": true
+    },
+    {
+     "name": "Privacidade mostra política ao dono e a restringe ao administrador e operador",
+     "ok": true
     }
    ]
   },
@@ -432,6 +512,10 @@
     {
      "name": "relatório em 503 avisa e recupera",
      "ok": true
+    },
+    {
+     "name": "template em 503 mantém texto, seletor e foco",
+     "ok": true
     }
    ]
   },
@@ -447,6 +531,10 @@
     },
     {
      "name": "funil segura 320 px com contatos",
+     "ok": true
+    },
+    {
+     "name": "envios registrados aparecem no total e no filtro de cadência",
      "ok": true
     }
    ]
@@ -499,6 +587,18 @@
     },
     {
      "name": "relatórios: guia",
+     "ok": true
+    },
+    {
+     "name": "cadências: previsão de hoje",
+     "ok": true
+    },
+    {
+     "name": "cadência: adicionar etapa",
+     "ok": true
+    },
+    {
+     "name": "gerador: abrir sugestão de IA sem confirmar",
      "ok": true
     },
     {
