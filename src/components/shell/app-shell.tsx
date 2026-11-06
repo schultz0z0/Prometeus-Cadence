@@ -13,10 +13,9 @@ import {Tour} from '../onboarding/tour-dialog';
 import {tourForRoute} from '@/domain/route-tours';
 import{NotificationProvider}from'@/client/notification-provider';
 import{NotificationBell}from'./notifications';
-import { navigation, allPages, pageTitle, type NavigationItem } from "./navigation";
+import { navigation, allPages, pageTitle, activeChild } from "./navigation";
 import { Icon } from "../ui/icon";
 import { Button, IconButton, Modal, LinkButton } from "../ui/primitives";
-function activeChild(n:NavigationItem,path:string){return n.children?.find(c=>c.href===path)??n.children?.filter(c=>path.startsWith(c.href+'/')).sort((a,b)=>b.href.length-a.href.length)[0]??(n.label==='Contatos'&&path.startsWith('/leads/')?n.children?.find(c=>c.href==='/contacts'):undefined);}
 export function AppShell({ children }: {
     children: React.ReactNode;
 }) {
@@ -51,6 +50,11 @@ function AppShellContent({children}:{children:React.ReactNode}){
         update();
         media.addEventListener("change", update);
         return () => media.removeEventListener("change", update);
+    }, []);
+    useEffect(() => {
+        const open = () => setInfo('Central de Ajuda');
+        window.addEventListener('help-open', open);
+        return () => window.removeEventListener('help-open', open);
     }, []);
     useEffect(() => {
         if (!mobile)

@@ -155,8 +155,14 @@ export function Modal({
     dialog?.showModal();
     // showModal moves focus to the dialog; React's autoFocus renders no attribute for it to honor.
     dialog?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    // A button disabled while saving drops the focus to the page; when it is enabled again, the focus goes back.
+    let last = document.activeElement as HTMLElement | null;
+    const track = (e: FocusEvent) => { last = e.target as HTMLElement; };
+    const watch = new MutationObserver(() => { if (last?.isConnected && !last.hasAttribute("disabled") && !dialog?.contains(document.activeElement)) last.focus({ preventScroll: true }); });
+    dialog?.addEventListener("focusin", track);
+    if (dialog) watch.observe(dialog, { subtree: true, attributes: true, attributeFilter: ["disabled"] });
     // By now React has removed the dialog, so the browser no longer restores the focus by itself.
-    return () => { dialog?.close(); if (opener?.isConnected) opener.focus({ preventScroll: true }); };
+    return () => { watch.disconnect(); dialog?.removeEventListener("focusin", track); dialog?.close(); if (opener?.isConnected) opener.focus({ preventScroll: true }); };
   }, []);
   return (
     <dialog

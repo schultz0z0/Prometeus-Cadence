@@ -31,7 +31,7 @@
 .prospecting-generation-fields .source-picker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0}
 .prospecting-generation-fields .source-option{min-height:110px;padding:16px;border:1px solid #e5e7eb;border-radius:12px;display:grid;grid-template-columns:32px minmax(0,1fr);gap:4px 12px;text-align:left;background:#fff;position:relative}
 .prospecting-generation-fields .source-option.selected{border-color:#ff6b00;background:#fff8f2;box-shadow:none}
-.prospecting-generation-fields .source-icon{grid-row:1/4;align-self:start;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;color:#ff6b00;background:#fff0e5}
+.prospecting-generation-fields .source-icon{position:static;grid-row:1/4;align-self:start;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;color:#ff6b00;background:#fff0e5}
 .prospecting-generation-fields .source-option strong{font-size:0.875rem;font-weight:600;line-height:1.25rem;padding-right:18px}
 .prospecting-generation-fields .source-option p{margin:0;font-size:0.75rem;line-height:1rem;color:#6b7280}
 .prospecting-generation-fields .source-option small{font-size:0.6875rem;line-height:1rem;color:#9ca3af}

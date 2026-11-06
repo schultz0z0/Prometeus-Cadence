@@ -91,7 +91,7 @@ export function Pipeline() {
           ))}
         </div>
       ) : (
-        <section className="pipeline-reference-empty"><ReferenceEmptyArt/><h2>Escolha uma cadência</h2><p>Use o seletor acima. O pipeline mostra em que passo da cadência<br/> está cada lead, como um quadro.</p></section>
+        <section className="pipeline-reference-empty"><ReferenceEmptyArt/><h2>Escolha uma cadência</h2><p>Use o seletor acima. O pipeline mostra em que passo da cadência<br/> está cada lead, como um quadro.</p><p className="reports-help">Primeira vez no pipeline? <button type="button" className="text-button" onClick={()=>window.dispatchEvent(new Event('help-open'))}>Leia o guia na Central de Ajuda</button></p></section>
       )}
     </div>
   );
