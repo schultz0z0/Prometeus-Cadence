@@ -1,5 +1,5 @@
 {
- "version": 3,
+ "version": 4,
  "note": "Rotas são decididas pelo relatório route-sweep.json, medido sobre o código atual; status digitado em rota é ignorado.",
  "items": [
   {
@@ -420,8 +420,7 @@
   {
    "id": "prospecção local: adicionar, importar e criar cadência",
    "kind": "journey",
-   "status": "pending",
-   "note": "a ser executada no 08A.3"
+   "run": "prospect-local"
   },
   {
    "id": "pesquisa e IA reais → qualificação → envio → inbox e parada",
@@ -462,10 +461,18 @@
    "run": "data"
   },
   {
+   "id": "apagar texto antigo: ligar a política com confirmação digitada",
+   "kind": "journey",
+   "run": "retention"
+  },
+  {
    "id": "apagar texto antigo: execução",
    "kind": "journey",
-   "status": "pending",
-   "note": "o 08A.2 só prova a confirmação digitada; a ser executada no 08A.3"
+   "status": "passed",
+   "evidence": [
+    "docs/validation/06e2-data-lifecycle.md"
+   ],
+   "note": "Prova de integração com PostgreSQL real (tests/integration/06e2-data-lifecycle.test.ts): apaga o antigo, mantém o recente e isola workspaces. Não foi exercido pelo navegador."
   },
   {
    "id": "API: chave, escopo e revogação",
@@ -484,10 +491,15 @@
    "run": "popups"
   },
   {
-   "id": "transversal: popups por módulo",
+   "id": "transversal: 11 popups de módulo abertos e fechados",
+   "kind": "state",
+   "run": "module-popups"
+  },
+  {
+   "id": "transversal: demais popups, pelo mesmo componente",
    "kind": "state",
    "status": "pending",
-   "note": "Modal é usado em 59 arquivos; a ser executada no 08A.3"
+   "note": "Modal aparece em 59 arquivos; todos usam o mesmo componente, mas não foram abertos um a um"
   },
   {
    "id": "transversal: operador recusado em cobrança",
@@ -495,10 +507,15 @@
    "run": "roles"
   },
   {
+   "id": "transversal: operador recusado e administrador aceito em 4 chamadas de API",
+   "kind": "state",
+   "run": "admin"
+  },
+  {
    "id": "transversal: administrador e demais áreas por papel",
    "kind": "state",
    "status": "pending",
-   "note": "a ser executada no 08A.3"
+   "note": "Falta exercer os papéis na tela, nas demais áreas"
   },
   {
    "id": "transversal: foco em Adicionar e Ajuda",
@@ -506,10 +523,15 @@
    "run": "keyboard"
   },
   {
+   "id": "transversal: teclado em 8 telas",
+   "kind": "state",
+   "run": "keyboard-more"
+  },
+  {
    "id": "transversal: teclado nas demais telas",
    "kind": "state",
    "status": "pending",
-   "note": "a ser executada no 08A.3"
+   "note": "8 de 72 rotas; as demais não foram percorridas com Tab"
   },
   {
    "id": "transversal: zoom 200%",
@@ -529,16 +551,32 @@
    "run": "network"
   },
   {
+   "id": "transversal: rede em 1 formulário e 2 leituras, com foco após erro",
+   "kind": "state",
+   "run": "network-more"
+  },
+  {
    "id": "transversal: rede nos demais formulários, leituras e foco após erro",
    "kind": "state",
    "status": "pending",
-   "note": "a ser executada no 08A.3"
+   "note": "Só a chave de API e as leituras de contatos e relatórios foram exercidas"
   },
   {
-   "id": "transversal: conversas e relatórios com dados",
+   "id": "transversal: funil conta os contatos reais",
+   "kind": "state",
+   "run": "reports-data"
+  },
+  {
+   "id": "transversal: relatórios com dados",
    "kind": "state",
    "status": "pending",
-   "note": "a ser executada no 08A.3"
+   "note": "O funil foi medido com contatos reais; os relatórios de envio exigem mensagens registradas, ainda não exercidas no navegador"
+  },
+  {
+   "id": "transversal: conversas com dados",
+   "kind": "state",
+   "status": "blocked",
+   "blockedBy": "conversa real exige canal conectado: número e autorização do usuário"
   },
   {
    "id": "cadência: abrir existente",
@@ -548,8 +586,7 @@
   {
    "id": "cadência: editar e salvar",
    "kind": "state",
-   "status": "pending",
-   "note": "a ser executada no 08A.3"
+   "run": "cadence-edit"
   },
   {
    "id": "execução: detalhe concluído",
@@ -557,10 +594,9 @@
    "run": "execution-detail"
   },
   {
-   "id": "execução: falha, parcial e em andamento",
+   "id": "execução: falha e parcial reais, em andamento simulado",
    "kind": "state",
-   "status": "pending",
-   "note": "a ser executada no 08A.3"
+   "run": "execution-states"
   },
   {
    "id": "onboarding: bloqueia sem aceite",
@@ -570,14 +606,13 @@
   {
    "id": "onboarding: concluir complemento",
    "kind": "state",
-   "status": "pending",
-   "note": "a ser executada no 08A.3"
+   "run": "onboarding-finish"
   },
   {
    "id": "visual: comparação com a referência por área",
    "kind": "state",
    "status": "pending",
-   "note": "exigida pelo AGENTS.md; nenhuma comparação foi feita no 08A; a ser executada no 08A.3"
+   "note": "Comparação feita em docs/validation/08a3-remaining.md. Há diferenças abertas, e o aceite é do usuário."
   },
   {
    "id": "módulo: cobrança, anual, adicionais e cupom",
@@ -623,50 +658,58 @@
   {
    "id": "módulo: pesquisa e enriquecimento",
    "kind": "module",
-   "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
+   "status": "blocked",
+   "blockedBy": "busca e IA reais pela rota central atual, autorização de custo do usuário",
+   "note": "A prova real de 21/10 cobre um lead pela rota codex-local, antes do 06B.2, do 06B.3 e da IA central. O resto usa provedor controlado."
   },
   {
    "id": "módulo: cadências e automações",
    "kind": "module",
-   "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
+   "status": "blocked",
+   "blockedBy": "envio real por cadência com canal próprio, autorização do usuário",
+   "note": "O serviço, a falha e a recuperação estão em 04-automation-ai.md, 06b5 e 06d1, com transporte substituído. O piloto Gmail enviou uma mensagem avulsa, não uma cadência."
   },
   {
    "id": "módulo: e-mail e WhatsApp",
    "kind": "module",
-   "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
+   "status": "blocked",
+   "blockedBy": "saída WhatsApp: número OpenWA e contato de teste, do usuário",
+   "note": "Gmail tem ida e volta reais (2026-10-23-gmail-pilot-inbox.md). No WhatsApp, a Meta recusou a entrega (130497) e o OpenWA não teve piloto."
   },
   {
    "id": "módulo: relatórios e notificações",
    "kind": "module",
-   "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
+   "status": "blocked",
+   "blockedBy": "aviso externo por e-mail, desligado neste ambiente; depende do 08B",
+   "note": "Os relatórios reconciliados estão provados em 06c2. Em 06c3, o aviso externo foi testado com capturador e está desligado aqui."
   },
   {
    "id": "módulo: assistente, busca e ajuda",
    "kind": "module",
-   "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
+   "status": "blocked",
+   "blockedBy": "IA real: a rota central respondeu limite de assinatura; o uso em QA é decisão do usuário",
+   "note": "Busca, ajuda e fallback estão provados em 06f1 e 06f2. Nenhuma resposta real da IA foi observada."
   },
   {
    "id": "módulo: API e webhooks",
    "kind": "module",
-   "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
+   "status": "blocked",
+   "blockedBy": "entrega a um receptor público, com URL autorizada pelo usuário",
+   "note": "API e fila estão provadas em 07c1a e 07c1b; o HTTP do webhook foi testado com request injetado."
   },
   {
    "id": "módulo: Google Agenda e Sheets",
    "kind": "module",
-   "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
+   "status": "blocked",
+   "blockedBy": "cliente OAuth e conta Google de teste, do usuário",
+   "note": "Consentimento e escrita real não foram exercidos (07c2b e 07c2c); os caminhos têm Google simulado."
   },
   {
    "id": "módulo: identidade, membros e privacidade",
    "kind": "module",
-   "status": "pending",
-   "note": "o relatório do pacote existe; falta conferir falha, recuperação e efeito externo no 08A.3"
+   "status": "blocked",
+   "blockedBy": "e-mail transacional por SMTP público e login Google, 08B",
+   "note": "2FA, revogação, conflito e desfazer fusão estão em 06e1 e 06e2. A exportação pela tela de Privacidade não foi entregue (06e2) e a última correção do 06e1 não foi repetida no navegador."
   },
   {
    "id": "referência: assinatura ativa",

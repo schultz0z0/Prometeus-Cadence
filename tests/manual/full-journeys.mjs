@@ -15,10 +15,10 @@ const db=new pg.Pool({connectionString:url.toString()});
 const {chromium}=await import(process.env.QA_PLAYWRIGHT_MODULE);
 const browser=await chromium.launch({headless:true,executablePath:process.env.QA_CHROME_PATH});
 const only=process.argv.find(a=>a.startsWith('--only='))?.slice(7);
-const created=[],hash=sourceHash();let issues=[];
+const created=[],open=[],hash=sourceHash();let issues=[];
 /** Waits for a real effect; a fixed sleep would only measure how slow the dev server is. */
 const until=async(fn,message,ms=30000)=>{const end=Date.now()+ms;let last;while(Date.now()<end){last=await fn();if(last)return last;await new Promise(w=>setTimeout(w,300));}assert.fail(message+' (last: '+last+')');};
-async function newContext(viewport={width:1440,height:900}){const context=await browser.newContext({viewport});await context.route('**/*',r=>{const h=new URL(r.request().url()).hostname;return h==='127.0.0.1'||h==='localhost'?r.continue():r.abort();});const page=await context.newPage();page.on('pageerror',e=>issues.push('pageerror '+e.message.slice(0,120)));page.on('response',r=>{if(r.status()>=400&&new URL(r.url()).pathname.startsWith('/api/'))issues.push(r.status()+' '+r.request().method()+' '+new URL(r.url()).pathname);});return {context,page};}
+async function newContext(viewport={width:1440,height:900}){const context=await browser.newContext({viewport});open.push(context);await context.route('**/*',r=>{const h=new URL(r.request().url()).hostname;return h==='127.0.0.1'||h==='localhost'?r.continue():r.abort();});const page=await context.newPage();page.on('pageerror',e=>issues.push('pageerror '+e.message.slice(0,120)));page.on('response',r=>{if(r.status()>=400&&new URL(r.url()).pathname.startsWith('/api/'))issues.push(r.status()+' '+r.request().method()+' '+new URL(r.url()).pathname);});return {context,page};}
 const mailLink=async(email,kind='verify-email')=>{for(let i=0;i<20;i++){const box=await (await fetch(`http://127.0.0.1:8125/api/v2/search?kind=to&query=${encodeURIComponent(email)}`)).json();for(const m of box.items??[]){const t=m.Content.Body.replace(/=\r?\n/g,'').replace(/=([A-Fa-f0-9]{2})/g,(_,h)=>String.fromCharCode(parseInt(h,16)));const l=(t.match(/https?:\/\/[^\s<>"]+/g)??[]).find(x=>x.includes(kind));if(l)return l;}await new Promise(w=>setTimeout(w,500));}throw Error('no mail link');};
 /** A fast account: API signup and the real workspace form. The signup journey does this by hand instead. */
 async function account(name,{plan=null}={}){
@@ -118,6 +118,80 @@ const journeys={
   await step('abre o detalhe de uma execução concluída',async()=>{await go(page,'/executions/'+id);await seen(page,'Busca de empresas');await seen(page,'1 inseridos');await seen(page,'Concluída');assert.equal(await page.getByText('Não foi possível carregar seu workspace').count(),0);});
   await step('a lista de execuções mostra o resultado',async()=>{await go(page,'/executions');await seen(page,'Busca de empresas · MAPS');await seen(page,'1 novos');});
  },
+ async 'prospect-local'(step){
+  const a=await account('prospeccao',{plan:'essential'}),{page}=a,count=async()=>(await db.query('SELECT count(*)::int n FROM app.lead WHERE workspace_id=$1',[a.workspace])).rows[0].n;
+  await step('adiciona um contato pelo formulário',async()=>{await go(page,'/contacts');await openLead(page);await page.getByLabel(/Nome da empresa/).fill('[RE] Empresa manual');await page.getByLabel(/Nome da nova lista/).fill('[RE] Lista manual');await page.getByRole('dialog').getByRole('button',{name:'Salvar contato'}).click();await until(async()=>await count()===1,'lead saved');await page.getByRole('dialog').waitFor({state:'detached'});await seen(page,'[RE] Empresa manual');});
+  await step('importa colando linhas e revisa antes de salvar',async()=>{await go(page,'/leads/import');await page.getByRole('button',{name:'Digitar / colar'}).click();await page.locator('textarea').first().fill('[RE] Colada Um, um@example.com\n[RE] Colada Dois, dois@example.com');await page.locator('.import-manual-destination input[type=text],.import-manual-destination input:not([type])').first().fill('[RE] Lista colada');await page.getByRole('button',{name:'Visualizar Preview'}).click();await page.getByRole('button',{name:/^Importar/}).last().click();await until(async()=>await count()===3,'two imported');});
+  await step('cria uma cadência do zero, como rascunho',async()=>{await go(page,'/cadences/new');await page.getByRole('button',{name:'Criar cadência'}).click();await seen(page,'Dê um nome à cadência.');await page.getByLabel('Nome da cadência').fill('[RE] Cadência nova');await page.getByText('Escrever mensagem').first().click();const editor=page.locator('.step-reference-form [contenteditable="true"],.step-reference-form textarea').first();await editor.click();await page.keyboard.type('[RE] Primeira mensagem');await page.locator('.step-reference-form button[type=submit]').click();await page.getByRole('tab',{name:/Configurações/}).or(page.getByRole('button',{name:/Configurações/})).first().click();await page.getByLabel(/Lista vinculada/).selectOption({index:1});await page.getByRole('button',{name:'Criar cadência'}).click();await until(async()=>(await db.query('SELECT count(*)::int n FROM app.cadence WHERE workspace_id=$1',[a.workspace])).rows[0].n===1,'cadence created');assert.equal((await db.query("SELECT payload->>'status' s FROM app.cadence WHERE workspace_id=$1",[a.workspace])).rows[0].s,'draft','nothing runs');});
+ },
+ async retention(step){
+  const a=await account('retencao',{plan:'essential'}),{page}=a;
+  await step('digitar APAGAR libera e a política fica ligada',async()=>{await go(page,'/settings/privacy');await page.getByRole('switch').first().click();await page.getByRole('button',{name:/Salvar/}).click();await page.getByLabel('Digite APAGAR para confirmar').fill('APAGAR');await page.getByRole('dialog').locator('button.danger,.btn.danger').click();await page.getByRole('dialog').waitFor({state:'detached'});await page.waitForTimeout(800);await go(page,'/settings/privacy');await seen(page,/Ligada: enviadas após/);});
+ },
+ async 'cadence-edit'(step){
+  const a=await account('edicao',{plan:'pro'}),{page}=a,list=randomUUID(),id=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista edição']);
+  await db.query('INSERT INTO app.cadence(workspace_id,id,list_id,payload) VALUES($1,$2,$3,$4)',[a.workspace,id,list,{id,name:'[RE] Para editar',listId:list,status:'draft',createdAt:new Date().toISOString(),settings:defaultCadenceSettings(),steps:[{id:'s1',channel:'WHATSAPP',delayDays:1,body:'[RE] Texto antigo',stopOnReply:true}]}]);
+  const body=async()=>(await db.query('SELECT payload FROM app.cadence WHERE workspace_id=$1 AND id=$2',[a.workspace,id])).rows[0].payload.steps[0].body;
+  await step('edita o passo, salva e persiste',async()=>{await go(page,'/cadences/'+id);await page.getByText('[RE] Texto antigo').first().click();const editor=page.locator('.step-reference-form [contenteditable="true"],.step-reference-form textarea').first();await editor.click();await page.keyboard.press('Control+a');await page.keyboard.type('[RE] Texto novo');await page.locator('.step-reference-form button[type=submit]').click();await page.getByRole('button',{name:'Salvar alterações'}).first().click();await until(async()=>(await body()).includes('[RE] Texto novo'),'saved');});
+  await step('recarregar mantém o texto',async()=>{await go(page,'/cadences/'+id);await seen(page,'[RE] Texto novo');});
+ },
+ async 'execution-states'(step){
+  const a=await account('estados',{plan:'pro'}),{page}=a,list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista estados']);
+  // Terminal states only: a worker can claim queued or running jobs and would call the paid provider.
+  const job=async(state,counts)=>{const id=randomUUID();await db.query('INSERT INTO app.prospecting_job(workspace_id,id,actor_id,list_id,request_id,body_hash,kind,source,state,input,profile_version,checkpoint,counts) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',[a.workspace,id,a.user,list,randomUUID(),'fixture','generation','MAPS',state,{kind:'generation',source:'MAPS',destination:{mode:'existing',listId:list},filters:{term:'[RE] fixture',location:'QA'},limit:2,dedupScope:'workspace'},'fixture',{fixture:true,context:null},counts]);return id;};
+  const failed=await job('failed',{found:0,inserted:0,duplicates:0,rejected:0,pending:0}),partial=await job('partial',{found:2,inserted:1,duplicates:0,rejected:1,pending:0}),done=await job('completed',{found:1,inserted:1,duplicates:0,rejected:0,pending:0});
+  await step('falha aparece como falha',async()=>{await go(page,'/executions/'+failed);await seen(page,/Falhou|Falha/);});
+  await step('parcial aparece como parcial, com as contagens',async()=>{await go(page,'/executions/'+partial);await seen(page,/Parcial|parcial/);await seen(page,'1 rejeitados');});
+  await step('em andamento (resposta simulada) mostra progresso',async()=>{await page.route('**/api/prospecting/jobs/'+done+'*',async r=>{const res=await r.fetch();const j=await res.json();const patch=o=>{if(o&&typeof o==='object'){if('state'in o)o.state='running';for(const v of Object.values(o))patch(v);}};patch(j);await r.fulfill({response:res,json:j});});await go(page,'/executions/'+done);await seen(page,/Processando|Em processamento|Em andamento|Executando/);await page.unroute('**/api/prospecting/jobs/'+done+'*');});
+ },
+ async 'onboarding-finish'(step){
+  const a=await account('completa'),{page}=a;
+  await step('aceitar conclui o cadastro e libera o app',async()=>{await db.query('UPDATE auth."user" SET "registrationRequired"=true WHERE id=$1',[a.user]);await go(page,'/onboarding/entry');await page.getByLabel('Telefone').fill('(21) 97323-1943');await page.getByRole('checkbox').first().check();await page.getByRole('button',{name:/Continuar|Salvar|Concluir/}).first().click();await page.waitForURL(u=>!u.pathname.startsWith('/onboarding/profile'),{timeout:30000});assert.equal((await db.query('SELECT "registrationRequired" r FROM auth."user" WHERE id=$1',[a.user])).rows[0].r,false);});
+ },
+ async admin(step){
+  const a=await account('dono-adm',{plan:'pro'}),admin=await account('admin'),op=await account('operador2');
+  for(const [who,role] of [[admin,'admin'],[op,'operator']]){await db.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),a.workspace,who.user,role]);const r=await who.page.request.post(origin+'/api/identity',{headers:{origin,'content-type':'application/json'},data:{type:'switch',workspaceId:a.workspace}});assert.equal(r.status(),200);}
+  const post=(who,path,data)=>who.page.request.post(origin+path,{headers:{origin,'content-type':'application/json','x-cadence-workspace':a.workspace},data});
+  await step('administrador pode preparar cobrança',async()=>{assert.equal((await post(admin,'/api/billing/prepare',{kind:'checkout',sku:'extractions-2000'})).status(),200);});
+  await step('operador não convida e o administrador convida',async()=>{const refused=await post(op,'/api/identity',{type:'invite',requestId:randomUUID(),email:'nao@example.com',role:'operator'});console.log('    operator invite',refused.status(),(await refused.text()).slice(0,120));assert.ok([401,403].includes(refused.status()));const ok=await post(admin,'/api/identity',{type:'invite',requestId:randomUUID(),email:'re-qa-convite@example.com',role:'operator'});const text=await ok.text();assert.ok(ok.status()===200||(ok.status()===409&&text.includes('BILLING_CAPACITY')),'the admin is authorized: only the seat limit may answer');});
+  await step('operador não cria chave de API',async()=>{const input={action:'create-key',input:{name:'[RE] chave',scopes:['leads:read']}};assert.equal((await post(op,'/api/integrations',input)).status(),403);const ok=await post(admin,'/api/integrations',input);assert.ok(ok.ok(),'the admin creates with the same call: '+ok.status());});
+  await step('operador não muda a privacidade',async()=>{const input={action:'retention',input:{active:true,sentDays:365,replyDays:365,expectedRevision:0,confirm:'APAGAR'}},r=await post(op,'/api/data-lifecycle',input);assert.equal(r.status(),403,await r.text());const ok=await post(a,'/api/data-lifecycle',input);assert.ok(ok.ok(),'the owner saves with the same call: '+ok.status());});
+  await step('operador trabalha nos contatos',async()=>{const r=await op.page.request.get(origin+'/api/contacts',{headers:{'x-cadence-workspace':a.workspace}});assert.equal(r.status(),200);});
+ },
+ async 'keyboard-more'(step){
+  const a=await account('teclado2',{plan:'pro'}),{page}=a;
+  for(const route of ['/contacts','/cadences','/templates','/leads/generator','/reports','/settings/account','/settings/webhooks','/sdr'])await step('Tab com foco visível em '+route,async()=>{await go(page,route);for(let i=0;i<12;i++){await page.keyboard.press('Tab');const f=await page.evaluate(()=>{const e=document.activeElement;if(!e||e===document.body)return null;const look=()=>{const s=getComputedStyle(e);return [s.outlineStyle,s.outlineWidth,s.boxShadow,s.borderColor,s.backgroundColor].join('|');},on=look();e.blur();const off=look();e.focus();return {changes:on!==off,tag:e.tagName+'.'+e.className+' '+(e.innerText||'').slice(0,20)};});assert.ok(f,'lost focus');assert.ok(f.changes,'focus changes nothing on '+f.tag);}});
+  await step('busca devolve o foco',async()=>{await go(page,'/dashboard');const b=page.getByRole('button',{name:/Buscar lead/});await b.focus();await page.keyboard.press('Enter');await page.getByRole('dialog').first().waitFor();await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'detached'});assert.ok(await b.evaluate(e=>e===document.activeElement),'focus lost');});
+  await step('assistente devolve o foco',async()=>{const b=page.getByRole('button',{name:'Assistente'});await b.focus();await page.keyboard.press('Enter');await page.locator('.assistant-panel').waitFor();await page.keyboard.press('Escape');await page.locator('.assistant-panel').waitFor({state:'detached'});assert.ok(await b.evaluate(e=>e===document.activeElement),'focus lost');});
+ },
+ async 'network-more'(step){
+  const a=await account('rede2',{plan:'pro'}),{page}=a,list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista rede']);await lead(a.workspace,list,{name:'[RE] Contato visível'});
+  const down=(glob,method='GET')=>page.route(glob,r=>r.request().method()===method?r.fulfill({status:503,contentType:'application/json',body:'{}'}):r.fallback());
+  await step('leitura de contatos em 503 mostra erro e tenta de novo',async()=>{await down('**/api/contacts*');await go(page,'/contacts');const retry=page.getByRole('button',{name:'Tentar novamente'}).first();await retry.waitFor({timeout:20000});await page.unroute('**/api/contacts*');await retry.click();await seen(page,'[RE] Contato visível');});
+  await step('formulário de chave em 503 mantém o rascunho e o foco no diálogo',async()=>{await go(page,'/settings/webhooks');await page.getByRole('button',{name:'Nova chave'}).click();const dialog=page.getByRole('dialog');const field=dialog.getByRole('textbox').first();await field.fill('[RE] Chave rascunho');await down('**/api/integrations','POST');await dialog.getByRole('button',{name:/Criar|Gerar/}).click();await page.waitForTimeout(1500);await page.unroute('**/api/integrations');assert.equal(await field.inputValue(),'[RE] Chave rascunho');assert.ok(await dialog.evaluate(d=>d.contains(document.activeElement)),'focus left the dialog');assert.ok((await dialog.innerText()).match(/Não foi possível|indispon|Tente/i),'no error in the dialog');});
+  await step('relatório em 503 avisa e recupera',async()=>{await down('**/api/reports*');await go(page,'/reports');const failure=page.getByText('Não foi possível consultar os relatórios');await failure.waitFor({timeout:20000});await page.unroute('**/api/reports*');await go(page,'/reports');await seen(page,'Os relatórios aparecem depois do primeiro envio');assert.equal(await failure.count(),0,'the error stayed after recovery');});
+ },
+ async 'reports-data'(step){
+  const a=await account('relatorios',{plan:'pro'}),{page}=a,list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista relatório']);for(let i=0;i<7;i++)await lead(a.workspace,list,{name:'[RE] Relatório '+i});
+  await step('o funil conta os contatos reais',async()=>{await go(page,'/reports/funnel');const card=page.locator('.reports-funnel-metrics section',{hasText:'Total Leads'});await until(async()=>/\b7\b/.test(await card.innerText()),'seven contacts on the card');});
+  await step('funil segura 320 px com contatos',async()=>{await page.setViewportSize({width:320,height:700});await go(page,'/reports/funnel');assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=1);await page.setViewportSize({width:1440,height:900});});
+ },
+ async 'module-popups'(step){
+  const a=await account('popups2',{plan:'pro'}),{page}=a,list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista popups']);await lead(a.workspace,list);
+  const open=async(route,click,name)=>step(name,async()=>{await go(page,route);await click();const d=page.getByRole('dialog').first();await d.waitFor();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=1);await page.keyboard.press('Escape');await d.waitFor({state:'detached'});});
+  await open('/contacts',()=>page.getByRole('button',{name:'Excluir por e-mail'}).click(),'contatos: excluir por e-mail');
+  await open('/contacts',()=>page.getByRole('button',{name:'Colunas'}).click(),'contatos: colunas');
+  await open('/settings/webhooks',()=>page.getByRole('button',{name:'Novo webhook'}).click(),'webhooks: novo');
+  await open('/settings/webhooks',()=>page.getByRole('button',{name:'Nova chave'}).click(),'API: nova chave');
+  await open('/templates',()=>page.getByRole('button',{name:/Novo template|Criar template/}).first().click(),'templates: novo');
+  await open('/settings/plan',async()=>{await page.getByRole('tab',{name:'Planos e pacotes'}).click();await page.locator('.billing-comparison-plan').first().getByRole('button').click();},'plano: revisão');
+  await open('/cadences',()=>page.getByRole('button',{name:/Nova cadência/}).first().click(),'cadências: nova');
+  await open('/settings/context',()=>page.getByRole('button',{name:/produto/i}).first().click(),'contexto: produto');
+  await open('/settings/email',()=>page.getByRole('button',{name:/Conectar|Adicionar/}).first().click(),'e-mail: conectar');
+  await open('/settings/whatsapp',()=>page.getByRole('button',{name:/Conectar|Adicionar/}).first().click(),'WhatsApp: conectar');
+  await open('/reports',()=>page.getByRole('button',{name:'Leia o guia na Central de Ajuda'}).click(),'relatórios: guia');
+  await step('sem canal, as caixas levam à conexão',async()=>{await go(page,'/messages/whatsapp');await page.getByRole('link',{name:'Conectar WhatsApp'}).click();await page.waitForURL(u=>u.pathname==='/settings/whatsapp');await go(page,'/inbox');await page.getByRole('link',{name:'Conectar e-mail'}).click();await page.waitForURL(u=>u.pathname==='/settings/email');});
+ },
  async onboarding(step){
   const a=await account('incompleto'),{page}=a;
   await step('cadastro incompleto vai para o complemento',async()=>{await db.query('UPDATE auth."user" SET "registrationRequired"=true WHERE id=$1',[a.user]);await go(page,'/onboarding/entry');await page.waitForURL(u=>u.pathname==='/onboarding/profile',{timeout:20000});await page.getByLabel('Telefone').waitFor();});
@@ -126,13 +200,14 @@ const journeys={
 };
 const runs=[];
 // What each journey is meant to provoke. Anything else on the page fails it.
-const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /]};
+const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /],'onboarding-finish':[/^403 GET /],admin:[/^409 GET /],'network-more':[/^503 GET \/api\/(contacts|reports)/,/^503 POST \/api\/integrations$/]};
 try{
  if(!only||only==='signup')await new Promise(w=>setTimeout(w,70000));
  for(const [id,run] of Object.entries(journeys)){
-  if(only&&only!==id)continue;
+  if(only&&!only.split(',').includes(id))continue;
   const local=[];const step=async(name,fn)=>{try{await fn();local.push({name,ok:true});console.log('  ok',id,'·',name);}catch(e){local.push({name,ok:false,error:String(e.message).split('\n')[0].slice(0,240)});console.log('  FAIL',id,'·',name,'·',String(e.message).split('\n')[0].slice(0,240));const pages=browser.contexts().flatMap(c=>c.pages());await pages.at(-1)?.screenshot({path:`${out}/journey-failures/${id}-${local.length}.jpg`,type:'jpeg',quality:60}).catch(()=>{});}};
   issues=[];let crash=null;try{await run(step);}catch(e){crash=String(e.message).split('\n')[0].slice(0,240);console.log('  CRASH',id,crash);}
+  for(const c of open.splice(0))await c.close().catch(()=>{});
   const unexpected=[...new Set(issues)].filter(x=>!(allowed[id]??[]).some(r=>r.test(x)));if(unexpected.length)console.log('  UNEXPECTED',id,unexpected.join(', ').slice(0,300));
   runs.push({id,ok:!crash&&!unexpected.length&&local.length>0&&local.every(s=>s.ok),crash,unexpected,steps:local});
   await new Promise(w=>setTimeout(w,1000));
