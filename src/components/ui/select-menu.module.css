@@ -1,0 +1,61 @@
+.root {
+  position: relative;
+  min-width: 0;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 12px;
+  white-space: nowrap;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--diary-control-border, var(--border));
+  border-radius: 8px;
+}
+
+.trigger svg {
+  color: var(--secondary);
+  flex: none;
+}
+
+.options {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  inset-inline: 0;
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px #0f172a1a;
+}
+
+.options[data-up="true"] {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+.options li {
+  padding: 7px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.options li[aria-selected="true"] {
+  color: var(--primary);
+}
+
+.options li[data-active="true"], .options li:hover {
+  background: var(--hover);
+}

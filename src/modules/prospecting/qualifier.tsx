@@ -135,7 +135,7 @@ function DemoQualifier() {
         title="Qualificador de Leads"
         description="Qualifique leads com extração de contatos e resumos por IA"
         actions={
-          <LinkButton href="/executions" icon="Clock">
+          <LinkButton href="/executions?view=jobs" icon="Clock">
             Histórico
           </LinkButton>
         }

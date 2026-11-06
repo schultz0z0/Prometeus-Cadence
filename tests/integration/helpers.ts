@@ -45,11 +45,10 @@ export async function mailLink(email: string, fragment: string) {
   }
   throw Error("Expected local test email was not captured.");
 }
-export async function verifiedUser() {
-  const email = uniqueEmail();
+export async function verifiedUser({name='Test User',email=uniqueEmail()}: {name?:string;email?:string}={}) {
   const signup = await requestAuth("sign-up/email", {
     registration,
-    name: "Test User",
+    name,
     email,
     password,
     callbackURL: base + "/onboarding/workspace",

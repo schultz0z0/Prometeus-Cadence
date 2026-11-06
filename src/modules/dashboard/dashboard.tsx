@@ -222,7 +222,7 @@ export function Dashboard() {
       <section className="panel section-gap">
         <div className="panel-heading">
           <h3>Atividade recente</h3>
-          <Link className="small-link" href="/executions">
+          <Link className="small-link" href="/executions?view=jobs">
             Ver todas →
           </Link>
         </div>

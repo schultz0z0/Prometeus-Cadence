@@ -13,10 +13,10 @@ export function configureProspectingTest(){
     APIFY_TOKEN:'fixture-not-a-live-token',APIFY_MAPS_ACTOR:'compass/crawler-google-places',APIFY_MAPS_BUILD:'fixture-build',APIFY_MAX_CHARGE_USD:'0.1',
   });
 }
-export async function prospectingUser(options:{billing?:boolean;platformAi?:boolean}={}){
-  const u=await verifiedUser();
+export async function prospectingUser(options:{billing?:boolean;platformAi?:boolean;qaName?:string}={}){
+  const u=await verifiedUser(options.qaName?{name:options.qaName,email:'re-'+randomUUID()+'@example.com'}:undefined);
   const headers=new Headers({cookie:u.cookie,origin:base});
-  await identityAction(headers,{type:'create',requestId:randomUUID(),name:'Prospecting QA'});
+  await identityAction(headers,{type:'create',requestId:randomUUID(),name:options.qaName??'Prospecting QA'});
   const p=await requirePrincipal(headers);
   if(options.billing!==false)await withWorkspaceTransaction(p,c=>c.query('SELECT app.billing_start_trial($1)',[randomUUID()]));
   headers.set('x-cadence-workspace',p.workspaceId);
