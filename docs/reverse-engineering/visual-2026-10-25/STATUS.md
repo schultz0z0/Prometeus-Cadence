@@ -1,11 +1,15 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-05 · Session: s44 · Phase:6 08A.3 concluído, aceite integral negado em 103 de 126; próximo 08B, em outra plataforma; paridade integral não aceita
+Updated: 2026-11-05 · Session: s45 · Phase:6 08A.4 diário de mensagens de cadências validado localmente · aceite integral pendente
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
 
+- Covered s45: diário de Execuções em desktop e celular, leitura de mensagens por workspace, rastreio, filtros, paginação, teclado e recuperação de leitura.
+  - **Evidência:** EV-307.
+  - **QA:** L-054.
+- Not covered s45: estados com dados na referência, seletores nas demais telas, diferenças visuais menores e provas transversais restantes.
 - Covered s44: 08A.3, jornadas restantes, comparação visual por área e conferência dos módulos.
   - **QA:** L-053 removed, resíduo 0.
   - **Evidência:** EV-306.
@@ -268,7 +272,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s44: diferenças visuais abertas e 08B; SDR sem aceite até o piloto.
+Fila vigente s45: seletores e demais pendências locais do 08A antes do 08B. SDR segue pendente de piloto.
+
+Fila s44 (histórica): diferenças visuais abertas e 08B.
 
 Fila s43 (histórica): 08A.3.
 

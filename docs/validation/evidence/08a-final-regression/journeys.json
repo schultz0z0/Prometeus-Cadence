@@ -1,7 +1,7 @@
 {
- "date": "2026-11-06T00:22:24.371Z",
- "sourceHash": "307ed37afa8e4f02715b634294ab7856eb03ab17f1449df75c7c120acea49ea7",
- "note": "Navegador sem acesso a outros hosts; contas sem canais; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
+ "date": "2026-11-06T02:22:57.332Z",
+ "sourceHash": "190d44207c3ecea0fdf154a3f6ff3ee50fc4966a98db887c941b6d89c6556dcd",
+ "note": "Navegador sem acesso a outros hosts; contas sem canais ativos; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
  "runs": [
   {
    "id": "signup",
@@ -226,7 +226,7 @@
      "ok": true
     },
     {
-     "name": "a lista de execuções mostra o resultado",
+     "name": "o histórico de jobs mostra o resultado",
      "ok": true
     }
    ]
@@ -275,6 +275,34 @@
     },
     {
      "name": "recarregar mantém o texto",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "execution-diary",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "diário vazio mantém cabeçalho, cartões, busca e paginação",
+     "ok": true
+    },
+    {
+     "name": "diário lê mensagens terminais de cadência e mostra o motivo",
+     "ok": true
+    },
+    {
+     "name": "tamanho de página e navegação exibem a última página",
+     "ok": true
+    },
+    {
+     "name": "filtros funcionam por teclado e a busca recupera a lista",
+     "ok": true
+    },
+    {
+     "name": "falha de leitura oferece nova tentativa com recuperação",
      "ok": true
     }
    ]

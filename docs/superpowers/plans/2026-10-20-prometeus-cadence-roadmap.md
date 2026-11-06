@@ -355,3 +355,7 @@ Onze jornadas clicadas, sem envio, sem fornecedor pago e sem confirmação no St
 ### Continuidade 05/11 — 08A.3
 
 Dez jornadas novas, comparação visual por área, correção das diferenças baratas e conferência dos 8 módulos, todos bloqueados por efeito externo não homologado. A revisão derrubou aprovações que nada mediam. Aceite integral negado em 103 de 126. O desenvolvimento continua em outra plataforma, a partir do prompt de continuação; próximo: diferenças visuais abertas e 08B. [Relatório](../../validation/08a3-remaining.md).
+
+### Continuidade 05/11/2026 — 08A.4
+
+Execuções passou a mostrar as mensagens registradas de cada cadência, com busca, filtros, motivos e paginação. O histórico de jobs mantém seus próprios atalhos. A ordem atual é aplicar seletores próprios nas demais telas, tratar as diferenças visuais menores e completar as provas transversais locais antes de começar a prontidão do 08B. [Relatório do diário](../../validation/08a4-execution-diary.md)

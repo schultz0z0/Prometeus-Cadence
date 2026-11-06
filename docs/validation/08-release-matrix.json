@@ -599,6 +599,11 @@
    "run": "execution-states"
   },
   {
+   "id": "execução: diário de mensagens registradas, filtros, paginação e recuperação",
+   "kind": "state",
+   "run": "execution-diary"
+  },
+  {
    "id": "onboarding: bloqueia sem aceite",
    "kind": "state",
    "run": "onboarding"
@@ -612,7 +617,7 @@
    "id": "visual: comparação com a referência por área",
    "kind": "state",
    "status": "pending",
-   "note": "Comparação feita em docs/validation/08a3-remaining.md. Há diferenças abertas, e o aceite é do usuário."
+   "note": "Comparação por área em docs/validation/08a3-remaining.md e diário em docs/validation/08a4-execution-diary.md. Há diferenças abertas e o aceite visual é do usuário."
   },
   {
    "id": "módulo: cobrança, anual, adicionais e cupom",
