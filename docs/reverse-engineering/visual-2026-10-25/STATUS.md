@@ -1,11 +1,20 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-05 · Session: s43 · Phase:6 08A.2 concluído, aceite integral negado em 92 de 119; próximo 08A.3; paridade integral não aceita
+Updated: 2026-11-05 · Session: s44 · Phase:6 08A.3 concluído, aceite integral negado em 103 de 126; próximo 08B, em outra plataforma; paridade integral não aceita
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
 
+- Covered s44: 08A.3, jornadas restantes, comparação visual por área e conferência dos módulos.
+  - **QA:** L-053 removed, resíduo 0.
+  - **Evidência:** EV-306.
+- Not covered s44:
+  - diário de execuções e seletores próprios;
+  - demais popups, teclado, papéis e rede.
+- Needs human s44:
+  - aceite visual;
+  - homologações externas listadas no relatório.
 - Covered s43: 08A.2, jornadas clicadas e varredura ampliada.
   - **QA:** L-052 removed, resíduo 0.
   - **Evidência:** EV-305.
@@ -259,7 +268,9 @@ Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validatio
 
 ## Next actions
 
-Fila vigente s43: 08A.3; SDR sem aceite até o piloto.
+Fila vigente s44: diferenças visuais abertas e 08B; SDR sem aceite até o piloto.
+
+Fila s43 (histórica): 08A.3.
 
 Fila s42 (histórica): 08A.2.
 

@@ -1,6 +1,6 @@
 {
- "date": "2026-11-05T12:43:49.129Z",
- "sourceHash": "4df160ea104291a664d576f797ee6e8ce9bd0de13bab80451c321901a36f7ac0",
+ "date": "2026-11-06T00:22:24.371Z",
+ "sourceHash": "307ed37afa8e4f02715b634294ab7856eb03ab17f1449df75c7c120acea49ea7",
  "note": "Navegador sem acesso a outros hosts; contas sem canais; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
  "runs": [
   {
@@ -227,6 +227,254 @@
     },
     {
      "name": "a lista de execuções mostra o resultado",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "prospect-local",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "adiciona um contato pelo formulário",
+     "ok": true
+    },
+    {
+     "name": "importa colando linhas e revisa antes de salvar",
+     "ok": true
+    },
+    {
+     "name": "cria uma cadência do zero, como rascunho",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "retention",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "digitar APAGAR libera e a política fica ligada",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "cadence-edit",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "edita o passo, salva e persiste",
+     "ok": true
+    },
+    {
+     "name": "recarregar mantém o texto",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "execution-states",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "falha aparece como falha",
+     "ok": true
+    },
+    {
+     "name": "parcial aparece como parcial, com as contagens",
+     "ok": true
+    },
+    {
+     "name": "em andamento (resposta simulada) mostra progresso",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "onboarding-finish",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "aceitar conclui o cadastro e libera o app",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "admin",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "administrador pode preparar cobrança",
+     "ok": true
+    },
+    {
+     "name": "operador não convida e o administrador convida",
+     "ok": true
+    },
+    {
+     "name": "operador não cria chave de API",
+     "ok": true
+    },
+    {
+     "name": "operador não muda a privacidade",
+     "ok": true
+    },
+    {
+     "name": "operador trabalha nos contatos",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "keyboard-more",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "Tab com foco visível em /contacts",
+     "ok": true
+    },
+    {
+     "name": "Tab com foco visível em /cadences",
+     "ok": true
+    },
+    {
+     "name": "Tab com foco visível em /templates",
+     "ok": true
+    },
+    {
+     "name": "Tab com foco visível em /leads/generator",
+     "ok": true
+    },
+    {
+     "name": "Tab com foco visível em /reports",
+     "ok": true
+    },
+    {
+     "name": "Tab com foco visível em /settings/account",
+     "ok": true
+    },
+    {
+     "name": "Tab com foco visível em /settings/webhooks",
+     "ok": true
+    },
+    {
+     "name": "Tab com foco visível em /sdr",
+     "ok": true
+    },
+    {
+     "name": "busca devolve o foco",
+     "ok": true
+    },
+    {
+     "name": "assistente devolve o foco",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "network-more",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "leitura de contatos em 503 mostra erro e tenta de novo",
+     "ok": true
+    },
+    {
+     "name": "formulário de chave em 503 mantém o rascunho e o foco no diálogo",
+     "ok": true
+    },
+    {
+     "name": "relatório em 503 avisa e recupera",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "reports-data",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "o funil conta os contatos reais",
+     "ok": true
+    },
+    {
+     "name": "funil segura 320 px com contatos",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "module-popups",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "contatos: excluir por e-mail",
+     "ok": true
+    },
+    {
+     "name": "contatos: colunas",
+     "ok": true
+    },
+    {
+     "name": "webhooks: novo",
+     "ok": true
+    },
+    {
+     "name": "API: nova chave",
+     "ok": true
+    },
+    {
+     "name": "templates: novo",
+     "ok": true
+    },
+    {
+     "name": "plano: revisão",
+     "ok": true
+    },
+    {
+     "name": "cadências: nova",
+     "ok": true
+    },
+    {
+     "name": "contexto: produto",
+     "ok": true
+    },
+    {
+     "name": "e-mail: conectar",
+     "ok": true
+    },
+    {
+     "name": "WhatsApp: conectar",
+     "ok": true
+    },
+    {
+     "name": "relatórios: guia",
+     "ok": true
+    },
+    {
+     "name": "sem canal, as caixas levam à conexão",
      "ok": true
     }
    ]

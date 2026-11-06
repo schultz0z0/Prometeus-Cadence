@@ -1,6 +1,6 @@
 {
- "date": "2026-11-05T13:11:30.766Z",
- "sourceHash": "4df160ea104291a664d576f797ee6e8ce9bd0de13bab80451c321901a36f7ac0",
+ "date": "2026-11-06T00:37:52.262Z",
+ "sourceHash": "307ed37afa8e4f02715b634294ab7856eb03ab17f1449df75c7c120acea49ea7",
  "note": "Só navegação; hosts externos bloqueados; contas descartáveis removidas ao fim.",
  "results": [
   {
@@ -2969,7 +2969,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "path": "/leads/abcd3d60-0884-4ff9-8c37-e78565805e79",
    "theme": "light",
    "fontSize": 16
   },
@@ -2979,7 +2979,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "path": "/leads/abcd3d60-0884-4ff9-8c37-e78565805e79",
    "theme": "light",
    "fontSize": 16
   },
@@ -2989,7 +2989,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "path": "/leads/abcd3d60-0884-4ff9-8c37-e78565805e79",
    "theme": "light",
    "fontSize": 16
   },
@@ -2999,7 +2999,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "path": "/leads/abcd3d60-0884-4ff9-8c37-e78565805e79",
    "theme": "light",
    "fontSize": 16
   },
@@ -3009,7 +3009,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "path": "/leads/abcd3d60-0884-4ff9-8c37-e78565805e79",
    "theme": "light",
    "fontSize": 16
   },
@@ -3019,7 +3019,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "path": "/leads/abcd3d60-0884-4ff9-8c37-e78565805e79",
    "theme": "dark",
    "fontSize": 16
   },
@@ -3029,7 +3029,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "path": "/leads/abcd3d60-0884-4ff9-8c37-e78565805e79",
    "theme": "light",
    "fontSize": 16
   },
@@ -3039,7 +3039,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/9fd3d39f-18ee-4692-bea7-f320447df484",
+   "path": "/leads/abcd3d60-0884-4ff9-8c37-e78565805e79",
    "theme": "light",
    "fontSize": 18
   },

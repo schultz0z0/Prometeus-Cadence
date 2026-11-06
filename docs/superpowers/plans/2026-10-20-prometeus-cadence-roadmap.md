@@ -351,3 +351,7 @@ Registro de cobertura com auditor e varredura de 72 rotas em 6 configurações, 
 ### Continuidade 05/11 — 08A.2
 
 Onze jornadas clicadas, sem envio, sem fornecedor pago e sem confirmação no Stripe. Acharam dois defeitos globais: mensagens escondidas atrás dos diálogos e foco perdido ao fechá-los. A revisão dividiu o registro para nenhum item prometer mais do que rodou. Aceite integral negado em 92 de 119; próximo: 08A.3. [Relatório](../../validation/08a2-journeys.md).
+
+### Continuidade 05/11 — 08A.3
+
+Dez jornadas novas, comparação visual por área, correção das diferenças baratas e conferência dos 8 módulos, todos bloqueados por efeito externo não homologado. A revisão derrubou aprovações que nada mediam. Aceite integral negado em 103 de 126. O desenvolvimento continua em outra plataforma, a partir do prompt de continuação; próximo: diferenças visuais abertas e 08B. [Relatório](../../validation/08a3-remaining.md).
