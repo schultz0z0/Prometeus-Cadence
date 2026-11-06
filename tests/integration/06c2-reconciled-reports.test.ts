@@ -5,6 +5,7 @@ import {preparePublication,confirmPublication} from '../../src/server/messaging/
 import {claimMailboxSync} from '../../src/server/mail/sync/repository.ts';import {ingestMailBatch} from '../../src/server/mail/ingestion.ts';import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 import {readReport,readReportDetail} from '../../src/server/operations/reports.ts';import {rebuildReportProjection} from '../../src/server/operations/projections.ts';import type {MailAdapter} from '../../src/server/mail/providers/contracts.ts';import type {MailMessage} from '../../src/domain/mail.ts';
 import {reportRequest} from '../../src/server/operations/report-http.ts';
+import {GET as getExecutionDiary} from '../../src/app/api/execution-diary/route.ts';
 beforeEach(resetRateLimits);after(async()=>{await getPools().close();await closeDispatchPool();await closeIngressPool();});
 const query=(cadenceId?:string)=>({view:'dashboard' as const,from:new Date(Date.now()-86400000).toISOString(),to:new Date(Date.now()+86400000).toISOString(),timezone:'UTC',...(cadenceId?{cadenceId}:{})});
 async function fixture(){const f=await multiFixture(true),review=await preparePublication(f.u.p,f.input);assert.deepEqual(review.blockers,[]);const publication=await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token,material:review.material});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100,f.u.p.workspaceId);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);const m=await testAdmin(async c=>(await c.query('SELECT em.*,cm.conversation_id FROM app.email_message em JOIN app.channel_message cm ON cm.workspace_id=em.workspace_id AND cm.id=em.message_id WHERE em.message_id=$1',[lease.messageId])).rows[0]);return{...f,publication,lease,message:m,now};}
@@ -19,6 +20,11 @@ test('accepted messages, real inbound classification and correlated DSN reconcil
  const report=await readReport(f.u.p,q);assert.equal(report.totals.sent,1);assert.equal(report.totals.email,1);assert.equal(report.totals.replies,1);assert.equal(report.totals.bounces,1);assert.equal(report.totals.optouts,0);assert.equal(report.totals.opens,null);assert.equal(report.stale,false);assert.equal(report.totals.leads,1);assert.equal(report.totals.qualified,1);assert.equal((await readReportDetail(f.u.p,'leads',q)).items.length,1);assert.equal(report.totals.baseLeads,1);assert.equal(report.totals.cadences,1);assert.equal(report.totals.commercialCredits,null);
  for(const metric of ['sent','replies','bounces'] as const){const detail=await readReportDetail(f.u.p,metric,q);assert.equal(detail.items.length,1);assert.equal(detail.totals[metric],detail.items.length);assert.equal(detail.nextCursor,null);assert.ok(!JSON.stringify(detail).includes('Podemos conversar'));}
  const other=await prospectingUser();await assert.rejects(readReport(other.p,q),(e:any)=>e.status===404);assert.equal((await readReport(other.p,query())).totals.sent,0);
+ const diaryResponse=await getExecutionDiary(new Request('http://127.0.0.1:3210/api/execution-diary',{headers:f.u.headers}));
+ assert.equal(diaryResponse.status,200);
+ const diary=await diaryResponse.json();
+ assert.deepEqual(diary.counts,{success:0,error:1,skipped:0,progress:0});
+ assert.match(diary.items[0].event,/devolvido/i);
 });
 test('report HTTP authenticates scope and rejects invalid calendar dates instead of normalizing them',async()=>{
  const f=await prospectingUser(),q=query(),url='http://127.0.0.1:3210/api/reports?'+new URLSearchParams(q);

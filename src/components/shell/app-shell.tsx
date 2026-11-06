@@ -33,7 +33,7 @@ function AppShellContent({children}:{children:React.ReactNode}){
     const menu = useRef<HTMLButtonElement>(null);
     const [smallScreen, setSmallScreen] = useState(false);
     const path = usePathname();
-    const navParent=navigation.find(n=>activeChild(n,path))?.label;
+    const navParent=path==='/executions'?undefined:navigation.find(n=>activeChild(n,path))?.label;
     const recordTitle=cadences.find(c=>path==='/cadences/'+c.id)?.name??leads.find(l=>path==='/leads/'+l.id)?.name;
     const integrationName=({"google-sheets":"Google Planilhas",apollo:"Apollo",funnelsflow:"FunnelsFlow CRM",meetflow:"MeetFlow"} as Record<string,string>)[path.split("/").at(-1)??""];
     const [collapsed, setCollapsed] = useState(false);

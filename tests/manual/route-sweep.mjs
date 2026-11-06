@@ -15,11 +15,18 @@ const browser=await chromium.launch({headless:true,executablePath:process.env.QA
 const sizes={'1920':[1920,855],'1440':[1440,900],'768':[768,1024],'390':[390,844],'320':[320,700],'390-dark':[390,844],zoom200:[960,428],'font-large':[320,700]};
 const only=process.argv.find(a=>a.startsWith('--only='))?.slice(7);
 const items=JSON.parse(readFileSync('docs/validation/08-release-matrix.json','utf8')).items.filter(i=>i.kind==='route');
+const attemptedEmails=[];
 // Nothing leaves this machine, whatever a page tries.
 const guard=context=>context.route('**/*',r=>{const h=new URL(r.request().url()).hostname;return h==='127.0.0.1'||h==='localhost'?r.continue():r.abort();});
 async function account(name){
  const email=`re-qa-08a-${name}-${Date.now()}@example.com`,password='Local-QA-08a-pass-7351!';
- const r=await fetch(origin+'/api/auth/sign-up/email',{method:'POST',headers:{'content-type':'application/json',origin},body:JSON.stringify({registration:{phone:'(21) 97323-1943',accepted:true,termsVersion:'homologacao-2026-10-26-v2',privacyVersion:'homologacao-2026-10-26-v2'},name:'[RE] QA '+name,email,password,callbackURL:origin+'/onboarding/workspace'})});
+ attemptedEmails.push(email);
+ let r;
+ for(let attempt=0;attempt<4;attempt++){
+  r=await fetch(origin+'/api/auth/sign-up/email',{method:'POST',headers:{'content-type':'application/json',origin},body:JSON.stringify({registration:{phone:'(21) 97323-1943',accepted:true,termsVersion:'homologacao-2026-10-26-v2',privacyVersion:'homologacao-2026-10-26-v2'},name:'[RE] QA '+name,email,password,callbackURL:origin+'/onboarding/workspace'})});
+  if(r.status!==429||attempt===3)break;
+  await new Promise(resolve=>setTimeout(resolve,75000));
+ }
  if(!r.ok)throw Error('signup '+r.status+' '+(await r.text()).slice(0,200));
  await new Promise(w=>setTimeout(w,1500));
  const box=await (await fetch(`http://127.0.0.1:8125/api/v2/search?kind=to&query=${encodeURIComponent(email)}`)).json();let link;
@@ -68,8 +75,8 @@ async function visit(who,item,viewport){
  const {text:_text,...facts}=m??{};
  return {route,viewport,account:who.name,status,ok:!!ok,path:facts.path,theme:facts.theme,fontSize:facts.fontSize,...(ok?{}:{failure,errors,console:console4,bad:[...new Set(bad)],missing:!!missing,...facts})};
 }
-const a=await account('a'),b=await account('b');
 try{
+ const a=await account('a'),b=await account('b');
  // Account a: Pro pilot, so paid modules render beyond their gate. Account b: a trial started by the app's own function.
  const set=await db.query("UPDATE app.billing_account SET state='pilot',plan='pro',period_start=now(),period_end=now()+interval '7 days' WHERE workspace_id=$1",[a.workspace]);if(set.rowCount!==1)throw Error('pilot fixture');
  const c=await db.connect();try{await c.query('BEGIN');await c.query("SELECT set_config('app.workspace_id',$1,true),set_config('app.user_id',$2,true)",[b.workspace,b.user]);await c.query('SELECT app.billing_start_trial($1)',[randomUUID()]);await c.query('COMMIT');}finally{c.release();}
@@ -93,7 +100,12 @@ try{
  if(!only&&sourceHash()!==hash)throw Error('The code changed during the sweep; its results measure nothing.');
  save({isolation,trialCta});console.log(JSON.stringify(isolation),'trialCta:',trialCta);
  console.log(`${results.filter(r=>r.ok).length}/${results.length} ok`);
+ if(results.some(r=>!r.ok)||!results.length||isolation.some(row=>!row.seesOwn||!row.seesOwnById||row.seesOtherInList||row.seesOtherById))process.exitCode=1;
 }finally{
  await browser.close();
- console.log('residue',await removeQaAccounts(db,{users:[a.user,b.user],workspaces:[a.workspace,b.workspace]}));await db.end();
+ try{
+  const residue=await removeQaAccounts(db,{users:[],workspaces:[],emails:attemptedEmails});
+  console.log('residue',residue);
+  if(residue!==0)process.exitCode=1;
+ }finally{await db.end();}
 }
