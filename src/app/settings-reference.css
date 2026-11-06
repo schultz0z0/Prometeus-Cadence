@@ -14,8 +14,8 @@
 .settings-reference-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 16px; }
 .settings-reference .field { min-width:0; gap:8px; margin:0; font-size:0.875rem; line-height:1.25rem; }
 .settings-reference .field > span { font-weight:500; }
-.settings-reference .field input:not([type="checkbox"]),.settings-reference .field select,.settings-reference .field textarea,.context-company-card input { width:100%; min-width:0; border:1px solid var(--border-strong,#d1d5db); border-radius:8px; padding:10px 12px; font-size:1rem; line-height:1.5rem; background:var(--surface,#fff); color:var(--text); }
-.settings-reference .field input:not([type="checkbox"]),.settings-reference .field select,.context-company-card input { height:46px; }
+.settings-reference .field input:not([type="checkbox"]),.settings-reference .field button[data-select-field],.settings-reference .field textarea,.context-company-card input { width:100%; min-width:0; border:1px solid var(--border-strong,#d1d5db); border-radius:8px; padding:10px 12px; font-size:1rem; line-height:1.5rem; background:var(--surface,#fff); color:var(--text); }
+.settings-reference .field input:not([type="checkbox"]),.settings-reference .field button[data-select-field],.context-company-card input { height:46px; }
 .settings-reference .field input:disabled { background:var(--hover,#f9fafb); color:var(--muted); }
 .settings-reference .field small { font-size:0.75rem; line-height:1.125rem; color:var(--muted); }
 .settings-reference .btn { min-height:32px; border-radius:8px; font-size:0.75rem; line-height:1rem; padding:0 12px; gap:8px; }

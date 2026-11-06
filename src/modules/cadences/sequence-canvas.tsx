@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { useRef, useState } from "react";
 import { useDemo } from "@/demo/provider";
 import type { Cadence, CadenceStep, Channel } from "@/domain/model";
@@ -171,7 +172,7 @@ export function SequenceCanvas({
                         ? "LINKEDIN"
                         : "WHATSAPP"}
                   </small>
-                  <p>{st.body || "Escrever mensagem…"}</p>
+                  <p className={st.body?undefined:"node-empty"}>{st.body || "Sem conteúdo"}</p>
                 </span>
               </button>
               <IconButton icon="MoreVertical" label={`Ações da etapa ${i+1}`} onClick={()=>setEditing(st.id)}/></div>
@@ -186,7 +187,7 @@ export function SequenceCanvas({
             </button>
           </div>
           <button className="flow-exit" onClick={onSettings}>
-            <Icon name="Flag" size={12} />
+            <span><Icon name="LogOut" size={13}/></span>
             Saída
           </button>
         </div>
@@ -297,7 +298,7 @@ export function SequenceCanvas({
           wide
         >
           <Field label="Lead da lista">
-            <select value={leadId} onChange={(e) => setLeadId(e.target.value)}>
+            <SelectField value={leadId} onChange={(e) => setLeadId(e.target.value)}>
               <option value="">Selecione um lead</option>
               {s.leads
                 .filter((l) => l.listId === cadence.listId)
@@ -306,7 +307,7 @@ export function SequenceCanvas({
                     {l.name}
                   </option>
                 ))}
-            </select>
+            </SelectField>
           </Field>
           {!lead && (
             <div className="notice section-gap">

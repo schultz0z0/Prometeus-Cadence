@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
@@ -334,7 +335,7 @@ function DemoAudienceWizard() {
                 />
               </Field>
               <Field label="Canal de contato">
-                <select
+                <SelectField
                   value={chosen.channel}
                   onChange={(e) =>
                     setChosen({
@@ -346,10 +347,10 @@ function DemoAudienceWizard() {
                   <option value="whatsapp">WhatsApp</option>
                   <option value="email">E-mail</option>
                   <option value="both">Os dois</option>
-                </select>
+                </SelectField>
               </Field>
               <Field label="Fonte de busca">
-                <select
+                <SelectField
                   value={chosen.source}
                   onChange={(e) =>
                     setChosen({
@@ -361,7 +362,7 @@ function DemoAudienceWizard() {
                   <option value="MAPS">Google Maps</option>
                   <option value="WEB">Busca na web</option>
                   <option value="CNPJ">Base CNPJ</option>
-                </select>
+                </SelectField>
               </Field>
               <Field label="Limite diário">
                 <input

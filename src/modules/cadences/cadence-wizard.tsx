@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -150,7 +151,7 @@ function DemoCadenceWizard({
             <section className="panel panel-pad stack">
               <h3>Pra quem</h3>
               <Field label="Lista de contatos">
-                <select
+                <SelectField
                   aria-label="Lista de contatos"
                   required
                   value={brief.listId}
@@ -164,7 +165,7 @@ function DemoCadenceWizard({
                       {s.leads.filter((x) => x.listId === l.id).length})
                     </option>
                   ))}
-                </select>
+                </SelectField>
               </Field>
               <Field
                 label="Quem decide (opcional)"

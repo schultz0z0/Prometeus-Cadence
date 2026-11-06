@@ -59,10 +59,18 @@
 .reference-first-steps-list .reference-checklist-step.completed .reference-step-copy > p { display: none; }
 .reference-first-steps-list .optional h3 small { margin-left: 8px; color: var(--muted); font-weight: 400; font-size: 0.75rem; }
 .reference-first-steps-list .optional > .btn { flex-shrink: 0; font-size: 0.75rem; }
-.reference-first-steps-aside { align-self: start; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
-.reference-first-steps-aside > h3 { font-size: 0.9375rem; margin-bottom: 8px; }
-.reference-first-steps-aside > p { color: var(--secondary); font-size: 0.8125rem; line-height: 1.3125rem; margin-bottom: 16px; }
-.reference-first-steps-aside > .btn { width: 100%; font-size: 0.75rem; }
+.reference-first-steps-aside { align-self: start; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font-size: .75rem; }
+.reference-first-steps-aside > p { color: var(--secondary); margin: 0 0 10px; }
+.reference-first-steps-aside strong { color: var(--text); }
+.reference-first-steps-help { display: grid; gap: 8px; padding: 10px; border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--surface)); border-radius: 8px; background: color-mix(in srgb, var(--primary) 4%, var(--surface)); }
+.reference-first-steps-help-heading { display: flex; align-items: center; gap: 8px; }
+.reference-first-steps-help-heading > span { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: var(--primary); color: white; }
+.reference-first-steps-help h3 { margin: 0; font-size: .875rem; }
+.reference-first-steps-help p { margin: 0; color: var(--secondary); }
+.reference-first-steps-help ul { display: grid; gap: 4px; list-style: none; padding: 0; margin: 0; color: var(--secondary); }
+.reference-first-steps-help li, .reference-first-steps-help button { display: flex; align-items: center; gap: 6px; }
+.reference-first-steps-help li svg { flex-shrink: 0; color: #0b8a63; }
+.reference-first-steps-help button { justify-self: start; padding: 0; font-size: inherit; }
 .reference-next-level-label { color: var(--muted); font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; margin: 28px 0 12px; }
 .reference-next-level { display: flex; align-items: flex-start; gap: 14px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
 .reference-next-level > div { flex: 1; }
@@ -85,7 +93,6 @@
 [data-theme="dark"] .reference-onboarding-group .reference-checklist-step:first-child:not(.completed) { background: #35281f; }
 @media (max-width: 1100px) {
   .reference-first-steps-layout { grid-template-columns: minmax(0, 1fr); }
-  .reference-first-steps-aside { display: none; }
   .reference-screen-tours > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .reference-help-art { height: 200px; min-height: 180px; }
   .reference-help-card { min-height: 350px; }

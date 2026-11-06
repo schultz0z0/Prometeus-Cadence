@@ -5,12 +5,12 @@
   gap: 12px;
   margin-top: 4px;
 }
-.contacts-toolbar select {
+.contacts-toolbar button[data-select-field] {
   width: auto;
   max-width: 300px;
   font-size: 0.9rem;
 }
-.contacts-toolbar > div:first-child select:first-child {
+.contacts-toolbar > div:first-child button[data-select-field]:first-child {
   font-weight: 550;
   border-color: var(--border);
 }
@@ -349,7 +349,7 @@
   .contacts-toolbar > .row {
     flex-wrap: wrap;
   }
-  .contacts-toolbar select {
+  .contacts-toolbar button[data-select-field] {
     max-width: 100%;
     flex: 1;
   }

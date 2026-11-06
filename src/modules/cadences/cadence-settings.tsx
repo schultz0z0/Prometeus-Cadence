@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { useDemo } from "@/demo/provider";
 import type { Cadence, Qualification } from "@/domain/model";
 import { qualificationLabels } from "@/domain/model";
@@ -27,7 +28,7 @@ export function CadenceSettings({
           />
         </Field>
         <Field label="Lista vinculada *">
-          <select
+          <SelectField
             value={cadence.listId}
             onChange={(e) => onChange({ ...cadence, listId: e.target.value })}
           >
@@ -38,7 +39,7 @@ export function CadenceSettings({
                 leads)
               </option>
             ))}
-          </select>
+          </SelectField>
         </Field>
         <div>
           <p className="field-label">Quem entra</p>
@@ -77,14 +78,14 @@ export function CadenceSettings({
             />
           </Field>
           <Field label="Fuso horário">
-            <select
+            <SelectField
               value={cfg.timezone}
               onChange={(e) => set({ timezone: e.target.value })}
             >
               <option value="America/Sao_Paulo">Brasília (UTC−3)</option>
               <option value="America/Manaus">Manaus (UTC−4)</option>
               <option value="Europe/Lisbon">Lisboa</option>
-            </select>
+            </SelectField>
           </Field>
         </div>
         <div>
@@ -245,7 +246,7 @@ export function CadenceSettings({
             />
           </Field>
           <Field label="Retomar sozinha">
-            <select
+            <SelectField
               value={cfg.resume}
               onChange={(e) =>
                 set({ resume: e.target.value as typeof cfg.resume })
@@ -254,7 +255,7 @@ export function CadenceSettings({
               <option value="tomorrow">no dia seguinte</option>
               <option value="hours">depois de algumas horas</option>
               <option value="manual">nunca, só quando eu reativar</option>
-            </select>
+            </SelectField>
           </Field>
         </div>
       </section>

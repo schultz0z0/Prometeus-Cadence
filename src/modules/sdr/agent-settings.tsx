@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Badge, Button, Field, LinkButton, Modal, Notice } from "@/components/ui/primitives";
@@ -80,18 +81,18 @@ function AgentEditor({ view, agent, onClose, onSaved, onReload }: { view: View; 
       {view.channels.some(c => c.provider === "openwa" && d.channelIds.includes(c.id)) && <Notice>No WhatsApp gerenciado o limite é de 20 respostas por dia, somadas aos outros envios do número.</Notice>}
     </div></section>
     <section className="reference-panel"><header><Icon name="Headphones" /><div><h2>Regras de passagem</h2><p>Quando o agente para e transfere a conversa para o seu time.</p></div></header><div className="reference-panel-body">
-      <Field label="Responsável"><select value={d.handoff.memberId} onChange={e => set("handoff", { ...d.handoff, memberId: e.target.value })}><option value="">Escolha um membro</option>{view.members.map(m => <option key={m.id} value={m.id}>{m.name || "Sem nome"}</option>)}</select></Field>
+      <Field label="Responsável"><SelectField value={d.handoff.memberId} onChange={e => set("handoff", { ...d.handoff, memberId: e.target.value })}><option value="">Escolha um membro</option>{view.members.map(m => <option key={m.id} value={m.id}>{m.name || "Sem nome"}</option>)}</SelectField></Field>
       <Field label="Regras (uma por linha)" help="Ex.: pediu proposta fechada; reclamou; perguntou algo que não está na base."><textarea rows={4} value={d.handoff.rules.join("\n")} onChange={e => set("handoff", { ...d.handoff, rules: e.target.value.split("\n").map(s => s.slice(0, 200)).slice(0, 10) })} onBlur={() => set("handoff", { ...d.handoff, rules: d.handoff.rules.map(s => s.trim()).filter(Boolean) })} /></Field>
     </div></section>
     <section className="reference-panel"><header><Icon name="Clock" /><div><h2>Horário e limites</h2><p>Fora do horário, o agente não prepara respostas.</p></div></header><div className="reference-panel-body">
       <div className="field-grid">
-        <Field label="Fuso horário"><select value={d.hours.timezone} onChange={e => set("hours", { ...d.hours, timezone: e.target.value })}>{zones.map(z => <option key={z}>{z}</option>)}</select></Field>
+        <Field label="Fuso horário"><SelectField value={d.hours.timezone} onChange={e => set("hours", { ...d.hours, timezone: e.target.value })}>{zones.map(z => <option key={z}>{z}</option>)}</SelectField></Field>
         <Field label="Respostas por dia" help="Até 200; no WhatsApp gerenciado, até 20."><input type="number" min={1} max={200} value={d.maxRepliesPerDay} onChange={e => set("maxRepliesPerDay", Math.max(1, Math.min(200, Number(e.target.value) || 1)))} /></Field>
       </div>
       <div className="sdr-days" role="group" aria-label="Dias de atendimento">{days.map((n, i) => <label key={n} className="checkbox-row"><input type="checkbox" checked={d.hours.weekdays.includes(i)} onChange={e => set("hours", { ...d.hours, weekdays: e.target.checked ? [...d.hours.weekdays, i].sort() : d.hours.weekdays.filter(x => x !== i) })} /><span>{n}</span></label>)}</div>
       <label className="checkbox-row"><input type="checkbox" checked={d.hours.allDay} onChange={e => set("hours", { ...d.hours, allDay: e.target.checked })} /><span>24 horas nos dias marcados</span></label>
       {!d.hours.allDay && <div className="field-grid"><Field label="Início"><input type="time" value={d.hours.start} onChange={e => set("hours", { ...d.hours, start: e.target.value })} /></Field><Field label="Fim"><input type="time" value={d.hours.end} onChange={e => set("hours", { ...d.hours, end: e.target.value })} /></Field></div>}
-      <Field label="Aprovação das respostas"><select value={d.approvalMode} onChange={e => set("approvalMode", e.target.value as SdrDraft["approvalMode"])}><option value="all">Pedir o meu ok antes de cada resposta</option><option value="bounded-auto">Responder sozinho o que estiver na base aprovada (depois do piloto)</option></select></Field>
+      <Field label="Aprovação das respostas"><SelectField value={d.approvalMode} onChange={e => set("approvalMode", e.target.value as SdrDraft["approvalMode"])}><option value="all">Pedir o meu ok antes de cada resposta</option><option value="bounded-auto">Responder sozinho o que estiver na base aprovada (depois do piloto)</option></SelectField></Field>
       <label className="checkbox-row"><input type="checkbox" checked={d.followupEnabled} onChange={e => set("followupEnabled", e.target.checked)} /><span>Follow-up com autorização <small className="muted">· até 2 retornos, só quando o contato pedir, cada um com o seu ok; por enquanto só no WhatsApp gerenciado</small></span></label>
     </div></section>
     <section className="reference-panel"><header><Icon name="BookOpen" /><div><h2>Base de conhecimento deste agente</h2><p>Só os itens aprovados podem ir para um agente ativo.</p></div></header><div className="reference-panel-body">
@@ -149,7 +150,7 @@ function KnowledgePanel({ view, onChange }: { view: View; onChange: () => void }
       <div className="row">{k.state !== "approved" && view.canManage && <Button disabled={busy} onClick={() => act(() => api(`/api/sdr/knowledge/${k.id}/state`, { expectedRevision: k.revision, state: "approved" }))}>Aprovar</Button>}
         <Button variant="ghost" disabled={busy} onClick={() => setEdit(k)}>Editar</Button><Button variant="ghost" disabled={busy} onClick={() => act(() => api(`/api/sdr/knowledge/${k.id}/state`, { expectedRevision: k.revision, state: "archived" }))}>Arquivar</Button></div></li>)}</ul>}
     {edit ? <div className="stack">
-      <div className="field-grid"><Field label="Tipo"><select value={edit.kind ?? "faq"} onChange={e => setEdit({ ...edit, kind: e.target.value as Knowledge["kind"] })}><option value="faq">Pergunta frequente</option><option value="note">Nota</option></select></Field>
+      <div className="field-grid"><Field label="Tipo"><SelectField value={edit.kind ?? "faq"} onChange={e => setEdit({ ...edit, kind: e.target.value as Knowledge["kind"] })}><option value="faq">Pergunta frequente</option><option value="note">Nota</option></SelectField></Field>
         <Field label="Título"><input maxLength={120} value={edit.title ?? ""} onChange={e => setEdit({ ...edit, title: e.target.value })} /></Field></div>
       <Field label="Texto" help="Editar volta o item para rascunho: ele precisa de nova aprovação."><textarea rows={4} maxLength={4000} value={edit.body ?? ""} onChange={e => setEdit({ ...edit, body: e.target.value })} /></Field>
       <div className="form-actions"><Button disabled={busy} onClick={() => setEdit(null)}>Cancelar</Button><Button variant="primary" disabled={busy || !edit.title?.trim() || !edit.body?.trim()} onClick={() => act(() => api("/api/sdr/knowledge", { ...(edit.id ? { id: edit.id } : {}), expectedRevision: edit.revision ?? 0, kind: edit.kind ?? "faq", title: edit.title, body: edit.body }))}>Salvar</Button></div>

@@ -516,7 +516,7 @@
 .preview-message h3 {
   margin-top: 10px;
 }
-.pipeline-filters select {
+.pipeline-filters button[data-select-field] {
   width: auto;
   max-width: 350px;
 }
@@ -691,7 +691,7 @@
   .review-step > .row .field {
     max-width: 95px;
   }
-  .pipeline-filters select {
+  .pipeline-filters button[data-select-field] {
     width: 100%;
     max-width: 100%;
   }

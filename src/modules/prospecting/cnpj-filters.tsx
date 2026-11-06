@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { Field } from "@/components/ui/primitives";
 const ufs = [
   "AC",
@@ -111,7 +112,7 @@ export function CnpjFilters({
       </div>
       <div className="field-grid section-gap">
         <Field label="Porte">
-          <select
+          <SelectField
             value={value.size ?? ""}
             onChange={(e) => set("size", e.target.value)}
           >
@@ -119,10 +120,10 @@ export function CnpjFilters({
             <option>ME</option>
             <option>EPP</option>
             <option>Demais</option>
-          </select>
+          </SelectField>
         </Field>
         <Field label="Natureza jurídica">
-          <select
+          <SelectField
             value={value.legal ?? ""}
             onChange={(e) => set("legal", e.target.value)}
           >
@@ -139,17 +140,17 @@ export function CnpjFilters({
             ].map((x) => (
               <option key={x}>{x}</option>
             ))}
-          </select>
+          </SelectField>
         </Field>
         <Field label="MEI">
-          <select
+          <SelectField
             value={value.mei ?? "Todos"}
             onChange={(e) => set("mei", e.target.value)}
           >
             <option>Todos</option>
             <option>Sem MEI</option>
             <option>Somente MEI</option>
-          </select>
+          </SelectField>
         </Field>
         <Field label="Capital mínimo">
           <input

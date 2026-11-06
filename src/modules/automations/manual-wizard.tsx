@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
@@ -166,7 +167,7 @@ export function ManualWizard({
                 <p className="secondary-text">
                   Defina o que buscar e onde buscar.
                 </p>
-                {source==='REENGAGE'?<div className="stack"><Field label="Lista de origem"><select required value={filters.sourceListId??''} onChange={e=>setFilters({...filters,sourceListId:e.target.value,sourceCadenceId:''})}><option value="">Selecione uma lista</option>{s.lists.map(l=><option key={l.id} value={l.id}>{l.name}</option>)}</select></Field><Field label="Cadência concluída"><select value={filters.sourceCadenceId??''} onChange={e=>setFilters({...filters,sourceCadenceId:e.target.value})}><option value="">Qualquer cadência da lista de origem</option>{s.cadences.filter(c=>c.listId===filters.sourceListId).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></Field><Notice>Move os contatos que concluíram a cadência sem responder para outra lista. A transferência não inicia envios.</Notice></div>:source==='QUALIFY' ? (
+                {source==='REENGAGE'?<div className="stack"><Field label="Lista de origem"><SelectField required value={filters.sourceListId??''} onChange={e=>setFilters({...filters,sourceListId:e.target.value,sourceCadenceId:''})}><option value="">Selecione uma lista</option>{s.lists.map(l=><option key={l.id} value={l.id}>{l.name}</option>)}</SelectField></Field><Field label="Cadência concluída"><SelectField value={filters.sourceCadenceId??''} onChange={e=>setFilters({...filters,sourceCadenceId:e.target.value})}><option value="">Qualquer cadência da lista de origem</option>{s.cadences.filter(c=>c.listId===filters.sourceListId).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</SelectField></Field><Notice>Move os contatos que concluíram a cadência sem responder para outra lista. A transferência não inicia envios.</Notice></div>:source==='QUALIFY' ? (
                   <Notice>
                     A lista de origem será escolhida na etapa Destino.
                   </Notice>
@@ -216,7 +217,7 @@ export function ManualWizard({
                   </div>}
                 </div>
                 <Field label="Escopo">
-                  <select
+                  <SelectField
                     value={filters.scope ?? "list"}
                     onChange={(e) =>
                       setFilters({ ...filters, scope: e.target.value })
@@ -226,7 +227,7 @@ export function ManualWizard({
                     <option value="workspace">
                       Todas as listas do workspace
                     </option>
-                  </select>
+                  </SelectField>
                 </Field>
                 {source === "CNPJ" && (
                   <CnpjFilters value={filters} onChange={setFilters} />
@@ -259,7 +260,7 @@ export function ManualWizard({
                   </Notice>
                 ) : (
                   <Field label="Lista existente">
-                    <select
+                    <SelectField
                       value={list}
                       onChange={(e) => setList(e.target.value)}
                     >
@@ -268,10 +269,10 @@ export function ManualWizard({
                           {l.name}
                         </option>
                       ))}
-                    </select>
+                    </SelectField>
                   </Field>
                 )}
-                {source==='QUALIFY'&&<Field label="Aguardar busca da mesma lista (opcional)"><select value={dependency} onChange={e=>setDependency(e.target.value)}><option value="">Sem dependência</option>{s.automations.filter(a=>a.listId===list&&['MAPS','WEB','CNPJ','APOLLO'].includes(a.source)).map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>}
+                {source==='QUALIFY'&&<Field label="Aguardar busca da mesma lista (opcional)"><SelectField value={dependency} onChange={e=>setDependency(e.target.value)}><option value="">Sem dependência</option>{s.automations.filter(a=>a.listId===list&&['MAPS','WEB','CNPJ','APOLLO'].includes(a.source)).map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</SelectField></Field>}
               </>
             ) : (
               <>

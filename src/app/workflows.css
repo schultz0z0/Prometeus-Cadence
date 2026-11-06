@@ -419,7 +419,7 @@
   max-width: none;
   width: 100%;
 }
-.automation-toolbar select {
+.automation-toolbar button[data-select-field] {
   width: 170px;
 }
 .automation-group {
@@ -671,7 +671,7 @@
   .automation-row {
     padding: 14px;
   }
-  .automation-toolbar select {
+  .automation-toolbar button[data-select-field] {
     width: calc(50% - 5px);
   }
   .automation-toolbar .btn {

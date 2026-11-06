@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { useEffect, useState } from "react";
 import { ReferenceEmptyArt } from "@/components/ui/reference-empty-art";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
@@ -209,7 +210,7 @@ export function TemplateLibrary() {
                 />
               </Field>
               <Field label="Canal">
-                <select
+                <SelectField
                   value={editing.channel}
                   onChange={(e) =>
                     setEditing({
@@ -220,7 +221,7 @@ export function TemplateLibrary() {
                 >
                   <option value="EMAIL">Email</option>
                   <option value="WHATSAPP">WhatsApp</option>
-                </select>
+                </SelectField>
               </Field>
             </div>
             <div className="stack section-gap">
@@ -271,7 +272,7 @@ export function TemplateLibrary() {
               </div>
               <aside className="panel panel-pad template-reference-preview">
                 <h3>Como vai chegar</h3>
-                <select
+                <SelectField
                   className="section-gap"
                   aria-label="Lista para prévia"
                   value={previewList}
@@ -283,7 +284,7 @@ export function TemplateLibrary() {
                       {l.name}
                     </option>
                   ))}
-                </select>
+                </SelectField>
                 {editing.channel === "EMAIL" && preview?.subject && (
                   <h4>{preview.subject}</h4>
                 )}

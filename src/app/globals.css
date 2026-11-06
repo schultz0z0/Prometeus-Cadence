@@ -58,7 +58,7 @@ body {
 }
 button,
 input,
-select,
+button[data-select-field],
 textarea {
   font: inherit;
   color: inherit;
@@ -66,7 +66,7 @@ textarea {
 button,
 a,
 input,
-select,
+button[data-select-field],
 textarea {
   -webkit-tap-highlight-color: transparent;
 }
@@ -94,7 +94,7 @@ a:focus-visible {
   outline-offset: 3px;
 }
 input:focus,
-select:focus,
+button[data-select-field]:focus,
 textarea:focus {
   outline: 0;
   border-color: var(--primary);
@@ -134,7 +134,7 @@ small {
   color: var(--muted);
 }
 input:not([type="checkbox"]):not([type="radio"]),
-select,
+button[data-select-field],
 textarea {
   width: 100%;
   background: var(--surface);
@@ -152,7 +152,7 @@ input::placeholder,
 textarea::placeholder {
   color: var(--muted);
 }
-select {
+button[data-select-field] {
   cursor: pointer;
 }
 input[type="checkbox"],

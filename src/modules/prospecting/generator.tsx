@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import Link from "next/link";
 import { useState } from "react";
 import { useDemo, useRepository, useAction, useNotify } from "@/demo/provider";
@@ -141,7 +142,7 @@ function DemoGenerator({
                   </Field>
                 ) : (
                   <Field label="Lista existente">
-                    <select
+                    <SelectField
                       required
                       value={listId}
                       onChange={(e) => setListId(e.target.value)}
@@ -151,7 +152,7 @@ function DemoGenerator({
                           {l.name}
                         </option>
                       ))}
-                    </select>
+                    </SelectField>
                   </Field>
                 )}
               </div>

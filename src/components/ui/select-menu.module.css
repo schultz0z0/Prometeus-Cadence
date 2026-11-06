@@ -24,15 +24,30 @@
   flex: none;
 }
 
+.trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.caption svg {
+  color: var(--primary);
+}
+
 .options {
-  position: absolute;
-  z-index: 5;
-  top: calc(100% + 4px);
-  inset-inline: 0;
-  width: max-content;
-  min-width: 100%;
+  position: fixed;
+  z-index: 20;
+  inset: auto;
   margin: 0;
   padding: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   list-style: none;
   color: var(--text);
   background: var(--surface);
@@ -41,21 +56,30 @@
   box-shadow: 0 6px 20px #0f172a1a;
 }
 
-.options[data-up="true"] {
-  top: auto;
-  bottom: calc(100% + 4px);
+.options[hidden] {
+  display: none;
 }
 
 .options li {
   padding: 7px 9px;
   border-radius: 5px;
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
 .options li[aria-selected="true"] {
   color: var(--primary);
 }
 
-.options li[data-active="true"], .options li:hover {
+.options li[data-active="true"], .options li:not([aria-disabled="true"]):hover {
   background: var(--hover);
+}
+
+.options li[aria-disabled="true"] {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.native[hidden] {
+  display: none;
 }

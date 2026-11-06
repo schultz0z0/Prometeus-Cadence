@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import {useEffect,useState,type ReactNode} from 'react';
 import {Infinity as MetaIcon,MessageCircle,CheckCircle2,ShieldAlert} from 'lucide-react';
 import {useLiveRefresh} from '@/client/use-live-refresh';
@@ -30,7 +31,7 @@ function TestMessage({connection,client,onClose}:{connection:ConnectionView;clie
  async function act(fn:()=>Promise<void>){if(busy)return;setBusy(true);setError('');try{await fn();}catch(e){setError(e instanceof Error?e.message:'Falha ao preparar teste.');}finally{setBusy(false);}}
  return <Modal title="Teste de WhatsApp com destinatário autorizado" onClose={()=>{if(!busy)onClose();}}><div className="stack">
  <Notice>Use seu próprio número de teste ou um contato que autorizou este teste. Um telefone público de prospecção não é consentimento. A confirmação coloca uma mensagem na fila e pode gerar cobrança no provedor.</Notice>
- {!review&&!result?<><Field label="Remetente"><select value={senderId} onChange={e=>setSender(e.target.value)}><option value="">Selecione</option>{connection.senders.map(s=><option key={s.id} value={s.id}>{s.address??s.externalId}</option>)}</select></Field>
+ {!review&&!result?<><Field label="Remetente"><SelectField value={senderId} onChange={e=>setSender(e.target.value)}><option value="">Selecione</option>{connection.senders.map(s=><option key={s.id} value={s.id}>{s.address??s.externalId}</option>)}</SelectField></Field>
  <Field label="Telefone autorizado · formato +55…"><input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} maxLength={16}/></Field>
  <WhatsappContentField capabilities={connection.capabilities} content={content} templates={templates} onChange={setContent}/>
  <Field label="Evidência da autorização para este teste" help="Descreva como e por quem o teste foi autorizado."><textarea rows={2} value={evidence} onChange={e=>setEvidence(e.target.value)} maxLength={4000}/></Field>

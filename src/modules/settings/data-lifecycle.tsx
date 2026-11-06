@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import{useEffect,useRef,useState}from'react';
 import{Copy,Eraser,Info,Loader2,Merge,Save,Search,TriangleAlert,Undo2}from'lucide-react';
 import{useIdentity}from'@/client/workspace-provider';
@@ -80,8 +81,8 @@ export function PrivacySettings(){
    footer={<>{message&&<p role="status" className="lifecycle-message">{message}</p>}<Button variant="primary" className="lifecycle-save" disabled={!changed||busy} onClick={()=>{if(needsTyped){setConfirming(true);return;}void save();}}><Save size={14}/>Salvar</Button></>}>
    <Toggle label="Apagar o texto de mensagens antigas" description={draft.active?'O texto mais antigo que os prazos abaixo é apagado pela rotina automática.':'Desligado: o histórico fica guardado, sem prazo.'} checked={draft.active} disabled={busy} onChange={v=>{setDraft({...draft,active:v});setMessage('');}}/>
    {draft.active&&<div className="field-grid lifecycle-fields">
-    <Field label="Mensagens enviadas: apagar o texto depois de"><select value={draft.sentDays} disabled={busy} onChange={e=>{setDraft({...draft,sentDays:Number(e.target.value)});setMessage('');}}>{choices('sent',draft.sentDays).map(v=><option key={v} value={v}>{retentionLabel(v)}</option>)}</select></Field>
-    <Field label="Respostas recebidas: apagar o texto depois de"><select value={draft.replyDays} disabled={busy} onChange={e=>{setDraft({...draft,replyDays:Number(e.target.value)});setMessage('');}}>{choices('reply',draft.replyDays).map(v=><option key={v} value={v}>{retentionLabel(v)}</option>)}</select></Field>
+    <Field label="Mensagens enviadas: apagar o texto depois de"><SelectField value={draft.sentDays} disabled={busy} onChange={e=>{setDraft({...draft,sentDays:Number(e.target.value)});setMessage('');}}>{choices('sent',draft.sentDays).map(v=><option key={v} value={v}>{retentionLabel(v)}</option>)}</SelectField></Field>
+    <Field label="Respostas recebidas: apagar o texto depois de"><SelectField value={draft.replyDays} disabled={busy} onChange={e=>{setDraft({...draft,replyDays:Number(e.target.value)});setMessage('');}}>{choices('reply',draft.replyDays).map(v=><option key={v} value={v}>{retentionLabel(v)}</option>)}</SelectField></Field>
    </div>}
    <div className="lifecycle-warning"><p><TriangleAlert size={16}/>O texto apagado não pode ser recuperado.</p><ul>
     <li><strong>Mensagens enviadas</strong> são as das cadências (e-mail e WhatsApp). <strong>Respostas recebidas</strong> são as que os leads mandam e caem na caixa de entrada.</li>

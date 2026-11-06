@@ -1,6 +1,9 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { useState,useRef } from "react";
 import { useIdentity, type IdentityView } from "@/client/workspace-provider";
+import { useShellBilling } from "@/client/use-shell-billing";
+import { getPlan } from "@/domain/billing";
 import { identityPost } from "@/modules/auth/workspace";
 import { useAction } from "@/demo/provider";
 import {
@@ -18,6 +21,8 @@ const labels: Record<string, string> = {
 export function Members() {
   const initial = useIdentity();
   const [data, setData] = useState<IdentityView | null>(initial);
+  const billing = useShellBilling(data?.activeWorkspaceId??null);
+  const seatLimit = billing ? billing.capacity?.seats??getPlan('essential').capacity.seats : null;
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("operator");
   const [busy, setBusy] = useState(false);
@@ -26,6 +31,7 @@ export function Members() {
   const me = data?.workspaces.find(
     (w) => w.id === data.activeWorkspaceId,
   )?.role;
+  const pendingSeats = me==='operator' ? billing?.usage.pendingSeats??data?.invitations.length??0 : data?.invitations.length??0;
   async function refresh(){const response=await fetch('/api/identity',{cache:'no-store',headers:{'x-cadence-workspace':data!.activeWorkspaceId!}});if(!response.ok)throw Error('Não foi possível atualizar os membros.');setData(await response.json());}
   async function act(body: Record<string,unknown>) {
     if (busy) return false;
@@ -49,12 +55,12 @@ export function Members() {
       <p className="subtitle">
         Pessoas do seu time que operam esta conta. Entram com o próprio login e trabalham nos seus leads e cadências.
       </p>
-      {data&&<div className="members-status row between"><Badge>{data.members.length} {data.members.length===1?'membro':'membros'} · {data.invitations.length} convites pendentes</Badge><Button disabled={busy} onClick={()=>void run(refresh,'Membros atualizados.')}>Atualizar membros</Button></div>}
+      {data&&<div className="members-status row between"><Badge><Icon name="Users" size={13}/> {data.members.length+pendingSeats} de {seatLimit??'—'} assentos</Badge><Button disabled={busy} onClick={()=>void run(refresh,'Membros atualizados.')}>Atualizar membros</Button></div>}
       <section className="settings-reference-panel">
         <header className="settings-reference-panel-head"><span className="settings-reference-symbol"><Icon name="Users" size={20}/></span><div><h2>Convidar</h2><p>A pessoa recebe um e-mail com o link de acesso, válido por 7 dias.</p></div></header>
         <form className="settings-reference-panel-body members-invite-form" onSubmit={async e=>{e.preventDefault();if(await act({type:"invite",email,role}))setEmail("");}}>
           <Field label="E-mail"><input type="email" placeholder="colega@empresa.com.br" required disabled={!data||me==="operator"||busy} value={email} onChange={e=>setEmail(e.target.value)}/></Field>
-          {me==="owner"&&<Field label="Papel"><select value={role} disabled={busy} onChange={e=>setRole(e.target.value)}><option value="operator">Operador</option><option value="admin">Administrador</option></select></Field>}
+          {me==="owner"&&<Field label="Papel"><SelectField value={role} disabled={busy} onChange={e=>setRole(e.target.value)}><option value="operator">Operador</option><option value="admin">Administrador</option></SelectField></Field>}
           <Button icon="Plus" variant="primary" disabled={!data||me==="operator"||busy||!email.trim()}>{busy?"Convidando…":"Convidar"}</Button>
         </form>
       </section>
@@ -84,7 +90,7 @@ export function Members() {
                       {me !== "owner" ? (
                         <Badge>{labels[m.role]}</Badge>
                       ) : (
-                        <select
+                        <SelectField
                           aria-label={`Papel de ${m.name}`}
                           value={m.role}
                           disabled={busy||(m.role==='owner'&&data.members.filter(v=>v.role==='owner').length===1)}
@@ -100,7 +106,7 @@ export function Members() {
                           <option value="operator">Operador</option>
                           <option value="admin">Administrador</option>
                           <option value="owner">Proprietário</option>
-                        </select>
+                        </SelectField>
                       )}
                     </td>
                     <td>

@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLiveRefresh } from "@/client/use-live-refresh";
 import { whatsappBlocker } from "@/client/whatsapp-copy";
@@ -48,7 +49,7 @@ export function SdrConversationControls({ conversationId, onSent }: { conversati
     </div>}
     {t?.proposal?.kind === "followup-consent" && !view.followup && view.agent?.followupAvailable && t.state === "pending-approval" && <div className="stack"><p>O agente entendeu que o contato pediu para ser procurado depois, por este trecho: <strong>“{t.proposal.quote}”</strong>. Confira a mensagem completa acima antes de registrar: vale como autorização de atendimento neste número.</p>
       {!view.canConsent ? <p className="muted">Só proprietário ou administrador registra autorizações.</p> : <>
-      <div className="row wrap"><label className="row">Vale por <select value={days} disabled={busy} onChange={e => setDays(Number(e.target.value))}>{[7, 14, 30].map(d => <option key={d} value={d}>{d} dias</option>)}</select></label>
+      <div className="row wrap"><label className="row">Vale por <SelectField aria-label="Vale por" value={days} disabled={busy} onChange={e => setDays(Number(e.target.value))}>{[7, 14, 30].map(d => <option key={d} value={d}>{d} dias</option>)}</SelectField></label>
         <Button disabled={busy} onClick={() => { const quote = (t.proposal as { quote: string }).quote; act(async () => { await post("followup-record", { turnId: t.id, quote, days }); setPrepared(null); }); }}>Registrar autorização</Button></div>
       <p className="muted">Até 2 retornos, com pelo menos 24 horas entre eles. Cada um é um rascunho que espera o seu ok; param se o contato escrever, pedir para sair, você assumir ou rejeitar um retorno.</p></>}</div>}
     {view.followup && <p className="muted">Retorno autorizado até {when(view.followup.expiresAt)} ({view.followup.attempts} de 2): “{view.followup.quote}”. <button type="button" className="text-button" disabled={busy} onClick={() => act(async () => { await post("followup-revoke", { id: view.followup!.id }); setPrepared(null); })}>Retirar</button></p>}

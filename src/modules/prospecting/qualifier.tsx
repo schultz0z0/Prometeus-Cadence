@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import Link from "next/link";
 import { useState } from "react";
 import {useIdentity} from '@/client/workspace-provider';
@@ -147,7 +148,7 @@ function DemoQualifier() {
           </h3>
           <div className="section-gap">
             <Field label="Lista de leads">
-              <select
+              <SelectField
                 value={list}
                 onChange={(e) => {
                   setList(e.target.value);
@@ -161,7 +162,7 @@ function DemoQualifier() {
                     leads)
                   </option>
                 ))}
-              </select>
+              </SelectField>
             </Field>
           </div>
         </section>
@@ -261,11 +262,11 @@ function DemoQualifier() {
               </div>
               <div className="field-grid">
                 <Field label="Idioma">
-                  <select value={lng} onChange={(e) => setLng(e.target.value)}>
+                  <SelectField value={lng} onChange={(e) => setLng(e.target.value)}>
                     <option>Português</option>
                     <option>English</option>
                     <option>Español</option>
-                  </select>
+                  </SelectField>
                 </Field>
                 <Field label="Limite de leads">
                   <input

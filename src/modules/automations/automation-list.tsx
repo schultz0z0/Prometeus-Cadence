@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import { useState,useEffect,useCallback } from "react";
 import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useAutomationClient,useCapabilities} from '@/client/workspace-provider';
@@ -86,14 +87,14 @@ export function AutomationList() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <select
+        <SelectField
           aria-label="Agrupar por"
           value={groupBy}
           onChange={(e) => {setGroupBy(e.target.value);setCollapsed([]);}}
         >
           <option value="source">Agrupar por fonte</option><option value="status">Por estado</option><option value="frequency">Por frequência</option><option value="none">Sem agrupamento</option>
-        </select>
-        <select
+        </SelectField>
+        <SelectField
           aria-label="Ordenação"
           value={order}
           onChange={(e) => setOrder(e.target.value)}
@@ -101,7 +102,7 @@ export function AutomationList() {
           <option value="recent">Última criação</option>
           <option value="name">Nome A–Z</option>
           <option value="oldest">Mais antigas</option>
-        </select>
+        </SelectField>
         <Button icon="Columns3" onClick={() => setComfortable(!comfortable)}>
           {comfortable ? "Confortável" : "Compacta"}
         </Button>

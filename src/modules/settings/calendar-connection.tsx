@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import {useEffect,useState} from 'react';
 import Link from 'next/link';
 import {useIdentity} from '@/client/workspace-provider';
@@ -66,12 +67,12 @@ function CalendarSetup({live,busy,canManage,onSubmit,onCancel}:{live:ConnectionV
  if(!canManage)return <section className="reference-panel sheets-config"><div className="reference-panel-body"><p className="muted">A conta Google está conectada. Somente proprietário ou administrador define a disponibilidade.</p></div></section>;
  return <section className="reference-panel sheets-config"><header><Icon name="Calendar" size={18}/><div className="grow"><h2>Disponibilidade</h2><p>Os horários livres seguem estas regras e descontam o que já está ocupado na sua agenda principal.</p></div></header>
   <form className="reference-panel-body stack" onSubmit={e=>{e.preventDefault();if(valid)onSubmit(rules);}}>
-   <Field label="Fuso horário"><select value={rules.timezone} disabled={busy} onChange={e=>set('timezone',e.target.value)}>{(zones.includes(rules.timezone)?zones:[rules.timezone,...zones]).map(z=><option key={z} value={z}>{z}</option>)}</select></Field>
+   <Field label="Fuso horário"><SelectField value={rules.timezone} disabled={busy} onChange={e=>set('timezone',e.target.value)}>{(zones.includes(rules.timezone)?zones:[rules.timezone,...zones]).map(z=><option key={z} value={z}>{z}</option>)}</SelectField></Field>
    <fieldset className="webhook-events calendar-days"><legend>Dias de atendimento</legend>{days.map((d,i)=><label key={d}><input type="checkbox" checked={rules.weekdays.includes(i)} disabled={busy} onChange={()=>set('weekdays',rules.weekdays.includes(i)?rules.weekdays.filter(x=>x!==i):[...rules.weekdays,i])}/><span>{d}</span></label>)}</fieldset>
    <div className="calendar-hours">
     <Field label="Início"><input type="time" value={rules.start} disabled={busy} onChange={e=>set('start',e.target.value)}/></Field>
     <Field label="Fim"><input type="time" value={rules.end} disabled={busy} onChange={e=>set('end',e.target.value)}/></Field>
-    <Field label="Duração da reunião"><select value={rules.durationMinutes} disabled={busy} onChange={e=>set('durationMinutes',Number(e.target.value) as Rules['durationMinutes'])}>{[15,30,45,60].map(m=><option key={m} value={m}>{m} min</option>)}</select></Field>
+    <Field label="Duração da reunião"><SelectField value={rules.durationMinutes} disabled={busy} onChange={e=>set('durationMinutes',Number(e.target.value) as Rules['durationMinutes'])}>{[15,30,45,60].map(m=><option key={m} value={m}>{m} min</option>)}</SelectField></Field>
     <Field label="Antecedência mínima (horas)"><input type="number" min={0} max={72} value={rules.noticeHours} disabled={busy} onChange={e=>set('noticeHours',Number(e.target.value))}/></Field>
     <Field label="Janela (dias)"><input type="number" min={1} max={60} value={rules.horizonDays} disabled={busy} onChange={e=>set('horizonDays',Number(e.target.value))}/></Field>
    </div>

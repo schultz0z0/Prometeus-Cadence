@@ -183,7 +183,7 @@ function AppShellContent({children}:{children:React.ReactNode}){
         </button>
       </aside>
       <div className="workspace" inert={smallScreen && mobile}>
-        {!paid && <div className="trial-banner"><span>{billing?.status === "trial" ? "Seu teste está ativo. Explore os recursos do seu plano." : billing?.status === "pilot" ? "Você está no piloto local de homologação." : "Você está montando a sua prospecção. Pra ligar, comece o teste grátis de 7 dias."}</span><Link href="/settings/plan">{billing?.status === "trial" || billing?.status === "pilot" ? "Ver meu plano" : "Começar o teste"}</Link></div>}
+        {!paid && <div className="trial-banner" data-unstarted={!started||undefined}><span>{billing?.status === "trial" ? "Seu teste está ativo. Explore os recursos do seu plano." : billing?.status === "pilot" ? "Você está no piloto local de homologação." : "Você está montando a sua prospecção. Pra ligar, comece o teste grátis de 7 dias."}</span><Link href="/settings/plan">{billing?.status === "trial" || billing?.status === "pilot" ? "Ver meu plano" : "Começar o teste"}</Link></div>}
         <header className="topbar">
           <div className="row">
             <button className="icon-btn mobile-menu" ref={menu} aria-label="Abrir menu" aria-expanded={mobile} onClick={() => setMobile(true)}>

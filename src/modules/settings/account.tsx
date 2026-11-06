@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import{AccountNotificationSummary}from"./notification-settings";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -41,7 +42,7 @@ export function Account() {
       <header className="settings-reference-panel-head"><span className="settings-reference-symbol"><UserRound size={20}/></span><div><h2>Perfil</h2><p>Como você aparece no app e o fuso que agenda seus envios.</p></div></header>
       <form className="settings-reference-panel-body" onSubmit={async e=>{e.preventDefault();if(busy)return;setBusy(true);const ok=await run(async()=>{if(identity){const result=await authClient.updateUser({name});if(result.error)throw Error(result.error.message??"Não foi possível salvar o perfil.");}await repo.updatePreferences({...(!identity?{accountName:name}:{}),...(admin?{company:p.company,timezone:p.timezone}:{})});},"Perfil salvo.");setBusy(false);if(ok&&identity)location.reload();}}>
         <div className="profile-avatar-row"><span className="large-avatar">{name.slice(0,1)}</span><div><Button type="button" disabled title="Envio de foto ainda não disponível">Trocar foto</Button><small>Envio de foto ainda não disponível.</small></div></div>
-        <div className="settings-reference-grid"><Field label="Nome"><input required maxLength={100} value={name} onChange={e=>setName(e.target.value)}/></Field><Field label="Empresa"><input disabled={!admin} maxLength={100} placeholder="Opcional" value={p.company} onChange={e=>setP({...p,company:e.target.value})}/></Field><Field label="Fuso horário"><select disabled={!admin} value={p.timezone} onChange={e=>setP({...p,timezone:e.target.value})}>{timezones.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></Field><Field label="E-mail de login" help="É o seu usuário; pra trocar, fale com o suporte."><input disabled value={identity?.user.email??"Conta demonstrativa"}/></Field></div>
+        <div className="settings-reference-grid"><Field label="Nome"><input required maxLength={100} value={name} onChange={e=>setName(e.target.value)}/></Field><Field label="Empresa"><input disabled={!admin} maxLength={100} placeholder="Opcional" value={p.company} onChange={e=>setP({...p,company:e.target.value})}/></Field><Field label="Fuso horário"><SelectField disabled={!admin} value={p.timezone} onChange={e=>setP({...p,timezone:e.target.value})}>{timezones.map(([value,label])=><option key={value} value={value}>{label}</option>)}</SelectField></Field><Field label="E-mail de login" help="É o seu usuário; pra trocar, fale com o suporte."><input disabled value={identity?.user.email??"Conta demonstrativa"}/></Field></div>
         <div className="form-actions"><Button variant="primary" icon="Save" disabled={busy}>Salvar</Button></div>
       </form>
     </section>

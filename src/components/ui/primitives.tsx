@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useId } from "react";
+import { createContext, useEffect, useRef, useId } from "react";
 import { Icon } from "./icon";
 export function Button({
   children,
@@ -65,6 +65,8 @@ export function Badge({
 }) {
   return <span className={`badge ${tone}`}>{children}</span>;
 }
+export const FieldLabelContext = createContext<string|undefined>(undefined);
+
 export function Field({
   label,
   help,
@@ -74,10 +76,11 @@ export function Field({
   help?: string;
   children: React.ReactNode;
 }) {
+  const id=useId();
   return (
     <label className="field">
-      <span>{label}</span>
-      {children}
+      <span id={id}>{label}</span>
+      <FieldLabelContext value={id}>{children}</FieldLabelContext>
       {help && <small>{help}</small>}
     </label>
   );

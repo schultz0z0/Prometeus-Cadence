@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import Link from "next/link";
 import { ReferenceEmptyArt } from "@/components/ui/reference-empty-art";
 import { useState } from "react";
@@ -22,8 +23,9 @@ export function Pipeline() {
         description="Leads em cada etapa da cadência"
       />
       <div className="row wrap pipeline-filters"><input type="search" aria-label="Buscar no pipeline" placeholder="Buscar por nome, e-mail, telefone, cidade…" value={query} onChange={e=>setQuery(e.target.value)}/>
-        <select
+        <SelectField
           aria-label="Cadência"
+          icon="Send"
           value={id}
           onChange={(e) => setId(e.target.value)}
         >
@@ -33,8 +35,8 @@ export function Pipeline() {
               {c.name}
             </option>
           ))}
-        </select>
-        <select
+        </SelectField>
+        <SelectField
           aria-label="Situação na cadência"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
@@ -44,8 +46,8 @@ export function Pipeline() {
           <option value="progress">Em andamento</option>
           <option value="replied">Responderam</option>
           <option value="completed">Concluídos</option>
-        </select>
-        <select
+        </SelectField>
+        <SelectField
           aria-label="Qualificação"
           value={qualification}
           onChange={(e) => setQualification(e.target.value)}
@@ -55,7 +57,7 @@ export function Pipeline() {
           <option value="pending">Pendentes</option>
           <option value="warning">Em alerta</option>
           <option value="disqualified">Desqualificados</option>
-        </select>
+        </SelectField>
       </div>
       {c ? (
         <div className="pipeline-board">

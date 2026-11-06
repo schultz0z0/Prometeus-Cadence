@@ -13,7 +13,7 @@
 .prospecting-panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px}
 .prospecting-reference .field{display:flex;flex-direction:column;gap:6px;margin:0}
 .prospecting-reference .field>span,.prospecting-field-label{font-size:0.875rem;font-weight:500;line-height:1.25rem;color:#374151}
-.prospecting-reference .field input:not([type=checkbox]),.prospecting-reference .field select,.prospecting-reference .field textarea,.prospecting-reference .search-field{background:#fff;border:1px solid #d1d5db;border-radius:8px;min-height:42px;padding:10px 12px;color:#111827;font:400 0.875rem/1.25rem Manrope,system-ui,sans-serif;width:100%}
+.prospecting-reference .field input:not([type=checkbox]),.prospecting-reference .field button[data-select-field],.prospecting-reference .field textarea,.prospecting-reference .search-field{background:#fff;border:1px solid #d1d5db;border-radius:8px;min-height:42px;padding:10px 12px;color:#111827;font:400 0.875rem/1.25rem Manrope,system-ui,sans-serif;width:100%}
 .prospecting-reference .field textarea{resize:vertical}
 .prospecting-reference .field small{font-size:0.75rem;line-height:1.125rem;color:#6b7280}
 .prospecting-reference input[type=checkbox]{accent-color:#ff6b00}
@@ -44,7 +44,7 @@
 .prospecting-narrow{width:100%;max-width:448px}
 .prospecting-destination,.prospecting-search-fields{display:grid;gap:12px}
 .prospecting-search-fields{gap:24px}
-.prospecting-generation-fields .field input:not([type=checkbox]),.prospecting-generation-fields .field select{min-height:46px;border-color:#e5e7eb;padding:10px 16px;font-size:1rem;line-height:1.5rem}
+.prospecting-generation-fields .field input:not([type=checkbox]),.prospecting-generation-fields .field button[data-select-field]{min-height:46px;border-color:#e5e7eb;padding:10px 16px;font-size:1rem;line-height:1.5rem}
 .prospecting-generation-fields .field .prospecting-limit{width:128px}
 .prospecting-segment{display:flex;align-items:center;gap:8px}
 .prospecting-segment>.btn{flex:1;justify-content:center;white-space:normal}

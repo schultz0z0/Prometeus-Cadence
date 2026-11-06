@@ -157,7 +157,13 @@ export function WorkspaceProvider({
               </main>
             ) : (
               <div
-                onFocusCapture={e=>{const field=e.target;if(field instanceof HTMLInputElement||field instanceof HTMLTextAreaElement||field instanceof HTMLSelectElement){if(!fields.current.has(field))fields.current.set(field,fieldValue(field));}}}
+                onFocusCapture={e=>{
+                  const field=e.target instanceof HTMLButtonElement&&e.target.dataset.selectField
+                    ?document.getElementById(e.target.dataset.selectField):e.target;
+                  if(field instanceof HTMLInputElement||field instanceof HTMLTextAreaElement||field instanceof HTMLSelectElement){
+                    if(!fields.current.has(field))fields.current.set(field,fieldValue(field));
+                  }
+                }}
                 onChangeCapture={(e) => {
                   edited.capture(e.target as HTMLInputElement);
                 }}

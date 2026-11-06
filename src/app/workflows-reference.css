@@ -8,14 +8,14 @@
 .workflow-reference .btn { border-radius:8px; min-height:36px; padding:0 16px; gap:8px; font-size:0.875rem; line-height:1.25rem; }
 .workflow-reference .field { gap:8px; min-width:0; }
 .workflow-reference .field > span { font-size:0.875rem; line-height:1.25rem; font-weight:500; }
-.workflow-reference .field input,.workflow-reference .field select,.workflow-reference .field textarea { width:100%; border-radius:8px; padding:10px 12px; font-size:1rem; line-height:1.5rem; }
+.workflow-reference .field input,.workflow-reference .field button[data-select-field],.workflow-reference .field textarea { width:100%; border-radius:8px; padding:10px 12px; font-size:1rem; line-height:1.5rem; }
 .workflow-reference .field small { font-size:0.75rem; line-height:1.125rem; }
 .workflow-reference .field-grid { gap:16px; }
 .workflow-reference .form-actions { margin-top:20px; padding-top:0; border:0; }
 .automation-reference .page-heading { margin-bottom:24px; }
 .automation-reference .automation-toolbar { gap:8px; margin-bottom:12px; }
-.automation-reference .automation-toolbar input,.automation-reference .automation-toolbar select { height:36px; min-height:36px; padding-top:6px; padding-bottom:6px; font-size:0.875rem; line-height:1.25rem; border-radius:8px; }
-.automation-reference .automation-toolbar select { width:172px; }
+.automation-reference .automation-toolbar input,.automation-reference .automation-toolbar button[data-select-field] { height:36px; min-height:36px; padding-top:6px; padding-bottom:6px; font-size:0.875rem; line-height:1.25rem; border-radius:8px; }
+.automation-reference .automation-toolbar button[data-select-field] { width:172px; }
 .automation-reference .automation-toolbar .btn { font-size:0.75rem; padding:0 12px; white-space:nowrap; }
 .automation-reference .automation-toolbar + .row { gap:12px; }
 .automation-reference .automation-toolbar + .row > small { color:var(--muted); font-size:0.625rem; letter-spacing:.04em; }
@@ -61,7 +61,7 @@
 .manual-automation-reference .workspace-form > form > .panel { padding:24px; gap:20px; }
 .manual-automation-reference .workspace-form h2 { font-family:"Exo 2",sans-serif; font-size:1.25rem; line-height:1.75rem; }
 .manual-automation-reference .workspace-form .subtitle { margin:4px 0 0; font-size:0.875rem; line-height:1.25rem; }
-.manual-automation-reference .field input,.manual-automation-reference .field select { min-height:38px; padding:8px 12px; font-size:0.875rem; line-height:1.25rem; }
+.manual-automation-reference .field input,.manual-automation-reference .field button[data-select-field] { min-height:38px; padding:8px 12px; font-size:0.875rem; line-height:1.25rem; }
 .manual-automation-reference .wizard-source .source-picker { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
 .manual-automation-reference .wizard-source .source-option { min-height:92px; padding:16px; border-radius:10px; }
 .manual-automation-reference .source-option strong { font-size:0.875rem; line-height:1.25rem; }
@@ -107,7 +107,7 @@
 .cadence-list-reference .contacts-toolbar { margin-top:16px; margin-bottom:16px; }
 .cadence-list-reference .contacts-toolbar .row:first-child { flex:1; }
 .cadence-list-reference .search-field { flex:1; min-width:200px; max-width:420px; }
-.cadence-list-reference .contacts-toolbar input,.cadence-list-reference .contacts-toolbar select { height:36px; min-height:36px; font-size:0.875rem; line-height:1.25rem; padding:6px 12px; border-radius:8px; }
+.cadence-list-reference .contacts-toolbar input,.cadence-list-reference .contacts-toolbar button[data-select-field] { height:36px; min-height:36px; font-size:0.875rem; line-height:1.25rem; padding:6px 12px; border-radius:8px; }
 .cadence-list-reference .cadence-today { padding:12px 16px; gap:32px; }
 .cadence-list-reference .cadence-today h3 { font-size:0.875rem; }
 .cadence-list-reference .cadence-today small { font-size:0.625rem; }

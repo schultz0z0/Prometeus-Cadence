@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import {useState} from 'react';
 import type {ChatGptOAuthView} from '@/domain/chatgpt-oauth';
 import type {ProspectingClient} from '@/client/prospecting-client';
@@ -10,7 +11,7 @@ export function ChatgptConnection({view,client,canManage,busy,act,onUpdate}:{vie
  {!view.available?<Notice>A conexão direta está disponível no ambiente local em 127.0.0.1. A oferta comercial hospedada depende de habilitação própria na OpenAI.</Notice>:<>
  {view.email&&<p>Conta: {view.email}</p>}
  {view.lastError&&<Notice>{view.lastError==='CHATGPT_PLAN_PERMISSION_REQUIRED'?'O login foi salvo, mas faltou conceder o uso dos modelos pelo plano ChatGPT. Reconecte e revise as permissões.':view.lastError==='CHATGPT_CATALOG_UNAVAILABLE'?'A autorização foi salva, mas o catálogo de modelos não está disponível. Autorize novamente quando o serviço estiver disponível.':view.lastError==='CHATGPT_REMOTE_REVOCATION_UNCONFIRMED'?'A conexão local foi removida. A revogação remota não foi confirmada; confira os aplicativos conectados na sua conta ChatGPT.':'A conexão precisa ser autorizada novamente.'}</Notice>}
- {view.state==='connected'&&<><Field label="Modelo da conta"><select value={model} disabled={busy||!canManage} onChange={e=>setModel(e.target.value)}>{!view.models.length&&<option value="">Nenhum modelo disponível nesta conta</option>}{view.models.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></Field><p className="muted">O catálogo não garante cota disponível. Use o teste revisado abaixo para verificar uma inferência.</p></>}
+ {view.state==='connected'&&<><Field label="Modelo da conta"><SelectField value={model} disabled={busy||!canManage} onChange={e=>setModel(e.target.value)}>{!view.models.length&&<option value="">Nenhum modelo disponível nesta conta</option>}{view.models.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</SelectField></Field><p className="muted">O catálogo não garante cota disponível. Use o teste revisado abaixo para verificar uma inferência.</p></>}
  {canManage&&<div className="row wrap"><Button variant="primary" disabled={busy} onClick={()=>act(async()=>{const result=await client.connectChatgpt(view.revision);const url=new URL(result.url);if(url.origin!=='https://auth.openai.com'||url.pathname!=='/api/accounts/authorize')throw Error('Endereço de autorização inválido.');location.assign(url.href);})}>{view.state==='disconnected'?'Conectar com ChatGPT':'Autorizar novamente'}</Button>
  {view.state==='connected'&&<Button disabled={busy||!model||model===view.model} onClick={()=>act(async()=>{await client.selectChatgptModel(view.revision,model);await onUpdate();})}>Salvar modelo</Button>}
  {view.state!=='disconnected'&&<Button disabled={busy} onClick={()=>setDisconnect(true)}>Desconectar ChatGPT</Button>}</div>}

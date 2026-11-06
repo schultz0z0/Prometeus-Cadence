@@ -1,4 +1,5 @@
 "use client";
+import { SelectField } from "@/components/ui/select-field";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useMessaging } from "@/client/workspace-provider";
@@ -32,8 +33,9 @@ export function CadenceList() {
   const [filter, setFilter] = useState("");
   const [query, setQuery] = useState("");
   const [view, setView] = useState("Lista");
-  const [gate, setGate] = useState(false);
+  const [gate, setGate] = useState<"channel"|"queue"|null>(null);
   const [archived, setArchived] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const list = s.cadences.filter(
     (c) =>
       !!c.archived === archived &&
@@ -78,32 +80,30 @@ export function CadenceList() {
         }
       />
       <section className="panel cadence-today">
-        <h3>Hoje</h3>
+        <h3><Icon name="Calendar" size={16}/> Hoje</h3>
         {[
           [metrics?String(metrics.today.email+metrics.today.whatsapp):'—', "JÁ SAÍRAM"],
-          [metrics?String(metrics.today.pending):'—', "AGUARDANDO HOJE"],
-          [metrics?String(metrics.today.replies):'—', "RESPOSTAS HOJE"],
+          [metrics?.cadenceQueue?.today??'—', "AINDA HOJE"],
+          [metrics?.cadenceQueue?.later??'—', "FICAM PRA DEPOIS"],
         ].map(([n, t]) => (
           <div key={t}>
             <strong>{n}</strong>
             <small>{t}</small>
           </div>
         ))}
-        <button className="orange" onClick={() => setGate(true)}>
-          entender por quê
+        <button className="orange" onClick={() => setGate("queue")}>
+          entender por quê <Icon name="ChevronDown" size={13}/>
         </button>
       </section>
       {metricsError&&<p role="alert" className="error-bar">Não foi possível atualizar todas as métricas: {metricsError}</p>}
       <div className="contacts-toolbar section-gap">
         <div className="row wrap">
-          <input
-            className="search-field"
-            aria-label="Buscar cadência"
-            placeholder="Buscar cadência, lista ou tag…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <select
+          <label className="cadence-list-search">
+            <Icon name="Search" size={15}/>
+            <input type="search" aria-label="Buscar cadência" placeholder="Buscar cadência, lista ou tag…"
+              value={query} onChange={(e) => setQuery(e.target.value)}/>
+          </label>
+          <SelectField
             aria-label="Status das cadências"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
@@ -119,45 +119,47 @@ export function CadenceList() {
                 {l}
               </option>
             ))}
-          </select>
-          <select aria-label="Período das métricas" value={period} onChange={e=>setPeriod(Number(e.target.value))}>{[1,7,30,90].map(days=><option key={days} value={days}>Métricas: {days===1?'hoje':`${days} dias`}</option>)}</select>
-          <select aria-label="Ordenar cadências" value={order} onChange={e=>setOrder(e.target.value)}><option value="recent">Mais recentes</option><option value="oldest">Mais antigas</option><option value="name">Nome A–Z</option></select>
-          <button
-            className={`pill ${archived ? "selected" : ""}`}
-            onClick={() => setArchived(!archived)}
-          >
-            {archived ? "Arquivadas" : "Ver arquivadas"}
-          </button>
+          </SelectField>
+          <SelectField aria-label="Período das métricas" value={period} onChange={e=>setPeriod(Number(e.target.value))}>{[1,7,30,90].map(days=><option key={days} value={days}>Métricas: {days===1?'hoje':`${days} dias`}</option>)}</SelectField>
+          <SelectField aria-label="Ordenar cadências" value={order} onChange={e=>setOrder(e.target.value)}><option value="recent">Mais recentes</option><option value="oldest">Mais antigas</option><option value="name">Nome A–Z</option></SelectField>
+          <Button type="button" icon="SlidersHorizontal" aria-expanded={filtersOpen} aria-controls="cadence-list-filters"
+            onClick={() => setFiltersOpen(!filtersOpen)}>Filtros{archived?' · 1':''}</Button>
         </div>
-        <div className="row">
+        <div className="row cadence-view-controls">
           {["Lista", "Cards"].map((v) => (
             <IconButton
               key={v}
               icon={v === "Lista" ? "ListChecks" : "LayoutDashboard"}
               label={v}
+              aria-pressed={view===v}
               onClick={() => setView(v)}
             />
           ))}
         </div>
       </div>
+      <div className="cadence-list-filters" id="cadence-list-filters" hidden={!filtersOpen}>
+        <button type="button" className={`pill ${archived?"selected":""}`} aria-pressed={archived} onClick={()=>setArchived(!archived)}>
+          {archived?"Arquivadas":"Ver arquivadas"}
+        </button>
+      </div>
       <div className="cadence-metrics">
         <section className="panel panel-pad">
-          <small>Enviados</small>
+          <small className="cadence-metric-title">Enviados <Icon name="Send" size={15}/></small>
           <strong>{metrics?.sent??'—'}</strong>
           <small>{metrics?`${metrics.email} e-mail · ${metrics.whatsapp} WhatsApp`:'Métricas ainda não disponíveis'}</small>
         </section>
         <section className="panel panel-pad">
-          <small>Respostas</small>
+          <small className="cadence-metric-title">Respostas <Icon name="ArrowLeft" size={15}/></small>
           <strong>{metrics?.replies??'—'}</strong>
           <small>últimos {period} dias</small>
         </section>
         <section className="panel panel-pad">
-          <small>Abertura de e-mail</small>
+          <small className="cadence-metric-title">Abertura de e-mail <Icon name="MailOpen" size={15}/></small>
           <strong>—</strong>
           <small>rastreamento indisponível</small>
         </section>
         <section className="panel panel-pad">
-          <small>Hoje</small>
+          <small className="cadence-metric-title">Hoje <Icon name="Sun" size={15}/></small>
           <strong>{metrics?metrics.today.email+metrics.today.whatsapp:'—'}</strong>
           <small>envios registrados hoje</small>
         </section>
@@ -206,7 +208,7 @@ export function CadenceList() {
                     <td>{cadenceMetrics[c.id]?cadenceMetrics[c.id].today.email+cadenceMetrics[c.id].today.whatsapp:'—'}</td>
                     <td>
                       <div className="row">
-                        <Button variant="soft" onClick={() => messaging?router.push(`/cadences/${c.id}?tab=publication`):setGate(true)}>
+                        <Button variant="soft" onClick={() => messaging?router.push(`/cadences/${c.id}?tab=publication`):setGate("channel")}>
                           {publications.some(p=>p.cadenceId===c.id&&p.state==='active')?'Ver publicação':'Ativar'}
                         </Button>
                         <Link
@@ -381,17 +383,18 @@ export function CadenceList() {
       )}
       {gate && (
         <Modal
-          title="Conecte um canal antes de ligar"
-          onClose={() => setGate(false)}
+          title={gate==="queue"?"O que pode mudar os envios":"Conecte um canal antes de ligar"}
+          onClose={() => setGate(null)}
         >
           <Notice>
-            As cadências estão em rascunho. A execução real depende dos serviços
-            de canal e agendamento, ainda não integrados nesta demonstração.
+            {gate==="queue"
+              ?"Os horários vêm da fila atual das cadências ativas. Respostas, limites do canal e alterações no agendamento podem mudar o que sai hoje."
+              :"As cadências estão em rascunho. A execução real depende de um canal e do agendamento do workspace."}
           </Notice>
           <div className="form-actions">
-            <Button onClick={() => setGate(false)}>Fechar</Button>
-            <LinkButton href="/settings/whatsapp" variant="primary">
-              Ver canais
+            <Button onClick={() => setGate(null)}>Fechar</Button>
+            <LinkButton href={gate==="queue"?"/settings/dispatch-limits":"/settings/whatsapp"} variant="primary">
+              {gate==="queue"?"Ver limites de disparo":"Ver canais"}
             </LinkButton>
           </div>
         </Modal>
