@@ -68,7 +68,7 @@ test('07A.2 two campaigns on one account: 12 invites a day in total, one invite 
  s.u.people.push(...shared,...Array.from({length:14},(_,i)=>person(i)),person(200,{network_distance:'DISTANCE_1'}),person(201,{pending_invitation:true}),person(202,{company:undefined}));
  const a=await activate(s.p,draft({name:'[RE] A'})),b=await activate(s.p,draft({name:'[RE] B'}));
  // Saturday: nothing leaves.
- await ticks(s.u,4,Date.parse('2026-11-07T15:00:00Z'));assert.equal(s.u.invites.length,0);
+ await ticks(s.u,4,WED+3*864e5+3*3600e3);assert.equal(s.u.invites.length,0);
  await ticks(s.u,30);
  assert.equal(s.u.invites.length,12,'account cap across campaigns');
  const ids=s.u.invites.map(i=>i.provider_id);assert.equal(new Set(ids).size,ids.length,'never the same person twice');

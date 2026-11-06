@@ -6,10 +6,28 @@ import {claimMailboxSync} from '../../src/server/mail/sync/repository.ts';import
 import {readReport,readReportDetail} from '../../src/server/operations/reports.ts';import {rebuildReportProjection} from '../../src/server/operations/projections.ts';import type {MailAdapter} from '../../src/server/mail/providers/contracts.ts';import type {MailMessage} from '../../src/domain/mail.ts';
 import {reportRequest} from '../../src/server/operations/report-http.ts';
 import {GET as getExecutionDiary} from '../../src/app/api/execution-diary/route.ts';
+import {readCadenceQueue,readMessageMetrics} from '../../src/server/messaging/metrics.ts';
 beforeEach(resetRateLimits);after(async()=>{await getPools().close();await closeDispatchPool();await closeIngressPool();});
 const query=(cadenceId?:string)=>({view:'dashboard' as const,from:new Date(Date.now()-86400000).toISOString(),to:new Date(Date.now()+86400000).toISOString(),timezone:'UTC',...(cadenceId?{cadenceId}:{})});
 async function fixture(){const f=await multiFixture(true),review=await preparePublication(f.u.p,f.input);assert.deepEqual(review.blockers,[]);const publication=await confirmPublication(f.u.p,{...f.input,requestId:randomUUID(),reviewToken:review.token,material:review.material});const now=new Date(f.now.getTime()+120000).toISOString();await materializeDueMessages(now,100,f.u.p.workspaceId);const lease=await claimDispatch(now,{workspaceId:f.u.p.workspaceId});assert.ok(lease);const m=await testAdmin(async c=>(await c.query('SELECT em.*,cm.conversation_id FROM app.email_message em JOIN app.channel_message cm ON cm.workspace_id=em.workspace_id AND cm.id=em.message_id WHERE em.message_id=$1',[lease.messageId])).rows[0]);return{...f,publication,lease,message:m,now};}
 const adapter=(sendOnce:MailAdapter['sendOnce']):MailAdapter=>({verify:async()=>{throw Error('not used');},readBatch:async()=>{throw Error('not used');},findSent:async()=>null,sendOnce});
+test('cadence today groups active pending steps by their recorded due time',async()=>{
+ const f=await fixture(),options={days:30,cadenceId:f.cadence.id};
+ await testAdmin(c=>c.query("UPDATE app.message_outbox SET next_at=clock_timestamp()-interval '1 second' WHERE workspace_id=$1 AND message_id=$2",[f.u.p.workspaceId,f.lease.messageId]));
+ assert.deepEqual((await readMessageMetrics(f.u.p,options)).cadenceQueue,{today:1,later:0});
+ await testAdmin(c=>c.query("UPDATE app.message_outbox SET next_at=clock_timestamp()+interval '2 days' WHERE workspace_id=$1 AND message_id=$2",[f.u.p.workspaceId,f.lease.messageId]));
+ assert.deepEqual((await readMessageMetrics(f.u.p,options)).cadenceQueue,{today:0,later:1});
+ await testAdmin(c=>c.query("UPDATE app.cadence_publication SET state='paused' WHERE workspace_id=$1 AND cadence_id=$2",[f.u.p.workspaceId,f.cadence.id]));
+ assert.deepEqual((await readMessageMetrics(f.u.p,options)).cadenceQueue,{today:0,later:0});
+});
+test('cadence queue rejects a session that has switched away since the report read',async()=>{
+ const f=await fixture();
+ const until=new Date(Date.now()+86400000).toISOString();
+ await readMessageMetrics(f.u.p,{days:30});
+ await testAdmin(c=>c.query('UPDATE auth.session SET "activeOrganizationId"=NULL WHERE id=$1',[f.u.p.sessionId]));
+ await assert.rejects(readCadenceQueue(f.u.p,until),(error:unknown)=>
+  error instanceof Error&&'status' in error&&error.status===403);
+});
 const incoming=(f:Awaited<ReturnType<typeof fixture>>,overrides:Partial<MailMessage>={}):MailMessage=>({remoteId:randomUUID(),remoteThreadId:null,rfcMessageId:'<'+randomUUID()+'@example.net>',inReplyTo:f.message.rfc_message_id,references:[f.message.rfc_message_id],from:f.lead.email!,to:[f.mailbox.address!],subject:'Re: Olá',text:'Podemos conversar',receivedAt:new Date().toISOString(),direction:'inbound',classification:'human',attachments:[],truncated:false,...overrides});
 async function ingest(f:Awaited<ReturnType<typeof fixture>>,messages:MailMessage[]){await testAdmin(c=>c.query("UPDATE app.email_sync_cursor SET next_at=clock_timestamp()-interval '1 second' WHERE mailbox_id=$1",[f.mailbox.id]));const leases=await claimMailboxSync(new Date(Date.now()+1000).toISOString(),{workspaceId:f.u.p.workspaceId,mailboxId:f.mailbox.id,limit:1});assert.equal(leases.length,1);await ingestMailBatch(leases[0],{messages,next:{kind:'imap',path:'INBOX',uidValidity:'1',lastUid:1,watermark:new Date().toISOString()},complete:true,gap:false});}
 test('accepted messages, real inbound classification and correlated DSN reconcile with the identical drilldown',async()=>{

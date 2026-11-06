@@ -125,7 +125,7 @@ const journeys={
   const a=await account('prospeccao',{plan:'essential'}),{page}=a,count=async()=>(await db.query('SELECT count(*)::int n FROM app.lead WHERE workspace_id=$1',[a.workspace])).rows[0].n;
   await step('adiciona um contato pelo formulário',async()=>{await go(page,'/contacts');await openLead(page);await page.getByLabel(/Nome da empresa/).fill('[RE] Empresa manual');await page.getByLabel(/Nome da nova lista/).fill('[RE] Lista manual');await page.getByRole('dialog').getByRole('button',{name:'Salvar contato'}).click();await until(async()=>await count()===1,'lead saved');await page.getByRole('dialog').waitFor({state:'detached'});await seen(page,'[RE] Empresa manual');});
   await step('importa colando linhas e revisa antes de salvar',async()=>{await go(page,'/leads/import');await page.getByRole('button',{name:'Digitar / colar'}).click();await page.locator('textarea').first().fill('[RE] Colada Um, um@example.com\n[RE] Colada Dois, dois@example.com');await page.locator('.import-manual-destination input[type=text],.import-manual-destination input:not([type])').first().fill('[RE] Lista colada');await page.getByRole('button',{name:'Visualizar Preview'}).click();await page.getByRole('button',{name:/^Importar/}).last().click();await until(async()=>await count()===3,'two imported');});
-  await step('cria uma cadência do zero, como rascunho',async()=>{await go(page,'/cadences/new');await page.getByRole('button',{name:'Criar cadência'}).click();await seen(page,'Dê um nome à cadência.');await page.getByLabel('Nome da cadência').fill('[RE] Cadência nova');await page.getByText('Escrever mensagem').first().click();const editor=page.locator('.step-reference-form [contenteditable="true"],.step-reference-form textarea').first();await editor.click();await page.keyboard.type('[RE] Primeira mensagem');await page.locator('.step-reference-form button[type=submit]').click();await page.getByRole('tab',{name:/Configurações/}).or(page.getByRole('button',{name:/Configurações/})).first().click();await page.getByLabel(/Lista vinculada/).selectOption({index:1});await page.getByRole('button',{name:'Criar cadência'}).click();await until(async()=>(await db.query('SELECT count(*)::int n FROM app.cadence WHERE workspace_id=$1',[a.workspace])).rows[0].n===1,'cadence created');assert.equal((await db.query("SELECT payload->>'status' s FROM app.cadence WHERE workspace_id=$1",[a.workspace])).rows[0].s,'draft','nothing runs');});
+  await step('cria uma cadência do zero, como rascunho',async()=>{await go(page,'/cadences/new');await page.getByRole('button',{name:'Criar cadência'}).click();await seen(page,'Dê um nome à cadência.');await page.getByLabel('Nome da cadência').fill('[RE] Cadência nova');await page.getByText('Sem conteúdo',{exact:true}).first().click();const editor=page.locator('.step-reference-form [contenteditable="true"],.step-reference-form textarea').first();await editor.click();await page.keyboard.type('[RE] Primeira mensagem');await page.locator('.step-reference-form button[type=submit]').click();await page.getByRole('tab',{name:/Configurações/}).or(page.getByRole('button',{name:/Configurações/})).first().click();await page.getByRole('combobox',{name:/Lista vinculada/}).click();await page.getByRole('listbox',{name:/Lista vinculada/}).getByRole('option').nth(1).click();await page.getByRole('button',{name:'Criar cadência'}).click();await until(async()=>(await db.query('SELECT count(*)::int n FROM app.cadence WHERE workspace_id=$1',[a.workspace])).rows[0].n===1,'cadence created');assert.equal((await db.query("SELECT payload->>'status' s FROM app.cadence WHERE workspace_id=$1",[a.workspace])).rows[0].s,'draft','nothing runs');});
  },
  async retention(step){
   const a=await account('retencao',{plan:'essential'}),{page}=a;
@@ -137,6 +137,157 @@ const journeys={
   const body=async()=>(await db.query('SELECT payload FROM app.cadence WHERE workspace_id=$1 AND id=$2',[a.workspace,id])).rows[0].payload.steps[0].body;
   await step('edita o passo, salva e persiste',async()=>{await go(page,'/cadences/'+id);await page.getByText('[RE] Texto antigo').first().click();const editor=page.locator('.step-reference-form [contenteditable="true"],.step-reference-form textarea').first();await editor.click();await page.keyboard.press('Control+a');await page.keyboard.type('[RE] Texto novo');await page.locator('.step-reference-form button[type=submit]').click();await page.getByRole('button',{name:'Salvar alterações'}).first().click();await until(async()=>(await body()).includes('[RE] Texto novo'),'saved');});
   await step('recarregar mantém o texto',async()=>{await go(page,'/cadences/'+id);await seen(page,'[RE] Texto novo');});
+ },
+ async 'select-fields'(step){
+  const a=await account('seletores'),{page}=a;
+  const {cadenceName}=await seedExecutionDiary(db,a.workspace,a.user,1);
+  const captures='output/playwright/visual-audit';
+  mkdirSync(captures,{recursive:true});
+  await page.setViewportSize({width:1920,height:855});
+  await go(page,'/cadences/pipeline');
+  const picker=page.getByRole('combobox',{name:'Cadência',exact:true});
+  await step('Pipeline abre o menu do app e confirma cadência com teclado',async()=>{
+   await picker.waitFor();
+   assert.equal(await picker.getAttribute('aria-expanded'),'false');
+   await page.screenshot({path:captures+'/selectors-pipeline-empty-1920.png',animations:'disabled'});
+   await picker.focus();
+   await page.keyboard.press('Enter');
+   const menu=page.getByRole('listbox',{name:'Cadência',exact:true});
+   await menu.getByRole('option',{name:cadenceName,exact:true}).waitFor();
+   await page.screenshot({path:captures+'/selectors-pipeline-1920.png',animations:'disabled'});
+   await page.keyboard.press('ArrowDown');
+   await page.keyboard.press('Enter');
+   await page.getByText('1 · EMAIL',{exact:true}).waitFor();
+   assert.equal(await picker.getAttribute('aria-expanded'),'false');
+   assert.equal(await picker.evaluate(element=>element===document.activeElement),true);
+  });
+  if(await picker.getAttribute('aria-expanded')===null)return;
+  await step('Escape fecha apenas o seletor e preserva a escolha no celular',async()=>{
+   await page.setViewportSize({width:320,height:700});
+   await picker.click();
+   const menu=page.getByRole('listbox',{name:'Cadência',exact:true});
+   await menu.waitFor();
+   const box=await menu.boundingBox();
+   assert.ok(box&&box.x>=0&&box.x+box.width<=320&&box.y>=0&&box.y+box.height<=700,'menu inteiro no viewport');
+   await page.setViewportSize({width:390,height:844});
+   await page.screenshot({path:captures+'/selectors-pipeline-390.png',animations:'disabled'});
+   await page.keyboard.press('Home');
+   await page.keyboard.press('Escape');
+   await menu.waitFor({state:'hidden'});
+   await page.getByText('1 · EMAIL',{exact:true}).waitFor();
+  });
+  await step('Tab confirma a opção destacada e avança o foco',async()=>{
+   await picker.focus();
+   await page.keyboard.press('Enter');
+   await page.keyboard.press('Home');
+   await page.keyboard.press('Tab');
+   await page.getByRole('heading',{name:'Escolha uma cadência'}).waitFor({timeout:5000});
+   assert.equal(await picker.evaluate(element=>element!==document.activeElement),true);
+   await page.screenshot({path:captures+'/selectors-pipeline-empty-390.png',animations:'disabled'});
+  });
+  await step('selecionar canal no formulário mantém a edição no diálogo',async()=>{
+   await go(page,'/templates');
+   await page.getByRole('button',{name:/Novo template|Criar template/}).first().click();
+   const dialog=page.getByRole('dialog');
+   const channel=dialog.getByRole('combobox',{name:'Canal',exact:true});
+   await channel.click();
+   await dialog.getByRole('option',{name:'WhatsApp',exact:true}).click();
+   assert.match(await channel.innerText(),/WhatsApp/);
+   await channel.click();
+   await page.keyboard.press('Escape');
+   await dialog.waitFor();
+   await page.keyboard.press('Escape');
+   await dialog.waitFor({state:'hidden'});
+  });
+  await step('lista obrigatória mantém validação sem submeter o gerador',async()=>{
+   await go(page,'/leads/generator');
+   await page.getByRole('button',{name:'Usar existente'}).click();
+   const list=page.getByRole('combobox',{name:'Lista existente'});
+   await list.click();
+   await page.getByRole('option',{name:'Selecione uma lista',exact:true}).click();
+   const native=page.locator('.prospecting-destination select[required]');
+   assert.equal(await native.evaluate(element=>element.checkValidity()),false);
+   await page.getByRole('alert').filter({hasText:'Selecione uma opção.'}).waitFor();
+   assert.equal(await list.evaluate(element=>element===document.activeElement),true);
+   await list.click();
+   await page.getByRole('option',{name:'[RE] Diário',exact:true}).click();
+   assert.equal(await native.evaluate(element=>element.checkValidity()),true);
+  });
+ },
+ async 'remaining-visual'(step){
+  const {page}=await account('visual'),captures='output/playwright/visual-audit';
+  mkdirSync(captures,{recursive:true});
+  async function capture(route){
+   for(const [width,height] of [[1920,855],[390,844]]){
+    await page.setViewportSize({width,height});
+    await page.screenshot({path:`${captures}/08a6-${route}-${width}.png`,fullPage:width===390,animations:'disabled'});
+   }
+  }
+  await step('Cadências mostra a faixa de hoje e o filtro de arquivadas',async()=>{
+   await go(page,'/cadences');
+   await page.locator('.cadence-today').getByRole('heading',{name:'Hoje',exact:true}).waitFor({timeout:5000});
+   await page.getByText('Ficam pra depois',{exact:false}).waitFor({timeout:5000});
+   await capture('cadences');
+   await page.getByRole('button',{name:'Filtros',exact:true}).click({timeout:5000});
+   await page.getByRole('button',{name:'Ver arquivadas',exact:true}).click({timeout:5000});
+   await page.getByRole('button',{name:'Arquivadas',exact:true}).waitFor({timeout:5000});
+  });
+  await step('cadência nova mostra Sem conteúdo e abre a edição pelo nó',async()=>{
+   await go(page,'/cadences/new');
+   await capture('cadences-new');
+   await page.getByText('Sem conteúdo',{exact:true}).first().click({timeout:5000});
+   await page.locator('.step-reference-form').waitFor({timeout:5000});
+  });
+  await step('fontes disponíveis mostram os ícones e preservam as opções desabilitadas',async()=>{
+   await go(page,'/automations/new');
+   const maps=page.getByRole('radio',{name:/Google Maps/});
+   await maps.locator('.source-icon svg[data-source="MAPS"]').waitFor({timeout:5000});
+   assert.equal(await page.getByRole('radio',{name:/CNPJ por termo/}).isDisabled(),true);
+   await capture('automations-new');
+  });
+  await step('Importar Leads mostra o limite real por lote no aviso',async()=>{
+   await go(page,'/leads/import');
+   await page.getByRole('note',{name:'Limites de importação'}).getByText('Máximo de 500 contatos por lote.').waitFor({timeout:5000});
+   await capture('leads-import');
+  });
+  await step('E-mail sem caixa de entrada mostra aviso e ação de conexão',async()=>{
+   await go(page,'/inbox');
+   await page.getByText('Nenhuma conta de e-mail configurada para receber mensagens.',{exact:true}).waitFor({timeout:5000});
+   await page.getByRole('link',{name:'Conectar e-mail',exact:true}).waitFor({timeout:5000});
+   await capture('inbox');
+  });
+  await step('caixa configurada em atenção mantém o aviso de falha de sincronização',async()=>{
+   const endpoint='**/api/mailboxes';
+   await page.route(endpoint,route=>route.fulfill({json:[{id:'re-qa',name:'[RE] Caixa',provider:'smtp-imap',state:'attention',readVerified:true,syncState:'error'}]}));
+   try{
+    await go(page,'/inbox');
+    await page.getByText('A caixa de e-mail conectada precisa de atenção.',{exact:true}).waitFor({timeout:5000});
+    assert.equal(await page.getByText('Nenhuma conta de e-mail configurada para receber mensagens.',{exact:true}).count(),0);
+   }finally{await page.unroute(endpoint);}
+  });
+  await step('Membros exibe assentos usados e capacidade do plano',async()=>{
+   await go(page,'/settings/seats');
+   await page.locator('.members-status').getByText(/1 de \d+ assentos/).waitFor({timeout:5000});
+   await capture('members');
+  });
+  await step('Primeiros passos oferece orientação pela Central de Ajuda nos dois viewports',async()=>{
+   await go(page,'/first-steps');
+   const card=page.getByRole('region',{name:'Precisa de ajuda para montar?'});
+   const open=card.getByRole('button',{name:'Abrir a Central de Ajuda'});
+   for(const [width,height] of [[1920,855],[390,844]]){
+    await page.setViewportSize({width,height});
+    await open.click({timeout:5000});
+    const dialog=page.getByRole('dialog',{name:'Central de Ajuda'});
+    await dialog.waitFor({timeout:5000});
+    await page.keyboard.press('Escape');
+    await dialog.waitFor({state:'detached'});
+    assert.equal(await open.evaluate(button=>button===document.activeElement),true);
+   }
+   await capture('first-steps');
+   await go(page,'/dashboard');
+   await page.getByRole('heading',{name:'Prepare com sua equipe'}).waitFor({timeout:5000});
+   assert.equal(await page.getByRole('heading',{name:'Prefere que a gente monte?'}).count(),0);
+  });
  },
  async 'execution-diary'(step){
   const a=await account('diario'),{page}=a;
@@ -220,13 +371,47 @@ const journeys={
  },
  async admin(step){
   const a=await account('dono-adm',{plan:'pro'}),admin=await account('admin'),op=await account('operador2');
-  for(const [who,role] of [[admin,'admin'],[op,'operator']]){await db.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),a.workspace,who.user,role]);const r=await who.page.request.post(origin+'/api/identity',{headers:{origin,'content-type':'application/json'},data:{type:'switch',workspaceId:a.workspace}});assert.equal(r.status(),200);}
+  for(const [who,role] of [[admin,'admin'],[op,'operator']]){await who.page.goto('about:blank');await db.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),a.workspace,who.user,role]);const r=await who.page.request.post(origin+'/api/identity',{headers:{origin,'content-type':'application/json'},data:{type:'switch',workspaceId:a.workspace}});assert.equal(r.status(),200);}
   const post=(who,path,data)=>who.page.request.post(origin+path,{headers:{origin,'content-type':'application/json','x-cadence-workspace':a.workspace},data});
   await step('administrador pode preparar cobrança',async()=>{assert.equal((await post(admin,'/api/billing/prepare',{kind:'checkout',sku:'extractions-2000'})).status(),200);});
   await step('operador não convida e o administrador convida',async()=>{const refused=await post(op,'/api/identity',{type:'invite',requestId:randomUUID(),email:'nao@example.com',role:'operator'});console.log('    operator invite',refused.status(),(await refused.text()).slice(0,120));assert.ok([401,403].includes(refused.status()));const ok=await post(admin,'/api/identity',{type:'invite',requestId:randomUUID(),email:'re-qa-convite@example.com',role:'operator'});const text=await ok.text();assert.ok(ok.status()===200||(ok.status()===409&&text.includes('BILLING_CAPACITY')),'the admin is authorized: only the seat limit may answer');});
   await step('operador não cria chave de API',async()=>{const input={action:'create-key',input:{name:'[RE] chave',scopes:['leads:read']}};assert.equal((await post(op,'/api/integrations',input)).status(),403);const ok=await post(admin,'/api/integrations',input);assert.ok(ok.ok(),'the admin creates with the same call: '+ok.status());});
   await step('operador não muda a privacidade',async()=>{const input={action:'retention',input:{active:true,sentDays:365,replyDays:365,expectedRevision:0,confirm:'APAGAR'}},r=await post(op,'/api/data-lifecycle',input);assert.equal(r.status(),403,await r.text());const ok=await post(a,'/api/data-lifecycle',input);assert.ok(ok.ok(),'the owner saves with the same call: '+ok.status());});
   await step('operador trabalha nos contatos',async()=>{const r=await op.page.request.get(origin+'/api/contacts',{headers:{'x-cadence-workspace':a.workspace}});assert.equal(r.status(),200);});
+  await step('nas caixas, a ação de conexão aparece para administrador e some para operador',async()=>{
+   for(const [path,title,action] of [
+    ['/inbox','Conecte uma conta de e-mail','Conectar e-mail'],
+    ['/messages/whatsapp','WhatsApp não configurado','Conectar WhatsApp'],
+   ]){
+    await go(admin.page,path);
+    await admin.page.getByRole('heading',{name:title,exact:true}).waitFor();
+    await admin.page.getByRole('link',{name:action,exact:true}).waitFor();
+    await go(op.page,path);
+    await op.page.getByRole('heading',{name:title,exact:true}).waitFor();
+    assert.equal(await op.page.getByRole('link',{name:action,exact:true}).count(),0);
+   }
+  });
+  await step('Membros bloqueia o formulário para operador e habilita para administrador',async()=>{
+   for(const who of [admin,op]){
+    await go(who.page,'/settings/seats');
+    const field=who.page.getByRole('textbox',{name:'E-mail',exact:true});
+    await field.waitFor();
+    assert.equal(await field.isDisabled(),who===op);
+    if(who===admin){
+     await field.fill('re-qa-papel@example.com');
+     assert.equal(await who.page.getByRole('button',{name:'Convidar',exact:true}).isEnabled(),true);
+    }
+   }
+  });
+  await step('Privacidade mostra política ao dono e a restringe ao administrador e operador',async()=>{
+   await go(a.page,'/settings/privacy');
+   await a.page.getByRole('switch').waitFor();
+   for(const who of [admin,op]){
+    await go(who.page,'/settings/privacy');
+    await who.page.getByText('Só o dono da conta',{exact:true}).waitFor();
+    assert.equal(await who.page.getByRole('switch').count(),0);
+   }
+  });
  },
  async 'keyboard-more'(step){
   const a=await account('teclado2',{plan:'pro'}),{page}=a;
@@ -240,11 +425,53 @@ const journeys={
   await step('leitura de contatos em 503 mostra erro e tenta de novo',async()=>{await down('**/api/contacts*');await go(page,'/contacts');const retry=page.getByRole('button',{name:'Tentar novamente'}).first();await retry.waitFor({timeout:20000});await page.unroute('**/api/contacts*');await retry.click();await seen(page,'[RE] Contato visível');});
   await step('formulário de chave em 503 mantém o rascunho e o foco no diálogo',async()=>{await go(page,'/settings/webhooks');await page.getByRole('button',{name:'Nova chave'}).click();const dialog=page.getByRole('dialog');const field=dialog.getByRole('textbox').first();await field.fill('[RE] Chave rascunho');await down('**/api/integrations','POST');await dialog.getByRole('button',{name:/Criar|Gerar/}).click();await page.waitForTimeout(1500);await page.unroute('**/api/integrations');assert.equal(await field.inputValue(),'[RE] Chave rascunho');assert.ok(await dialog.evaluate(d=>d.contains(document.activeElement)),'focus left the dialog');assert.ok((await dialog.innerText()).match(/Não foi possível|indispon|Tente/i),'no error in the dialog');});
   await step('relatório em 503 avisa e recupera',async()=>{await down('**/api/reports*');await go(page,'/reports');const failure=page.getByText('Não foi possível consultar os relatórios');await failure.waitFor({timeout:20000});await page.unroute('**/api/reports*');await go(page,'/reports');await seen(page,'Os relatórios aparecem depois do primeiro envio');assert.equal(await failure.count(),0,'the error stayed after recovery');});
+  await step('template em 503 mantém texto, seletor e foco',async()=>{
+   await go(page,'/templates');
+   await page.getByRole('button',{name:/Novo template|Criar template/}).first().click();
+   const dialog=page.getByRole('dialog',{name:'Novo template'});
+   const name=dialog.getByRole('textbox',{name:'Nome *',exact:true}),body=dialog.getByRole('textbox',{name:'Corpo *',exact:true});
+   await name.fill('[RE] Template indisponível');
+   await body.fill('[RE] Corpo da mensagem');
+   const channel=dialog.getByRole('combobox',{name:'Canal',exact:true});
+   await channel.click();
+   await dialog.getByRole('option',{name:'WhatsApp',exact:true}).click();
+   const route='**/api/workspace/commands';
+   await page.route(route,r=>r.fulfill({status:503,json:{message:'[RE] Não foi possível salvar o template.'}}));
+   try{
+    const failure=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/workspace/commands'&&r.status()===503);
+    await dialog.getByRole('button',{name:'Criar template',exact:true}).click();
+    await failure;
+    await seen(page,'[RE] Não foi possível salvar o template.');
+    assert.equal(await name.inputValue(),'[RE] Template indisponível');
+    assert.equal(await body.inputValue(),'[RE] Corpo da mensagem');
+    assert.match(await channel.innerText(),/WhatsApp/);
+    assert.equal(await dialog.evaluate(element=>element.contains(document.activeElement)),true);
+    assert.equal((await db.query('SELECT count(*)::int n FROM app.template WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);
+   }finally{await page.unroute(route);}
+  });
  },
  async 'reports-data'(step){
   const a=await account('relatorios',{plan:'pro'}),{page}=a,list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista relatório']);for(let i=0;i<7;i++)await lead(a.workspace,list,{name:'[RE] Relatório '+i});
   await step('o funil conta os contatos reais',async()=>{await go(page,'/reports/funnel');const card=page.locator('.reports-funnel-metrics section',{hasText:'Total Leads'});await until(async()=>/\b7\b/.test(await card.innerText()),'seven contacts on the card');});
   await step('funil segura 320 px com contatos',async()=>{await page.setViewportSize({width:320,height:700});await go(page,'/reports/funnel');assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=1);await page.setViewportSize({width:1440,height:900});});
+  const {cadenceName}=await seedExecutionDiary(db,a.workspace,a.user);
+  await step('envios registrados aparecem no total e no filtro de cadência',async()=>{
+   await go(page,'/reports');
+   const sent=page.getByRole('button',{name:'Ver registros de E-mails aceitos',exact:true});
+   await until(async()=>await sent.innerText()==='2','duas mensagens aceitas registradas incluindo a avulsa');
+   await page.getByRole('combobox',{name:'Cadência',exact:true}).click();
+   await page.getByRole('option',{name:cadenceName,exact:true}).click();
+   await until(async()=>await sent.innerText()==='1','a mensagem avulsa fica fora do recorte da cadência');
+   await sent.click();
+   const dialog=page.getByRole('dialog',{name:'Detalhe do indicador'});
+   await dialog.getByRole('cell',{name:'accepted',exact:true}).waitFor();
+   const row=dialog.locator('tbody tr');
+   assert.equal(await dialog.locator('tbody tr').count(),1);
+   assert.match(await row.innerText(),/EMAIL/);
+   await page.keyboard.press('Escape');
+   await dialog.waitFor({state:'hidden'});
+   assert.equal(await sent.evaluate(element=>element===document.activeElement),true);
+  });
  },
  async 'module-popups'(step){
   const a=await account('popups2',{plan:'pro'}),{page}=a,list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista popups']);await lead(a.workspace,list);
@@ -260,6 +487,12 @@ const journeys={
   await open('/settings/email',()=>page.getByRole('button',{name:/Conectar|Adicionar/}).first().click(),'e-mail: conectar');
   await open('/settings/whatsapp',()=>page.getByRole('button',{name:/Conectar|Adicionar/}).first().click(),'WhatsApp: conectar');
   await open('/reports',()=>page.getByRole('button',{name:'Leia o guia na Central de Ajuda'}).click(),'relatórios: guia');
+  await open('/cadences',()=>page.getByRole('button',{name:/entender por quê/i}).click(),'cadências: previsão de hoje');
+  await open('/cadences/new',()=>page.getByRole('button',{name:'Adicionar etapa no final',exact:true}).click(),'cadência: adicionar etapa');
+  await open('/leads/generator',async()=>{
+   await page.getByRole('textbox',{name:'Descrever público para sugestão de IA'}).fill('[RE] Empresas fictícias');
+   await page.getByRole('button',{name:'Sugerir com IA',exact:true}).click();
+  },'gerador: abrir sugestão de IA sem confirmar');
   await step('sem canal, as caixas levam à conexão',async()=>{await go(page,'/messages/whatsapp');await page.getByRole('link',{name:'Conectar WhatsApp'}).click();await page.waitForURL(u=>u.pathname==='/settings/whatsapp');await go(page,'/inbox');await page.getByRole('link',{name:'Conectar e-mail'}).click();await page.waitForURL(u=>u.pathname==='/settings/email');});
  },
  async onboarding(step){
@@ -270,7 +503,7 @@ const journeys={
 };
 const runs=[];
 // What each journey is meant to provoke. Anything else on the page fails it.
-const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /],'onboarding-finish':[/^403 GET /],admin:[/^409 GET /],'network-more':[/^503 GET \/api\/(contacts|reports)/,/^503 POST \/api\/integrations$/],'execution-diary':[/^503 GET \/api\/execution-diary$/]};
+const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /],'onboarding-finish':[/^403 GET /],admin:[/^409 GET /],'network-more':[/^503 GET \/api\/(contacts|reports)/,/^503 POST \/api\/(integrations|workspace\/commands)$/],'execution-diary':[/^503 GET \/api\/execution-diary$/]};
 try{
  if(!only||only==='signup')await new Promise(w=>setTimeout(w,70000));
  for(const [id,run] of Object.entries(journeys)){

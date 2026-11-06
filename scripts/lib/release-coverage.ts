@@ -4,7 +4,7 @@ import path from 'node:path';
 // zoom200 is 1920 at 200%; font-large is the app's largest text setting on a phone.
 export const VIEWPORTS=['1920','1440','768','390','320','390-dark','zoom200','font-large'];
 export interface ReleaseItem {id:string;kind:'route'|'journey'|'module'|'state';source?:string;expectPath?:string;public?:boolean;noShell?:boolean;run?:string;status?:string;evidence?:string[];blockedBy?:string;severity?:string;localProof?:string;proof?:{service?:boolean;happy?:boolean;failure?:boolean;recovery?:boolean;externalEffect?:string};}
-export interface SweepResult {route:string;viewport:string;ok:boolean;path?:string;theme?:string;fontSize?:number;}
+export interface SweepResult {route:string;viewport:string;ok:boolean;path?:string;theme?:string;fontSize?:number;keyboard?:{available:number;visited:number;failures:string[]};}
 export interface ReleaseCoverageReport {required:number;passed:number;failed:string[];blocked:string[];pending:string[];referenceUnknown:string[];unclassified:string[];criticalFailures:number;exceptions:string[];unregistered:string[];stale:boolean;}
 export const releaseCoverageAccepted=(i:{required:number;passed:number;criticalFailures:number;unknownUnclassified:number})=>i.required>0&&i.passed===i.required&&i.criticalFailures===0&&i.unknownUnclassified===0;
 // A picture shows a state, not that the flow ran; and only a validation report counts, not any file that happens to exist.
@@ -59,8 +59,14 @@ export async function auditReleaseCoverage(input:{manifestPath:string;evidenceRo
  const journeysFile=path.join(input.evidenceRoot,'journeys.json'),journeys=existsSync(journeysFile)?JSON.parse(readFileSync(journeysFile,'utf8')):null;
  const rows:SweepResult[]=!sweep||stale?[]:sweep.results,journeysStale=!!journeys&&journeys.sourceHash!==sourceHash();
  // Zoom and text pass only when every route passes the audit's own rules, not merely its ok flag.
- const routeAudit=auditRelease(items.filter(i=>i.kind==='route'),rows,existsSync),allRoutes=routeAudit.required>0&&routeAudit.passed===routeAudit.required;
- const runs=[...(journeys&&!journeysStale?journeys.runs:[]),...(allRoutes?[{id:'zoom',ok:true},{id:'text',ok:true}]:[])];
+ const routes=items.filter(i=>i.kind==='route'),routeAudit=auditRelease(routes,rows,existsSync),allRoutes=routeAudit.required>0&&routeAudit.passed===routeAudit.required;
+ const keyboard=routes.map(item=>rows.find(row=>row.route===item.id&&row.viewport==='1440'&&row.ok)?.keyboard);
+ const keyboardMeasured=allRoutes&&keyboard.every(proof=>proof!==undefined);
+ const keyboardOk=keyboardMeasured&&keyboard.every(proof=>!!proof&&
+  Number.isInteger(proof.available)&&Number.isInteger(proof.visited)&&proof.available>=0&&
+  proof.visited===Math.min(proof.available,8)&&
+  Array.isArray(proof.failures)&&proof.failures.length===0);
+ const runs=[...(journeys&&!journeysStale?journeys.runs:[]),...(allRoutes?[{id:'zoom',ok:true},{id:'text',ok:true}]:[]),...(keyboardMeasured?[{id:'keyboard-initial-routes',ok:keyboardOk}]:[])];
  const report=auditRelease(items,rows,existsSync,runs),sources=new Set(items.map(i=>i.source));
  report.stale=stale||journeysStale;
  report.unregistered=sourceRoutes('src/app').filter(r=>r!=='/'&&!sources.has(r));

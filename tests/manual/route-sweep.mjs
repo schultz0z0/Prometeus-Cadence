@@ -53,6 +53,56 @@ const inspect=()=>{
  const text=document.body.innerText;
  return {overflow:document.documentElement.scrollWidth-w,offscreen,unnamed,path:location.pathname,theme:document.documentElement.dataset.theme??'n/a',fontSize:parseFloat(getComputedStyle(document.documentElement).fontSize),text,fallback:/Internal Server Error|NEXT_HTTP_ERROR_FALLBACK;500|Application error|Não foi possível carregar seu workspace/.test(text),busy:!!document.querySelector('[aria-busy="true"],.billing-loading')||/Carregando|Consultando/.test(text)};
 };
+async function inspectKeyboard(page){
+ const {available,previous}=await page.evaluate(()=>{
+  const scope=document.querySelector('main')??document.body;
+  const focusable=[...scope.querySelectorAll('a[href],button,input:not([type=hidden]),textarea,select,summary,[tabindex]')]
+   .filter(element=>element.tabIndex>=0&&!element.matches(':disabled')&&!element.closest('[inert]')&&element.checkVisibility({checkOpacity:true,checkVisibilityCSS:true}));
+  const controls=focusable.filter(element=>{
+   if(!(element instanceof HTMLInputElement)||element.type!=='radio'||!element.name)return true;
+   const group=focusable.filter(other=>other instanceof HTMLInputElement&&other.type==='radio'&&other.form===element.form&&other.name===element.name);
+   return element===(group.find(member=>member.checked)??group[0]);
+  });
+  const previous=scope.getAttribute('tabindex');
+  if(controls.length){
+   scope.setAttribute('tabindex','-1');
+   scope.focus({preventScroll:true});
+   controls.forEach((element,index)=>element.setAttribute('data-qa-tab-index',String(index)));
+  }
+  return {available:controls.length,previous};
+ });
+ const visited=new Set(),failures=[];
+ try{
+  for(let i=0;i<Math.min(8,available);i++){
+   await page.keyboard.press('Tab');
+   const focus=await page.evaluate(()=>{
+    const element=document.activeElement,index=element?.getAttribute('data-qa-tab-index');
+    if(!element||index==null)return null;
+    const hasRing=target=>{
+     const style=getComputedStyle(target);
+     return (style.outlineStyle!=='none'&&parseFloat(style.outlineWidth)>0)||style.boxShadow!=='none';
+    };
+    const ringTargets=[element,element.closest('label'),element.closest('form')];
+    return {
+     index,tag:element.tagName.toLowerCase(),
+     visible:element.checkVisibility({checkOpacity:true,checkVisibilityCSS:true}),
+     indicator:element.matches(':focus-visible')&&ringTargets.some(target=>target&&hasRing(target)),
+    };
+   });
+   if(!focus||visited.has(focus.index)){failures.push('Tab não avançou para outro controle do conteúdo');break;}
+   visited.add(focus.index);
+   if(!focus.visible||!focus.indicator)failures.push(focus.tag+' sem indicação visível de foco');
+  }
+  return {available,visited:visited.size,failures};
+ }finally{
+  if(available)await page.evaluate(previous=>{
+   const scope=document.querySelector('main')??document.body;
+   if(previous===null)scope.removeAttribute('tabindex');
+   else scope.setAttribute('tabindex',previous);
+   scope.querySelectorAll('[data-qa-tab-index]').forEach(element=>element.removeAttribute('data-qa-tab-index'));
+  },previous);
+ }
+}
 async function visit(who,item,viewport){
  const route=item.id,[width,height]=sizes[viewport],page=who.page,errors=[],bad=[],console4=[],dark=viewport.endsWith('dark');
  await page.setViewportSize({width,height});
@@ -73,7 +123,9 @@ async function visit(who,item,viewport){
  const ok=!failure&&status<500&&!errors.length&&!console4.length&&!bad.length&&m&&!m.fallback&&!m.busy&&!missing&&m.overflow<=1&&!m.offscreen.length&&!m.unnamed.length;
  if(!ok)await page.screenshot({path:`${out}/failures/${route.replace(/[^a-z0-9]+/gi,'_')}-${viewport}.jpg`,type:'jpeg',quality:60}).catch(()=>{});
  const {text:_text,...facts}=m??{};
- return {route,viewport,account:who.name,status,ok:!!ok,path:facts.path,theme:facts.theme,fontSize:facts.fontSize,...(ok?{}:{failure,errors,console:console4,bad:[...new Set(bad)],missing:!!missing,...facts})};
+ const keyboard=ok&&viewport==='1440'?await inspectKeyboard(page):undefined;
+ if(keyboard?.failures.length)console.log('KEYBOARD',route,keyboard.failures.join('; '));
+ return {route,viewport,account:who.name,status,ok:!!ok,path:facts.path,theme:facts.theme,fontSize:facts.fontSize,...(keyboard?{keyboard}:{}),...(ok?{}:{failure,errors,console:console4,bad:[...new Set(bad)],missing:!!missing,...facts})};
 }
 try{
  const a=await account('a'),b=await account('b');

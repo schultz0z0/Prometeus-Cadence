@@ -107,7 +107,8 @@ export const draft=(o:Partial<LinkedinCampaignDraft>={}):LinkedinCampaignDraft=>
  source:{...d.source,mode:'filters',roles:['CEO','Diretor'],locations:['São Paulo'],industries:['Software'],keyword:'vendas'},...o};};
 export async function save(p:Principal,d:LinkedinCampaignDraft,id:string=randomUUID(),expectedRevision=0){return saveLinkedinCampaign(p,{id,expectedRevision,draft:d});}
 export async function activate(p:Principal,d:LinkedinCampaignDraft){const s=await save(p,d);await confirmLinkedinCampaign(p,{id:s.id,revision:s.revision});return s.id;}
-export const WED=Date.parse('2026-11-04T12:00:00Z');// Wednesday 9h in Brasília
+// Wednesday 9h in Brasília. Far ahead of the real clock on purpose: approvals and human sends read clock_timestamp(), so the simulated ticks must never fall behind it.
+export const WED=Date.parse('2099-11-04T12:00:00Z');
 export async function ticks(u:Fake,n:number,start=WED,stepMin=21){let now=start;for(let i=0;i<n;i++){await runLinkedinCampaignTick({limit:10,now:new Date(now)},u.deps);now+=stepMin*60e3;}return now;}
 export const rows=(ws:string,sql:string,args:unknown[]=[])=>testAdmin(async c=>(await c.query(sql,[ws,...args])).rows);
 export const states=async(ws:string,campaign:string)=>Object.fromEntries((await rows(ws,'SELECT state,count(*)::int n FROM app.linkedin_campaign_person WHERE workspace_id=$1 AND campaign_id=$2 GROUP BY state',[campaign])).map(r=>[r.state,r.n]));

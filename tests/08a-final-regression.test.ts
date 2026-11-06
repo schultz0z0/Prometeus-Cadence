@@ -73,7 +73,7 @@ test('08A the sweep must match the code it measured and include the isolation pr
 
 test('08A the registry keeps the required items and every real section',()=>{
  const items:{id:string;kind:string}[]=JSON.parse(readFileSync('docs/validation/08-release-matrix.json','utf8')).items,ids=new Set(items.map(i=>i.id));
- for(const id of ['signup → trial → revisão de assinatura','assinatura: pagamento e ativação','prospecção local: adicionar, importar e criar cadência','pesquisa e IA reais → qualificação → envio → inbox e parada','LinkedIn conectado → ação autorizada → conversa','SDR → handoff, agenda e CRM','pacote: revisão e cupom recusado','pacote, renovação e cancelamento com efeito real','fundir, desfazer e exportar','apagar texto antigo: execução','API: chave, escopo e revogação','MCP: escopos e revogação em cliente real','transversal: popups do menu e da barra','transversal: 11 popups de módulo abertos e fechados','transversal: demais popups, pelo mesmo componente','transversal: relatórios com dados','transversal: conversas com dados','transversal: operador recusado em cobrança','transversal: administrador e demais áreas por papel','transversal: foco em Adicionar e Ajuda','transversal: teclado nas demais telas','transversal: zoom 200%','transversal: 503, offline e lentidão no formulário de lead','transversal: rede nos demais formulários, leituras e foco após erro','cadência: abrir existente','cadência: editar e salvar','execução: detalhe concluído','execução: falha e parcial reais, em andamento simulado','onboarding: bloqueia sem aceite','onboarding: concluir complemento','visual: comparação com a referência por área'])assert.ok(ids.has(id),id);
+ for(const id of ['signup → trial → revisão de assinatura','assinatura: pagamento e ativação','prospecção local: adicionar, importar e criar cadência','pesquisa e IA reais → qualificação → envio → inbox e parada','LinkedIn conectado → ação autorizada → conversa','SDR → handoff, agenda e CRM','pacote: revisão e cupom recusado','pacote, renovação e cancelamento com efeito real','fundir, desfazer e exportar','apagar texto antigo: execução','API: chave, escopo e revogação','MCP: escopos e revogação em cliente real','transversal: popups do menu e da barra','transversal: 14 popups de módulo abertos e fechados','transversal: demais popups, pelo mesmo componente','transversal: relatórios com dados','transversal: conversas com dados','transversal: operador recusado em cobrança','transversal: administrador e demais áreas por papel','transversal: foco em Adicionar e Ajuda','transversal: Tab nos primeiros controles das telas iniciais','transversal: zoom 200%','transversal: 503, offline e lentidão no formulário de lead','transversal: rede nos demais formulários, leituras e foco após erro','cadência: abrir existente','cadência: editar e salvar','execução: detalhe concluído','execução: falha e parcial reais, em andamento simulado','onboarding: bloqueia sem aceite','onboarding: concluir complemento','visual: comparação com a referência por área'])assert.ok(ids.has(id),id);
  // Nothing may claim a word its run never did.
  const runs=items.filter((i:any)=>i.run);for(const [id,word] of [['pack','renovação'],['api','MCP'],['roles','administrador'],['signup','assinatura: pagamento']] as const)for(const i of runs.filter((r:any)=>r.run===id))assert.ok(!i.id.includes(word),i.id);
  const settings=/\[([^\]]*'account'[^\]]*)\]\.includes/.exec(readFileSync('src/app/(app)/settings/[[...section]]/page.tsx','utf8'))![1].match(/'[^']+'/g)!.map(s=>s.slice(1,-1));assert.ok(settings.includes('apps/apollo'));
@@ -115,6 +115,22 @@ test('08A zoom and text cannot pass on a wrong page or a text size that never ap
 test('08A a module cannot skip its proof through a run, and the hash covers the measuring scripts',()=>{
  assert.deepEqual(auditRelease([{id:'m',kind:'module',run:'x'}] as never,[],()=>true,[{id:'x',ok:true}]).pending,['m']);
  assert.notEqual(sourceHash(),sourceHash('src'),'the default also hashes scripts and migrations');
+});
+
+test('08A initial keyboard coverage needs a real probe on every registered route',async()=>{
+ const dir=mkdtempSync(path.join(tmpdir(),'08a-keyboard-')),manifest=path.join(dir,'m.json');
+ const items=[{id:'/dashboard',kind:'route',source:'/dashboard'},{id:'/cadences',kind:'route',source:'/cadences'},{id:'keyboard',kind:'state',run:'keyboard-initial-routes'}];
+ writeFileSync(manifest,JSON.stringify({items}));
+ const hash=sourceHash(),report=()=>auditReleaseCoverage({manifestPath:manifest,evidenceRoot:dir});
+ function write(second?:{available:number;visited:number;failures:string[]}){
+  const probe={available:3,visited:3,failures:[]};
+  const results=[...ok('/dashboard').map(row=>row.viewport==='1440'?{...row,keyboard:probe}:row),...ok('/cadences').map(row=>row.viewport==='1440'?{...row,keyboard:second}:row)];
+  writeFileSync(path.join(dir,'route-sweep.json'),JSON.stringify({sourceHash:hash,isolation:[{seesOwn:true,seesOwnById:true}],results}));
+ }
+ write();assert.deepEqual((await report()).pending,['keyboard']);
+ write({available:1,visited:0,failures:[]});assert.deepEqual((await report()).failed,['keyboard']);
+ write({available:8,visited:1,failures:[]});assert.deepEqual((await report()).failed,['keyboard']);
+ write({available:4,visited:4,failures:[]});assert.equal((await report()).passed,3);
 });
 
 test('08A a stale journeys report is flagged',async()=>{
