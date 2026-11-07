@@ -270,6 +270,25 @@ const journeys={
    await page.locator('.members-status').getByText(/1 de \d+ assentos/).waitFor({timeout:5000});
    await capture('members');
   });
+  await step('Primeiros passos agrupa título e progresso no mesmo cartão em desktop e celular',async()=>{
+   for(const [width,height] of [[1920,855],[390,844]]){
+    await page.setViewportSize({width,height});
+    await go(page,'/first-steps');
+    const progress=page.getByRole('progressbar',{name:'Primeiros passos concluídos'});
+    await progress.waitFor({timeout:7000});
+    assert.equal(await progress.getAttribute('aria-valuenow'),'0');
+    assert.equal(await progress.getAttribute('aria-valuemax'),'14');
+    const layout=await progress.evaluate(bar=>{
+     const card=bar.closest('section'),title=card?.querySelector('h1'),count=card?.querySelector('.reference-progress-label');
+     if(!title||!count)return null;
+     const t=title.getBoundingClientRect(),n=count.getBoundingClientRect(),b=bar.getBoundingClientRect();
+     return {sameRow:n.left>=t.right&&n.top<t.bottom,stacked:n.top>=t.bottom,barBelow:b.top>=n.bottom};
+    });
+    assert.ok(layout?.barBelow,'o título e o contador precisam estar no cartão, acima da barra');
+    assert.equal(width===1920?layout.sameRow:layout.stacked,true);
+   }
+   await capture('first-steps');
+  });
   await step('Primeiros passos oferece orientação pela Central de Ajuda nos dois viewports',async()=>{
    await go(page,'/first-steps');
    const card=page.getByRole('region',{name:'Precisa de ajuda para montar?'});
@@ -283,7 +302,6 @@ const journeys={
     await dialog.waitFor({state:'detached'});
     assert.equal(await open.evaluate(button=>button===document.activeElement),true);
    }
-   await capture('first-steps');
    await go(page,'/dashboard');
    await page.getByRole('heading',{name:'Prepare com sua equipe'}).waitFor({timeout:5000});
    assert.equal(await page.getByRole('heading',{name:'Prefere que a gente monte?'}).count(),0);
@@ -412,6 +430,29 @@ const journeys={
     assert.equal(await who.page.getByRole('switch').count(),0);
    }
   });
+  await step('controles administrativos de e-mail, API e Apollo respeitam o papel',async()=>{
+   for(const [path,heading,action,denied] of [
+    ['/settings/email','Contas de e-mail','Conectar e-mail','A configuração das caixas exige um administrador.'],
+    ['/settings/webhooks','Webhooks e API','Nova chave',/Somente proprietário ou administrador gerencia (webhooks|chaves de API)\./],
+    ['/settings/apps/apollo','Apollo','Conectar','Somente proprietário ou administrador conecta o Apollo.'],
+   ]){
+    for(const who of [a,admin,op]){
+     await go(who.page,path);
+     await who.page.getByRole('heading',{name:heading,exact:true}).first().waitFor({timeout:7000});
+     const button=who.page.getByRole('button',{name:action,exact:true});
+     if(who===op){
+      await who.page.getByText(denied,{exact:false}).first().waitFor({timeout:7000});
+      assert.equal(await button.count()===0||await button.isDisabled(),true,path+' deixou a ação disponível ao operador');
+      if(path==='/settings/webhooks')assert.equal(await who.page.getByRole('button',{name:'Novo webhook',exact:true}).isDisabled(),true);
+     }else{
+      await button.waitFor({timeout:7000});
+      if(path==='/settings/apps/apollo')await who.page.getByPlaceholder('Cole a chave aqui').fill('[RE] chave fictícia sem envio');
+      await until(()=>button.isEnabled(),path+' manteve a ação bloqueada');
+      if(path==='/settings/webhooks')assert.equal(await who.page.getByRole('button',{name:'Novo webhook',exact:true}).isEnabled(),true);
+     }
+    }
+   }
+  });
  },
  async 'keyboard-more'(step){
   const a=await account('teclado2',{plan:'pro'}),{page}=a;
@@ -448,6 +489,59 @@ const journeys={
     assert.equal(await dialog.evaluate(element=>element.contains(document.activeElement)),true);
     assert.equal((await db.query('SELECT count(*)::int n FROM app.template WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);
    }finally{await page.unroute(route);}
+  });
+ },
+ async 'mail-config'(step){
+  const {page,workspace}=await account('caixas',{plan:'pro'});
+  const endpoint='**/api/mailboxes';
+  await step('503 da lista de caixas encerra o carregamento e permite nova tentativa',async()=>{
+   const fail=route=>route.request().method()==='GET'
+    ?route.fulfill({status:503,json:{message:'[RE] Caixa temporariamente indisponível.'}})
+    :route.fallback();
+   await page.route(endpoint,fail);
+   try{
+    await go(page,'/settings/email');
+    await seen(page,'[RE] Caixa temporariamente indisponível.');
+    assert.equal(await page.getByText('Consultando caixas…',{exact:true}).count(),0);
+   }finally{await page.unroute(endpoint,fail);}
+   const retried=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/mailboxes'&&r.request().method()==='GET',{timeout:3000});
+   await page.getByRole('button',{name:'Atualizar',exact:true}).click();
+   assert.equal((await retried).status(),200);
+   await page.getByRole('heading',{name:'Nenhuma caixa conectada'}).waitFor({timeout:7000});
+   assert.equal(await page.getByText('[RE] Caixa temporariamente indisponível.',{exact:true}).count(),0);
+  });
+  await step('Gmail e SMTP fecham com Escape e devolvem foco ao botão de conexão',async()=>{
+   for(const [width,height,choice,title] of [[1920,855,/Gmail \/ Google Workspace/,'Adicionar caixa Google'],[390,844,/SMTP \+ IMAP/,'Adicionar SMTP + IMAP']]){
+    await page.setViewportSize({width,height});
+    await go(page,'/settings/email');
+    const opener=page.getByRole('button',{name:'Conectar e-mail',exact:true});
+    await opener.click();
+    await page.getByRole('dialog',{name:'Conectar e-mail'}).getByRole('button',{name:choice}).click();
+    const dialog=page.getByRole('dialog',{name:title});
+    await dialog.getByRole('textbox',{name:'Nome da caixa',exact:true}).waitFor({timeout:7000});
+    assert.equal(await dialog.evaluate(element=>element.contains(document.activeElement)),true);
+    await page.keyboard.press('Escape');
+    await dialog.waitFor({state:'hidden',timeout:7000});
+    assert.equal(await opener.evaluate(element=>element===document.activeElement),true);
+   }
+  });
+  await step('503 ao salvar uma caixa Google preserva o formulário e o foco',async()=>{
+   await go(page,'/settings/email');
+   await page.getByRole('button',{name:'Conectar e-mail',exact:true}).click();
+   await page.getByRole('button',{name:/Gmail \/ Google Workspace/}).click();
+   const dialog=page.getByRole('dialog',{name:'Adicionar caixa Google'}),name=dialog.getByRole('textbox',{name:'Nome da caixa',exact:true});
+   await name.fill('[RE] Caixa rascunho');
+   const fail=route=>route.request().method()==='POST'
+    ?route.fulfill({status:503,json:{message:'[RE] Não foi possível salvar a caixa.'}})
+    :route.fallback();
+   await page.route(endpoint,fail);
+   try{
+    await dialog.getByRole('button',{name:'Salvar configuração',exact:true}).click();
+    await dialog.getByRole('alert').getByText('[RE] Não foi possível salvar a caixa.',{exact:true}).waitFor({timeout:7000});
+    assert.equal(await name.inputValue(),'[RE] Caixa rascunho');
+    assert.equal(await dialog.evaluate(element=>element.contains(document.activeElement)),true);
+    assert.equal((await db.query('SELECT count(*)::int n FROM app.email_mailbox WHERE workspace_id=$1',[workspace])).rows[0].n,0);
+   }finally{await page.unroute(endpoint,fail);}
   });
  },
  async 'reports-data'(step){
@@ -503,7 +597,7 @@ const journeys={
 };
 const runs=[];
 // What each journey is meant to provoke. Anything else on the page fails it.
-const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /],'onboarding-finish':[/^403 GET /],admin:[/^409 GET /],'network-more':[/^503 GET \/api\/(contacts|reports)/,/^503 POST \/api\/(integrations|workspace\/commands)$/],'execution-diary':[/^503 GET \/api\/execution-diary$/]};
+const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /],'onboarding-finish':[/^403 GET /],admin:[/^409 GET /,/^403 GET \/api\/integrations$/],'network-more':[/^503 GET \/api\/(contacts|reports)/,/^503 POST \/api\/(integrations|workspace\/commands)$/],'execution-diary':[/^503 GET \/api\/execution-diary$/],'mail-config':[/^503 (GET|POST) \/api\/mailboxes$/]};
 try{
  if(!only||only==='signup')await new Promise(w=>setTimeout(w,70000));
  for(const [id,run] of Object.entries(journeys)){
