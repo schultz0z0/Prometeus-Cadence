@@ -168,11 +168,7 @@ function AppShellContent({children}:{children:React.ReactNode}){
         })}
         </nav>
         <div className="sidebar-bottom">
-          <button className="help-link" onClick={() => setInfo("Central de Ajuda")}>
-            <Icon name="HelpCircle" size={16}/>
-            <span>Central de Ajuda</span>
-          </button>
-          <Link href="/first-steps" className="help-link onboarding-link"><Icon name="Compass" size={16}/><span>Primeiros passos</span></Link>
+          <Link href="/aprender" className="help-link onboarding-link" aria-label="Aprender" aria-current={path==='/aprender'?'page':undefined}><Icon name="BookOpen" size={16}/><span>Aprender</span></Link>
           <Link href="/settings/plan" className="btn primary trial"><Icon name={started ? "CreditCard" : "Sparkles"} size={17}/><span>{started ? "Gerenciar meu plano" : "Começar o teste grátis"}</span></Link>
           <Link href="/settings/plan" className="help-link plan-link"><Icon name="CreditCard" size={16}/><span>{billing ? billing.status === "active" ? "Plano " + planLabel : billing.status === "past_due" ? "Pagamento pendente" : billing.status === "trial" ? "Teste de 7 dias" : billing.status === "pilot" ? "Piloto local" : billing.status === "attention" ? "Revisar assinatura" : billing.status === "canceled" ? "Assinatura encerrada" : "Teste por ativar" : identity ? "Consultando plano…" : "Demonstração local"}</span></Link>
           {!identity && <Link href="/settings/account" className="profile"><span className="avatar">{preferences.accountName[0] || "P"}</span><span>{preferences.accountName}<small>Workspace de demonstração</small></span></Link>}
@@ -201,6 +197,9 @@ function AppShellContent({children}:{children:React.ReactNode}){
               <span>Buscar...</span>
               <kbd>Ctrl K</kbd>
             </button>
+            <button className="btn compact contextual-help-button" type="button" aria-label="Ajuda desta tela" onClick={() => setInfo("Ajuda desta tela")}>
+              <Icon name="BookOpen" size={15}/><span>Ajuda</span>
+            </button>
             <Button variant="primary compact" icon="Sparkles" onClick={() => setInfo("Assistente")}>
               Assistente
             </Button>
@@ -217,8 +216,9 @@ function AppShellContent({children}:{children:React.ReactNode}){
       {search && <SearchPalette workspaceId={identity?.activeWorkspaceId??null} onClose={()=>setSearch(false)}/>}
       {info==='Assistente'&&<AssistantPanel workspaceId={identity?.activeWorkspaceId??null} onClose={closeInfo} onHelp={()=>setInfo('Central de Ajuda')}/>}
       {info==='Central de Ajuda'&&<HelpCenter onClose={closeInfo}/>}
+      {info==='Ajuda desta tela'&&<HelpCenter contextual onClose={closeInfo}/>}
       {info==='Como funciona esta área'&&<Tour key={path} tour={tourForRoute(path)} onClose={closeInfo}/>}
-      {info && !['Assistente','Central de Ajuda','Como funciona esta área'].includes(info) && (<Modal title={info} onClose={() => setInfo("")}>
+      {info && !['Assistente','Central de Ajuda','Ajuda desta tela','Como funciona esta área'].includes(info) && (<Modal title={info} onClose={() => setInfo("")}>
           {info === "Notificações" ? (<p>O feed de notificações será disponibilizado no marco 06C.3. Acompanhe por enquanto o estado nas áreas de mensagens e execuções.</p>) : (<>
               <p>
                 Encontre empresas, qualifique quem combina com o seu negócio e

@@ -68,6 +68,7 @@ export function pageTitle(path: string) {
   if (path.startsWith('/executions/')) return 'Execuções';
   if (path === '/inbox') return 'E-mail';
   if (path === '/first-steps') return 'Primeiros passos';
+  if (path === '/aprender') return 'Aprender';
   if (path === "/leads/import") return "Importar leads";
   if (path === "/linkedin/campaigns/new") return "Nova campanha";
   if (
