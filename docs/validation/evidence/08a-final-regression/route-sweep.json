@@ -1,8 +1,93 @@
 {
- "date": "2026-11-07T03:32:33.386Z",
- "sourceHash": "20bc283f063a1ba87eda2b9a72f0412fd6eaa7ecd91187634699f18102782c51",
+ "date": "2026-11-07T18:00:16.912Z",
+ "sourceHash": "f419a780e3f4e6348bcf51cf14fa9b1aaf052cdeb2a9751c5a85c704fee78c41",
  "note": "Só navegação; hosts externos bloqueados; contas descartáveis removidas ao fim.",
  "results": [
+  {
+   "route": "/aprender",
+   "viewport": "320",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/aprender",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/aprender",
+   "viewport": "390",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/aprender",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/aprender",
+   "viewport": "768",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/aprender",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/aprender",
+   "viewport": "1440",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/aprender",
+   "theme": "light",
+   "fontSize": 16,
+   "keyboard": {
+    "available": 63,
+    "visited": 8,
+    "failures": []
+   }
+  },
+  {
+   "route": "/aprender",
+   "viewport": "1920",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/aprender",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/aprender",
+   "viewport": "390-dark",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/aprender",
+   "theme": "dark",
+   "fontSize": 16
+  },
+  {
+   "route": "/aprender",
+   "viewport": "zoom200",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/aprender",
+   "theme": "light",
+   "fontSize": 16
+  },
+  {
+   "route": "/aprender",
+   "viewport": "font-large",
+   "account": "a",
+   "status": 200,
+   "ok": true,
+   "path": "/aprender",
+   "theme": "light",
+   "fontSize": 18
+  },
   {
    "route": "/automations",
    "viewport": "320",
@@ -3154,7 +3239,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/a6484ea9-5cd9-4ea6-b999-a51ec9b1dee1",
+   "path": "/leads/2736f5f6-3fb9-4893-a236-1b38bcbdd1d5",
    "theme": "light",
    "fontSize": 16
   },
@@ -3164,7 +3249,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/a6484ea9-5cd9-4ea6-b999-a51ec9b1dee1",
+   "path": "/leads/2736f5f6-3fb9-4893-a236-1b38bcbdd1d5",
    "theme": "light",
    "fontSize": 16
   },
@@ -3174,7 +3259,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/a6484ea9-5cd9-4ea6-b999-a51ec9b1dee1",
+   "path": "/leads/2736f5f6-3fb9-4893-a236-1b38bcbdd1d5",
    "theme": "light",
    "fontSize": 16
   },
@@ -3184,7 +3269,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/a6484ea9-5cd9-4ea6-b999-a51ec9b1dee1",
+   "path": "/leads/2736f5f6-3fb9-4893-a236-1b38bcbdd1d5",
    "theme": "light",
    "fontSize": 16,
    "keyboard": {
@@ -3199,7 +3284,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/a6484ea9-5cd9-4ea6-b999-a51ec9b1dee1",
+   "path": "/leads/2736f5f6-3fb9-4893-a236-1b38bcbdd1d5",
    "theme": "light",
    "fontSize": 16
   },
@@ -3209,7 +3294,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/a6484ea9-5cd9-4ea6-b999-a51ec9b1dee1",
+   "path": "/leads/2736f5f6-3fb9-4893-a236-1b38bcbdd1d5",
    "theme": "dark",
    "fontSize": 16
   },
@@ -3219,7 +3304,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/a6484ea9-5cd9-4ea6-b999-a51ec9b1dee1",
+   "path": "/leads/2736f5f6-3fb9-4893-a236-1b38bcbdd1d5",
    "theme": "light",
    "fontSize": 16
   },
@@ -3229,7 +3314,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/a6484ea9-5cd9-4ea6-b999-a51ec9b1dee1",
+   "path": "/leads/2736f5f6-3fb9-4893-a236-1b38bcbdd1d5",
    "theme": "light",
    "fontSize": 18
   },

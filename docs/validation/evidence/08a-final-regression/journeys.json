@@ -1,6 +1,6 @@
 {
- "date": "2026-11-07T03:31:50.833Z",
- "sourceHash": "20bc283f063a1ba87eda2b9a72f0412fd6eaa7ecd91187634699f18102782c51",
+ "date": "2026-11-07T17:59:31.889Z",
+ "sourceHash": "f419a780e3f4e6348bcf51cf14fa9b1aaf052cdeb2a9751c5a85c704fee78c41",
  "note": "Navegador sem acesso a outros hosts; contas sem canais ativos; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
  "runs": [
   {
@@ -212,6 +212,14 @@
     {
      "name": "a lista mostra a cadência como rascunho",
      "ok": true
+    },
+    {
+     "name": "a revisão da sequência fecha e devolve o foco",
+     "ok": true
+    },
+    {
+     "name": "503 ao salvar a cadência preserva o rascunho e o registro anterior",
+     "ok": true
     }
    ]
   },
@@ -352,6 +360,38 @@
    ]
   },
   {
+   "id": "learning-help",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "Ajuda desta tela abre guia contextual e devolve foco",
+     "ok": true
+    },
+    {
+     "name": "Aprender abre os primeiros passos e salva um passeio concluído",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "local-overlays",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "período rejeita intervalo invertido e permite cancelar pelo teclado",
+     "ok": true
+    },
+    {
+     "name": "autenticador abre e cancela sem preparar pareamento",
+     "ok": true
+    }
+   ]
+  },
+  {
    "id": "execution-diary",
    "ok": true,
    "crash": null,
@@ -450,7 +490,7 @@
      "ok": true
     },
     {
-     "name": "controles administrativos de e-mail, API e Apollo respeitam o papel",
+     "name": "controles administrativos de e-mail, API, Apollo, Agenda e Sheets respeitam o papel",
      "ok": true
     }
    ]

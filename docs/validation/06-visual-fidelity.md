@@ -4,6 +4,8 @@ O usuário reiterou que a entrega inicial deve reproduzir o visual, os fluxos e 
 
 ## Referência e escopo
 
+A comparação mais recente na sessão aberta do Chrome cobre Dashboard, Aprender, Ajuda desta tela e Execuções. Ela registra a diferença entre os vídeos da referência e os passeios do Prometeus. [08A.8](08a8-live-visual.md)
+
 Três imagens fornecidas pelo usuário e observação autenticada L4 de `https://app.cadenceflow.pro/settings/plan` em25/10/2026. Somente leitura e troca transitória de abas; nenhuma compra, trial ou alteração de dados na referência. Dados pessoais não são reproduzidos nos registros de comparação.
 
 Medidas observadas em1920×855, DPR1: menu260px, header56px, faixa de trial36px, navegação de configurações208px, separação32px, área de plano1152px. Manrope14px/20px nos controles e Exo2 nos títulos. Cartões brancos com borda cinza e raio16px; uso em seis cartões neutros com raio12px; abas em trilho cinza e seleção branca. Resumo com faixa azul. Cobrança em painéis recolhíveis e formulário inline. Adicionais por categoria com seletor, antes da comparação de planos. Os estilos foram reimplementados; fonte Exo2 obtida do Google Fonts, com licença OFL incluída.

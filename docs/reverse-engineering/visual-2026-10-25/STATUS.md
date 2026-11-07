@@ -1,11 +1,15 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-07 · Session: s47 · Phase:6 08A.7 recuperação e controles por papel · aceite integral pendente
+Updated: 2026-11-07 · Session: s48 · Phase:6 08A.8 comparação com a referência viva · aceite integral pendente
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
 
+- Covered s48: Aprender, ajuda contextual e estrutura de Execuções, observados no Chrome da referência. Progresso, teclado e navegação foram exercitados no Prometeus.
+  - **Evidência:** EV-310.
+  - **QA:** L-057.
+- Not covered s48: comparação integral por estado e homologações externas. Passeios e guias em lugar do catálogo em vídeo foram autorizados pelo usuário.
 - Covered s47: recuperação da lista de caixas, formulários de e-mail, controles por papel em três áreas e cartão de progresso de Primeiros passos.
   - **Evidência:** EV-309.
   - **QA:** L-056.

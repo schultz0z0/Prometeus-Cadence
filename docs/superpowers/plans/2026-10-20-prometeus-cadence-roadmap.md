@@ -367,3 +367,7 @@ Seletores próprios nas telas existentes, ajustes de fidelidade e provas de rela
 ### Continuidade 07/11/2026 — 08A.7
 
 Recuperação da lista de caixas após falha, novas provas dos formulários e controles por papel e cartão de progresso de Primeiros passos. A sequência aprovada é concluir as pendências locais e preparar em homologação isolada os pré-requisitos públicos do 08B que viabilizam as provas externas do 08A. [Relatório](../../validation/08a7-local-regression.md)
+
+### Continuidade 07/11/2026 — 08A.8 e 06A-V
+
+Comparação com a sessão aberta do CadenceFlow, com Aprender e ajuda contextual incorporados ao Prometeus. O relatório discrimina as diferenças da referência e o inventário reúne as conexões para a futura homologação. Os demais marcos seguem pendentes por orientação do usuário. [Comparação](../../validation/08a8-live-visual.md) · [Conexões externas](../../validation/08a8-conexoes-externas.md)

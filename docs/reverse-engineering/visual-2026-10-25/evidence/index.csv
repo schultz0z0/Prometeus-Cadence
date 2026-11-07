@@ -116,3 +116,4 @@ id,date,session,route,shows,masked
 "EV-307","2026-11-05","s45","/executions","Diary compared in desktop and mobile against stored captures; inert terminal fixtures and ephemeral PostgreSQL tests for bounce, delay, trace and workspace isolation","yes"
 "EV-308","2026-11-06","s46","selectors and local 08A areas","Stored reference comparisons, browser controls and reports using terminal fixtures, ephemeral queue and workspace authority tests","yes"
 "EV-309","2026-11-07","s47","first steps and mail configuration","Stored first-steps capture, mailbox read and form failure, and controls by role","yes"
+"EV-310","2026-11-07","s48","live Chrome reference and local QA","Learning hub, contextual help drawer and diary structure; dimensions and observations without account data","yes"

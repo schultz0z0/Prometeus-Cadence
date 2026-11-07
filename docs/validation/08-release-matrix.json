@@ -3,6 +3,11 @@
  "note": "Rotas são decididas pelo relatório route-sweep.json, medido sobre o código atual; status digitado em rota é ignorado.",
  "items": [
   {
+   "id": "/aprender",
+   "kind": "route",
+   "source": "/aprender"
+  },
+  {
    "id": "/automations",
    "kind": "route",
    "source": "/automations"
@@ -501,6 +506,16 @@
    "run": "mail-config"
   },
   {
+   "id": "transversal: Aprender, progresso persistido e ajuda contextual",
+   "kind": "state",
+   "run": "learning-help"
+  },
+  {
+   "id": "transversal: diálogos de período e autenticador em estado local",
+   "kind": "state",
+   "run": "local-overlays"
+  },
+  {
    "id": "transversal: demais popups, pelo mesmo componente",
    "kind": "state",
    "status": "pending",
@@ -525,7 +540,12 @@
    "id": "transversal: administrador e demais áreas por papel",
    "kind": "state",
    "status": "pending",
-   "note": "A jornada admin cobre Membros, Privacidade, caixas de mensagens, configuração de E-mail, Webhooks/API e Apollo. Permanecem as demais áreas por papel."
+   "note": "A jornada admin cobre Membros, Privacidade, caixas de mensagens, configuração de E-mail, Webhooks/API, Apollo, Google Agenda e Sheets sem conexão. Permanecem os demais estados por papel."
+  },
+  {
+   "id": "transversal: autorização visual de Agenda e Sheets por papel",
+   "kind": "state",
+   "run": "admin"
   },
   {
    "id": "transversal: foco em Adicionar e Ajuda",
@@ -574,7 +594,12 @@
    "id": "transversal: rede nos demais formulários, leituras e foco após erro",
    "kind": "state",
    "status": "pending",
-   "note": "Chave de API, template, contatos, relatórios e configuração de e-mail exercitados. O formulário de lead também cobre 503, offline e lentidão."
+   "note": "Chave de API, template, cadência, contatos, relatórios e configuração de e-mail exercitados. O formulário de lead também cobre 503, offline e lentidão."
+  },
+  {
+   "id": "transversal: revisão da sequência e preservação do rascunho de cadência após 503",
+   "kind": "state",
+   "run": "cadence-editor"
   },
   {
    "id": "transversal: funil conta os contatos reais",
