@@ -1,6 +1,6 @@
 {
- "date": "2026-11-06T04:49:17.469Z",
- "sourceHash": "59dfe325057b5124f0c6a23bff501987a442fbdc25af81329166ff358e3873a0",
+ "date": "2026-11-07T03:31:50.833Z",
+ "sourceHash": "20bc283f063a1ba87eda2b9a72f0412fd6eaa7ecd91187634699f18102782c51",
  "note": "Navegador sem acesso a outros hosts; contas sem canais ativos; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
  "runs": [
   {
@@ -342,6 +342,10 @@
      "ok": true
     },
     {
+     "name": "Primeiros passos agrupa título e progresso no mesmo cartão em desktop e celular",
+     "ok": true
+    },
+    {
      "name": "Primeiros passos oferece orientação pela Central de Ajuda nos dois viewports",
      "ok": true
     }
@@ -444,6 +448,10 @@
     {
      "name": "Privacidade mostra política ao dono e a restringe ao administrador e operador",
      "ok": true
+    },
+    {
+     "name": "controles administrativos de e-mail, API e Apollo respeitam o papel",
+     "ok": true
     }
    ]
   },
@@ -515,6 +523,26 @@
     },
     {
      "name": "template em 503 mantém texto, seletor e foco",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "mail-config",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "503 da lista de caixas encerra o carregamento e permite nova tentativa",
+     "ok": true
+    },
+    {
+     "name": "Gmail e SMTP fecham com Escape e devolvem foco ao botão de conexão",
+     "ok": true
+    },
+    {
+     "name": "503 ao salvar uma caixa Google preserva o formulário e o foco",
      "ok": true
     }
    ]

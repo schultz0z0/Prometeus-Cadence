@@ -1,11 +1,15 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-06 · Session: s46 · Phase:6 08A.5 e 08A.6 seletores e provas locais · aceite integral pendente
+Updated: 2026-11-07 · Session: s47 · Phase:6 08A.7 recuperação e controles por papel · aceite integral pendente
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
 
+- Covered s47: recuperação da lista de caixas, formulários de e-mail, controles por papel em três áreas e cartão de progresso de Primeiros passos.
+  - **Evidência:** EV-309.
+  - **QA:** L-056.
+- Not covered s47: demais estados condicionais de popups, permissões e rede, aceite visual e homologações externas.
 - Covered s46: seletores próprios, ajustes de Cadências, fontes, importação, e-mail, Membros e cartão informativo de Primeiros passos. Provas de relatórios com mensagens terminais, teclado inicial e amostras adicionais de popups, papéis e rede.
   - **Evidência:** EV-308.
   - **QA:** L-055.

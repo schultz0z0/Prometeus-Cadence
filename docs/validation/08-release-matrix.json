@@ -496,10 +496,15 @@
    "run": "module-popups"
   },
   {
+   "id": "transversal: formulários Gmail e SMTP abrem e fecham com retorno do foco",
+   "kind": "state",
+   "run": "mail-config"
+  },
+  {
    "id": "transversal: demais popups, pelo mesmo componente",
    "kind": "state",
    "status": "pending",
-   "note": "Foram abertos 14 popups de módulo e o detalhe com dados de Relatórios. Permanecem usos condicionais do componente Modal sem prova individual."
+   "note": "Foram abertos 14 popups de módulo, o detalhe de Relatórios e os formulários Gmail e SMTP. Permanecem usos condicionais do componente Modal sem prova individual."
   },
   {
    "id": "transversal: operador recusado em cobrança",
@@ -512,10 +517,15 @@
    "run": "admin"
   },
   {
+   "id": "transversal: controles de E-mail, Webhooks/API e Apollo por papel",
+   "kind": "state",
+   "run": "admin"
+  },
+  {
    "id": "transversal: administrador e demais áreas por papel",
    "kind": "state",
    "status": "pending",
-   "note": "A jornada admin cobre Membros, Privacidade, E-mail e WhatsApp. Permanecem as demais áreas por papel."
+   "note": "A jornada admin cobre Membros, Privacidade, caixas de mensagens, configuração de E-mail, Webhooks/API e Apollo. Permanecem as demais áreas por papel."
   },
   {
    "id": "transversal: foco em Adicionar e Ajuda",
@@ -556,10 +566,15 @@
    "run": "network-more"
   },
   {
+   "id": "transversal: 503 na lista e no formulário de configuração de e-mail",
+   "kind": "state",
+   "run": "mail-config"
+  },
+  {
    "id": "transversal: rede nos demais formulários, leituras e foco após erro",
    "kind": "state",
    "status": "pending",
-   "note": "Chave de API, template e leituras de contatos e relatórios exercitados. O formulário de lead também cobre 503, offline e lentidão."
+   "note": "Chave de API, template, contatos, relatórios e configuração de e-mail exercitados. O formulário de lead também cobre 503, offline e lentidão."
   },
   {
    "id": "transversal: funil conta os contatos reais",
@@ -623,6 +638,11 @@
    "kind": "state",
    "run": "remaining-visual",
    "note": "Inclui o cartão informativo de Primeiros passos e a abertura da Central de Ajuda nos dois viewports."
+  },
+  {
+   "id": "visual: título e progresso de Primeiros passos no mesmo cartão",
+   "kind": "state",
+   "run": "remaining-visual"
   },
   {
    "id": "visual: comparação com a referência por área",

@@ -363,3 +363,7 @@ Execuções passou a mostrar as mensagens registradas de cada cadência, com bus
 ### Continuidade 06/11/2026 — 08A.5 e 08A.6
 
 Seletores próprios nas telas existentes, ajustes de fidelidade e provas de relatórios com mensagens terminais e de teclado nas telas iniciais. Primeiros passos ganhou orientação pela Central de Ajuda. O 08A permanece parcial com estados locais transversais, aceite visual e homologações externas em aberto. A ordem dos pré-requisitos públicos de MCP, SMTP e Google segue pendente. [Seletores](../../validation/08a5-selectors.md) · [Provas locais](../../validation/08a6-local-closure.md)
+
+### Continuidade 07/11/2026 — 08A.7
+
+Recuperação da lista de caixas após falha, novas provas dos formulários e controles por papel e cartão de progresso de Primeiros passos. A sequência aprovada é concluir as pendências locais e preparar em homologação isolada os pré-requisitos públicos do 08B que viabilizam as provas externas do 08A. [Relatório](../../validation/08a7-local-regression.md)
