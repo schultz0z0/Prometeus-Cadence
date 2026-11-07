@@ -77,7 +77,7 @@ const journeys={
   const a=await account('popups',{plan:'essential'}),{page}=a;await go(page,'/dashboard');
   const closes=async(open,visible)=>{await open();await visible();const before=await page.evaluate(()=>document.body.scrollWidth-innerWidth);assert.ok(before<=1);await page.keyboard.press('Escape');await page.waitForTimeout(300);};
   await step('busca abre com Ctrl+K e fecha com Escape',async()=>{await closes(()=>page.keyboard.press('Control+k'),()=>page.getByRole('dialog').first().waitFor());assert.equal(await page.getByRole('dialog').count(),0);});
-  await step('Central de Ajuda abre e fecha',async()=>{await closes(()=>page.getByRole('button',{name:'Central de Ajuda'}).click(),()=>page.getByRole('dialog').first().waitFor());assert.equal(await page.getByRole('dialog').count(),0);});
+  await step('Central de Ajuda abre e fecha',async()=>{await go(page,'/aprender');await closes(()=>page.getByRole('button',{name:'Central de Ajuda',exact:true}).click(),()=>page.getByRole('dialog').first().waitFor());assert.equal(await page.getByRole('dialog').count(),0);await go(page,'/dashboard');});
   await step('Como funciona abre e fecha',async()=>{await closes(()=>page.getByRole('button',{name:'Como funciona'}).first().click(),()=>page.getByRole('dialog').first().waitFor());assert.equal(await page.getByRole('dialog').count(),0);});
   await step('notificações abrem',async()=>{const bell=page.getByRole('button',{name:'Notificações'});await bell.click();const panel=page.getByRole('dialog').first();await panel.waitFor();await page.keyboard.press('Escape');await panel.waitFor({state:'detached'});});
   await step('novo lead abre e fecha',async()=>{await go(page,'/contacts');await openLead(page);await page.keyboard.press('Escape');await page.waitForTimeout(300);assert.equal(await page.getByRole('dialog').count(),0);});
@@ -86,7 +86,7 @@ const journeys={
  async keyboard(step){
   const a=await account('keyboard',{plan:'essential'}),{page}=a;await go(page,'/contacts');
   await step('o foco fica preso no diálogo e volta ao botão',async()=>{const open=page.getByRole('button',{name:'Adicionar'}).first();await open.focus();await page.keyboard.press('Enter');await page.locator('.dropdown button').nth(1).focus();await page.keyboard.press('Enter');const dialog=page.getByRole('dialog').first();await dialog.waitFor();for(let i=0;i<30;i++){await page.keyboard.press('Tab');assert.ok(await dialog.evaluate(d=>d.contains(document.activeElement)||document.activeElement===document.body),'focus reached the page behind the dialog');}await page.keyboard.press('Escape');await page.waitForTimeout(300);assert.ok(await open.evaluate(e=>e===document.activeElement),'focus did not return');});
-  await step('todo diálogo devolve o foco a quem abriu',async()=>{await go(page,'/dashboard');const help=page.getByRole('button',{name:'Central de Ajuda'});await help.focus();await page.keyboard.press('Enter');await page.getByRole('dialog').first().waitFor();await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'detached'});assert.ok(await help.evaluate(e=>e===document.activeElement),'focus lost');});
+  await step('todo diálogo devolve o foco a quem abriu',async()=>{await go(page,'/aprender');const help=page.getByRole('button',{name:'Central de Ajuda',exact:true});await help.focus();await page.keyboard.press('Enter');await page.getByRole('dialog').first().waitFor();await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'detached'});assert.ok(await help.evaluate(e=>e===document.activeElement),'focus lost');});
   await step('Tab anda sempre com foco visível',async()=>{await go(page,'/dashboard');for(let i=0;i<15;i++){await page.keyboard.press('Tab');const f=await page.evaluate(()=>{const e=document.activeElement;if(!e||e===document.body)return null;const look=()=>{const s=getComputedStyle(e);return [s.outlineStyle,s.outlineWidth,s.boxShadow,s.borderColor].join('|');},on=look();e.blur();const off=look();e.focus();return {changes:on!==off,tag:e.tagName+'.'+e.className};});assert.ok(f,'lost focus');assert.ok(f.changes,'focus changes nothing on '+f.tag);}});
  },
  async network(step){
@@ -111,8 +111,43 @@ const journeys={
   // A draft never runs, so nothing is sent.
   await db.query('INSERT INTO app.cadence(workspace_id,id,list_id,payload) VALUES($1,$2,$3,$4)',[a.workspace,id,list,{id,name:'[RE] Cadência existente',listId:list,status:'draft',createdAt:new Date().toISOString(),settings:defaultCadenceSettings(),steps:[{id:'s1',channel:'WHATSAPP',delayDays:1,body:'[RE] Mensagem do passo',stopOnReply:true}]}]);
   await step('abre a cadência existente, sem erro',async()=>{await go(page,'/cadences/'+id);await seen(page,'[RE] Cadência existente');await page.getByText('[RE] Mensagem do passo').first().waitFor();assert.equal(await page.getByText('Não foi possível carregar seu workspace').count(),0);});
-  await step('o editor segura 320 px',async()=>{await page.setViewportSize({width:320,height:700});await go(page,'/cadences/'+id);await seen(page,'[RE] Cadência existente');assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=1);await page.setViewportSize({width:1440,height:900});});
+  await step('o editor segura 320 px',async()=>{
+   await page.setViewportSize({width:320,height:700});
+   await go(page,'/cadences/'+id);
+   const name=page.getByRole('textbox',{name:'Nome da cadência',exact:true});
+   await name.waitFor({timeout:20000});
+   assert.equal(await name.inputValue(),'[RE] Cadência existente');
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=1);
+   await page.setViewportSize({width:1440,height:900});
+  });
   await step('a lista mostra a cadência como rascunho',async()=>{await go(page,'/cadences');await seen(page,'[RE] Cadência existente');});
+  await step('a revisão da sequência fecha e devolve o foco',async()=>{
+   await go(page,'/cadences/'+id);
+   const open=page.getByRole('button',{name:'Otimizar',exact:true});
+   await open.click({timeout:7000});
+   const dialog=page.getByRole('dialog',{name:'Revisão da sequência'});
+   await dialog.waitFor({timeout:7000});
+   await page.keyboard.press('Escape');
+   await dialog.waitFor({state:'detached',timeout:7000});
+   assert.equal(await open.evaluate(e=>e===document.activeElement),true);
+  });
+  await step('503 ao salvar a cadência preserva o rascunho e o registro anterior',async()=>{
+   const endpoint='**/api/workspace/commands';
+   const fail=route=>route.request().method()==='POST'
+    ?route.fulfill({status:503,json:{message:'[RE] Não foi possível salvar a cadência.'}})
+    :route.fallback();
+   await page.route(endpoint,fail);
+   try{
+    const name=page.getByRole('textbox',{name:'Nome da cadência',exact:true});
+    await name.fill('[RE] Cadência alterada');
+    await page.getByRole('button',{name:'Salvar alterações',exact:true}).click();
+    await seen(page,'[RE] Não foi possível salvar a cadência.');
+    assert.equal(await name.inputValue(),'[RE] Cadência alterada');
+    await page.getByText('Alterações não salvas',{exact:true}).waitFor({timeout:7000});
+    const {rows}=await db.query("SELECT payload->>'name' AS name FROM app.cadence WHERE workspace_id=$1 AND id=$2",[a.workspace,id]);
+    assert.equal(rows[0].name,'[RE] Cadência existente');
+   }finally{await page.unroute(endpoint,fail);}
+  });
  },
  async 'execution-detail'(step){
   const a=await account('execucao',{plan:'pro'}),{page}=a,list=randomUUID(),id=randomUUID(),leadId=await (async()=>{await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista execução']);return lead(a.workspace,list);})();
@@ -307,6 +342,82 @@ const journeys={
    assert.equal(await page.getByRole('heading',{name:'Prefere que a gente monte?'}).count(),0);
   });
  },
+ async 'learning-help'(step){
+  const {page}=await account('aprender');
+  await step('Ajuda desta tela abre guia contextual e devolve foco',async()=>{
+   for(const [width,height] of [[1920,855],[390,844]]){
+    await page.setViewportSize({width,height});
+    await go(page,'/cadences');
+    const open=page.getByRole('button',{name:'Ajuda desta tela',exact:true});
+    await open.click({timeout:7000});
+    const drawer=page.getByRole('dialog',{name:'Ajuda',exact:true});
+    const search=drawer.getByRole('textbox',{name:'Buscar na ajuda',exact:true});
+    await search.waitFor({timeout:7000});
+    assert.equal(await search.evaluate(e=>e===document.activeElement),true);
+    const box=await drawer.boundingBox();
+    assert.ok(box&&Math.abs(box.width-Math.min(width,640))<=1&&Math.abs(box.x+box.width-width)<=1);
+    await drawer.getByText('Por que minha cadência não enviou',{exact:true}).waitFor({timeout:7000});
+    await page.keyboard.press('Tab');
+    assert.equal(await drawer.evaluate(e=>e.contains(document.activeElement)),true);
+    await page.screenshot({path:`output/playwright/visual-audit/08a8-ajuda-${width}.png`,animations:'disabled'});
+    await search.fill('busca sem resultado 789');
+    await drawer.getByText(/Nenhum artigo encontrado/).waitFor({timeout:7000});
+    await page.keyboard.press('Escape');
+    await drawer.waitFor({state:'detached',timeout:7000});
+    assert.equal(await open.evaluate(e=>e===document.activeElement),true);
+   }
+  });
+  await step('Aprender abre os primeiros passos e salva um passeio concluído',async()=>{
+   await page.setViewportSize({width:1920,height:855});
+   await go(page,'/dashboard');
+   await page.getByRole('link',{name:'Aprender',exact:true}).click({timeout:7000});
+   await page.waitForURL(u=>u.pathname==='/aprender',{timeout:7000});
+   await page.getByRole('link',{name:/Fazer Primeiros passos/}).click();
+   assert.equal(new URL(page.url()).hash,'#primeiros-passos');
+   await page.getByRole('progressbar',{name:'Primeiros passos concluídos'}).waitFor();
+   const overview=page.getByRole('region',{name:'Comece aqui'});
+   await overview.getByRole('button',{name:'Ver o passeio',exact:true}).click();
+   const dialog=page.getByRole('dialog');
+   for(let i=0;i<9;i++)await dialog.getByRole('button',{name:'Próximo',exact:true}).click();
+   await dialog.getByRole('button',{name:'Concluir',exact:true}).click();
+   await overview.getByText('Passeio visto',{exact:true}).waitFor({timeout:10000});
+   for(const [width,height] of [[1920,855],[390,844]]){
+    await page.setViewportSize({width,height});
+    await go(page,'/aprender');
+    await overview.getByText('Passeio visto',{exact:true}).waitFor({timeout:7000});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth<=1),true);
+    await page.screenshot({path:`output/playwright/visual-audit/08a8-aprender-${width}.png`,animations:'disabled'});
+   }
+  });
+ },
+ async 'local-overlays'(step){
+  const {page}=await account('dialogos');
+  await step('período rejeita intervalo invertido e permite cancelar pelo teclado',async()=>{
+   await go(page,'/dashboard');
+   const opener=page.getByRole('button',{name:'Personalizado',exact:true});
+   await opener.click({timeout:7000});
+   const dialog=page.getByRole('dialog',{name:'Período personalizado'});
+   await dialog.getByLabel('De',{exact:true}).fill('2026-10-05');
+   await dialog.getByLabel('Até',{exact:true}).fill('2026-10-01');
+   await dialog.getByRole('button',{name:'Aplicar período'}).click();
+   await dialog.getByRole('alert').getByText(/data final após a inicial/).waitFor({timeout:7000});
+   assert.equal(await dialog.getByLabel('De',{exact:true}).inputValue(),'2026-10-05');
+   await page.keyboard.press('Escape');
+   await dialog.waitFor({state:'detached',timeout:7000});
+   assert.equal(await opener.evaluate(e=>e===document.activeElement),true);
+  });
+  await step('autenticador abre e cancela sem preparar pareamento',async()=>{
+   await go(page,'/settings/security');
+   const open=page.getByRole('button',{name:'Ativar autenticador',exact:true});
+   await open.click({timeout:7000});
+   const dialog=page.getByRole('dialog',{name:'Ativar autenticador'});
+   await dialog.getByLabel('Senha atual').waitFor({timeout:7000});
+   assert.equal(await dialog.getByRole('button',{name:'Continuar',exact:true}).isDisabled(),true);
+   await page.keyboard.press('Escape');
+   await dialog.waitFor({state:'detached',timeout:7000});
+   assert.equal(await open.evaluate(e=>e===document.activeElement),true);
+  });
+ },
  async 'execution-diary'(step){
   const a=await account('diario'),{page}=a;
   const captureDir='output/playwright/visual-audit';
@@ -430,11 +541,13 @@ const journeys={
     assert.equal(await who.page.getByRole('switch').count(),0);
    }
   });
-  await step('controles administrativos de e-mail, API e Apollo respeitam o papel',async()=>{
+  await step('controles administrativos de e-mail, API, Apollo, Agenda e Sheets respeitam o papel',async()=>{
    for(const [path,heading,action,denied] of [
     ['/settings/email','Contas de e-mail','Conectar e-mail','A configuração das caixas exige um administrador.'],
     ['/settings/webhooks','Webhooks e API','Nova chave',/Somente proprietário ou administrador gerencia (webhooks|chaves de API)\./],
     ['/settings/apps/apollo','Apollo','Conectar','Somente proprietário ou administrador conecta o Apollo.'],
+    ['/settings/apps/google-calendar','Google Agenda','Conectar conta Google','Somente proprietário ou administrador conecta o Google.'],
+    ['/settings/apps/google-sheets','Google Sheets','Conectar conta Google','Somente proprietário ou administrador conecta o Google.'],
    ]){
     for(const who of [a,admin,op]){
      await go(who.page,path);
@@ -597,7 +710,7 @@ const journeys={
 };
 const runs=[];
 // What each journey is meant to provoke. Anything else on the page fails it.
-const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /],'onboarding-finish':[/^403 GET /],admin:[/^409 GET /,/^403 GET \/api\/integrations$/],'network-more':[/^503 GET \/api\/(contacts|reports)/,/^503 POST \/api\/(integrations|workspace\/commands)$/],'execution-diary':[/^503 GET \/api\/execution-diary$/],'mail-config':[/^503 (GET|POST) \/api\/mailboxes$/]};
+const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /],'onboarding-finish':[/^403 GET /],admin:[/^409 GET /,/^403 GET \/api\/integrations$/],'network-more':[/^503 GET \/api\/(contacts|reports)/,/^503 POST \/api\/(integrations|workspace\/commands)$/],'execution-diary':[/^503 GET \/api\/execution-diary$/],'mail-config':[/^503 (GET|POST) \/api\/mailboxes$/],'cadence-editor':[/^503 POST \/api\/workspace\/commands$/]};
 try{
  if(!only||only==='signup')await new Promise(w=>setTimeout(w,70000));
  for(const [id,run] of Object.entries(journeys)){
