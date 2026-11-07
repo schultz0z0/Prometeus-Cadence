@@ -46,9 +46,21 @@
 .reference-guide-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .reference-guide-list h3 { margin-bottom: 10px; font-size: 0.9375rem; }
 .reference-guide-list button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px 0; border-bottom: 1px solid var(--border); text-align: left; color: var(--secondary); font-size: 0.8125rem; }
-.reference-first-steps > h1 { margin-bottom: 8px; }
-.reference-first-steps > .subtitle { max-width: 960px; margin-bottom: 24px; }
-.reference-first-steps > .reference-onboarding-progress { max-width: 1260px; }
+.reference-first-steps-summary .reference-onboarding-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px 24px;
+  align-items: start;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.reference-first-steps-summary h1 { margin: 0 0 4px; }
+.reference-first-steps-summary .subtitle { max-width: 680px; margin: 0; }
+.reference-first-steps-summary .reference-progress-label { display: grid; gap: 2px; text-align: right; margin: 0; }
+.reference-first-steps-summary .reference-progress-label > span:first-child { color: var(--primary); font-size: 1.875rem; font-weight: 700; line-height: 1; }
+.reference-first-steps-summary .reference-progress-track { grid-column: 1 / -1; height: 10px; }
 .reference-first-steps-layout { display: grid; grid-template-columns: minmax(0, 1fr) 274px; gap: 36px; }
 .reference-first-steps-list { overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
 .reference-first-steps-list > .reference-checklist-step { min-height: 75px; }
@@ -99,6 +111,8 @@
   .reference-help-art .reference-art-orbit { transform: rotate(-20deg) scale(.8, .6); }
 }
 @media (max-width: 700px) {
+  .reference-first-steps-summary .reference-onboarding-progress { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 16px; }
+  .reference-first-steps-summary .reference-progress-label { text-align: left; }
   .reference-onboarding .reference-progress-label { position: static; margin-bottom: 8px; }
   .reference-onboarding-help, .reference-guide-list, .reference-screen-tours > div { grid-template-columns: 1fr; }
   .reference-checklist-step { flex-wrap: wrap; gap: 10px; padding: 16px; }
@@ -108,5 +122,3 @@
   .reference-next-level { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { .reference-progress-track > i { transition: none; } }
-.reference-first-steps > .reference-onboarding-progress { padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
-.reference-first-steps .reference-progress-label > span:first-child { color: var(--primary); font-size: 1.5rem; font-weight: 700; }
