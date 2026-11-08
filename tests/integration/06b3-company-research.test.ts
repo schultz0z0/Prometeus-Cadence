@@ -56,6 +56,22 @@ test('social failure preserves site results and restart reuses the completed col
  const result=await readCompanyResearch(f.p,job.id);assert.equal(result.state,'partial');assert.ok(result.facts.some(f=>f.field==='email'&&f.attribution==='company'));assert.ok(result.missing.length>0);
  assert.equal(siteCalls,1);
 });
+test('public social search retains corroborated profiles without fetching LinkedIn',async()=>{
+ process.env.APIFY_WEB_ACTOR='apify/google-search-scraper';process.env.APIFY_WEB_BUILD='fixture';
+ try{
+  const f=await fixture(),snapshot=await readWorkspaceSnapshot(f.p);
+  await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...snapshot.data.leads[0],phone:'+552133334444'}}});
+  const {job}=await start(f);let searches=0,collections=0;
+  const evidence={id:'serp',url:'https://www.linkedin.com/company/clinica-exemplo/',text:'Clínica Exemplo. Telefone (21) 3333-4444. https://www.linkedin.com/company/clinica-exemplo/',hash:'social',fetchedAt:new Date().toISOString(),truncated:false};
+  await runCompanyResearch(await grantTestLease(f.p,job.id),{collect:async(kind)=>{assert.equal(kind,'website');collections++;return[page()];},apify:{
+   start:async()=>{searches++;return{kind:'inline',page:{receiptId:'social-search',candidates:[{name:'Clínica Exemplo',source:'WEB',sourceRef:evidence.url,evidence:[evidence]}],rawCount:1,rejected:[],nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:'social',units:{},costUsd:null,costKind:'unknown'}}};},
+   poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');},
+  }});
+  assert.equal(searches,1);assert.equal(collections,1);
+  const result=await readCompanyResearch(f.p,job.id);
+  assert.ok(result.facts.some(fact=>fact.field==='linkedin'&&fact.attribution==='company'));
+ }finally{delete process.env.APIFY_WEB_ACTOR;delete process.env.APIFY_WEB_BUILD;}
+});
 test('unrelated domains cannot be applied and worker cannot publish after membership revocation',async()=>{
  const f=await fixture(),{job}=await start(f),lease=await grantTestLease(f.p,job.id);
  await runCompanyResearch(lease,{collect:async()=>[page('https://outra.example','Empresa distinta. Contato: outro@outra.example')]});

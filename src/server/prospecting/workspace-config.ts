@@ -5,8 +5,10 @@ export const apolloMaxPages=(own:boolean)=>process.env.APOLLO_MAX_PAGES===undefi
 // The platform Apollo key is lent only to workspaces an operator listed (or '*' explicitly), never by default.
 const centralApolloAllowed=(workspaceId:string)=>(process.env.APOLLO_CENTRAL_WORKSPACE_IDS??'').split(',').map(x=>x.trim()).some(x=>x==='*'||x===workspaceId);
 export type ApolloCredential='connection'|'central'|null;
-export async function workspaceProspectingConfig(c:PoolClient){
+export async function workspaceProspectingConfig(c:PoolClient,planning=false){
  const config=prospectingConfig(),policy=(await c.query('SELECT limits,version FROM app.prospecting_policy')).rows[0]??null;
+ const paid=(await c.query('SELECT app.prospecting_paid_capacity($1) AS caps',[planning])).rows[0].caps;
+ if(paid){config.caps=parseCaps(JSON.stringify(paid.workspace));config.globalCaps=parseCaps(JSON.stringify(paid.global));}
  if(policy){const own=parseCaps(JSON.stringify(policy.limits));for(const k of Object.keys(config.caps) as (keyof typeof config.caps)[])config.caps[k]=Math.min(config.caps[k],own[k]);}
  // A workspace's own Apollo connection makes the source ready with its key; its revision goes into the job review proof (profileVersion).
  const ws=(await c.query("SELECT current_setting('app.workspace_id',true) ws")).rows[0].ws as string;

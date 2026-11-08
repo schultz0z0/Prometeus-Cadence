@@ -13,14 +13,16 @@ export function prospectingConfig(){
   const e=process.env;
   const profiles=Object.fromEntries(['MAPS','WEB','CNPJ'].map(s=>[s,{actor:e[`APIFY_${s}_ACTOR`]??'',build:e[`APIFY_${s}_BUILD`]??''}])) as Record<'MAPS'|'WEB'|'CNPJ',{actor:string;build:string}>;
   const caps=parseCaps(e.PROSPECTING_WORKSPACE_DAILY_UNITS), globalCaps=parseCaps(e.PROSPECTING_GLOBAL_DAILY_UNITS);
+  const siteCrawler=e.APIFY_SITE_ACTOR==='apify/website-content-crawler'&&/^[-\w.]{1,100}$/.test(e.APIFY_SITE_BUILD??'')?
+    {actor:e.APIFY_SITE_ACTOR,build:e.APIFY_SITE_BUILD!,maxPages:10}:null;
   let local=false;try{local=e.CADENCE_RUNTIME_MODE==='local'&&['127.0.0.1','localhost','[::1]'].includes(new URL(e.BETTER_AUTH_URL!).hostname);}catch{}
   const codexEnabled=e.CODEX_LOCAL_ENABLED==='true'&&local&&!!e.CODEX_BINARY&&isAbsolute(e.CODEX_BINARY)&&existsSync(e.CODEX_BINARY)&&!!e.CODEX_MODEL;
   const ready:Record<GenerationSource,boolean>={MAPS:false,WEB:false,CNPJ:false,APOLLO:!!e.APOLLO_API_KEY&&Number(e.APOLLO_MAX_PAGES)>0};
   for(const key of ['MAPS','WEB','CNPJ'] as const)ready[key]=!!e.APIFY_TOKEN&&!!profiles[key].actor&&!!profiles[key].build&&Number(e.APIFY_MAX_CHARGE_USD)>0;
   const codexWorkspaces=(e.CODEX_TEST_WORKSPACE_IDS??'').split(',').map(x=>x.trim()).filter(Boolean);
   const enabled=e.PROSPECTING_ENABLED==='true';
-  const version=hashValue({providerContractVersion,researchContractVersion,enabled,profiles,ready,caps,globalCaps,apifyMax:e.APIFY_MAX_CHARGE_USD,apolloMax:e.APOLLO_MAX_PAGES,jev:e.JEV_MODEL??'typesafe/jev-1.13',jevReady:!!e.OPENROUTER_API_KEY,codexEnabled,codexWorkspaces,codexModel:e.CODEX_MODEL,credentials:hashValue([e.APIFY_TOKEN??'',e.APOLLO_API_KEY??'',e.OPENROUTER_API_KEY??''])});
-  return {enabled,profiles,ready,caps,globalCaps,version,codexEnabled,codexWorkspaces,jevReady:!!e.OPENROUTER_API_KEY&&(e.JEV_MODEL??'typesafe/jev-1.13')==='typesafe/jev-1.13'};
+  const version=hashValue({providerContractVersion,researchContractVersion,siteCrawler,enabled,profiles,ready,caps,globalCaps,apifyMax:e.APIFY_MAX_CHARGE_USD,apolloMax:e.APOLLO_MAX_PAGES,jev:e.JEV_MODEL??'typesafe/jev-1.13',jevReady:!!e.OPENROUTER_API_KEY,codexEnabled,codexWorkspaces,codexModel:e.CODEX_MODEL,credentials:hashValue([e.APIFY_TOKEN??'',e.APOLLO_API_KEY??'',e.OPENROUTER_API_KEY??''])});
+  return {enabled,profiles,siteCrawler,ready,caps,globalCaps,version,codexEnabled,codexWorkspaces,jevReady:!!e.OPENROUTER_API_KEY&&(e.JEV_MODEL??'typesafe/jev-1.13')==='typesafe/jev-1.13'};
 }
 export type ProspectingConfig=ReturnType<typeof prospectingConfig>;
 export function estimateUsage(input:JobInput,route?:AiRoute|null,plannedFresh?:number):UsageEstimate[]{
@@ -36,7 +38,7 @@ export function estimateUsage(input:JobInput,route?:AiRoute|null,plannedFresh?:n
     }
   }else{
     const n=input.leadIds.length;
-    if(input.companyResearch){const calls=(input.companyResearch.sourceKinds.some(s=>s==='website'||s==='social')&&prospectingConfig().ready.WEB?1:0)+(input.companyResearch.sourceKinds.includes('registry')&&prospectingConfig().ready.CNPJ?1:0);if(calls)add('apify','apifyRuns',n*calls);return result;}
+    if(input.companyResearch){const calls=(input.companyResearch.sourceKinds.some(s=>s==='website'||s==='social')&&prospectingConfig().ready.WEB?1:0)+(input.companyResearch.sourceKinds.includes('social')&&prospectingConfig().ready.WEB?1:0)+(input.companyResearch.sourceKinds.includes('registry')&&prospectingConfig().ready.CNPJ?1:0);if(calls)add('apify','apifyRuns',n*calls);return result;}
     if(input.enrichment){const fresh=plannedFresh??Math.min(n,input.enrichment.maxCredits);if(fresh>0){const config=prospectingConfig(),calls=input.companyPeople?(config.ready.WEB?2:0)+(config.ready.CNPJ?1:0):3;if(calls)add('apify','apifyRuns',fresh*calls);if(route){add(route.conventional.provider,conventionalUnit(route.conventional.provider),fresh);if(route.decisionProvider==='jev')add('openrouter','jevCalls',fresh);}}return result;}
     if(input.modules.includes('qualify')){if(!route||route.decisionProvider==='jev')add('openrouter','jevCalls',n);else add(route.conventional.provider,conventionalUnit(route.conventional.provider),n);}
     const calls=(input.modules.includes('summary')?n:0)+(input.escalation==='ambiguous'&&input.modules.includes('qualify')&&(!route||route.decisionProvider==='jev')?n:0);

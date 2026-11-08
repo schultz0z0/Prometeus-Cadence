@@ -3,13 +3,19 @@ export type JobState='queued'|'running'|'waiting_provider'|'needs_reconciliation
 export type ModuleId='email'|'phone'|'website'|'summary'|'deep'|'validateEmail'|'registry'|'qualify'|'decisors';
 export type GenerationSource='MAPS'|'WEB'|'CNPJ'|'APOLLO';
 export type Destination={mode:'new';name:string}|{mode:'existing';listId:string};
-export type ProspectingInput={kind:'generation';source:GenerationSource;destination:Destination;filters:Record<string,string>;limit:number;dedupScope:'list'|'workspace'}|{kind:'qualification';listId:string;leadIds:string[];modules:ModuleId[];summaryPolicy:'all'|'fits';escalation:'off'|'ambiguous';options?:import('./qualification-policy.ts').QualificationOptions;enrichment?:import('./enrichment.ts').EnrichmentOptions;companyPeople?:true;companyResearch?:import('./company-research.ts').ResearchOptions};
+export type ProspectingInput={kind:'generation';source:GenerationSource;destination:Destination;filters:Record<string,string>;limit:number;dedupScope:'list'|'workspace';funding?:'plan'|'credits'}|{kind:'qualification';listId:string;leadIds:string[];modules:ModuleId[];summaryPolicy:'all'|'fits';escalation:'off'|'ambiguous';options?:import('./qualification-policy.ts').QualificationOptions;enrichment?:import('./enrichment.ts').EnrichmentOptions;companyPeople?:true;companyResearch?:import('./company-research.ts').ResearchOptions};
 export type JobInput=ProspectingInput|import('./planning.ts').PlanningInput;
 export type Unit='candidates'|'apifyRuns'|'apolloPages'|'jevCalls'|'codexCalls'|'openaiCalls'|'geminiCalls';
 export type Units=Partial<Record<Unit,number>>;
 export interface UsageEstimate{provider:string;unit:Unit;maxUnits:number;estimatedUsd:number|null;pricingSource:string|null}
 export interface ProviderUsage{provider:string;operationId:string;units:Units;inputTokens?:number;outputTokens?:number;fetchedCount?:number;acceptedCount?:number;costUsd:number|null;costKind:'reported'|'estimated'|'unknown'}
-export interface Review<T extends JobInput=ProspectingInput>{token:string;expiresAt:string;input:T;warnings:string[];blockers:string[];profileVersion:string;usage:UsageEstimate[];aiRoute?:import('./ai-routing.ts').AiRouteView|null;enrichmentPreview?:{companies:number;cached:number;maxCredits:number;freshLookups:number}}
+export interface Review<T extends JobInput=ProspectingInput>{token:string;expiresAt:string;input:T;warnings:string[];blockers:string[];profileVersion:string;usage:UsageEstimate[];extractionRemaining?:number|null;qualificationDay?:import('./billing.ts').QualificationDay|null;aiRoute?:import('./ai-routing.ts').AiRouteView|null;enrichmentPreview?:{companies:number;cached:number;maxCredits:number;freshLookups:number}}
+export function groupUsageEstimates(rows:UsageEstimate[]):UsageEstimate[]{
+ const grouped=new Map<string,UsageEstimate>();
+ for(const row of rows){const key=row.provider+':'+row.unit,old=grouped.get(key);
+  grouped.set(key,old?{...old,maxUnits:old.maxUnits+row.maxUnits,estimatedUsd:old.estimatedUsd===null||row.estimatedUsd===null?null:old.estimatedUsd+row.estimatedUsd}: {...row});
+ }return [...grouped.values()];
+}
 export interface JobLease{workspaceId:string;jobId:string;actorId:string;token:string;expiresAt:string;fence:number}
 export interface IngestCounts{found:number;inserted:number;duplicates:number;rejected:number;pending:number}
 export interface JobView{id:string;kind:JobInput['kind'];source:GenerationSource|'QUALIFY'|'AI';task?:import('./planning.ts').PlanningTask;state:JobState;listId:string|null;enrichment?:boolean;companyPeople?:boolean;research?:boolean;outputListId?:string;createdBy:string;createdAt:string;updatedAt:string;revision:number;counts:IngestCounts;error:{code:string;message:string}|null;usage?:ProviderUsage[];testFixture?:boolean;purpose?:'ai-connection-test';aiRoute?:import('./ai-routing.ts').AiRouteView|null;unresolvedAttempts?:{id:string;provider:string;step:string;canAttachRun:boolean}[];retainedResults?:{operationId:string;provider:string;result:unknown;receivedAt:string}[]}

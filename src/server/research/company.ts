@@ -14,7 +14,7 @@ import {AppError} from '../errors.ts';
 import {prepareJob,confirmJob} from '../prospecting/service.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from '../prospecting/review.ts';
 import {readLeasedJob,performStep,finishJob,handleStepFailure,UncertainStep} from '../prospecting/journal.ts';
-import {sourceResult} from '../prospecting/qualification.ts';
+import {sourceResult,sourceResults,verifySiteContent} from '../prospecting/qualification.ts';
 import {cancelRemoteRuns} from '../prospecting/enrichment.ts';
 import {prospectingConfig} from '../prospecting/config.ts';
 import {fetchPublicPage} from '../prospecting/extraction/fetch-page.ts';
@@ -96,6 +96,7 @@ async function researchTransaction<T>(lease:JobLease,fn:(c:PoolClient)=>Promise<
 function pageQuote(page:ResearchPage){return page.text.slice(0,12000);}
 function supportsCompany(lead:Lead,page:ResearchPage,kind:ResearchKind){
  if(kind==='registry')return !!lead.cnpj&&extractCnpjs([page]).includes(normalizeCnpj(lead.cnpj)??'');
+ if(kind==='social'&&verifySiteContent(lead,[page]))return true;
  if(matchCompanySource({companyDomain:lead.site??'',candidateDomain:page.url,corroborated:false})==='matched')return true;
  if(kind==='social'&&lead.site)return(page.externalLinks??page.links??[]).some(link=>matchCompanySource({companyDomain:lead.site!,candidateDomain:link,corroborated:false})==='matched');
  return false;
@@ -134,6 +135,7 @@ export async function runCompanyResearch(lease:JobLease,deps:ResearchAdapters={}
    let fetched=pages.length;
    while(queue.length&&fetched<options.maxPagesPerCompany){
     const entry=queue.shift()!,url=researchUrl(entry.url);if(!url||seen.has(url.toString())){if(!url)missing.push('FONTE_PUBLICA_INVALIDA');continue;}seen.add(url.toString());fetched++;
+    if(url.hostname.replace(/^www\./,'')==='linkedin.com'){missing.push('LINKEDIN_APENAS_RESULTADOS_PUBLICOS');continue;}
     let collected:ResearchPage[];
     if(await failedResearchStep(lease,'research-page:'+lead.id+':'+hashValue(url.toString()))){missing.push(entry.kind==='social'?'REDE_SOCIAL_INDISPONIVEL':'PAGINA_INDISPONIVEL');continue;}
     try{collected=await performStep(lease,'research-page:'+lead.id+':'+hashValue(url.toString()),'public-web',{},async()=>{
@@ -148,6 +150,24 @@ export async function runCompanyResearch(lease:JobLease,deps:ResearchAdapters={}
       for(const link of page.links??[])if(researchUrl(link)&&matchCompanySource({companyDomain:site??'',candidateDomain:link,corroborated:false})==='matched'&&/contato|contact|sobre|about|equipe/i.test(new URL(link).pathname))queue.push({url:link,kind:'website'});
       if(options.sourceKinds.includes('social'))for(const link of page.socialLinks??[])if(socialField(link))queue.push({url:link,kind:'social'});
      }
+    }
+   }
+   if(options.sourceKinds.includes('social')&&registry.webSearch.available&&!pages.some(page=>page.sourceKind==='social')){
+    const socialStep='website:'+lead.id+':social';
+    try{
+     if(await failedResearchStep(lease,socialStep))throw new ProviderError('SOURCE_UNAVAILABLE');
+     const candidates=await sourceResults(lease,job,{...lead,name:`"${lead.name}" ${lead.city??''} (site:instagram.com OR site:facebook.com OR site:linkedin.com/company)`},'website',{apify:deps.apify,signal},{limit:5,suffix:'social'});
+     if(candidates===null)return;
+     for(const candidate of candidates)for(const evidence of candidate.evidence??[]){
+      if(!socialField(evidence.url)||pages.length>=options.maxPagesPerCompany)continue;
+      const page:ResearchPage={...evidence,sourceKind:'social',socialLinks:[evidence.url]};
+      page.corroborated=supportsCompany(lead,page,'social');
+      pages.push(page);
+     }
+     if(!pages.some(page=>page.sourceKind==='social'))missing.push('PERFIL_PUBLICO_NAO_ENCONTRADO');
+    }catch(error){
+     if(error instanceof AppError||error instanceof UncertainStep||error instanceof ProviderError&&error.uncertain||signal.aborted)throw error;
+     missing.push('BUSCA_SOCIAL_INDISPONIVEL');
     }
    }
    if(queue.length)missing.push('LIMITE_DE_PAGINAS');if(!pages.length)missing.push('SEM_FONTE_PUBLICA');

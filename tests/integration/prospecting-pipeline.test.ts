@@ -42,15 +42,29 @@ test('uncertain start requires explicit reconciliation and never posts twice',as
   const reset=await reconcileJob(p,job.id,{confirmNotStarted:true});assert.equal(reset.state,'queued');
 });
 test('qualification stores proposals and confirmed application is atomic and conflict-aware',async()=>{
-  const {p,job,lease}=await setup(1);
+  const {p}=await prospectingUser();
+  await testAdmin(async c=>{
+    await c.query("UPDATE app.billing_account SET state='active',plan='essential' WHERE workspace_id=$1",[p.workspaceId]);
+    await c.query("INSERT INTO app.billing_grant(workspace_id,id,unit,quantity,source,external_ref) VALUES($1,$2,'extractions',2,'pack',$2)",[p.workspaceId,randomUUID()]);
+  });
+  const generation={...generationInput(),limit:1,funding:'credits' as const},generationReview=await prepareJob(p,generation);
+  const job=await confirmJob(p,{requestId:randomUUID(),input:generation,reviewToken:generationReview.token}),lease=await grantTestLease(p,job.id);
+  await testAdmin(c=>c.query("INSERT INTO app.billing_grant(workspace_id,id,unit,quantity,source,external_ref) VALUES($1,$2,'extractions',2,'plan',$2)",[p.workspaceId,randomUUID()]));
+  const oversizedPlan={...generationInput(),limit:3};
+  const balanceReview=await prepareJob(p,oversizedPlan);
+  assert.equal(balanceReview.extractionRemaining,2);
+  assert.ok(balanceReview.blockers.some(message=>message.includes('2 disponíveis hoje')));
+  await assert.rejects(confirmJob(p,{requestId:randomUUID(),input:oversizedPlan,reviewToken:balanceReview.token}),{status:409});
   const adapter={start:async()=>({kind:'inline' as const,page:{...page(1),exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
   await runGeneration(lease,{apify:adapter});
   let snapshot=await readWorkspaceSnapshot(p);const lead=snapshot.data.leads[0];
   const input={kind:'qualification' as const,listId:job.listId,leadIds:[lead.id],modules:['email' as const],summaryPolicy:'all' as const,escalation:'off' as const};
   const review=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});
+  assert.deepEqual(review.qualificationDay,{limit:250,plan:0,credits:0,requestedPlan:0,requestedCredits:1});
   const qLease=await grantTestLease(p,q.id),qualificationDeps={collect:async()=>[{id:'e',url:'https://example.com',fetchedAt:new Date().toISOString(),text:'Contato company@example.com',hash:'h',truncated:false}]};
   await runQualification(qLease,qualificationDeps);await runQualification(qLease,qualificationDeps);
   assert.equal((await getJob(p,q.id)).state,'completed');
+  assert.equal((await prepareJob(p,input)).qualificationDay?.credits,1);
   assert.equal((await readWorkspaceSnapshot(p)).data.leads[0].email,undefined);
   const items=(await listJobItems(p,q.id)).items;assert.equal(items.length,1);
   snapshot=await readWorkspaceSnapshot(p);
@@ -72,7 +86,10 @@ test('registry discovers a unique valid CNPJ from public evidence and keeps look
   await runGeneration(lease,{apify:source});const lead=(await readWorkspaceSnapshot(p)).data.leads[0];
   const input={kind:'qualification' as const,listId:job.listId,leadIds:[lead.id],modules:['registry' as const],summaryPolicy:'all' as const,escalation:'off' as const};
   const review=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});let lookups=0;
-  const deps={collect:async()=>[{id:'public',url:'https://example.com',fetchedAt:new Date().toISOString(),text:'CNPJ 37.297.479/0001-80',hash:'public-hash',truncated:false}],apify:{...source,start:async(_ctx:any,request:any)=>{lookups++;assert.equal(request.filters.cnpj,'37297479000180');return{kind:'inline' as const,page:{...page(1),candidates:[normalizeCandidate({cnpj:'37297479000180',razao_social:'Empresa legal',municipio:'Curitiba',uf:'PR'},'CNPJ')],exhausted:true,nextCursor:null}};}}};
+  const deps={collect:async()=>[{id:'public',url:'https://example.com',fetchedAt:new Date().toISOString(),text:'CNPJ 37.297.479/0001-80',hash:'public-hash',truncated:false}],apify:{...source,start:async(_ctx:any,request:any)=>{lookups++;assert.equal(request.filters.cnpj,'37297479000180');return{kind:'inline' as const,page:{...page(1),candidates:[
+    normalizeCandidate({id:'unidentified',razao_social:'Registro sem CNPJ',municipio:'Recife'},'CNPJ'),
+    normalizeCandidate({cnpj:'37297479000180',razao_social:'Empresa legal',municipio:'Curitiba',uf:'PR'},'CNPJ'),
+  ],exhausted:true,nextCursor:null}};}}};
   const qLease=await grantTestLease(p,q.id);await runQualification(qLease,deps);await runQualification(qLease,deps);
   const item=(await listJobItems(p,q.id)).items[0];
   assert.equal(lookups,1);assert.equal(item.results[0].status,'pending_review');assert.equal(item.results[0].proposed.cnpj,'37297479000180');assert.ok(item.results[0].evidenceIds.length);
@@ -84,17 +101,33 @@ test('registry discovers a unique valid CNPJ from public evidence and keeps look
   assert.equal((await listJobItems(p,formatted.id)).items[0].results[0].status,'pending_review');
 });
 
-test('an absent site during registry cannot cache empty evidence before website discovery',async()=>{
+test('website discovery rejects generic results and supplies evidence before registry lookup',async()=>{
   process.env.APIFY_WEB_ACTOR='apify/google-search-scraper';process.env.APIFY_WEB_BUILD='fixture-build';process.env.APIFY_CNPJ_ACTOR='bigdavidson/brazil-cnpj-companies';process.env.APIFY_CNPJ_BUILD='fixture-build';
   const {p,job,lease}=await setup(1);
-  const source={start:async()=>({kind:'inline' as const,page:{...page(1),candidates:[normalizeCandidate({id:'no-site',name:'Empresa'},'MAPS')],exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
+  const source={start:async()=>({kind:'inline' as const,page:{...page(1),candidates:[normalizeCandidate({id:'no-site',name:'[RE] Esquadrias Exemplo',phone:'+5511987654321',city:'São Paulo'},'MAPS')],exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
   await runGeneration(lease,{apify:source});const lead=(await readWorkspaceSnapshot(p)).data.leads[0];
+  const snapshot=await readWorkspaceSnapshot(p);
+  await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...lead,site:'https://google.com/'}}});
   const input={kind:'qualification' as const,listId:job.listId,leadIds:[lead.id],modules:['registry','website','email'],summaryPolicy:'all' as const,escalation:'off' as const};
   const review=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),qLease=await grantTestLease(p,q.id);let reads=0;
-  const deps={apify:{...source,start:async()=>({kind:'inline' as const,page:{...page(1),exhausted:true,nextCursor:null}})},collect:async()=>{reads++;return[{id:'e',url:'https://example.com',fetchedAt:new Date().toISOString(),text:'contato@example.com',hash:'h',truncated:false}];}};
+  const searches:string[]=[];
+  const deps={apify:{...source,start:async(_ctx:unknown,request:{source:string})=>{
+    searches.push(request.source);
+    const candidates=request.source==='WEB'?[
+      normalizeCandidate({id:'generic',name:'Google',site:'https://google.com'},'WEB'),
+      normalizeCandidate({id:'social',name:'[RE] Esquadrias Exemplo',site:'https://instagram.com/esquadriasexemplo'},'WEB'),
+      normalizeCandidate({id:'other',name:'Outra Empresa',site:'https://outra.example.com'},'WEB'),
+      normalizeCandidate({id:'homonym',name:'[RE] Esquadrias Exemplo',site:'https://esquadriasexemplo.other.example.com'},'WEB'),
+      normalizeCandidate({id:'official',name:'[RE] Esquadrias Exemplo',site:'https://esquadriasexemplo.example.com'},'WEB'),
+    ]:[normalizeCandidate({id:'registry',name:'[RE] Esquadrias Exemplo',cnpj:'37297479000180'},'CNPJ')];
+    return {kind:'inline' as const,page:{...page(1),candidates,exhausted:true,nextCursor:null}};
+  }},collect:async(site:string)=>{reads++;const text=site==='https://esquadriasexemplo.example.com/'?'Esquadrias Exemplo +55 11 98765-4321 contato@example.com 37.297.479/0001-80':'Esquadrias Exemplo São Paulo';return[{id:'e',url:site,fetchedAt:new Date().toISOString(),text,hash:'h',truncated:false}];}};
   for(let step=0;step<4;step++)await runQualification(qLease,deps);
   const results=(await listJobItems(p,q.id)).items[0].results;
-  assert.equal(reads,1);assert.equal(results.find(r=>r.module==='email')?.proposed.email,'contato@example.com');
+  assert.deepEqual(searches,['WEB','CNPJ']);assert.equal(reads,2);
+  assert.equal(results.find(r=>r.module==='website')?.proposed.site,'https://esquadriasexemplo.example.com/');
+  assert.equal(results.find(r=>r.module==='registry')?.proposed.cnpj,'37297479000180');
+  assert.equal(results.find(r=>r.module==='email')?.proposed.email,'contato@example.com');
 });
 
 test('cancellation during start keeps cleanup metadata and blocks publication until abort is confirmed',async()=>{
@@ -129,15 +162,24 @@ test('revocation allows only remote cleanup metadata and never late lead publica
 test('JEV remains a proposal, omitted summary makes no generative call, and context changes conflict',async()=>{
   process.env.OPENROUTER_API_KEY='fixture-not-live';
   const {p,job,lease}=await setup(1);
-  const source={start:async()=>({kind:'inline' as const,page:{...page(1),exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
+  const mapsEvidence={id:'maps',url:'https://maps.example.com/',text:'Clínica odontológica em São Paulo',hash:'maps',fetchedAt:new Date().toISOString(),truncated:false};
+  const candidate={...normalizeCandidate({id:'clinic',name:'[RE] Clínica Exemplo'},'MAPS'),evidence:[mapsEvidence]};
+  const source={start:async()=>({kind:'inline' as const,page:{...page(1),candidates:[candidate],exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
   await runGeneration(lease,{apify:source});let snapshot=await readWorkspaceSnapshot(p);
   await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'context.approve',profile:{...snapshot.data.companyProfile,offer:'Software',idealCustomer:'Clínicas'}}});
   await seedHybridPolicy(p,job.id);
   snapshot=await readWorkspaceSnapshot(p);const lead=snapshot.data.leads[0];
+  await testAdmin(async c=>{
+    await c.query("SELECT set_config('app.workspace_id',$1,false),set_config('app.user_id',$2,false)",[p.workspaceId,p.userId]);
+    await c.query("INSERT INTO app.research_case(workspace_id,id,job_id,lead_id,case_version,name,basis,state) VALUES($1,$2,$3,$4,'fixture','[RE] Pesquisa',$5,'completed')",[p.workspaceId,randomUUID(),job.id,lead.id,lead]);
+    for(const attribution of ['company','uncertain'])await c.query("INSERT INTO app.research_source(workspace_id,job_id,id,lead_id,url,text,hash,fetched_at,source_kind,attribution) VALUES($1,$2,$3,$4,'https://instagram.com/exemplo',$5,$5,now(),'social',$6)",[p.workspaceId,job.id,randomUUID(),lead.id,attribution==='company'?'Perfil comercial verificado':'Outro perfil não verificado',attribution]);
+  });
   const input={kind:'qualification' as const,listId:job.listId,leadIds:[lead.id],modules:['qualify' as const],summaryPolicy:'all' as const,escalation:'off' as const},review=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),qLease=await grantTestLease(p,q.id);
   let generated=0,decisions=0;
-  const deps={collect:async()=>[{id:'e',url:'https://example.com',fetchedAt:new Date().toISOString(),text:'Somos uma clínica odontológica com atendimento e agendamento.',hash:'h',truncated:false}],decide:async(ctx:any,source:any)=>{decisions++;return{model:'typesafe/jev-1.13' as const,verdict:'fits' as const,confidence:0.98,probabilities:{fits:0.98,does_not_fit:0.01,insufficient_evidence:0.01},criteria:{quality:0.9},evidenceIds:source.evidence.map((e:any)=>e.id),usage:{provider:'openrouter',operationId:ctx.operationId,units:{jevCalls:1},costUsd:null,costKind:'unknown' as const}};},generate:async()=>{generated++;throw Error('must not generate');}};
+  const deps={collect:async()=>{throw Error('No website to fetch');},decide:async(ctx:any,source:any)=>{decisions++;assert.ok(source.evidence.some((item:any)=>item.text===mapsEvidence.text));assert.ok(source.evidence.some((item:any)=>item.text==='Perfil comercial verificado'));assert.ok(source.evidence.every((item:any)=>item.text!=='Outro perfil não verificado'));return{model:'typesafe/jev-1.13' as const,verdict:'fits' as const,confidence:0.98,probabilities:{fits:0.98,does_not_fit:0.01,insufficient_evidence:0.01},criteria:{quality:0.9},evidenceIds:source.evidence.map((e:any)=>e.id),usage:{provider:'openrouter',operationId:ctx.operationId,units:{jevCalls:1},costUsd:null,costKind:'unknown' as const}};},generate:async()=>{generated++;throw Error('must not generate');}};
   await runQualification(qLease,deps);await runQualification(qLease,deps);assert.equal(decisions,1);assert.equal(generated,0);
+  assert.equal((await getJob(p,q.id)).state,'completed');
+  assert.equal((await listJobItems(p,q.id)).items[0].results[0].status,'pending_review');
   assert.equal((await readWorkspaceSnapshot(p)).data.leads[0].qualification,'pending');
   const items=(await listJobItems(p,q.id)).items;snapshot=await readWorkspaceSnapshot(p);
   await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'context.approve',profile:{...snapshot.data.companyProfile,idealCustomer:'Indústrias'}}});
@@ -161,7 +203,7 @@ test('recovery after the last receipt finishes without reading page zero again',
 test('uncertain website qualification retains reservation on cancel and reconciles the specific run',async()=>{
   process.env.APIFY_WEB_ACTOR='apify/google-search-scraper';process.env.APIFY_WEB_BUILD='fixture-build';
   const {p,job,lease}=await setup(1);
-  const source={start:async()=>({kind:'inline' as const,page:{...page(1),candidates:[normalizeCandidate({id:'id1',name:'Company 1'},'MAPS')],exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
+  const source={start:async()=>({kind:'inline' as const,page:{...page(1),candidates:[normalizeCandidate({id:'id1',name:'3M',phone:'+5511987654321'},'MAPS')],exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
   await runGeneration(lease,{apify:source});const lead=(await readWorkspaceSnapshot(p)).data.leads[0];
   const input={kind:'qualification' as const,listId:job.listId,leadIds:[lead.id],modules:['website' as const],summaryPolicy:'all' as const,escalation:'off' as const},review=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});
   let posts=0;const lost={...source,start:async()=>{posts++;return{kind:'uncertain' as const,operationId:'lost'};}};
@@ -169,10 +211,12 @@ test('uncertain website qualification retains reservation on cancel and reconcil
   await cancelJob(p,q.id);await runQualification(await grantTestLease(p,q.id).then(async lease=>{await testAdmin(c=>c.query("UPDATE app.prospecting_job SET state='cancelling' WHERE id=$1 AND workspace_id=$2",[q.id,p.workspaceId]));return lease;}),{apify:lost});
   assert.equal((await getJob(p,q.id)).state,'needs_reconciliation');
   const closeReleases=await testAdmin(async c=>(await c.query("SELECT * FROM app.usage_ledger WHERE workspace_id=$1 AND job_id=$2 AND operation_id=$3",[p.workspaceId,q.id,q.id+':close'])).rows.length);assert.equal(closeReleases,0);
-  const adapter=new ApifyAdapter(async url=>String(url).includes('/acts/')?Response.json({data:{id:'actor1'}}):String(url).includes('/actor-runs/')?Response.json({data:{actId:'actor1',buildNumber:'fixture-build',defaultDatasetId:'ds1',status:'SUCCEEDED'}}):Response.json([{organicResults:[{title:'Company 1',url:'https://example.com/',description:'Public company site.'}]}]));
+  const adapter=new ApifyAdapter(async url=>String(url).includes('/acts/')?Response.json({data:{id:'actor1'}}):String(url).includes('/actor-runs/')?Response.json({data:{actId:'actor1',buildNumber:'fixture-build',defaultDatasetId:'ds1',status:'SUCCEEDED'}}):Response.json([{organicResults:[{title:'3M — Produtos e soluções',url:'http://company.example.com/',description:'Contato +55 11 98765-4321'}]}]));
   await reconcileJob(p,q.id,{runId:'run-recovered'},{apify:adapter});
-  const recovered=await grantTestLease(p,q.id);await runQualification(recovered,{apify:adapter});await runQualification(recovered,{apify:adapter});
-  assert.equal(posts,1);assert.equal((await getJob(p,q.id)).state,'completed');const items=(await listJobItems(p,q.id)).items;assert.ok(items[0].results[0].evidenceIds.length);assert.ok(items[0].evidence?.length);
+  const recovered=await grantTestLease(p,q.id);
+  const deps={apify:adapter,collect:async(url:string)=>[{id:'company-page',url:url.replace('http:','https:'),text:'3M, contato +55 11 98765-4321',hash:'page-hash',fetchedAt:new Date().toISOString(),truncated:false}]};
+  await runQualification(recovered,deps);await runQualification(recovered,deps);
+  assert.equal(posts,1);assert.equal((await getJob(p,q.id)).state,'completed');const items=(await listJobItems(p,q.id)).items;assert.ok(items[0].results[0].evidenceIds.length);assert.ok(items[0].evidence?.length);assert.equal(items[0].results[0].proposed.site,'https://company.example.com/');
 });
 
 test('unavailable inference result can settle consumption without a second call; operator cannot reconcile',async()=>{

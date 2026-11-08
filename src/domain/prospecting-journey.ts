@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import type {UsageEstimate} from './prospecting.ts';
 import type {Reviewed} from './reviewed-operation.ts';
-export const journeyInputSchema=z.strictObject({brief:z.string().trim().min(2).max(4000),location:z.string().trim().min(2).max(200),limit:z.number().int().min(1).max(500),destinationListId:z.string().min(1).max(120).optional()});
+export const journeyInputSchema=z.strictObject({brief:z.string().trim().min(2).max(4000),location:z.string().trim().min(2).max(200),limit:z.number().int().min(1).max(500),destinationListId:z.string().min(1).max(120).optional(),funding:z.enum(['plan','credits']).optional()});
 export type JourneyInput=z.infer<typeof journeyInputSchema>;
 export type JourneyStage='discover'|'research'|'people'|'qualify'|'review'|'cadence';
 export type JourneyState='running'|'paused'|'blocked'|'review'|'ready';

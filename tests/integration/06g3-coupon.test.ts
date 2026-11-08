@@ -18,7 +18,7 @@ const code=()=>'QA-'+randomUUID().replaceAll('-','').slice(0,12).toUpperCase();
 const week=()=>new Date(Date.now()+7*86400000);
 async function fixture(remote:any={valid:true,percent_off:10,amount_off:null,currency:null}){
  const u=await billingUser(),customer=rid('cus'),pi=rid('pi'),session=rid('cs');await beginTrial(u.p);
- await testAdmin(c=>c.query('UPDATE app.billing_account SET customer_id=$2 WHERE workspace_id=$1',[u.p.workspaceId,customer]));
+ await testAdmin(c=>c.query("UPDATE app.billing_account SET customer_id=$2,state='active',plan='essential' WHERE workspace_id=$1",[u.p.workspaceId,customer]));
  const posts:{path:string;form:URLSearchParams}[]=[];let failCheckout=0,paid:any=null,checkoutMeta:any={},status='open',piStatus='succeeded',paymentStatus='unpaid';
  const adapter=createStripeAdapter(async(input,init)=>{const url=new URL(String(input)),path=url.pathname,form=new URLSearchParams(String(init?.body));
   if(init?.method==='POST'){posts.push({path,form});

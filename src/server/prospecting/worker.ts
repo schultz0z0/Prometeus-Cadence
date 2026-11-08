@@ -19,7 +19,7 @@ import {AppError} from '../errors.ts';
 async function cleanRevoked(deps:GenerationAdapters,signal:AbortSignal,workspaceId?:string){
   const ticket=(await workerPool().query('SELECT app.claim_revoked_prospecting_cleanup($1) AS ticket',[workspaceId??null])).rows[0].ticket;
   if(!ticket)return false;
-  const source=(['MAPS','WEB','CNPJ'] as const).find(s=>ticket.execution?.profiles?.[s]?.actor===ticket.run.profileId);
+  const source=ticket.execution?.siteCrawler?.actor===ticket.run.profileId?'CRAWL':(['MAPS','WEB','CNPJ'] as const).find(s=>ticket.execution?.profiles?.[s]?.actor===ticket.run.profileId);
   if(!source)return false;
   let done=false;
   try{const ctx=providerContext({checkpoint:{execution:ticket.execution}},source,ticket.run.operationId,signal);const result=await(deps.apify??new ApifyAdapter()).abort(ctx,ticket.run);done=['cancelled','failed','succeeded'].includes(result.status);}catch{}

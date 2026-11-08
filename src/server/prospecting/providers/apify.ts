@@ -48,8 +48,21 @@ export class ApifyAdapter implements SourceAdapter{
     const candidates=[],rejected=[];
     for(const r of rows.slice(0,limit))try{
       const candidate=normalizeCandidate(ctx.profile.source==='WEB'?{...r,id:r.url,site:r.url}:r,ctx.profile.source);
-      if(ctx.profile.source==='CNPJ'&&ctx.profile.partners)candidate.facts={decisionMakers:normalizeDecisionMakers(r.qsa)};
-      const text=JSON.stringify({source:ctx.profile.source,sourceRef:candidate.sourceRef,name:candidate.name,cnpj:candidate.cnpj,city:candidate.city,state:candidate.state,site:candidate.site,phone:candidate.phone,email:candidate.email,...(candidate.facts?{decisionMakers:candidate.facts.decisionMakers}:{}),description:typeof r.description==='string'?r.description.slice(0,4000):undefined}).slice(0,6000);
+      if(ctx.profile.source==='CNPJ'){
+        const status=typeof r.descricao_situacao_cadastral==='string'?r.descricao_situacao_cadastral.trim().toUpperCase():'';
+        const registrationStatus=['ATIVA','BAIXADA','INAPTA','SUSPENSA','NULA'].includes(status)?status:undefined;
+        candidate.facts={registrationStatus,...(ctx.profile.partners?{decisionMakers:normalizeDecisionMakers(r.qsa)}:{})};
+      }
+      const mapsFacts=ctx.profile.source==='MAPS'?{
+        category:typeof r.categoryName==='string'?r.categoryName.slice(0,200):undefined,
+        address:candidate.address,
+        rating:candidate.rating===undefined?undefined:Number(candidate.rating),
+        reviewCount:candidate.reviewCount===undefined?undefined:Number(candidate.reviewCount),
+        permanentlyClosed:typeof r.permanentlyClosed==='boolean'?r.permanentlyClosed:undefined,
+        temporarilyClosed:typeof r.temporarilyClosed==='boolean'?r.temporarilyClosed:undefined,
+      }:{};
+      if(ctx.profile.source==='MAPS')candidate.facts=mapsFacts;
+      const text=JSON.stringify({source:ctx.profile.source,sourceRef:candidate.sourceRef,name:candidate.name,cnpj:candidate.cnpj,city:candidate.city,state:candidate.state,site:candidate.site,phone:candidate.phone,email:candidate.email,...mapsFacts,...candidate.facts,description:typeof r.description==='string'?r.description.slice(0,4000):undefined}).slice(0,6000);
       let url=`https://api.apify.com/v2/datasets/${id(run.datasetId)}/items?offset=${offset}`;
       if(ctx.profile.source==='WEB')try{const pageUrl=new URL(r.url);if(['http:','https:'].includes(pageUrl.protocol)&&!pageUrl.username&&!pageUrl.password)url=pageUrl.toString();}catch{}
       candidate.evidence=[{id:hashValue({receipt:run.runId,ref:candidate.sourceRef}),url,text,hash:hashValue(text),fetchedAt:new Date().toISOString(),truncated:typeof r.description==='string'&&r.description.length>4000}];

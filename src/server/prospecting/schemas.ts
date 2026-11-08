@@ -7,7 +7,8 @@ const allowedFilters:Record<string,Set<string>>={
   CNPJ:new Set(['term','location','active','email','phone','noAccountant','openedAfter','openedBefore','includeCnae','excludeCnae','excludeEmail','excludeDomains','includeName','excludeName','states','size','legal','mei','minCapital','maxCapital','headOffice','neighborhood','zip','cnae','state','city','cnpj']),
   APOLLO:new Set(['term','location','industry','minEmployees','maxEmployees','domains']),
 };
-export const generationSchema=z.strictObject({kind:z.literal('generation'),source:z.enum(['MAPS','WEB','CNPJ','APOLLO']),destination:z.discriminatedUnion('mode',[z.strictObject({mode:z.literal('new'),name:z.string().trim().min(2).max(100)}),z.strictObject({mode:z.literal('existing'),listId:idSchema})]),filters,limit:z.number().int().min(1).max(500),dedupScope:z.enum(['list','workspace'])}).superRefine((v,c)=>{
+export const generationSchema=z.strictObject({kind:z.literal('generation'),source:z.enum(['MAPS','WEB','CNPJ','APOLLO']),destination:z.discriminatedUnion('mode',[z.strictObject({mode:z.literal('new'),name:z.string().trim().min(2).max(100)}),z.strictObject({mode:z.literal('existing'),listId:idSchema})]),filters,limit:z.number().int().min(1).max(500),dedupScope:z.enum(['list','workspace']),funding:z.enum(['plan','credits']).optional()}).superRefine((v,c)=>{
+  if(v.source==='APOLLO'&&v.funding)c.addIssue({code:'custom',path:['funding'],message:'Apollo usa a franquia de importações.'});
   for(const key of Object.keys(v.filters))if(!allowedFilters[v.source].has(key))c.addIssue({code:'custom',path:['filters',key],message:'Filtro desconhecido.'});
   if(!v.filters.term?.trim())c.addIssue({code:'custom',path:['filters','term'],message:'Informe o público.'});
   if(['MAPS','WEB'].includes(v.source)&&!v.filters.location?.trim())c.addIssue({code:'custom',path:['filters','location'],message:'Informe a localização.'});

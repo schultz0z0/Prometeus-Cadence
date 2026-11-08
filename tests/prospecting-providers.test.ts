@@ -16,10 +16,17 @@ test('Apify start is bounded and a lost POST response is uncertain without retry
   const body=JSON.parse(calls[0].init!.body as string);assert.deepEqual(body.searchStringsArray,['dentistas']);assert.equal(body.locationQuery,'São Paulo');assert.equal(body.maxCrawledPlacesPerSearch,5);
 });
 test('Apify normalizes dataset pages and rejects malformed and provider failures safely',async()=>{
-  const adapter=new ApifyAdapter(async(url)=>String(url).includes('/datasets/')?Response.json([{placeId:'one',title:'A',website:'https://example.com'}]):Response.json({data:{id:'run1',defaultDatasetId:'ds1',status:'SUCCEEDED'}}));
+  const adapter=new ApifyAdapter(async(url)=>String(url).includes('/datasets/')?Response.json([{placeId:'one',title:'A',website:'https://example.com',categoryName:'Serralheria',address:'Rua Exemplo, 1',totalScore:4.8,reviewsCount:39,permanentlyClosed:false}]):Response.json({data:{id:'run1',defaultDatasetId:'ds1',status:'SUCCEEDED'}}));
   const started=await adapter.start(context(),input);assert.equal(started.kind,'remote');if(started.kind!=='remote')return;
   assert.equal((await adapter.poll(context(),started.run)).status,'succeeded');
   const page=await adapter.readPage(context(),started.run,null,5);assert.equal(page.candidates[0].name,'A');assert.equal(page.exhausted,true);
+  const evidence=JSON.parse(page.candidates[0].evidence![0].text);
+  assert.equal(page.candidates[0].address,'Rua Exemplo, 1');
+  assert.equal(page.candidates[0].rating,'4.8');
+  assert.equal(page.candidates[0].reviewCount,'39');
+  assert.equal(evidence.category,'Serralheria');assert.equal(evidence.address,'Rua Exemplo, 1');
+  assert.equal(evidence.rating,4.8);assert.equal(evidence.reviewCount,39);assert.equal(evidence.permanentlyClosed,false);
+  assert.equal(page.candidates[0].facts?.permanentlyClosed,false);
   for(const status of[401,402,403,429]){
     const bad=new ApifyAdapter(async()=>Response.json({secret:'secret-fixture'},{status}));
     await assert.rejects(()=>bad.start(context(),input),(error:unknown)=>error instanceof ProviderError&&!error.message.includes('secret-fixture'));
@@ -73,4 +80,14 @@ test('actual source mapping retains bounded public provenance for web and regist
   const adapter=new ApifyAdapter(async()=>Response.json([{organicResults:[{title:'Company A',url:'https://example.com/',description:'Dental company providing orthodontics.'}]}]));
   const page=await adapter.readPage(ctx,{provider:'apify',runId:'r',datasetId:'d',profileId:ctx.profile.actor,build:'pinned',operationId:'op'},null,1);
   assert.equal(page.candidates[0].evidence?.length,1);assert.ok(page.candidates[0].evidence?.[0].text.includes('orthodontics'));assert.equal(page.candidates[0].evidence?.[0].url,'https://example.com/');
+  const registry={...ctx,profile:{...providerProfile('CNPJ',{actor:'bigdavidson/brazil-cnpj-companies',build:'pinned'}),partners:true}};
+  const companyAdapter=new ApifyAdapter(async()=>Response.json([
+    {cnpj:'37297479000180',razao_social:'[RE] Empresa',descricao_situacao_cadastral:'ATIVA',qsa:[{nome_socio:'[RE] Pessoa',qualificacao_socio:'Sócio'}]},
+    {cnpj:'33000167000101',razao_social:'[RE] Outra',descricao_situacao_cadastral:'BAIXADA'},
+    {cnpj:'60746948000112',razao_social:'[RE] Sem status'},
+  ]));
+  const companies=await companyAdapter.readPage(registry,{provider:'apify',runId:'r',datasetId:'d',profileId:registry.profile.actor,build:'pinned',operationId:'op'},null,5);
+  assert.deepEqual(companies.candidates.map(company=>company.facts?.registrationStatus),['ATIVA','BAIXADA',undefined]);
+  assert.equal(JSON.parse(companies.candidates[0].evidence![0].text).registrationStatus,'ATIVA');
+  assert.deepEqual(companies.candidates[0].facts?.decisionMakers,[{name:'[RE] Pessoa',role:'Sócio'}]);
 });

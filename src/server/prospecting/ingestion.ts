@@ -17,18 +17,21 @@ export async function ingestPage(c:PoolClient,lease:JobLease,page:CandidatePage)
   const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0],input=job.input as JobInput;
   if(input.kind!=='generation')throw new AppError(409,'Tipo de execução incompatível.');
   const counts:IngestCounts={found:page.rawCount,inserted:0,duplicates:0,rejected:page.rejected.length,pending:0};
-  if(job.counts.found+page.rawCount>input.limit)throw new AppError(422,'Quantidade acima do limite confirmado.');
+  const scanLimit=job.checkpoint.discoveryScanLimit??input.limit;
+  if(job.counts.found+page.rawCount>scanLimit)throw new AppError(422,'Quantidade acima do limite confirmado.');
   for(const candidate of page.candidates){
     let normalized;try{normalized=normalizeCandidate(candidate,input.source);}catch{counts.rejected++;continue;}
     const identities=strongIdentities(normalized),existing=(await c.query('SELECT lead_id FROM app.lead_identity WHERE identity=ANY($1::text[]) AND ($2 OR list_id=$3) LIMIT 1',[identities,input.dedupScope==='workspace',job.list_id])).rows[0];
+    if(!existing&&job.checkpoint.discoveryScanLimit&&
+      (candidate.facts?.admissionVerified!==true||job.counts.inserted+counts.inserted>=input.limit)){counts.rejected++;continue;}
     const id=randomUUID(),leadId=existing?.lead_id??randomUUID();
     if(existing)counts.duplicates++;
     else{
       const {sourceRef:_ref,...fields}=normalized;
-      const lead={...fields,id:leadId,listId:job.list_id,qualification:'pending',createdAt:new Date().toISOString()};
+      const lead={...fields,...(job.checkpoint.discoveryScanLimit?{cnae:candidate.cnae,size:candidate.size}:{}),id:leadId,listId:job.list_id,qualification:'pending',createdAt:new Date().toISOString()};
       await c.query("INSERT INTO app.lead(workspace_id,id,list_id,payload) VALUES(current_setting('app.workspace_id'),$1,$2,$3)",[leadId,job.list_id,lead]);
       for(const identity of identities)await c.query("INSERT INTO app.lead_identity VALUES(current_setting('app.workspace_id'),$1,$2,$3) ON CONFLICT DO NOTHING",[job.list_id,identity,leadId]);
-      await saveEvidence(c,lease.jobId,leadId,candidate.evidence??[]);counts.inserted++;
+      await saveEvidence(c,lease.jobId,leadId,candidate.evidence??[],job.checkpoint.discoveryScanLimit?4:3);counts.inserted++;
     }
     await c.query("INSERT INTO app.prospecting_item(workspace_id,job_id,id,lead_id,source_ref,name,status) VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4,$5,$6) ON CONFLICT(workspace_id,job_id,source_ref) DO NOTHING",[lease.jobId,id,leadId,normalized.sourceRef,normalized.name,existing?'duplicate':'inserted']);
   }

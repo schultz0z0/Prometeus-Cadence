@@ -17,6 +17,19 @@ export function normalizeCandidate(raw:unknown,profile:GenerationSource):Candida
   const candidate:Candidate={name,sourceRef,source:profile};
   const fields={companyName:string(r.companyName??(profile==='CNPJ'?r.razao_social:undefined),300),email:email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?email:undefined,phone:phone&&/^\+?\d{7,15}$/.test(phone)?phone:undefined,site:normalizeSite(r.site??r.website??r.primary_domain),city:string(r.city??(profile==='CNPJ'?r.municipio:undefined),200),state:string(r.state??(profile==='CNPJ'?r.uf:undefined),100),cnpj:normalizeCnpj(r.cnpj)};
   for(const [k,v]of Object.entries(fields))if(v)(candidate as unknown as Record<string,unknown>)[k]=v;
+  if(profile==='MAPS'){
+    const address=string(r.address,500);
+    const rating=r.totalScore??r.rating,reviewCount=r.reviewsCount??r.reviewCount;
+    const bounded=(value:unknown,max:number,integer=false)=>{
+      if(typeof value!=='number'&&(typeof value!=='string'||!/^\d+(\.\d+)?$/.test(value)))return undefined;
+      const number=Number(value);
+      return Number.isFinite(number)&&number>=0&&number<=max&&(!integer||Number.isSafeInteger(number))?String(number):undefined;
+    };
+    if(address)candidate.address=address;
+    const validRating=bounded(rating,5),validReviewCount=bounded(reviewCount,Number.MAX_SAFE_INTEGER,true);
+    if(validRating!==undefined)candidate.rating=validRating;
+    if(validReviewCount!==undefined)candidate.reviewCount=validReviewCount;
+  }
   if(profile==='CNPJ'){
     const scalar=(v:unknown,max=500)=>typeof v==='number'&&Number.isFinite(v)?String(v):string(v,max);
     const extra={capital:scalar(r.capital??r.capital_social,100),size:scalar(r.size??r.porte,100),legalNature:scalar(r.legalNature??r.natureza_juridica,300),cnae:scalar(r.cnae??r.cnae_fiscal,200),openedAt:scalar(r.openedAt??r.data_inicio_atividade,100),address:scalar(r.address??r.endereco_completo,500)};

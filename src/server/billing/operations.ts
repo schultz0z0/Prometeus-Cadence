@@ -20,6 +20,8 @@ function proof(p:Principal,a:any,r:Omit<BillingReview,'token'|'expiresAt'|'effec
 async function account(c:import('pg').PoolClient){const row=(await c.query('SELECT *,app.current_role() AS role FROM app.billing_account')).rows[0];if(!row||!['owner','admin'].includes(row.role))throw new AppError(403,'Somente proprietário ou administrador pode gerenciar cobrança.');return row;}
 // A rolled period with its renewal still unprocessed: a change now would be judged against the old one.
 const samePeriod=(item:any,a:any)=>item?.current_period_start===new Date(a.period_start).getTime()/1000;
+const creditEligible=(a:any)=>a.state==='active'&&['essential','pro','essential-annual','pro-annual'].includes(a.plan)&&
+ Boolean(a.period_start&&a.period_end&&Date.parse(a.period_start)<=Date.now()&&Date.parse(a.period_end)>Date.now());
 export async function prepareBilling(p:Principal,input:unknown,deps:{adapter?:StripeAdapter}={}):Promise<BillingReview>{
  const parsed=inputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Operação de cobrança inválida.');if(!billingConfig().configured)throw new AppError(503,'Stripe de teste ainda não configurado.','BILLING_NOT_CONFIGURED');
  const a=await billingTransaction(p,account),b=parsed.data;
@@ -28,7 +30,7 @@ export async function prepareBilling(p:Principal,input:unknown,deps:{adapter?:St
  if(b.kind==='checkout'){
   if(!sku)throw new AppError(422,'Escolha um plano ou pacote.');let offer;try{offer=getSku(sku);}catch{throw new AppError(422,'Plano ou pacote inválido.');}
   if('cycle'in offer){if(a.subscription_id&&['active','past_due','attention'].includes(a.state))throw new AppError(409,'Altere a assinatura existente para trocar de plano.');effects=[offer.cycle==='year'?'Assinatura anual em ambiente de teste, cobrada de uma vez. A franquia renova a cada mês, sem acumular.':'Assinatura mensal em ambiente de teste.','Acesso somente após pagamento confirmado.'];}
-  else {if(!offer.available)throw new AppError(409,'Este recurso ainda não está disponível para compra.');await billingTransaction(p,c=>c.query('SELECT app.billing_require_execution()'));effects=['Compra única, sem renovação automática.','Créditos sem expiração; usados depois da franquia.'];}amount=offer.amount;
+  else {if(!offer.available)throw new AppError(409,'Este recurso ainda não está disponível para compra.');if(!creditEligible(a))throw new AppError(402,'A compra de créditos adicionais exige assinatura Essential ou Pro ativa.','BILLING_CREDITS_REQUIRES_PLAN');effects=['Compra única, sem renovação automática.','Créditos sem expiração. Na captação, você escolhe quando usá-los.'];}amount=offer.amount;
   if(b.coupon!==undefined){
    if('cycle'in offer)throw new AppError(422,'O cupom vale para pacotes de créditos.');
    const code=couponCode(b.coupon);if(!code)throw new AppError(422,'Cupom inválido, vencido ou já utilizado.','BILLING_COUPON_INVALID');
@@ -98,6 +100,7 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
  const update=async(action:string,data:unknown)=>{const r=(await billingPool().query('SELECT app.billing_update_operation($1,$2,$3,$4,$5) AS saved',[o.workspace_id,o.id,o.lease_token,action,data])).rows[0].saved;if(!r)throw Error('Billing lease lost.');};
  try{
   if(Date.now()-Date.parse(o.created_at)>23*3600000){await update('uncertain',{code:'MANUAL_RECONCILIATION'});return true;}
+  if(o.kind==='checkout'&&!('cycle' in getSku(o.sku))&&o.stage!=='financial_requested'&&!creditEligible(o.account))throw new StripeFailure(false);
   let customer=o.account.customer_id;
   if(!customer){
    if(Date.now()-Date.parse(o.account.customer_started_at)>23*3600000){await update('uncertain',{code:'MANUAL_RECONCILIATION'});return true;}
@@ -168,7 +171,8 @@ export async function processBillingOperation(id?:string,adapter:StripeAdapter=c
    }
   }else throw new StripeFailure(false);
  }catch(error){
-  try{await update(error instanceof StripeFailure&&!error.uncertain?'failed':'uncertain',{code:error instanceof StripeFailure&&!error.uncertain?'PROVIDER_REJECTED':'RECONCILIATION_REQUIRED'});}catch{}
+  const refused=error instanceof StripeFailure&&!error.uncertain||error instanceof Error&&error.message==='BILLING_CREDITS_REQUIRES_PLAN';
+  try{await update(refused?'failed':'uncertain',{code:refused?'PROVIDER_REJECTED':'RECONCILIATION_REQUIRED'});}catch{}
  }
  return true;
 }

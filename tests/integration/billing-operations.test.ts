@@ -8,6 +8,7 @@ import {readBilling} from '../../src/server/billing/repository.ts';
 import {createStripeAdapter} from '../../src/server/billing/stripe.ts';
 import {billingConfig} from '../../src/server/billing/config.ts';
 import {closeBillingPool} from '../../src/server/billing/db.ts';
+import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 after(async()=>{await closeBillingPool();await getPools().close();});
 Object.assign(process.env,{STRIPE_SECRET_KEY:'sk_test_fixture',STRIPE_WEBHOOK_SECRET:'whsec_fixture'});
 function stripeFixture(loseCheckout=false){
@@ -44,7 +45,15 @@ test('uncertain operation older than provider idempotency window never retries P
 test('prepaid purchase requires valid subscription and unavailable enrichment cannot be sold',async()=>{
  const u=await billingUser();await assert.rejects(prepareBilling(u.p,{kind:'checkout',sku:'imports-5000'}),/assinatura|teste/i);
  await beginTrial(u.p);await assert.rejects(prepareBilling(u.p,{kind:'checkout',sku:'enrichment-50'}),/disponível/i);
+ await assert.rejects(prepareBilling(u.p,{kind:'checkout',sku:'imports-5000'}),{code:'BILLING_CREDITS_REQUIRES_PLAN'});
+ await assert.rejects(withWorkspaceTransaction(u.p,c=>c.query(
+  "SELECT app.billing_prepare_operation($1,$2,'fixture','checkout','imports-5000',(SELECT revision FROM app.billing_account),'{}')",[randomUUID(),randomUUID()])),{code:'BILLING_CREDITS_REQUIRES_PLAN'});
+ await testAdmin(c=>c.query("UPDATE app.billing_account SET state='active',plan='essential' WHERE workspace_id=$1",[u.p.workspaceId]));
  const review=await prepareBilling(u.p,{kind:'checkout',sku:'imports-5000'});assert.equal(review.amount,2700);assert.match(review.effects.join(' '),/única/i);
+ await testAdmin(c=>c.query("UPDATE app.billing_account SET state='past_due' WHERE workspace_id=$1",[u.p.workspaceId]));
+ const f=stripeFixture();
+ await assert.rejects(confirmBilling(u.p,{requestId:randomUUID(),review},{adapter:f.adapter}),{code:'BILLING_REQUIRED'});
+ assert.deepEqual(f.counts(),{customers:0,checkouts:0});
 });
 test('customer creation retries frozen parameters after lost response even if contact was edited',async()=>{
  const u=await billingUser();let created=false,lost=false;const bodies:string[]=[];
@@ -58,4 +67,14 @@ test('customer creation retries frozen parameters after lost response even if co
  await testAdmin(c=>c.query("UPDATE app.billing_account SET contact='{\"email\":\"changed@example.com\",\"phone\":null}',revision=revision+1 WHERE workspace_id=$1",[u.p.workspaceId]));
  await processBillingOperation(op.id,adapter);assert.equal((await readBilling(u.p)).operations.find(x=>x.id===op.id)?.state,'awaiting_payment');assert.equal(bodies[0],bodies[1]);
  await processBillingOperation(undefined,adapter);assert.equal((await readBilling(u.p)).operations.some(x=>x.kind==='contact'&&x.state==='completed'),true);
+});
+test('a queued credit purchase stops before provider calls when the subscription expires',async()=>{
+ const u=await billingUser();await beginTrial(u.p);
+ await testAdmin(c=>c.query("UPDATE app.billing_account SET state='active',plan='essential' WHERE workspace_id=$1",[u.p.workspaceId]));
+ const id=randomUUID();
+ await withWorkspaceTransaction(u.p,c=>c.query("SELECT app.billing_prepare_operation($1,$2,'fixture','checkout','imports-5000',(SELECT revision FROM app.billing_account),'{}')",[id,randomUUID()]));
+ await testAdmin(c=>c.query("UPDATE app.billing_account SET period_end=now()-interval '1 second' WHERE workspace_id=$1",[u.p.workspaceId]));
+ const f=stripeFixture();await processBillingOperation(id,f.adapter);
+ assert.deepEqual(f.counts(),{customers:0,checkouts:0});
+ assert.equal((await readBilling(u.p)).operations.find(operation=>operation.id===id)?.state,'failed');
 });

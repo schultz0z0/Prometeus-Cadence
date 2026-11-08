@@ -36,7 +36,7 @@ export function parsePlanning(input:unknown):PlanningInput{
 async function authorized(c:PoolClient,p:Principal){requirePermission({...p,role:(await c.query('SELECT app.current_role() AS role')).rows[0].role},'data.write');}
 export async function planningReviewState(c:PoolClient,p:Principal,input:PlanningInput){
  await authorized(c,p);
- const {config,policy}=await workspaceProspectingConfig(c),aiPolicy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId);
+ const {config,policy}=await workspaceProspectingConfig(c,true),aiPolicy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId);
  const textOnly=input.task==='context_read'||input.task==='message_preview',effectivePolicy=textOnly&&aiPolicy.mode==='auto'?{...aiPolicy,mode:'conventional-only' as const}:aiPolicy;
  const conventional=aiPolicy.conventionalProvider?runtime.conventional[aiPolicy.conventionalProvider].route:null;
  const resolution=resolveAiRoute(effectivePolicy,runtime,conventional?await readConnectionCheck(c,conventional):null);

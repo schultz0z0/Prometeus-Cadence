@@ -75,7 +75,7 @@ test('past-due accounts can open payment recovery without receiving unpaid renew
  assert.equal(f.mutations.filter(m=>m.path.endsWith('/billing_portal/sessions')).length,1);
 });
 test('prepaid checkout requires a verified paid session and grants only once',async()=>{
- const f=await fixture();await beginTrial(f.u.p);const op=randomUUID(),session='cs_test_fixture';
+ const f=await fixture();await deliver(f,'invoice.paid',{id:f.invoice.id,customer:f.customer});const op=randomUUID(),session='cs_test_fixture';
  await testAdmin(c=>c.query("INSERT INTO app.billing_operation(workspace_id,id,request_id,actor_id,body_hash,kind,sku,expected_revision,state,customer_id,remote_id) VALUES($1,$2,$2,$3,'hash','checkout','imports-5000',0,'awaiting_payment',$4,$5)",[f.u.p.workspaceId,op,f.u.p.userId,f.customer,session]));
  const value:any={id:session,customer:f.customer,mode:'payment',status:'complete',payment_status:'unpaid',currency:'brl',amount_total:2700,payment_intent:f.pi,metadata:{workspace_id:f.u.p.workspaceId,operation_id:op,sku:'imports-5000',catalog_version:BILLING_VERSION},line_items:{data:[{quantity:1,amount_total:2700}],has_more:false}};f.sessions.set(session,value);
  await deliver(f,'checkout.session.completed',{id:session,customer:f.customer});assert.equal((await readBilling(f.u.p)).balances.find(x=>x.unit==='imports')?.purchased,0);

@@ -11,7 +11,7 @@ import {decide} from './ai/jev.ts';
 import {generate} from './ai/codex.ts';
 import {hashValue} from './review.ts';
 import {ApifyAdapter} from './providers/apify.ts';
-import {normalizeCnpj} from './normalize.ts';
+import {normalizeCnpj,normalizeSite} from './normalize.ts';
 import type {SourceAdapter} from './providers/types.ts';
 import {providerContext} from './steps.ts';
 import {ProviderError} from './providers/transport.ts';
@@ -28,14 +28,98 @@ import {runEnrichment} from './enrichment.ts';
 import {buildAiSkill} from '../../domain/ai-skills.ts';
 import type {DecisorGenerator} from './ai/decisors.ts';
 export interface QualificationAdapters{
-  signal?:AbortSignal;apify?:SourceAdapter;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
+  signal?:AbortSignal;apify?:SourceAdapter;siteCrawler?:SourceAdapter;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
   collect?:typeof fetchEvidencePack;checkEmail?:typeof checkEmailDns;decisors?:DecisorGenerator;
   decide?:typeof decide;generate?:typeof generate;
 }
-async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,deps:QualificationAdapters):Promise<Evidence[]>{
+
+const discoveryLimit=5;
+const platformDomains=['google.com','google.com.br','googleusercontent.com','gstatic.com','goo.gl','google.site','instagram.com','facebook.com','linkedin.com','youtube.com','whatsapp.com','wa.me','linktr.ee','cnpj.biz','casadosdados.com.br','econodata.com.br','apontador.com.br','guiamais.com.br'];
+export function institutionalSite(value:unknown){
+  const site=normalizeSite(value);
+  if(!site)return undefined;
+  const host=new URL(site).hostname;
+  return platformDomains.some(domain=>host===domain||host.endsWith('.'+domain))?undefined:site;
+}
+const siteWords=(value:string)=>value.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().match(/[a-z0-9]+/g)??[];
+const identityWords=(value:string)=>{
+  const words=siteWords(value);
+  return words.length===1?words:words.filter(word=>word.length>2);
+};
+
+export const phoneIdentity=(value:string)=>value.replace(/\D/g,'').replace(/^55(?=\d{10,11}$)/,'');
+const containsWords=(text:string,words:string[])=>words.length>0&&` ${text} `.includes(` ${words.join(' ')} `);
+const matchesName=(text:string,name:string[])=>containsWords(
+  (name.length===1&&name[0].length<=2?siteWords(text):identityWords(text)).join(' '),name);
+const companyNames=(lead:Lead)=>[lead.name,lead.companyName].filter((name):name is string=>Boolean(name)).map(identityWords);
+
+export function companySiteCandidates(candidates:Candidate[],lead:Lead,{allowTitleMatch=false}={}){
+  const names=companyNames(lead),phone=phoneIdentity(lead.phone??'');
+  return candidates.filter(candidate=>{
+    const site=institutionalSite(candidate.site);
+    if(!site)return false;
+    const host=new URL(site).hostname;
+    const hostLabels=host.split('.').map(label=>label.replace(/-/g,''));
+    return names.some(words=>matchesName(candidate.name,words)&&(
+      allowTitleMatch||
+      (words.join('').length>2&&hostLabels.includes(words.join('')))||
+      Boolean(phone&&extractContacts(candidate.evidence??[]).phones.some(value=>phoneIdentity(value)===phone))
+    ));
+  });
+}
+
+export function verifySiteContent(lead:Lead,pages:Evidence[]){
+  const body=pages.map(page=>page.text).join(' ');
+  if(!companyNames(lead).some(name=>matchesName(body,name)))return false;
+  const cnpj=normalizeCnpj(lead.cnpj),cnpjs=extractCnpjs(pages);
+  if(cnpj&&cnpjs.length)return cnpjs.includes(cnpj);
+  const phone=phoneIdentity(lead.phone??''),phones=extractContacts(pages).phones.map(phoneIdentity);
+  return Boolean(phone&&phones.includes(phone));
+}
+
+async function mapsEvidence(lease:JobLease,lead:Lead):Promise<Evidence[]>{
+  if(lead.source!=='MAPS')return[];
+  return performStep(lease,'maps-evidence:'+lead.id,'public-web',{},()=>withLeasedTransaction(lease,async c=>{
+    const {rows}=await c.query(
+      `SELECT e.* FROM app.lead_evidence e JOIN app.prospecting_job j
+        ON j.workspace_id=e.workspace_id AND j.id=e.job_id
+        WHERE e.lead_id=$1 AND j.kind='generation' AND j.source='MAPS'
+        ORDER BY e.fetched_at DESC,e.id LIMIT 3`,[lead.id]);
+    const evidence:Evidence[]=rows.map(row=>({id:row.id,url:row.url,text:row.text,hash:row.hash,truncated:row.truncated,fetchedAt:new Date(row.fetched_at).toISOString()}));
+    const ids=await saveEvidence(c,lease.jobId,lead.id,evidence);
+    return evidence.slice(0,ids.length).map((item,index)=>({...item,id:ids[index]}));
+  }));
+}
+async function researchEvidence(lease:JobLease,lead:Lead):Promise<Evidence[]>{
+ return performStep(lease,'research-evidence:'+lead.id,'public-web',{},()=>withLeasedTransaction(lease,async c=>{
+  const {rows}=await c.query(`
+   SELECT DISTINCT ON(s.source_kind) s.* FROM app.research_source s
+   JOIN app.research_case r ON r.workspace_id=s.workspace_id AND r.job_id=s.job_id AND r.lead_id=s.lead_id
+   WHERE s.lead_id=$1 AND s.attribution='company' AND s.fetched_at>now()-interval '7 days'
+    AND r.basis->>'name'=$2 AND (r.basis->>'site') IS NOT DISTINCT FROM $3
+    AND (r.basis->>'cnpj') IS NOT DISTINCT FROM $4 AND (r.basis->>'phone') IS NOT DISTINCT FROM $5
+   ORDER BY s.source_kind,s.fetched_at DESC,s.id LIMIT 3`,
+   [lead.id,lead.name,lead.site??null,lead.cnpj??null,lead.phone??null]);
+  const pages:Evidence[]=rows.map(row=>({id:row.id,url:row.url,text:row.text,hash:row.hash,fetchedAt:new Date(row.fetched_at).toISOString(),truncated:false}));
+  const ids=await saveEvidence(c,lease.jobId,lead.id,pages);
+  return pages.slice(0,ids.length).map((page,index)=>({...page,id:ids[index]}));
+ }));
+}
+async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,deps:QualificationAdapters,verify=false):Promise<Evidence[]>{
   const site=lead.site;if(!site)return[];
-  return performStep(lease,'evidence:'+lead.id+':'+deep,'public-web',{},async()=>{
-    const pages=job.checkpoint.purpose==='ai-connection-test'?[{id:'connection-sample',url:'https://example.com/',fetchedAt:new Date().toISOString(),text:'Evidência sintética de teste: clínica odontológica fictícia com consultas e ortodontia. Não representa uma empresa real.',hash:hashValue('connection-sample-v1'),truncated:false}]:await (deps.collect??fetchEvidencePack)(site,{signal:deps.signal??new AbortController().signal},deep);
+  const step=verify?'verify-site:'+lead.id+':'+hashValue(new URL(site).host):'evidence:'+lead.id+':'+deep;
+  return performStep(lease,step,'public-web',{},async()=>{
+    let pages=job.checkpoint.purpose==='ai-connection-test'?[{id:'connection-sample',url:'https://example.com/',fetchedAt:new Date().toISOString(),text:'Evidência sintética de teste: clínica odontológica fictícia com consultas e ortodontia. Não representa uma empresa real.',hash:hashValue('connection-sample-v1'),truncated:false}]:await (deps.collect??fetchEvidencePack)(site,{signal:deps.signal??new AbortController().signal},deep);
+    if(verify){
+      const requested=new URL(site);
+      pages=pages.filter(page=>{
+        const canonical=institutionalSite(page.url);
+        if(!canonical)return false;
+        const received=new URL(canonical);
+        return received.host===requested.host&&(requested.protocol==='http:'||received.protocol==='https:');
+      });
+      if(!verifySiteContent(lead,pages))return[];
+    }
     return withLeasedTransaction(lease,async c=>{
       const ids=await saveEvidence(c,lease.jobId,lead.id,pages);
       return pages.slice(0,ids.length).map((e,i)=>({...e,id:ids[i]}));
@@ -43,24 +127,44 @@ async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,dep
   });
 }
 export async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string}={}):Promise<Partial<Candidate>|null>{const result=await sourceResults(lease,job,lead,module,deps,options);return result===null?null:result[0]??{};}
-export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string;limit?:number;beforeStart?:(operationId:string)=>Promise<void>}={}):Promise<Candidate[]|null>{
+export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string;limit?:number;beforeStart?:(operationId:string)=>Promise<void>;onTerminal?:(runId:string)=>Promise<void>}={}):Promise<Candidate[]|null>{
   const source=module==='registry'?'CNPJ':'WEB',step=module+':'+lead.id+(options.suffix?':'+options.suffix:'');
   const ctx=providerContext(job,source,hashValue({job:lease.jobId,step}),deps.signal??new AbortController().signal),adapter=deps.apify??new ApifyAdapter();
   if(options.partners)ctx.profile.partners=true;
   const limit=Math.min(5,Math.max(1,options.limit??1));
+  const requestedCnpj=module==='registry'?normalizeCnpj(lead.cnpj):undefined;
+  let differentCnpj=false;
+  function matchingCandidates(candidates:Candidate[]){
+    if(module==='website')return candidates.slice(0,limit);
+    return candidates.filter(candidate=>{
+      const cnpj=normalizeCnpj(candidate.cnpj);
+      if(cnpj&&cnpj!==requestedCnpj)differentCnpj=true;
+      return Boolean(cnpj&&cnpj===requestedCnpj);
+    }).slice(0,limit);
+  }
+  function noMatch(){
+    if(differentCnpj)throw new ProviderError('CNPJ_IDENTITY_MISMATCH');
+    return [];
+  }
   const input:Extract<JobInput,{kind:'generation'}>={kind:'generation',source,destination:{mode:'existing',listId:lead.listId},filters:module==='registry'?{term:lead.name,cnpj:lead.cnpj!}:{term:lead.name,location:[lead.city,lead.state].filter(Boolean).join(', ')||'Brasil'},limit,dedupScope:'workspace'};
   const started=await performStep(lease,step,'apify',{apifyRuns:1},async()=>{await options.beforeStart?.(ctx.operationId);return adapter.start(ctx,input);},r=>({provider:'apify',operationId:ctx.operationId,units:r.kind==='uncertain'?{}:{apifyRuns:1},costUsd:null,costKind:'unknown'}));
   if(started.kind==='uncertain'){await finishJob(lease,'needs_reconciliation','START_UNCERTAIN');return null;}
-  if(started.kind==='inline')return started.page.candidates.slice(0,limit);
-  const remote=await adapter.poll(ctx,started.run);if(['failed','cancelled'].includes(remote.status))throw new ProviderError('REMOTE_FAILED');
+  if(started.kind==='inline'){
+    const matching=matchingCandidates(started.page.candidates);
+    return matching.length?matching:noMatch();
+  }
+  const remote=await adapter.poll(ctx,started.run);
+  if(['succeeded','failed','cancelled'].includes(remote.status))await options.onTerminal?.(started.run.runId);
+  if(['failed','cancelled'].includes(remote.status))throw new ProviderError('REMOTE_FAILED');
   if(remote.status!=='succeeded')return null;
   // Registry datasets may include free notice rows before the requested company.
   // Keep dataset paging distinct from the one-company lookup limit.
   let cursor:string|null=null;
   for(let page=0;page<20;page++){
     const result=await adapter.readPage(ctx,remote.run,cursor,module==='registry'?100:limit);
-    if(result.candidates.length)return result.candidates.slice(0,limit);
-    if(result.exhausted||!result.nextCursor)return[];
+    const matching=matchingCandidates(result.candidates);
+    if(matching.length)return matching;
+    if(result.exhausted||!result.nextCursor)return noMatch();
     cursor=result.nextCursor;
   }
   throw new ProviderError('LOOKUP_PAGE_LIMIT');
@@ -85,6 +189,8 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       current={leadId,module};
       const base=job.checkpoint.bases[leadId] as Lead;
       const lead={...base,...Object.assign({},...prior.map(r=>r.proposed))} as Lead;
+      if(lead.site&&!institutionalSite(lead.site))lead.site=undefined;
+      const discovered=prior.find(item=>item.module==='website'&&item.proposed.site===lead.site&&item.reasons.includes('SITE_VERIFIED'));
       const result:ModuleResult={module,status:'pending_review',proposed:{},base:{},reasons:[],evidenceIds:[],usage:null,contextVersion:job.checkpoint.context?.version??0};
       const skip=qualificationSkipReason(base,input.options,!!job.checkpoint.processed?.[leadId]);
       if(skip){result.status='skipped';result.reasons=[skip];}
@@ -92,20 +198,34 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       else if(module==='registry'||module==='website'){
         let registryCnpj=normalizeCnpj(lead.cnpj);
         if(module==='registry'&&!registryCnpj){
-          const evidence=await collectEvidence(lease,job,lead,input.modules.includes('deep'),deps),cnpjs=extractCnpjs(evidence);result.evidenceIds=evidence.map(e=>e.id);
+          const evidence=await collectEvidence(lease,job,lead,input.modules.includes('deep'),deps,Boolean(discovered)),cnpjs=extractCnpjs(evidence);result.evidenceIds=evidence.map(e=>e.id);
           if(cnpjs.length===1)registryCnpj=cnpjs[0];
           else{result.status='skipped';result.reasons=[cnpjs.length?'AMBIGUOUS_CNPJ':'NO_CNPJ'];}
         }
         if(module==='website'&&lead.site){result.status='skipped';result.reasons=['ALREADY_HAS_SITE'];}
-        else if(result.status!=='skipped'){const source=await sourceResult(lease,job,{...lead,cnpj:registryCnpj},module,deps);if(source===null)return;
+        else if(result.status!=='skipped'){
+          const candidates=await sourceResults(lease,job,{...lead,cnpj:registryCnpj},module,deps,{limit:module==='website'?discoveryLimit:1});if(candidates===null)return;
+          let source:Partial<Candidate>=candidates[0]??{};
+          if(module==='website'){
+            source={};
+            for(const candidate of companySiteCandidates(candidates,lead)){
+              const site=institutionalSite(candidate.site)!;
+              const evidence=await collectEvidence(lease,job,{...lead,site},input.modules.includes('deep'),deps,true);
+              if(!evidence.length)continue;
+              source={site:institutionalSite(evidence[0].url)};result.evidenceIds=evidence.map(page=>page.id);result.reasons=['SITE_VERIFIED'];break;
+            }
+          }
           if(module==='registry'&&source.cnpj&&source.cnpj!==registryCnpj)throw new ProviderError('CNPJ_IDENTITY_MISMATCH');
-          result.evidenceIds.push(...await withLeasedTransaction(lease,c=>saveEvidence(c,lease.jobId,lead.id,'evidence' in source?source.evidence??[]:[])));
+          result.evidenceIds.push(...await withLeasedTransaction(lease,c=>saveEvidence(c,lease.jobId,lead.id,source.evidence??[])));
           for(const key of (module==='website'?['site']:['cnpj','companyName','city','state','capital','size','legalNature','cnae','openedAt','address']) as (keyof Lead)[])if(source[key as keyof typeof source])Object.assign(result.proposed,{[key]:source[key as keyof typeof source]});if(!Object.keys(result.proposed).length){result.status='skipped';result.reasons=['NO_RESULT'];}}
       }else if(module==='validateEmail'){
         const validation=lead.email?await (deps.checkEmail??checkEmailDns)(lead.email):null;result.status='succeeded';result.reasons=[!validation?'NO_EMAIL':validation.format?'FORMAT_VALID':'FORMAT_INVALID',validation?.dns===true?'MAIL_DOMAIN_FOUND':'MAIL_DOMAIN_UNKNOWN','MAILBOX_NOT_VERIFIED'];
         if(validation&&lead.email)result.emailAssessment=assessEmail(lead.email,validation,new Date().toISOString());
       }else{
-        const evidence=await collectEvidence(lease,job,lead,input.modules.includes('deep'),deps);result.evidenceIds=evidence.map(e=>e.id);
+        const pages=await collectEvidence(lease,job,lead,input.modules.includes('deep'),deps,Boolean(discovered));
+        const evidence=pages.length||!['qualify','summary'].includes(module)?pages:await mapsEvidence(lease,lead);
+        if(['qualify','summary'].includes(module))evidence.push(...await researchEvidence(lease,lead));
+        result.evidenceIds=evidence.map(e=>e.id);
         if(!evidence.length){result.status='skipped';result.reasons=['NO_EVIDENCE'];}
         else if(module==='deep'){result.status='succeeded';result.reasons=['PUBLIC_PAGES_ONLY'];}
         else if(module==='email'||module==='phone'){

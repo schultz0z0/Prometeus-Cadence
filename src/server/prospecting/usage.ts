@@ -5,7 +5,11 @@ import {hashValue} from './review.ts';
 import {releaseCommercial} from '../billing/entitlements.ts';
 export async function reserveUsage(c:PoolClient,operation:{jobId:string;operationId:string;units:Units;caps:Units;globalCaps:Units}){
   try{await c.query('SELECT app.reserve_prospecting_usage($1,$2,$3,$4,$5)',[operation.jobId,operation.operationId,operation.units,operation.caps,operation.globalCaps]);}
-  catch(e){if(e instanceof Error&&e.message==='USAGE_LIMIT')throw new AppError(429,'O orçamento de uso disponível não permite esta execução.','USAGE_LIMIT');throw e;}
+  catch(e){
+    const messages:Record<string,string>={USAGE_LIMIT:'O orçamento de uso disponível não permite esta execução.',USAGE_WORKSPACE_LIMIT:'A capacidade diária de processamento deste workspace foi atingida.',USAGE_PLATFORM_LIMIT:'A capacidade de processamento da plataforma está ocupada. Tente novamente mais tarde.',PLANNING_DAILY_LIMIT:'O limite diário de 20 análises auxiliares foi atingido. A qualificação dos leads tem capacidade separada.'};
+    if(e instanceof Error&&messages[e.message])throw new AppError(429,messages[e.message],e.message);
+    throw e;
+  }
 }
 export async function settleUsage(c:PoolClient,jobId:string,usage:ProviderUsage){
   await c.query('SELECT 1 FROM app.prospecting_job WHERE id=$1 FOR UPDATE',[jobId]);

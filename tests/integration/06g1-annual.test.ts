@@ -8,6 +8,7 @@ import {receiveBillingEvent,processBillingEvent} from '../../src/server/billing/
 import {readBilling} from '../../src/server/billing/repository.ts';
 import {BILLING_VERSION,monthlyWindow} from '../../src/domain/billing.ts';
 import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
+import {readExtractionDay} from '../../src/server/billing/extraction-day.ts';
 import {prepareBilling,confirmBilling} from '../../src/server/billing/operations.ts';
 Object.assign(process.env,{STRIPE_SECRET_KEY:'sk_test_fixture',STRIPE_WEBHOOK_SECRET:'whsec_fixture'});
 after(async()=>{await closeBillingPool();await getPools().close();});
@@ -130,7 +131,9 @@ test('06G.1 review: the gap between windows spends the franchise, not paid packs
  await testAdmin(c=>c.query("INSERT INTO app.billing_grant(workspace_id,id,unit,quantity,source,external_ref) VALUES($1,'pack-qa','extractions',100,'pack','pack-qa')",[f.u.p.workspaceId]));
  // The worker has not run yet and the window has just ended.
  await testAdmin(async c=>{await c.query("UPDATE app.billing_account SET period_start=period_start-interval '32 days' WHERE workspace_id=$1",[f.u.p.workspaceId]);await c.query("UPDATE app.billing_grant SET expires_at=now()-interval '1 minute' WHERE workspace_id=$1 AND source='plan'",[f.u.p.workspaceId]);});
+ assert.equal((await withWorkspaceTransaction(f.u.p,c=>readExtractionDay(c)))?.planBalance,5000);
  await withWorkspaceTransaction(f.u.p,c=>c.query("SELECT app.billing_reserve($1,'extractions',10)",[randomUUID()]));
+ assert.equal((await withWorkspaceTransaction(f.u.p,c=>readExtractionDay(c)))?.planBalance,4990);
  const pack=await testAdmin(async c=>(await c.query("SELECT held,spent FROM app.billing_grant WHERE id='pack-qa' AND workspace_id=$1",[f.u.p.workspaceId])).rows[0]);assert.deepEqual([pack.held,pack.spent],[0,0],'the prepaid pack is untouched');
  // Past due and canceled open nothing, also from the reservation path.
  const d=await fixture();await pay(d);await testAdmin(c=>c.query("UPDATE app.billing_account SET state='past_due' WHERE workspace_id=$1",[d.u.p.workspaceId]));const n=(await grants(d)).length;await roll(inDays(32));assert.equal((await grants(d)).length,n);

@@ -9,7 +9,7 @@ export function researchSourceRegistry(){
  return{version:researchContractVersion,website:{available:config.enabled,contract:'public-company-html-v1'},social:{available:config.enabled,contract:'public-linked-profile-html-v1',authenticated:false},webSearch:{available:ready('WEB'),contract:'approved-apify-web'},registry:{available:ready('CNPJ'),contract:'approved-apify-cnpj'}};
 }
 export function researchSourceWarnings(kinds:ResearchKind[]){const r=researchSourceRegistry();return[
- ...(kinds.includes('social')?['Redes sociais: páginas públicas ligadas ao site. Perfis privados ou bloqueados não são acessados; a cobertura pode ser parcial.']:[]),
+ ...(kinds.includes('social')?['Redes sociais: páginas públicas e resultados indexados de busca. LinkedIn usa somente evidências do buscador. A cobertura pode ser parcial.']:[]),
  ...(kinds.includes('registry')&&!r.registry.available?['Consulta cadastral indisponível; a investigação continuará com as demais fontes habilitadas.']:[]),
  ...(!r.webSearch.available?['Busca de sites indisponível; contatos sem um site informado poderão ficar sem resultado.']:[]),
  ];}

@@ -22,12 +22,14 @@ import {qualificationFingerprint} from '../../domain/qualification-policy.ts';
 import {peopleCheckpoint} from '../research/identity.ts';
 import {enrichmentCheckpoint} from './enrichment-context.ts';
 import {processedQualifications} from './processed.ts';
+import {readExtractionDay} from '../billing/extraction-day.ts';
+import {readQualificationDay} from '../billing/qualification-day.ts';
 const secret=()=>{const s=process.env.BETTER_AUTH_SECRET;if(!s)throw Error('Review signing is not configured');return s;};
 async function authorized(c:PoolClient,p:Principal){
   const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;
   const current={...p,role};requirePermission(current,'data.write');return current;
 }
-export async function prospectingReviewState(c:PoolClient,p:Principal,input:ProspectingInput){
+export async function prospectingReviewState(c:PoolClient,p:Principal,input:ProspectingInput,{checkExtraction=true}={}){
   await authorized(c,p);
   const {config,policy}=await workspaceProspectingConfig(c);
   let aiRoute:AiRoute|null=null;const aiBlockers:string[]=[];
@@ -36,6 +38,17 @@ export async function prospectingReviewState(c:PoolClient,p:Principal,input:Pros
     const resolution=resolveAiRoute(aiPolicy,runtime,selected?await readConnectionCheck(c,selected):null);aiRoute=resolution.route;aiBlockers.push(...resolution.blockers);
   }
   const blockers=[...aiBlockers];
+  const extractionDay=checkExtraction&&input.kind==='generation'&&input.source!=='APOLLO'?await readExtractionDay(c):null;
+  const funding=input.kind==='generation'?input.funding??'plan':'plan';
+  const extractionRemaining=extractionDay?Math.max(0,Math.min(extractionDay.limit-extractionDay[funding],funding==='credits'?extractionDay.creditsBalance:extractionDay.planBalance)):null;
+  const qualificationDay=input.kind==='qualification'&&!input.enrichment&&!input.companyResearch?await readQualificationDay(c,input.listId,input.leadIds):null;
+  if(qualificationDay){
+    const {limit,plan,credits,requestedPlan,requestedCredits}=qualificationDay;
+    if(requestedPlan&&plan+requestedPlan>limit)blockers.push(`A qualificação pede ${requestedPlan} vagas da franquia e há ${Math.max(0,limit-plan)} disponíveis hoje.`);
+    if(requestedCredits&&credits+requestedCredits>limit)blockers.push(`A qualificação pede ${requestedCredits} vagas de leads captados com adicionais e há ${Math.max(0,limit-credits)} disponíveis hoje.`);
+  }
+  if(checkExtraction&&funding==='credits'&&!extractionDay)blockers.push('Créditos adicionais exigem assinatura Essential ou Pro ativa.');
+  if(input.kind==='generation'&&extractionRemaining!==null&&input.limit>extractionRemaining)blockers.push(`A busca pede ${input.limit} extrações, mas o saldo escolhido tem ${extractionRemaining} disponíveis hoje.`);
   let listId:string|null=null;
   if(input.kind==='qualification'||input.destination.mode==='existing'){
     listId=input.kind==='qualification'?input.listId:input.destination.mode==='existing'?input.destination.listId:null;
@@ -57,14 +70,14 @@ export async function prospectingReviewState(c:PoolClient,p:Principal,input:Pros
   blockers.push(...requirements(config,input,p.workspaceId,aiRoute,enrichment?.reserveCredits));
   const profileVersion=hashValue({config:config.version,apolloConnection:config.apolloConnection,policy:policy??null,contextVersion:context?.version??0,aiRoute,...(enrichment?{enrichment}: {})});
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};
-  return {config,blockers,proof,profileVersion,aiRoute,enrichment,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:apolloMaxPages(!!config.apolloConnection),apolloConnection:config.apolloConnection,apolloCredential:config.apolloCredential}}};
+  return {config,blockers,proof,profileVersion,aiRoute,enrichment,extractionRemaining,qualificationDay,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,siteCrawler:config.siteCrawler,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:apolloMaxPages(!!config.apolloConnection),apolloConnection:config.apolloConnection,apolloCredential:config.apolloCredential}}};
 }
 function parseInput(input:unknown):ProspectingInput{const parsed=jobInputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise fonte, filtros, destino e quantidade.');return parsed.data;}
 export async function prepareJob(p:Principal,input:unknown):Promise<Review>{
   const parsed=parseInput(input);
   return withWorkspaceTransaction(p,async c=>{
     const state=await prospectingReviewState(c,p,parsed),now=Date.now();
-    return {token:createReviewToken(state.proof,secret(),now),expiresAt:new Date(now+600000).toISOString(),input:parsed,blockers:state.blockers,profileVersion:state.profileVersion,aiRoute:state.aiRoute?aiRouteView(state.aiRoute):null,usage:estimateUsage(parsed,state.aiRoute,state.enrichment?.reserveCredits),...(state.enrichment?{enrichmentPreview:{companies:state.enrichment.groups.length,cached:state.enrichment.cached,maxCredits:state.enrichment.reserveCredits,freshLookups:state.enrichment.reserveCredits}}:{}),warnings:['A execução usa serviços externos. Custos desconhecidos não são tratados como zero.','Resultados de IA serão apresentados para revisão antes de aplicar.',...(parsed.kind==='generation'&&parsed.source==='CNPJ'?['Filtros e cobertura dependem do Actor; esta fonte não é uma base nacional local.']:[])]};
+    return {token:createReviewToken(state.proof,secret(),now),expiresAt:new Date(now+600000).toISOString(),input:parsed,blockers:state.blockers,profileVersion:state.profileVersion,aiRoute:state.aiRoute?aiRouteView(state.aiRoute):null,usage:estimateUsage(parsed,state.aiRoute,state.enrichment?.reserveCredits),extractionRemaining:state.extractionRemaining,qualificationDay:state.qualificationDay,...(state.enrichment?{enrichmentPreview:{companies:state.enrichment.groups.length,cached:state.enrichment.cached,maxCredits:state.enrichment.reserveCredits,freshLookups:state.enrichment.reserveCredits}}:{}),warnings:['A execução usa serviços externos. Custos desconhecidos não são tratados como zero.','Resultados de IA serão apresentados para revisão antes de aplicar.',...(parsed.kind==='generation'&&parsed.source==='CNPJ'?['Filtros e cobertura dependem do Actor; esta fonte não é uma base nacional local.']:[])]};
   });
 }
 export async function confirmJob(p:Principal,input:unknown):Promise<JobView>{

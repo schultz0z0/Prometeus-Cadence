@@ -22,7 +22,7 @@ const until=async(fn,message,ms=30000)=>{const end=Date.now()+ms;let last;while(
 async function newContext(viewport={width:1440,height:900}){const context=await browser.newContext({viewport});open.push(context);await context.route('**/*',r=>{const h=new URL(r.request().url()).hostname;return h==='127.0.0.1'||h==='localhost'?r.continue():r.abort();});const page=await context.newPage();page.on('pageerror',e=>issues.push('pageerror '+e.message.slice(0,120)));page.on('response',r=>{if(r.status()>=400&&new URL(r.url()).pathname.startsWith('/api/'))issues.push(r.status()+' '+r.request().method()+' '+new URL(r.url()).pathname);});return {context,page};}
 const mailLink=async(email,kind='verify-email')=>{for(let i=0;i<20;i++){const box=await (await fetch(`http://127.0.0.1:8125/api/v2/search?kind=to&query=${encodeURIComponent(email)}`)).json();for(const m of box.items??[]){const t=m.Content.Body.replace(/=\r?\n/g,'').replace(/=([A-Fa-f0-9]{2})/g,(_,h)=>String.fromCharCode(parseInt(h,16)));const l=(t.match(/https?:\/\/[^\s<>"]+/g)??[]).find(x=>x.includes(kind));if(l)return l;}await new Promise(w=>setTimeout(w,500));}throw Error('no mail link');};
 /** A fast account: API signup and the real workspace form. The signup journey does this by hand instead. */
-async function account(name,{plan=null}={}){
+async function account(name,{plan=null,paid=false}={}){
  const email=`re-qa-08a-${name}-${Date.now()}@example.com`,password='Local-QA-08a-pass-7351!';
  attemptedEmails.add(email);
  // The app limits signups; this waits for the window instead of working around it.
@@ -31,7 +31,7 @@ async function account(name,{plan=null}={}){
  const {context,page}=await newContext();await page.goto(await mailLink(email),{waitUntil:'load',timeout:120000});await workspaceForm(page,'[RE] QA 08A '+name);
  const row=(await db.query('SELECT m."organizationId" AS ws,u.id FROM auth."user" u JOIN auth.member m ON m."userId"=u.id WHERE u.email=$1',[email])).rows[0];created.push(row);
  if(plan==='trial'){const c=await db.connect();try{await c.query('BEGIN');await c.query("SELECT set_config('app.workspace_id',$1,true),set_config('app.user_id',$2,true)",[row.ws,row.id]);await c.query('SELECT app.billing_start_trial($1)',[randomUUID()]);await c.query('COMMIT');}finally{c.release();}}
- else if(plan){await db.query("UPDATE app.billing_account SET state='pilot',plan=$2,period_start=now(),period_end=now()+interval '7 days' WHERE workspace_id=$1",[row.ws,plan]);for(const unit of ['imports','extractions'])await db.query("INSERT INTO app.billing_grant(workspace_id,id,unit,quantity,source,external_ref,expires_at) VALUES($1,$2,$3,1000,'pilot',$2,now()+interval '7 days')",[row.ws,randomUUID(),unit]);}
+ else if(plan){await db.query("UPDATE app.billing_account SET state=$3,plan=$2,period_start=now(),period_end=now()+interval '7 days' WHERE workspace_id=$1",[row.ws,plan,paid?'active':'pilot']);for(const unit of ['imports','extractions'])await db.query("INSERT INTO app.billing_grant(workspace_id,id,unit,quantity,source,external_ref,expires_at) VALUES($1,$2,$3,1000,$4,$2,now()+interval '7 days')",[row.ws,randomUUID(),unit,paid?'plan':'pilot']);}
  return {email,password,workspace:row.ws,user:row.id,context,page};
 }
 async function workspaceForm(page,name){await page.getByText('Carregando sua conta').waitFor({state:'hidden',timeout:60000}).catch(()=>{});await page.waitForTimeout(1500);await page.getByPlaceholder('Sua empresa').fill(name);await page.getByRole('button',{name:/Criar workspace/}).click();await page.waitForURL(u=>!u.pathname.includes('onboarding/workspace'),{timeout:120000});}
@@ -51,7 +51,37 @@ const journeys={
   await step('revisa a assinatura anual, sem confirmar',async()=>{await planTab(page);await page.getByRole('button',{name:/Anual/}).click();await page.locator('.billing-comparison-plan').first().getByRole('button').click();const review=page.getByRole('dialog');await review.getByText('Revisar alteração de cobrança').waitFor();await review.getByText('R$ 3.811,20').first().waitFor();await review.getByRole('button',{name:'Voltar'}).click();assert.equal((await db.query('SELECT count(*)::int n FROM app.billing_operation WHERE workspace_id=$1',[created.at(-1).ws])).rows[0].n,0,'nothing confirmed');});
  },
  async pack(step){
-  const a=await account('pack',{plan:'trial'}),{page}=a;
+  const a=await account('pack',{plan:'essential',paid:true}),{page}=a;
+  await step('plano mostra limites separados de captação e qualificação',async()=>{
+   await go(page,'/settings/plan');
+   await seen(page,'Qualificações de hoje, incluindo reservas');
+   const usage=await page.locator('.billing-usage-footnote').allTextContents();
+   assert.ok(usage.some(text=>text.includes('Franquia 0 / 250')&&text.includes('Adicionais 0 / 250')));
+   assert.ok(usage.some(text=>text.includes('Qualificações de hoje')&&text.includes('0 / 250')));
+   const positions=await page.locator('.billing-usage-footnote').evaluateAll(items=>items.map(item=>item.getBoundingClientRect().left));
+   assert.ok(positions.every(x=>Math.abs(x-positions[0])<1),'medidores diários alinhados com o resumo mensal');
+   mkdirSync('output/playwright/usage-limits',{recursive:true});
+   await page.screenshot({path:'output/playwright/usage-limits/essential-plan.png',fullPage:true});
+   await page.setViewportSize({width:390,height:844});
+   try{
+    await seen(page,'Qualificações de hoje, incluindo reservas');
+    await until(()=>page.evaluate(()=>innerWidth===390&&document.documentElement.scrollWidth<=innerWidth+1),'layout do plano cabe em 390 px',5000);
+    await page.screenshot({path:'output/playwright/usage-limits/essential-plan-mobile.png',fullPage:true});
+   }finally{await page.setViewportSize({width:1440,height:900});}
+  });
+  await step('jornada herda créditos e permite revisar a escolha antes de buscar',async()=>{
+   await go(page,'/leads/generator');
+   await page.getByRole('combobox',{name:'Saldo para extrações'}).click();
+   await page.getByRole('option',{name:'Créditos adicionais',exact:true}).click();
+   await page.getByRole('button',{name:'Prospecção completa',exact:true}).click();
+   const dialog=page.getByRole('dialog');
+   assert.equal(await dialog.getByRole('combobox',{name:'Saldo para extrações'}).innerText(),'Créditos adicionais');
+   await dialog.getByRole('combobox',{name:'Saldo para extrações'}).click();
+   await page.getByRole('option',{name:'Franquia do plano',exact:true}).click();
+   assert.equal(await dialog.getByRole('combobox',{name:'Saldo para extrações'}).innerText(),'Franquia do plano');
+   await dialog.getByRole('button',{name:'Cancelar',exact:true}).click();
+   assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);
+  });
   await step('revisa um pacote com o preço do servidor, sem confirmar',async()=>{await planTab(page);await page.locator('.billing-addon-card').first().getByRole('button').click();const review=page.getByRole('dialog');await review.getByText('Revisar alteração de cobrança').waitFor();await review.getByText('R$ 97,00').first().waitFor();await review.getByRole('button',{name:'Voltar'}).click();await review.waitFor({state:'detached'});});
   await step('cupom inexistente é recusado na tela e o rascunho fica',async()=>{await page.getByLabel('Tem um cupom?').fill('naoexiste');await page.locator('.billing-addon-card').first().getByRole('button').click();await seen(page,'Cupom inválido, vencido ou já utilizado.');assert.equal(await page.getByLabel('Tem um cupom?').inputValue(),'naoexiste');});
   await step('nada foi cobrado nem criado',async()=>{assert.equal((await db.query('SELECT count(*)::int n FROM app.billing_operation WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);});
@@ -98,7 +128,7 @@ const journeys={
   await step('resposta lenta não permite salvar duas vezes',async()=>{await form();await page.getByLabel(/Nome da empresa/).fill('[RE] Lento');await page.route('**/api/**',async r=>{if(r.request().method()!=='GET')await new Promise(w=>setTimeout(w,2500));await r.continue().catch(()=>{});});const button=page.getByRole('dialog').getByRole('button',{name:/Salvar|Adicionar|Criar/}).last();await button.click();await button.click({timeout:800}).catch(()=>{});await page.waitForTimeout(4000);await page.unroute('**/api/**');const n=await until(async()=>(await db.query("SELECT count(*)::int n FROM app.lead WHERE workspace_id=$1 AND payload->>'name'='[RE] Lento'",[a.workspace])).rows[0].n,'saved');assert.equal(n,1);});
  },
  async roles(step){
-  const a=await account('roles',{plan:'pro'}),operator=await account('operador');
+  const a=await account('roles',{plan:'pro',paid:true}),operator=await account('operador');
   await db.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),a.workspace,operator.user,'operator']);
   const {page}=operator;
   await step('entra no workspace do dono',async()=>{const r=await page.request.post(origin+'/api/identity',{headers:{origin,'content-type':'application/json'},data:{type:'switch',workspaceId:a.workspace}});assert.equal(r.status(),200);});
@@ -499,7 +529,7 @@ const journeys={
   await step('aceitar conclui o cadastro e libera o app',async()=>{await db.query('UPDATE auth."user" SET "registrationRequired"=true WHERE id=$1',[a.user]);await go(page,'/onboarding/entry');await page.getByLabel('Telefone').fill('(21) 97323-1943');await page.getByRole('checkbox').first().check();await page.getByRole('button',{name:/Continuar|Salvar|Concluir/}).first().click();await page.waitForURL(u=>!u.pathname.startsWith('/onboarding/profile'),{timeout:30000});assert.equal((await db.query('SELECT "registrationRequired" r FROM auth."user" WHERE id=$1',[a.user])).rows[0].r,false);});
  },
  async admin(step){
-  const a=await account('dono-adm',{plan:'pro'}),admin=await account('admin'),op=await account('operador2');
+  const a=await account('dono-adm',{plan:'pro',paid:true}),admin=await account('admin'),op=await account('operador2');
   for(const [who,role] of [[admin,'admin'],[op,'operator']]){await who.page.goto('about:blank');await db.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),a.workspace,who.user,role]);const r=await who.page.request.post(origin+'/api/identity',{headers:{origin,'content-type':'application/json'},data:{type:'switch',workspaceId:a.workspace}});assert.equal(r.status(),200);}
   const post=(who,path,data)=>who.page.request.post(origin+path,{headers:{origin,'content-type':'application/json','x-cadence-workspace':a.workspace},data});
   await step('administrador pode preparar cobrança',async()=>{assert.equal((await post(admin,'/api/billing/prepare',{kind:'checkout',sku:'extractions-2000'})).status(),200);});

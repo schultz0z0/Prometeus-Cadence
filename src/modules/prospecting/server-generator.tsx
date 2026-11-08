@@ -20,10 +20,11 @@ export function ServerGenerator({initialSource='MAPS'}:{initialSource?:string}){
   const [mode,setMode]=useState('new'),[name,setName]=useState(''),[listId,setListId]=useState(state.lists[0]?.id??''),[term,setTerm]=useState(''),[location,setLocation]=useState(''),[cnae,setCnae]=useState(''),[region,setRegion]=useState(''),[cnpj,setCnpj]=useState(''),[description,setDescription]=useState(''),[suggesting,setSuggesting]=useState(false);
   const [research,setResearch]=useState(false);
   const [journey,setJourney]=useState(false);
+  const [funding,setFunding]=useState<'plan'|'credits'>('plan');
   const [limit,setLimit]=useState(10),[scope,setScope]=useState<'list'|'workspace'>('workspace'),[review,setReview]=useState<Review|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
   async function prepare(){setBusy(true);setError('');try{
     const filters=generationFilters({source,term,location,cnae,region,cnpj});
-    const input:JobInput={kind:'generation',source,destination:mode==='new'?{mode:'new',name}:{mode:'existing',listId},filters,limit,dedupScope:scope};setReview(await client.prepare(input));
+    const input:JobInput={kind:'generation',source,destination:mode==='new'?{mode:'new',name}:{mode:'existing',listId},filters,limit,dedupScope:scope,...(source==='APOLLO'?{}:{funding})};setReview(await client.prepare(input));
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível preparar.');}finally{setBusy(false);}}
   return <div className="prospecting-reference prospecting-generator"><PageHeader title="Gerador de leads" description="Encontre empresas no Google Maps, na busca da web ou na Base CNPJ e salve numa lista pronta pra qualificar."/>
     <p className="prospecting-inline-help">Esta é a forma avulsa: você roda agora, uma vez. <Link href="/automations/new">Em Automações</Link>, o sistema repete isso sozinho e traz leads novos toda semana.</p>
@@ -39,6 +40,7 @@ export function ServerGenerator({initialSource='MAPS'}:{initialSource?:string}){
         <Field label={source==='CNPJ'?'Cidade (opcional)':'Localização'}><input required={source==='MAPS'||source==='WEB'} value={location} onChange={e=>setLocation(e.target.value)} placeholder="Ex: São Paulo, SP / Miami, FL"/></Field>
         {source==='CNPJ'&&<Field label="Estado (UF)"><input maxLength={2} value={region} onChange={e=>setRegion(e.target.value.toUpperCase())} placeholder="SP"/></Field>}
         <Field label="Máximo de candidatos" ><input className="prospecting-limit" required type="number" min={1} max={500} value={limit} onChange={e=>setLimit(Number(e.target.value))}/></Field>
+        {source!=='APOLLO'&&<Field label="Saldo para extrações"><SelectField value={funding} onChange={e=>setFunding(e.target.value==='credits'?'credits':'plan')}><option value="plan">Franquia do plano</option><option value="credits">Créditos adicionais</option></SelectField></Field>}
         </div>
         {source==='CNPJ'&&<p className="prospecting-capability-note">A busca conectada aceita CNAE, cidade e UF, ou consulta por CNPJ específico. O nome do público é um rótulo. Outros filtros cadastrais dependem do provedor e não são enviados por esta tela.</p>}
         {source==='APOLLO'&&<Notice>O Apollo conectado busca empresas. Dados de pessoas e enriquecimento de e-mail não estão incluídos nesta busca.</Notice>}
@@ -47,7 +49,7 @@ export function ServerGenerator({initialSource='MAPS'}:{initialSource?:string}){
       {error&&<p className="error-bar" role="alert">{error}</p>}
     </form><details className="prospecting-provider-details"><summary>Status das integrações e histórico</summary><ProviderStatus compact/><LinkButton href="/executions?view=jobs" icon="Clock">Histórico de execuções</LinkButton></details>
     <div className="research-generator-entry"><p>Prefere seguir da busca à investigação e qualificação com o mesmo objetivo?</p><Button icon="Sparkles" onClick={()=>setJourney(true)}>Prospecção completa</Button><p>Já tem empresas na sua lista? Investigue o site, redes públicas e contatos comerciais.</p><Button icon="Globe" disabled={!state.leads.length} onClick={()=>setResearch(true)}>Investigar empresas da lista</Button></div>
-    {journey&&<JourneyStart initial={{brief:term,location,limit,...(mode==='existing'?{destinationListId:listId}:{})}} onClose={()=>setJourney(false)}/>}
+    {journey&&<JourneyStart initial={{brief:term,location,limit,funding,...(mode==='existing'?{destinationListId:listId}:{})}} onClose={()=>setJourney(false)}/>}
     {research&&<ResearchStart onClose={()=>setResearch(false)}/>}
     {suggesting&&<NicheSuggestions description={description} onClose={()=>setSuggesting(false)} onApply={draft=>{setSource(draft.source);setTerm(draft.term);setLocation(draft.location);setCnae(draft.cnae);setRegion(draft.region);setCnpj(draft.cnpj);setLimit(draft.limit);if(mode==='new')setName(draft.name);setReview(null);setSuggesting(false);}}/>}
     {review&&<JobReview review={review} onClose={()=>setReview(null)} onConfirm={async()=>{const job=await client.confirm(review);window.location.assign('/executions/'+job.id);}}/>}
