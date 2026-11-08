@@ -1,6 +1,6 @@
 {
- "date": "2026-11-07T17:59:31.889Z",
- "sourceHash": "f419a780e3f4e6348bcf51cf14fa9b1aaf052cdeb2a9751c5a85c704fee78c41",
+ "date": "2026-11-08T02:41:21.156Z",
+ "sourceHash": "e5eb284aa95a26a0a524b4765446a74f79949ed15e706098d512185d71684d8a",
  "note": "Navegador sem acesso a outros hosts; contas sem canais ativos; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
  "runs": [
   {
@@ -37,6 +37,14 @@
    "crash": null,
    "unexpected": [],
    "steps": [
+    {
+     "name": "plano mostra limites separados de captação e qualificação",
+     "ok": true
+    },
+    {
+     "name": "jornada herda créditos e permite revisar a escolha antes de buscar",
+     "ok": true
+    },
     {
      "name": "revisa um pacote com o preço do servidor, sem confirmar",
      "ok": true

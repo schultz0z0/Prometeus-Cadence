@@ -371,3 +371,7 @@ Recuperação da lista de caixas após falha, novas provas dos formulários e co
 ### Continuidade 07/11/2026 — 08A.8 e 06A-V
 
 Comparação com a sessão aberta do CadenceFlow, com Aprender e ajuda contextual incorporados ao Prometeus. O relatório discrimina as diferenças da referência e o inventário reúne as conexões para a futura homologação. Os demais marcos seguem pendentes por orientação do usuário. [Comparação](../../validation/08a8-live-visual.md) · [Conexões externas](../../validation/08a8-conexoes-externas.md)
+
+### Continuidade 07/11/2026 — franquias e Prospecção completa
+
+Franquias de prospecção e qualificação por plano e créditos, com admissão verificada na Prospecção completa e medição local. O aceite público continua condicionado à homologação dos fornecedores e da capacidade operacional. [Relatório](../../validation/2026-11-07-prospecting-allowances-progress.md).

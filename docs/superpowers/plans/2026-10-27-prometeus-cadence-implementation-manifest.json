@@ -1703,5 +1703,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-11-05"
+  "prospectingAllowances": {"status": "implemented-local", "plan": "docs/superpowers/plans/2026-11-07-prometeus-cadence-prospecting-allowances.md", "validation": "docs/validation/2026-11-07-prospecting-allowances-progress.md", "review": "docs/validation/2026-11-07-prospecting-allowances-review.md", "evidence": "EV-311", "deviations": "Commercial limits are Prometeus policy. Full live journey and sustained provider capacity require separate acceptance."},
+  "updatedAt": "2026-11-07"
 }

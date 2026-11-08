@@ -229,3 +229,7 @@ Continuidade 07B.3 em 04/11 (parcial, sem aceite do SDR):
 - **Pendências:** CRM não existe (nenhum conector); piloto depende de contas e autorização do usuário.
 
 A revisão independente encontrou cinco High, doze Medium e oito Low, tratados na 110b, com três itens aceitos e registrados. [Relatório](../../validation/07b3-sdr-actions.md).
+
+### Franquias de prospecção e qualificação
+
+Franquias de prospecção e qualificação por plano e créditos, com admissão verificada na Prospecção completa e medição local. O aceite público continua condicionado à homologação dos fornecedores e da capacidade operacional. [Relatório](../../validation/2026-11-07-prospecting-allowances-progress.md).
