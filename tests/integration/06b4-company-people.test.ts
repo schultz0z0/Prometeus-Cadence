@@ -24,6 +24,19 @@ async function fixture(){const user=await prospectingUser({platformAi:true}),lis
 async function start(f:Awaited<ReturnType<typeof fixture>>){const review=await prepareJob(f.p,f.input);assert.deepEqual(review.blockers,[]);return confirmJob(f.p,{input:f.input,reviewToken:review.token,requestId:randomUUID()});}
 async function run(f:Awaited<ReturnType<typeof fixture>>,deps:import('../../src/domain/company-people.ts').PeopleAdapters=adapters()){const job=await start(f),lease=await grantTestLease(f.p,job.id);await resolveCompanyPeople(lease,deps);const result=await readCompanyPeople(f.p,job.id);assert.ok(['completed','partial'].includes(result.state),JSON.stringify((await getJob(f.p,job.id)).error));return{job,result};}
 const consumed=async(p:any)=>withWorkspaceTransaction(p,async c=>Number((await c.query("SELECT COALESCE(sum(quantity),0) n FROM app.billing_consumption WHERE unit='enrichment'")).rows[0].n));
+
+test('indexed LinkedIn evidence never makes a direct LinkedIn request',async()=>{
+ const f=await fixture(),deps=adapters(),read:string[]=[];
+ const original=deps.apify.start;
+ deps.apify.start=async(ctx:any,input:any)=>{
+  const result=await original(ctx,input);
+  if(input.source==='WEB')result.page.candidates=[{...result.page.candidates[0],name:'Empresa Exemplo',source:'WEB',sourceRef:'linkedin',site:'https://linkedin.com/',evidence:[{...page,url:'https://www.linkedin.com/in/pessoa',text:'Empresa Exemplo Ana Silva diretora'}]}];
+  return result;
+ };
+ deps.collect=async(url?:string)=>{read.push(url!);return page;};
+ await run(f,deps);
+ assert.ok(read.length>0);assert.ok(read.every(url=>!new URL(url).hostname.endsWith('linkedin.com')),JSON.stringify(read));
+});
 test('missing CNPJ is investigated; manager and shareholder remain distinct, with reviewed idempotent delivery',async()=>{
  const f=await fixture(),{job,result}=await run(f);assert.equal(result.identity.state,'resolved');assert.equal(result.identity.cnpj,'11444777000161');assert.equal(result.people.length,2);
  const manager=result.people.find(p=>p.name==='Ana Silva')!,partner=result.people.find(p=>p.name==='Bruno Exemplo')!;assert.equal(manager.relationship,'manager');assert.equal(partner.relationship,'partner');assert.deepEqual(partner.contacts,[]);assert.equal(await consumed(f.p),1);
