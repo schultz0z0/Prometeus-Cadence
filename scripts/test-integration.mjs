@@ -16,6 +16,7 @@ process.env.NODE_ENV = "test";
 process.env.CADENCE_INTEGRATION = "1";
 process.env.SITE_BROWSER_ENABLED = "true";
 process.env.SITE_BROWSER_TOKEN = "fixture-only-integration-browser-token";
+process.env.APIFY_CNPJ_DATE_SLICES = "false";
 const known = [
   "06e2-data-lifecycle",
   "06f-assistant-experience",

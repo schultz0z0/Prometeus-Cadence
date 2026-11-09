@@ -91,6 +91,7 @@ const journeys={
    await dialog.getByRole('button',{name:'Revisar prospecção',exact:true}).click();
    await dialog.getByText(/Base CNPJ ativa · CNAE 2512800/).waitFor();
    await dialog.getByText(/Curitiba, PR/).waitFor();
+   if(process.env.QA_EXPECT_REGISTRY_SLICES==='1')await dialog.getByText(/duas faixas de abertura/).waitFor();
    const evidence='output/playwright/registry-first';
    mkdirSync(evidence,{recursive:true});
    await page.setViewportSize({width:1920,height:855});
