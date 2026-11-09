@@ -27,6 +27,7 @@ const known = [
   "06c2-reconciled-reports",
   "06b5-prospecting-journey",
   "06b6b-site-queue",
+  "06b6e-site-capacity",
   "06d2-channel-operation",
   "06d1-message-authoring",
   "06d1-upgrade",
