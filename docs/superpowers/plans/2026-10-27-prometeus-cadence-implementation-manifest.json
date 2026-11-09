@@ -375,7 +375,7 @@
       "evidence": "docs/validation/06b6c-registry-complementary-slices.md",
       "integration": "tests/integration/06b5-prospecting-journey.test.ts",
       "pending": [
-        "Homologação das duas faixas no build real do Actor de CNPJ antes de ativar a configuração",
+        "Homologar a faixa até 2019 no build real do Actor de CNPJ antes de ativar a configuração",
         "Aceite operacional do fluxo no 06B.6e"
       ]
     },

@@ -8,8 +8,10 @@ A revisão independente foi somente leitura. Ela orientou a contar todos os esta
 
 No Chrome, a jornada `pack` exibiu o navegador disponível e abriu a revisão em 1920×855 e 390×844. O servidor temporário estava em modo de revisão, com execuções externas desabilitadas. A conta descartável foi removida com resíduo zero. O servidor de prova foi encerrado após a rodada.
 
-## Próximo gate
+## Piloto cadastral
 
-Proposta de piloto cadastral, sujeito a autorização expressa. Consultar o build configurado na Apify para CNAE 2512800 em Curitiba/PR, uma execução por faixa e até um cadastro devolvido por execução. Fixar `maxTotalChargeUsd` em US$ 0,05 por run, sem reinício automático. Comparar somente a atividade, o município e a data de abertura em memória. Registrar apenas contagens, cobertura e custo, sem salvar leads. O objetivo é comprovar o comportamento das duas faixas no build antes de ativar `APIFY_CNPJ_DATE_SLICES`. A prova ponta a ponta com Maps e Chromium continua separada.
+O operador autorizou a proposta. A primeira faixa foi confirmada e a segunda ficou inconclusiva devido ao limite da Minha Receita. [Relatório do piloto](06b6e-cnpj-actor-pilot.md)
+
+O protocolo aprovado consultou o build configurado na Apify para CNAE 2512800 em Curitiba/PR, uma execução por faixa e até um cadastro devolvido por execução. O teto foi de US$ 0,05 por run, com reinício automático desativado. A conferência foi em memória e a evidência registra contagens, cobertura e custo. A prova ponta a ponta com Maps e Chromium continua separada.
 
 [Limite de cobrança por execução na Apify](https://docs.apify.com/api/v2/actors-runs-post)
