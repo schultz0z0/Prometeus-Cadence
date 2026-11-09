@@ -16,3 +16,11 @@ O Chromium roda em container sem privilégios, em rede Docker interna e com cont
 O serviço renderiza uma página por requisição. A fila durável, o sitemap, a política de robots.txt e a retomada após queda da jornada pertencem ao 06B.6b. O 06B.6c liga essa coleta à ordem CNPJ primeiro. O 06B.6d faz a troca de provedor no app. Os testes atuais comprovam o isolamento e a recuperação nos cenários descritos. Páginas que exigem autenticação, CAPTCHA ou requisições de escrita ficam fora do contrato de leitura pública.
 
 Para iniciar uma instância local, definir `SITE_BROWSER_TOKEN` em `.env.local` e usar `docker compose --env-file .env.local -f docker/compose.site-browser.yaml up -d --build`. A saúde fica em `http://127.0.0.1:3222/health`. A configuração ainda não conecta o serviço ao worker do Prometeus.
+
+## Instalação a partir do clone oficial em 09/11
+
+O submódulo `third_party/scrapling` fixa a versão 0.4.6 em `ced9a8d63c7da93839ff40968c08262b78ff254f`. Antes de construir a imagem em outro checkout, rode `git submodule update --init third_party/scrapling`. O Compose passa apenas esse diretório como contexto adicional. O estágio de build compila o wheel a partir do clone com a rede desligada. A imagem final instala esse artefato local e preserva a licença upstream.
+
+O teste de proveniência falhou com a imagem anterior e passou com a nova. A suíte isolada de Chromium e gateway passou em 10/10. O teste de contrato do cliente TypeScript com o Compose retornou HTTP 200 e texto renderizado. Os serviços e as redes temporárias foram removidos.
+
+[Versão oficial Scrapling 0.4.6](https://github.com/D4Vinci/Scrapling/releases/tag/v0.4.6)
