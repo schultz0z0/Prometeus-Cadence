@@ -16,6 +16,29 @@ def reply(body, *, status=200, headers=None):
 
 
 class RendererTests(unittest.IsolatedAsyncioTestCase):
+    async def test_link_cap_is_reported_as_partial(self):
+        async def fixture(_url, _method, _headers):
+            return reply("".join(f'<a href="/page/{i}">[RE] Link</a>' for i in range(501)))
+
+        result = await render_page("https://example.com/", 8000, fixture, executable=os.getenv("SITE_BROWSER_TEST_CHROME"))
+        self.assertEqual(len(result["links"]), 500)
+        self.assertTrue(result["truncated"])
+
+    async def test_queue_returns_http_and_browser_redirects_without_visiting_target(self):
+        seen = []
+
+        async def fixture(url, _method, _headers):
+            seen.append(url)
+            if url.endswith("/old"):
+                return reply("", status=301, headers={"location": "/restrito"})
+            return reply("<script>location.assign('/restrito')</script>")
+
+        for path, status in (("old", 301), ("script", 302)):
+            result = await render_page("https://example.com/" + path, 8000, fixture,
+                                       executable=os.getenv("SITE_BROWSER_TEST_CHROME"), queue_navigation=True)
+            self.assertEqual(result, {"redirect": "https://example.com/restrito", "status": status})
+        self.assertEqual(seen, ["https://example.com/old", "https://example.com/script"])
+
     async def test_real_javascript_link_pagination_and_context_isolation(self):
         seen = []
 
@@ -142,7 +165,7 @@ class GatewayTests(unittest.IsolatedAsyncioTestCase):
         finish = asyncio.Event()
         count = 0
 
-        async def renderer(url, _timeout, _gateway):
+        async def renderer(url, _timeout, _gateway, **_options):
             nonlocal count
             count += 1
             if count == 2:

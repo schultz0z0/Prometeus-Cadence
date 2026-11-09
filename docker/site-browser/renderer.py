@@ -16,6 +16,12 @@ class BrowserFailure(RuntimeError):
     pass
 
 
+class QueuedNavigation(Exception):
+    def __init__(self, target, status=302):
+        self.target = target
+        self.status = status
+
+
 def same_domain(first, second):
     return first.removeprefix("www.") == second.removeprefix("www.")
 
@@ -25,7 +31,7 @@ def browser_url(value):
     return url if url.raw_path != "/" else url.with_path("/", keep_query=True)
 
 
-async def render_page(url, deadline_ms, fetch, *, executable=None):
+async def render_page(url, deadline_ms, fetch, *, executable=None, queue_navigation=False):
     try:
         _, domain, _ = public_url(url)
     except PolicyError as error:
@@ -36,8 +42,10 @@ async def render_page(url, deadline_ms, fetch, *, executable=None):
     active = set()
     requests = 0
     bytes_read = 0
+    resource_limited = False
     entries = {}
     pending_redirect = None
+    queued_navigation = None
     deadline = asyncio.get_running_loop().time() + deadline_ms / 1000
 
     async def follow(value, method, headers, navigation):
@@ -55,13 +63,15 @@ async def render_page(url, deadline_ms, fetch, *, executable=None):
             target = urljoin(value, location)
             old, _, _ = public_url(value)
             new, _, _ = public_url(target)
+            if navigation and queue_navigation:
+                raise QueuedNavigation(target, reply["status"])
             if (old.scheme, old.netloc) != (new.scheme, new.netloc):
                 headers = {key: header for key, header in headers.items() if key != "cookie"}
             value = target
         raise PolicyError("REDIRECT_LIMIT")
 
     async def route_request(route):
-        nonlocal requests, bytes_read, blocked_navigation, pending_redirect
+        nonlocal requests, bytes_read, blocked_navigation, pending_redirect, queued_navigation, resource_limited
         task = asyncio.current_task()
         active.add(task)
         request = route.request
@@ -69,12 +79,17 @@ async def render_page(url, deadline_ms, fetch, *, executable=None):
         main_navigation = False
         try:
             main_navigation = navigation and request.frame.parent_frame is None
+            if navigation and queue_navigation and not main_navigation:
+                await route.abort()
+                return
             if request.method not in {"GET", "HEAD"} or request.resource_type in {"media", "image", "font"}:
                 await route.abort()
                 return
             _, host, _ = public_url(request.url)
             if navigation and not same_domain(domain, host):
                 raise PolicyError("URL_BLOCKED")
+            if main_navigation and queue_navigation and browser_url(request.url) != browser_url(url):
+                raise QueuedNavigation(request.url)
             requests += 1
             if requests > 120 or bytes_read >= 20_000_000:
                 raise PolicyError("PAGE_RESOURCE_LIMIT")
@@ -95,7 +110,12 @@ async def render_page(url, deadline_ms, fetch, *, executable=None):
             if bytes_read > 20_000_000:
                 raise PolicyError("PAGE_RESOURCE_LIMIT")
             await route.fulfill(status=reply["status"], headers=reply["headers"], body=reply["body"])
+        except QueuedNavigation as redirect:
+            queued_navigation = redirect
+            await route.abort()
         except PolicyError as error:
+            if str(error) == "PAGE_RESOURCE_LIMIT":
+                resource_limited = True
             if main_navigation and str(error) == "URL_BLOCKED":
                 blocked_navigation = True
             await route.abort()
@@ -120,7 +140,10 @@ async def render_page(url, deadline_ms, fetch, *, executable=None):
                 target, pending_redirect = pending_redirect, None
                 await page.goto(target)
                 await page.wait_for_load_state("domcontentloaded")
-            if click == 3 or not await more.first.is_visible():
+            if not await more.first.is_visible():
+                break
+            if click == 3:
+                snapshot["pagination_limited"] = True
                 break
             try:
                 await more.first.click(timeout=min(800, deadline_ms))
@@ -130,7 +153,7 @@ async def render_page(url, deadline_ms, fetch, *, executable=None):
         snapshot.update(await page.evaluate("""() => ({
             url: location.href,
             text: document.body?.innerText?.slice(0, 24001) ?? '',
-            links: [...document.querySelectorAll('a[href]')].slice(0, 1500).map(a => a.href)
+            links: [...document.querySelectorAll('a[href]')].slice(0, 1501).map(a => a.href)
         })"""))
 
     # Fail closed if Chromium bypasses request interception, including background
@@ -158,13 +181,21 @@ async def render_page(url, deadline_ms, fetch, *, executable=None):
                     for task in tasks:
                         task.cancel()
                     await asyncio.gather(*tasks, return_exceptions=True)
+    except QueuedNavigation as redirect:
+        return {"redirect": redirect.target, "status": redirect.status}
     except (TimeoutError, PlaywrightTimeout) as error:
+        if queued_navigation:
+            return {"redirect": queued_navigation.target, "status": queued_navigation.status}
         raise BrowserFailure("PAGE_TIMEOUT") from error
     except PolicyError as error:
         raise BrowserFailure(str(error)) from error
     except (PlaywrightError, RuntimeError) as error:
+        if queued_navigation:
+            return {"redirect": queued_navigation.target, "status": queued_navigation.status}
         raise BrowserFailure("URL_BLOCKED" if blocked_navigation else "PAGE_UNAVAILABLE") from error
 
+    if queued_navigation:
+        return {"redirect": queued_navigation.target, "status": queued_navigation.status}
     if blocked_navigation:
         raise BrowserFailure("URL_BLOCKED")
     if not snapshot:
@@ -179,4 +210,5 @@ async def render_page(url, deadline_ms, fetch, *, executable=None):
         if same_domain(domain, host):
             links[parsed._replace(fragment="").geturl()] = None
     return {"url": snapshot["url"], "status": response.status, "text": text[:24000],
-            "truncated": len(text) > 24000, "links": list(links)[:500]}
+            "truncated": (len(text) > 24000 or len(links) > 500 or len(snapshot["links"]) > 1500
+                          or resource_limited or snapshot.get("pagination_limited", False)), "links": list(links)[:500]}

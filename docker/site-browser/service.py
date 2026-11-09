@@ -52,7 +52,9 @@ def app_for(role, token, gateway="http://site-browser-gateway:8081/fetch"):
                         raise ValueError
                     result = await fetch_public(request.app[SESSION], body["url"], body["method"], body["headers"])
                     return web.json_response({**result, "body": base64.b64encode(result["body"]).decode("ascii")})
-                if set(body) != {"url", "timeoutMs"} or type(body["timeoutMs"]) is not int or not 1000 <= body["timeoutMs"] <= 25000:
+                if (set(body) not in ({"url", "timeoutMs"}, {"url", "timeoutMs", "queueNavigation"})
+                        or type(body["timeoutMs"]) is not int or not 1000 <= body["timeoutMs"] <= 25000
+                        or type(body.get("queueNavigation", False)) is not bool):
                     raise ValueError
                 if role == "gateway":
                     # Fixed private destination. User-provided URLs never route this connection.
@@ -70,7 +72,8 @@ def app_for(role, token, gateway="http://site-browser-gateway:8081/fetch"):
                             raise PolicyError(raw.get("code", "GATEWAY_UNAVAILABLE"))
                         return {**raw, "body": base64.b64decode(raw["body"], validate=True)}
 
-                return web.json_response(await render_page(body["url"], body["timeoutMs"], gateway_read))
+                return web.json_response(await render_page(body["url"], body["timeoutMs"], gateway_read,
+                                                           queue_navigation=body.get("queueNavigation", False)))
             except (BrowserFailure, PolicyError) as error:
                 code = str(error)
                 status = 504 if code == "PAGE_TIMEOUT" else 503 if code == "BUSY" else 422
