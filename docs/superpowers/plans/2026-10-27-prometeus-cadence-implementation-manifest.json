@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "08A",
+  "next": "06B.6b",
   "end": "08B",
   "packages": [
     {
@@ -293,6 +293,111 @@
       "followUpMigrations": [
         "db/migrations/087a-journey-recovery-authority.sql"
       ]
+    },
+    {
+      "id": "06B.6a",
+      "title": "Renderizador Scrapling com Chromium em Docker",
+      "requirements": [
+        "R05",
+        "R06"
+      ],
+      "dependencies": [
+        "06B.5"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-08-browser-collection.md",
+      "status": "implemented-local",
+      "evidence": "docs/validation/06b6a-site-browser.md",
+      "unit": "docker/site-browser/test_renderer.py",
+      "create": [
+        "docker/site-browser/Dockerfile",
+        "docker/site-browser/renderer.py",
+        "docker/site-browser/site_gateway.py",
+        "docker/site-browser/service.py",
+        "docker/compose.site-browser.yaml"
+      ],
+      "modify": []
+    },
+    {
+      "id": "06B.6b",
+      "title": "Fila durável de URLs e retomada",
+      "requirements": [
+        "R05",
+        "R06"
+      ],
+      "dependencies": [
+        "06B.6a"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-08-browser-collection.md",
+      "status": "planned",
+      "create": [
+        "src/server/prospecting/extraction/site-queue.ts"
+      ],
+      "modify": [
+        "src/server/prospecting/worker.ts"
+      ]
+    },
+    {
+      "id": "06B.6c",
+      "title": "CNPJ primeiro na Prospecção completa",
+      "requirements": [
+        "R05",
+        "R06"
+      ],
+      "dependencies": [
+        "06B.6b"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-08-browser-collection.md",
+      "status": "planned",
+      "create": [],
+      "modify": [
+        "src/domain/prospecting-journey.ts",
+        "src/server/research/journey.ts",
+        "src/modules/prospecting/research-journey.tsx",
+        "src/server/prospecting/discovery-admission.ts"
+      ]
+    },
+    {
+      "id": "06B.6d",
+      "title": "Troca do provedor de leitura de sites",
+      "requirements": [
+        "R05",
+        "R06"
+      ],
+      "dependencies": [
+        "06B.6c"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-08-browser-collection.md",
+      "status": "planned",
+      "create": [],
+      "modify": [
+        "src/server/prospecting/config.ts",
+        "src/server/prospecting/steps.ts"
+      ]
+    },
+    {
+      "id": "06B.6e",
+      "title": "Homologação do navegador, busca e capacidade",
+      "requirements": [
+        "R05",
+        "R06"
+      ],
+      "dependencies": [
+        "06B.6d"
+      ],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-08-browser-collection.md",
+      "status": "planned",
+      "create": [],
+      "modify": []
     },
     {
       "id": "06IA-H",
@@ -1664,7 +1769,8 @@
         "R01"
       ],
       "dependencies": [
-        "08A"
+        "08A",
+        "06B.6e"
       ],
       "conditional": false,
       "continuous": false,
