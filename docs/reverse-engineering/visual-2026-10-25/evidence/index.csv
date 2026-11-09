@@ -123,3 +123,4 @@ id,date,session,route,shows,masked
 "EV-314","2026-11-09","s52","local browser cutover","Chromium renderer fixtures and isolated worker recovery with simulated sources","yes; synthetic identities, no reference writes"
 "EV-315","2026-11-09","s53","browser capacity and local gateway","Synthetic 250-company admission, isolated Chromium measurements and authenticated gateway smoke","yes; simulated paid providers, no reference writes"
 "EV-316","2026-11-09","s54","disjoint CNPJ date windows","Synthetic registry datasets, durable continuation, run reconciliation and commercial settlement","yes; simulated paid providers, no reference writes"
+"EV-317","2026-11-09","s55","local prospecting worker replacement","Idle lane replacement, stable usage counters and authenticated browser gateway smoke","yes; no reference writes and no paid pilot"

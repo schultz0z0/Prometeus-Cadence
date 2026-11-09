@@ -6,7 +6,7 @@ O cenário de capacidade percorre o worker, a fila e as regras de cobrança com 
 
 A migração aditiva `113f-site-page-queue.sql` foi aplicada ao banco local. A nova tabela tem RLS habilitada e forçada. A verificação anterior observou zero automações ativas e zero execuções de prospecção reclamáveis. Dois registros históricos já estavam em reconciliação. O serviço do Scrapling foi iniciado e o cliente autenticado do app renderizou uma página pública de exemplo em 1,4 s. A chave foi configurada em `.env.local`.
 
-A etapa seguinte é trocar de forma controlada o processo contínuo de prospecção. O supervisor compartilhado ainda usa os processos anteriores. O piloto real continua pendente de autorização específica para as chamadas pagas.
+A troca controlada da lane de prospecção foi realizada posteriormente. O piloto real continua pendente de autorização específica para as chamadas pagas. [Relatório da troca local](06b6e-local-worker-cutover.md)
 
 ## Navegador
 

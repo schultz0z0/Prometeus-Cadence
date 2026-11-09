@@ -404,7 +404,7 @@
       "evidence": "docs/validation/06b6d-site-browser-cutover.md",
       "integration": "tests/integration/prospecting-pipeline.test.ts",
       "pending": [
-        "Ativação controlada no runtime compartilhado e aceite operacional no 06B.6e"
+        "Aceite da coleta pelo worker compartilhado durante o piloto do 06B.6e"
       ]
     },
     {
@@ -426,7 +426,6 @@
       "evidence": "docs/validation/06b6e-site-browser-capacity.md",
       "integration": "tests/integration/06b6e-site-capacity.test.ts",
       "pending": [
-        "Troca controlada do worker contínuo compartilhado",
         "Piloto externo pequeno com autorização específica de custo",
         "Revalidação dos estados afetados no 08A"
       ]

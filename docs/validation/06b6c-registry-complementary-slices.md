@@ -11,7 +11,7 @@ A reconciliação de uma consulta cadastral exige Actor, build e dataset, além 
 - A Apify pode cobrar uma linha já entregue antes do descarte local. A ausência de sobreposição no provedor depende de o build respeitar os filtros de data. O aplicativo evita repetir as consultas de Maps e de busca web daquele CNPJ dentro da mesma execução e só debita leads efetivamente inseridos.
 - Se o primeiro dataset devolver um cadastro do recorte principal com data incompatível ou ausente, o worker encerra o resultado parcial antes de abrir o segundo Actor. A decisão evita ampliar o custo quando o filtro inicial não pode ser confirmado.
 - As duas faixas preservam o recorte comercial aprovado e o teto técnico original. Fontes esgotadas, registros sem data e vínculos inconclusivos podem produzir resultado parcial. Uma nova execução revisada separadamente pode voltar a consultar a fonte.
-- A configuração compartilhada segue sem ativar os recortes até o piloto verificar o build configurado. A ativação do worker compartilhado e o piloto real continuam registrados no 06B.6e.
+- A configuração compartilhada segue sem ativar os recortes até o piloto verificar o build configurado. A troca do worker local foi validada em repouso. [Relatório do 06B.6e](06b6e-local-worker-cutover.md)
 
 ## Verificação local
 
