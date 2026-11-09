@@ -417,10 +417,17 @@
       ],
       "conditional": false,
       "continuous": false,
-      "plan": "docs/superpowers/plans/2026-11-08-browser-collection.md",
-      "status": "planned",
-      "create": [],
-      "modify": []
+      "plan": "docs/superpowers/plans/2026-11-09-site-browser-capacity.md",
+      "status": "partial",
+      "create": ["tests/integration/06b6e-site-capacity.test.ts"],
+      "modify": ["scripts/test-integration.mjs"],
+      "evidence": "docs/validation/06b6e-site-browser-capacity.md",
+      "integration": "tests/integration/06b6e-site-capacity.test.ts",
+      "pending": [
+        "Troca controlada do worker contínuo compartilhado",
+        "Piloto externo pequeno com autorização específica de custo",
+        "Revalidação dos estados afetados no 08A"
+      ]
     },
     {
       "id": "06IA-H",

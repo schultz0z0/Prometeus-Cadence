@@ -1,10 +1,15 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-09 · Session: s52 · Phase:6 franquias e Prospecção completa · aceite integral pendente
+Updated: 2026-11-09 · Session: s53 · Phase:6 franquias e Prospecção completa · aceite integral pendente
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- s53: a admissão controlada inseriu 250 empresas após quatro descartes. Houve recuperação na mesma execução, isolamento de workspace e conferência da liquidação.
+  - **Evidência:** EV-315.
+  - **QA:** L-062.
+  - O gateway está instalado localmente. A troca do worker contínuo e o piloto externo continuam pendentes.
 
 - s52: leitores de sites do aplicativo passaram para Scrapling e Chromium. O caminho de disparo do crawler legado foi removido, com identificadores históricos preservados.
   - **Evidência:** EV-314.
