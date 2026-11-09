@@ -7,6 +7,22 @@ const words=(value='')=>value.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase
 const states=new Map(Object.entries(brazilianStates).map(([uf,name])=>[words(name),uf.toLowerCase()]));
 const state=(value?:string)=>states.get(words(value))??words(value);
 const name=(value?:string)=>words(value).replace(/^re /,'').replace(/(?: (?:ltda|eireli|me|epp))+$/,'');
+const registryWindows=[{openedFrom:'2020-01-01'},{openedTo:'2019-12-31'}] as const;
+
+export function registryWindow(batch:number):(typeof registryWindows)[number]|undefined{
+ return registryWindows[batch];
+}
+
+export function registrySliceRemaining(scanLimit:number,batch:number,found:number){
+ return (batch===0?Math.floor(scanLimit*.6):scanLimit)-found;
+}
+
+export function inRegistryWindow(date:string|undefined,window:NonNullable<ReturnType<typeof registryWindow>>){
+ if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date))return false;
+ const timestamp=Date.parse(date);
+ if(!Number.isFinite(timestamp)||new Date(timestamp).toISOString().slice(0,10)!==date)return false;
+ return 'openedFrom' in window?date>=window.openedFrom:date<=window.openedTo;
+}
 function address(candidate:Candidate){
  const raw=typeof candidate.facts?.street==='string'?candidate.facts.street:candidate.address;
  if(!raw)return '';

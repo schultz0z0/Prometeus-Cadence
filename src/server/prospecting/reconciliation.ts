@@ -11,6 +11,9 @@ import {ApifyAdapter} from './providers/apify.ts';
 import {providerContext} from './steps.ts';
 import {settleUsage,releaseUnused} from './usage.ts';
 import {resumeReconciledDiscovery} from '../research/journey.ts';
+import {registrySliceRemaining,registryWindow} from './registry-first.ts';
+import {actorInput} from './providers/profiles.ts';
+import {hashValue} from './review.ts';
 const schema=z.strictObject({operationId:z.string().min(1).max(120).optional(),runId:z.string().regex(/^[-\w]{1,100}$/).optional(),confirmNotStarted:z.literal(true).optional(),resultUnavailable:z.literal(true).optional()}).refine(v=>[v.runId,v.confirmNotStarted,v.resultUnavailable].filter(Boolean).length===1);
 const unresolvedSql="provider<>'site-browser' AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain')";
 const sourceFor=(job:any,attempt:any)=>attempt.step.startsWith('abort:')&&attempt.payload.source?attempt.payload.source:attempt.step.startsWith('crawl:')?'CRAWL':attempt.step.startsWith('registry:')?'CNPJ':attempt.step.startsWith('maps:')?'MAPS':attempt.step.startsWith('website:')?'WEB':job.kind==='generation'?job.source:null;
@@ -28,6 +31,7 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
     return{job,attempt};
   });
   const aborting=attempt.step.startsWith('abort:');
+  const slicedStart=job.checkpoint.registryDateSlices===true&&job.kind==='generation'&&/^start(?::1)?$/.test(attempt.step);
   if(aborting&&(!selection.runId||selection.runId!==attempt.payload.runId))throw new AppError(409,'Confirme o estado final do run associado antes de liberar a reserva.');
   const source=sourceFor(job,attempt);let run:any=null;
   if(selection.runId){
@@ -35,6 +39,19 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
     const ctx=providerContext(job,source,attempt.id,AbortSignal.timeout(30000)),adapter=deps.apify??new ApifyAdapter();
     const [actor,remote]=await Promise.all([adapter.request(ctx,'/acts/'+ctx.profile.actor.replace('/','~')),adapter.request(ctx,'/actor-runs/'+selection.runId)]);
     if(remote?.data?.actId!==actor?.data?.id||![remote?.data?.buildId,remote?.data?.buildNumber].includes(ctx.profile.build)||!/^[-\w]{1,100}$/.test(remote?.data?.defaultDatasetId??''))throw new AppError(409,'O Actor/build/dataset do run não corresponde ao perfil confirmado.');
+    if(slicedStart){
+      const batch=job.checkpoint.registryBatch??0,window=registryWindow(batch);
+      const store=remote.data.defaultKeyValueStoreId;
+      const startedAt=typeof remote.data.startedAt==='string'?Date.parse(remote.data.startedAt):NaN;
+      const preparedAt=new Date(attempt.created_at).getTime();
+      if(!window||attempt.step!==(batch?'start:1':'start')||typeof store!=='string'||!/^[-\w]{1,100}$/.test(store)||
+        !Number.isFinite(startedAt)||startedAt<preparedAt-5000||startedAt>Date.now()+5000)
+        throw new AppError(409,'O run não corresponde ao recorte cadastral pendente.');
+      const remoteInput=await adapter.request(ctx,'/key-value-stores/'+store+'/records/INPUT');
+      const limit=registrySliceRemaining(job.checkpoint.discoveryScanLimit,batch,job.counts.found);
+      const expected=actorInput({...ctx.profile,registryFirst:true,registryWindow:window},{...job.input,limit});
+      if(hashValue(remoteInput)!==hashValue(expected))throw new AppError(409,'O run não corresponde ao recorte cadastral pendente.');
+    }
     if(aborting&&!['SUCCEEDED','FAILED','ABORTED','TIMED-OUT'].includes(remote.data.status))throw new AppError(409,'O run ainda não possui encerramento confirmado. A reserva permanece retida.');
     run={provider:'apify',runId:selection.runId,datasetId:remote.data.defaultDatasetId,profileId:ctx.profile.actor,build:ctx.profile.build,operationId:attempt.id};
   }
@@ -43,6 +60,8 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
     const current=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1 FOR UPDATE',[id])).rows[0];
     if(current.state!=='needs_reconciliation'||String(current.revision)!==String(job.revision))throw new AppError(409,'A execução mudou. Revise novamente.');
     if(!(await c.query(`SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND id=$2 AND ${unresolvedSql} FOR UPDATE`,[id,attempt.id])).rowCount)throw new AppError(409,'Esta chamada já foi reconciliada.');
+    if(slicedStart&&run&&(await c.query("SELECT 1 FROM app.prospecting_attempt WHERE workspace_id=current_setting('app.workspace_id') AND id<>$1 AND (remote_id=$2 OR payload->'result'->'run'->>'runId'=$2) LIMIT 1",[attempt.id,run.runId])).rowCount)
+      throw new AppError(409,'Este run já está vinculado a outra tentativa do workspace.');
     const units:Units=attempt.payload.reservedUnits??(attempt.provider==='apify'?{apifyRuns:1}:attempt.provider==='apollo'?{apolloPages:1}:attempt.provider==='openrouter'?{jevCalls:1}:(attempt.provider==='codex'||attempt.provider==='chatgpt-oauth')?{codexCalls:1}:attempt.provider==='openai'?{openaiCalls:1}:attempt.provider==='gemini'?{geminiCalls:1}:{});
     let state='queued',providerRun=current.provider_run;
     if(selection.confirmNotStarted){

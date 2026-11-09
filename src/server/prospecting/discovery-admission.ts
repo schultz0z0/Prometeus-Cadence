@@ -9,14 +9,14 @@ import {hashValue} from './review.ts';
 import {withLeasedTransaction} from './worker-db.ts';
 import {ProviderError} from './providers/transport.ts';
 import {collectSiteTick} from './site-collection.ts';
-import {isRegistryCandidate,registryMapsMatch,registrySiteMatches} from './registry-first.ts';
+import {inRegistryWindow,isRegistryCandidate,registryMapsMatch,registrySiteMatches,registryWindow} from './registry-first.ts';
 
 // Keep eight candidate slots for replacements after the initial Maps batch.
 export const discoveryScanLimit=(requested:number)=>Math.min(500,requested*2+8);
-export function discoveryUsage(scanLimit:number,registryFirst=false):UsageEstimate[]{
+export function discoveryUsage(scanLimit:number,registryFirst=false,registryDateSlices=false):UsageEstimate[]{
   return [
     {provider:'apify',unit:'candidates',maxUnits:scanLimit,estimatedUsd:null,pricingSource:null},
-    {provider:'apify',unit:'apifyRuns',maxUnits:(registryFirst?1:2)+2*scanLimit,estimatedUsd:null,pricingSource:null},
+    {provider:'apify',unit:'apifyRuns',maxUnits:(registryFirst&&!registryDateSlices?1:2)+2*scanLimit,estimatedUsd:null,pricingSource:null},
   ];
 }
 
@@ -28,10 +28,18 @@ export async function markDiscoveryRunDone(lease:JobLease,runId:string){
 
 export async function admitRegistryPage(lease:JobLease,job:any,page:CandidatePage,deps:QualificationAdapters):Promise<CandidatePage|null>{
  const candidates:CandidatePage['candidates']=[],rejected=[...page.rejected];
+ const window=job.checkpoint.registryDateSlices?registryWindow(job.checkpoint.registryBatch??0):undefined;
+ const seen=new Set<string>(job.checkpoint.examinedCnpjs??[]),examinedCnpjs:string[]=[];
  const onTerminal=(runId:string)=>markDiscoveryRunDone(lease,runId);
  for(const registry of page.candidates){
   const reject=(reason:string)=>rejected.push({sourceRef:registry.sourceRef,reason});
   if(!isRegistryCandidate(registry,job.checkpoint.registryFirst)){reject('CNPJ_OUTSIDE_SCOPE');continue;}
+  if(window){
+   if(!inRegistryWindow(registry.openedAt,window)){reject('CNPJ_OUTSIDE_DATE_WINDOW');continue;}
+   if(seen.has(registry.cnpj!)){reject('CNPJ_ALREADY_EXAMINED');continue;}
+   seen.add(registry.cnpj!);
+   examinedCnpjs.push(registry.cnpj!);
+  }
   const duplicate=await withLeasedTransaction(lease,async c=>(await c.query('SELECT 1 FROM app.lead_identity WHERE identity=ANY($1::text[]) LIMIT 1',[strongIdentities(registry)])).rowCount);
   if(duplicate){candidates.push(registry);continue;}
   const key=hashValue(registry.cnpj);
@@ -76,7 +84,7 @@ export async function admitRegistryPage(lease:JobLease,job:any,page:CandidatePag
   }
   if(!verified)reject('SITE_IDENTITY_UNVERIFIED');
  }
- return {...page,candidates,rejected};
+ return {...page,candidates,rejected,...(window?{examinedCnpjs}:{})};
 }
 
 export async function admitDiscoveryPage(lease:JobLease,job:any,page:CandidatePage,deps:QualificationAdapters):Promise<CandidatePage|null>{

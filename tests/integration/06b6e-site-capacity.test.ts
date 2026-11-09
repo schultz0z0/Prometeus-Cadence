@@ -17,6 +17,7 @@ import {closeProspectingPools,configureProspectingTest,prospectingUser,testAdmin
 configureProspectingTest();
 Object.assign(process.env,{
   APIFY_CNPJ_ACTOR:'bigdavidson/brazil-cnpj-companies',APIFY_CNPJ_BUILD:'fixture-build',
+  APIFY_CNPJ_DATE_SLICES:'true',
   APIFY_WEB_ACTOR:'apify/google-search-scraper',APIFY_WEB_BUILD:'fixture-build',
   OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture',PROSPECTING_GLOBAL_CONCURRENCY:'32',
   PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({candidates:1000,apifyRuns:2000,openaiCalls:2000}),
@@ -52,11 +53,11 @@ async function setup(limit:number,central=false){
 function sources(id:string,count:number,discarded=0,interruptAt=-1){
   const records:Candidate[]=Array.from({length:count},(_,index)=>({
     name:'[RE] Esquadrias Modelo '+index,source:'CNPJ',sourceRef:'registro-'+index,
-    cnpj:cnpj(index),city:'Curitiba',state:'PR',cnae:'2512800',
+    cnpj:cnpj(index),city:'Curitiba',state:'PR',cnae:'2512800',openedAt:index<129?'2020-01-01':'2019-12-31',
     phone:'+55419999'+String(10_000+index).slice(1),address:'Rua Exemplo, '+(index+1),facts:{registrationStatus:'ATIVA'},
   }));
   const byName=new Map(records.map((entry,index)=>[entry.name,index]));
-  const run:RemoteRun={provider:'apify',runId:'fixture-'+id,datasetId:'dataset-'+id,profileId:'bigdavidson/brazil-cnpj-companies',build:'fixture-build',operationId:id};
+  const datasets=new Map<string,Candidate[]>();
   const starts=new Map<string,number>(),pages=new Map<string,number>(),reads=new Map<string,number>();
   const countCall=(calls:Map<string,number>,key:string)=>calls.set(key,(calls.get(key)??0)+1).get(key)!;
   function page(entries:Candidate[],receiptId:string,nextCursor:string|null=null):CandidatePage{
@@ -66,8 +67,13 @@ function sources(id:string,count:number,discarded=0,interruptAt=-1){
   const apify:SourceAdapter={
     async start(ctx,input){
       if(ctx.profile.source==='CNPJ'){
-        assert.equal(countCall(starts,'registry'),1);
         assert.equal(ctx.profile.registryFirst,true);
+        const newer=ctx.profile.registryWindow?.openedFrom==='2020-01-01';
+        assert.ok(newer||ctx.profile.registryWindow?.openedTo==='2019-12-31');
+        const slice=newer?'newer':'older',runId='fixture-'+id+'-'+slice;
+        assert.equal(countCall(starts,'registry-'+slice),1);
+        datasets.set(runId,records.filter(entry=>(entry.openedAt==='2020-01-01')===newer).slice(0,input.limit));
+        const run:RemoteRun={provider:'apify',runId,datasetId:runId,profileId:ctx.profile.actor,build:ctx.profile.build,operationId:ctx.operationId};
         return {kind:'remote',run};
       }
       assert.equal(ctx.profile.source,'MAPS');
@@ -79,13 +85,16 @@ function sources(id:string,count:number,discarded=0,interruptAt=-1){
         address:index<discarded?'Rua Homonima, 9999':entry.address};
       return {kind:'inline',page:page([result],ctx.operationId)};
     },
-    async poll(){return {status:'succeeded',run};},
-    async readPage(_ctx,_run,cursor,limit){
+    async poll(_ctx,run){return {status:'succeeded',run};},
+    async readPage(_ctx,run,cursor,limit){
       const offset=Number(cursor??0);
       assert.ok(limit!==undefined&&limit>0,'the worker requests a bounded dataset page');
-      assert.equal(countCall(pages,String(offset)),1);
-      const next=Math.min(offset+limit,records.length);
-      return page(records.slice(offset,next),'dataset-'+id+'-'+offset,next===records.length?null:String(next));
+      const dataset=datasets.get(run.runId);
+      assert.ok(dataset);
+      const receipt=run.runId+'-'+offset;
+      assert.equal(countCall(pages,receipt),1);
+      const next=Math.min(offset+limit,dataset.length);
+      return page(dataset.slice(offset,next),receipt,next===dataset.length?null:String(next));
     },
     async abort(){throw Error('Unexpected provider abort');},
   };
@@ -148,7 +157,10 @@ test('Capacity250 admits replacements and preserves pages, billing and workspace
   assert.equal(result.siteCollection?.completed,250);
   assert.equal(primary.reads.get('page-7'),2);
   assert.equal(primary.reads.get('page-4'),1);
-  assert.equal(primary.starts.size,255);
+  assert.equal(primary.starts.size,256);
+  assert.equal(primary.starts.get('registry-newer'),1);
+  assert.equal(primary.starts.get('registry-older'),1);
+  assert.equal(secondary.starts.has('registry-older'),false);
   assert.equal([...primary.reads.values()].reduce((sum,value)=>sum+value,0),751);
   const balance=await withWorkspaceTransaction(large.p,readExtractionDay);
   assert.equal(balance?.plan,250);

@@ -14,6 +14,8 @@ import {RetainedResults} from './retained-results';
 import {JourneyProgress} from './research-journey';
 const discoveryLabels:Record<string,string>={
   CNPJ_OUTSIDE_SCOPE:'CNPJ fora do recorte ou sem situação ativa confirmada',
+  CNPJ_OUTSIDE_DATE_WINDOW:'Data de abertura fora da faixa consultada ou indisponível',
+  CNPJ_ALREADY_EXAMINED:'CNPJ já examinado nesta busca',
   MAPS_IDENTITY_UNVERIFIED:'Estabelecimento sem correspondência confirmada no Maps',
   SITE_IDENTITY_UNVERIFIED:'Site institucional sem vínculo confirmado',
   MISSING_IDENTITY:'Registro sem identificação suficiente',

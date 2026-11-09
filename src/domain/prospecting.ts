@@ -25,7 +25,7 @@ export interface Page<T>{items:T[];nextCursor:string|null}
 export interface JobFilters{kind?:JobInput['kind'];state?:JobState;source?:JobView['source'];automationId?:string;cursor?:string}
 export interface Evidence{id:string;url:string;fetchedAt:string;text:string;hash:string;truncated:boolean}
 export interface Candidate extends Omit<Lead,'id'|'listId'|'createdAt'|'qualification'>{sourceRef:string;facts?:Record<string,unknown>;contacts?:{emails:string[];phones:string[]};evidence?:Evidence[]}
-export interface CandidatePage{receiptId:string;candidates:Candidate[];nextCursor:string|null;exhausted:boolean;rawCount:number;rejected:{sourceRef?:string;reason:string}[];usage:ProviderUsage}
+export interface CandidatePage{receiptId:string;candidates:Candidate[];nextCursor:string|null;exhausted:boolean;rawCount:number;rejected:{sourceRef?:string;reason:string}[];usage:ProviderUsage;examinedCnpjs?:string[]}
 export interface RemoteRun{provider:'apify';runId:string;datasetId:string|null;profileId:string;build:string;operationId:string}
 export interface RemoteState{run:RemoteRun;status:'ready'|'running'|'succeeded'|'failed'|'cancelling'|'cancelled';error?:{code:string;message:string}}
 export interface Decision{provider?:'jev'|'codex-local'|'chatgpt-oauth'|'openai'|'gemini';model:string;verdict:'fits'|'does_not_fit'|'insufficient_evidence';confidence:number|null;probabilities:Record<string,number>;criteria:Record<string,number>;evidenceIds:string[];usage:ProviderUsage}

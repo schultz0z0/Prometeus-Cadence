@@ -15,6 +15,7 @@ import {workspaceUsageCaps} from './workspace-config.ts';
 import {capacityConfigurationError} from './usage.ts';
 import {loopbackSiteBrowser,siteCollectorVersion} from './site-browser.ts';
 import {prospectingConfig} from './config.ts';
+import {registrySliceRemaining,registryWindow} from './registry-first.ts';
 export {runQualification} from './qualification.ts';
 export interface GenerationAdapters{apify?:SourceAdapter;apollo?:ApolloAdapter;signal?:AbortSignal;collect?:QualificationAdapters['collect'];siteBrowser?:QualificationAdapters['siteBrowser']}
 export function providerContext(job:any,source:'MAPS'|'WEB'|'CNPJ'|'APOLLO'|'CRAWL',operationId:string,signal:AbortSignal):ProviderContext{
@@ -26,16 +27,29 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
   const job=await readLeasedJob(lease),input=job.input as JobInput;
   if(input.kind!=='generation')throw Error('INVALID_JOB_KIND');
   const admission=job.checkpoint.discoveryScanLimit as number|undefined,scanLimit=admission??input.limit;
-  const batch=Number(job.checkpoint.mapsBatch??0),startStep=batch?'start:'+batch:'start';
+  const slices=job.checkpoint.registryDateSlices===true;
+  const batch=Number((slices?job.checkpoint.registryBatch:job.checkpoint.mapsBatch)??0),startStep=batch?'start:'+batch:'start';
+  const sliceRemaining=slices?registrySliceRemaining(scanLimit,batch,job.counts.found):scanLimit-job.counts.found;
   const finishDiscovery=async(inserted:number,found=job.counts.found)=>{
-    if(admission&&!job.checkpoint.registryFirst&&inserted<input.limit&&found<scanLimit&&batch===0){
-      await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_job SET provider_run=NULL,state='running',checkpoint=checkpoint||'{\"mapsBatch\":1,\"cursor\":null,\"exhausted\":false}'::jsonb WHERE id=$1 AND state IN('running','waiting_provider')",[lease.jobId]));return;
+    if(admission&&(slices||!job.checkpoint.registryFirst)&&inserted<input.limit&&found<scanLimit&&batch===0){
+      const advanced=await withLeasedTransaction(lease,c=>c.query(
+        "UPDATE app.prospecting_job SET provider_run=NULL,state='running',checkpoint=checkpoint||$2::jsonb,revision=revision+1,updated_at=now() WHERE id=$1 AND state IN('running','waiting_provider') AND NOT ($3::boolean AND COALESCE(checkpoint->'discoveryReasons','{}'::jsonb) ? 'CNPJ_OUTSIDE_DATE_WINDOW')",
+        [lease.jobId,{[slices?'registryBatch':'mapsBatch']:1,cursor:null,exhausted:false},slices]));
+      if(slices&&!advanced.rowCount)await finishJob(lease,'partial','CNPJ_WINDOW_UNVERIFIED');
+      return;
     }
     await finishJob(lease,admission&&inserted<input.limit?'partial':'completed',admission&&inserted<input.limit?'VERIFIED_DISCOVERY_SHORTFALL':undefined);
   };
   const ctx=providerContext(job,input.source,lease.jobId+':'+startStep,adapters.signal??new AbortController().signal),apify=adapters.apify??new ApifyAdapter();
   if(job.checkpoint.registryFirst)ctx.profile.registryFirst=true;
-  const admit=(page:import('../../domain/prospecting.ts').CandidatePage)=>job.checkpoint.registryFirst?admitRegistryPage(lease,job,page,{...adapters,signal:ctx.signal}):admission?admitDiscoveryPage(lease,job,page,{...adapters,signal:ctx.signal}):page;
+  if(slices)ctx.profile.registryWindow=registryWindow(batch);
+  const admit=(page:CandidatePage)=>{
+    if(slices){
+      if(page.rawCount>sliceRemaining)throw new ProviderError('CNPJ_WINDOW_LIMIT_EXCEEDED');
+      if(page.rawCount===sliceRemaining)page={...page,exhausted:true};
+    }
+    return job.checkpoint.registryFirst?admitRegistryPage(lease,job,page,{...adapters,signal:ctx.signal}):admission?admitDiscoveryPage(lease,job,page,{...adapters,signal:ctx.signal}):page;
+  };
   try{
     let run=job.provider_run as RemoteRun|null;
     if(job.state==='cancelling'){
@@ -64,7 +78,8 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
     }
     if(admission&&(job.checkpoint.execution?.siteCollector!==siteCollectorVersion||
       job.checkpoint.execution?.version!==prospectingConfig().version))throw new ProviderError('PROFILE_CHANGED');
-    if(job.checkpoint.exhausted===true||job.counts.found>=scanLimit||(admission&&job.counts.inserted>=input.limit)){await finishDiscovery(job.counts.inserted);return;}
+    if(slices&&!ctx.profile.registryWindow)throw new ProviderError('PROFILE_CHANGED');
+    if(job.checkpoint.exhausted===true||sliceRemaining<=0||(admission&&job.counts.inserted>=input.limit)){await finishDiscovery(job.counts.inserted);return;}
     if(job.checkpoint.registryFirst&&!adapters.collect){
       const browser=adapters.siteBrowser??loopbackSiteBrowser;
       if(browser.available&&!(await browser.available(ctx.signal)))throw new ProviderError('SITE_BROWSER_UNAVAILABLE');
@@ -89,9 +104,9 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
       if(pageLimit===0)throw capacityConfigurationError();
     }
     if(!run){
-      const remaining=scanLimit-job.counts.found;
+      const remaining=sliceRemaining;
       const batchLimit=admission&&!job.checkpoint.registryFirst&&batch===0?Math.min(input.limit*2,Math.floor(remaining*0.6)):remaining;
-      const batchInput={...input,limit:batchLimit,...(batch?{filters:{...input.filters,term:input.filters.term+' '+(input.filters.location??'')}}:{})};
+      const batchInput={...input,limit:batchLimit,...(batch&&!slices?{filters:{...input.filters,term:input.filters.term+' '+(input.filters.location??'')}}:{})};
       const started=await performStep(lease,startStep,'apify',{apifyRuns:1},()=>apify.start(ctx,batchInput),result=>({provider:'apify',operationId:ctx.operationId,units:result.kind==='uncertain'?{}:{apifyRuns:1},costUsd:null,costKind:'unknown'}));
       if(started.kind==='uncertain'){await finishJob(lease,'needs_reconciliation','START_UNCERTAIN');return;}
       if(started.kind==='inline'){
@@ -101,7 +116,7 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
       }
       run=started.run;await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_job SET provider_run=$2,state=CASE WHEN state='cancelling' THEN state ELSE 'waiting_provider' END WHERE id=$1",[lease.jobId,run]));
     }
-    const remaining=scanLimit-job.counts.found;
+    const remaining=sliceRemaining;
     let raw=job.checkpoint.registryPage as CandidatePage|undefined;
     if(!raw){
       const state=await apify.poll(ctx,run);

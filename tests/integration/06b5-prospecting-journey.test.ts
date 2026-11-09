@@ -13,6 +13,7 @@ import {runWorkerOnce} from '../../src/server/prospecting/worker.ts';
 import {getJob} from '../../src/server/prospecting/service.ts';
 import {reconcileJob} from '../../src/server/prospecting/reconciliation.ts';
 import {ApifyAdapter} from '../../src/server/prospecting/providers/apify.ts';
+import {actorInput} from '../../src/server/prospecting/providers/profiles.ts';
 import {readExtractionDay} from '../../src/server/billing/extraction-day.ts';
 import {preparePlanningSelection,confirmPlanningSelection} from '../../src/server/planning/confirmation.ts';
 import {withLeasedTransaction} from '../../src/server/prospecting/worker-db.ts';
@@ -231,6 +232,98 @@ test('an uncertain registry-first Maps run reconciles against Maps and resumes w
  for(let i=0;i<4&&(await getJob(f.p,jobId)).state!=='partial';i++)await tick();
  assert.equal((await getJob(f.p,jobId)).state,'partial');
  assert.equal(starts,2);
+});
+test('ComplementaryRegistry resumes a disjoint CNPJ window without repeating candidate lookups',async t=>{
+ const previous=process.env.APIFY_CNPJ_DATE_SLICES;
+ process.env.APIFY_CNPJ_DATE_SLICES='true';
+ t.after(()=>{if(previous===undefined)delete process.env.APIFY_CNPJ_DATE_SLICES;else process.env.APIFY_CNPJ_DATE_SLICES=previous;});
+ const f=await fixture(1),input:JourneyInput={...f.input,location:'Curitiba, PR',registry:{cnae:'2512800',city:'Curitiba',uf:'PR'}};
+ const {journey}=await start({...f,input});
+ const jobId=journey.stages[0].jobId!;
+ t.mock.method(globalThis,'fetch',async()=>{throw Error('External network is forbidden in this test');});
+ const record={name:'[RE] Empresa Nova',city:'Curitiba',state:'PR',phone:'+5541999991234',address:'Rua Exemplo, 10',cnpj:'37297479000180',cnae:'2512800',openedAt:'2020-01-01',source:'CNPJ' as const,sourceRef:'newer',facts:{registrationStatus:'ATIVA'}};
+ const older={...record,name:'[RE] Empresa Anterior',cnpj:'11222333000181',address:'Rua Exemplo, 20',openedAt:'2019-12-31',sourceRef:'older'};
+ const page=(receiptId:string,candidates:import('../../src/domain/prospecting.ts').Candidate[])=>({receiptId,candidates,rejected:[],rawCount:candidates.length,
+  nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:receiptId,units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}});
+ const searches:ReturnType<typeof actorInput>[]=[],maps:string[]=[];
+ const apify={start:async(ctx:any,request:any)=>{
+  if(ctx.profile.source==='CNPJ'){
+   searches.push(actorInput(ctx.profile,request));
+   if(searches.length===1)return {kind:'remote' as const,run:{provider:'apify' as const,runId:'newer',datasetId:'newer-dataset',profileId:ctx.profile.actor,build:ctx.profile.build,operationId:ctx.operationId}};
+   return {kind:'uncertain' as const,operationId:ctx.operationId};
+  }
+  assert.equal(ctx.profile.source,'MAPS');
+  maps.push(request.filters.term);
+  return {kind:'inline' as const,page:page(ctx.operationId,request.filters.term===record.name?[]:[
+   {...older,source:'MAPS',cnpj:undefined,site:'https://empresa.example.com/'},
+  ])};
+ },poll:async(_ctx:any,run:any)=>({status:'succeeded' as const,run}),
+ readPage:async(_ctx:any,run:any)=>run.runId==='newer'?page('registry-newer',[record]):page('registry-older',[record,{...record,sourceRef:'overlap',openedAt:older.openedAt},older]),
+ abort:async()=>{throw Error('Unexpected abort');}};
+ const siteBrowser={async read(kind:string){return kind==='page'?{status:200,text:older.name+' CNPJ '+older.cnpj}:{status:404,text:''};}};
+ const tick=()=>runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+ await tick();
+ assert.equal((await getJob(f.p,jobId)).state,'running');
+ process.env.APIFY_CNPJ_DATE_SLICES='false';
+ await tick();
+ const pending=await getJob(f.p,jobId);
+ assert.equal(pending.state,'needs_reconciliation');
+ assert.equal(pending.unresolvedAttempts![0].step,'start:1');
+ const reconciling=new ApifyAdapter(async url=>{
+  const path=new URL(String(url)).pathname;
+  if(path.includes('/acts/'))return Response.json({data:{id:'registry-actor'}});
+  if(path.endsWith('/records/INPUT'))return Response.json(path.includes('wrong-window')?searches[0]:searches[1]);
+  const wrong=path.endsWith('/actor-runs/wrong-window'),old=path.endsWith('/actor-runs/old-run');
+  assert.ok(wrong||old||path.endsWith('/actor-runs/newer')||path.endsWith('/actor-runs/older-confirmed'));
+  return Response.json({data:{actId:'registry-actor',buildNumber:'fixture-build',defaultDatasetId:'older-dataset',defaultKeyValueStoreId:wrong?'wrong-window':'older-confirmed',
+   startedAt:old?'2020-01-01T00:00:00.000Z':new Date().toISOString()}});
+ });
+ await assert.rejects(reconcileJob(f.p,jobId,{runId:'wrong-window',operationId:pending.unresolvedAttempts![0].id},{apify:reconciling}),{status:409});
+ await assert.rejects(reconcileJob(f.p,jobId,{runId:'old-run',operationId:pending.unresolvedAttempts![0].id},{apify:reconciling}),{status:409});
+ await assert.rejects(reconcileJob(f.p,jobId,{runId:'newer',operationId:pending.unresolvedAttempts![0].id},{apify:reconciling}),{status:409});
+ assert.equal((await getJob(f.p,jobId)).state,'needs_reconciliation');
+ await reconcileJob(f.p,jobId,{runId:'older-confirmed',operationId:pending.unresolvedAttempts![0].id},{apify:reconciling});
+ for(let i=0;i<8&&(await getJob(f.p,jobId)).state!=='completed';i++)await tick();
+ const result=await getJob(f.p,jobId);
+ assert.equal(result.state,'completed');
+ assert.equal(result.counts.inserted,1);
+ assert.deepEqual(result.discoveryReasons,{MAPS_IDENTITY_UNVERIFIED:1,CNPJ_OUTSIDE_DATE_WINDOW:1,CNPJ_ALREADY_EXAMINED:1});
+ assert.deepEqual(maps,[record.name,older.name]);
+ const shared={mode:'search',cnae:['2512800'],cnaeScope:'main',uf:['PR'],city:['Curitiba'],situacao:['ATIVA'],includePartners:false};
+ assert.deepEqual(searches,[
+  {...shared,openedFrom:'2020-01-01',maxRecords:6},
+  {...shared,openedTo:'2019-12-31',maxRecords:9},
+ ]);
+ const billed=await testAdmin(async c=>(await c.query("SELECT COALESCE(sum(quantity),0)::int AS spent FROM app.billing_consumption WHERE workspace_id=$1 AND reservation_key=$2 AND unit='extractions'",[f.p.workspaceId,'job:'+jobId])).rows[0].spent);
+ assert.equal(billed,1);
+});
+test('ComplementaryRegistry stops before a second paid window if the source violates the first date filter',async t=>{
+ const previous=process.env.APIFY_CNPJ_DATE_SLICES;
+ process.env.APIFY_CNPJ_DATE_SLICES='true';
+ t.after(()=>{if(previous===undefined)delete process.env.APIFY_CNPJ_DATE_SLICES;else process.env.APIFY_CNPJ_DATE_SLICES=previous;});
+ const f=await fixture(1),input:JourneyInput={...f.input,location:'Curitiba, PR',registry:{cnae:'2512800',city:'Curitiba',uf:'PR'}};
+ const {journey}=await start({...f,input});
+ t.mock.method(globalThis,'fetch',async()=>{throw Error('External network is forbidden in this test');});
+ let starts=0;
+ const apify={
+  start:async(ctx:any)=>{
+   assert.equal(++starts,1);
+   assert.equal(ctx.profile.source,'CNPJ');
+   return {kind:'inline' as const,page:{receiptId:'outside-window',
+    candidates:[{name:'[RE] Fora da faixa',city:'Curitiba',state:'PR',cnae:'2512800',cnpj:'37297479000180',openedAt:'2019-12-31',source:'CNPJ' as const,sourceRef:'outside',facts:{registrationStatus:'ATIVA'}}],
+    rawCount:1,rejected:[],nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:'outside-window',units:{candidates:1},costUsd:null,costKind:'unknown' as const}}};
+  },
+  poll:async()=>{throw Error('Unexpected poll');},readPage:async()=>{throw Error('Unexpected dataset');},abort:async()=>{throw Error('Unexpected abort');},
+ };
+ const siteBrowser={async read(){throw Error('Unexpected site visit');}};
+ const options={signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId};
+ await runWorkerOnce({apify,siteBrowser},options);
+ const result=await getJob(f.p,journey.stages[0].jobId!);
+ assert.equal(result.state,'partial');
+ assert.equal(result.error?.code,'CNPJ_WINDOW_UNVERIFIED');
+ assert.deepEqual(result.discoveryReasons,{CNPJ_OUTSIDE_DATE_WINDOW:1});
+ assert.equal(await runWorkerOnce({apify,siteBrowser},options),false);
+ assert.equal(starts,1);
 });
 test('discovery only delivers a verified active company and reports a shortfall',async()=>{
  const f=await fixture(),{journey}=await start(f);const calls:string[]=[];
