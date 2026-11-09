@@ -1,0 +1,36 @@
+name: prometeus-site-browser
+services:
+  site-browser:
+    image: prometeus-site-browser:local
+    build: ./site-browser
+    init: true
+    environment:
+      SITE_BROWSER_TOKEN: ${SITE_BROWSER_TOKEN:?Configure SITE_BROWSER_TOKEN}
+    networks: [browser-private]
+    read_only: true
+    tmpfs: [/tmp]
+    shm_size: 256m
+    mem_limit: 1g
+    pids_limit: 220
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  site-browser-gateway:
+    image: prometeus-site-browser:local
+    command: [gateway]
+    init: true
+    environment:
+      SITE_BROWSER_TOKEN: ${SITE_BROWSER_TOKEN:?Configure SITE_BROWSER_TOKEN}
+    ports:
+      - '127.0.0.1:3222:8081'
+    networks: [browser-private, browser-egress]
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 256m
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+networks:
+  browser-private:
+    internal: true
+  browser-egress: {}
