@@ -13,6 +13,8 @@
 
 ## 06B.6b — Fila e retomada por URL
 
+**Estado.** Implementado e validado em isolamento. [Medição](../../validation/06b6b-site-queue.md) e [revisão](../../validation/06b6b-site-queue-review.md).
+
 - Manter o orquestrador TypeScript e usar uma migração nova para guardar fila, resultado e tentativas por workspace, execução e URL canônica. Preservar RLS e o vínculo com a execução. As requisições pendentes têm lease e fence. Ao concluir uma página, gravar texto, hash, fontes, links novos e estado na mesma transação.
 - Percorrer URLs públicas alcançáveis por sitemap e links do domínio permitido. Priorizar contato, sobre e informações legais na fila e depois continuar nas demais. Deduplicar URLs e registrar páginas bloqueadas por robots.txt, inacessíveis e ainda pendentes. Tempo e concorrência operacionais dividem a coleta em rodadas. Se um limite de segurança encerrar a coleta, registrar cobertura parcial.
 - Repetir somente URLs recuperáveis com prazo por tentativa e espera progressiva. Usar o resultado já confirmado ao repetir uma etapa. Se o worker cair após ler a página e antes do commit, só aquela URL precisa ser lida de novo. A queda depois do commit não repete a leitura.

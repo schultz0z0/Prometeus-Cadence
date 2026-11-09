@@ -12,7 +12,7 @@ As famílias 01–08 preservam o histórico; não existe 09 definido. Letras/suf
 
 ## Pacotes restantes e dependências
 
-Em 08/11, a trilha do navegador foi incluída no roadmap. O 06B.6a tem validação local isolada e a próxima implementação é a fila do 06B.6b. As pendências anteriores do 08A continuam registradas, e o 08B incorpora o aceite da trilha 06B.6.
+Em 08/11, a trilha do navegador foi incluída no roadmap. O 06B.6a e o 06B.6b têm validação local isolada. O 06B.6c liga a fila ao fluxo de CNPJ primeiro no Gerador. As pendências anteriores do 08A continuam registradas, e o 08B incorpora o aceite da trilha 06B.6.
 
 A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gate antecipável e deve ocorrer antes de 07A.1;07D é condicional. Dependências concluídas são lidas em seus relatórios, sem refazer a implementação.
 
@@ -25,7 +25,7 @@ A ordem abaixo é uma sequência de integração.06A-V é contínuo;07A.0 é gat
 | 06D.2 | Canais, inbox e homologação de entrega | 06D.1 | [tarefas](2026-10-27-prometeus-cadence-06d2-channel-operation.md) | Concluído local/controlado; piloto externo permanece gate |
 | 06B.5 | Jornada integrada de prospecção e cadência | 06B.3, 06B.4, 06D.1, 06D.2 | [tarefas](2026-10-27-prometeus-cadence-06b5-prospecting-journey.md) | Concluído local/controlado; acurácia live permanece gate06IA-H |
 | 06B.6a | Renderizador Scrapling com Chromium em Docker | 06B.5 | [tarefas](2026-11-08-browser-collection.md#06b6a--renderizador-chromium-isolado) | Implementado e validado isoladamente no [Docker local](../../validation/06b6a-site-browser.md) |
-| 06B.6b | Fila durável de URLs e retomada | 06B.6a | [tarefas](2026-11-08-browser-collection.md#06b6b--fila-e-retomada-por-url) | Planejado |
+| 06B.6b | Fila durável de URLs e retomada | 06B.6a | [tarefas](2026-11-08-browser-collection.md#06b6b--fila-e-retomada-por-url) | Implementado e validado em [Postgres efêmero e Chromium isolado](../../validation/06b6b-site-queue.md) |
 | 06B.6c | CNPJ primeiro na Prospecção completa | 06B.6b | [tarefas](2026-11-08-browser-collection.md#06b6c--cnpj-primeiro-no-app) | Planejado; integração parcial ainda sem aceite |
 | 06B.6d | Troca do provedor de leitura de sites | 06B.6c | [tarefas](2026-11-08-browser-collection.md#06b6d--troca-do-provedor-de-leitura-de-sites) | Planejado |
 | 06B.6e | Homologação e capacidade | 06B.6d | [tarefas](2026-11-08-browser-collection.md#06b6e--homologação-e-capacidade) | Planejado; piloto externo depende de autorização |

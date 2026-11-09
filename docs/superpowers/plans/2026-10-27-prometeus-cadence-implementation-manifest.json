@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "06B.6b",
+  "next": "06B.6c",
   "end": "08B",
   "packages": [
     {
@@ -332,13 +332,20 @@
       "conditional": false,
       "continuous": false,
       "plan": "docs/superpowers/plans/2026-11-08-browser-collection.md",
-      "status": "planned",
+      "status": "implemented-local",
       "create": [
-        "src/server/prospecting/extraction/site-queue.ts"
+        "db/migrations/113f-site-page-queue.sql",
+        "src/server/prospecting/site-queue.ts",
+        "src/server/prospecting/site-browser.ts",
+        "src/server/prospecting/site-collection.ts"
       ],
       "modify": [
-        "src/server/prospecting/worker.ts"
-      ]
+        "docker/site-browser/renderer.py",
+        "docker/site-browser/service.py",
+        "scripts/test-integration.mjs"
+      ],
+      "evidence": "docs/validation/06b6b-site-queue.md",
+      "integration": "tests/integration/06b6b-site-queue.test.ts"
     },
     {
       "id": "06B.6c",

@@ -1,10 +1,15 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-07 · Session: s49 · Phase:6 franquias e Prospecção completa · aceite integral pendente
+Updated: 2026-11-09 · Session: s50 · Phase:6 franquias e Prospecção completa · aceite integral pendente
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- s50: fila local de leitura de sites. Postgres efêmero e Chromium isolado verificaram retomada, cancelamento e cobertura parcial.
+  - **Evidência:** EV-312.
+  - **QA:** L-059.
+  - A próxima prova no app está no 06B.6c. A referência permaneceu fora da rodada.
 
 - Covered s48: Aprender, ajuda contextual e estrutura de Execuções, observados no Chrome da referência. Progresso, teclado e navegação foram exercitados no Prometeus.
   - **Evidência:** EV-310.
