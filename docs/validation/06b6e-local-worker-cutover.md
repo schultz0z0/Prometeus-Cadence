@@ -10,8 +10,10 @@ No Chrome, a jornada `pack` exibiu o navegador disponível e abriu a revisão em
 
 ## Piloto cadastral
 
-O operador autorizou a proposta. A primeira faixa foi confirmada e a segunda ficou inconclusiva devido ao limite da Minha Receita. [Relatório do piloto](06b6e-cnpj-actor-pilot.md)
+O operador autorizou as duas consultas iniciais e uma nova consulta da faixa até 2019, após o primeiro HTTP 429 da Minha Receita. O build cadastral retornou um cadastro válido e distinto em cada faixa. [Relatório do piloto](06b6e-cnpj-actor-pilot.md)
 
-O protocolo aprovado consultou o build configurado na Apify para CNAE 2512800 em Curitiba/PR, uma execução por faixa e até um cadastro devolvido por execução. O teto foi de US$ 0,05 por run, com reinício automático desativado. A conferência foi em memória e a evidência registra contagens, cobertura e custo. A prova ponta a ponta com Maps e Chromium continua separada.
+O protocolo aprovado usou CNAE 2512800 em Curitiba/PR, até um cadastro e teto de US$ 0,05 por execução, com reinício automático desativado. A conferência foi em memória e a evidência registra contagens, cobertura e custo.
+
+Com zero jobs em andamento, zero jornadas em execução e zero automações ativas, `APIFY_CNPJ_DATE_SLICES` foi ativado localmente para novas revisões. A política congelada no job dispensa um novo restart do worker. A jornada `pack` passou com os avisos de disponibilidade do navegador e das duas faixas e revisão em 1920×855 e 390×844. A conta descartável deixou resíduo zero e o servidor temporário foi encerrado. A prova ponta a ponta com Maps e Chromium continua separada.
 
 [Limite de cobrança por execução na Apify](https://docs.apify.com/api/v2/actors-runs-post)

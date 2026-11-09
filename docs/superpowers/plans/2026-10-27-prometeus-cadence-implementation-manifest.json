@@ -375,7 +375,6 @@
       "evidence": "docs/validation/06b6c-registry-complementary-slices.md",
       "integration": "tests/integration/06b5-prospecting-journey.test.ts",
       "pending": [
-        "Homologar a faixa até 2019 no build real do Actor de CNPJ antes de ativar a configuração",
         "Aceite operacional do fluxo no 06B.6e"
       ]
     },
@@ -426,7 +425,7 @@
       "evidence": "docs/validation/06b6e-site-browser-capacity.md",
       "integration": "tests/integration/06b6e-site-capacity.test.ts",
       "pending": [
-        "Piloto externo pequeno com autorização específica de custo",
+        "Piloto ponta a ponta no worker compartilhado com Maps e Chromium, com autorização específica de custo",
         "Revalidação dos estados afetados no 08A"
       ]
     },

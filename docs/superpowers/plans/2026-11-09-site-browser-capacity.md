@@ -13,3 +13,9 @@ A prova de capacidade usa `node scripts/test-integration.mjs 06b6e-site-capacity
 2. Validar o PID, a linha de comando e a relação de parentesco do processo `jobs`. Exigir telemetria ociosa recente e, sob bloqueio breve no banco local, fila sem trabalho reclamável, jornadas sem execução e automações inativas. Manter os registros em reconciliação.
 3. Encerrar apenas esse filho ocioso e observar o supervisor criar outro. Conferir PID novo, dois ciclos bem-sucedidos, demais processos preservados e contadores de jobs e consumo estáveis.
 4. Usar a API e o navegador local em modo de revisão para conferir o Gerador. Separar a validação da instalação do piloto autorizado com fornecedores reais.
+
+## Ativação local dos recortes de CNPJ
+
+1. Confirmar um cadastro válido em cada faixa no build configurado e comparar os CNPJs em memória.
+2. Ativar os recortes para novas revisões com a porta do app livre, sem jobs em andamento, jornadas em execução ou automações ativas. O worker lê a política congelada na revisão, portanto a ativação dispensa reiniciar a lane.
+3. Em servidor temporário com execução de prospecção desabilitada, conferir a revisão no Gerador. Encerrar o servidor e remover a conta descartável.

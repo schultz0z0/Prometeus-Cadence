@@ -5,10 +5,11 @@ Em 09/11/2026, o operador autorizou duas consultas ao build cadastral configurad
 | Faixa | Resultado | Uso informado pela Apify |
 | --- | --- | --- |
 | A partir de 01/01/2020 | Um cadastro com data, CNAE, município, UF e situação válidos | US$ 0,008, com um evento de início e um de cadastro |
-| Até 31/12/2019 | Nenhum cadastro. Uma linha de erro | US$ 0,000, com zero eventos cobrados |
+| Até 31/12/2019, primeira consulta | Nenhum cadastro. Uma linha de erro | US$ 0,000, com zero eventos cobrados |
+| Até 31/12/2019, nova consulta autorizada | Um cadastro com data, CNAE, município, UF e situação válidos | US$ 0,008, com um evento de início e um de cadastro |
 
-A segunda execução terminou tecnicamente em `SUCCEEDED`, mas seu dataset registrou HTTP 429 da Minha Receita. O prazo de retentativa informado foi de 60 s, acima do tempo que o Actor aceitou esperar. Isso deixa a segunda faixa inconclusiva. O diagnóstico foi lido do run existente após confirmar o build, o teto e o INPUT. O total informado foi US$ 0,008.
+A primeira consulta da faixa antiga terminou tecnicamente em `SUCCEEDED`, mas seu dataset registrou HTTP 429 da Minha Receita. O prazo de retentativa informado foi de 60 s, acima do tempo que o Actor aceitou esperar. Com nova autorização, somente essa faixa foi consultada, com os mesmos filtros e limites. O retorno incluiu um cadastro válido e zero linhas de erro. A conferência dos datasets existentes confirmou CNPJs distintos entre as faixas. O total informado para as três execuções foi US$ 0,016.
 
-A conferência ocorreu em memória. Nenhum cadastro foi salvo no Prometeus. A Apify mantém o histórico das duas execuções. `APIFY_CNPJ_DATE_SLICES` permanece desativado no ambiente compartilhado. Uma nova tentativa exige autorização própria. A homologação ponta a ponta com o worker e Chromium continua separada.
+A conferência ocorreu em memória, com apenas agregados no Prometeus. A Apify mantém o histórico das três execuções. O resultado confirma os filtros neste recorte e neste build, com uma amostra válida em cada faixa. A homologação ponta a ponta com o worker e Chromium continua separada.
 
 [Contrato dos filtros](https://apify.com/bigdavidson/brazil-cnpj-companies/input-schema) · [Limite por execução](https://docs.apify.com/api/v2/actors-runs-post)

@@ -125,3 +125,4 @@ id,date,session,route,shows,masked
 "EV-316","2026-11-09","s54","disjoint CNPJ date windows","Synthetic registry datasets, durable continuation, run reconciliation and commercial settlement","yes; simulated paid providers, no reference writes"
 "EV-317","2026-11-09","s55","local prospecting worker replacement","Idle lane replacement, stable usage counters and authenticated browser gateway smoke","yes; no reference writes and no paid pilot"
 "EV-318","2026-11-09","s56","approved CNPJ Actor pilot","Two capped Actor runs, one verified date window and one upstream rate-limit response","yes; authorized paid pilot; aggregate evidence only"
+"EV-319","2026-11-09","s57","complementary CNPJ window verification","One capped retry verified the older window, distinct CNPJs and local review in Chrome","yes; authorized paid retry and disposable local review; aggregate evidence only"
