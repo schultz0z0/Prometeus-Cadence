@@ -389,12 +389,20 @@
       ],
       "conditional": false,
       "continuous": false,
-      "plan": "docs/superpowers/plans/2026-11-08-browser-collection.md",
-      "status": "planned",
-      "create": [],
+      "plan": "docs/superpowers/plans/2026-11-09-site-browser-cutover.md",
+      "status": "partial",
+      "create": ["src/server/prospecting/site-policy.ts"],
       "modify": [
         "src/server/prospecting/config.ts",
-        "src/server/prospecting/steps.ts"
+        "src/server/prospecting/steps.ts",
+        "src/server/prospecting/extraction/fetch-page.ts",
+        "src/server/prospecting/worker.ts",
+        "docker/site-browser/renderer.py"
+      ],
+      "evidence": "docs/validation/06b6d-site-browser-cutover.md",
+      "integration": "tests/integration/prospecting-pipeline.test.ts",
+      "pending": [
+        "Ativação controlada no runtime compartilhado e aceite operacional no 06B.6e"
       ]
     },
     {

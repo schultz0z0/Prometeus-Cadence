@@ -1,0 +1,5 @@
+# Revisão independente do 06B.6d
+
+A revisão em modo somente leitura identificou que um navegador temporariamente indisponível podia falhar um módulo de qualificação ou fazer a investigação prosseguir com fontes faltando. O teste de integração reproduziu a ausência do estado de espera no Qualificador. O worker agora registra a espera e retoma o mesmo job, preservando etapas confirmadas. A investigação de empresa também conserva o recibo técnico quando a permissão é removida durante uma coleta, com a publicação dos fatos sujeita à autorização atual.
+
+O teste de recuperação entrega ao worker a concessão isolada do próprio job, verifica a data de retomada e simula o gateway retornando indisponibilidade e depois uma página. Isso evita depender das concessões abertas por outros testes na mesma suíte. O Chromium real verificou a extração em uma rodada separada, com documentos sintéticos. A cobertura operacional e de capacidade fica para o 06B.6e. [Relatório do corte](06b6d-site-browser-cutover.md)
