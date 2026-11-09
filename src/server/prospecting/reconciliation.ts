@@ -12,7 +12,7 @@ import {providerContext} from './steps.ts';
 import {settleUsage,releaseUnused} from './usage.ts';
 import {resumeReconciledDiscovery} from '../research/journey.ts';
 const schema=z.strictObject({operationId:z.string().min(1).max(120).optional(),runId:z.string().regex(/^[-\w]{1,100}$/).optional(),confirmNotStarted:z.literal(true).optional(),resultUnavailable:z.literal(true).optional()}).refine(v=>[v.runId,v.confirmNotStarted,v.resultUnavailable].filter(Boolean).length===1);
-const unresolvedSql="(state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain')";
+const unresolvedSql="provider<>'site-browser' AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain')";
 const sourceFor=(job:any,attempt:any)=>attempt.step.startsWith('abort:')&&attempt.payload.source?attempt.payload.source:attempt.step.startsWith('crawl:')?'CRAWL':attempt.step.startsWith('registry:')?'CNPJ':attempt.step.startsWith('maps:')?'MAPS':attempt.step.startsWith('website:')?'WEB':job.kind==='generation'?job.source:null;
 export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apify?:ApifyAdapter}={}){
   const parsed=schema.safeParse(body);if(!parsed.success)throw new AppError(422,'Selecione uma chamada e uma ação de reconciliação.');

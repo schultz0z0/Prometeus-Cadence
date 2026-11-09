@@ -71,6 +71,10 @@ const journeys={
   });
   await step('jornada herda créditos e permite revisar a escolha antes de buscar',async()=>{
    await go(page,'/leads/generator');
+   if(process.env.QA_EXPECT_SITE_BROWSER==='1'){
+    await page.getByText('Status das integrações e histórico',{exact:true}).click();
+    await seen(page,'Navegador · disponível');
+   }
    await page.getByRole('combobox',{name:'Saldo para extrações'}).click();
    await page.getByRole('option',{name:'Créditos adicionais',exact:true}).click();
    await page.getByRole('button',{name:'Prospecção completa',exact:true}).click();
