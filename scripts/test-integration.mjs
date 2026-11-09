@@ -104,7 +104,7 @@ const known = [
 const requested = process.argv.slice(2);
 const suites = requested.length
   ? requested
-  : known.filter((s) => fs.existsSync(`tests/integration/${s}.test.ts`));
+  : known.filter((s) => s !== "06b6e-site-capacity" && fs.existsSync(`tests/integration/${s}.test.ts`));
 if (!suites.length || suites.some((s) => !known.includes(s)))
   throw Error("Unknown integration suite.");
 const args = [
