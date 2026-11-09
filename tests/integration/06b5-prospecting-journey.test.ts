@@ -1,3 +1,4 @@
+import {ApifySiteCrawler} from '../../src/server/prospecting/providers/site-crawler.ts';
 import test,{after,beforeEach} from 'node:test';import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';
 import {configureProspectingTest,prospectingUser,closeProspectingPools,testAdmin} from './prospecting-helpers.ts';
 import {withWorkspaceTransaction,withContextTransaction} from '../../src/server/db/transaction.ts';
@@ -11,6 +12,9 @@ import {saveAiPolicy} from '../../src/server/prospecting/ai/settings.ts';
 import {prepareJourney,confirmJourney,getJourney,cancelJourney,prepareJourneyResume,resumeJourney,advanceJourney,prepareJourneyCadence,confirmJourneyCadence} from '../../src/server/research/journey.ts';
 import {runWorkerOnce} from '../../src/server/prospecting/worker.ts';
 import {getJob} from '../../src/server/prospecting/service.ts';
+import {reconcileJob} from '../../src/server/prospecting/reconciliation.ts';
+import {ApifyAdapter} from '../../src/server/prospecting/providers/apify.ts';
+import {readExtractionDay} from '../../src/server/billing/extraction-day.ts';
 import {preparePlanningSelection,confirmPlanningSelection} from '../../src/server/planning/confirmation.ts';
 import {withLeasedTransaction} from '../../src/server/prospecting/worker-db.ts';
 import {grantTestLease} from './prospecting-helpers.ts';
@@ -38,7 +42,7 @@ async function done(f:Awaited<ReturnType<typeof fixture>>,journey:any,name:strin
  const row=(await workerPool().query('SELECT * FROM app.claim_journey_advance($1)',[f.p.workspaceId])).rows[0];assert.ok(row,'durable advance ticket');
  return advanceJourney({workspaceId:row.workspace_id,jobId:row.job_id,actorId:row.actor_id,token:row.token,fence:Number(row.fence),expiresAt:row.expires_at.toISOString()});
 }
-test('one reviewed request creates one journey, one list, one reserved discovery and no cadence or publication',async()=>{
+test('one reviewed request creates one journey, one list, one queued discovery and no cadence or publication',async()=>{
  const f=await fixture(),r=await prepareJourney(f.p,f.input);assert.equal((await readWorkspaceSnapshot(f.p)).data.lists.length,0);
  const previousToken=createReviewToken({action:'journey.create',userId:f.p.userId,workspaceId:f.p.workspaceId,input:f.input,basisHash:r.basisHash,revision:0,id:null},process.env.BETTER_AUTH_SECRET!);
  await assert.rejects(confirmJourney(f.p,{input:f.input,token:previousToken,requestId:randomUUID()}),(error:any)=>error.status===409);
@@ -47,25 +51,207 @@ test('one reviewed request creates one journey, one list, one reserved discovery
  const snap=await readWorkspaceSnapshot(f.p);assert.equal(snap.data.lists.length,1);assert.equal(snap.data.cadences.length,0);
  await assert.rejects(confirmJourney(f.p,{...body,input:{...f.input,limit:3}}),(e:any)=>e.status===409);
 });
+test('technical capacity waits and resumes the same discovery without another confirmation',async()=>{
+ const f=await fixture();
+ await testAdmin(async c=>{
+  await c.query("UPDATE app.billing_account SET state='active',plan='essential' WHERE workspace_id=$1",[f.p.workspaceId]);
+  await c.query("UPDATE app.billing_grant SET source='plan',quantity=5000 WHERE workspace_id=$1 AND unit='extractions'",[f.p.workspaceId]);
+  await c.query('INSERT INTO app.prospecting_policy(workspace_id,limits) VALUES($1,$2)',[f.p.workspaceId,{candidates:100,apifyRuns:1,openaiCalls:100}]);
+ });
+ assert.equal((await prepareJourney(f.p,f.input)).extractionRemaining,250);
+ const {journey,body}=await start(f),jobId=journey.stages[0].jobId;
+ assert.ok(jobId);
+ assert.equal((await confirmJourney(f.p,body)).stages[0].jobId,jobId);
+ let starts=0;
+ const apify={start:async()=>{
+  const receiptId=`capacity-page-${++starts}`;
+  return {kind:'inline' as const,page:{receiptId,candidates:[],rejected:[],rawCount:0,nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:receiptId,units:{candidates:0},costUsd:null,costKind:'unknown' as const}}};
+ },poll:async()=>{throw Error('Unexpected poll');},readPage:async()=>{throw Error('Unexpected dataset');},abort:async()=>{throw Error('Unexpected abort');}};
+ const tick=()=>runWorkerOnce({apify},{workspaceId:f.p.workspaceId,signal:new AbortController().signal});
+ assert.equal(await tick(),true);
+ assert.equal(await tick(),true);
+ assert.equal(starts,1);
+ const waiting=await getJourney(f.p,journey.id);
+ assert.equal(waiting.state,'running');
+ assert.equal(waiting.reason,'WAITING_CAPACITY');
+ assert.equal((await getJob(f.p,jobId)).error?.code,'WAITING_CAPACITY');
+ assert.equal(await tick(),false,'waiting work must yield the worker');
+ const overLimit=await prepareJourney(f.p,{...f.input,limit:249});
+ assert.equal(overLimit.extractionRemaining,248);
+ assert.equal(overLimit.blockers.length,1);
+ await assert.rejects(confirmJourney(f.p,{input:overLimit.input,token:overLimit.token,requestId:randomUUID()}),/248 disponíveis hoje/);
+ await testAdmin(async c=>{
+  await c.query("UPDATE app.usage_ledger SET created_at=created_at-interval '1 day' WHERE job_id=$1 AND event='consume'",[jobId]);
+  await c.query('UPDATE app.prospecting_job SET capacity_retry_at=clock_timestamp() WHERE id=$1',[jobId]);
+ });
+ assert.equal(await tick(),true);
+ assert.equal(starts,2,'first paid call must not be repeated');
+ assert.equal((await getJob(f.p,jobId)).state,'partial');
+ assert.equal((await getJourney(f.p,journey.id)).state,'review');
+ assert.equal((await withWorkspaceTransaction(f.p,readExtractionDay))?.plan,0,'release unused commercial balance');
+});
+test('discovery reads a page that fits the technical capacity of one day',async()=>{
+ const f=await fixture(5);
+ await testAdmin(c=>c.query('INSERT INTO app.prospecting_policy(workspace_id,limits) VALUES($1,$2)',[f.p.workspaceId,{candidates:2,apifyRuns:10,openaiCalls:100}]));
+ const {journey}=await start(f),jobId=journey.stages[0].jobId;
+ assert.ok(jobId);
+ const run={provider:'apify' as const,runId:'capacity-run',datasetId:'capacity-dataset',profileId:'fixture',build:'fixture-build',operationId:'capacity-run',status:'succeeded' as const};
+ const sizes:number[]=[];
+ const apify={start:async()=>({kind:'remote' as const,run}),poll:async()=>({run,status:'succeeded' as const}),readPage:async(_ctx:any,_run:any,_cursor:any,limit=100)=>{
+  sizes.push(limit);
+  return {receiptId:'bounded-capacity-page',candidates:[],rejected:Array.from({length:limit},()=>({reason:'MISSING_IDENTITY'})),rawCount:limit,nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:'bounded-capacity-page',units:{candidates:limit},costUsd:null,costKind:'unknown' as const}};
+ },abort:async()=>{throw Error('Unexpected abort');}};
+ await runWorkerOnce({apify},{workspaceId:f.p.workspaceId,signal:new AbortController().signal});
+ assert.deepEqual(sizes,[2]);
+ assert.equal((await getJob(f.p,jobId)).counts.rejected,2);
+});
+test('registry-first HTTP journey replaces a homonym and resumes website collection in the same execution',async t=>{
+ const f=await fixture(1),calls:string[]=[];
+ const before=process.env.SITE_BROWSER_TOKEN;
+ process.env.SITE_BROWSER_TOKEN='fixture-only-site-browser-token-00001';
+ t.after(()=>{if(before===undefined)delete process.env.SITE_BROWSER_TOKEN;else process.env.SITE_BROWSER_TOKEN=before;});
+ const input:JourneyInput={...f.input,location:'Curitiba, PR',registry:{cnae:'2512800',city:'Curitiba',uf:'PR'}};
+ const call=(body:unknown)=>journeyRequest(new Request(base+'/api/prospecting/journeys',{method:'POST',headers:f.headers,body:JSON.stringify(body)}));
+ const review=await (await call({action:'prepare',input})).json();
+ assert.deepEqual(review.blockers,[]);
+ assert.equal(review.input.location,'Curitiba, PR');
+ const body={action:'confirm',input,token:review.token,requestId:randomUUID()};
+ const journey=await (await call(body)).json();
+ const id=journey.stages[0].jobId;
+ assert.equal((await (await call(body)).json()).stages[0].jobId,id);
+ const record={name:'[RE] Esquadrias Exemplo',city:'Curitiba',phone:'+5541999991234',address:'Rua Exemplo, 10',cnpj:'37297479000180',cnae:'2512800'};
+ const rejected={...record,name:'[RE] Homônimo',cnpj:'11222333000181',source:'CNPJ' as const,sourceRef:'first',state:'PR',facts:{registrationStatus:'ATIVA'}};
+ const accepted={...record,source:'CNPJ' as const,sourceRef:'second',state:'PR',facts:{registrationStatus:'ATIVA'}};
+ const run={provider:'apify' as const,runId:'registry-run',datasetId:'registry-dataset',profileId:'bigdavidson/brazil-cnpj-companies',build:'fixture-build',operationId:'registry-run'};
+ function page(candidates:import('../../src/domain/prospecting.ts').Candidate[],receiptId:string,nextCursor:string|null=null){
+  return {receiptId,candidates,rejected:[],rawCount:candidates.length,nextCursor,exhausted:nextCursor===null,usage:{provider:'apify',operationId:receiptId,units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}};
+ }
+ const apify={start:async(ctx:any,request:any)=>{
+  calls.push(ctx.profile.source+':'+request.filters.term);
+  if(ctx.profile.source==='CNPJ'){
+   assert.equal(ctx.profile.registryFirst,true);
+   assert.deepEqual(request.filters,{term:f.input.brief,cnae:'2512800',state:'PR',city:'Curitiba'});
+   return {kind:'remote' as const,run};
+  }
+  const lead={...record,cnpj:undefined,source:'MAPS' as const,state:'Paraná',sourceRef:ctx.operationId};
+  if(ctx.profile.source==='MAPS')return {kind:'inline' as const,page:page(request.filters.term===rejected.name?[{...lead,name:rejected.name,address:'Rua Exemplo, 99'}]:[{...lead,site:'https://google.com/'}],ctx.operationId)};
+  return {kind:'inline' as const,page:page([
+   {...lead,source:'WEB',site:'https://google.com/'},
+   {...lead,source:'WEB',site:'https://company.example.com/'},
+  ],ctx.operationId)};
+ },poll:async()=>({status:'succeeded' as const,run}),readPage:async(_ctx:any,_run:any,cursor:string|null)=>{
+  calls.push('dataset:'+(cursor??'0'));
+  return cursor?page([accepted],'registry-page-2'):page([rejected],'registry-page-1','1');
+ },abort:async()=>{throw Error('Unexpected abort');}};
+ let contactReads=0;
+ let browserAvailable=false;
+ const playwrightModule=process.env.QA_PLAYWRIGHT_MODULE;
+ const chrome=playwrightModule?await (await import(playwrightModule)).chromium.launch({headless:true,executablePath:process.env.QA_CHROME_PATH}):null;
+ if(chrome)t.after(()=>chrome.close());
+ const siteBrowser={available:async()=>browserAvailable,async read(kind:string,url:string){
+  const path=new URL(url).pathname;
+  assert.equal(new URL(url).hostname,'company.example.com');
+  calls.push(kind+':'+path);
+  if(kind==='robots'||kind==='sitemap')return {status:404,text:''};
+  if(path!=='/'&&contactReads++===0)return {status:504,text:''};
+  if(chrome){
+   const page=await chrome.newPage();
+   try{
+    await page.route('**/*',(route:any)=>route.request().url()===url?route.fulfill({contentType:'text/html',body:path==='/'?
+     '<main></main><script>document.querySelector("main").innerHTML="[RE] Esquadrias Exemplo <a href=/contato>Contato</a>"</script>':
+     '<main></main><script>document.querySelector("main").textContent="[RE] Esquadrias Exemplo +55 41 99999-1234"</script>'}):route.abort());
+    const response=await page.goto(url);
+    const text=await page.locator('main').innerText();
+    const links=await page.locator('a[href]').evaluateAll((anchors:HTMLAnchorElement[])=>anchors.map(a=>a.href));
+    return {status:response?.status()??0,text,links,finalUrl:page.url()};
+   }finally{await page.close();}
+  }
+  if(path==='/')return {status:200,text:'[RE] Esquadrias Exemplo',links:['/contato']};
+  return {status:200,text:'[RE] Esquadrias Exemplo +55 41 99999-1234'};
+ }};
+ await runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+ assert.deepEqual(calls,[],'an unavailable browser must not start a paid Actor');
+ assert.equal((await getJob(f.p,id)).error?.code,'WAITING_SITE_BROWSER');
+ browserAvailable=true;
+ await testAdmin(c=>c.query('UPDATE app.prospecting_job SET capacity_retry_at=clock_timestamp() WHERE id=$1',[id]));
+ for(let i=0;i<15;i++){
+  await runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+  if((await getJob(f.p,id)).state==='completed')break;
+  await testAdmin(c=>c.query("UPDATE app.prospecting_site_page SET retry_at=clock_timestamp() WHERE job_id=$1 AND reason='HTTP_504' AND state='pending'",[id]));
+ }
+ const job=await getJob(f.p,id);
+ assert.equal(job.state,'completed');
+ assert.equal(job.counts.inserted,1);
+ assert.equal(job.counts.rejected,1);
+ assert.equal(job.discoveryReasons?.MAPS_IDENTITY_UNVERIFIED,1);
+ assert.equal(job.siteCollection?.completed,2);
+ assert.deepEqual(calls,[
+  'CNPJ:'+f.input.brief,'dataset:0','MAPS:'+rejected.name,'dataset:1','MAPS:'+accepted.name,'WEB:'+accepted.name,
+  'robots:/robots.txt','sitemap:/sitemap.xml','page:/','page:/contato','page:/contato',
+ ]);
+ const result=await getJourney(f.p,journey.id);
+ assert.equal(result.stages[1].name,'research');
+ const snapshot=await readWorkspaceSnapshot(f.p);
+ assert.equal(snapshot.data.leads[0].cnpj,record.cnpj);
+ assert.equal(snapshot.data.leads[0].site,'https://company.example.com/');
+ assert.equal(snapshot.data.cadences.length,0);
+});
+test('an uncertain registry-first Maps run reconciles against Maps and resumes without another start',async t=>{
+ const before=process.env.SITE_BROWSER_TOKEN;
+ process.env.SITE_BROWSER_TOKEN='fixture-only-site-browser-token-00001';
+ t.after(()=>{if(before===undefined)delete process.env.SITE_BROWSER_TOKEN;else process.env.SITE_BROWSER_TOKEN=before;});
+ const f=await fixture(1),input:JourneyInput={...f.input,location:'Curitiba, PR',registry:{cnae:'2512800',city:'Curitiba',uf:'PR'}};
+ const {journey}=await start({...f,input});
+ const jobId=journey.stages[0].jobId!;
+ let starts=0;
+ const result=(receiptId:string,candidates:import('../../src/domain/prospecting.ts').Candidate[])=>({
+  receiptId,candidates,rejected:[],rawCount:candidates.length,nextCursor:null,exhausted:true,
+  usage:{provider:'apify',operationId:receiptId,units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const},
+ });
+ const apify={start:async(ctx:any)=>{
+  starts++;
+  if(ctx.profile.source==='MAPS')return {kind:'uncertain' as const,operationId:ctx.operationId};
+  return {kind:'inline' as const,page:result('registry-for-reconciliation',[
+   {name:'[RE] Empresa Maps',source:'CNPJ',sourceRef:'registry-company',city:'Curitiba',state:'PR',cnae:'2512800',cnpj:'37297479000180',facts:{registrationStatus:'ATIVA'}},
+  ])};
+ },poll:async(_ctx:any,run:any)=>({status:'succeeded' as const,run}),readPage:async()=>result('empty-maps',[]),abort:async()=>{throw Error('Unexpected abort');}};
+ const siteBrowser={async read(){throw Error('No site should be visited');}};
+ const tick=()=>runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+ await tick();
+ const pending=await getJob(f.p,jobId);
+ assert.equal(pending.state,'needs_reconciliation');
+ assert.match(pending.unresolvedAttempts![0].step,/^maps:/);
+ const reconciling=new ApifyAdapter(async url=>{
+  const path=new URL(String(url)).pathname;
+  if(path.includes('/acts/'))return Response.json({data:{id:path.endsWith('/compass~crawler-google-places')?'maps-actor':'different-actor'}});
+  assert.ok(path.endsWith('/actor-runs/maps-confirmed'));
+  return Response.json({data:{actId:'maps-actor',buildNumber:'fixture-build',defaultDatasetId:'maps-dataset'}});
+ });
+ const resumed=await reconcileJob(f.p,jobId,{runId:'maps-confirmed',operationId:pending.unresolvedAttempts![0].id},{apify:reconciling});
+ assert.equal(resumed.state,'queued');
+ for(let i=0;i<4&&(await getJob(f.p,jobId)).state!=='partial';i++)await tick();
+ assert.equal((await getJob(f.p,jobId)).state,'partial');
+ assert.equal(starts,2);
+});
 test('discovery only delivers a verified active company and reports a shortfall',async()=>{
  const f=await fixture(),{journey}=await start(f);const calls:string[]=[];
  const apify={start:async(ctx:any,input:any)=>{
   calls.push(ctx.profile.source);
-  const candidates=ctx.profile.source==='MAPS'?[
+  const candidates=ctx.profile.source==='MAPS'?(calls.length>1?[]:[
    {sourceRef:'missing-phone',name:'[RE] Sem telefone',site:'https://no-phone.example',source:'MAPS' as const},
    {sourceRef:'inactive',name:'[RE] Clínica Baixada',site:'https://inactive.example',phone:'+5511987654321',source:'MAPS' as const},
    {sourceRef:'clinic',name:'[RE] Clínica Ativa',site:'https://clinic.example',phone:'+5511987654321',source:'MAPS' as const},
    {sourceRef:'closed',name:'[RE] Clínica Ativa',site:'https://clinic.example',phone:'+5511987654321',source:'MAPS' as const,facts:{permanentlyClosed:true}},
-  ]:[{sourceRef:'registry',name:calls.length===2?'[RE] Clínica Baixada':'[RE] Clínica Ativa',source:'CNPJ' as const,cnpj:calls.length===2?'33000167000101':'37297479000180',facts:{registrationStatus:calls.length===2?'BAIXADA':'ATIVA'}}];
+  ]):[{sourceRef:'registry',name:calls.length===2?'[RE] Clínica Baixada':'[RE] Clínica Ativa',source:'CNPJ' as const,cnpj:calls.length===2?'33000167000101':'37297479000180',facts:{registrationStatus:calls.length===2?'BAIXADA':'ATIVA'}}];
   return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,nextCursor:null,exhausted:true,rawCount:candidates.length,rejected:[],usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
  const collect=async(url:string)=>[{id:'site',url,text:url.includes('inactive')?'Clínica Baixada +55 11 98765-4321 33.000.167/0001-01':'Clínica Ativa +55 11 98765-4321 37.297.479/0001-80',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];
- await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
-  const current=await getJourney(f.p,journey.id);assert.deepEqual(calls,['MAPS','CNPJ','CNPJ']);
+ for(let batch=0;batch<2;batch++)await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ const current=await getJourney(f.p,journey.id);assert.deepEqual(calls,['MAPS','CNPJ','CNPJ','MAPS']);
  assert.equal(current.stages[0].state,'partial');assert.equal(current.stages.filter(s=>s.name==='research').length,1,JSON.stringify(current));
  const leads=(await readWorkspaceSnapshot(f.p)).data.leads;assert.equal(leads.length,1);assert.equal(leads[0].cnpj,'37297479000180');
 });
-test('admission crawls through Apify and resumes a remote site without duplicate starts',async()=>{
+test('admission uses pages from a timed-out Apify crawl without paying for a second start',async()=>{
  const f=await fixture(1);
  process.env.APIFY_SITE_ACTOR='apify/website-content-crawler';process.env.APIFY_SITE_BUILD='fixture-build';
  const {journey}=await start(f);let crawlStarts=0,polls=0;
@@ -74,16 +260,22 @@ test('admission crawls through Apify and resumes a remote site without duplicate
    :[{sourceRef:'registry',name:'[RE] Empresa',cnpj:'37297479000180',source:'CNPJ' as const,facts:{registrationStatus:'ATIVA'}}];
   return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,nextCursor:null,exhausted:true,rawCount:candidates.length,rejected:[],usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No cancellation');}};
- const siteCrawler={
-  start:async(ctx:any)=>{crawlStarts++;return{kind:'remote' as const,run:{provider:'apify' as const,runId:'crawl',datasetId:'site',profileId:ctx.profile.actor,build:ctx.profile.build,operationId:ctx.operationId}};},
-  poll:async(_ctx:any,run:any)=>({run,status:++polls===1?'running' as const:'succeeded' as const}),
-  readPage:async()=>({receiptId:'site-pages',candidates:[
-   {sourceRef:'home',name:'[RE] Empresa',source:'WEB' as const,evidence:[{id:'home',url:'https://example.com/',text:'Empresa +55 11 98765-4321',hash:'home',fetchedAt:new Date().toISOString(),truncated:false}]},
-   {sourceRef:'legal',name:'[RE] Empresa',source:'WEB' as const,evidence:[{id:'legal',url:'https://example.com/legal',text:'CNPJ 37.297.479/0001-80',hash:'legal',fetchedAt:new Date().toISOString(),truncated:false}]},
-  ],rawCount:2,rejected:[],nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:'site-pages',units:{},costUsd:null,costKind:'unknown' as const}}),
-  abort:async()=>{throw Error('No cancellation');},
- };
+ const siteCrawler=new ApifySiteCrawler(async(url,init)=>{
+  if(init?.method==='POST'){
+   crawlStarts++;
+   return Response.json({data:{id:'crawl',defaultDatasetId:'site'}});
+  }
+  if(String(url).endsWith('/actor-runs/crawl')){
+   return Response.json({data:{status:++polls===1?'TIMING-OUT':'TIMED-OUT',defaultDatasetId:'site'}});
+  }
+  assert.match(String(url),/datasets\/site\/items/);
+  return Response.json([
+   {url:'https://example.com/',text:'Empresa +55 11 98765-4321'},
+   {url:'https://example.com/legal',text:'CNPJ 37.297.479/0001-80'},
+  ]);
+ });
  await runWorkerOnce({apify,siteCrawler},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ assert.equal((await getJob(f.p,journey.stages[0].jobId!)).state,'running');
  assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,0);
  await runWorkerOnce({apify,siteCrawler},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
  assert.equal(crawlStarts,1);assert.equal((await readWorkspaceSnapshot(f.p)).data.leads[0].cnpj,'37297479000180');
@@ -163,7 +355,9 @@ test('discovery makes a bounded complementary Maps query when the first result s
    maps++;if(maps===2)assert.match(input.filters.term,/Rio de Janeiro/);
    candidates=[{sourceRef:'company-'+maps,name:maps===1?'[RE] Alfa':'[RE] Beta',phone:'+5511987654321',site:maps===1?'https://alfa.example':'https://beta.example',source:'MAPS' as const}];
   }else candidates=[{sourceRef:'cnpj',name:maps===1?'[RE] Alfa':'[RE] Beta',phone:'+5511987654321',cnpj:input.filters.cnpj,source:'CNPJ' as const,facts:{registrationStatus:'ATIVA'}}];
-  return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,rawCount:1,rejected:[],exhausted:true,nextCursor:null,usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:1},costUsd:null,costKind:'unknown' as const}}};
+  const rejected=ctx.profile.source==='MAPS'&&maps===1?Array.from({length:3},()=>({reason:'MISSING_IDENTITY'})):[];
+  const rawCount=candidates.length+rejected.length;
+  return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,rawCount,rejected,exhausted:true,nextCursor:null,usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:rawCount},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
  const collect=async(url:string)=>[{id:'page',url,text:url.includes('alfa')?'Alfa +55 11 98765-4321 37.297.479/0001-80':'Beta +55 11 98765-4321 33.000.167/0001-01',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];
  await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
@@ -184,6 +378,23 @@ test('discovery makes a bounded complementary Maps query when the first result s
   assert.equal(maps,1);
   assert.equal((await getJob(cancelled.p,id)).state,'cancelled');
  }finally{await testAdmin(c=>c.query('DROP TRIGGER test_cancel_after_receipt ON app.prospecting_job; DROP FUNCTION app.test_cancel_after_receipt()'));}
+});
+test('a reviewed request for 250 companies leaves candidate capacity for a second Maps query',async()=>{
+ const f=await fixture(250),limits:number[]=[];
+ await testAdmin(async c=>{
+  await c.query("UPDATE app.billing_account SET state='active',plan='essential' WHERE workspace_id=$1",[f.p.workspaceId]);
+  await c.query("UPDATE app.billing_grant SET source='plan',quantity=5000 WHERE workspace_id=$1 AND unit='extractions'",[f.p.workspaceId]);
+ });
+ const {journey}=await start(f);
+ const apify={start:async(ctx:any,input:any)=>{
+  limits.push(input.limit);
+  const count=limits.length===1?100:0;
+  return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates:[],rawCount:count,rejected:Array.from({length:count},()=>({reason:'MISSING_IDENTITY'})),exhausted:true,nextCursor:null,usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:count},costUsd:null,costKind:'unknown' as const}}};
+ },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
+ for(let i=0;i<2;i++)await runWorkerOnce({apify},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ assert.deepEqual(limits,[300,400]);
+ const job=await getJob(f.p,journey.stages[0].jobId!);
+ assert.equal(job.state,'partial');assert.equal(job.counts.rejected,100);assert.equal(job.counts.inserted,0);
 });
 test('partial source failures retain 70 companies and reviewed resume retries only 30 pending companies',async()=>{
  const f=await fixture(100);

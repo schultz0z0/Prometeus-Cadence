@@ -26,7 +26,7 @@ async function preflight(lease:JobLease,job:any,deps:PlanningExecutionAdapters,f
  const check=()=>withLeasedTransaction(lease,async c=>{
   requirePermission({workspaceId:lease.workspaceId,userId:lease.actorId,sessionId:'worker',role:(await c.query('SELECT app.current_role() AS role')).rows[0].role},'data.write');
   await assertAiRouteCurrent(c,job,freshOperationId);
-  const {config,policy}=await workspaceProspectingConfig(c);
+  const {config,policy}=await workspaceProspectingConfig(c,true);
   if(!config.enabled||config.version!==job.checkpoint.execution.version||hashValue({policy,caps:config.caps,globalCaps:config.globalCaps})!==job.checkpoint.planning.limitsHash)throw new AppError(409,'Os limites ou a configuração mudaram.','PROFILE_CHANGED');
   if(job.input.task!=='context_read'){
    const approved=await readApprovedContext(c);if((approved?.version??0)!==job.checkpoint.planning.base.contextVersion)throw new AppError(409,'O contexto aprovado mudou.','CONTEXT_CHANGED');

@@ -10,9 +10,10 @@ import {jobView} from './repository.ts';
 import {ApifyAdapter} from './providers/apify.ts';
 import {providerContext} from './steps.ts';
 import {settleUsage,releaseUnused} from './usage.ts';
+import {resumeReconciledDiscovery} from '../research/journey.ts';
 const schema=z.strictObject({operationId:z.string().min(1).max(120).optional(),runId:z.string().regex(/^[-\w]{1,100}$/).optional(),confirmNotStarted:z.literal(true).optional(),resultUnavailable:z.literal(true).optional()}).refine(v=>[v.runId,v.confirmNotStarted,v.resultUnavailable].filter(Boolean).length===1);
 const unresolvedSql="(state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain')";
-const sourceFor=(job:any,attempt:any)=>attempt.step.startsWith('abort:')&&attempt.payload.source?attempt.payload.source:attempt.step.startsWith('crawl:')?'CRAWL':attempt.step.startsWith('registry:')?'CNPJ':attempt.step.startsWith('website:')?'WEB':job.kind==='generation'?job.source:null;
+const sourceFor=(job:any,attempt:any)=>attempt.step.startsWith('abort:')&&attempt.payload.source?attempt.payload.source:attempt.step.startsWith('crawl:')?'CRAWL':attempt.step.startsWith('registry:')?'CNPJ':attempt.step.startsWith('maps:')?'MAPS':attempt.step.startsWith('website:')?'WEB':job.kind==='generation'?job.source:null;
 export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apify?:ApifyAdapter}={}){
   const parsed=schema.safeParse(body);if(!parsed.success)throw new AppError(422,'Selecione uma chamada e uma ação de reconciliação.');
   const selection=parsed.data;
@@ -73,8 +74,9 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
       }
     }
     if((await c.query(`SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND ${unresolvedSql} LIMIT 1`,[id])).rowCount)state='needs_reconciliation';
+    if(state==='queued'&&job.checkpoint.registryFirst&&job.checkpoint.journey&&!(await resumeReconciledDiscovery(c,p,job)))state='cancelled';
     const cleanup=aborting?(job.checkpoint.discoveryScanLimit?{cleanupDone:[...new Set([...(current.checkpoint.cleanupDone??[]),attempt.payload.runId])]}:!job.input?.enrichment?{remoteTerminal:true}:{}):{};
-    const row=(await c.query("UPDATE app.prospecting_job SET state=$2,actor_id=$3,provider_run=$4,error_code=$5,error_message=$6,lease_until=NULL,lease_token=NULL,fence=fence+1,revision=revision+1,updated_at=now(),checkpoint=checkpoint||$7::jsonb WHERE id=$1 RETURNING *",[id,state,p.userId,providerRun,selection.resultUnavailable?'RESULT_UNAVAILABLE':null,selection.resultUnavailable?'Consumo registrado por confirmação administrativa; resultado indisponível, sem repetir a chamada.':null,cleanup])).rows[0];
+    const row=(await c.query("UPDATE app.prospecting_job SET state=$2,actor_id=$3,provider_run=$4,error_code=$5,error_message=$6,lease_until=NULL,lease_token=NULL,fence=fence+1,revision=revision+1,updated_at=now(),checkpoint=checkpoint||$7::jsonb WHERE id=$1 RETURNING *",[id,state,job.checkpoint.journey?job.actor_id:p.userId,providerRun,selection.resultUnavailable?'RESULT_UNAVAILABLE':null,selection.resultUnavailable?'Consumo registrado por confirmação administrativa; resultado indisponível, sem repetir a chamada.':null,cleanup])).rows[0];
     if(['failed','partial','cancelled'].includes(state))await releaseUnused(c,id);
     await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES(current_setting('app.workspace_id'),$1,'prospecting.reconcile')",[p.userId]);return jobView(row);
   });

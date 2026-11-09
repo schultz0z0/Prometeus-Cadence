@@ -45,8 +45,9 @@ for(const provider of ['codex-local','chatgpt-oauth','openai','gemini'] as const
  await runPlanning(await grantTestLease(p,job.id),{generate:fakeGenerate(counter),diagnose});
  const result=await getPlanning(p,job.id);assert.equal(result.job.state,'completed');assert.equal(counter.calls,1);assert.equal(result.proposal?.task,'audience_plan');assert.equal(result.job.usage?.length,1);assert.equal(await countRows('list',p.workspaceId),0);
 });
-test('auto context reading does not require or call JEV and keeps literal public provenance',async()=>{
+test('paid auto context reading uses the planning budget, skips JEV and keeps literal provenance',async()=>{
  const {p}=await setup();await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:1,policy:{mode:'auto',conventionalProvider:'openai',jevEnabled:true}});
+ await testAdmin(c=>c.query("UPDATE app.billing_account SET state='active',plan='essential',period_start=now()-interval '1 day',period_end=now()+interval '29 days' WHERE workspace_id=$1",[p.workspaceId]));
  const review=await preparePlanning(p,context);assert.deepEqual(review.blockers,[]);assert.equal(review.usage.length,1);
  const job=await confirmPlanning(p,{requestId:randomUUID(),input:context,reviewToken:review.token}),counter={calls:0};
  await runPlanning(await grantTestLease(p,job.id),{generate:fakeGenerate(counter),collect:async()=>planningSources().map(s=>({id:s.id,url:s.url!,text:s.text,hash:s.hash,fetchedAt:s.obtainedAt,truncated:false})),rank:async()=>{throw Error('JEV must not run');}});
