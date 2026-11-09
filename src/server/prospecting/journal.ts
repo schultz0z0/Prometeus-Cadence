@@ -1,6 +1,6 @@
 import type {JobLease,JobState,ProviderUsage,Units} from '../../domain/prospecting.ts';
 import {withLeasedTransaction} from './worker-db.ts';
-import {releaseUnused,assertReserved} from './usage.ts';
+import {releaseUnused,assertReserved,reserveStepUsage,WaitingCapacity} from './usage.ts';
 import {prospectingConfig} from './config.ts';
 import {ProviderError} from './providers/transport.ts';
 import {AppError} from '../errors.ts';
@@ -27,6 +27,7 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
     await assertExecution(c);
     await assertAutomationAuthority(c,job,'dispatch');
     if(!prospectingConfig().enabled||job.checkpoint.execution?.version!==prospectingConfig().version)throw new AppError(409,'A configuração mudou. Revise antes de continuar.','PROFILE_CHANGED');
+    if(job.checkpoint.incrementalUsage===true)await reserveStepUsage(c,lease.jobId,operationId,units);
     await assertReserved(c,lease.jobId,units);
     await c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4,'prepared',$5)",[lease.jobId,operationId,provider,step,{reservedUnits:units}]);
     return null;
@@ -50,6 +51,7 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
   return result;
 }
 export async function handleStepFailure(lease:JobLease,error:unknown){
+  if(error instanceof WaitingCapacity)throw error;
   if(error instanceof UncertainStep)return;
   if(error instanceof ProviderError&&error.uncertain){await finishJob(lease,'needs_reconciliation',error.code);return;}
   if(error instanceof AppError&&error.code==='STALE_JOB')throw error;

@@ -1,4 +1,4 @@
-import type {CandidatePage,JobLease,UsageEstimate} from '../../domain/prospecting.ts';
+import type {CandidatePage,Evidence,JobLease,UsageEstimate} from '../../domain/prospecting.ts';
 import type {Lead} from '../../domain/model.ts';
 import {fetchEvidencePack} from './extraction/fetch-page.ts';
 import {extractCnpjs} from './extraction/contacts.ts';
@@ -12,12 +12,15 @@ import {ApifySiteCrawler} from './providers/site-crawler.ts';
 import type {ProviderContext} from './providers/types.ts';
 import {finishJob} from './journal.ts';
 import {approvePublicUrl} from './extraction/public-url.ts';
+import {collectSiteTick} from './site-collection.ts';
+import {isRegistryCandidate,registryMapsMatch,registrySiteMatches} from './registry-first.ts';
 
-export const discoveryScanLimit=(requested:number)=>Math.min(500,requested*2);
-export function discoveryUsage(scanLimit:number):UsageEstimate[]{
+// Keep eight candidate slots for replacements after the initial Maps batch.
+export const discoveryScanLimit=(requested:number)=>Math.min(500,requested*2+8);
+export function discoveryUsage(scanLimit:number,registryFirst=false):UsageEstimate[]{
   return [
     {provider:'apify',unit:'candidates',maxUnits:scanLimit,estimatedUsd:null,pricingSource:null},
-    {provider:'apify',unit:'apifyRuns',maxUnits:2+8*scanLimit,estimatedUsd:null,pricingSource:null},
+    {provider:'apify',unit:'apifyRuns',maxUnits:registryFirst?1+2*scanLimit:2+8*scanLimit,estimatedUsd:null,pricingSource:null},
   ];
 }
 
@@ -40,12 +43,67 @@ async function crawlSite(lease:JobLease,job:any,url:string,step:string,deps:Qual
  if(started.kind==='inline')return started.page.candidates.flatMap(candidate=>candidate.evidence??[]);
  const state=await adapter.poll(ctx,started.run);
  if(['succeeded','failed','cancelled'].includes(state.status))await markDiscoveryRunDone(lease,started.run.runId);
- if(['failed','cancelled'].includes(state.status))return[];
- if(state.status!=='succeeded')return null;
+ const timedOut=state.status==='failed'&&state.error?.code==='REMOTE_TIMED_OUT';
+ if(state.status==='cancelled'||(state.status==='failed'&&!timedOut))return[];
+ if(state.status!=='succeeded'&&!timedOut)return null;
+ if(!state.run.datasetId&&timedOut)return[];
  return performStep(lease,'crawl-pages:'+step,'public-web',{},async()=>{
   const page=await adapter.readPage(ctx,state.run,null,options.maxPages);
   return page.candidates.flatMap(candidate=>candidate.evidence??[]);
  });
+}
+
+export async function admitRegistryPage(lease:JobLease,job:any,page:CandidatePage,deps:QualificationAdapters):Promise<CandidatePage|null>{
+ const candidates:CandidatePage['candidates']=[],rejected=[...page.rejected];
+ const onTerminal=(runId:string)=>markDiscoveryRunDone(lease,runId);
+ for(const registry of page.candidates){
+  const reject=(reason:string)=>rejected.push({sourceRef:registry.sourceRef,reason});
+  if(!isRegistryCandidate(registry,job.checkpoint.registryFirst)){reject('CNPJ_OUTSIDE_SCOPE');continue;}
+  const duplicate=await withLeasedTransaction(lease,async c=>(await c.query('SELECT 1 FROM app.lead_identity WHERE identity=ANY($1::text[]) LIMIT 1',[strongIdentities(registry)])).rowCount);
+  if(duplicate){candidates.push(registry);continue;}
+  const key=hashValue(registry.cnpj);
+  const lead:Lead={...registry,id:key,listId:job.list_id,qualification:'pending',createdAt:new Date().toISOString()};
+  const maps=await sourceResults(lease,job,lead,'maps',deps,{limit:3,suffix:'registry-first',onTerminal});
+  if(maps===null)return null;
+  const matches=maps.filter(candidate=>registryMapsMatch(registry,candidate));
+  if(matches.length!==1){reject('MAPS_IDENTITY_UNVERIFIED');continue;}
+  const [match]=matches;
+  const observedLead={...lead,...match,companyName:registry.companyName};
+  const mapsSite=institutionalSite(match.site);
+  let sites=mapsSite?[mapsSite]:[];
+  let verified=false;
+  let webSearched=false;
+  while(!verified){
+   if(!sites.length){
+    if(webSearched)break;
+    const web=await sourceResults(lease,job,observedLead,'website',deps,{limit:5,suffix:'registry-first',onTerminal});
+    if(web===null)return null;
+    webSearched=true;
+    sites=[...new Set(companySiteCandidates(web,observedLead,{allowTitleMatch:true}).flatMap(candidate=>{
+      const site=institutionalSite(candidate.site);
+      return site&&site!==mapsSite?[site]:[];
+    }))];
+    if(!sites.length)break;
+   }
+   const site=sites.shift()!;
+   const result=await collectSiteTick(lease,site,deps.siteBrowser,deps.signal);
+   await withLeasedTransaction(lease,c=>c.query(
+     "UPDATE app.prospecting_job SET checkpoint=checkpoint||jsonb_build_object('siteCollections',COALESCE(checkpoint->'siteCollections','{}'::jsonb)||jsonb_build_object($2::text,$3::jsonb)), capacity_retry_at=$4, updated_at=now() WHERE id=$1",
+     [lease.jobId,hashValue(site),JSON.stringify(result.coverage),result.retryAt]));
+   if(!result.done)return null;
+   const pages:Evidence[]=result.pages.map(page=>({id:hashValue({url:page.url,hash:page.hash}),url:page.url,text:page.text,hash:page.hash,fetchedAt:page.fetchedAt,truncated:page.truncated??false}));
+   if(!registrySiteMatches(registry,match,pages))continue;
+   const cnpjPage=pages.find(evidence=>extractCnpjs([evidence]).includes(registry.cnpj!));
+   const phonePage=pages.find(evidence=>verifySiteContent({...observedLead,cnpj:undefined},[evidence]));
+   const siteEvidence=[cnpjPage,phonePage,...pages].filter((e):e is Evidence=>!!e);
+   candidates.push({...registry,name:match.name,site,phone:match.phone,address:match.address??registry.address,rating:match.rating,reviewCount:match.reviewCount,
+    facts:{...match.facts,...registry.facts,mapsSourceRef:match.sourceRef,admissionVerified:true},
+    evidence:[...(registry.evidence??[]).slice(0,1),...(match.evidence??[]).slice(0,1),...new Map(siteEvidence.map(e=>[e.url,e])).values()].slice(0,4)});
+   verified=true;break;
+  }
+  if(!verified)reject('SITE_IDENTITY_UNVERIFIED');
+ }
+ return {...page,candidates,rejected};
 }
 
 export async function admitDiscoveryPage(lease:JobLease,job:any,page:CandidatePage,deps:QualificationAdapters):Promise<CandidatePage|null>{

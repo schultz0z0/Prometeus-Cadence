@@ -3,6 +3,26 @@ import type {Units,ProviderUsage} from '../../domain/prospecting.ts';
 import {AppError} from '../errors.ts';
 import {hashValue} from './review.ts';
 import {releaseCommercial} from '../billing/entitlements.ts';
+import {workspaceUsageCaps} from './workspace-config.ts';
+export class WaitingCapacity extends AppError{
+  constructor(){super(429,'Aguardando capacidade de processamento. A execução continua automaticamente.','WAITING_CAPACITY');}
+}
+export function capacityConfigurationError(){
+  return new AppError(503,'A capacidade de processamento desta etapa precisa ser configurada pela plataforma.','CAPACITY_CONFIGURATION');
+}
+export async function reserveStepUsage(c:PoolClient,jobId:string,operationId:string,units:Units){
+  const positive=Object.fromEntries(Object.entries(units).filter(([,count])=>count!==0));
+  if(!Object.keys(positive).length)return;
+  const {caps,globalCaps}=await workspaceUsageCaps(c);
+  for(const [unit,count] of Object.entries(positive) as [keyof Units,number][]){
+    if(count>Math.min(caps[unit]??0,globalCaps[unit]??0))throw capacityConfigurationError();
+  }
+  try{await reserveUsage(c,{jobId,operationId,units:positive,caps,globalCaps});}
+  catch(error){
+    if(error instanceof AppError&&['USAGE_LIMIT','USAGE_WORKSPACE_LIMIT','USAGE_PLATFORM_LIMIT'].includes(error.code??''))throw new WaitingCapacity();
+    throw error;
+  }
+}
 export async function reserveUsage(c:PoolClient,operation:{jobId:string;operationId:string;units:Units;caps:Units;globalCaps:Units}){
   try{await c.query('SELECT app.reserve_prospecting_usage($1,$2,$3,$4,$5)',[operation.jobId,operation.operationId,operation.units,operation.caps,operation.globalCaps]);}
   catch(e){

@@ -79,6 +79,28 @@ const journeys={
    await dialog.getByRole('combobox',{name:'Saldo para extrações'}).click();
    await page.getByRole('option',{name:'Franquia do plano',exact:true}).click();
    assert.equal(await dialog.getByRole('combobox',{name:'Saldo para extrações'}).innerText(),'Franquia do plano');
+   await dialog.getByLabel('Quem você quer alcançar').fill('[RE] Esquadrias');
+   await dialog.getByLabel('CNAE principal').fill('2512800');
+   await dialog.getByLabel('Município').fill('Curitiba');
+   await dialog.getByRole('combobox',{name:'Estado (UF)'}).click();
+   await page.getByRole('option',{name:'PR · Paraná',exact:true}).click();
+   await dialog.getByRole('button',{name:'Revisar prospecção',exact:true}).click();
+   await dialog.getByText(/Base CNPJ ativa · CNAE 2512800/).waitFor();
+   await dialog.getByText(/Curitiba, PR/).waitFor();
+   const evidence='output/playwright/registry-first';
+   mkdirSync(evidence,{recursive:true});
+   await page.setViewportSize({width:1920,height:855});
+   await page.screenshot({path:evidence+'/review-1920.png',animations:'disabled'});
+   await page.setViewportSize({width:390,height:844});
+   try{
+    assert.ok(await dialog.getByText(/Base CNPJ ativa/).isVisible());
+    assert.ok(await dialog.evaluate(el=>{
+     const box=el.getBoundingClientRect();
+     return box.left>=0&&box.right<=innerWidth+1&&el.scrollWidth<=el.clientWidth+1;
+    }),'o diálogo cabe no viewport de 390 px');
+    await page.screenshot({path:evidence+'/review-390.png',animations:'disabled'});
+   }finally{await page.setViewportSize({width:1440,height:900});}
+   await dialog.getByRole('button',{name:'Voltar',exact:true}).click();
    await dialog.getByRole('button',{name:'Cancelar',exact:true}).click();
    assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);
   });

@@ -16,6 +16,7 @@ import type {ResearchAdapters} from '../../domain/company-research.ts';
 import type {PeopleAdapters} from '../../domain/company-people.ts';
 import {advanceJourney,advancePendingJourney} from '../research/journey.ts';
 import {AppError} from '../errors.ts';
+import {WaitingCapacity} from './usage.ts';
 async function cleanRevoked(deps:GenerationAdapters,signal:AbortSignal,workspaceId?:string){
   const ticket=(await workerPool().query('SELECT app.claim_revoked_prospecting_cleanup($1) AS ticket',[workspaceId??null])).rows[0].ticket;
   if(!ticket)return false;
@@ -41,7 +42,14 @@ export async function runWorkerOnce(deps:GenerationAdapters&QualificationAdapter
       default:throw Error('INVALID_JOB_KIND');
     }
     if(job.checkpoint?.journey)await advanceJourney(lease);
-  }catch(error){if(error instanceof AppError&&error.code==='JOURNEY_CHANGED')await advanceJourney(lease).catch(()=>{}); /* Other fencing/revocation keeps the durable journal. */ }
+  }catch(error){
+    if(error instanceof WaitingCapacity){
+      await withContextTransaction(workerPool(),{workspaceId:lease.workspaceId,userId:lease.actorId,role:'operator',sessionId:'worker'},c=>c.query(
+        "UPDATE app.prospecting_job SET capacity_retry_at=clock_timestamp()+interval '1 minute',error_code=$4,error_message=$5,revision=revision+1,updated_at=now() WHERE id=$1 AND lease_token=$2 AND fence=$3 AND lease_until>clock_timestamp() AND state IN('running','waiting_provider')",
+        [lease.jobId,lease.token,lease.fence,error.code,error.message]));
+    }else if(error instanceof AppError&&error.code==='JOURNEY_CHANGED')await advanceJourney(lease).catch(()=>{});
+    // Other fencing or revocation keeps the durable journal.
+  }
   finally{
     clearInterval(timer);await checking;
     try{await withContextTransaction(workerPool(),{workspaceId:lease.workspaceId,userId:lease.actorId,role:'operator',sessionId:'worker'},c=>c.query('UPDATE app.prospecting_job SET lease_until=now() WHERE id=$1 AND lease_token=$2 AND fence=$3',[lease.jobId,lease.token,lease.fence]));}catch{}

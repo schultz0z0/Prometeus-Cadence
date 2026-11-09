@@ -4,6 +4,7 @@ import {ProviderError} from './providers/transport.ts';
 import type {SitePageResult,SiteUrl} from './site-queue.ts';
 
 export interface SiteBrowser {
+  available?(signal:AbortSignal):Promise<boolean>;
   read(kind:SiteUrl['kind'],url:string,signal:AbortSignal):Promise<SitePageResult>;
 }
 
@@ -14,16 +15,31 @@ const rawSchema=z.object({status:responseStatus,headers:z.record(z.string(),z.st
 const redirectSchema=z.object({status:responseStatus,redirect:z.string().max(1800)});
 const errors=z.object({code:z.string().regex(/^[A-Z_]+$/).max(60)});
 const agent='PrometeusCadence/1.0 (public company research)';
+const origin='http://127.0.0.1:3222';
 
 export function siteBrowserReady(){return (process.env.SITE_BROWSER_TOKEN?.length??0)>=32;}
+export const siteCollectorVersion='chromium-v1';
+export function siteBrowserUnavailable(error:unknown){
+  return error instanceof ProviderError&&['SITE_BROWSER_NOT_CONFIGURED','SITE_BROWSER_UNAVAILABLE','UNAUTHORIZED','BUSY'].includes(error.code);
+}
 
 export const loopbackSiteBrowser:SiteBrowser={
+  async available(signal){
+    if(!siteBrowserReady())return false;
+    try {
+      const response=await fetch(origin+'/health',{redirect:'error',signal:AbortSignal.any([signal,AbortSignal.timeout(3000)])});
+      return response.ok;
+    }catch(error){
+      if(signal.aborted)throw error;
+      return false;
+    }
+  },
   async read(kind,url,signal){
     if(!siteBrowserReady())throw new ProviderError('SITE_BROWSER_NOT_CONFIGURED',503);
     const render=kind==='page';
     let response;
     try {
-      response=await fetch('http://127.0.0.1:3222/'+(render?'render':'fetch'),{
+      response=await fetch(origin+'/'+(render?'render':'fetch'),{
         method:'POST',redirect:'error',signal:AbortSignal.any([signal,AbortSignal.timeout(30000)]),
         headers:{authorization:'Bearer '+process.env.SITE_BROWSER_TOKEN,'content-type':'application/json'},
         body:JSON.stringify(render?{url,timeoutMs:25000,queueNavigation:true}:{url,method:'GET',headers:{'user-agent':agent}}),

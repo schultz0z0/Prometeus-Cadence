@@ -17,7 +17,7 @@ export function normalizeCandidate(raw:unknown,profile:GenerationSource):Candida
   const candidate:Candidate={name,sourceRef,source:profile};
   const fields={companyName:string(r.companyName??(profile==='CNPJ'?r.razao_social:undefined),300),email:email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?email:undefined,phone:phone&&/^\+?\d{7,15}$/.test(phone)?phone:undefined,site:normalizeSite(r.site??r.website??r.primary_domain),city:string(r.city??(profile==='CNPJ'?r.municipio:undefined),200),state:string(r.state??(profile==='CNPJ'?r.uf:undefined),100),cnpj:normalizeCnpj(r.cnpj)};
   for(const [k,v]of Object.entries(fields))if(v)(candidate as unknown as Record<string,unknown>)[k]=v;
-  if(profile==='MAPS'){
+  if(profile==='MAPS'||profile==='CNPJ'){
     const address=string(r.address,500);
     const rating=r.totalScore??r.rating,reviewCount=r.reviewsCount??r.reviewCount;
     const bounded=(value:unknown,max:number,integer=false)=>{
@@ -43,5 +43,6 @@ export function normalizeDecisionMakers(raw:unknown):{name:string;role:string}[]
  for(const row of raw.slice(0,50)){if(!row||typeof row!=='object')continue;const name=string(row.nome_socio??row.nome_socio_razao_social??row.name,200),role=string(row.qualificacao_socio??row.role,150);if(name&&role)out.push({name,role});}return out;
 }
 export function strongIdentities(candidate:Candidate){
-  return [...(candidate.cnpj?['cnpj:'+candidate.cnpj]:[]),`source:${candidate.source}:${candidate.sourceRef}`];
+  const mapRef=candidate.facts?.mapsSourceRef;
+  return [...(candidate.cnpj?['cnpj:'+candidate.cnpj]:[]),`source:${candidate.source}:${candidate.sourceRef}`,...(typeof mapRef==='string'&&mapRef?['source:MAPS:'+mapRef]:[])];
 }

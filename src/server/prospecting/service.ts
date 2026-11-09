@@ -29,7 +29,7 @@ async function authorized(c:PoolClient,p:Principal){
   const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;
   const current={...p,role};requirePermission(current,'data.write');return current;
 }
-export async function prospectingReviewState(c:PoolClient,p:Principal,input:ProspectingInput,{checkExtraction=true}={}){
+export async function prospectingReviewState(c:PoolClient,p:Principal,input:ProspectingInput,{checkExtraction=true,checkTechnicalCapacity=true}={}){
   await authorized(c,p);
   const {config,policy}=await workspaceProspectingConfig(c);
   let aiRoute:AiRoute|null=null;const aiBlockers:string[]=[];
@@ -67,7 +67,7 @@ export async function prospectingReviewState(c:PoolClient,p:Principal,input:Pros
   }
   const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);
   const enrichment=input.kind==='qualification'?input.companyPeople?await peopleCheckpoint(c,input,bases,config,aiRoute,context):await enrichmentCheckpoint(c,input,bases,config,aiRoute):null;
-  blockers.push(...requirements(config,input,p.workspaceId,aiRoute,enrichment?.reserveCredits));
+  blockers.push(...requirements(config,input,p.workspaceId,aiRoute,enrichment?.reserveCredits,checkTechnicalCapacity));
   const profileVersion=hashValue({config:config.version,apolloConnection:config.apolloConnection,policy:policy??null,contextVersion:context?.version??0,aiRoute,...(enrichment?{enrichment}: {})});
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};
   return {config,blockers,proof,profileVersion,aiRoute,enrichment,extractionRemaining,qualificationDay,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,siteCrawler:config.siteCrawler,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:apolloMaxPages(!!config.apolloConnection),apolloConnection:config.apolloConnection,apolloCredential:config.apolloCredential}}};

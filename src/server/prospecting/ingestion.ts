@@ -5,7 +5,7 @@ import {AppError} from '../errors.ts';
 import {assertJobLease} from './repository.ts';
 import {strongIdentities,normalizeCandidate} from './normalize.ts';
 import {hashValue} from './review.ts';
-import {settleUsage} from './usage.ts';
+import {settleUsage,reserveStepUsage} from './usage.ts';
 import {saveEvidence} from './evidence.ts';
 export async function lockWorkspace(c:PoolClient){await c.query("SELECT revision FROM app.workspace_meta WHERE workspace_id=current_setting('app.workspace_id') FOR UPDATE");}
 export async function ingestPage(c:PoolClient,lease:JobLease,page:CandidatePage):Promise<IngestCounts>{
@@ -19,9 +19,10 @@ export async function ingestPage(c:PoolClient,lease:JobLease,page:CandidatePage)
   const counts:IngestCounts={found:page.rawCount,inserted:0,duplicates:0,rejected:page.rejected.length,pending:0};
   const scanLimit=job.checkpoint.discoveryScanLimit??input.limit;
   if(job.counts.found+page.rawCount>scanLimit)throw new AppError(422,'Quantidade acima do limite confirmado.');
+  if(job.checkpoint.incrementalUsage===true)await reserveStepUsage(c,lease.jobId,page.usage.operationId,page.usage.units);
   for(const candidate of page.candidates){
     let normalized;try{normalized=normalizeCandidate(candidate,input.source);}catch{counts.rejected++;continue;}
-    const identities=strongIdentities(normalized),existing=(await c.query('SELECT lead_id FROM app.lead_identity WHERE identity=ANY($1::text[]) AND ($2 OR list_id=$3) LIMIT 1',[identities,input.dedupScope==='workspace',job.list_id])).rows[0];
+    const identities=strongIdentities({...normalized,...(job.checkpoint.registryFirst?{facts:candidate.facts}:{})}),existing=(await c.query('SELECT lead_id FROM app.lead_identity WHERE identity=ANY($1::text[]) AND ($2 OR list_id=$3) LIMIT 1',[identities,input.dedupScope==='workspace',job.list_id])).rows[0];
     if(!existing&&job.checkpoint.discoveryScanLimit&&
       (candidate.facts?.admissionVerified!==true||job.counts.inserted+counts.inserted>=input.limit)){counts.rejected++;continue;}
     const id=randomUUID(),leadId=existing?.lead_id??randomUUID();
@@ -38,7 +39,9 @@ export async function ingestPage(c:PoolClient,lease:JobLease,page:CandidatePage)
   const next=Object.fromEntries(Object.keys(counts).map(k=>[k,Number(job.counts[k]??0)+counts[k as keyof IngestCounts]]));
   await settleUsage(c,lease.jobId,page.usage);
   await c.query("INSERT INTO app.prospecting_receipt VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4)",[lease.jobId,page.receiptId,hash,counts]);
-  await c.query("UPDATE app.prospecting_job SET counts=$2,checkpoint=checkpoint||$3::jsonb,revision=revision+1,updated_at=now() WHERE id=$1",[lease.jobId,next,{cursor:page.nextCursor,exhausted:page.exhausted}]);
+  const reasons={...job.checkpoint.discoveryReasons};
+  if(job.checkpoint.registryFirst)for(const rejection of page.rejected)reasons[rejection.reason]=(reasons[rejection.reason]??0)+1;
+  await c.query("UPDATE app.prospecting_job SET counts=$2,checkpoint=(checkpoint-'registryPage')||$3::jsonb,revision=revision+1,updated_at=now() WHERE id=$1",[lease.jobId,next,{cursor:page.nextCursor,exhausted:page.exhausted,...(job.checkpoint.registryFirst?{discoveryReasons:reasons}:{})}]);
   if(counts.inserted)await c.query("UPDATE app.workspace_meta SET revision=revision+1 WHERE workspace_id=current_setting('app.workspace_id')");
   return counts;
 }

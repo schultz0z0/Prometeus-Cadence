@@ -13,7 +13,7 @@ import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {prospectingReviewState} from '../prospecting/service.ts';
 import {insertReviewedJob} from '../prospecting/job-store.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from '../prospecting/review.ts';
-import {estimateUsage,prospectingConfig,usageUnits} from '../prospecting/config.ts';
+import {estimateUsage,prospectingConfig} from '../prospecting/config.ts';
 import {discoveryScanLimit,discoveryUsage} from '../prospecting/discovery-admission.ts';
 import {releaseUnused} from '../prospecting/usage.ts';
 import {requirePermission} from '../auth/permissions.ts';
@@ -26,6 +26,7 @@ import {resolveAiRoute} from '../../domain/ai-routing.ts';
 import {assertExecution} from '../billing/entitlements.ts';
 import {preparePlanning,planningReviewState} from '../planning/service.ts';
 import {preparePlanningSelection,confirmPlanningSelection} from '../planning/confirmation.ts';
+import {siteBrowserReady,siteCollectorVersion} from '../prospecting/site-browser.ts';
 
 const terminal=['completed','partial','failed','cancelled','needs_reconciliation'];
 const sequence:JourneyStage[]=['discover','research','people','qualify'];
@@ -34,30 +35,31 @@ const resumeSchema=z.strictObject({token:z.string().min(1).max(8192),requestId:z
 const secret=()=>{if(!process.env.BETTER_AUTH_SECRET)throw Error('Review signing unavailable');return process.env.BETTER_AUTH_SECRET;};
 function parse<T>(schema:z.ZodType<T>,raw:unknown):T{const r=schema.safeParse(raw);if(!r.success)throw new AppError(422,'Revise o objetivo, a localização e a quantidade.');return r.data;}
 async function authorize(c:PoolClient,p:Principal){const role=(await c.query('SELECT app.current_role() role')).rows[0].role;if(!['owner','admin','operator'].includes(role))throw new AppError(403,'Seu papel não permite esta alteração.');requirePermission({...p,role},'data.write');}
-function discovery(input:JourneyInput):ProspectingInput{return{kind:'generation',source:'MAPS',destination:input.destinationListId?{mode:'existing',listId:input.destinationListId}:{mode:'new',name:input.brief.slice(0,100)},filters:{term:input.brief.slice(0,1000),location:input.location},limit:input.limit,dedupScope:'workspace',...(input.funding?{funding:input.funding}:{})};}
+function discovery(input:JourneyInput):ProspectingInput{return{kind:'generation',source:input.registry?'CNPJ':'MAPS',destination:input.destinationListId?{mode:'existing',listId:input.destinationListId}:{mode:'new',name:input.brief.slice(0,100)},filters:{term:input.brief.slice(0,1000),...(input.registry?{cnae:input.registry.cnae,state:input.registry.uf,city:input.registry.city}:{location:input.location})},limit:input.limit,dedupScope:'workspace',...(input.funding?{funding:input.funding}:{})};}
 async function basis(c:PoolClient,p:Principal,input:JourneyInput,checkExtraction=true){
  await authorize(c,p);
- const s=await prospectingReviewState(c,p,discovery(input),{checkExtraction}),context=await readApprovedContext(c),policy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),route=policy.conventionalProvider?runtime.conventional[policy.conventionalProvider].route:null;
+ const s=await prospectingReviewState(c,p,discovery(input),{checkExtraction,checkTechnicalCapacity:false}),context=await readApprovedContext(c),policy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),route=policy.conventionalProvider?runtime.conventional[policy.conventionalProvider].route:null;
  const resolved=resolveAiRoute(policy,runtime,route?await readConnectionCheck(c,route):null);
  const databaseAuthority=(await c.query('SELECT app.journey_database_authority() value')).rows[0].value;
- const frozen={context,aiRoute:resolved.route,execution:s.checkpoint.execution,policy,sourcePolicy:s.profileVersion,databaseAuthority};
+ const frozen={context,aiRoute:resolved.route,execution:s.checkpoint.execution,policy,sourcePolicy:s.profileVersion,databaseAuthority,...(input.registry?{siteCollector:siteCollectorVersion}:{})};
  const blockers=[...s.blockers,...resolved.blockers];if(!context?.offer||!context.idealCustomer)blockers.push('Aprove a oferta e o cliente ideal no contexto da empresa.');
  if(!s.config.ready.CNPJ)blockers.push('Configure a consulta de CNPJ da Apify para a Prospecção completa.');
+ if(input.registry&&!s.config.ready.MAPS)blockers.push('Configure o Google Maps da Apify para confirmar as empresas.');
+ if(input.registry&&!siteBrowserReady())blockers.push('Configure o navegador de coleta da plataforma para confirmar os sites das empresas.');
  if(!s.config.ready.WEB)blockers.push('Configure a busca web da Apify para descobrir sites na Prospecção completa.');
- for(const [unit,count] of Object.entries(usageUnits(discoveryUsage(discoveryScanLimit(input.limit)))))if(count>(s.config.caps[unit as keyof typeof s.config.caps]??0)||count>(s.config.globalCaps[unit as keyof typeof s.config.globalCaps]??0))blockers.push('O orçamento técnico não cobre a busca e a validação cadastral para a quantidade pedida.');
  return{s,frozen,hash:hashValue(frozen),blockers};
 }
-function proof(p:Principal,input:JourneyInput,basisHash:string,revision=0,id?:string){return{action:id?'journey.resume':'journey.create',userId:p.userId,workspaceId:p.workspaceId,input,basisHash,revision,id:id??null,discoveryUsage:discoveryUsage(discoveryScanLimit(input.limit))};}
+function proof(p:Principal,input:JourneyInput,basisHash:string,revision=0,id?:string){return{action:id?'journey.resume':'journey.create',userId:p.userId,workspaceId:p.workspaceId,input,basisHash,revision,id:id??null,discoveryUsage:discoveryUsage(discoveryScanLimit(input.limit),!!input.registry)};}
 function estimated(input:JourneyInput,route:any):UsageEstimate[]{
- const gen=discoveryUsage(discoveryScanLimit(input.limit)),q:ProspectingInput={kind:'qualification',listId:'estimate',leadIds:Array.from({length:input.limit},(_,i)=>String(i)),modules:['qualify','summary'],summaryPolicy:'all',escalation:'off'};
+ const gen=discoveryUsage(discoveryScanLimit(input.limit),!!input.registry),q:ProspectingInput={kind:'qualification',listId:'estimate',leadIds:Array.from({length:input.limit},(_,i)=>String(i)),modules:['qualify','summary'],summaryPolicy:'all',escalation:'off'};
  return [...gen,...estimateUsage({...q,modules:['deep'],companyResearch:{sourceKinds:['website','social','registry'],maxPagesPerCompany:10}}),...estimateUsage({...q,modules:['decisors'],companyPeople:true,enrichment:{maxCredits:input.limit,destinationName:'Decisores'}},route,input.limit),...estimateUsage(q,route)];
 }
 export async function prepareJourney(p:Principal,value:unknown):Promise<JourneyReview>{
- const input=parse(journeyInputSchema,value);return withWorkspaceTransaction(p,async c=>{const b=await basis(c,p,input),pr=proof(p,input,b.hash);return{input,token:createReviewToken(pr,secret()),expiresAt:new Date(Date.now()+600000).toISOString(),basisHash:b.hash,blockers:b.blockers,warnings:['A pesquisa pode ser parcial. Contatos pessoais não são garantidos.','Custos de fornecedores desconhecidos não são tratados como zero. A capacidade é revalidada em cada etapa.'],usage:estimated(input,b.frozen.aiRoute),effects:['Criar a lista de destino, se necessário, e iniciar busca, investigação, pessoas e qualificação.','Resultados permanecem revisáveis. Nenhuma cadência será publicada e nenhuma mensagem será enviada.']};});
+ const input=parse(journeyInputSchema,value);return withWorkspaceTransaction(p,async c=>{const b=await basis(c,p,input),pr=proof(p,input,b.hash);return{input,token:createReviewToken(pr,secret()),expiresAt:new Date(Date.now()+600000).toISOString(),basisHash:b.hash,blockers:b.blockers,extractionRemaining:b.s.extractionRemaining,warnings:['A pesquisa pode ser parcial. Contatos pessoais não são garantidos.','Somente empresas novas e verificadas são descontadas do saldo escolhido.'],usage:estimated(input,b.frozen.aiRoute),effects:['Criar a lista de destino, se necessário, e iniciar busca, investigação, pessoas e qualificação.','Resultados permanecem revisáveis. Nenhuma cadência será publicada e nenhuma mensagem será enviada.']};});
 }
 async function row(c:PoolClient,id:string,lock=false){const r=(await c.query('SELECT * FROM app.prospecting_journey WHERE id=$1'+(lock?' FOR UPDATE':''),[id])).rows[0];if(!r)throw new AppError(404,'Jornada não encontrada.');return r;}
 async function stages(c:PoolClient,id:string){return(await c.query('SELECT s.*,j.state job_state,j.input job_input,j.checkpoint job_checkpoint,j.counts,j.error_code FROM app.journey_stage s JOIN app.prospecting_job j ON j.workspace_id=s.workspace_id AND j.id=s.job_id WHERE s.journey_id=$1 ORDER BY s.created_at,s.id',[id])).rows;}
-async function view(c:PoolClient,id:string):Promise<JourneyView>{const q=await row(c,id),ss=await stages(c,id),all=await ids(c,id),gaps=new Set<string>();for(const name of ['research','people','qualify'] as const)for(const id of (await pendingStage(c,q,name,ss,all)).missing)gaps.add(id);return{id:q.id,revision:Number(q.revision),state:q.state,input:q.input,listId:q.list_id,proposalJobId:q.proposal_job_id,cadenceId:q.cadence_id,reason:q.reason,missing:gaps.size,excluded:await excluded(c,id),stages:ss.map(s=>({name:s.name,jobId:s.job_id,state:s.job_state,missing:s.missing,companies:s.company_ids.length}))};}
+async function view(c:PoolClient,id:string):Promise<JourneyView>{const q=await row(c,id),ss=await stages(c,id),all=await ids(c,id),gaps=new Set<string>();for(const name of ['research','people','qualify'] as const)for(const id of (await pendingStage(c,q,name,ss,all)).missing)gaps.add(id);const waiting=q.state==='running'&&ss.some(s=>!terminal.includes(s.job_state)&&s.error_code==='WAITING_CAPACITY');return{id:q.id,revision:Number(q.revision),state:q.state,input:q.input,listId:q.list_id,proposalJobId:q.proposal_job_id,cadenceId:q.cadence_id,reason:waiting?'WAITING_CAPACITY':q.reason,missing:gaps.size,excluded:await excluded(c,id),stages:ss.map(s=>({name:s.name,jobId:s.job_id,state:s.job_state,missing:s.missing,companies:s.company_ids.length}))};}
 export function getJourney(p:Principal,id:string){return withWorkspaceTransaction(p,c=>view(c,id));}
 export function journeyForJob(p:Principal,jobId:string){return withWorkspaceTransaction(p,async c=>{const s=(await c.query('SELECT journey_id FROM app.journey_stage WHERE job_id=$1 UNION ALL SELECT journey_id FROM app.journey_proposal_attempt WHERE job_id=$1',[jobId])).rows[0];return s?view(c,s.journey_id):null;});}
 export async function confirmJourney(p:Principal,value:Confirm<JourneyInput>|unknown):Promise<JourneyView>{
@@ -75,9 +77,9 @@ async function enqueue(c:PoolClient,p:Principal,q:any,name:JourneyStage,ids:stri
  const version=Number((await c.query('SELECT COALESCE(max(version),0)+1 n FROM app.journey_stage WHERE journey_id=$1 AND name=$2',[q.id,name])).rows[0].n);
  for(const batch of batches){
   const input:ProspectingInput=name==='discover'?{...discovery(q.input),destination:{mode:'existing',listId:q.list_id}} as ProspectingInput:{kind:'qualification',listId:q.list_id,leadIds:batch,modules:name==='research'?['deep']:name==='people'?['decisors']:modules,summaryPolicy:'all',escalation:'off',...(name==='research'?{companyResearch:{sourceKinds:['website','social','registry'],maxPagesPerCompany:10}}:{}),...(name==='people'?{companyPeople:true,enrichment:{maxCredits:batch.length,destinationName:'Decisores · '+q.input.brief.slice(0,75)}}:{})};
-  const s=await prospectingReviewState(c,p,input);if(s.blockers.length)throw new AppError(409,s.blockers[0],'JOURNEY_CAPACITY');
+  const s=await prospectingReviewState(c,p,input,{checkTechnicalCapacity:false});if(s.blockers.length)throw new AppError(409,s.blockers[0],'JOURNEY_CAPACITY');
   const scanLimit=name==='discover'?discoveryScanLimit(q.input.limit):null;
-  const job=await insertReviewedJob(c,p,{input,listId:q.list_id,requestId:randomUUID(),bodyHash:hashValue({journey:q.id,name,version,batch}),profileVersion:s.profileVersion,checkpoint:{...s.checkpoint,...(scanLimit?{discoveryScanLimit:scanLimit,discoveryWebFallback:true}:{}),context:q.basis.context,journey:{id:q.id,name,version,basisHash:hashValue(q.basis),databaseAuthority:q.basis.databaseAuthority}},usage:scanLimit?discoveryUsage(scanLimit):estimateUsage(input,s.aiRoute,s.enrichment?.reserveCredits),caps:s.config.caps,globalCaps:s.config.globalCaps});
+  const job=await insertReviewedJob(c,p,{input,listId:q.list_id,requestId:randomUUID(),bodyHash:hashValue({journey:q.id,name,version,batch}),profileVersion:s.profileVersion,checkpoint:{...s.checkpoint,incrementalUsage:true,...(scanLimit?{discoveryScanLimit:scanLimit,discoveryWebFallback:true,...(q.input.registry?{registryFirst:q.input.registry,siteCollector:q.basis.siteCollector}:{})}:{}),context:q.basis.context,journey:{id:q.id,name,version,basisHash:hashValue(q.basis),databaseAuthority:q.basis.databaseAuthority}},usage:[],caps:s.config.caps,globalCaps:s.config.globalCaps});
   await c.query('INSERT INTO app.journey_stage(workspace_id,journey_id,id,name,version,company_ids,batch_key,job_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[p.workspaceId,q.id,randomUUID(),name,version,batch,hashValue(batch),job.id]);
  }
 }
@@ -104,6 +106,16 @@ async function pendingStage(c:PoolClient,q:any,name:'research'|'people'|'qualify
  return{pending,missing};
 }
 async function currentBasis(c:PoolClient,p:Principal,q:any){const b=await basis(c,p,q.input);return b;}
+export async function resumeReconciledDiscovery(c:PoolClient,p:Principal,job:{id:string;actor_id:string;checkpoint:{journey:{id:string;basisHash:string}}}){
+ const q=await row(c,job.checkpoint.journey.id,true);
+ if(q.actor_id!==job.actor_id||q.actor_id!==p.userId||hashValue(q.basis)!==job.checkpoint.journey.basisHash)return false;
+ if(q.state!=='running'&&(q.state!=='blocked'||q.reason!=='NEEDS_RECONCILIATION'))return false;
+ if((await stages(c,q.id)).some(stage=>stage.job_id!==job.id&&stage.job_state==='needs_reconciliation'))return false;
+ const basis=await currentBasis(c,p,q);
+ if(basis.hash!==hashValue(q.basis))return false;
+ if(q.state==='blocked')await c.query("UPDATE app.prospecting_journey SET state='running',reason=NULL,revision=revision+1 WHERE id=$1",[q.id]);
+ return true;
+}
 export async function assertJourneyAuthority(c:PoolClient,job:any){
  if(!job.checkpoint?.journey||job.state==='cancelling')return;
  const role=(await c.query('SELECT app.current_role() role')).rows[0].role;if(!['owner','admin','operator'].includes(role))throw new AppError(403,'A autorização para esta jornada foi removida.');
@@ -153,7 +165,7 @@ export async function cancelJourney(p:Principal,id:string){return withWorkspaceT
  await c.query("UPDATE app.prospecting_journey SET state='paused',reason=NULL,revision=revision+1 WHERE id=$1",[id]);await synchronize(c,q);return view(c,id);
 });}
 async function resumeState(c:PoolClient,p:Principal,id:string){await authorize(c,p);const q=await row(c,id,true);if(q.actor_id!==p.userId)throw new AppError(403,'Retome com o usuário que autorizou a jornada.');const ss=await stages(c,id),needsDiscovery=ss.find(s=>s.name==='discover')?.job_state!=='completed'&&!(await ids(c,id)).length,b=await basis(c,p,q.input,needsDiscovery),blockers=[...b.blockers];if(!['paused','blocked','review'].includes(q.state))blockers.push('Pause a jornada antes de revisar a retomada.');if(ss.some(s=>!terminal.includes(s.job_state)||s.job_state==='needs_reconciliation'))blockers.push('Aguarde o encerramento ou a reconciliação da operação anterior.');return{q,ss,b,blockers,pr:proof(p,q.input,b.hash,Number(q.revision),id)};}
-export async function prepareJourneyResume(p:Principal,id:string):Promise<JourneyReview>{return withWorkspaceTransaction(p,async c=>{const s=await resumeState(c,p,id);return{input:s.q.input,token:createReviewToken(s.pr,secret()),expiresAt:new Date(Date.now()+600000).toISOString(),basisHash:s.b.hash,blockers:s.blockers,warnings:['Resultados concluídos são preservados. Apenas pendências e etapas invalidadas serão consultadas novamente.','A estimativa abaixo é um teto; custos externos desconhecidos continuam sem valor comprovado.'],usage:estimated(s.q.input,s.b.frozen.aiRoute),effects:['Retomar as etapas pendentes com o contexto revisado. Nenhuma mensagem será enviada.']};});}
+export async function prepareJourneyResume(p:Principal,id:string):Promise<JourneyReview>{return withWorkspaceTransaction(p,async c=>{const s=await resumeState(c,p,id);return{input:s.q.input,token:createReviewToken(s.pr,secret()),expiresAt:new Date(Date.now()+600000).toISOString(),basisHash:s.b.hash,blockers:s.blockers,extractionRemaining:s.b.s.extractionRemaining,warnings:['Resultados concluídos são preservados. Apenas pendências e etapas invalidadas serão consultadas novamente.'],usage:estimated(s.q.input,s.b.frozen.aiRoute),effects:['Retomar as etapas pendentes com o contexto revisado. Nenhuma mensagem será enviada.']};});}
 export async function resumeJourney(p:Principal,id:string,raw:unknown){const body=parse(resumeSchema,raw);return withWorkspaceTransaction(p,async c=>{
  await authorize(c,p);await lockWorkspace(c);const digest=hashValue({action:'journey.resume',id}),old=(await c.query('SELECT * FROM app.command_result WHERE request_id=$1',[body.requestId])).rows[0];if(old){if(old.user_id!==p.userId||old.body_hash!==digest)throw new AppError(409,'Identificador já utilizado.');return view(c,id);}
  const s=await resumeState(c,p,id);verifyReviewToken(body.token,s.pr,secret());if(s.blockers.length)throw new AppError(409,s.blockers[0]);await assertExecution(c);

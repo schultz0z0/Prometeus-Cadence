@@ -12,6 +12,12 @@ import {PeopleResults} from '@/modules/research/company-people';
 import {ResearchResults} from '@/modules/research/company-research';
 import {RetainedResults} from './retained-results';
 import {JourneyProgress} from './research-journey';
+const discoveryLabels:Record<string,string>={
+  CNPJ_OUTSIDE_SCOPE:'CNPJ fora do recorte ou sem situação ativa confirmada',
+  MAPS_IDENTITY_UNVERIFIED:'Estabelecimento sem correspondência confirmada no Maps',
+  SITE_IDENTITY_UNVERIFIED:'Site institucional sem vínculo confirmado',
+  MISSING_IDENTITY:'Registro sem identificação suficiente',
+};
 const activeStates=['queued','running','waiting_provider','cancelling'];
 export function useProspectingJob(id:string){
   const client=useProspecting(),[job,setJob]=useState<JobView|null>(null),[error,setError]=useState(''),[revision,setRevision]=useState(0);
@@ -32,11 +38,17 @@ export function JobProgress({id}:{id:string}){
     {job.purpose==='ai-connection-test'?<Notice>Teste de conexão com evidência sintética. Pode consumir uma chamada real da LLM convencional, conforme o uso registrado. Nenhuma proposta deste teste será aplicada.</Notice>:job.testFixture&&<Notice>Validação com dados sintéticos. Esta execução usa fixtures de QA e não comprova uma chamada real ao provedor.</Notice>}
     {job.aiRoute&&<p className="secondary-text">{job.aiRoute.effectiveMode==='hybrid'?'JEV + LLM convencional':'LLM convencional'} · {job.aiRoute.conventional.provider} · {job.aiRoute.conventional.model}{identity?.platformAiAdmin&&<> · <a href="/settings/ai">Administrar IA da plataforma</a></>}</p>}
     {(error||actionError)&&<p role="alert" className="error-bar">{error||actionError}</p>}
-    <section className="panel panel-pad stack"><div className="row between wrap"><h2>Progresso</h2><Badge tone={job.state==='completed'?'green':job.state==='failed'?'red':'neutral'}>{jobStateLabels[job.state]}</Badge></div><div className="row wrap">{job.research?<><span>{job.counts.found} empresa(s) investigada(s)</span><span>{job.counts.rejected} com cobertura parcial</span></>:<><span>{job.counts.found} encontrados</span><span>{job.counts.inserted} inseridos</span><span>{job.counts.duplicates} duplicados</span><span>{job.counts.rejected} rejeitados</span><span>{job.counts.pending} para revisão</span></>}</div>
+    <section className="panel panel-pad stack"><div className="row between wrap"><h2>Progresso</h2><Badge tone={job.state==='completed'?'green':job.state==='failed'?'red':'neutral'}>{job.error?.code==='WAITING_CAPACITY'?'Aguardando capacidade':job.error?.code==='WAITING_SITE_BROWSER'?'Aguardando navegador':jobStateLabels[job.state]}</Badge></div><div className="row wrap">{job.research?<><span>{job.counts.found} empresa(s) investigada(s)</span><span>{job.counts.rejected} com cobertura parcial</span></>:<><span>{job.counts.found} encontrados</span><span>{job.counts.inserted} inseridos</span><span>{job.counts.duplicates} duplicados</span><span>{job.counts.rejected} rejeitados</span><span>{job.counts.pending} para revisão</span></>}</div>
+      {job.siteCollection&&<div className="stack">
+        <h3>Coleta de sites</h3>
+        <div className="row wrap"><span>{job.siteCollection.completed} páginas lidas</span><span>{job.siteCollection.pending} pendentes</span><span>{job.siteCollection.blocked} bloqueadas</span><span>{job.siteCollection.failed} com falha</span></div>
+        {job.siteCollection.partial&&<small className="secondary-text">{job.siteCollection.pending?'Coleta em andamento.':'A cobertura dos sites foi parcial.'}</small>}
+      </div>}
+      {!!Object.keys(job.discoveryReasons??{}).length&&<details><summary>Motivos de descarte</summary><ul>{Object.entries(job.discoveryReasons!).map(([code,count])=><li key={code}>{count} · {discoveryLabels[code]??code}</li>)}</ul></details>}
       {job.state==='queued'&&<Notice>A execução está na fila. O worker precisa estar ativo para iniciar o processamento. Nenhum resultado é simulado nesta conta.</Notice>}
       {job.state==='partial'&&<Notice>Parte do processamento foi confirmada. Os resultados preservados estão abaixo; revise a falha antes de iniciar outra execução.</Notice>}
       {job.state==='cancelling'&&<Notice>O cancelamento foi solicitado. Estamos aguardando a confirmação do provedor; isso não garante estorno de uso.</Notice>}
-      {job.error&&<p role="alert">{job.error.message} <small>Referência: {job.error.code}</small></p>}
+      {job.error&&job.error.code!=='WAITING_CAPACITY'&&<p role="alert">{job.error.code==='VERIFIED_DISCOVERY_SHORTFALL'?'A busca terminou com menos empresas verificadas que a meta. Confira os resultados e os motivos de descarte.':job.error.message} <small>Referência: {job.error.code}</small></p>}
       {job.state==='needs_reconciliation'&&<Notice>A resposta de uma operação externa ficou incerta. O sistema não repetirá a chamada automaticamente. Um administrador precisa conferir o provedor antes de retomar.</Notice>}
       {job.state==='needs_reconciliation'&&['owner','admin'].includes(role??'')&&<Button onClick={()=>setReconcile(true)}>Reconciliar chamada</Button>}
       {job.enrichment&&job.outputListId&&<a className="btn" href={'/contacts?list='+encodeURIComponent(job.outputListId)}>Abrir lista de decisores →</a>}

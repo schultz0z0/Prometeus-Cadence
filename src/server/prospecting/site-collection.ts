@@ -1,5 +1,5 @@
 import type {JobLease} from '../../domain/prospecting.ts';
-import {loopbackSiteBrowser,type SiteBrowser} from './site-browser.ts';
+import {loopbackSiteBrowser,siteBrowserUnavailable,type SiteBrowser} from './site-browser.ts';
 import {claimSiteUrl,openSiteQueue,saveSiteUrl,siteCoverage,siteQueueSnapshot,siteUrl,type SitePageResult,type SiteUrl} from './site-queue.ts';
 import {ProviderError} from './providers/transport.ts';
 export type {SiteBrowser} from './site-browser.ts';
@@ -138,7 +138,7 @@ export async function collectSiteTick(lease:JobLease,root:string,browser:SiteBro
         }else if(claim.kind==='sitemap'&&[404,410].includes(status)) result={status,text:''};
         else failure={state:'failed',reason:'HTTP_'+status};
       }catch(error){
-        if(signal.aborted)throw error;
+        if(signal.aborted||siteBrowserUnavailable(error))throw error;
         if(!(error instanceof ProviderError))throw error;
         failure={state:error.status>=500||error.status===429?'retry':error.code==='URL_BLOCKED'?'blocked':'failed',reason:error.code};
       }
@@ -148,9 +148,12 @@ export async function collectSiteTick(lease:JobLease,root:string,browser:SiteBro
   }
   const rows=await siteQueueSnapshot(lease,key,false);
   const coverage=siteCoverage(rows);
-  if(coverage.pending)return {done:false,coverage,pages:[]};
+  if(coverage.pending){
+    const scheduled=claim?[]:rows.flatMap(row=>row.state==='pending'&&row.retry_at instanceof Date&&row.retry_at.getTime()>Date.now()?[row.retry_at.getTime()]:[]);
+    return {done:false,coverage,pages:[],retryAt:scheduled.length?new Date(Math.min(...scheduled)).toISOString():null};
+  }
   const completed=await siteQueueSnapshot(lease,key);
-  return {done:true,coverage,pages:completed.flatMap(row=>{
+  return {done:true,coverage,retryAt:null,pages:completed.flatMap(row=>{
     const page=row.result;
     return row.kind==='page'&&row.state==='completed'&&page&&page.status>=200&&page.status<300?[{url:row.url,...page}]:[];
   })};

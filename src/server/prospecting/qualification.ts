@@ -1,4 +1,5 @@
 import type {JobLease,JobInput,Evidence,ModuleResult,Decision,Generation,ProviderUsage,Candidate} from '../../domain/prospecting.ts';
+import type {SiteBrowser} from './site-browser.ts';
 import type {Lead,CompanyProfile} from '../../domain/model.ts';
 import {withLeasedTransaction} from './worker-db.ts';
 import {readLeasedJob,finishJob,performStep,handleStepFailure} from './journal.ts';
@@ -28,7 +29,7 @@ import {runEnrichment} from './enrichment.ts';
 import {buildAiSkill} from '../../domain/ai-skills.ts';
 import type {DecisorGenerator} from './ai/decisors.ts';
 export interface QualificationAdapters{
-  signal?:AbortSignal;apify?:SourceAdapter;siteCrawler?:SourceAdapter;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
+  signal?:AbortSignal;apify?:SourceAdapter;siteCrawler?:SourceAdapter;siteBrowser?:SiteBrowser;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
   collect?:typeof fetchEvidencePack;checkEmail?:typeof checkEmailDns;decisors?:DecisorGenerator;
   decide?:typeof decide;generate?:typeof generate;
 }
@@ -127,15 +128,27 @@ async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,dep
   });
 }
 export async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string}={}):Promise<Partial<Candidate>|null>{const result=await sourceResults(lease,job,lead,module,deps,options);return result===null?null:result[0]??{};}
-export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string;limit?:number;beforeStart?:(operationId:string)=>Promise<void>;onTerminal?:(runId:string)=>Promise<void>}={}):Promise<Candidate[]|null>{
-  const source=module==='registry'?'CNPJ':'WEB',step=module+':'+lead.id+(options.suffix?':'+options.suffix:'');
+export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'registry'|'website'|'maps',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string;limit?:number;beforeStart?:(operationId:string)=>Promise<void>;onTerminal?:(runId:string)=>Promise<void>}={}):Promise<Candidate[]|null>{
+  const source=module==='registry'?'CNPJ':module==='maps'?'MAPS':'WEB',step=module+':'+lead.id+(options.suffix?':'+options.suffix:'');
   const ctx=providerContext(job,source,hashValue({job:lease.jobId,step}),deps.signal??new AbortController().signal),adapter=deps.apify??new ApifyAdapter();
+  if(job.checkpoint.registryFirst){
+    const cached=await withLeasedTransaction(lease,async c=>(await c.query(
+      "SELECT payload->'lookup' AS lookup FROM app.prospecting_attempt WHERE id=$1 AND job_id=$2 AND state='completed'",
+      [ctx.operationId,lease.jobId])).rows[0]?.lookup as Candidate[]|undefined);
+    if(cached)return cached;
+  }
+  const remember=async (candidates:Candidate[])=>{
+    if(job.checkpoint.registryFirst)await withLeasedTransaction(lease,c=>c.query(
+      "UPDATE app.prospecting_attempt SET payload=payload||jsonb_build_object('lookup',$3::jsonb) WHERE id=$1 AND job_id=$2 AND state='completed'",
+      [ctx.operationId,lease.jobId,JSON.stringify(candidates)]));
+    return candidates;
+  };
   if(options.partners)ctx.profile.partners=true;
   const limit=Math.min(5,Math.max(1,options.limit??1));
   const requestedCnpj=module==='registry'?normalizeCnpj(lead.cnpj):undefined;
   let differentCnpj=false;
   function matchingCandidates(candidates:Candidate[]){
-    if(module==='website')return candidates.slice(0,limit);
+    if(module!=='registry')return candidates.slice(0,limit);
     return candidates.filter(candidate=>{
       const cnpj=normalizeCnpj(candidate.cnpj);
       if(cnpj&&cnpj!==requestedCnpj)differentCnpj=true;
@@ -151,7 +164,7 @@ export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'reg
   if(started.kind==='uncertain'){await finishJob(lease,'needs_reconciliation','START_UNCERTAIN');return null;}
   if(started.kind==='inline'){
     const matching=matchingCandidates(started.page.candidates);
-    return matching.length?matching:noMatch();
+    return remember(matching.length?matching:noMatch());
   }
   const remote=await adapter.poll(ctx,started.run);
   if(['succeeded','failed','cancelled'].includes(remote.status))await options.onTerminal?.(started.run.runId);
@@ -163,8 +176,8 @@ export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'reg
   for(let page=0;page<20;page++){
     const result=await adapter.readPage(ctx,remote.run,cursor,module==='registry'?100:limit);
     const matching=matchingCandidates(result.candidates);
-    if(matching.length)return matching;
-    if(result.exhausted||!result.nextCursor)return noMatch();
+    if(matching.length)return remember(matching);
+    if(result.exhausted||!result.nextCursor)return remember(noMatch());
     cursor=result.nextCursor;
   }
   throw new ProviderError('LOOKUP_PAGE_LIMIT');

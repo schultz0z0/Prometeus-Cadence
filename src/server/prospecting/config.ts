@@ -49,7 +49,7 @@ export function estimateUsage(input:JobInput,route?:AiRoute|null,plannedFresh?:n
   return result;
 }
 export const usageUnits=(usage:UsageEstimate[]):Units=>Object.fromEntries(usage.map(u=>u.unit).map(k=>[k,usage.filter(u=>u.unit===k).reduce((n,u)=>n+u.maxUnits,0)]));
-export function requirements(config:ProspectingConfig,input:JobInput,workspaceId:string,route?:AiRoute|null,plannedFresh?:number){
+export function requirements(config:ProspectingConfig,input:JobInput,workspaceId:string,route?:AiRoute|null,plannedFresh?:number,checkTechnicalCapacity=true){
   const blockers:string[]=[];
   if(!config.enabled)blockers.push('As execuções externas ainda não foram habilitadas neste ambiente.');
   if(input.kind==='generation'&&!config.ready[input.source])blockers.push('Configure a credencial e o perfil da fonte antes de executar.');
@@ -64,6 +64,6 @@ export function requirements(config:ProspectingConfig,input:JobInput,workspaceId
     if(input.modules.includes('registry')&&!config.ready.CNPJ)blockers.push('Configure a consulta cadastral.');
     if(input.modules.includes('website')&&!config.ready.WEB)blockers.push('Configure a busca de sites.');
   }
-  for(const u of estimateUsage(input,route,plannedFresh))if(u.maxUnits>(config.caps[u.unit]??0)||u.maxUnits>(config.globalCaps[u.unit]??0))blockers.push(`O limite de ${u.unit} não permite esta execução.`);
+  if(checkTechnicalCapacity)for(const u of estimateUsage(input,route,plannedFresh))if(u.maxUnits>(config.caps[u.unit]??0)||u.maxUnits>(config.globalCaps[u.unit]??0))blockers.push(`O limite de ${u.unit} não permite esta execução.`);
   return blockers;
 }

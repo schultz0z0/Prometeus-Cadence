@@ -17,9 +17,11 @@ export class ApifyAdapter implements SourceAdapter{
   }
   async poll(ctx:ProviderContext,run:RemoteRun):Promise<RemoteState>{
     const response=await this.request(ctx,`/actor-runs/${id(run.runId)}`),data=response.data;
-    const status:Record<string,RemoteState['status']>={READY:'ready',RUNNING:'running',SUCCEEDED:'succeeded',FAILED:'failed',TIMING_OUT:'failed',TIMED_OUT:'failed',ABORTING:'cancelling',ABORTED:'cancelled'};
-    if(!status[data?.status])throw new ProviderError('INVALID_RUN_STATUS');
-    return{run:{...run,datasetId:data.defaultDatasetId?id(data.defaultDatasetId):run.datasetId},status:status[data.status]};
+    const remoteStatus=typeof data?.status==='string'?data.status.replaceAll('_','-'):'';
+    const status:Record<string,RemoteState['status']>={READY:'ready',RUNNING:'running',SUCCEEDED:'succeeded',FAILED:'failed','TIMING-OUT':'running','TIMED-OUT':'failed',ABORTING:'cancelling',ABORTED:'cancelled'};
+    if(!Object.hasOwn(status,remoteStatus))throw new ProviderError('INVALID_RUN_STATUS');
+    const error=remoteStatus==='TIMED-OUT'?{code:'REMOTE_TIMED_OUT',message:'A execução na Apify atingiu o limite de tempo.'}:undefined;
+    return{run:{...run,datasetId:data.defaultDatasetId?id(data.defaultDatasetId):run.datasetId},status:status[remoteStatus],...(error?{error}:{})};
   }
   async readPage(ctx:ProviderContext,run:RemoteRun,cursor:string|null,limit=100):Promise<CandidatePage>{
     const offset=Number(cursor??0);if(!Number.isSafeInteger(offset)||offset<0||offset>(ctx.profile.source==='CNPJ'?2000:500)||!Number.isInteger(limit)||limit<1||limit>100)throw new ProviderError('INVALID_PAGE');
@@ -51,11 +53,14 @@ export class ApifyAdapter implements SourceAdapter{
       if(ctx.profile.source==='CNPJ'){
         const status=typeof r.descricao_situacao_cadastral==='string'?r.descricao_situacao_cadastral.trim().toUpperCase():'';
         const registrationStatus=['ATIVA','BAIXADA','INAPTA','SUSPENSA','NULA'].includes(status)?status:undefined;
-        candidate.facts={registrationStatus,...(ctx.profile.partners?{decisionMakers:normalizeDecisionMakers(r.qsa)}:{})};
+        const street=[r.descricao_tipo_de_logradouro,r.logradouro].filter(v=>typeof v==='string'&&v.trim()).join(' ');
+        const number=typeof r.numero==='string'||typeof r.numero==='number'?String(r.numero).trim():'';
+        candidate.facts={registrationStatus,...(street&&number?{street:`${street}, ${number}`.slice(0,500)}:{}),...(ctx.profile.partners?{decisionMakers:normalizeDecisionMakers(r.qsa)}:{})};
       }
       const mapsFacts=ctx.profile.source==='MAPS'?{
         category:typeof r.categoryName==='string'?r.categoryName.slice(0,200):undefined,
         address:candidate.address,
+        street:typeof r.street==='string'?r.street.slice(0,500):undefined,
         rating:candidate.rating===undefined?undefined:Number(candidate.rating),
         reviewCount:candidate.reviewCount===undefined?undefined:Number(candidate.reviewCount),
         permanentlyClosed:typeof r.permanentlyClosed==='boolean'?r.permanentlyClosed:undefined,
