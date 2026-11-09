@@ -10,14 +10,15 @@ export interface SiteBrowser {
 
 const responseStatus=z.number().int().min(100).max(599);
 const documentSchema=z.object({url:z.string().max(1800),status:responseStatus,text:z.string().max(24000),
-  links:z.array(z.string()).max(500),truncated:z.boolean()});
+  links:z.array(z.string()).max(500),contacts:z.array(z.string().max(500)).max(100).optional(),
+  externalLinks:z.array(z.string()).max(100).optional(),truncated:z.boolean()});
 const rawSchema=z.object({status:responseStatus,headers:z.record(z.string(),z.string()),body:z.string().max(1_400_000)});
 const redirectSchema=z.object({status:responseStatus,redirect:z.string().max(1800)});
 const errors=z.object({code:z.string().regex(/^[A-Z_]+$/).max(60)});
 const agent='PrometeusCadence/1.0 (public company research)';
 const origin='http://127.0.0.1:3222';
 
-export function siteBrowserReady(){return (process.env.SITE_BROWSER_TOKEN?.length??0)>=32;}
+export function siteBrowserReady(){return process.env.SITE_BROWSER_ENABLED!=='false'&&(process.env.SITE_BROWSER_TOKEN?.length??0)>=32;}
 export const siteCollectorVersion='chromium-v1';
 export function siteBrowserUnavailable(error:unknown){
   return error instanceof ProviderError&&['SITE_BROWSER_NOT_CONFIGURED','SITE_BROWSER_UNAVAILABLE','UNAUTHORIZED','BUSY'].includes(error.code);
@@ -27,7 +28,7 @@ export const loopbackSiteBrowser:SiteBrowser={
   async available(signal){
     if(!siteBrowserReady())return false;
     try {
-      const response=await fetch(origin+'/health',{redirect:'error',signal:AbortSignal.any([signal,AbortSignal.timeout(3000)])});
+      const response=await fetch(origin+'/health',{redirect:'error',headers:{authorization:'Bearer '+process.env.SITE_BROWSER_TOKEN},signal:AbortSignal.any([signal,AbortSignal.timeout(3000)])});
       return response.ok;
     }catch(error){
       if(signal.aborted)throw error;
@@ -76,3 +77,9 @@ export const loopbackSiteBrowser:SiteBrowser={
     }catch {throw new ProviderError('INVALID_METADATA_ENCODING');}
   },
 };
+
+export async function siteBrowserStatus():Promise<'disabled'|'unconfigured'|'unavailable'|'healthy'>{
+  if(process.env.SITE_BROWSER_ENABLED==='false')return 'disabled';
+  if(!siteBrowserReady())return 'unconfigured';
+  return await loopbackSiteBrowser.available!(new AbortController().signal)?'healthy':'unavailable';
+}

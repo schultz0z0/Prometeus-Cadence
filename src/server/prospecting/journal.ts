@@ -9,6 +9,9 @@ import {assertAutomationAuthority} from '../automations/guard.ts';
 import {syncOccurrenceJob} from '../automations/assignments.ts';
 import {workerPool} from './worker-db.ts';
 import {assertExecution} from '../billing/entitlements.ts';
+import type {PoolClient} from 'pg';
+import {assertJobLease} from './repository.ts';
+import {siteBrowserUnavailable} from './site-browser.ts';
 export class UncertainStep extends Error{}
 export async function readLeasedJob(lease:JobLease){return withLeasedTransaction(lease,async c=>(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0]);}
 export async function finishJob(lease:JobLease,state:JobState,code?:string){
@@ -33,13 +36,22 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
     return null;
   });
   if(prior?.state==='completed')return prior.payload.result as T;
-  if(prior){await finishJob(lease,'needs_reconciliation','UNCERTAIN_STEP');throw new UncertainStep();}
+  const readOnlyRetry=provider==='site-browser'&&prior?.provider===provider&&prior.state==='prepared';
+  if(prior&&!readOnlyRetry){await finishJob(lease,'needs_reconciliation','UNCERTAIN_STEP');throw new UncertainStep();}
   let result:T;
   try{
-    await withLeasedTransaction(lease,async c=>{await assertExecution(c);const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];await assertAutomationAuthority(c,job,'dispatch',operationId);});
+    await withLeasedTransaction(lease,async c=>{
+      await assertExecution(c);
+      const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
+      const config=prospectingConfig();
+      if(readOnlyRetry&&(!config.enabled||job.checkpoint.execution?.version!==config.version))
+        throw new AppError(409,'A configuração mudou. Revise antes de continuar.','PROFILE_CHANGED');
+      await assertAutomationAuthority(c,job,'dispatch',operationId);
+    });
     result=await call();
   }
   catch(error){
+    if(provider==='site-browser'&&siteBrowserUnavailable(error))throw error;
     if(error instanceof ProviderError&&error.uncertain){await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_attempt SET state='uncertain' WHERE id=$1",[operationId]));await finishJob(lease,'needs_reconciliation','UNCERTAIN_STEP');throw new UncertainStep();}
     await withLeasedTransaction(lease,c=>c.query("UPDATE app.prospecting_attempt SET state='failed' WHERE id=$1",[operationId]));throw error;
   }
@@ -50,8 +62,47 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
   if(!received.rows[0].authorized)throw new AppError(403,'Resposta preservada; o acesso foi removido.','RESULT_RECEIVED_ACCESS_REVOKED');
   return result;
 }
+export async function performSiteRead<T>(lease:JobLease,step:string,call:()=>Promise<T>,
+  publish?:(client:PoolClient,result:T)=>Promise<T>):Promise<T>{
+  const id=hashValue({job:lease.jobId,step});
+  const authorized=async(c:PoolClient)=>{
+    await assertJobLease(c,lease);
+    await assertExecution(c);
+    const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[lease.jobId])).rows[0];
+    const config=prospectingConfig();
+    if(!config.enabled||job.checkpoint.execution?.version!==config.version)
+      throw new AppError(409,'A configuração mudou. Revise antes de continuar.','PROFILE_CHANGED');
+    await assertAutomationAuthority(c,job,'dispatch');
+  };
+  const prior=await withLeasedTransaction(lease,async c=>{
+    await authorized(c);
+    return (await c.query('SELECT state,payload FROM app.prospecting_attempt WHERE job_id=$1 AND id=$2',[lease.jobId,id])).rows[0];
+  });
+  if(prior?.state==='completed')return prior.payload.result as T;
+  if(prior?.state==='failed')throw new ProviderError(prior.payload.code??'PAGE_UNAVAILABLE');
+  let result:T;
+  try{result=await call();}
+  catch(error){
+    if(!(error instanceof AppError)&&!siteBrowserUnavailable(error)){
+      const code=error instanceof ProviderError?error.code:'PAGE_UNAVAILABLE';
+      await withLeasedTransaction(lease,async c=>{
+        await authorized(c);
+        await c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES(current_setting('app.workspace_id'),$1,$2,'site-browser',$3,'failed',$4) ON CONFLICT DO NOTHING",
+          [lease.jobId,id,step,{code}]);
+      });
+    }
+    throw error;
+  }
+  return withLeasedTransaction(lease,async c=>{
+    await authorized(c);
+    const saved=publish?await publish(c,result):result;
+    await c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES(current_setting('app.workspace_id'),$1,$2,'site-browser',$3,'completed',$4)",
+      [lease.jobId,id,step,{result:saved}]);
+    return saved;
+  });
+}
 export async function handleStepFailure(lease:JobLease,error:unknown){
-  if(error instanceof WaitingCapacity)throw error;
+  if(error instanceof WaitingCapacity||siteBrowserUnavailable(error))throw error;
   if(error instanceof UncertainStep)return;
   if(error instanceof ProviderError&&error.uncertain){await finishJob(lease,'needs_reconciliation',error.code);return;}
   if(error instanceof AppError&&error.code==='STALE_JOB')throw error;

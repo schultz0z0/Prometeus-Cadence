@@ -4,14 +4,10 @@ import {fetchEvidencePack} from './extraction/fetch-page.ts';
 import {extractCnpjs} from './extraction/contacts.ts';
 import {companySiteCandidates,institutionalSite,phoneIdentity,sourceResults,verifySiteContent,type QualificationAdapters} from './qualification.ts';
 import {strongIdentities} from './normalize.ts';
-import {performStep} from './journal.ts';
+import {performSiteRead} from './journal.ts';
 import {hashValue} from './review.ts';
 import {withLeasedTransaction} from './worker-db.ts';
 import {ProviderError} from './providers/transport.ts';
-import {ApifySiteCrawler} from './providers/site-crawler.ts';
-import type {ProviderContext} from './providers/types.ts';
-import {finishJob} from './journal.ts';
-import {approvePublicUrl} from './extraction/public-url.ts';
 import {collectSiteTick} from './site-collection.ts';
 import {isRegistryCandidate,registryMapsMatch,registrySiteMatches} from './registry-first.ts';
 
@@ -20,7 +16,7 @@ export const discoveryScanLimit=(requested:number)=>Math.min(500,requested*2+8);
 export function discoveryUsage(scanLimit:number,registryFirst=false):UsageEstimate[]{
   return [
     {provider:'apify',unit:'candidates',maxUnits:scanLimit,estimatedUsd:null,pricingSource:null},
-    {provider:'apify',unit:'apifyRuns',maxUnits:registryFirst?1+2*scanLimit:2+8*scanLimit,estimatedUsd:null,pricingSource:null},
+    {provider:'apify',unit:'apifyRuns',maxUnits:(registryFirst?1:2)+2*scanLimit,estimatedUsd:null,pricingSource:null},
   ];
 }
 
@@ -28,29 +24,6 @@ export async function markDiscoveryRunDone(lease:JobLease,runId:string){
   await withLeasedTransaction(lease,c=>c.query(
     "UPDATE app.prospecting_job SET checkpoint=jsonb_set(checkpoint,'{cleanupDone}',COALESCE(checkpoint->'cleanupDone','[]'::jsonb)||to_jsonb($2::text),true) WHERE id=$1 AND NOT COALESCE(checkpoint->'cleanupDone','[]'::jsonb) ? $2",
     [lease.jobId,runId]));
-}
-
-async function crawlSite(lease:JobLease,job:any,url:string,step:string,deps:QualificationAdapters){
- const options=job.checkpoint.execution.siteCrawler,signal=deps.signal??new AbortController().signal;
- const adapter=deps.siteCrawler??new ApifySiteCrawler();
- const ctx:ProviderContext={operationId:hashValue({job:lease.jobId,step}),signal,profile:{source:'WEB',...options,ppe:false},
-  credential:process.env.APIFY_TOKEN??'',maxChargeUsd:job.checkpoint.execution.maxChargeUsd??0,maxPages:options.maxPages,targetUrl:url};
- const started=await performStep(lease,'crawl:'+step,'apify',{apifyRuns:1},async()=>{
-  if(!deps.siteCrawler)await approvePublicUrl(url);
-  return adapter.start(ctx,{kind:'generation',source:'WEB',destination:{mode:'existing',listId:job.list_id},filters:{term:url},limit:options.maxPages,dedupScope:'workspace'});
- },result=>({provider:'apify',operationId:ctx.operationId,units:result.kind==='uncertain'?{}:{apifyRuns:1},costUsd:null,costKind:'unknown'}));
- if(started.kind==='uncertain'){await finishJob(lease,'needs_reconciliation','START_UNCERTAIN');return null;}
- if(started.kind==='inline')return started.page.candidates.flatMap(candidate=>candidate.evidence??[]);
- const state=await adapter.poll(ctx,started.run);
- if(['succeeded','failed','cancelled'].includes(state.status))await markDiscoveryRunDone(lease,started.run.runId);
- const timedOut=state.status==='failed'&&state.error?.code==='REMOTE_TIMED_OUT';
- if(state.status==='cancelled'||(state.status==='failed'&&!timedOut))return[];
- if(state.status!=='succeeded'&&!timedOut)return null;
- if(!state.run.datasetId&&timedOut)return[];
- return performStep(lease,'crawl-pages:'+step,'public-web',{},async()=>{
-  const page=await adapter.readPage(ctx,state.run,null,options.maxPages);
-  return page.candidates.flatMap(candidate=>candidate.evidence??[]);
- });
 }
 
 export async function admitRegistryPage(lease:JobLease,job:any,page:CandidatePage,deps:QualificationAdapters):Promise<CandidatePage|null>{
@@ -119,8 +92,8 @@ export async function admitDiscoveryPage(lease:JobLease,job:any,page:CandidatePa
     if(!/^\d{10,11}$/.test(phone)){reject('PHONE_REQUIRED');continue;}
     const key=hashValue(candidate.sourceRef);
     const lead:Lead={...candidate,id:key,listId:job.list_id,site,qualification:'pending',createdAt:new Date().toISOString()};
-    const inspect=(url:string,step:string)=>job.checkpoint.execution?.siteCrawler&&!deps.collect?crawlSite(lease,job,url,step,deps):performStep(lease,step,'public-web',{},async()=>{
-      const found=await(deps.collect??fetchEvidencePack)(url,{signal},true);
+    const inspect=(url:string,step:string)=>performSiteRead(lease,step,async()=>{
+      const found=await(deps.collect??fetchEvidencePack)(url,{signal,browser:deps.siteBrowser},true);
       const requested=new URL(url);
       return found.filter(item=>{
         const origin=institutionalSite(item.url);

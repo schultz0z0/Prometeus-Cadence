@@ -1,11 +1,12 @@
 import type {JobLease,Evidence,Decision} from '../../domain/prospecting.ts';
 import type {Lead} from '../../domain/model.ts';
 import {validateDecisorEvidence,type Decisor,type EnrichmentResult} from '../../domain/enrichment.ts';
-import {withLeasedTransaction} from './worker-db.ts';import {readLeasedJob,finishJob,performStep,handleStepFailure} from './journal.ts';
+import {withLeasedTransaction} from './worker-db.ts';import {readLeasedJob,finishJob,performStep,performSiteRead,handleStepFailure} from './journal.ts';
 import {sourceResult,preflight,type QualificationAdapters} from './qualification.ts';
 import {decide} from './ai/jev.ts';
 import {providerContext} from './steps.ts';import {ApifyAdapter} from './providers/apify.ts';import {ProviderError} from './providers/transport.ts';
 import {saveEvidence} from './evidence.ts';import {hashValue} from './review.ts';import {fetchEvidencePack} from './extraction/fetch-page.ts';
+import {siteUrl} from './site-policy.ts';
 import {assertAiRouteCurrent} from './ai/route-guard.ts';import {conventionalUnit} from './ai/conventional.ts';import {generateDecisors} from './ai/decisors.ts';
 import {qualificationFingerprint} from '../../domain/qualification-policy.ts';import {AppError} from '../errors.ts';
 import type {EnrichmentCheckpoint,EnrichmentGroup} from './enrichment-context.ts';
@@ -35,9 +36,8 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
   let site=lead.site;if(!site){const website=await sourceResult(lease,job,lead,'website',deps);if(website===null)return;site=website.site;}
   const linked=await sourceResult(lease,job,{...lead,name:[lead.companyName||lead.name,...names.slice(0,2),'diretor sócio contato site:linkedin.com/in/'].join(' ')},'website',deps,{suffix:'linkedin'});if(linked===null)return;
   const pages:Evidence[]=[...(registry.evidence??[]),...(linked.evidence??[])];
-  const linkedProfile=linked.evidence?.find(e=>{try{const u=new URL(e.url);return u.protocol==='https:'&&!u.username&&!u.password&&/(^|\.)linkedin\.com$/.test(u.hostname)&&u.pathname.startsWith('/in/');}catch{return false;}})?.url;
-  for(const [index,url]of [site,linkedProfile??linked.site].filter((u,i,a):u is string=>!!u&&a.indexOf(u)===i).entries()){
-   const collected=await performStep(lease,'decisor-evidence:'+group.leadId+':'+index,'public-web',{},()=> (deps.collect??fetchEvidencePack)(url,{signal:deps.signal??new AbortController().signal},index===0));pages.push(...collected);
+  for(const [index,url]of [site,linked.site].filter((u,i,a):u is string=>!!u&&!!siteUrl(u)&&a.indexOf(u)===i).entries()){
+   const collected=await performSiteRead(lease,'decisor-evidence:'+group.leadId+':'+index,()=> (deps.collect??fetchEvidencePack)(url,{signal:deps.signal??new AbortController().signal,browser:deps.siteBrowser},index===0));pages.push(...collected);
   }
   const unique=[...new Map(pages.slice(0,12).map(e=>[e.hash,{...e,text:e.text.slice(0,6000),truncated:e.truncated||e.text.length>6000}])).values()];
   const evidence=await withLeasedTransaction(lease,async c=>{const ids=await saveEvidence(c,lease.jobId,group.leadId,unique);return unique.slice(0,ids.length).map((e,i)=>({...e,id:ids[i]}));});

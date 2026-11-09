@@ -1,9 +1,11 @@
 import {createHash} from 'node:crypto';
+import {siteBrowserUnavailable} from '../prospecting/site-browser.ts';
 import type {JobLease,JobInput} from '../../domain/prospecting.ts';
+import type {Evidence} from '../../domain/prospecting.ts';
 import type {PlanningInput,PlanningEvidence,PlanningProposal} from '../../domain/planning.ts';
 import type {AiRoute} from '../../domain/ai-routing.ts';
 import {withLeasedTransaction} from '../prospecting/worker-db.ts';
-import {readLeasedJob,performStep,finishJob,UncertainStep} from '../prospecting/journal.ts';
+import {readLeasedJob,performStep,performSiteRead,finishJob,UncertainStep} from '../prospecting/journal.ts';
 import {fetchEvidencePack} from '../prospecting/extraction/fetch-page.ts';
 import {generatePlanning} from './model.ts';
 import {rankPlanningOptions} from './ranking.ts';
@@ -19,7 +21,7 @@ import {readApprovedContext} from '../context/repository.ts';
 import {requirePermission} from '../auth/permissions.ts';
 import {ProviderError} from '../prospecting/providers/transport.ts';
 import {AppError} from '../errors.ts';
-export interface PlanningAdapters{signal?:AbortSignal;collect?:typeof fetchEvidencePack;planningGenerate?:typeof generatePlanning;rank?:typeof rankPlanningOptions;diagnose?:typeof diagnoseCodex}
+export interface PlanningAdapters{signal?:AbortSignal;collect?:(...args:Parameters<typeof fetchEvidencePack>)=>Promise<Evidence[]>;planningGenerate?:typeof generatePlanning;rank?:typeof rankPlanningOptions;diagnose?:typeof diagnoseCodex}
 // Planning's generate adapter is named separately from the existing summary adapter.
 export type PlanningExecutionAdapters=Omit<PlanningAdapters,'planningGenerate'>&{generate?:typeof generatePlanning};
 async function preflight(lease:JobLease,job:any,deps:PlanningExecutionAdapters,freshOperationId?:string){
@@ -56,7 +58,7 @@ export async function runPlanning(lease:JobLease,deps:PlanningExecutionAdapters=
    const unknown=await withLeasedTransaction(lease,async c=>(await c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND state IN('prepared','uncertain') LIMIT 1",[lease.jobId])).rowCount);
    await finishJob(lease,unknown?'needs_reconciliation':'cancelled',unknown?'CANCEL_UNCERTAIN':undefined);return;
   }
-  const sources=await performStep(lease,'planning:collect','public-web',{},async()=>{
+  const collect=async()=>{
    await preflight(lease,job,deps);
    const sources:PlanningEvidence[]=[];
    if(input.task==='context_read'){
@@ -73,8 +75,14 @@ export async function runPlanning(lease:JobLease,deps:PlanningExecutionAdapters=
      sources.push(source('selected-lead','lead_fact',{step:{channel:step.channel,body:step.body.slice(0,2000),subject:step.subject?.slice(0,200),delayDays:step.delayDays},lead:{name:lead.name,companyName:lead.companyName,email:lead.email,phone:lead.phone,site:lead.site,city:lead.city,cnpj:lead.cnpj,summary:lead.summary?.slice(0,2000)}}));
     }
    }
-   return withLeasedTransaction(lease,c=>savePlanningEvidence(c,lease,sources));
-  });
+   return sources;
+  };
+  const sources=input.task==='context_read'
+    ?await performSiteRead(lease,'planning:collect',collect,(c,result)=>savePlanningEvidence(c,lease,result))
+    :await performStep(lease,'planning:collect','public-web',{},async()=>{
+      const result=await collect();
+      return withLeasedTransaction(lease,c=>savePlanningEvidence(c,lease,result));
+    });
   const step='planning:generate',operationId=hashValue({job:lease.jobId,step}),conventional=route.conventional;
   const slot=(release:boolean)=>withLeasedTransaction(lease,async c=>Boolean((await c.query('SELECT app.codex_prospecting_slot($1,$2,$3,$4) AS ok',[lease.jobId,lease.token,lease.fence,release])).rows[0].ok));
   const generated=await performStep(lease,step,conventional.provider==='codex-local'?'codex':conventional.provider,{[conventionalUnit(conventional.provider)]:1},async()=>{
@@ -99,6 +107,7 @@ export async function runPlanning(lease:JobLease,deps:PlanningExecutionAdapters=
   }
   await finishJob(lease,'completed');
  }catch(error){
+  if(siteBrowserUnavailable(error))throw error;
   if(error instanceof UncertainStep)return;
   if(error instanceof AppError&&error.code==='STALE_JOB')throw error;
   const hasProposal=await withLeasedTransaction(lease,async c=>(await c.query('SELECT 1 FROM app.planning_proposal WHERE job_id=$1',[lease.jobId])).rowCount);

@@ -1,4 +1,5 @@
 import 'server-only';
+import {siteBrowserUnavailable} from '../prospecting/site-browser.ts';
 import {z} from 'zod';
 import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
@@ -10,7 +11,7 @@ import {peopleContractVersion,reviewCompanyPeople,resolveIdentityCandidates,sani
 import {researchUrl,matchCompanySource} from '../../domain/company-research.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {withLeasedTransaction,workerPool} from '../prospecting/worker-db.ts';
-import {readLeasedJob,performStep,finishJob,handleStepFailure,UncertainStep} from '../prospecting/journal.ts';
+import {readLeasedJob,performStep,performSiteRead,finishJob,handleStepFailure,UncertainStep} from '../prospecting/journal.ts';
 import {sourceResults,preflight} from '../prospecting/qualification.ts';
 import {decide} from '../prospecting/ai/jev.ts';
 import {cancelRemoteRuns} from '../prospecting/enrichment.ts';
@@ -94,7 +95,7 @@ export async function resolveCompanyPeople(lease:JobLease,deps:PeopleAdapters={}
    identity={caseId:row.id,cnpj:null,legalName:null,state:'missing',evidence:[]};people=[];missing.push(group.cacheId?'CACHE_EXPIRADO':'LIMITE_DO_LOTE');
   }else{
    const failed=async(step:string)=>withLeasedTransaction(lease,async c=>!!(await c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND step=$2 AND state='failed'",[lease.jobId,step])).rowCount);
-   const collect=async(url:string)=>{const parsed=researchUrl(url);if(!parsed){missing.push('FONTE_INVALIDA');return;}if(/(^|[.])linkedin[.]com$/i.test(parsed.hostname)){missing.push('LINKEDIN_APENAS_INDEXADO');return;}const step='people-page:'+lead.id+':'+hashValue(parsed.toString());if(await failed(step)){missing.push('PAGINA_INDISPONIVEL');return;}try{const e=await performStep(lease,step,'public-web',{},async()=>{await publication(lease,job,async()=>{});const page=await(deps.collect??((url,signal)=>fetchPublicPage(url,{signal})))(parsed.toString(),signal);return page?safeEvidence(lease,lead,page):null;});if(e&&researchUrl(e.url))pages.push(e);}catch(e){if(e instanceof AppError||e instanceof UncertainStep||signal.aborted)throw e;missing.push('PAGINA_INDISPONIVEL');}};
+   const collect=async(url:string)=>{const parsed=researchUrl(url);if(!parsed){missing.push('FONTE_INVALIDA');return;}if(/(^|[.])linkedin[.]com$/i.test(parsed.hostname)){missing.push('LINKEDIN_APENAS_INDEXADO');return;}const step='people-page:'+lead.id+':'+hashValue(parsed.toString());if(await failed(step)){missing.push('PAGINA_INDISPONIVEL');return;}try{const e=await performSiteRead(lease,step,async()=>{await publication(lease,job,async()=>{});const page=await(deps.collect??((url,signal)=>fetchPublicPage(url,{signal})))(parsed.toString(),signal);return page?safeEvidence(lease,lead,page):null;});if(e&&researchUrl(e.url))pages.push(e);}catch(e){if(siteBrowserUnavailable(e)||e instanceof AppError||e instanceof UncertainStep||signal.aborted)throw e;missing.push('PAGINA_INDISPONIVEL');}};
    const lookup=async(module:'website'|'registry',candidate:Lead,suffix:string,partners=false)=>{const step=module+':'+lead.id+':'+suffix;if(await failed(step)){missing.push('FONTE_INDISPONIVEL');return[];}try{const result=await sourceResults(lease,job,candidate,module,{apify:deps.apify,signal},{suffix,partners,limit:5,beforeStart:operationId=>publication(lease,job,async()=>{},operationId)});if(result===null)return null;for(const r of result)pages.push(...(r.evidence??[]).filter(e=>researchUrl(e.url)).slice(0,1).map(e=>safeEvidence(lease,lead,e)));return result;}catch(e){if(e instanceof AppError||e instanceof UncertainStep||e instanceof ProviderError&&e.uncertain||signal.aborted)throw e;missing.push('FONTE_INDISPONIVEL');return[];}};
    if(lead.site)await collect(lead.site);
    const candidates:IdentityCandidate[]=[],known=normalizeCnpj(lead.cnpj),companyPages=()=>pages.filter(p=>matchCompanySource({companyDomain:lead.site??'',candidateDomain:p.url,corroborated:false})==='matched'&&[lead.name,lead.companyName].some(n=>n&&fold(p.text).includes(fold(n))));

@@ -13,7 +13,7 @@ import {admitDiscoveryPage,admitRegistryPage,markDiscoveryRunDone} from './disco
 import type {QualificationAdapters} from './qualification.ts';
 import {workspaceUsageCaps} from './workspace-config.ts';
 import {capacityConfigurationError} from './usage.ts';
-import {loopbackSiteBrowser,siteBrowserUnavailable,siteCollectorVersion} from './site-browser.ts';
+import {loopbackSiteBrowser,siteCollectorVersion} from './site-browser.ts';
 import {prospectingConfig} from './config.ts';
 export {runQualification} from './qualification.ts';
 export interface GenerationAdapters{apify?:SourceAdapter;apollo?:ApolloAdapter;signal?:AbortSignal;collect?:QualificationAdapters['collect'];siteBrowser?:QualificationAdapters['siteBrowser']}
@@ -62,14 +62,12 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
       else if((await withLeasedTransaction(lease,c=>c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND(state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain')",[lease.jobId]))).rowCount){await finishJob(lease,'needs_reconciliation','CANCEL_UNCERTAIN');return;}
       await finishJob(lease,'cancelled');return;
     }
-    if(job.checkpoint.registryFirst&&(job.checkpoint.siteCollector!==siteCollectorVersion||
+    if(admission&&(job.checkpoint.execution?.siteCollector!==siteCollectorVersion||
       job.checkpoint.execution?.version!==prospectingConfig().version))throw new ProviderError('PROFILE_CHANGED');
     if(job.checkpoint.exhausted===true||job.counts.found>=scanLimit||(admission&&job.counts.inserted>=input.limit)){await finishDiscovery(job.counts.inserted);return;}
-    if(job.checkpoint.registryFirst){
+    if(job.checkpoint.registryFirst&&!adapters.collect){
       const browser=adapters.siteBrowser??loopbackSiteBrowser;
       if(browser.available&&!(await browser.available(ctx.signal)))throw new ProviderError('SITE_BROWSER_UNAVAILABLE');
-      if(job.error_code==='WAITING_SITE_BROWSER')await withLeasedTransaction(lease,c=>c.query(
-        'UPDATE app.prospecting_job SET error_code=NULL,error_message=NULL,revision=revision+1 WHERE id=$1',[lease.jobId]));
     }
     if(input.source==='APOLLO'){
       const pageNo=Number(job.checkpoint.cursor??1),apollo=adapters.apollo??new ApolloAdapter();
@@ -123,12 +121,6 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
     const counts=await withLeasedTransaction(lease,c=>ingestPage(c,lease,page));
     if(page.exhausted||page.rawCount>=remaining||(admission&&job.counts.inserted+counts.inserted>=input.limit))await finishDiscovery(job.counts.inserted+counts.inserted,job.counts.found+page.rawCount);
   }catch(error){
-    if(job.checkpoint.registryFirst&&siteBrowserUnavailable(error)){
-      await withLeasedTransaction(lease,c=>c.query(
-        "UPDATE app.prospecting_job SET capacity_retry_at=clock_timestamp()+interval '30 seconds',error_code='WAITING_SITE_BROWSER',error_message=$2,revision=revision+1,updated_at=now() WHERE id=$1 AND state IN('running','waiting_provider')",
-        [lease.jobId,'A busca será retomada quando o navegador de coleta voltar.']));
-      return;
-    }
     await handleStepFailure(lease,error);
   }
 }

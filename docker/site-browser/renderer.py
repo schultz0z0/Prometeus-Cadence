@@ -202,13 +202,21 @@ async def render_page(url, deadline_ms, fetch, *, executable=None, queue_navigat
         raise BrowserFailure("PAGE_UNAVAILABLE")
     text = snapshot["text"].strip()
     links = {}
+    contacts = {}
+    external = {}
     for link in snapshot["links"]:
+        if link.startswith(("mailto:", "tel:")) and len(link) <= 500:
+            contacts[link] = None
+            continue
         try:
-            parsed, host, _ = public_url(link)
+            parsed, host, _ = public_url(link, outbound=False)
         except PolicyError:
             continue
         if same_domain(domain, host):
             links[parsed._replace(fragment="").geturl()] = None
+        else:
+            external[parsed._replace(fragment="").geturl()] = None
     return {"url": snapshot["url"], "status": response.status, "text": text[:24000],
             "truncated": (len(text) > 24000 or len(links) > 500 or len(snapshot["links"]) > 1500
-                          or resource_limited or snapshot.get("pagination_limited", False)), "links": list(links)[:500]}
+                          or resource_limited or snapshot.get("pagination_limited", False)), "links": list(links)[:500],
+            "contacts": list(contacts)[:100], "externalLinks": list(external)[:100]}

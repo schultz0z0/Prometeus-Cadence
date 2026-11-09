@@ -14,6 +14,8 @@ for (const prefix of ["MIGRATOR", "AUTH", "APP", "WORKER", "INGRESS", "DISPATCH"
 }
 process.env.NODE_ENV = "test";
 process.env.CADENCE_INTEGRATION = "1";
+process.env.SITE_BROWSER_ENABLED = "true";
+process.env.SITE_BROWSER_TOKEN = "fixture-only-integration-browser-token";
 const known = [
   "06e2-data-lifecycle",
   "06f-assistant-experience",

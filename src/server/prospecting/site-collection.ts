@@ -1,66 +1,9 @@
 import type {JobLease} from '../../domain/prospecting.ts';
 import {loopbackSiteBrowser,siteBrowserUnavailable,type SiteBrowser} from './site-browser.ts';
-import {claimSiteUrl,openSiteQueue,saveSiteUrl,siteCoverage,siteQueueSnapshot,siteUrl,type SitePageResult,type SiteUrl} from './site-queue.ts';
+import {claimSiteUrl,openSiteQueue,saveSiteUrl,siteCoverage,siteQueueSnapshot,type SitePageResult,type SiteUrl} from './site-queue.ts';
 import {ProviderError} from './providers/transport.ts';
+import {siteUrl,parseRobots,allows,siteRedirectStatuses} from './site-policy.ts';
 export type {SiteBrowser} from './site-browser.ts';
-
-type Rule={allow:boolean; pattern:string};
-const normalized=(value:string)=>encodeURI(value).replace(/%25([\dA-F]{2})/gi,(_,hex:string)=>{
-  const char=String.fromCharCode(parseInt(hex,16));
-  return /[\w.~-]/.test(char)?char:'%'+hex.toUpperCase();
-});
-
-function parseRobots(text:string) {
-  const groups:{agents:string[]; rules:Rule[]}[]=[];
-  const sitemaps:string[]=[];
-  let group:typeof groups[number]|undefined;
-  let afterRules=false;
-  for (const line of text.split(/\r?\n/)) {
-    const [,raw='',value='']=line.split('#',1)[0].match(/^\s*([\w-]+)\s*:\s*(.*?)\s*$/)??[];
-    const field=raw.toLowerCase();
-    if (field==='sitemap'&&value)sitemaps.push(value);
-    if (field==='user-agent') {
-      if(!group||afterRules){group={agents:[],rules:[]};groups.push(group);afterRules=false;}
-      group.agents.push(value.toLowerCase());
-    }
-    if (group&&(field==='allow'||field==='disallow')) {
-      afterRules=true;
-      if(value.startsWith('/'))group.rules.push({allow:field==='allow',pattern:normalized(value)});
-    }
-  }
-  const exact=groups.filter(item=>item.agents.includes('prometeuscadence'));
-  const chosen=exact.length?exact:groups.filter(item=>item.agents.includes('*'));
-  return {rules:chosen.flatMap(item=>item.rules),sitemaps};
-}
-
-// Match in linear passes over path segments. A remote robots.txt cannot inject a regular expression.
-function matches(path:string,pattern:string) {
-  const anchored=pattern.endsWith('$');
-  const [prefix,...middle]=(anchored?pattern.slice(0,-1):pattern).split('*');
-  if (!path.startsWith(prefix))return false;
-  if (!middle.length)return !anchored||path===prefix;
-  const suffix=anchored?middle.pop()!:'';
-  if (!path.endsWith(suffix))return false;
-  const body=path.slice(prefix.length,path.length-suffix.length);
-  let offset=0;
-  for (const part of middle) {
-    const found=body.indexOf(part,offset);
-    if (found<0)return false;
-    offset=found+part.length;
-  }
-  return path.length>=prefix.length+suffix.length+offset;
-}
-
-function allows(url:string,rules:Rule[]) {
-  const {pathname,search}=new URL(url), path=normalized(pathname+search);
-  let best:Rule|undefined;
-  for (const rule of rules) {
-    if (best && (rule.pattern.length<best.pattern.length ||
-        (rule.pattern.length===best.pattern.length&&best.allow)))continue;
-    if (matches(path,rule.pattern))best=rule;
-  }
-  return best?.allow??true;
-}
 
 function sitemapLinks(text:string):SiteUrl[] {
   const kind=/^\s*(?:<\?xml[^>]*>\s*)?<sitemapindex(?:\s|>)/i.test(text)?'sitemap':'page';
@@ -82,8 +25,6 @@ function frontier(root:string,base:string,items:SiteUrl[]) {
   }
   return [...urls.values()];
 }
-
-const redirectStatuses=[301,302,303,307,308];
 
 export async function collectSiteTick(lease:JobLease,root:string,browser:SiteBrowser=loopbackSiteBrowser,signal:AbortSignal=AbortSignal.timeout(35000)){
   signal.throwIfAborted();
@@ -107,7 +48,7 @@ export async function collectSiteTick(lease:JobLease,root:string,browser:SiteBro
         if (claim.kind==='robots') {
           let current=claim.url;
           const visited=new Set([current]);
-          while (redirectStatuses.includes(result.status)){
+          while (siteRedirectStatuses.includes(result.status)){
             const target=result.redirect&&siteUrl(result.redirect,current);
             if(!target||!siteUrl(target,root)||visited.has(target)||visited.size>=6)break;
             visited.add(target);
@@ -117,7 +58,7 @@ export async function collectSiteTick(lease:JobLease,root:string,browser:SiteBro
         }
         const status=result.status;
         if(status===408||status===429||status>=500)failure={state:'retry',reason:'HTTP_'+status};
-        else if(redirectStatuses.includes(status)&&claim.kind!=='robots'){
+        else if(siteRedirectStatuses.includes(status)&&claim.kind!=='robots'){
           const redirect=result.redirect&&siteUrl(result.redirect,claim.url);
           if(redirect&&siteUrl(redirect,root)){
             result={...result,redirect};

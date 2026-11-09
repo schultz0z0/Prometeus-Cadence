@@ -45,7 +45,7 @@ async function basis(c:PoolClient,p:Principal,input:JourneyInput,checkExtraction
  const blockers=[...s.blockers,...resolved.blockers];if(!context?.offer||!context.idealCustomer)blockers.push('Aprove a oferta e o cliente ideal no contexto da empresa.');
  if(!s.config.ready.CNPJ)blockers.push('Configure a consulta de CNPJ da Apify para a Prospecção completa.');
  if(input.registry&&!s.config.ready.MAPS)blockers.push('Configure o Google Maps da Apify para confirmar as empresas.');
- if(input.registry&&!siteBrowserReady())blockers.push('Configure o navegador de coleta da plataforma para confirmar os sites das empresas.');
+ if(!siteBrowserReady())blockers.push('Configure o navegador de coleta da plataforma para confirmar os sites das empresas.');
  if(!s.config.ready.WEB)blockers.push('Configure a busca web da Apify para descobrir sites na Prospecção completa.');
  return{s,frozen,hash:hashValue(frozen),blockers};
 }

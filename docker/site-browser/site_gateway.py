@@ -31,7 +31,7 @@ def public_address(value):
     return address.is_global and not address.is_multicast and not address.is_reserved
 
 
-def public_url(value):
+def public_url(value, *, outbound=True):
     try:
         if not isinstance(value, str) or len(value) > 3000 or re.search(r"[\x00-\x20\x7f\\]", value):
             raise ValueError
@@ -40,6 +40,8 @@ def public_url(value):
             raise ValueError
         port = 443 if url.scheme == "https" else 80
         host = (url.hostname or "").rstrip(".").encode("idna").decode("ascii")
+        if outbound and re.search(r"(^|\.)(linkedin\.com|licdn\.com|unipile\.com)$", host):
+            raise ValueError
         if url.port not in {None, port} or not host or host.endswith((".local", ".internal", ".localhost")):
             raise ValueError
         try:

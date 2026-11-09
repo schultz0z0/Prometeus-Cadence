@@ -1,4 +1,3 @@
-import {ApifySiteCrawler} from '../../src/server/prospecting/providers/site-crawler.ts';
 import test,{after,beforeEach} from 'node:test';import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';
 import {configureProspectingTest,prospectingUser,closeProspectingPools,testAdmin} from './prospecting-helpers.ts';
 import {withWorkspaceTransaction,withContextTransaction} from '../../src/server/db/transaction.ts';
@@ -251,34 +250,29 @@ test('discovery only delivers a verified active company and reports a shortfall'
  assert.equal(current.stages[0].state,'partial');assert.equal(current.stages.filter(s=>s.name==='research').length,1,JSON.stringify(current));
  const leads=(await readWorkspaceSnapshot(f.p)).data.leads;assert.equal(leads.length,1);assert.equal(leads[0].cnpj,'37297479000180');
 });
-test('admission uses pages from a timed-out Apify crawl without paying for a second start',async()=>{
+test('legacy Maps-first admission uses Chromium even with the retired Actor configured',async t=>{
+ const previous=[process.env.APIFY_SITE_ACTOR,process.env.APIFY_SITE_BUILD];
+ t.after(()=>{for(const [i,key] of ['APIFY_SITE_ACTOR','APIFY_SITE_BUILD'].entries()){if(previous[i]===undefined)delete process.env[key];else process.env[key]=previous[i];}});
  const f=await fixture(1);
  process.env.APIFY_SITE_ACTOR='apify/website-content-crawler';process.env.APIFY_SITE_BUILD='fixture-build';
- const {journey}=await start(f);let crawlStarts=0,polls=0;
+ const {journey}=await start(f);const calls:string[]=[];
+ t.mock.method(globalThis,'fetch',async()=>{throw Error('Unexpected external HTTP');});
  const apify={start:async(ctx:any)=>{
+  calls.push(ctx.profile.source);
   const candidates=ctx.profile.source==='MAPS'?[{sourceRef:'maps',name:'[RE] Empresa',site:'https://example.com',phone:'+5511987654321',source:'MAPS' as const,evidence:[{id:'maps',url:'https://example.com/maps',text:'Categoria do Maps: esquadrias',hash:'maps',fetchedAt:new Date().toISOString(),truncated:false}]}]
    :[{sourceRef:'registry',name:'[RE] Empresa',cnpj:'37297479000180',source:'CNPJ' as const,facts:{registrationStatus:'ATIVA'}}];
   return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,nextCursor:null,exhausted:true,rawCount:candidates.length,rejected:[],usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No cancellation');}};
- const siteCrawler=new ApifySiteCrawler(async(url,init)=>{
-  if(init?.method==='POST'){
-   crawlStarts++;
-   return Response.json({data:{id:'crawl',defaultDatasetId:'site'}});
-  }
-  if(String(url).endsWith('/actor-runs/crawl')){
-   return Response.json({data:{status:++polls===1?'TIMING-OUT':'TIMED-OUT',defaultDatasetId:'site'}});
-  }
-  assert.match(String(url),/datasets\/site\/items/);
-  return Response.json([
-   {url:'https://example.com/',text:'Empresa +55 11 98765-4321'},
-   {url:'https://example.com/legal',text:'CNPJ 37.297.479/0001-80'},
-  ]);
- });
- await runWorkerOnce({apify,siteCrawler},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
- assert.equal((await getJob(f.p,journey.stages[0].jobId!)).state,'running');
- assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,0);
- await runWorkerOnce({apify,siteCrawler},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
- assert.equal(crawlStarts,1);assert.equal((await readWorkspaceSnapshot(f.p)).data.leads[0].cnpj,'37297479000180');
+ const browserReads:string[]=[];
+ const siteBrowser={async read(kind:string,url:string){
+  browserReads.push(kind+':'+new URL(url).pathname);
+  if(kind==='robots')return {status:404,text:''};
+  return {status:200,text:'Empresa +55 11 98765-4321 CNPJ 37.297.479/0001-80'};
+ }};
+ await runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+ assert.deepEqual(calls,['MAPS','CNPJ']);
+ assert.deepEqual(browserReads,['robots:/robots.txt','page:/','page:/sobre','page:/contato']);
+ assert.equal((await readWorkspaceSnapshot(f.p)).data.leads[0].cnpj,'37297479000180');
  assert.equal((await getJourney(f.p,journey.id)).stages[0].state,'completed');
  const evidence=(await testAdmin(c=>c.query("SELECT text FROM app.lead_evidence WHERE workspace_id=$1",[f.p.workspaceId]))).rows;
  assert.ok(evidence.some(row=>row.text.includes('37.297.479')));

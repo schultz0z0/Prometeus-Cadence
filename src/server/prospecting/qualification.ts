@@ -1,8 +1,8 @@
 import type {JobLease,JobInput,Evidence,ModuleResult,Decision,Generation,ProviderUsage,Candidate} from '../../domain/prospecting.ts';
-import type {SiteBrowser} from './site-browser.ts';
+import {siteBrowserUnavailable,type SiteBrowser} from './site-browser.ts';
 import type {Lead,CompanyProfile} from '../../domain/model.ts';
 import {withLeasedTransaction} from './worker-db.ts';
-import {readLeasedJob,finishJob,performStep,handleStepFailure} from './journal.ts';
+import {readLeasedJob,finishJob,performStep,performSiteRead,handleStepFailure} from './journal.ts';
 import {recordModuleResult} from './results.ts';
 import {saveEvidence} from './evidence.ts';
 import {fetchEvidencePack} from './extraction/fetch-page.ts';
@@ -29,8 +29,8 @@ import {runEnrichment} from './enrichment.ts';
 import {buildAiSkill} from '../../domain/ai-skills.ts';
 import type {DecisorGenerator} from './ai/decisors.ts';
 export interface QualificationAdapters{
-  signal?:AbortSignal;apify?:SourceAdapter;siteCrawler?:SourceAdapter;siteBrowser?:SiteBrowser;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
-  collect?:typeof fetchEvidencePack;checkEmail?:typeof checkEmailDns;decisors?:DecisorGenerator;
+  signal?:AbortSignal;apify?:SourceAdapter;siteBrowser?:SiteBrowser;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
+  collect?:(...args:Parameters<typeof fetchEvidencePack>)=>Promise<Evidence[]>;checkEmail?:typeof checkEmailDns;decisors?:DecisorGenerator;
   decide?:typeof decide;generate?:typeof generate;
 }
 
@@ -109,8 +109,8 @@ async function researchEvidence(lease:JobLease,lead:Lead):Promise<Evidence[]>{
 async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,deps:QualificationAdapters,verify=false):Promise<Evidence[]>{
   const site=lead.site;if(!site)return[];
   const step=verify?'verify-site:'+lead.id+':'+hashValue(new URL(site).host):'evidence:'+lead.id+':'+deep;
-  return performStep(lease,step,'public-web',{},async()=>{
-    let pages=job.checkpoint.purpose==='ai-connection-test'?[{id:'connection-sample',url:'https://example.com/',fetchedAt:new Date().toISOString(),text:'Evidência sintética de teste: clínica odontológica fictícia com consultas e ortodontia. Não representa uma empresa real.',hash:hashValue('connection-sample-v1'),truncated:false}]:await (deps.collect??fetchEvidencePack)(site,{signal:deps.signal??new AbortController().signal},deep);
+  return performSiteRead<Evidence[]>(lease,step,async()=>{
+    let pages=job.checkpoint.purpose==='ai-connection-test'?[{id:'connection-sample',url:'https://example.com/',fetchedAt:new Date().toISOString(),text:'Evidência sintética de teste: clínica odontológica fictícia com consultas e ortodontia. Não representa uma empresa real.',hash:hashValue('connection-sample-v1'),truncated:false}]:await (deps.collect??fetchEvidencePack)(site,{signal:deps.signal??new AbortController().signal,browser:deps.siteBrowser},deep);
     if(verify){
       const requested=new URL(site);
       pages=pages.filter(page=>{
@@ -121,10 +121,10 @@ async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,dep
       });
       if(!verifySiteContent(lead,pages))return[];
     }
-    return withLeasedTransaction(lease,async c=>{
-      const ids=await saveEvidence(c,lease.jobId,lead.id,pages);
-      return pages.slice(0,ids.length).map((e,i)=>({...e,id:ids[i]}));
-    });
+    return pages;
+  },async(c,pages)=>{
+    const ids=await saveEvidence(c,lease.jobId,lead.id,pages);
+    return pages.slice(0,ids.length).map((e,i)=>({...e,id:ids[i]}));
   });
 }
 export async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string}={}):Promise<Partial<Candidate>|null>{const result=await sourceResults(lease,job,lead,module,deps,options);return result===null?null:result[0]??{};}
@@ -285,6 +285,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       if(job.checkpoint.automation)await syncOccurrenceJob(c,job.checkpoint.automation.occurrenceId);
     });
   }catch(error){
+    if(siteBrowserUnavailable(error))throw error;
     if(current&&!(error instanceof AppError)&&!(error instanceof Error&&error.constructor.name==='UncertainStep')){
       await withLeasedTransaction(lease,c=>recordModuleResult(c,lease,current!.leadId,{module:current!.module,status:'failed',proposed:{},base:{},reasons:[error instanceof ProviderError?error.code:'MODULE_FAILED'],evidenceIds:[],usage:null,contextVersion:job.checkpoint.context?.version??0}));return;
     }

@@ -4,28 +4,15 @@ import type {JobLease} from '../../domain/prospecting.ts';
 import {AppError} from '../errors.ts';
 import {assertJobLease} from './repository.ts';
 import {withLeasedTransaction} from './worker-db.ts';
+import {siteUrl} from './site-policy.ts';
 
 export type SiteUrl = {url:string; kind:'robots'|'sitemap'|'page'};
-export type SitePageResult = {status:number; text:string; finalUrl?:string; redirect?:string; links?:string[]; truncated?:boolean};
+export type SitePageResult = {status:number; text:string; finalUrl?:string; redirect?:string; links?:string[]; contacts?:string[]; externalLinks?:string[]; truncated?:boolean};
 export type SiteClaim = SiteUrl & {failures:number};
 type SiteState = 'pending'|'processing'|'completed'|'blocked'|'failed';
 type SiteRow = SiteClaim & {state:SiteState; retry_at:Date|string; result:(SitePageResult & {hash:string; fetchedAt:string})|null; reason:string|null};
 const limit = 500;
 const hash = (value:string) => createHash('sha256').update(value).digest('hex');
-
-export function siteUrl(value:string, root?:string) {
-  try {
-    const url = new URL(value,root);
-    if (!['https:','http:'].includes(url.protocol) || url.username || url.password || url.port) return null;
-    if (root) {
-      const origin=new URL(root);
-      if (url.hostname.replace(/^www\./,'')!==origin.hostname.replace(/^www\./,'') ||
-          (origin.protocol==='https:' && url.protocol!=='https:')) return null;
-    }
-    url.hash='';
-    return url.href.length<=1800 ? url.href : null;
-  } catch {return null;}
-}
 
 function priority({url,kind}:SiteUrl) {
   if (kind==='robots') return 0;

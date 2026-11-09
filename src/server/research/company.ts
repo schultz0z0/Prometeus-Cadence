@@ -14,6 +14,7 @@ import {AppError} from '../errors.ts';
 import {prepareJob,confirmJob} from '../prospecting/service.ts';
 import {createReviewToken,verifyReviewToken,hashValue} from '../prospecting/review.ts';
 import {readLeasedJob,performStep,finishJob,handleStepFailure,UncertainStep} from '../prospecting/journal.ts';
+import {siteBrowserUnavailable} from '../prospecting/site-browser.ts';
 import {sourceResult,sourceResults,verifySiteContent} from '../prospecting/qualification.ts';
 import {cancelRemoteRuns} from '../prospecting/enrichment.ts';
 import {prospectingConfig} from '../prospecting/config.ts';
@@ -105,7 +106,7 @@ const defaultCollect=async(_kind:ResearchKind,urls:string[],signal:AbortSignal):
 async function failedResearchStep(lease:JobLease,step:string){return withLeasedTransaction(lease,async c=>!!(await c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND step=$2 AND state='failed'",[lease.jobId,step])).rowCount);}
 
 async function cancelResearch(lease:JobLease,job:any,deps:ResearchAdapters){
- const unknown=await withLeasedTransaction(lease,async c=>!!(await c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') LIMIT 1",[lease.jobId])).rowCount);
+ const unknown=await withLeasedTransaction(lease,async c=>!!(await c.query("SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND provider<>'site-browser' AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') LIMIT 1",[lease.jobId])).rowCount);
  if(unknown){await finishJob(lease,'needs_reconciliation','CANCEL_UNCERTAIN');return;}
  if(await cancelRemoteRuns(lease,job,{apify:deps.apify,signal:deps.signal}))await finishJob(lease,'cancelled');
 }
@@ -138,10 +139,10 @@ export async function runCompanyResearch(lease:JobLease,deps:ResearchAdapters={}
     if(url.hostname.replace(/^www\./,'')==='linkedin.com'){missing.push('LINKEDIN_APENAS_RESULTADOS_PUBLICOS');continue;}
     let collected:ResearchPage[];
     if(await failedResearchStep(lease,'research-page:'+lead.id+':'+hashValue(url.toString()))){missing.push(entry.kind==='social'?'REDE_SOCIAL_INDISPONIVEL':'PAGINA_INDISPONIVEL');continue;}
-    try{collected=await performStep(lease,'research-page:'+lead.id+':'+hashValue(url.toString()),'public-web',{},async()=>{
+    try{collected=await performStep(lease,'research-page:'+lead.id+':'+hashValue(url.toString()),'site-browser',{},async()=>{
       const result=await(deps.collect??defaultCollect)(entry.kind,[url.toString()],signal);
       return result.slice(0,1).map(p=>({...p,text:pageQuote(p),hash:hashValue(pageQuote(p)),sourceKind:entry.kind}));
-    });}catch(e){if(e instanceof UncertainStep||e instanceof AppError||signal.aborted)throw e;missing.push(entry.kind==='social'?'REDE_SOCIAL_INDISPONIVEL':'PAGINA_INDISPONIVEL');continue;}
+    });}catch(e){if(siteBrowserUnavailable(e)||e instanceof UncertainStep||e instanceof AppError||signal.aborted)throw e;missing.push(entry.kind==='social'?'REDE_SOCIAL_INDISPONIVEL':'PAGINA_INDISPONIVEL');continue;}
     for(const page of collected){
      if(!researchUrl(page.url)){missing.push('FONTE_PUBLICA_INVALIDA');continue;}
      page.corroborated=supportsCompany(lead,page,entry.kind);pages.push(page);

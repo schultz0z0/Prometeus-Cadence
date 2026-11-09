@@ -24,6 +24,7 @@ import {enrichmentCheckpoint} from './enrichment-context.ts';
 import {processedQualifications} from './processed.ts';
 import {readExtractionDay} from '../billing/extraction-day.ts';
 import {readQualificationDay} from '../billing/qualification-day.ts';
+import {siteBrowserReady,siteBrowserStatus,siteCollectorVersion} from './site-browser.ts';
 const secret=()=>{const s=process.env.BETTER_AUTH_SECRET;if(!s)throw Error('Review signing is not configured');return s;};
 async function authorized(c:PoolClient,p:Principal){
   const role=(await c.query('SELECT app.current_role() AS role')).rows[0]?.role;
@@ -67,10 +68,18 @@ export async function prospectingReviewState(c:PoolClient,p:Principal,input:Pros
   }
   const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);
   const enrichment=input.kind==='qualification'?input.companyPeople?await peopleCheckpoint(c,input,bases,config,aiRoute,context):await enrichmentCheckpoint(c,input,bases,config,aiRoute):null;
+  if(input.kind==='qualification'&&!siteBrowserReady()){
+    const needsBrowser=input.companyResearch?input.companyResearch.sourceKinds.some(kind=>kind!=='registry'):
+      input.enrichment?(enrichment?.reserveCredits??0)>0:input.modules.includes('website')||Object.values(bases).some(value=>{
+        const lead=value as {site?:string;cnpj?:string};
+        return !!lead.site&&input.modules.some(module=>module!=='validateEmail'&&(module!=='registry'||!lead.cnpj));
+      });
+    if(needsBrowser)blockers.push('O navegador de coleta está desabilitado ou sem configuração.');
+  }
   blockers.push(...requirements(config,input,p.workspaceId,aiRoute,enrichment?.reserveCredits,checkTechnicalCapacity));
   const profileVersion=hashValue({config:config.version,apolloConnection:config.apolloConnection,policy:policy??null,contextVersion:context?.version??0,aiRoute,...(enrichment?{enrichment}: {})});
   const proof={userId:p.userId,workspaceId:p.workspaceId,input,revision,profileVersion};
-  return {config,blockers,proof,profileVersion,aiRoute,enrichment,extractionRemaining,qualificationDay,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,siteCrawler:config.siteCrawler,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:apolloMaxPages(!!config.apolloConnection),apolloConnection:config.apolloConnection,apolloCredential:config.apolloCredential}}};
+  return {config,blockers,proof,profileVersion,aiRoute,enrichment,extractionRemaining,qualificationDay,checkpoint:{context,bases,processed,...(enrichment?{enrichment}:{}),execution:{aiRoute,siteCollector:siteCollectorVersion,version:config.version,profiles:config.profiles,maxChargeUsd:Number(process.env.APIFY_MAX_CHARGE_USD??0),maxPages:apolloMaxPages(!!config.apolloConnection),apolloConnection:config.apolloConnection,apolloCredential:config.apolloCredential}}};
 }
 function parseInput(input:unknown):ProspectingInput{const parsed=jobInputSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise fonte, filtros, destino e quantidade.');return parsed.data;}
 export async function prepareJob(p:Principal,input:unknown):Promise<Review>{
@@ -116,7 +125,7 @@ export async function getJob(p:Principal,id:string):Promise<JobView>{return with
   const row=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[id])).rows[0];
   if(!row)throw new AppError(404,'Execução não encontrada.');
   const usage=(await c.query("SELECT * FROM app.usage_ledger WHERE job_id=$1 AND event='consume' ORDER BY created_at",[id])).rows.map(r=>({provider:r.provider,operationId:r.operation_id,units:r.units,costUsd:r.cost_usd===null?null:Number(r.cost_usd),costKind:r.cost_kind,...r.metadata}));
-  const unresolvedAttempts=(await c.query("SELECT id,provider,step FROM app.prospecting_attempt WHERE job_id=$1 AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') ORDER BY created_at,id",[id])).rows.map(a=>({...a,canAttachRun:a.provider==='apify'&&(row.kind==='generation'||a.step.startsWith('registry:')||a.step.startsWith('website:')||a.step.startsWith('abort:'))}));
+  const unresolvedAttempts=(await c.query("SELECT id,provider,step FROM app.prospecting_attempt WHERE job_id=$1 AND provider<>'site-browser' AND (state IN('prepared','uncertain') OR payload->'result'->>'kind'='uncertain') ORDER BY created_at,id",[id])).rows.map(a=>({...a,canAttachRun:a.provider==='apify'&&(row.kind==='generation'||a.step.startsWith('registry:')||a.step.startsWith('website:')||a.step.startsWith('abort:'))}));
   const role=(await c.query("SELECT app.current_role() AS role")).rows[0].role;const retainedResults=['owner','admin'].includes(role)?(await c.query("SELECT id,provider,payload FROM app.prospecting_attempt WHERE job_id=$1 AND payload->>'receivedWithoutMembership'='true' ORDER BY created_at,id LIMIT 10",[id])).rows.map(a=>({operationId:a.id,provider:a.provider,result:a.payload.result,receivedAt:a.payload.receivedAt})):undefined;
   return {...jobView(row),usage,unresolvedAttempts,retainedResults};
 });}
@@ -140,4 +149,4 @@ export async function cancelJob(p:Principal,id:string):Promise<JobView>{return w
   if(state==='cancelled'){await releaseUnused(c,id);if(row.checkpoint?.automation)await c.query('SELECT app.sync_cancelled_automation_job($1)',[id]);}
   await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,'prospecting.cancel')",[p.workspaceId,p.userId]);return jobView(updated);
 });}
-export async function providerCapabilities(p:Principal){const policy=await withWorkspaceTransaction(p,readAiPolicy),provider=policy.conventionalProvider,entry=provider?conventionalConfig(p.workspaceId).conventional[provider]:null;const c=prospectingConfig();return {enabled:c.enabled,sources:Object.fromEntries(Object.entries(c.ready).map(([source,configured])=>[source,{configured}])),decision:{model:'typesafe/jev-1.13',configured:c.jevReady},generation:{provider:provider??'none',configured:!!entry?.configured},limits:{perJob:500,pageSize:100}};}
+export async function providerCapabilities(p:Principal){const [policy,browser]=await Promise.all([withWorkspaceTransaction(p,readAiPolicy),siteBrowserStatus()]),provider=policy.conventionalProvider,entry=provider?conventionalConfig(p.workspaceId).conventional[provider]:null;const c=prospectingConfig();return {enabled:c.enabled,browser,sources:Object.fromEntries(Object.entries(c.ready).map(([source,configured])=>[source,{configured}])),decision:{model:'typesafe/jev-1.13',configured:c.jevReady},generation:{provider:provider??'none',configured:!!entry?.configured},limits:{perJob:500,pageSize:100}};}

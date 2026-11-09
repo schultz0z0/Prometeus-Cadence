@@ -81,11 +81,16 @@ def app_for(role, token, gateway="http://site-browser-gateway:8081/fetch"):
             except TimeoutError:
                 return web.json_response({"code": "PAGE_TIMEOUT"}, status=504)
             except (OSError, ClientError):
+                if role == "gateway" and request.path == "/render":
+                    return web.json_response({"code": "SITE_BROWSER_UNAVAILABLE"}, status=503)
                 return web.json_response({"code": "PAGE_UNAVAILABLE"}, status=502)
             except (json.JSONDecodeError, ValueError, TypeError):
                 return web.json_response({"code": "INVALID_REQUEST"}, status=400)
 
     async def health(_request):
+        provided = _request.headers.get("Authorization")
+        if provided is not None and not hmac.compare_digest(provided.encode(), ("Bearer " + token).encode()):
+            return web.json_response({"status": "unavailable"}, status=401)
         if role == "gateway":
             try:
                 async with _request.app[INGRESS].get("http://site-browser:8080/health", timeout=2, allow_redirects=False) as response:

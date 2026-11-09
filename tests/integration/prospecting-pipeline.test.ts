@@ -13,7 +13,7 @@ import {executeWorkspaceCommand,readWorkspaceSnapshot} from '../../src/server/wo
 import {configureProspectingTest,prospectingUser,generationInput,grantTestLease,testAdmin,closeProspectingPools,seedHybridPolicy} from './prospecting-helpers.ts';
 import {resetRateLimits} from './helpers.ts';
 import type {CandidatePage} from '../../src/domain/prospecting.ts';
-import {runWorkerOnce} from '../../src/server/prospecting/worker.ts';
+import {runLeasedJob,runWorkerOnce} from '../../src/server/prospecting/worker.ts';
 import {ApifyAdapter} from '../../src/server/prospecting/providers/apify.ts';
 import {hashValue} from '../../src/server/prospecting/review.ts';
 import {ProviderError} from '../../src/server/prospecting/providers/transport.ts';
@@ -40,6 +40,37 @@ test('uncertain start requires explicit reconciliation and never posts twice',as
   await runGeneration(lease,{apify});assert.equal((await getJob(p,job.id)).state,'needs_reconciliation');
   await assert.rejects(()=>runGeneration(lease,{apify}));assert.equal(posts,1);
   const reset=await reconcileJob(p,job.id,{confirmNotStarted:true});assert.equal(reset.state,'queued');
+});
+test('ChromiumQualifier waits on transient browser failure and resumes the same job',async t=>{
+  const {p,job,lease}=await setup(1);
+  const apify={start:async()=>({kind:'inline' as const,page:{...page(1),exhausted:true,nextCursor:null}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
+  await runGeneration(lease,{apify});
+  const [lead]=(await readWorkspaceSnapshot(p)).data.leads;
+  assert.ok(lead.site);
+  const input={kind:'qualification' as const,listId:job.listId,leadIds:[lead.id],modules:['email' as const],summaryPolicy:'all' as const,escalation:'off' as const};
+  const review=await prepareJob(p,input);
+  const qualified=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});
+  let renders=0;
+  t.mock.method(globalThis,'fetch',async(url:URL|string)=>{
+    const target=new URL(url);
+    assert.equal(target.origin,'http://127.0.0.1:3222');
+    if(target.pathname==='/fetch')return Response.json({status:404,headers:{},body:''});
+    assert.equal(target.pathname,'/render');
+    if(++renders===1)return Response.json({code:'BUSY'},{status:503});
+    return Response.json({status:200,url:lead.site,text:'[RE] Empresa contato@example.com',links:[],contacts:['mailto:contato@example.com'],truncated:false});
+  });
+  const work=async()=>runLeasedJob(await grantTestLease(p,qualified.id),{},AbortSignal.timeout(5000));
+  await work();
+  const waiting=await getJob(p,qualified.id);
+  assert.equal(waiting.error?.code,'WAITING_SITE_BROWSER',JSON.stringify({state:waiting.state,renders,counts:waiting.counts}));
+  assert.equal(await testAdmin(async c=>(await c.query('SELECT capacity_retry_at>clock_timestamp() AS waiting FROM app.prospecting_job WHERE id=$1',[qualified.id])).rows[0].waiting),true);
+  await testAdmin(c=>c.query('UPDATE app.prospecting_job SET capacity_retry_at=clock_timestamp() WHERE id=$1',[qualified.id]));
+  await work();await work();
+  const result=await getJob(p,qualified.id);
+  assert.equal(result.state,'completed');
+  assert.equal(result.error?.code,undefined);
+  assert.equal(renders,2);
+  assert.equal((await listJobItems(p,qualified.id)).items.length,1);
 });
 test('qualification stores proposals and confirmed application is atomic and conflict-aware',async()=>{
   const {p}=await prospectingUser();

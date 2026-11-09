@@ -16,6 +16,26 @@ def reply(body, *, status=200, headers=None):
 
 
 class RendererTests(unittest.IsolatedAsyncioTestCase):
+    async def test_keeps_rendered_contact_links_without_requesting_index_only_domains(self):
+        seen = []
+
+        async def fixture(url, _method, _headers):
+            seen.append(url)
+            return reply("""<main></main><script>
+                document.querySelector('main').innerHTML =
+                  '<a href="mailto:contato@example.com">Contato</a>' +
+                  '<a href="tel:+554130136190">Telefone</a>' +
+                  '<a href="https://www.linkedin.com/company/exemplo">Perfil</a>';
+                fetch('https://www.linkedin.com/company/exemplo').catch(() => {});
+                fetch('https://cdn.licdn.com/example.js').catch(() => {});
+            </script>""")
+
+        result = await render_page("https://example.com/", 8000, fixture,
+                                   executable=os.getenv("SITE_BROWSER_TEST_CHROME"), queue_navigation=True)
+        self.assertEqual(result["contacts"], ["mailto:contato@example.com", "tel:+554130136190"])
+        self.assertEqual(result["externalLinks"], ["https://www.linkedin.com/company/exemplo"])
+        self.assertEqual(seen, ["https://example.com/"])
+
     async def test_link_cap_is_reported_as_partial(self):
         async def fixture(_url, _method, _headers):
             return reply("".join(f'<a href="/page/{i}">[RE] Link</a>' for i in range(501)))
@@ -134,6 +154,14 @@ class RendererTests(unittest.IsolatedAsyncioTestCase):
 
 
 class GatewayTests(unittest.IsolatedAsyncioTestCase):
+    async def test_health_validates_a_supplied_service_token(self):
+        token = "fixture-" * 5
+        async with TestClient(TestServer(app_for("browser", token))) as api:
+            async with api.get("/health", headers={"Authorization": "Bearer bad"}) as response:
+                self.assertEqual(response.status, 401)
+            async with api.get("/health", headers={"Authorization": "Bearer " + token}) as response:
+                self.assertEqual(response.status, 200)
+
     async def test_mixed_public_private_resolution_and_local_destinations_are_refused(self):
         async def mixed(_host, _port, **_options):
             return [(0, 0, 0, "", ("93.184.216.34", 443)), (0, 0, 0, "", ("169.254.169.254", 443))]

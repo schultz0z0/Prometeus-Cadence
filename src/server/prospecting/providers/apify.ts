@@ -10,6 +10,7 @@ export class ApifyAdapter implements SourceAdapter{
   fetcher:Fetch;constructor(fetcher:Fetch=fetch){this.fetcher=fetcher;}
   async request(ctx:ProviderContext,path:string,method='GET',body?:unknown){return providerJson(this.fetcher,api+path,{method,headers:{authorization:'Bearer '+ctx.credential,'content-type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})},ctx.signal) as Promise<any>;}
   async start(ctx:ProviderContext,input:GenerationInput):Promise<StartResult>{
+    if(ctx.profile.actor.replace('~','/').toLowerCase()==='apify/website-content-crawler')throw new ProviderError('LEGACY_CRAWLER_RETIRED');
     const body=actorInput(ctx.profile,input),query=new URLSearchParams({build:ctx.profile.build,timeout:'300',maxItems:String(input.limit)});
     if(ctx.profile.ppe)query.set('maxTotalChargeUsd',String(ctx.maxChargeUsd));
     try{const response=await this.request(ctx,`/acts/${ctx.profile.actor.replace('/','~')}/runs?${query}`,'POST',body);return{kind:'remote',run:{provider:'apify',runId:id(response.data?.id),datasetId:response.data?.defaultDatasetId?id(response.data.defaultDatasetId):null,profileId:ctx.profile.actor,build:ctx.profile.build,operationId:ctx.operationId}};}
