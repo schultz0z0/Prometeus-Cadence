@@ -1,3 +1,6 @@
 [submodule "third_party/openwa"]
 	path = third_party/openwa
 	url = https://github.com/rmyndharis/OpenWA.git
+[submodule "third_party/scrapling"]
+	path = third_party/scrapling
+	url = https://github.com/D4Vinci/Scrapling.git

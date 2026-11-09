@@ -1,6 +1,7 @@
 *
 !Dockerfile
 !requirements.lock
+!build-requirements.lock
 !renderer.py
 !site_gateway.py
 !service.py

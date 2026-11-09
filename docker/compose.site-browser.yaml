@@ -2,7 +2,10 @@ name: prometeus-site-browser
 services:
   site-browser:
     image: prometeus-site-browser:local
-    build: ./site-browser
+    build:
+      context: ./site-browser
+      additional_contexts:
+        scrapling: ../third_party/scrapling
     init: true
     environment:
       SITE_BROWSER_TOKEN: ${SITE_BROWSER_TOKEN:?Configure SITE_BROWSER_TOKEN}
