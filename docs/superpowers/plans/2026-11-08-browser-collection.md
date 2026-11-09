@@ -22,7 +22,7 @@
 
 ## 06B.6c — CNPJ primeiro no app
 
-**Estado.** Fluxo principal integrado e exercitado em Postgres efêmero e Chrome. Recortes complementares do CNPJ e aceite operacional pendentes. [Medição](../../validation/06b6c-registry-first-browser.md) e [revisão](../../validation/06b6c-registry-first-browser-review.md).
+**Estado.** Fluxo principal integrado e exercitado em Postgres efêmero e Chrome. As duas faixas complementares estão implementadas e exercitadas com fontes simuladas. A ativação depende do build real do Actor e do aceite operacional do 06B.6e. [Medição original](../../validation/06b6c-registry-first-browser.md) e [recortes complementares](../../validation/06b6c-registry-complementary-slices.md).
 
 - Ligar a entrada normal do Gerador e do assistente de automação à revisão de CNAE, município e UF. Executar **CNPJ ativo → Google Maps pelo estabelecimento → busca web se faltar um domínio utilizável → Chromium → validação de identidade → investigação e qualificação**. A busca web preserva a lista de candidatos e suas fontes. O vínculo com o site exige confirmação antes da entrega.
 - Preservar requisitos de nome, telefone, site institucional e CNPJ ativo. Descartar homônimos, duplicados, encerrados e vínculos inconclusivos. Continuar pelo dataset e pelos recortes suportados até a meta ou o esgotamento das fontes, mantendo o registro de resultados parciais. Debitar a franquia ou créditos pelos leads novos entregues e liberar reservas não utilizadas.

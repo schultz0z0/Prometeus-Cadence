@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "06B.6c",
+  "next": "06B.6e",
   "end": "08B",
   "packages": [
     {
@@ -368,13 +368,15 @@
         "src/domain/prospecting-journey.ts",
         "src/server/research/journey.ts",
         "src/modules/prospecting/research-journey.tsx",
-        "src/server/prospecting/discovery-admission.ts"
+        "src/server/prospecting/discovery-admission.ts",
+        "src/server/prospecting/steps.ts",
+        "src/server/prospecting/reconciliation.ts"
       ],
-      "evidence": "docs/validation/06b6c-registry-first-browser.md",
+      "evidence": "docs/validation/06b6c-registry-complementary-slices.md",
       "integration": "tests/integration/06b5-prospecting-journey.test.ts",
       "pending": [
-        "Recortes cadastrais complementares sem repetir registros cobrados",
-        "Ativação controlada do Chromium e homologação do fluxo com provedores reais"
+        "Homologação das duas faixas no build real do Actor de CNPJ antes de ativar a configuração",
+        "Aceite operacional do fluxo no 06B.6e"
       ]
     },
     {

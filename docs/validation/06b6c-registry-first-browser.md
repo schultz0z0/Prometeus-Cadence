@@ -1,5 +1,7 @@
 # 06B.6c — CNPJ primeiro na Prospecção completa
 
+Este relatório registra a primeira entrega. A continuidade por recortes está na [validação complementar](06b6c-registry-complementary-slices.md).
+
 O Gerador e o assistente de automação usam o mesmo formulário para revisar CNAE principal, município, UF, meta e saldo de captação. A revisão mostra a origem cadastral. O worker consulta CNPJs ativos, confere o estabelecimento e o telefone no Maps e tenta a busca web quando o site do Maps estiver ausente, for genérico ou não puder ser confirmado. O Chromium percorre o site e a publicação exige evidência de identidade. A investigação e a qualificação continuam como etapas separadas. A tela de execução mostra páginas lidas, pendências, falhas, bloqueios e motivos de descarte.
 
 O lote cadastral e os resultados de Maps e busca web ficam gravados durante a coleta. Uma nova lease reaproveita essas respostas e a fila de páginas. Se o navegador estiver indisponível, a execução aguarda na mesma fila antes de iniciar outra consulta. O saldo comercial desconta as empresas novas entregues. A rodada ainda usa o limite técnico de candidatos existente, `min(500, meta × 2 + 8)`, no recorte de CNAE, município e UF revisado. Atingir esse limite pode resultar em menos empresas do que a meta. A busca automática por recortes complementares de CNPJ continua pendente.
