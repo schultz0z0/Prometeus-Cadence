@@ -81,6 +81,32 @@ const journeys={
    await page.getByRole('option',{name:'Créditos adicionais',exact:true}).click();
    assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);
   });
+  await step('três telas em etapas: enriquecedor separa o lote padrão da investigação sem CNPJ',async()=>{
+   const list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista etapas']);
+   await lead(a.workspace,list,{name:'[RE] Qualificada com CNPJ',qualification:'qualified',cnpj:'37297479000180'});
+   await lead(a.workspace,list,{name:'[RE] Pendente com CNPJ',cnpj:'11222333000181'});
+   await lead(a.workspace,list,{name:'[RE] Maps sem CNPJ',source:'MAPS',site:undefined,phone:'+5541999990001'});
+   const evidence='output/playwright/06b7-staged';mkdirSync(evidence,{recursive:true});
+   try{
+    for(const [width,height] of [[1920,855],[390,844],[320,700]]){
+     await page.setViewportSize({width,height});
+     for(const [name,route] of [['gerador','/leads/generator'],['qualificador','/leads/qualifier'],['enriquecedor','/leads/enrich']]){
+      await go(page,route);
+      assert.equal(await page.getByText(/prospecção completa/i).count(),0,name+' sem prospecção completa');
+      await until(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),name+' cabe em '+width+' px',5000);
+      await page.screenshot({path:`${evidence}/${name}-${width}.png`,animations:'disabled'});
+     }
+    }
+    const row=page.getByRole('row').filter({hasText:'[RE] Lista etapas'});
+    assert.equal((await row.getByRole('cell').nth(1).innerText()).trim(),'1','só a empresa qualificada com CNPJ é elegível');
+    await row.getByRole('button',{name:'Investigar 1 sem CNPJ'}).click();
+    await page.getByRole('dialog',{name:'Investigar empresas sem CNPJ'}).getByRole('button',{name:'Cancelar'}).click();
+    await row.getByRole('button',{name:'Ver preview'}).click();
+    await page.getByRole('dialog',{name:'Preview de enriquecimento'}).getByText('1 empresas · 1 empresas neste lote.').waitFor();
+    await page.keyboard.press('Escape');
+   }finally{await page.setViewportSize({width:1440,height:900});}
+   assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);
+  });
   await step('revisa um pacote com o preço do servidor, sem confirmar',async()=>{await planTab(page);await page.locator('.billing-addon-card').first().getByRole('button').click();const review=page.getByRole('dialog');await review.getByText('Revisar alteração de cobrança').waitFor();await review.getByText('R$ 97,00').first().waitFor();await review.getByRole('button',{name:'Voltar'}).click();await review.waitFor({state:'detached'});});
   await step('cupom inexistente é recusado na tela e o rascunho fica',async()=>{await page.getByLabel('Tem um cupom?').fill('naoexiste');await page.locator('.billing-addon-card').first().getByRole('button').click();await seen(page,'Cupom inválido, vencido ou já utilizado.');assert.equal(await page.getByLabel('Tem um cupom?').inputValue(),'naoexiste');});
   await step('nada foi cobrado nem criado',async()=>{assert.equal((await db.query('SELECT count(*)::int n FROM app.billing_operation WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);});
