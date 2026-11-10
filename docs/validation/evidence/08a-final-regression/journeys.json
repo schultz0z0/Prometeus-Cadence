@@ -1,6 +1,6 @@
 {
- "date": "2026-11-08T02:41:21.156Z",
- "sourceHash": "e5eb284aa95a26a0a524b4765446a74f79949ed15e706098d512185d71684d8a",
+ "date": "2026-11-10T11:57:24.453Z",
+ "sourceHash": "7f872c745b1f9ec5084df45bedf9b37fe89cc4245dbbd35587a41b09aa7ee374",
  "note": "Navegador sem acesso a outros hosts; contas sem canais ativos; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
  "runs": [
   {
@@ -42,7 +42,11 @@
      "ok": true
     },
     {
-     "name": "jornada herda créditos e permite revisar a escolha antes de buscar",
+     "name": "gerador oferece as quatro fontes e nenhuma prospecção completa",
+     "ok": true
+    },
+    {
+     "name": "três telas em etapas: enriquecedor aceita lead com CNPJ e manda o resto ao qualificador",
      "ok": true
     },
     {

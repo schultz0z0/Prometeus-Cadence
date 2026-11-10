@@ -30,7 +30,7 @@ A homologação real de prospecção pode começar depois do 06B.7 e da regress�
 | **07D** | Descoberta condicional. Registrar inclusão ou exclusão antes de abrir desenvolvimento de scoring. |
 | **08B público** | Host, domínio, DNS/TLS, SMTP transacional, OAuth, documentos jurídicos, observabilidade e Stripe live. [Lista de conexões e insumos](../../validation/08a8-conexoes-externas.md) |
 
-A última medição integral registrada para o 08A.8 foi de **117/138**. O auditor atual reconhece **8/138**, com 17 bloqueados, 113 pendentes e quatro estados de referência desconhecida com prova local. Os relatórios globais anteriores estão fora do hash atual. As evidências anteriores continuam válidas para os cenários e versões que mediram. [Medição do 08A.8](../../validation/08a8-live-visual.md) · [Matriz atual](../../validation/08-release-matrix.json)
+Remedição de 10/11/2026 no código atual: o auditor reconhece **117/138**, com 17 bloqueados por dependência externa, 4 pendentes locais e quatro estados de referência desconhecida com prova local. [Remedição](../../validation/08a9-remedicao.md) A homologação real por módulo rodou Gerador, Qualificador e Enriquecedor com fornecedores e IA reais; faltam um decisor com contato entregue e a qualidade da Busca na web. [Homologação por módulo](../../validation/06b6e-homologacao-por-modulo.md) As evidências anteriores continuam válidas para os cenários e versões que mediram. [Medição do 08A.8](../../validation/08a8-live-visual.md) · [Matriz atual](../../validation/08-release-matrix.json)
 
 ## Como ler a numeração do desenvolvimento completo
 
