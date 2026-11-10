@@ -49,6 +49,16 @@ Na última rodada o Qualificador usou 9 execuções Apify e 10 chamadas de IA pa
 
 A tela de resultados passou a mostrar módulo, estado e motivo em português, em vez dos códigos internos.
 
+## Diagnóstico do Enriquecedor
+
+Uma rodada com registro temporário (contatos mascarados) mostrou o que a IA recebia e propunha:
+
+- **Empresas da Base CNPJ, sem site:** a evidência foi o próprio registro cadastral e páginas genéricas (Serasa, Google). A IA não propôs ninguém. Os nomes dos sócios vinham do cadastro, mas sem nenhum contato.
+- **Clínica com site próprio que publica o CNPJ (Prodont):** a leitura do site trouxe início, "sobre" e contato. O Enriquecedor, porém, gravava no máximo 3 evidências e descartava a página de contato antes da IA. **Corrigido:** todas as páginas coletadas chegam à IA; teste em `tests/integration/enrichment.test.ts`. Na rodada de confirmação chegaram 4 evidências, incluindo `/contato/`.
+- **Mesmo com todas as páginas, nenhum decisor foi proposto.** A regra vigente só entrega pessoa com contato pessoal publicado e atribuído por citação literal, e o site da clínica não publica contato de sócio. O validador rígido não chegou a recusar nenhuma proposta nas rodadas observadas: a IA se absteve antes.
+
+Conclusão: com fontes públicas e a regra atual, o Enriquecedor tende a zero entregas em pequenas empresas. Isso é limite de produto e de fonte de dados, não de código.
+
 ## Achados abertos
 
 1. **Busca na web traz páginas de resultado, não empresas.** Na rodada 1, dois dos três leads eram "Melhores empresas de Contabilidade em Curitiba" e "Mapa". Na rodada 2 os três eram sites de escritórios, mas com o título da página como nome ("Escritório de Contabilidade em Curitiba | (41) …"). A fonte precisa filtrar diretórios e extrair o nome da empresa.

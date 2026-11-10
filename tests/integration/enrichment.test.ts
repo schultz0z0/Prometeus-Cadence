@@ -165,3 +165,13 @@ test('06B.7 the credit cap of a standard batch looks up only what it covers and 
  assert.equal(paid.enrichment?.charged,true);assert.equal(paid.enrichment?.people.length,1);
  assert.ok(await consumed(p,'enrichment')<=1);
 });
+test('06B.7 the decision-maker model sees every collected site page, not only the first three pieces of evidence',async()=>{
+ const f=await fixture(),job=await confirmJob(f.p,{requestId:randomUUID(),input:f.input,reviewToken:f.review.token}),base=adapters(true);
+ const page=(path:string,body:string)=>({id:path,url:'https://empresa.example'+path,text:body,hash:'h'+path,fetchedAt:new Date().toISOString(),truncated:false});
+ const pages=[page('/','Empresa Exemplo, soluções industriais.'),page('/sobre','Empresa Exemplo desde 1999.'),page('/servicos','Serviços da Empresa Exemplo.'),page('/contato',text)];
+ let seen:string[]=[];
+ const deps={...base,collect:async()=>pages,decisors:async(ctx:any,input:any)=>{seen=input.evidence.map((e:any)=>new URL(e.url).pathname);return base.decisors(ctx,input);}};
+ for(let i=0;i<8&&!['completed','partial','failed'].includes((await getJob(f.p,job.id)).state);i++)await runEnrichment(await grantTestLease(f.p,job.id),deps);
+ assert.ok(seen.includes('/contato'),'the contact page reaches the model: '+JSON.stringify(seen));
+ assert.equal((await listJobItems(f.p,job.id)).items[0].enrichment?.people.length,1);
+});

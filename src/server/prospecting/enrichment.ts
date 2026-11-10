@@ -40,7 +40,7 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
    const collected=await performSiteRead(lease,'decisor-evidence:'+group.leadId+':'+index,()=> (deps.collect??fetchEvidencePack)(url,{signal:deps.signal??new AbortController().signal,browser:deps.siteBrowser},index===0));pages.push(...collected);
   }
   const unique=[...new Map(pages.slice(0,12).map(e=>[e.hash,{...e,text:e.text.slice(0,6000),truncated:e.truncated||e.text.length>6000}])).values()];
-  const evidence=await withLeasedTransaction(lease,async c=>{const ids=await saveEvidence(c,lease.jobId,group.leadId,unique);return unique.slice(0,ids.length).map((e,i)=>({...e,id:ids[i]}));});
+  const evidence=await withLeasedTransaction(lease,async c=>{const ids=await saveEvidence(c,lease.jobId,group.leadId,unique,unique.length);return unique.slice(0,ids.length).map((e,i)=>({...e,id:ids[i]}));});
   let people:Decisor[]=[],assessment:Decision|undefined;
   if(evidence.length){
    const route=job.checkpoint.execution.aiRoute.conventional,step='decisors:'+group.leadId,operationId=hashValue({job:lease.jobId,step});

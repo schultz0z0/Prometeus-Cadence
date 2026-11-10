@@ -57,6 +57,9 @@ try{
   if(round.jobId){const listId=(await db.query('SELECT list_id FROM app.prospecting_job WHERE id=$1',[round.jobId])).rows[0]?.list_id;if(listId){lists[source]=listId;round.leads=shape(await leadsOf(listId));}}
   delete round.items;
  }
+ // --seed=file.json: leads conhecidos (nome, site, cnpj, cidade) numa lista própria, para medir o Enriquecedor sem depender do Gerador.
+ const seedFile=process.argv.find(a=>a.startsWith('--seed='))?.slice(7);
+ if(seedFile){const listId=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[ws,listId,'[RE] HML semente']);for(const l of JSON.parse((await import('node:fs')).readFileSync(seedFile,'utf8'))){const id=randomUUID();await db.query('INSERT INTO app.lead VALUES($1,$2,$3,$4)',[ws,id,listId,{id,listId,source:'MANUAL',qualification:'pending',createdAt:new Date().toISOString(),...l}]);}lists.SEED=listId;}
  const summarize=items=>items.map(i=>({name:i.name,status:i.status,modules:(i.results??[]).map(r=>({module:r.module,status:r.status,reasons:r.reasons,proposed:Object.keys(r.proposed??{}),evidence:(r.evidenceIds??[]).length})),people:i.enrichment?.people?.length,charged:i.enrichment?.charged}));
  // Qualificador: lista do Maps (sem CNPJ) com descoberta de site, contatos, cadastro, aderência e resumo por IA.
  if(lists.MAPS){const leads=await leadsOf(lists.MAPS);if(leads.length){const round=await run('qualificador:MAPS',{kind:'qualification',listId:lists.MAPS,leadIds:leads.map(l=>l.id),modules:['website','email','phone','registry','qualify','summary'],summaryPolicy:'all',escalation:'off'},15);const items=round.items??[];round.results=summarize(items);delete round.items;
@@ -64,7 +67,7 @@ try{
    if(applicable.length&&round.jobId)try{round.applied=await call('/jobs/'+round.jobId+'/apply',{requestId:randomUUID(),itemIds:applicable});round.leadsAfter=shape(await leadsOf(lists.MAPS));}catch(e){round.applyError=String(e.message).slice(0,200);}}}
  // Enriquecedor: qualquer lead com CNPJ válido; primeiro a lista da Base CNPJ, depois a do Maps se a qualificação achou CNPJ.
  const valid=l=>/^[A-Z0-9]{12}[0-9]{2}$/.test(String(l.payload.cnpj??'').replace(/[.\/\s-]/g,'').toUpperCase());
- for(const source of ['CNPJ','MAPS']){if(!lists[source])continue;const leads=(await leadsOf(lists[source])).filter(valid).slice(0,2);if(!leads.length){report.rounds.push({name:'enriquecedor:'+source,state:'sem lead com CNPJ'});console.log('enriquecedor:'+source,'sem lead com CNPJ');continue;}
+ for(const source of ['CNPJ','MAPS','SEED']){if(!lists[source])continue;const leads=(await leadsOf(lists[source])).filter(valid).slice(0,3);if(!leads.length){report.rounds.push({name:'enriquecedor:'+source,state:'sem lead com CNPJ'});console.log('enriquecedor:'+source,'sem lead com CNPJ');continue;}
   const round=await run('enriquecedor:'+source,{kind:'qualification',listId:lists[source],leadIds:leads.map(l=>l.id),modules:['decisors'],summaryPolicy:'all',escalation:'off',enrichment:{maxCredits:leads.length,destinationName:'[RE] HML Decisores '+source}},15);round.results=summarize(round.items??[]);delete round.items;}
  report.billing=(await db.query('SELECT unit,sum(quantity)::int AS consumed FROM app.billing_consumption WHERE workspace_id=$1 GROUP BY unit',[ws])).rows;
  report.reservations=(await db.query('SELECT unit,count(*)::int AS open FROM app.billing_reservation WHERE workspace_id=$1 AND NOT closed GROUP BY unit',[ws])).rows;
