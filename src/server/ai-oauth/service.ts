@@ -22,6 +22,8 @@ export async function startOAuth(p:Principal,expectedRevision:number,deps:Depend
  return store.lock(p.workspaceId,async()=>{
   await admin(p);
   let row=store.read(p.workspaceId);if(!row){row=store.initial(p.workspaceId);store.save(p.workspaceId,row,{});}if(row.revision!==expectedRevision)throw new AppError(409,'A conexão mudou. Atualize antes de conectar.');
+  // A disconnected connection is free to take another account; only a live one stays pinned to its registration and identity.
+  if(row.state==='disconnected')row={...row,clientId:null,subject:null};
   const authorization=createAuthorization(row.hostId,redirect,row.clientId?{clientId:row.clientId}:undefined);
   store.putAttempt(authorization.state,{workspaceId:p.workspaceId,connectionId:row.id,userId:p.userId,sessionHash:digest(p.sessionId),revision:row.revision,expiresAt:Date.now()+600000,...(row.clientId?{clientId:row.clientId}:{}),...(row.subject?{subject:row.subject}:{})},{verifier:authorization.verifier,nonce:authorization.nonce,redirectUri:authorization.redirectUri});
   return {url:authorization.url};
@@ -53,6 +55,6 @@ export async function selectOAuthModel(p:Principal,expectedRevision:number,model
 }
 export async function disconnectOAuth(p:Principal,expectedRevision:number,deps:Dependencies={}){
  local();await admin(p);const store=deps.store??oauthStore;return store.lock(p.workspaceId,async()=>{const row=store.read(p.workspaceId);if(!row||row.revision!==expectedRevision)throw new AppError(409,'A conexão mudou.');const secrets=store.credentials(p.workspaceId,row.revision);let revoked=!secrets.refreshToken;try{if(secrets.refreshToken&&row.clientId)revoked=await revokeToken(secrets.refreshToken,row.clientId,deps.fetcher);}catch{}
-  store.save(p.workspaceId,{...row,state:'disconnected',refreshPending:false,revision:row.revision+1,model:'',models:[],expiresAt:0,lastError:revoked?null:'CHATGPT_REMOTE_REVOCATION_UNCONFIRMED'},{});return oauthView(p.workspaceId,store);
+  store.save(p.workspaceId,{...row,state:'disconnected',clientId:null,subject:null,email:null,refreshPending:false,revision:row.revision+1,model:'',models:[],expiresAt:0,lastError:revoked?null:'CHATGPT_REMOTE_REVOCATION_UNCONFIRMED'},{});return oauthView(p.workspaceId,store);
  });
 }

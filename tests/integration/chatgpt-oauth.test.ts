@@ -17,7 +17,7 @@ import {prospectingUser,configureProspectingTest,closeProspectingPools,testAdmin
 configureProspectingTest();after(closeProspectingPools);
 async function fixture(){
  const root=await mkdtemp(join(tmpdir(),'chatgpt-flow-')),store=createOAuthStore(root),{privateKey,publicKey}=await generateKeyPair('RS256'),key=await exportJWK(publicKey);key.kid='qa';
- const p=(await prospectingUser({platformAi:true})).p;let nonce='',refreshes=0,revokes=0;
+ const p=(await prospectingUser({platformAi:true})).p;let nonce='',refreshes=0,revokes=0,account={subject:'qa-subject',email:'qa@example.com'};
  const fetcher:typeof fetch=async(url,init)=>{
   if(String(url).endsWith('/models'))return Response.json({models:[{slug:'fixture-model',display_name:'Fixture Model',visibility:'list'},{slug:'hidden',display_name:'Hidden',visibility:'hide'}]});
   if(String(url).endsWith('/revoke')){revokes++;return new Response(null,{status:200});}
@@ -25,12 +25,12 @@ async function fixture(){
   assert.equal(form.get('resource'),'https://api.openai.com/v1');
   if(form.get('grant_type')==='refresh_token'){refreshes++;await new Promise(r=>setTimeout(r,20));return Response.json({access_token:'qa-rotated',refresh_token:'qa-refresh-rotated',expires_in:3600,token_type:'Bearer'});}
   assert.equal(form.get('redirect_uri'),localOAuthRedirect());assert.ok(form.get('code_verifier'));
-  const id_token=await new SignJWT({nonce,email:'qa@example.com'}).setProtectedHeader({alg:'RS256',kid:'qa'}).setSubject('qa-subject').setIssuer('https://auth.openai.com').setAudience('qa-issued-client').setExpirationTime('5m').sign(privateKey);
+  const id_token=await new SignJWT({nonce,email:account.email}).setProtectedHeader({alg:'RS256',kid:'qa'}).setSubject(account.subject).setIssuer('https://auth.openai.com').setAudience('qa-issued-client').setExpirationTime('5m').sign(privateKey);
   return Response.json({access_token:'qa-access',refresh_token:'qa-refresh',id_token,expires_in:3600,token_type:'Bearer',scope:'openid profile email offline_access resource.invoke chatgpt.tokens.use.direct'});
  };
  const deps={store,fetcher,keys:{keys:[key]}};
  async function begin(){const u=new URL((await startOAuth(p,store.read(p.workspaceId)?.revision??0,deps)).url);nonce=u.searchParams.get('nonce')!;const callback=new URL(localOAuthRedirect()!);callback.searchParams.set('state',u.searchParams.get('state')!);callback.searchParams.set('code','qa-code');callback.searchParams.set('client_id','qa-issued-client');return callback;}
- return{root,store,p,deps,begin,counts:()=>({refreshes,revokes})};
+ return{root,store,p,deps,begin,counts:()=>({refreshes,revokes}),signInAs(subject:string,email:string){account={subject,email};}};
 }
 test('direct OAuth registers per workspace, validates callback identity, rotates once, selects models and disconnects',async()=>{
  const f=await fixture();try{
@@ -46,6 +46,16 @@ test('direct OAuth registers per workspace, validates callback identity, rotates
   await assert.rejects(()=>oauthAccessToken(f.p.workspaceId,row.revision,f.deps),{status:409});
   const off=await disconnectOAuth(f.p,selected.revision,f.deps);assert.equal(off.state,'disconnected');assert.equal(f.counts().revokes,1);assert.deepEqual(f.store.credentials(f.p.workspaceId,off.revision),{});
   assert.equal(f.store.read(f.p.workspaceId)?.hostId,row.hostId);assert.equal(f.store.read('other-workspace'),null);
+ }finally{await rm(f.root,{recursive:true,force:true});}
+});
+test('after disconnecting, the administrator can connect a different ChatGPT account; a live connection stays pinned to its account',async()=>{
+ const f=await fixture();try{
+  const first=await finishOAuth(f.p,await f.begin(),f.deps);assert.equal(first.email,'qa@example.com');
+  f.signInAs('other-subject','other@example.com');
+  await assert.rejects(async()=>finishOAuth(f.p,await f.begin(),f.deps),{status:409},'re-authorizing a live connection with another account is refused');
+  const off=await disconnectOAuth(f.p,f.store.read(f.p.workspaceId)!.revision,f.deps);assert.equal(off.state,'disconnected');assert.equal(off.email,null,'the old account is no longer shown');
+  const second=await finishOAuth(f.p,await f.begin(),f.deps);
+  assert.equal(second.state,'connected');assert.equal(second.email,'other@example.com');
  }finally{await rm(f.root,{recursive:true,force:true});}
 });
 test('callback binds session and workspace; permission downgrade and hosted mode cannot connect',async()=>{
