@@ -31,3 +31,7 @@ Execute `node scripts/test-integration.mjs 06b6e-site-capacity` separadamente. A
 - No Chrome local, a jornada `pack` mostrou o navegador disponível e abriu a revisão da prospecção em 1920×855 e 390×844. O app de prova estava com as execuções externas desabilitadas. A conta descartável foi removida com resíduo zero, sem job de prospecção ou operação de cobrança.
 - O build, a checagem de tipos e os 462 testes unitários passaram. O auditor do 08A continua em 8/138, com relatórios globais anteriores fora do hash atual. A verificação da base manteve os quatro erros históricos de `clone/barriers.md`.
 - A suíte padrão de integração registrou 686 aprovados e zero falhas. Os cinco testes com Stripe real ficaram desabilitados. O p95 do cenário de Relatórios foi de 215 ms para o teto de 250 ms.
+
+## Repetição após o piloto
+
+O mesmo cenário sintético repetiu as 250 inserções, quatro rejeições, 256 inícios simulados, 751 leituras simuladas e 555 turnos. A execução levou 570,6 s, com p95 de 1.619 ms por turno e pico de 292 MiB no processo Node. As asserções de reposição, isolamento e liquidação passaram. A medição cobre o ambiente controlado. [Piloto com fontes reais](06b6e-prospecting-live-pilot.md)

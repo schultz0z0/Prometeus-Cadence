@@ -19,3 +19,10 @@ A prova de capacidade usa `node scripts/test-integration.mjs 06b6e-site-capacity
 1. Confirmar um cadastro válido em cada faixa no build configurado e comparar os CNPJs em memória.
 2. Ativar os recortes para novas revisões com a porta do app livre, sem jobs em andamento, jornadas em execução ou automações ativas. O worker lê a política congelada na revisão, portanto a ativação dispensa reiniciar a lane.
 3. Em servidor temporário com execução de prospecção desabilitada, conferir a revisão no Gerador. Encerrar o servidor e remover a conta descartável.
+
+## Piloto de admissão de um lead
+
+1. Preparar e confirmar a jornada pelo handler do aplicativo em Postgres efêmero com conta descartável. Rodar `runWorkerOnce` até a fase de descoberta encerrar, com teto acumulado e checagem dos mínimos de cada Actor.
+2. Registrar a ordem de CNPJ, Maps e site, os descartes, a cobertura do navegador, as reservas e o custo informado pela Apify. Reaproveitar datasets já pagos para diagnosticar descartes.
+3. Se a amostra não entregar um lead, usar em separado uma empresa com correspondência conhecida em datasets reais já disponíveis. Conferir se o site ao vivo é renderizado, se o mesmo lead recebe as três evidências e se a liquidação fecha com zero reservas.
+4. Registrar em separado o aceite no worker contínuo e a revalidação do 08A. Remover a conta e o catálogo de prova e manter somente agregados.

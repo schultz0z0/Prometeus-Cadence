@@ -14,6 +14,6 @@ O operador autorizou as duas consultas iniciais e uma nova consulta da faixa at�
 
 O protocolo aprovado usou CNAE 2512800 em Curitiba/PR, até um cadastro e teto de US$ 0,05 por execução, com reinício automático desativado. A conferência foi em memória e a evidência registra contagens, cobertura e custo.
 
-Com zero jobs em andamento, zero jornadas em execução e zero automações ativas, `APIFY_CNPJ_DATE_SLICES` foi ativado localmente para novas revisões. A política congelada no job dispensa um novo restart do worker. A jornada `pack` passou com os avisos de disponibilidade do navegador e das duas faixas e revisão em 1920×855 e 390×844. A conta descartável deixou resíduo zero e o servidor temporário foi encerrado. A prova ponta a ponta com Maps e Chromium continua separada.
+Com zero jobs em andamento, zero jornadas em execução e zero automações ativas, `APIFY_CNPJ_DATE_SLICES` foi ativado localmente para novas revisões. A política congelada no job dispensa um novo restart do worker. A jornada `pack` passou com os avisos de disponibilidade do navegador e das duas faixas e revisão em 1920×855 e 390×844. A conta descartável deixou resíduo zero e o servidor temporário foi encerrado. A prova em banco efêmero teve um cenário de busca nova com resultado parcial e um cenário com dados reaproveitados que inseriu um lead com evidência real do Chromium. [Piloto da Prospecção completa](06b6e-prospecting-live-pilot.md)
 
 [Limite de cobrança por execução na Apify](https://docs.apify.com/api/v2/actors-runs-post)

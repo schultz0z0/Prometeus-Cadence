@@ -15,4 +15,4 @@ O Gerador informa o estado do navegador em **Status das integrações e históri
 - O auditor registrou 8/138 no hash `c5867dcc3c9dcfb269bfeeeb16d262813d9fbc0f3351a3d647eb86c6eb8acb18`. A jornada seletiva desta rodada não atualiza os relatórios globais do 08A. A base de conhecimento manteve os quatro erros históricos de `clone/barriers.md`.
 - Durante o primeiro teste de regressão, o caminho antigo pôde tentar alcançar a Apify com uma credencial fictícia. A resposta dessa tentativa ficou sem verificação. O teste final intercepta o transporte e proíbe tráfego externo.
 
-O ambiente compartilhado ainda exige ativação controlada. A medição do lote de 250, dos recortes complementares de CNPJ e do piloto real segue no 06B.6c/06B.6e.
+O gateway foi ativado no ambiente local e o supervisor substituiu o worker de prospecção em repouso. O Chromium leu um site público durante uma admissão em banco de prova. A admissão em busca nova no worker contínuo segue pendente. [Troca do worker](06b6e-local-worker-cutover.md) · [Piloto de admissão](06b6e-prospecting-live-pilot.md)

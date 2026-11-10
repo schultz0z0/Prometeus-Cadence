@@ -425,7 +425,7 @@
       "evidence": "docs/validation/06b6e-site-browser-capacity.md",
       "integration": "tests/integration/06b6e-site-capacity.test.ts",
       "pending": [
-        "Piloto ponta a ponta no worker compartilhado com Maps e Chromium, com autorização específica de custo",
+        "Observar admissão a partir de uma busca nova na lane compartilhada. O piloto em Postgres efêmero terminou parcial no recorte real e comprovou admissão com dados de CNPJ e Maps reaproveitados e leitura Chromium ao vivo",
         "Revalidação dos estados afetados no 08A"
       ]
     },

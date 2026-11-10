@@ -1,10 +1,15 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-09 · Session: s57 · Phase:6 franquias e Prospecção completa · aceite integral pendente
+Updated: 2026-11-09 · Session: s58 · Phase:6 franquias e Prospecção completa · aceite integral pendente
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- s58: a Prospecção completa isolada fez a busca real com CNPJ primeiro e encerrou dez avaliações sem inserção. O teste com dados reais reaproveitados e Chromium ao vivo inseriu um lead pendente e fechou as reservas.
+  - **Evidência:** EV-320.
+  - **QA:** L-068 e L-069.
+  - A admissão em busca nova na lane contínua permanece pendente.
 
 - s57: a nova consulta autorizada confirmou a faixa até 2019 com um CNPJ distinto do retornado na faixa a partir de 2020. A configuração local foi ativada e a revisão no Chrome passou com resíduo zero.
   - **Evidência:** EV-319.
