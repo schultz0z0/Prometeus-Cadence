@@ -268,3 +268,34 @@ test('unavailable inference result can settle consumption without a second call;
   const result=await getJob(p,q.id);assert.equal(result.state,'partial');assert.equal(calls,1);assert.equal(result.usage![0].units.jevCalls,1);
   assert.equal((await readWorkspaceSnapshot(p)).data.leads[0].qualification,'pending');
 });
+test('registry finds the CNPJ of a Maps lead through public search results and proposes it only when the registry corroborates the company',async t=>{
+  Object.assign(process.env,{APIFY_CNPJ_ACTOR:'bigdavidson/brazil-cnpj-companies',APIFY_CNPJ_BUILD:'fixture-build',APIFY_WEB_ACTOR:'apify/google-search-scraper',APIFY_WEB_BUILD:'fixture-build'});
+  t.after(()=>{for(const key of ['APIFY_WEB_ACTOR','APIFY_WEB_BUILD'])delete process.env[key];});
+  const inline=(candidates:any[])=>({kind:'inline' as const,page:{receiptId:randomUUID(),candidates,rejected:[],rawCount:candidates.length,nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:randomUUID(),units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}});
+  const never=async()=>{throw Error('No remote run');};
+  async function qualify(registryCity:string){
+    const {p,job,lease}=await setup(1);
+    await runGeneration(lease,{apify:{start:async()=>inline([normalizeCandidate({id:'maps-1',name:'Clínica Exemplo Sorriso',site:'https://clinica.example.com',city:'Curitiba',phone:'+5541999990001'},'MAPS')]),poll:never,readPage:never,abort:never}});
+    const lead=(await readWorkspaceSnapshot(p)).data.leads[0];
+    const input={kind:'qualification' as const,listId:job.listId,leadIds:[lead.id],modules:['registry' as const],summaryPolicy:'all' as const,escalation:'off' as const};
+    const review=await prepareJob(p,input);assert.deepEqual(review.blockers,[]);
+    const q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),calls:string[]=[];
+    const deps={collect:async()=>[{id:'home',url:'https://clinica.example.com/',fetchedAt:new Date().toISOString(),text:'Clínica Exemplo Sorriso. Agende sua consulta.',hash:'home',truncated:false}],apify:{poll:never,readPage:never,abort:never,start:async(ctx:any,request:any)=>{
+      calls.push(ctx.profile.source);
+      if(ctx.profile.source==='WEB'){assert.match(request.filters.term,/Clínica Exemplo Sorriso.*CNPJ/);return inline([
+        {...normalizeCandidate({id:'web-1',name:'Clínica Exemplo Sorriso - Curitiba',site:'https://cnpj.example/clinica'},'WEB'),evidence:[{id:'web-1',url:'https://cnpj.example/clinica',text:'Clínica Exemplo Sorriso CNPJ 37.297.479/0001-80 Curitiba PR',hash:'web-1',fetchedAt:new Date().toISOString(),truncated:false}]},
+        {...normalizeCandidate({id:'web-2',name:'Outra Empresa Qualquer',site:'https://cnpj.example/outra'},'WEB'),evidence:[{id:'web-2',url:'https://cnpj.example/outra',text:'Outra Empresa Qualquer CNPJ 11.222.333/0001-81',hash:'web-2',fetchedAt:new Date().toISOString(),truncated:false}]},
+      ]);}
+      assert.equal(request.filters.cnpj,'37297479000180');
+      return inline([normalizeCandidate({cnpj:'37297479000180',razao_social:'CLINICA EXEMPLO SORRISO LTDA',municipio:registryCity,uf:'PR'},'CNPJ')]);
+    }}};
+    for(let i=0;i<4&&(await getJob(p,q.id)).state!=='completed';i++)await runQualification(await grantTestLease(p,q.id),deps);
+    assert.equal((await getJob(p,q.id)).state,'completed');
+    return{p,calls,result:(await listJobItems(p,q.id)).items[0].results[0]};
+  }
+  const found=await qualify('Curitiba');
+  assert.deepEqual(found.calls,['WEB','CNPJ']);assert.equal(found.result.status,'pending_review');assert.equal(found.result.proposed.cnpj,'37297479000180');assert.ok(found.result.evidenceIds.length);
+  assert.equal((await readWorkspaceSnapshot(found.p)).data.leads[0].cnpj,undefined,'the CNPJ stays a proposal until the operator applies it');
+  const homonym=await qualify('Recife');
+  assert.equal(homonym.result.status,'skipped');assert.deepEqual(homonym.result.reasons,['CNPJ_NOT_CORROBORATED']);assert.deepEqual(homonym.result.proposed,{});
+});

@@ -42,7 +42,8 @@ export function estimateUsage(input:JobInput,route?:AiRoute|null,plannedFresh?:n
     if(input.modules.includes('qualify')){if(!route||route.decisionProvider==='jev')add('openrouter','jevCalls',n);else add(route.conventional.provider,conventionalUnit(route.conventional.provider),n);}
     const calls=(input.modules.includes('summary')?n:0)+(input.escalation==='ambiguous'&&input.modules.includes('qualify')&&(!route||route.decisionProvider==='jev')?n:0);
     if(calls)add(route?.conventional.provider??'codex',route?conventionalUnit(route.conventional.provider):'codexCalls',calls);
-    if(input.modules.includes('registry'))add('apify','apifyRuns',n);
+    // The registry module may add one public search per lead to find a missing CNPJ.
+    if(input.modules.includes('registry'))add('apify','apifyRuns',n*(prospectingConfig().ready.WEB?2:1));
     if(input.modules.includes('website'))add('apify','apifyRuns',n);
   }
   return result;
