@@ -209,24 +209,43 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
       if(skip){result.status='skipped';result.reasons=[skip];}
       else if(module==='summary'&&input.summaryPolicy==='fits'&&!prior.some(r=>r.module==='qualify'&&r.proposed.qualification==='qualified')){result.status='skipped';result.reasons=['SUMMARY_REQUIRES_FIT'];}
       else if(module==='registry'||module==='website'){
-        let registryCnpj=normalizeCnpj(lead.cnpj),searchedCnpj=false;
+        let registryCnpj=normalizeCnpj(lead.cnpj),searched:string[]=[];
         if(module==='registry'&&!registryCnpj){
           const evidence=await collectEvidence(lease,job,lead,input.modules.includes('deep'),deps,Boolean(discovered)),cnpjs=extractCnpjs(evidence);result.evidenceIds=evidence.map(e=>e.id);
           if(cnpjs.length===1)registryCnpj=cnpjs[0];
           else if(!cnpjs.length&&job.checkpoint.execution.profiles.WEB?.actor){
-            // Maps leads rarely print the CNPJ on their own site: look in public search results and let the registry corroborate it below.
-            const found=await sourceResults(lease,job,{...lead,name:`"${lead.name}" ${lead.city??''} CNPJ`.replace(/\s+/g,' ')},'website',deps,{limit:5,suffix:'cnpj'});if(found===null)return;
-            const names=companyNames(lead),hits=found.filter(r=>names.some(words=>matchesName((r.evidence??[]).map(e=>e.text).join(' ')+' '+r.name,words)));
-            const searched=[...new Set(hits.flatMap(r=>extractCnpjs(r.evidence??[])))];
-            if(searched.length===1){registryCnpj=searched[0];searchedCnpj=true;result.evidenceIds.push(...await withLeasedTransaction(lease,c=>saveEvidence(c,lease.jobId,lead.id,hits.flatMap(r=>r.evidence??[]).filter(e=>extractCnpjs([e]).includes(searched[0])))));}
-            else{result.status='skipped';result.reasons=[searched.length?'AMBIGUOUS_CNPJ':'NO_CNPJ'];}
+            // Maps leads rarely print the CNPJ on their own site: take up to two candidates from public search results; the registry decides below.
+            // Maps names carry taglines ("| Implantes - 24h"), and directories quote their own CNPJ next to the company, so nothing here is trusted yet.
+            const tradeName=lead.name.split(/\s+[|–-]\s+/)[0];
+            const found=await sourceResults(lease,job,{...lead,name:`"${tradeName}" ${lead.city??''} CNPJ`.replace(/\s+/g,' ')},'website',deps,{limit:5,suffix:'cnpj'});if(found===null)return;
+            const words=identityWords(tradeName),hits=found.flatMap(r=>r.evidence??[]).filter(e=>matchesName(e.text,words));
+            searched=[...new Set(extractCnpjs(hits))].slice(0,2);
+            if(searched.length)result.evidenceIds.push(...await withLeasedTransaction(lease,c=>saveEvidence(c,lease.jobId,lead.id,hits.filter(e=>extractCnpjs([e]).some(cnpj=>searched.includes(cnpj))))));
+            else{result.status='skipped';result.reasons=['NO_CNPJ'];}
           }
           else{result.status='skipped';result.reasons=[cnpjs.length?'AMBIGUOUS_CNPJ':'NO_CNPJ'];}
         }
         if(module==='website'&&lead.site){result.status='skipped';result.reasons=['ALREADY_HAS_SITE'];}
         else if(result.status!=='skipped'){
-          const candidates=await sourceResults(lease,job,{...lead,cnpj:registryCnpj},module,deps,{limit:module==='website'?discoveryLimit:1});if(candidates===null)return;
-          let source:Partial<Candidate>=candidates[0]??{};
+          let source:Partial<Candidate>={},candidates:Candidate[]=[];
+          if(searched.length){
+            // A CNPJ that came from a search result is kept only when the registry agrees on the city and on the name, phone or postal code.
+            const fold=(value?:string)=>siteWords(value??'').join(' '),phone=phoneIdentity(lead.phone??''),cep=(value?:string)=>value?.match(/\b\d{5}-?\d{3}\b/)?.[0].replace('-','');
+            const confirmed:Candidate[]=[];
+            for(const cnpj of searched){
+              const looked=await sourceResults(lease,job,{...lead,cnpj},'registry',deps,{limit:1,suffix:'cnpj:'+cnpj});if(looked===null)return;
+              const found=looked[0];if(!found)continue;
+              const sameCity=!!lead.city&&!!found.city&&fold(lead.city)===fold(found.city);
+              const sameCompany=companyNames(lead).some(words=>matchesName([found.name,found.companyName].filter(Boolean).join(' '),words))||Boolean(phone&&found.phone&&phoneIdentity(found.phone)===phone);
+              const sameAddress=!!cep(lead.address)&&cep(lead.address)===cep(found.address);
+              if(sameCity&&(sameCompany||sameAddress))confirmed.push(found);
+            }
+            if(confirmed.length===1){source=confirmed[0];registryCnpj=normalizeCnpj(source.cnpj);}
+            else{result.status='skipped';result.reasons=[confirmed.length?'AMBIGUOUS_CNPJ':'CNPJ_NOT_CORROBORATED'];}
+          }else{
+            const looked=await sourceResults(lease,job,{...lead,cnpj:registryCnpj},module,deps,{limit:module==='website'?discoveryLimit:1});if(looked===null)return;
+            candidates=looked;source=candidates[0]??{};
+          }
           if(module==='website'){
             source={};
             for(const candidate of companySiteCandidates(candidates,lead)){
@@ -237,15 +256,8 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
             }
           }
           if(module==='registry'&&source.cnpj&&source.cnpj!==registryCnpj)throw new ProviderError('CNPJ_IDENTITY_MISMATCH');
-          // A CNPJ that came from a search result is kept only when the registry agrees on the city and on the name or phone.
-          if(searchedCnpj){
-            const fold=(value?:string)=>siteWords(value??'').join(' '),phone=phoneIdentity(lead.phone??'');
-            const sameCity=!!lead.city&&!!source.city&&fold(lead.city)===fold(source.city);
-            const sameCompany=companyNames(lead).some(words=>matchesName([source.name,source.companyName].filter(Boolean).join(' '),words))||Boolean(phone&&source.phone&&phoneIdentity(source.phone)===phone);
-            if(!sameCity||!sameCompany)source={};
-          }
           result.evidenceIds.push(...await withLeasedTransaction(lease,c=>saveEvidence(c,lease.jobId,lead.id,source.evidence??[])));
-          for(const key of (module==='website'?['site']:['cnpj','companyName','city','state','capital','size','legalNature','cnae','openedAt','address']) as (keyof Lead)[])if(source[key as keyof typeof source])Object.assign(result.proposed,{[key]:source[key as keyof typeof source]});if(!Object.keys(result.proposed).length){result.status='skipped';result.reasons=[searchedCnpj?'CNPJ_NOT_CORROBORATED':'NO_RESULT'];}}
+          for(const key of (module==='website'?['site']:['cnpj','companyName','city','state','capital','size','legalNature','cnae','openedAt','address']) as (keyof Lead)[])if(source[key as keyof typeof source])Object.assign(result.proposed,{[key]:source[key as keyof typeof source]});if(!Object.keys(result.proposed).length&&result.status!=='skipped'){result.status='skipped';result.reasons=['NO_RESULT'];}}
       }else if(module==='validateEmail'){
         const validation=lead.email?await (deps.checkEmail??checkEmailDns)(lead.email):null;result.status='succeeded';result.reasons=[!validation?'NO_EMAIL':validation.format?'FORMAT_VALID':'FORMAT_INVALID',validation?.dns===true?'MAIL_DOMAIN_FOUND':'MAIL_DOMAIN_UNKNOWN','MAILBOX_NOT_VERIFIED'];
         if(validation&&lead.email)result.emailAssessment=assessEmail(lead.email,validation,new Date().toISOString());

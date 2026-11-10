@@ -1,6 +1,6 @@
 # 06B.6e / 06IA-H — Homologação real por módulo
 
-**Estado em 10/11/2026: os três módulos executaram de ponta a ponta com fornecedores e IA reais, pelo worker contínuo. A qualidade ainda não sustenta o aceite: há três achados abertos abaixo.** Autorização permanente de gasto dada pelo operador em 10/11/2026.
+**Estado em 10/11/2026: os três módulos executaram de ponta a ponta com fornecedores e IA reais, pelo worker contínuo. A descoberta de CNPJ para leads do Maps subiu de 0 em 6 para 3 em 5 depois da correção descrita abaixo. Continuam abertos a Busca na web e a entrega real de um decisor com contato.** Autorização permanente de gasto dada pelo operador em 10/11/2026.
 
 ## Como foi executado
 
@@ -29,11 +29,31 @@ Qualificador, por lead: site já existia (`ALREADY_HAS_SITE`) em 6 de 6. Consult
 
 O pedido de decisores enviava um esquema JSON com campos opcionais (`email`, `phone`, `linkedin`). O modo estrito da OpenAI, usado tanto pela rota ChatGPT OAuth quanto pela API, recusa esse esquema com HTTP 400. Os testes usavam IA simulada e não exercitavam o esquema. Correção em `src/server/prospecting/ai/decisors.ts`: todos os campos obrigatórios, texto vazio quando o dado não existe e descarte dos vazios na leitura; contrato elevado para `decisors-public-evidence-v4`. Teste em `tests/enrichment-instructions.test.ts`.
 
+## Descoberta de CNPJ para leads do Maps
+
+Nas duas primeiras rodadas a consulta cadastral só procurava o CNPJ no site do próprio lead e não achou nenhum (0 de 6). A correção, em `src/server/prospecting/qualification.ts`:
+
+1. Quando o site não publica CNPJ, o módulo faz uma busca pública por `"nome comercial" cidade CNPJ`, usando o nome sem o complemento do Maps ("| Implantes", "- Dentista 24h").
+2. Dos resultados que citam a empresa, toma até dois CNPJs candidatos.
+3. Consulta cada candidato na Base CNPJ e só aceita o que confirma a mesma cidade e, além dela, o nome, o telefone ou o CEP do lead.
+4. Com exatamente um confirmado, propõe o CNPJ para revisão. Com nenhum, abstém-se com `CNPJ_NOT_CORROBORATED`; com dois, `AMBIGUOUS_CNPJ`.
+
+A conferência na Receita é necessária: numa rodada, o único CNPJ do resultado era o do próprio diretório que listava a clínica, com sede no Rio de Janeiro, e foi recusado pela cidade.
+
+| Rodada (5 leads do Maps, Curitiba) | CNPJ proposto | Como |
+| --- | --- | --- |
+| Busca restrita a diretórios cadastrais, um candidato | 1 de 5 | CNPJ publicado no site do lead |
+| Busca geral, até dois candidatos conferidos | 3 de 5 | 1 pelo site, 2 pela busca com confirmação na Receita |
+
+Na última rodada o Qualificador usou 9 execuções Apify e 10 chamadas de IA para 5 leads, em 258 s. A estimativa da revisão passou a reservar até 3 execuções por lead no módulo cadastral. Dois dos leads com CNPJ seguiram para o Enriquecedor, que concluiu sem decisor com contato atribuível e sem cobrança.
+
+A tela de resultados passou a mostrar módulo, estado e motivo em português, em vez dos códigos internos.
+
 ## Achados abertos
 
 1. **Busca na web traz páginas de resultado, não empresas.** Na rodada 1, dois dos três leads eram "Melhores empresas de Contabilidade em Curitiba" e "Mapa". Na rodada 2 os três eram sites de escritórios, mas com o título da página como nome ("Escritório de Contabilidade em Curitiba | (41) …"). A fonte precisa filtrar diretórios e extrair o nome da empresa.
-2. **Maps → CNPJ: 0 de 6.** A consulta cadastral do Qualificador não achou CNPJ para nenhuma clínica vinda do Maps, embora todas tivessem site. Como o Enriquecedor só age em lead com CNPJ, nenhum lead do Maps chegou aos decisores.
-3. **Base CNPJ traz MEIs.** Dois dos três eram microempreendedores individuais com nome de pessoa física. O Enriquecedor avaliou os dois e, corretamente, não entregou contato sem evidência. Falta medir o Enriquecedor numa empresa com sócios e presença pública.
+2. **Maps → CNPJ: 3 de 5 após a correção.** Amostra pequena, um nicho e uma cidade. Dois de cinco continuam sem CNPJ e, portanto, fora do Enriquecedor.
+3. **Nenhum decisor com contato entregue.** Em cinco execuções do Enriquecedor, com MEIs da Base CNPJ e clínicas do Maps, o resultado foi sempre abstenção sem cobrança. A regra exige contato pessoal atribuído por citação literal; falta um caso real em que ela seja satisfeita.
 
 ## Limites desta prova
 
