@@ -38,3 +38,18 @@ test('explicit no-email rule produces an applicable reviewed disqualification ev
  const input={...f.input,options:{disqualifyNoEmail:true}},review=await prepareJob(f.p,input),job=await confirmJob(f.p,{requestId:randomUUID(),input,reviewToken:review.token});
  await runQualification(await grantTestLease(f.p,job.id),{collect:async()=>[{...page,text:'Página pública da empresa sem contato de e-mail.'}]});await runQualification(await grantTestLease(f.p,job.id));const item=(await listJobItems(f.p,job.id)).items[0];assert.equal(item.results[0].status,'pending_review');await applyJobResults(f.p,job.id,{requestId:randomUUID(),itemIds:[item.id]});assert.equal((await readWorkspaceSnapshot(f.p)).data.leads[0].qualification,'disqualified');
 });
+test('06B.7 a lead without site or CNPJ keeps each selected module independent and reports why it abstained',async t=>{
+ Object.assign(process.env,{APIFY_CNPJ_ACTOR:'bigdavidson/brazil-cnpj-companies',APIFY_CNPJ_BUILD:'fixture-build'});t.after(()=>{delete process.env.APIFY_CNPJ_ACTOR;delete process.env.APIFY_CNPJ_BUILD;});
+ const {p}=await prospectingUser(),listId=randomUUID(),leadId=randomUUID();
+ await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:0,command:{type:'leads.import',list:{id:listId,name:'[RE] Maps parcial'},leads:[{id:leadId,listId,name:'[RE] Clínica Exemplo',phone:'+5541999990001',source:'MAPS',qualification:'pending',favorite:false,createdAt:new Date().toISOString()}]}});
+ const input={kind:'qualification',listId,leadIds:[leadId],modules:['registry','email'],summaryPolicy:'all',escalation:'off'},review=await prepareJob(p,input);
+ assert.deepEqual(review.blockers,[]);
+ const job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});let starts=0;
+ const deps={collect:async()=>[],apify:{start:async()=>{starts++;throw Error('No registry lookup without a CNPJ');}} as any};
+ for(let i=0;i<3&&(await getJob(p,job.id)).state!=='completed';i++)await runQualification(await grantTestLease(p,job.id),deps);
+ assert.equal((await getJob(p,job.id)).state,'completed');
+ const results=(await listJobItems(p,job.id)).items[0].results;
+ assert.deepEqual(results.map((r:any)=>[r.module,r.status,r.reasons]),[['registry','skipped',['NO_CNPJ']],['email','skipped',['NO_EVIDENCE']]]);
+ assert.equal(starts,0);
+ const lead=(await readWorkspaceSnapshot(p)).data.leads.find(l=>l.id===leadId)!;assert.equal(lead.qualification,'pending');assert.equal(lead.phone,'+5541999990001');
+});
