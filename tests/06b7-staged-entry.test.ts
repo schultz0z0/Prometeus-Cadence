@@ -9,3 +9,9 @@ test('06B.7 standard entries offer four sources and no integrated journey trigge
  for(const key of ['journey','journeyForJob','pauseJourney'])assert.equal(key in client,true,key);
  client.dispose();
 });
+test('06B.7 archived journeys offer no dead end: ending is named as final and stale proposals point to the list',()=>{
+ assert.doesNotMatch(read('modules/prospecting/research-journey.tsx'),/Pausar jornada/);
+ assert.match(read('modules/prospecting/research-journey.tsx'),/Encerrar jornada/);
+ assert.doesNotMatch(read('modules/cadences/server-cadence-wizard.tsx'),/revisar nova análise/);
+ assert.doesNotMatch(read('server/planning/confirmation.ts'),/sugestão atual na jornada/);
+});

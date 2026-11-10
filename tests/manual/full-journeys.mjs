@@ -81,7 +81,7 @@ const journeys={
    await page.getByRole('option',{name:'Créditos adicionais',exact:true}).click();
    assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);
   });
-  await step('três telas em etapas: enriquecedor separa o lote padrão da investigação sem CNPJ',async()=>{
+  await step('três telas em etapas: enriquecedor aceita lead com CNPJ e manda o resto ao qualificador',async()=>{
    const list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista etapas']);
    await lead(a.workspace,list,{name:'[RE] Qualificada com CNPJ',qualification:'qualified',cnpj:'37297479000180'});
    await lead(a.workspace,list,{name:'[RE] Pendente com CNPJ',cnpj:'11222333000181'});
@@ -98,11 +98,11 @@ const journeys={
      }
     }
     const row=page.getByRole('row').filter({hasText:'[RE] Lista etapas'});
-    assert.equal((await row.getByRole('cell').nth(1).innerText()).trim(),'1','só a empresa qualificada com CNPJ é elegível');
-    await row.getByRole('button',{name:'Investigar 1 sem CNPJ'}).click();
-    await page.getByRole('dialog',{name:'Investigar empresas sem CNPJ'}).getByRole('button',{name:'Cancelar'}).click();
+    assert.equal((await row.getByRole('cell').nth(1).innerText()).trim(),'2','lead com CNPJ é elegível, qualificado ou não');
+    assert.equal(await row.getByRole('link',{name:'encontre o CNPJ no Qualificador'}).getAttribute('href'),'/leads/qualifier');
+    await row.getByText('1 sem CNPJ').waitFor();
     await row.getByRole('button',{name:'Ver preview'}).click();
-    await page.getByRole('dialog',{name:'Preview de enriquecimento'}).getByText('1 empresas · 1 empresas neste lote.').waitFor();
+    await page.getByRole('dialog',{name:'Preview de enriquecimento'}).getByText('2 empresas · 2 empresas neste lote.').waitFor();
     await page.keyboard.press('Escape');
    }finally{await page.setViewportSize({width:1440,height:900});}
    assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);

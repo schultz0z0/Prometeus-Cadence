@@ -10,7 +10,6 @@ import {jobView} from './repository.ts';
 import {ApifyAdapter} from './providers/apify.ts';
 import {providerContext} from './steps.ts';
 import {settleUsage,releaseUnused} from './usage.ts';
-import {resumeReconciledDiscovery} from '../research/journey.ts';
 import {registrySliceRemaining,registryWindow} from './registry-first.ts';
 import {actorInput} from './providers/profiles.ts';
 import {hashValue} from './review.ts';
@@ -93,7 +92,8 @@ export async function reconcileJob(p:Principal,id:string,body:unknown,deps:{apif
       }
     }
     if((await c.query(`SELECT 1 FROM app.prospecting_attempt WHERE job_id=$1 AND ${unresolvedSql} LIMIT 1`,[id])).rowCount)state='needs_reconciliation';
-    if(state==='queued'&&job.checkpoint.registryFirst&&job.checkpoint.journey&&!(await resumeReconciledDiscovery(c,p,job)))state='cancelled';
+    // 06B.7: a reconciled legacy journey is settled, never re-queued.
+    if(state==='queued'&&job.checkpoint.registryFirst&&job.checkpoint.journey)state='cancelled';
     const cleanup=aborting?(job.checkpoint.discoveryScanLimit?{cleanupDone:[...new Set([...(current.checkpoint.cleanupDone??[]),attempt.payload.runId])]}:!job.input?.enrichment?{remoteTerminal:true}:{}):{};
     const row=(await c.query("UPDATE app.prospecting_job SET state=$2,actor_id=$3,provider_run=$4,error_code=$5,error_message=$6,lease_until=NULL,lease_token=NULL,fence=fence+1,revision=revision+1,updated_at=now(),checkpoint=checkpoint||$7::jsonb WHERE id=$1 RETURNING *",[id,state,job.checkpoint.journey?job.actor_id:p.userId,providerRun,selection.resultUnavailable?'RESULT_UNAVAILABLE':null,selection.resultUnavailable?'Consumo registrado por confirmação administrativa; resultado indisponível, sem repetir a chamada.':null,cleanup])).rows[0];
     if(['failed','partial','cancelled'].includes(state))await releaseUnused(c,id);

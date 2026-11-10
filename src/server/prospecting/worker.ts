@@ -32,7 +32,7 @@ async function cleanRevoked(deps:GenerationAdapters,signal:AbortSignal,workspace
 export async function runWorkerOnce(deps:WorkerAdapters={},options:{workerId?:string;signal:AbortSignal;workspaceId?:string}):Promise<boolean>{
   if(await cleanRevoked(deps,options.signal,options.workspaceId))return true;
   if(!prospectingConfig().enabled)return false;
-  if(await advancePendingJourney(options.workspaceId))return true;
+  if(await advancePendingJourney(options.workspaceId,false))return true;
   const lease=await claimJob(options.workerId??randomUUID(),options.workspaceId);if(!lease)return false;
   await runLeasedJob(lease,deps,options.signal);
   return true;
@@ -50,7 +50,7 @@ export async function runLeasedJob(lease:JobLease,deps:WorkerAdapters,shutdown:A
       case 'planning':await runPlanning(lease,{...deps,generate:deps.planningGenerate,signal});break;
       default:throw Error('INVALID_JOB_KIND');
     }
-    if(job.checkpoint?.journey)await advanceJourney(lease);
+    if(job.checkpoint?.journey)await advanceJourney(lease,false);
   }catch(error){
     if(error instanceof WaitingCapacity||siteBrowserUnavailable(error)){
       const retry=error instanceof WaitingCapacity
@@ -59,7 +59,7 @@ export async function runLeasedJob(lease:JobLease,deps:WorkerAdapters,shutdown:A
       await withContextTransaction(workerPool(),{workspaceId:lease.workspaceId,userId:lease.actorId,role:'operator',sessionId:'worker'},c=>c.query(
         "UPDATE app.prospecting_job SET capacity_retry_at=clock_timestamp()+make_interval(secs=>$6),error_code=$4,error_message=$5,revision=revision+1,updated_at=now() WHERE id=$1 AND lease_token=$2 AND fence=$3 AND lease_until>clock_timestamp() AND state IN('running','waiting_provider')",
         [lease.jobId,lease.token,lease.fence,retry.code,retry.message,retry.seconds]));
-    }else if(error instanceof AppError&&error.code==='JOURNEY_CHANGED')await advanceJourney(lease).catch(()=>{});
+    }else if(error instanceof AppError&&error.code==='JOURNEY_CHANGED')await advanceJourney(lease,false).catch(()=>{});
     // Other fencing or revocation keeps the durable journal.
   }
   finally{

@@ -108,16 +108,6 @@ async function pendingStage(c:PoolClient,q:any,name:'research'|'people'|'qualify
  return{pending,missing};
 }
 async function currentBasis(c:PoolClient,p:Principal,q:any){return basis(c,p,q.input,true,q.basis.registryDateSlices===true);}
-export async function resumeReconciledDiscovery(c:PoolClient,p:Principal,job:{id:string;actor_id:string;checkpoint:{journey:{id:string;basisHash:string}}}){
- const q=await row(c,job.checkpoint.journey.id,true);
- if(q.actor_id!==job.actor_id||q.actor_id!==p.userId||hashValue(q.basis)!==job.checkpoint.journey.basisHash)return false;
- if(q.state!=='running'&&(q.state!=='blocked'||q.reason!=='NEEDS_RECONCILIATION'))return false;
- if((await stages(c,q.id)).some(stage=>stage.job_id!==job.id&&stage.job_state==='needs_reconciliation'))return false;
- const basis=await currentBasis(c,p,q);
- if(basis.hash!==hashValue(q.basis))return false;
- if(q.state==='blocked')await c.query("UPDATE app.prospecting_journey SET state='running',reason=NULL,revision=revision+1 WHERE id=$1",[q.id]);
- return true;
-}
 export async function assertJourneyAuthority(c:PoolClient,job:any){
  if(!job.checkpoint?.journey||job.state==='cancelling')return;
  const role=(await c.query('SELECT app.current_role() role')).rows[0].role;if(!['owner','admin','operator'].includes(role))throw new AppError(403,'A autorização para esta jornada foi removida.');
@@ -134,7 +124,7 @@ async function drainChildren(c:PoolClient,q:any){
   if(s.job_state==='queued')await releaseUnused(c,s.job_id);
  }
 }
-async function advance(c:PoolClient,p:Principal,q:any){
+async function advance(c:PoolClient,p:Principal,q:any,proceed=true){
  const ss=await synchronize(c,q);if(q.state!=='running')return;
  if(ss.some(s=>s.job_state==='needs_reconciliation')){await c.query("UPDATE app.prospecting_journey SET state='blocked',reason='NEEDS_RECONCILIATION',revision=revision+1 WHERE id=$1",[q.id]);return;}
  const b=await currentBasis(c,p,q);if(b.hash!==hashValue(q.basis)){await drainChildren(c,q);await c.query("UPDATE app.prospecting_journey SET state='blocked',reason='CONTEXT_CHANGED',revision=revision+1 WHERE id=$1",[q.id]);return;}
@@ -146,21 +136,22 @@ async function advance(c:PoolClient,p:Principal,q:any){
  }
  if(!all.length){await c.query("UPDATE app.prospecting_journey SET state='review',reason='EMPTY_RESULT',revision=revision+1 WHERE id=$1",[q.id]);return;}
  const next=sequence.filter(n=>n!=='discover').map(name=>({name,covered:new Set(ss.filter(s=>s.name===name&&['completed','partial'].includes(s.job_state)&&(name==='research'||s.job_checkpoint.journey?.basisHash===hashValue(q.basis))).flatMap(s=>s.company_ids as string[]))})).map(s=>({name:s.name,pending:all.filter(id=>!s.covered.has(id))})).find(s=>s.pending.length);
- if(next){await enqueue(c,p,q,next.name,next.pending);await c.query('UPDATE app.prospecting_journey SET revision=revision+1 WHERE id=$1',[q.id]);}
+ if(next){if(!proceed)throw new AppError(409,'Jornada arquivada.','LEGACY_JOURNEY_ARCHIVED');await enqueue(c,p,q,next.name,next.pending);await c.query('UPDATE app.prospecting_journey SET revision=revision+1 WHERE id=$1',[q.id]);}
  else await c.query("UPDATE app.prospecting_journey SET state='review',reason=NULL,revision=revision+1 WHERE id=$1",[q.id]);
 }
-export async function advanceJourney(lease:JobLease):Promise<JourneyView>{
+// 06B.7: the worker passes proceed=false, so a legacy journey finishes its current stage and stops instead of queueing the next one.
+export async function advanceJourney(lease:JobLease,proceed=true):Promise<JourneyView>{
  const p:Principal={workspaceId:lease.workspaceId,userId:lease.actorId,role:'operator',sessionId:'journey-worker'};
  return withContextTransaction(workerPool(),p,async c=>{
   await lockWorkspace(c);await authorize(c,p);await assertJobLease(c,lease,true,true);
   const stage=(await c.query('SELECT journey_id FROM app.journey_stage WHERE job_id=$1',[lease.jobId])).rows[0];if(!stage)throw new AppError(404,'Etapa não encontrada.');
   await c.query("SELECT set_config('app.journey_job',$1,true),set_config('app.journey_token',$2,true),set_config('app.journey_fence',$3,true)",[lease.jobId,lease.token,String(lease.fence)]);
   const q=await row(c,stage.journey_id,true);await c.query('SAVEPOINT journey_advance');
-  try{await advance(c,p,q);await c.query('RELEASE SAVEPOINT journey_advance');}catch(e){await c.query('ROLLBACK TO SAVEPOINT journey_advance');await c.query('RELEASE SAVEPOINT journey_advance');if(!(e instanceof AppError))throw e;await c.query("UPDATE app.prospecting_journey SET state='blocked',reason=$2,revision=revision+1 WHERE id=$1",[q.id,e.code??'REVIEW_REQUIRED']);}
+  try{await advance(c,p,q,proceed);await c.query('RELEASE SAVEPOINT journey_advance');}catch(e){await c.query('ROLLBACK TO SAVEPOINT journey_advance');await c.query('RELEASE SAVEPOINT journey_advance');if(!(e instanceof AppError))throw e;await c.query("UPDATE app.prospecting_journey SET state='blocked',reason=$2,revision=revision+1 WHERE id=$1",[q.id,e.code??'REVIEW_REQUIRED']);}
   return view(c,q.id);
  });
 }
-export async function advancePendingJourney(workspaceId?:string){const r=(await workerPool().query('SELECT * FROM app.claim_journey_advance($1)',[workspaceId??null])).rows[0];if(!r)return false;const lease={workspaceId:r.workspace_id,actorId:r.actor_id,jobId:r.job_id,token:r.token,expiresAt:r.expires_at.toISOString(),fence:Number(r.fence)};try{await advanceJourney(lease);}finally{await withContextTransaction(workerPool(),{workspaceId:r.workspace_id,userId:r.actor_id,role:'operator',sessionId:'journey-worker'},c=>c.query('UPDATE app.prospecting_job SET lease_until=clock_timestamp() WHERE id=$1 AND lease_token=$2 AND fence=$3',[r.job_id,r.token,r.fence])).catch(()=>{});}return true;}
+export async function advancePendingJourney(workspaceId?:string,proceed=true){const r=(await workerPool().query('SELECT * FROM app.claim_journey_advance($1)',[workspaceId??null])).rows[0];if(!r)return false;const lease={workspaceId:r.workspace_id,actorId:r.actor_id,jobId:r.job_id,token:r.token,expiresAt:r.expires_at.toISOString(),fence:Number(r.fence)};try{await advanceJourney(lease,proceed);}finally{await withContextTransaction(workerPool(),{workspaceId:r.workspace_id,userId:r.actor_id,role:'operator',sessionId:'journey-worker'},c=>c.query('UPDATE app.prospecting_job SET lease_until=clock_timestamp() WHERE id=$1 AND lease_token=$2 AND fence=$3',[r.job_id,r.token,r.fence])).catch(()=>{});}return true;}
 export async function cancelJourney(p:Principal,id:string){return withWorkspaceTransaction(p,async c=>{
  await authorize(c,p);await lockWorkspace(c);const q=await row(c,id,true);if(q.actor_id!==p.userId&&(await c.query('SELECT app.current_role() role')).rows[0].role==='operator')throw new AppError(403,'Somente o criador ou um administrador pode pausar esta jornada.');
  for(const s of await stages(c,id))if(!terminal.includes(s.job_state)){await c.query("UPDATE app.prospecting_job SET state=CASE WHEN state='queued' THEN 'cancelled' ELSE 'cancelling' END,revision=revision+1 WHERE id=$1",[s.job_id]);if(s.job_state==='queued')await releaseUnused(c,s.job_id);}

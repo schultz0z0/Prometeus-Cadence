@@ -141,3 +141,27 @@ test('unavailable later inference keeps a useful paid company result applicable'
  await runEnrichment(await grantTestLease(f.p,job.id),deps);await runEnrichment(await grantTestLease(f.p,job.id),deps);const reconciled=await reconcileJob(f.p,job.id,{resultUnavailable:true});assert.equal(reconciled.state,'partial');
  const item=(await listJobItems(f.p,job.id)).items[0];assert.equal((await applyJobResults(f.p,job.id,{requestId:randomUUID(),itemIds:[item.id]})).applied,1);assert.equal(await consumed(f.p,'enrichment'),1);
 });
+test('06B.7 enrichment accepts a lead with CNPJ before qualification and rejects a lead without a valid CNPJ',async()=>{
+ const {p}=await prospectingUser({platformAi:true}),listId=randomUUID(),pending=randomUUID(),bare=randomUUID(),lead=(id:string,extra:object)=>({id,listId,name:'[RE] Empresa '+id.slice(0,4),source:'MANUAL',qualification:'pending',createdAt:new Date().toISOString(),...extra});
+ await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:0,command:{type:'leads.import',list:{id:listId,name:'[RE] Com e sem CNPJ'},leads:[lead(pending,{cnpj:'12345678000190'}),lead(bare,{cnpj:'123'})]}});
+ await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});
+ const input=(leadIds:string[])=>({kind:'qualification',listId,leadIds,modules:['decisors'],summaryPolicy:'all',escalation:'off',enrichment:{maxCredits:1,destinationName:'[RE] Decisores'}});
+ assert.deepEqual((await prepareJob(p,input([pending]))).blockers,[]);
+ await assert.rejects(prepareJob(p,input([pending,bare])),{status:422});
+});
+test('06B.7 the credit cap of a standard batch looks up only what it covers and marks the rest as over budget',async()=>{
+ const {p}=await prospectingUser({platformAi:true}),listId=randomUUID(),ids=[randomUUID(),randomUUID()];
+ await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:0,command:{type:'leads.import',list:{id:listId,name:'[RE] Teto'},leads:ids.map((id,n)=>({id,listId,name:'Empresa Exemplo '+n,cnpj:n?'37297479000180':'12345678000190',site:'https://empresa.example',source:'MANUAL',qualification:'pending',createdAt:new Date().toISOString()}))}});
+ await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});
+ const input={kind:'qualification',listId,leadIds:ids,modules:['decisors'],summaryPolicy:'all',escalation:'off',enrichment:{maxCredits:1,destinationName:'[RE] Decisores'}},review=await prepareJob(p,input);
+ assert.deepEqual(review.blockers,[]);
+ const job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),base=adapters(true);let lookups=0;
+ const deps={...base,apify:{...base.apify,start:async(ctx:any)=>{lookups++;return base.apify.start(ctx);}}};
+ for(let i=0;i<8&&!['completed','partial','failed'].includes((await getJob(p,job.id)).state);i++)await runEnrichment(await grantTestLease(p,job.id),deps);
+ assert.equal((await getJob(p,job.id)).state,'completed');
+ assert.ok(lookups>0&&lookups<=3,'only the one company covered by the cap is looked up (at most three source runs per company)');
+ const items=(await listJobItems(p,job.id)).items,over=items.find(i=>i.leadId===ids[1])!,paid=items.find(i=>i.leadId===ids[0])!;
+ assert.equal(over.status,'skipped');assert.equal(over.enrichment?.charged,false);assert.equal(over.enrichment?.people.length,0);
+ assert.equal(paid.enrichment?.charged,true);assert.equal(paid.enrichment?.people.length,1);
+ assert.ok(await consumed(p,'enrichment')<=1);
+});

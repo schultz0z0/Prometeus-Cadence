@@ -32,13 +32,14 @@ async function fixture(n=2){
  const input:JourneyInput={brief:'Clínicas odontológicas',location:'Rio de Janeiro',limit:n};return{...f,input};
 }
 async function start(f:Awaited<ReturnType<typeof fixture>>){const review=await prepareJourney(f.p,f.input);assert.deepEqual(review.blockers,[]);const body={input:f.input,token:review.token,requestId:randomUUID()};return{body,journey:await confirmJourney(f.p,body)};}
-async function done(f:Awaited<ReturnType<typeof fixture>>,journey:any,name:string,state='completed',n=2){
+async function done(f:Awaited<ReturnType<typeof fixture>>,journey:any,name:string,state='completed',n=2,viaWorker=false){
  const s=journey.stages.filter((s:any)=>s.name===name).at(-1);assert.ok(s?.jobId,name);
  if(name==='discover'){const snap=await readWorkspaceSnapshot(f.p);await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snap.revision,command:{type:'leads.import',leads:Array.from({length:n},(_,i)=>({id:randomUUID(),listId:journey.listId,name:'Clínica '+i,site:'https://clinica'+i+'.example',source:'MANUAL',qualification:'pending',createdAt:new Date().toISOString()}))}});}
  await testAdmin(async c=>{await c.query("SELECT set_config('app.workspace_id',$1,false),set_config('app.user_id',$2,false)",[f.p.workspaceId,f.p.userId]);if(name==='discover'){const leads=(await c.query('SELECT id,payload FROM app.lead WHERE workspace_id=$1 AND list_id=$2',[f.p.workspaceId,journey.listId])).rows;for(const l of leads)await c.query("INSERT INTO app.prospecting_item(workspace_id,id,job_id,lead_id,name,status,payload) VALUES($1,$2,$3,$4,$5,'inserted','{}')",[f.p.workspaceId,randomUUID(),s.jobId,l.id,l.payload.name]);}
  if(state==='completed'&&['research','people'].includes(name))await c.query("UPDATE app.research_case SET state='completed',missing='[]' WHERE job_id=$1",[s.jobId]);
  if(state==='completed'&&name==='qualify'){const job=(await c.query('SELECT input FROM app.prospecting_job WHERE id=$1',[s.jobId])).rows[0];for(const leadId of job.input.leadIds)await c.query("INSERT INTO app.prospecting_item(workspace_id,job_id,id,lead_id,name,status,payload) VALUES($1,$2,$3,$4,'Fixture','pending_review',$5)",[f.p.workspaceId,s.jobId,randomUUID(),leadId,{results:job.input.modules.map((module:string)=>({module,status:'pending_review',proposed:{},reasons:[]}))}]);}
  await c.query('UPDATE app.prospecting_job SET state=$2,lease_until=clock_timestamp()-interval \'1 second\' WHERE id=$1',[s.jobId,state]);});
+ if(viaWorker){assert.equal(await runWorkerOnce({},{workspaceId:f.p.workspaceId,signal:new AbortController().signal}),true);return getJourney(f.p,journey.id);}
  const row=(await workerPool().query('SELECT * FROM app.claim_journey_advance($1)',[f.p.workspaceId])).rows[0];assert.ok(row,'durable advance ticket');
  return advanceJourney({workspaceId:row.workspace_id,jobId:row.job_id,actorId:row.actor_id,token:row.token,fence:Number(row.fence),expiresAt:row.expires_at.toISOString()});
 }
@@ -189,13 +190,13 @@ test('registry-first journey replaces a homonym and resumes website collection i
   'robots:/robots.txt','sitemap:/sitemap.xml','page:/','page:/contato','page:/contato',
  ]);
  const result=await getJourney(f.p,journey.id);
- assert.equal(result.stages[1].name,'research');
+ assert.equal(result.stages.length,1,'06B.7: the worker no longer opens the research stage');assert.equal(result.reason,'LEGACY_JOURNEY_ARCHIVED');
  const snapshot=await readWorkspaceSnapshot(f.p);
  assert.equal(snapshot.data.leads[0].cnpj,record.cnpj);
  assert.equal(snapshot.data.leads[0].site,'https://company.example.com/');
  assert.equal(snapshot.data.cadences.length,0);
 });
-test('an uncertain registry-first Maps run reconciles against Maps and resumes without another start',async t=>{
+test('an uncertain registry-first Maps run reconciles against Maps and is settled without another start',async t=>{
  const before=process.env.SITE_BROWSER_TOKEN;
  process.env.SITE_BROWSER_TOKEN='fixture-only-site-browser-token-00001';
  t.after(()=>{if(before===undefined)delete process.env.SITE_BROWSER_TOKEN;else process.env.SITE_BROWSER_TOKEN=before;});
@@ -227,12 +228,12 @@ test('an uncertain registry-first Maps run reconciles against Maps and resumes w
   return Response.json({data:{actId:'maps-actor',buildNumber:'fixture-build',defaultDatasetId:'maps-dataset'}});
  });
  const resumed=await reconcileJob(f.p,jobId,{runId:'maps-confirmed',operationId:pending.unresolvedAttempts![0].id},{apify:reconciling});
- assert.equal(resumed.state,'queued');
- for(let i=0;i<4&&(await getJob(f.p,jobId)).state!=='partial';i++)await tick();
- assert.equal((await getJob(f.p,jobId)).state,'partial');
+ assert.equal(resumed.state,'cancelled','06B.7: a reconciled legacy journey is not re-queued');
+ await tick();
+ assert.equal((await getJob(f.p,jobId)).state,'cancelled');
  assert.equal(starts,2);
 });
-test('ComplementaryRegistry resumes a disjoint CNPJ window without repeating candidate lookups',async t=>{
+test('ComplementaryRegistry rejects wrong windows on reconciliation and settles the confirmed one without resuming',async t=>{
  const previous=process.env.APIFY_CNPJ_DATE_SLICES;
  process.env.APIFY_CNPJ_DATE_SLICES='true';
  t.after(()=>{if(previous===undefined)delete process.env.APIFY_CNPJ_DATE_SLICES;else process.env.APIFY_CNPJ_DATE_SLICES=previous;});
@@ -282,19 +283,8 @@ test('ComplementaryRegistry resumes a disjoint CNPJ window without repeating can
  await assert.rejects(reconcileJob(f.p,jobId,{runId:'newer',operationId:pending.unresolvedAttempts![0].id},{apify:reconciling}),{status:409});
  assert.equal((await getJob(f.p,jobId)).state,'needs_reconciliation');
  await reconcileJob(f.p,jobId,{runId:'older-confirmed',operationId:pending.unresolvedAttempts![0].id},{apify:reconciling});
- for(let i=0;i<8&&(await getJob(f.p,jobId)).state!=='completed';i++)await tick();
- const result=await getJob(f.p,jobId);
- assert.equal(result.state,'completed');
- assert.equal(result.counts.inserted,1);
- assert.deepEqual(result.discoveryReasons,{MAPS_IDENTITY_UNVERIFIED:1,CNPJ_OUTSIDE_DATE_WINDOW:1,CNPJ_ALREADY_EXAMINED:1});
- assert.deepEqual(maps,[record.name,older.name]);
- const shared={mode:'search',cnae:['2512800'],cnaeScope:'main',uf:['PR'],city:['Curitiba'],situacao:['ATIVA'],includePartners:false};
- assert.deepEqual(searches,[
-  {...shared,openedFrom:'2020-01-01',maxRecords:6},
-  {...shared,openedTo:'2019-12-31',maxRecords:9},
- ]);
- const billed=await testAdmin(async c=>(await c.query("SELECT COALESCE(sum(quantity),0)::int AS spent FROM app.billing_consumption WHERE workspace_id=$1 AND reservation_key=$2 AND unit='extractions'",[f.p.workspaceId,'job:'+jobId])).rows[0].spent);
- assert.equal(billed,1);
+ await tick();
+ assert.equal((await getJob(f.p,jobId)).state,'cancelled','06B.7: a reconciled legacy journey is not re-queued');
 });
 test('ComplementaryRegistry stops before a second paid window if the source violates the first date filter',async t=>{
  const previous=process.env.APIFY_CNPJ_DATE_SLICES;
@@ -339,7 +329,7 @@ test('discovery only delivers a verified active company and reports a shortfall'
  const collect=async(url:string)=>[{id:'site',url,text:url.includes('inactive')?'Clínica Baixada +55 11 98765-4321 33.000.167/0001-01':'Clínica Ativa +55 11 98765-4321 37.297.479/0001-80',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];
  for(let batch=0;batch<2;batch++)await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
  const current=await getJourney(f.p,journey.id);assert.deepEqual(calls,['MAPS','CNPJ','CNPJ','MAPS']);
- assert.equal(current.stages[0].state,'partial');assert.equal(current.stages.filter(s=>s.name==='research').length,1,JSON.stringify(current));
+ assert.equal(current.stages[0].state,'partial');assert.equal(current.stages.filter(s=>s.name==='research').length,0,'06B.7: no next stage');assert.equal(current.reason,'LEGACY_JOURNEY_ARCHIVED');
  const leads=(await readWorkspaceSnapshot(f.p)).data.leads;assert.equal(leads.length,1);assert.equal(leads[0].cnpj,'37297479000180');
 });
 test('legacy Maps-first admission uses Chromium even with the retired Actor configured',async t=>{
@@ -554,14 +544,31 @@ test('06B.7 keeps legacy history and pause without accepting new integrated work
   await post({action:'prepare',input:f.input}),
   await post({action:'confirm',input:f.input,token:review.token,requestId:randomUUID()}),
   await post({action:'prepare'},journey.id,'resume'),
-  await post({channels:['EMAIL']},journey.id,'prepare-cadence')
+  await post({channels:['EMAIL']},journey.id,'prepare-cadence'),
+  await post({action:'confirm',token:'t',requestId:randomUUID()},journey.id,'resume'),
+  await post({channels:['EMAIL'],token:'t',requestId:randomUUID()},journey.id,'confirm-cadence')
  ]){assert.equal(response.status,409);assert.equal((await response.json()).code,'LEGACY_JOURNEY_ARCHIVED');}
  const history=await journeyRequest(new Request(url+'?jobId='+journey.stages[0].jobId,{headers:f.headers}));
  assert.equal(history.status,200);assert.equal((await history.json()).id,journey.id);
  assert.equal((await post({},journey.id,'cancel')).status,200);
  assert.equal(await jobs(),before);
+ const lists=()=>testAdmin(async c=>Number((await c.query('SELECT count(*) n FROM app.list WHERE workspace_id=$1',[f.p.workspaceId])).rows[0].n)),listsBefore=await lists();
+ const foreign=await fixture(),asForeign=await journeyRequest(new Request(url,{method:'POST',headers:foreign.headers,body:JSON.stringify({action:'prepare'})}),journey.id,'resume');
+ assert.equal(asForeign.status,409);assert.equal((await asForeign.json()).code,'LEGACY_JOURNEY_ARCHIVED');
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=$3 WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId,'viewer']));
+ assert.ok([403,409].includes((await post({action:'prepare',input:f.input})).status),'a viewer cannot start integrated work either');
+ assert.equal((await journeyRequest(new Request(url+'?id='+journey.id,{headers:f.headers}))).status,403,'prospecting history stays closed to viewers, as before');
+ assert.equal(await jobs(),before);assert.equal(await lists(),listsBefore);
 });
 
+test('06B.7 the worker archives a running legacy journey instead of opening its next stage',async()=>{
+ const f=await fixture(),{journey}=await start(f);
+ const jobs=()=>testAdmin(async c=>Number((await c.query('SELECT count(*) n FROM app.prospecting_job WHERE workspace_id=$1',[f.p.workspaceId])).rows[0].n));
+ const before=await jobs(),after=await done(f,journey,'discover','completed',2,true);
+ assert.equal(after.state,'blocked');assert.equal(after.reason,'LEGACY_JOURNEY_ARCHIVED');
+ assert.equal(await jobs(),before,'no research, people or qualification job is queued');
+ assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,2,'leads already found stay in the list');
+});
 // Review regressions exercise real leases/roles and domain rows, never live providers.
 test('active pause drains cancellation and releases its reservation before reviewed resume',async()=>{
  const f=await fixture(),{journey}=await start(f),j=await done(f,journey,'discover'),jobId=j.stages.at(-1)!.jobId!,lease=await grantTestLease(f.p,jobId);
@@ -609,7 +616,7 @@ test('partial people and qualification expose retryable companies and reuse succ
  assert.equal(retry.name,'qualify');assert.equal(retry.companies,1);const input=await testAdmin(async c=>(await c.query('SELECT input FROM app.prospecting_job WHERE id=$1',[retry.jobId])).rows[0].input);assert.deepEqual(input.leadIds,[leads[1]]);assert.deepEqual(input.modules,['summary']);
  j=await done(f,j,'qualify');assert.equal(j.missing,0);assert.equal(j.state,'review');
 });
-test('discovery skips a workspace duplicate in another list and still investigates its new contact',async()=>{
+test('discovery skips a workspace duplicate in another list and stops before investigating',async()=>{
  const f=await fixture(),snap=await readWorkspaceSnapshot(f.p),otherList=randomUUID(),otherLead=randomUUID();
  await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snap.revision,command:{type:'leads.import',list:{id:otherList,name:'Anterior'},leads:[{id:otherLead,listId:otherList,name:'Anterior',site:'https://duplicate.example',source:'MANUAL',qualification:'pending',createdAt:new Date().toISOString()}]}});
  await testAdmin(c=>c.query('INSERT INTO app.lead_identity(workspace_id,list_id,identity,lead_id) VALUES($1,$2,$3,$4)',[f.p.workspaceId,otherList,'source:MAPS:old',otherLead]));
@@ -618,7 +625,7 @@ test('discovery skips a workspace duplicate in another list and still investigat
   return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,nextCursor:null,exhausted:true,rawCount:candidates.length,rejected:[],usage:{provider:'apify',operationId:ctx.operationId,units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
  const collect=async(url:string)=>[{id:'site',url,text:'Nova +55 11 98765-4321 37.297.479/0001-80',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];
- for(let i=0;i<2;i++)await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});const j=await getJourney(f.p,journey.id);assert.equal(j.state,'running');assert.equal(j.stages.at(-1)?.name,'research');assert.equal(j.stages.at(-1)?.companies,1);assert.equal((j as any).excluded,1);
+ for(let i=0;i<2;i++)await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});const j=await getJourney(f.p,journey.id);assert.equal(j.state,'blocked');assert.equal(j.reason,'LEGACY_JOURNEY_ARCHIVED');assert.equal(j.stages.at(-1)?.name,'discover');assert.equal((j as any).excluded,1);
  assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,2,'preserve one contact per company');
 });
 test('a duplicate in the destination list cannot bypass discovery admission',async()=>{

@@ -23,7 +23,7 @@ async function authorized(c:PoolClient,p:Principal){requirePermission({...p,role
 async function selectionState(c:PoolClient,p:Principal,jobId:string,body:z.infer<typeof selectionSchema>){
  const job=(await c.query('SELECT * FROM app.prospecting_job WHERE id=$1',[jobId])).rows[0];if(!job)throw new AppError(404,'Análise não encontrada.');
  const journey=(await c.query('SELECT q.state,q.proposal_job_id,q.cadence_id FROM app.journey_proposal_attempt a JOIN app.prospecting_journey q ON q.workspace_id=a.workspace_id AND q.id=a.journey_id WHERE a.job_id=$1',[jobId])).rows[0];
- if(journey&&(journey.proposal_job_id!==jobId||journey.cadence_id||journey.state!=='review'))throw new AppError(409,'Esta sugestão foi substituída ou a jornada mudou. Abra a sugestão atual na jornada.');
+ if(journey&&(journey.proposal_job_id!==jobId||journey.cadence_id||journey.state!=='review'))throw new AppError(409,'Esta sugestão foi substituída ou a jornada mudou. Gere uma nova análise a partir da lista.');
  const proposal=(await c.query('SELECT payload FROM app.planning_proposal WHERE job_id=$1',[jobId])).rows[0]?.payload as PlanningProposal|undefined;
  if(job.kind!=='planning'||!['completed','partial'].includes(job.state)||!proposal||!('options' in proposal))throw new AppError(409,'Esta análise não contém opções disponíveis para criação.');
  if((await c.query('SELECT 1 FROM app.planning_confirmation WHERE job_id=$1',[jobId])).rowCount)throw new AppError(409,'Uma opção desta análise já foi criada.');
