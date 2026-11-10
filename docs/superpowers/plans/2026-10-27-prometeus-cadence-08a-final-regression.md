@@ -9,7 +9,8 @@
 
 ## Global Constraints
 
-- Pacote planejado; não marcado concluído. Dependências: 06G, 07B.3, 07C.3, 06A-V. Ordem vigente no índice geral;07D só executa produto após seu gate.
+- Pacote parcial. O aceite integral depende de 06G, 07B.3, 07C.3, 06A-V e 06B.7. A regressão local pode avançar enquanto as entradas externas são preparadas. O 07D segue condicional.
+- O recorte da prospecção cobre Gerador, Qualificador, Enriquecedor e histórico legado. Medir esse recorte no 06B.7 antes de iniciar suas rodadas reais. Consolidar os relatórios globais após as últimas edições.
 - Apify/LLM centrais; contexto, canais, dados, cache, quota e resultados privados por workspace. Sem autoelevação de owner a admin da plataforma.
 - Preservar trial de 7 dias, consumo pré-pago e OpenWA 20 mensagens/5 novoscontatos por dia; intervalo 60–180 s e demais gates existentes.
 - Fidelidade ao CadenceFlow por rota/estado/viewport; não criar outra estética. Estados da referência não observados permanecem classificados.

@@ -1,5 +1,7 @@
 # 06B.6e — Homologação e capacidade
 
+**Gate vigente em 09/11/2026.** A prova de capacidade e o piloto integrado abaixo ficam como histórico. Depois do [06B.7](2026-11-09-prometeus-cadence-06b7-prospeccao-em-etapas.md), homologar as fontes do Gerador, o Qualificador e o Enriquecedor separadamente. Confirmar leitura Chromium no worker contínuo em uma operação avulsa autorizada. Preservar os critérios de isolamento, custo, limpeza e evidência.
+
 1. Medir a admissão de 250 empresas no recorte CNPJ → Maps → site. Usar o worker e o Postgres efêmero com fontes sintéticas. Inserir descartes antes de completar a meta, uma interrupção e um segundo workspace.
 2. Conferir cobertura do Chromium com páginas sintéticas, medir latência e memória e separar a prova do navegador da prova da fila e do consumo comercial.
 3. Corrigir regressões observadas com teste falhando antes da implementação e revisão independente. Registrar o alcance, os limites da medição e o resultado das verificações.

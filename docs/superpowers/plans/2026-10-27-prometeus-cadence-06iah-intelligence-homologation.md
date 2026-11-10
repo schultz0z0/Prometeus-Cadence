@@ -9,7 +9,7 @@
 
 ## Global Constraints
 
-- Pacote concluído no contrato local/controlado em28/10/2026; piloto real permanece gate. Dependências: 06B.5, 06IA. Ordem vigente no índice geral;07D só executa produto após seu gate.
+- Contrato local/controlado aceito em 28/10/2026. O piloto de prospecção passa a depender de 06B.7 e 06IA. Medir qualificação e decisores em operações separadas, com evidência, custo e critérios de abstenção. Sugestões de cadência têm prova própria. O 07D segue condicional.
 - Apify/LLM centrais; contexto, canais, dados, cache, quota e resultados privados por workspace. Sem autoelevação de owner a admin da plataforma.
 - Preservar trial de 7 dias, consumo pré-pago e OpenWA 20 mensagens/5 novoscontatos por dia; intervalo 60–180 s e demais gates existentes.
 - Fidelidade ao CadenceFlow por rota/estado/viewport; não criar outra estética. Estados da referência não observados permanecem classificados.

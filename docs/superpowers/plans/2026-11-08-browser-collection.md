@@ -1,8 +1,10 @@
 # 06B.6 — Busca web e coleta de sites com navegador próprio
 
+> **Atualização de 09/11/2026.** O navegador próprio permanece no escopo das operações avulsas. A jornada CNPJ primeiro do 06B.6c fica preservada como histórico e sai do caminho de lançamento. A sequência vigente está no [06B.7](2026-11-09-prometeus-cadence-06b7-prospeccao-em-etapas.md).
+
 **Decisão de 08/11/2026.** Substituir o Website Content Crawler da Apify pelo Scrapling com Chromium, preservando Apify para a base CNPJ, o Maps e a busca de resultados web. Separar a descoberta de URLs da leitura das páginas. O Prometeus continua responsável pela fila, pela validação de identidade e pela qualificação.
 
-**Estado.** Plano aprovado para desenvolvimento. O experimento no Chrome é uma prova parcial do renderizador. A integração CNPJ primeiro iniciada no workspace precisa ser concluída com o novo provedor. O protótipo de retomada do Actor antigo fica fora do fluxo novo. [Análise e evidências](../../validation/2026-11-08-browser-collection-evaluation.md)
+**Estado.** Renderizador, fila durável e troca do leitor implementados localmente. A prova operacional dos módulos avulsos segue no 06B.6e. [Análise inicial e evidências](../../validation/2026-11-08-browser-collection-evaluation.md)
 
 ## 06B.6a — Renderizador Chromium isolado
 
@@ -38,5 +40,5 @@
 ## 06B.6e — Homologação e capacidade
 
 - Rodar cenários controlados com site estático, SPA, paginação, sitemap, redirecionamento, domínio com erro e página lenta. Exercitar lote de 250 empresas elegíveis com fontes simuladas, reposição após descartes, mais de um workspace e recuperação de interrupções. Medir cobertura, erros, fila, memória, latência e consumo comercial.
-- Depois, executar um piloto real pequeno mediante autorização específica para chamadas pagas. Medir cobertura do navegador, precisão dos vínculos CNPJ/Maps/site, custo da busca, tempo até o resultado e motivo de cada descarte. Separar evidência do navegador, da busca e da qualificação. Escala real e custo são aceites medidos em separado da simulação de 250.
+- Depois, homologar separadamente cada módulo avulso, mediante autorização específica para chamadas pagas. Medir cobertura do navegador, precisão dos vínculos aplicáveis ao módulo, custo, tempo até o resultado e motivos de descarte. Escala real e custo são aceites medidos em separado da simulação de 250.
 - **Aceite.** Relatórios com critérios e resultados após as últimas alterações, revisão independente, suítes, build e tipos. Revalidar os estados afetados em 08A. O 08B usa os resultados para dimensionar e operar o serviço de navegador; a publicação e os fornecedores externos continuam sujeitos aos gates existentes.

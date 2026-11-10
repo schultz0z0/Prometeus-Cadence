@@ -28,7 +28,7 @@ A experiência inicial reproduz visual, fluxos e funcionalidades observáveis do
 | R04 | Site/razão social → CNPJ/empresa correta → sócios e gestores → perfis pessoais/LinkedIn e contatos atribuídos, sem confundir homônimos |06B.4 |
 | R05 | Pesquisa adaptativa continua parcialmente quando uma fonte falha; cancelamento/retomada não repetem consumo ou consultas já concluídas |06B.3/4/5 |
 | R06 | LLM tradicional usa instruções gerais versionadas + contexto/ICP/produto privado + pedido + evidências; JEV avalia dentro de contrato estruturado |06IA aceito;06IA-H avalia fontes/qualidade |
-| R07 | Qualificação e fatos revisáveis; lista e cadência sugeridas com variáveis, sem criar/envios pelo simples pedido de sugestão |06B.5/06D.1 |
+| R07 | Qualificação e fatos revisáveis em lista existente. Sugestão de cadência com variáveis é uma operação separada, com confirmação explícita para produzir efeitos. | 06B.7/06D.1 |
 | R08 | Criação manual/IA/assistente/importação de modelo conforme inventário; etapas, variantes, anexos, agenda e publicação real/revisada |06D.1 |
 | R09 | Canais/inbox/threads/respostas/opt-out/parada; entrega/recibo apenas quando o canal fornece prova; falhas incertas reconciliadas |06D.2 |
 | R10 | Dashboard, relatórios e execuções compartilham fatos reais, período/fuso/filtros e detalhes; zero distingue indisponibilidade |06C.2 |

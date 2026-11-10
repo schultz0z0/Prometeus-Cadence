@@ -4,7 +4,33 @@ Especificação aprovada: `docs/superpowers/specs/2026-10-20-prometeus-cadence-d
 
 O roteiro abaixo cobre o produto completo. Os pacotes restantes têm planos executáveis no [índice mestre de27/10](2026-10-27-prometeus-cadence-master-plan.md), alinhados ao PRD e aos contratos técnicos, sem prometer integrações a partir de mocks.
 
-**Revisão vigente:27/10/2026.** O alvo é a réplica visual, dos fluxos e das funcionalidades de produto; o usuário não exige comprovar uma implementação interna idêntica ao backend privado da referência. A implementação própria continua sujeita a testes reais. Regras não observadas recebem contrato explícito e classificação, sem bloquear todo o roteiro nem serem apresentadas como verificadas no concorrente. Detalhamento e critérios em [Fechamento de paridade](2026-10-26-prometeus-cadence-parity-closure.md), complementado pela [extensão de escopo aprovada em27/10](../specs/2026-10-27-prometeus-cadence-scope-audit.md). Esta última prevalece nas subdivisões e prioridades alteradas.
+**Revisão vigente em 09/11/2026.** O alvo continua sendo a reprodução do visual e dos fluxos observáveis do CadenceFlow. A revisão aprovada para prospecção separa Gerador, Qualificador e Enriquecedor e prevalece nas dependências alteradas abaixo. Os demais critérios continuam na [extensão de escopo de 27/10](../specs/2026-10-27-prometeus-cadence-scope-audit.md) e no [fechamento de paridade](2026-10-26-prometeus-cadence-parity-closure.md).
+
+## Caminho restante para a homologação
+
+| Ordem | Trabalho a fechar | Critério de saída |
+| --- | --- | --- |
+| 1 | **06B.7 — Implementação do fluxo em etapas.** Gerar em uma fonte, trabalhar a lista no Qualificador e enriquecer decisores quando elegíveis. Retirar a jornada integrada da entrada padrão e preservar seu histórico. | Testes de elegibilidade, consumo, papéis e histórico, revisão independente e comparação das três telas com a referência. [Plano de execução](2026-11-09-prometeus-cadence-06b7-prospeccao-em-etapas.md) |
+| 2 | **06B.6e, 06IA-H e recorte do 08A — Homologar o núcleo.** Rodadas reais independentes para Gerador, Qualificador e Enriquecedor, com trabalho novo observado no worker contínuo. | Maps, Base CNPJ e busca web exercitados separadamente. Apollo tem rodada própria quando houver chave com acesso à pesquisa. Medir evidência por campo, custo, tempo, volumes e reservas. Qualificação e decisores com revisão humana. Chromium confirmado em módulo avulso. |
+| 3 | **06A-V e 08A — Fechar regressão local do release.** Resolver variantes de popups, papéis, teclado, rede e relatórios com dados seguros e revisar diferenças visuais ainda abertas. | Regerar jornadas, varredura e matriz depois das últimas edições. Comparar por área, estado e viewport. Separar evidências locais, homologações externas e estados da referência desconhecidos. |
+| 4 | **08B local — Preparar operação em paralelo à regressão.** Readiness, backup/restauração, carga, soak, observabilidade, recuperação e rollback controlados. | Restaurar com canais e dispatch isolados, provar metas operacionais e documentar como ativar/desativar recursos. O trabalho local pode avançar antes do fechamento integral do 08A. |
+| 5 | **Ambiente de homologação do 08B e aceites externos.** Com autorização específica, preparar uma origem HTTPS isolada com acesso restrito e callbacks de teste antes do aceite integral do 08A. | Validar MCP, webhooks, OAuth e demais fluxos que exigem URL HTTPS. Usar contas e canais de teste, com credenciais e dados segregados. |
+| 6 | **08B público.** Ativar a oferta aprovada depois do aceite integral aplicável e dos testes operacionais. | Domínio, deploy de produção, comunicação externa e Stripe live têm autorização específica. Evidências de homologação e rollback ficam no registro de lançamento. |
+
+A homologação real de prospecção pode começar depois do 06B.7 e da regressão do seu recorte. O fechamento integral do roadmap exige os aceites externos dos módulos ofertados e o 08B. A fase de correção de bugs começa para cada recorte depois de sua implementação aceita. Um recurso que ainda precisa de conector, de decisão de escopo ou de prova operacional continua com pendência própria.
+
+### Pendências fora do núcleo de prospecção
+
+| Pacote | Natureza e pendência |
+| --- | --- |
+| **06D.2, 06C e 06F** | Homologação real de e-mail e WhatsApp em canais próprios, resposta, parada, inbox, avisos e rota central de IA. A implementação controlada e os roteiros existentes são a base. |
+| **07A e 06G** | Homologar LinkedIn após contrato, chave Unipile, conta de teste e decisão jurídica/comercial. Conferir catálogo e regras ainda abertas, como preço anual do adicional e comportamento acima do limite após reassinatura. Preservar o aceite do Stripe em teste. |
+| **07C.2 e 07C.3** | Homologar Agenda, Sheets, MCP e webhooks com credenciais, contas e callbacks autorizados. MCP em Claude e ChatGPT precisa da URL pública. |
+| **07B.3** | Implementação de CRM depende da escolha do fornecedor. Agenda e acompanhamento têm prova local. Piloto SDR depende de OpenWA, conta Google, IA central e autorização de envio. |
+| **07D** | Descoberta condicional. Registrar inclusão ou exclusão antes de abrir desenvolvimento de scoring. |
+| **08B público** | Host, domínio, DNS/TLS, SMTP transacional, OAuth, documentos jurídicos, observabilidade e Stripe live. [Lista de conexões e insumos](../../validation/08a8-conexoes-externas.md) |
+
+A última medição integral registrada para o 08A.8 foi de **117/138**. O auditor atual reconhece **8/138**, com 17 bloqueados, 113 pendentes e quatro estados de referência desconhecida com prova local. Os relatórios globais anteriores estão fora do hash atual. As evidências anteriores continuam válidas para os cenários e versões que mediram. [Medição do 08A.8](../../validation/08a8-live-visual.md) · [Matriz atual](../../validation/08-release-matrix.json)
 
 ## Como ler a numeração do desenvolvimento completo
 
@@ -15,7 +41,7 @@ As famílias continuam sendo **01 a08**. Letras e sufixos dividem uma família e
 | Família | Papel no desenvolvimento completo |
 |---|---|
 | **01–05** | Base de interface, identidade, prospecção/IA, automações e canais; aceites históricos preservados, complementos tratados nos pacotes seguintes. |
-| **06** | Fechamento do produto principal: prospecção completa, inteligência/fontes, cadências, dashboard, segurança, experiência e catálogo comercial. Parte já entregue e parte pendente, conforme relatórios. |
+| **06** | Fechamento do produto principal: prospecção em etapas, inteligência e fontes, cadências, dashboard, segurança, experiência e catálogo comercial. |
 | **07** | LinkedIn, integrações/API/MCP eSDR;07D é descoberta condicional. OSDR é o último módulo funcional novo, após suas dependências. |
 | **08** | Regressão integral visual/funcional e preparação/homologação de produção pública. |
 
@@ -33,14 +59,15 @@ A fidelidade visual/UX e a operação real são aceites de cada pacote, não tra
 | 06A-V | Fechamento das diferenças visuais conhecidas de todas as áreas e porta visual de cada marco | Inventário observado e06A | Comparação por tela/estado/viewport, incluindo assistente lateral, popups, geometria e responsive; contagem de visitas não equivale a aceite visual |
 | 06A-P · novo | Entrada pública, cadastro e ativação | 02 e06A-V | Telefone/documentos próprios com contrato real; cadastro/verificação/workspace/plano, senha, convites e retornos/erros; sem ativação automática |
 | 06A-H · novo | Homologação do ciclo financeiro já implementado | 06A e sandbox próprio | Pacotes, pagamento, alteração, renovação/falha, cancelamento e retomada suportada; efeitos únicos, eventos duplicados/fora de ordem; sem cobrança live |
-| 06B | Contatos, fontes, investigação, qualificação e jornada completa de prospecção | 03–04 + unidades comerciais do06A;06IA;06D para fechar06B.5 |06B.1 base/importação/busca/IA e06B.2 qualificação/enriquecimento nos aceites históricos;06B.3 empresa/site/redes/contatos comerciais;06B.4 CNPJ/sócios/gestores/perfis/contatos atribuídos;06B.5 orquestração/revisão/sugestão de cadência, recuperação e consumo sem duplicação |
-| 06B.6a | Renderizador Scrapling com Chromium em Docker | 06B.5 | JavaScript, navegação, paginação e isolamento de rede em navegador real |
+| 06B | Contatos, fontes, investigação, qualificação e enriquecimento | 03–04, unidades comerciais do 06A e 06IA | 06B.1–06B.4 cobrem a base local e 06B.7 organiza o fluxo padrão em etapas. O 06B.5 preserva a jornada integrada no histórico. |
+| 06B.6a | Renderizador Scrapling com Chromium em Docker | 06B.3 | JavaScript, navegação, paginação e isolamento de rede em navegador real |
 | 06B.6b | Fila persistente de páginas e retomada após timeout ou queda | 06B.6a | Reinício preserva o texto e as URLs confirmadas no Postgres |
-| 06B.6c | Prospecção completa com CNPJ primeiro e busca web de apoio | 06B.6b | CNPJ → Maps → busca web quando necessária → navegador → validação → qualificação |
-| 06B.6d | Substituição do Website Content Crawler da Apify | 06B.6c | Coletas novas passam pelo navegador próprio e o histórico anterior segue consultável |
-| 06B.6e | Homologação do navegador, busca e capacidade | 06B.6d | [Prova controlada](../../validation/06b6e-site-browser-capacity.md), [troca do worker local](../../validation/06b6e-local-worker-cutover.md) e [piloto real isolado](../../validation/06b6e-prospecting-live-pilot.md). Admissão em busca nova na lane contínua pendente |
+| 06B.6c | CNPJ primeiro na jornada integrada | 06B.6b | Prova histórica da jornada. Piloto integrado adiado e fora dos critérios do lançamento padrão. |
+| 06B.6d | Substituição do Website Content Crawler da Apify | 06B.6b | Leituras novas usam o navegador próprio. Falta a prova no worker contínuo pelo 06B.6e. |
+| 06B.7 | Prospecção em etapas | 06B.3, 06B.4, 06B.6d | Gerador por fonte, Qualificador e Enriquecedor independentes, com histórico legado preservado. |
+| 06B.6e | Homologação do navegador, busca e capacidade | 06B.7, 06B.6d | Capacidade controlada já provada. Homologação operacional de cada módulo avulso pendente. |
 | 06IA · novo | Administração central e inteligência adaptativa de IA | 06B.2 e contexto privado da empresa | Apify/LLM configurados exclusivamente pelo administrador do SaaS; cliente não fornece chaves nem escolhe a infraestrutura. Instruções versionadas por tarefa + contexto/público-alvo do workspace + pedido atual; JEV/LLM, abstenção, fontes, isolamento, consumo e avaliações verificáveis |
-| 06IA-H | Homologação da inteligência e das fontes ampliadas | 06IA,06B.3/4/5 e contratos de06D | Cenários controlados de pertinência/cobertura/atribuição/homônimos, custos/tempo, dados reais dos Actors e avaliações LLM/JEV; critérios definidos antes do piloto, orçamento e isolamento comprovados; não repetir infraestrutura já aceita |
+| 06IA-H | Homologação da inteligência e das fontes ampliadas | 06IA, 06B.7 e contratos de 06D | Pertinência, cobertura, atribuição, homônimos, custos e tempo por módulo. Sugestões de cadência em prova separada. |
 | 06C | Eventos, desempenho, dashboard, relatórios, execuções e notificações | 03–06A; projeções consomem eventos de06B/06D |06C.1 eventos/latência/atualização contínua;06C.2 projeções reconciliadas;06C.3 feed/som/avisos/resumos reais; nenhum dado demonstrativo apresentado como operação |
 | 06D | Autoria, publicação, canais e inbox | 05,06B e OpenWA |06D.1 modelos/variantes/anexos/rascunho/agenda;06D.2 entrega/resposta/opt-out e telemetria suportada; reinício sem duplicação e piloto próprio autorizado |
 | 06E | Segurança, privacidade e ciclo de dados/membros | 02,06A-P e06A |06E.1 TOTP/dispositivos/convites/permissões;06E.2 mesclagem/retenção/exportação/exclusão reais, conteúdo removido fora da IA, isolamento |
@@ -50,12 +77,12 @@ A fidelidade visual/UX e a operação real são aceites de cada pacote, não tra
 | 07C | Integrações, API/eventos, agenda e MCP em três pacotes | 02,06E e eventos/comandos do domínio |07C.1 API/outbox/webhooks/contratos de agenda e CRM;07C.2 adaptadores por workspace e fluxos externos;07C.3 MCP com escopos/confirmação/revogação |
 | 06G · novo | Catálogo comercial completo e capacidade adicional | 06A-H e aceite dos recursos vendidos;07A/07B quando incluídos | Anual/cupom conforme catálogo-alvo, caixas/números/assentos com vigência e quotas; consumo pré-pago preservado; módulos pendentes continuam fora de venda |
 | 07D | Descoberta e eventual entrega de Lead Scoring / Hot Now | Eventos de 06C/07B e confirmação da oferta atual | A documentação pública usa planos antigos; confirmar primeiro. Depois, eventos, decay, tiers e replay com fixture |
-| 08A | Regressão final visual e funcional do inventário-alvo já exigida em cada marco | 06A–07C, incluindo06F/06G;07D conforme descoberta | Jornadas entre módulos, desktop/tablet/mobile, todos os estados catalogados, foco/teclado/tema/texto; contratos próprios testados e limites de observação explícitos |
-| 08B | Operação e produção | 08A, 06B.6e e contas próprias habilitadas | Backup/restauração, observabilidade, orçamento de latência, recuperação de provedores, isolamento, deploy/rollback e teste real autorizado |
+| 08A | Regressão final visual e funcional do inventário-alvo | 06A–07C, incluindo 06B.7, 06F e 06G. 07D conforme descoberta. | Jornadas entre módulos, desktop/tablet/mobile, estados catalogados, foco, teclado, tema e texto. Provas locais e bloqueios externos ficam discriminados. |
+| 08B | Operação, homologação HTTPS isolada e produção | Homologação isolada depende de prontidão e autorização. Produção depende de 08A, 06B.6e, 06IA-H e dos aceites aplicáveis. | Backup, restore, observabilidade, recuperação, isolamento e rollback. URL HTTPS de homologação precede as provas externas do 08A que dependem dela. |
 
 **Complemento aprovado em 08/11.** Os pacotes 06B.6a a 06B.6e substituem o rastreamento de sites da Apify. A busca por resultados web, CNPJ e Maps continua com as fontes configuradas. O renderizador 06B.6a e a fila 06B.6b foram validados em isolamento. O 06B.6c conectou ambos à jornada de CNPJ primeiro e implementou recortes complementares por data. O 06B.6d migrou os leitores do aplicativo para o Scrapling com Chromium. O 06B.6e mediu 250 empresas em cenário controlado, confirmou os filtros de abertura no build real e exercitou a admissão com dados reais reaproveitados e Chromium ao vivo. A busca nova no recorte de Curitiba terminou parcial. O aceite operacional segue pendente. Os estados afetados voltam ao 08A e o encerramento continua no 08B. [Plano de desenvolvimento](2026-11-08-browser-collection.md)
 
-**Sequência restante aprovada em27/10:**06B.3→06B.4→06D.1→06D.2→06B.5→06IA-H→06C.2/06C.3→06E.1/06E.2→06F→07C.1/07C.2→07A.1/07A.2/07A.3→07C.3→07B.1/07B.2/07B.3→06G→08A→08B. A viabilidade07A.0 será antecipada antes de comprometer a implementação operacional07A. Se07D for confirmado, encaixar sua entrega antes doSDR com as dependências satisfeitas; se depender de eventosSDR, usar contrato/fixtures antes e revalidar com eventos reais depois. Não prometer07D obrigatório sem confirmação.
+**Sequência histórica aprovada em 27/10.** O [índice mestre](2026-10-27-prometeus-cadence-master-plan.md) preserva os pacotes anteriores e seus aceites locais. A ordem operacional restante passa a ser a tabela **Caminho restante para a homologação** acima. O 07D segue condicionado à decisão de produto.
 
 06A-V continua porta de qualidade de todas as entregas e suas diferenças conhecidas precisam de fechamento; não é um aceite integral já obtido. Os aceites existentes de06A-P/06A-H/06C.1/06B.1/06B.2/06IA permanecem históricos, sem refazer essas entregas. Preparar contratos independentes antes é permitido; segurança, autorização e operação real continuam requisitos de todos os pacotes. OSDR usa agenda/CRM já operacionais, não apenas interfaces ou tipos preparados.06G fecha a oferta comercial depois do aceite dos recursos vendidos.
 

@@ -1,10 +1,16 @@
 # Status: CadenceFlow Visual
-Updated: 2026-11-09 · Session: s58 · Phase:6 franquias e Prospecção completa · aceite integral pendente
+Updated: 2026-11-09 · Session: s60 · Phase: 6 prospecção em etapas · aceite integral pendente
 Environment: L4 · Sandbox: sem escrita na referência · Open ledger rows:0
 
 Consulte [REPORT.md](REPORT.md) para a auditoria geral e [06B.1](../../validation/06-contacts-search.md) para a entrega06B.1; [06B.2](../../validation/06-qualification-enrichment.md) registra a entrega atual. As filas s02 abaixo são históricas, não anulam as verificações posteriores. A paridade integral continua sem aceite; estados bloqueados são não observados por decisão explícita do operador.
 
 ## Summary
+
+- s60: o operador aprovou Gerador, Qualificador e Enriquecedor como etapas independentes no fluxo padrão. O 06B.7 é a próxima implementação e a jornada integrada fica como histórico. A homologação do navegador passa a usar operações avulsas.
+  - **Base da decisão:** EV-321. [Plano do 06B.7](../../superpowers/plans/2026-11-09-prometeus-cadence-06b7-prospeccao-em-etapas.md)
+
+- s59: a observação do CadenceFlow confirmou três telas independentes. O Gerador seleciona uma fonte e salva em lista. O Enriquecedor exige lead qualificado com CNPJ.
+  - **Evidência:** EV-321.
 
 - s58: a Prospecção completa isolada fez a busca real com CNPJ primeiro e encerrou dez avaliações sem inserção. O teste com dados reais reaproveitados e Chromium ao vivo inseriu um lead pendente e fechou as reservas.
   - **Evidência:** EV-320.

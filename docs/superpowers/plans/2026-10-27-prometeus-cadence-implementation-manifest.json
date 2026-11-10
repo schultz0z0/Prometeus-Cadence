@@ -1,8 +1,8 @@
 {
   "version": 1,
   "date": "2026-10-27",
-  "scope": "approved-product-baseline;06C.3-completed-local-controlled;remaining-packages-planned",
-  "next": "06B.6e",
+  "scope": "approved-product-baseline;staged-prospecting-approved;legacy-integrated-journey-deferred",
+  "next": "06B.7",
   "end": "08B",
   "packages": [
     {
@@ -15,6 +15,8 @@
       "conditional": false,
       "continuous": true,
       "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-06av-visual-closure.md",
+      "status": "partial",
+      "pending": ["Comparar diferenças residuais por área e estado e concluir aceite visual aplicável"],
       "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-release-design.md",
       "create": [
         "scripts/lib/visual-coverage.ts",
@@ -290,6 +292,7 @@
       "status": "completed-local-controlled",
       "completedAt": "2026-10-28",
       "review": "docs/validation/06b5-prospecting-journey-review.md",
+      "releaseScope": "Histórico preservado. O 06B.7 retira a criação da jornada integrada do fluxo padrão.",
       "followUpMigrations": [
         "db/migrations/087a-journey-recovery-authority.sql"
       ]
@@ -302,7 +305,7 @@
         "R06"
       ],
       "dependencies": [
-        "06B.5"
+        "06B.3"
       ],
       "conditional": false,
       "continuous": false,
@@ -359,10 +362,10 @@
       "dependencies": [
         "06B.6b"
       ],
-      "conditional": false,
+      "conditional": true,
       "continuous": false,
       "plan": "docs/superpowers/plans/2026-11-08-browser-collection.md",
-      "status": "partial",
+      "status": "deferred-legacy",
       "create": [],
       "modify": [
         "src/domain/prospecting-journey.ts",
@@ -375,7 +378,7 @@
       "evidence": "docs/validation/06b6c-registry-complementary-slices.md",
       "integration": "tests/integration/06b5-prospecting-journey.test.ts",
       "pending": [
-        "Aceite operacional do fluxo no 06B.6e"
+        "Piloto integrado adiado por decisão de produto. Reabrir somente se o fluxo integrado voltar ao escopo."
       ]
     },
     {
@@ -386,12 +389,12 @@
         "R06"
       ],
       "dependencies": [
-        "06B.6c"
+        "06B.6b"
       ],
       "conditional": false,
       "continuous": false,
       "plan": "docs/superpowers/plans/2026-11-09-site-browser-cutover.md",
-      "status": "partial",
+      "status": "implemented-local",
       "create": ["src/server/prospecting/site-policy.ts"],
       "modify": [
         "src/server/prospecting/config.ts",
@@ -403,7 +406,35 @@
       "evidence": "docs/validation/06b6d-site-browser-cutover.md",
       "integration": "tests/integration/prospecting-pipeline.test.ts",
       "pending": [
-        "Aceite da coleta pelo worker compartilhado durante o piloto do 06B.6e"
+        "Comprovar coleta pelo worker contínuo em um módulo avulso no 06B.6e"
+      ]
+    },
+    {
+      "id": "06B.7",
+      "title": "Prospecção em etapas",
+      "requirements": ["R02", "R03", "R04", "R05", "R06", "R24"],
+      "dependencies": ["06B.3", "06B.4", "06B.6d"],
+      "conditional": false,
+      "continuous": false,
+      "plan": "docs/superpowers/plans/2026-11-09-prometeus-cadence-06b7-prospeccao-em-etapas.md",
+      "status": "planned",
+      "dependencyScope": "Para iniciar 06B.7, usar a implementação local do 06B.6d. O aceite operacional do navegador vem depois no 06B.6e.",
+      "modify": [
+        "src/modules/prospecting/server-generator.tsx",
+        "src/modules/prospecting/server-qualifier.tsx",
+        "src/modules/prospecting/enrichment.tsx",
+        "src/modules/automations/server-audience-wizard.tsx",
+        "src/server/research/journey-http.ts",
+        "src/server/prospecting/qualification.ts",
+        "src/server/research/people.ts"
+      ],
+      "integration": "tests/integration/prospecting-pipeline.test.ts",
+      "evidence": "docs/validation/06b7-prospeccao-em-etapas.md",
+      "routes": ["/leads/generator", "/leads/qualifier", "/leads/enrich", "/executions/[id]"],
+      "pending": [
+        "Retirar a jornada integrada do fluxo padrão e preservar o histórico",
+        "Validar geração por fonte, qualificação revisável e elegibilidade de decisores",
+        "Comparar as três telas e liberar homologação real do recorte"
       ]
     },
     {
@@ -414,6 +445,7 @@
         "R06"
       ],
       "dependencies": [
+        "06B.7",
         "06B.6d"
       ],
       "conditional": false,
@@ -425,7 +457,7 @@
       "evidence": "docs/validation/06b6e-site-browser-capacity.md",
       "integration": "tests/integration/06b6e-site-capacity.test.ts",
       "pending": [
-        "Observar admissão a partir de uma busca nova na lane compartilhada. O piloto em Postgres efêmero terminou parcial no recorte real e comprovou admissão com dados de CNPJ e Maps reaproveitados e leitura Chromium ao vivo",
+        "Homologar separadamente Gerador, Qualificador e Enriquecedor com fontes reais e observar leitura Chromium no worker contínuo em um módulo avulso",
         "Revalidação dos estados afetados no 08A"
       ]
     },
@@ -436,7 +468,7 @@
         "R06"
       ],
       "dependencies": [
-        "06B.5",
+        "06B.7",
         "06IA"
       ],
       "conditional": false,
@@ -467,6 +499,7 @@
       "status": "completed-local-controlled",
       "completedAt": "2026-10-28",
       "review": "docs/validation/06iah-intelligence-homologation-review.md",
+      "pending": ["Homologar acurácia, abstenção, atribuição e custo em operações reais de qualificação e decisores"],
       "followUpMigrations": [
         "db/migrations/088a-evaluation-recovery.sql"
       ],
@@ -1762,12 +1795,18 @@
         "06G",
         "07B.3",
         "07C.3",
-        "06A-V"
+        "06A-V",
+        "06B.7"
       ],
       "conditional": false,
       "continuous": false,
       "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-08a-final-regression.md",
       "status": "partial-08a8-live-comparison",
+      "pending": [
+        "Regerar os relatórios de jornada e varredura após as últimas edições",
+        "Fechar os estados transversais e a regressão da prospecção em etapas",
+        "Concluir os aceites externos aplicáveis com HTTPS restrito quando necessário"
+      ],
       "partialAt": "2026-11-07",
       "packages": {"08A.1": {"status": "done","executionPlan": "docs/superpowers/plans/2026-11-05-prometeus-cadence-08a1-coverage-sweep-execution.md","validation": "docs/validation/08a1-coverage-sweep.md","review": "docs/validation/08a1-coverage-sweep-review.md","matrix": "docs/validation/08-release-matrix.json","deviations": "split from 08A; navigation only, no flows"},"08A.2": {"status": "done","executionPlan": "docs/superpowers/plans/2026-11-05-prometeus-cadence-08a2-journeys-execution.md","validation": "docs/validation/08a2-journeys.md","review": "docs/validation/08a2-journeys-review.md","deviations": "no paid provider, no outbound, no Stripe confirmation in the journeys"},"08A.3": {"status": "done","executionPlan": "docs/superpowers/plans/2026-11-05-prometeus-cadence-08a3-remaining-execution.md","validation": "docs/validation/08a3-remaining.md","review": "docs/validation/08a3-remaining-review.md","matrix": "docs/validation/08-release-matrix.json","deviations": "integral acceptance refused at 103 of 126; open visual differences and external homologations depend on the user"},"08A.4": {"status": "implemented-local","executionPlan": "docs/superpowers/plans/2026-11-05-prometeus-cadence-08a4-execution-diary.md","validation": "docs/validation/08a4-execution-diary.md","review": "docs/validation/08a4-execution-diary-review.md","matrix": "docs/validation/08-release-matrix.json","deviations": "diary covers persisted cadence messages and dispatch attempts; global selectors and further local proof precede 08B"},"08A.5": {"status":"implemented-local","executionPlan":"docs/superpowers/plans/2026-11-06-prometeus-cadence-08a5-selectors.md","validation":"docs/validation/08a5-selectors.md","review":"docs/validation/08a5-selectors-review.md","deviations":"stored reference shows closed controls; opened states have local keyboard and form evidence"},"08A.6": {"status":"implemented-local","executionPlan":"docs/superpowers/plans/2026-11-06-prometeus-cadence-08a6-local-closure.md","validation":"docs/validation/08a6-local-closure.md","review":"docs/validation/08a6-local-closure-review.md","matrix":"docs/validation/08-release-matrix.json","deviations":"first steps help is informational by user choice; remaining transversal states, visual acceptance and external homologations stay open"},"08A.7": {"status":"implemented-local","executionPlan":"docs/superpowers/plans/2026-11-07-prometeus-cadence-08a7-local-regression.md","validation":"docs/validation/08a7-local-regression.md","review":"docs/validation/08a7-local-regression-review.md","matrix":"docs/validation/08-release-matrix.json","deviations":"additional local proofs; visual acceptance and external homologations remain open"},"08A.8": {"status":"implemented-local","executionPlan":"docs/superpowers/plans/2026-11-07-prometeus-cadence-08a8-live-visual-closure.md","validation":"docs/validation/08a8-live-visual.md","review":"docs/validation/08a8-live-visual-review.md","matrix":"docs/validation/08-release-matrix.json","deviations":"live reference comparison; Prometeus tours in place of reference videos; full acceptance open"}},
       "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-release-design.md",
@@ -1800,11 +1839,15 @@
       ],
       "dependencies": [
         "08A",
-        "06B.6e"
+        "06B.6e",
+        "06IA-H"
       ],
+      "localPreparation": "Readiness, backup, restore, carga, soak, recuperação e rollback podem avançar em ambiente controlado antes do aceite integral. As dependências acima governam o aceite público.",
+      "restrictedHomologation": "Origem HTTPS isolada, com acesso e callbacks de teste autorizados, pode preceder o aceite integral do 08A para validar MCP, OAuth e webhooks. A ativação pública e Stripe live têm autorização própria.",
       "conditional": false,
       "continuous": false,
       "plan": "docs/superpowers/plans/2026-10-27-prometeus-cadence-08b-public-production.md",
+      "status": "planned",
       "spec": "docs/superpowers/specs/2026-10-27-prometeus-cadence-release-design.md",
       "create": [
         "scripts/lib/release-readiness.ts",
@@ -1839,6 +1882,6 @@
       ]
     }
   ],
-  "prospectingAllowances": {"status": "implemented-local", "plan": "docs/superpowers/plans/2026-11-07-prometeus-cadence-prospecting-allowances.md", "validation": "docs/validation/2026-11-07-prospecting-allowances-progress.md", "review": "docs/validation/2026-11-07-prospecting-allowances-review.md", "evidence": "EV-311", "deviations": "Commercial limits are Prometeus policy. Full live journey and sustained provider capacity require separate acceptance."},
-  "updatedAt": "2026-11-07"
+  "prospectingAllowances": {"status": "implemented-local", "plan": "docs/superpowers/plans/2026-11-07-prometeus-cadence-prospecting-allowances.md", "validation": "docs/validation/2026-11-07-prospecting-allowances-progress.md", "review": "docs/validation/2026-11-07-prospecting-allowances-review.md", "evidence": "EV-311", "deviations": "Limites comerciais são política do Prometeus. Homologação real por operação e capacidade sustentada têm aceites separados."},
+  "updatedAt": "2026-11-09"
 }

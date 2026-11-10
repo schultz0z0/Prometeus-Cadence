@@ -1,5 +1,7 @@
 # Prospecção completa e inteligência — desenho técnico
 
+**Revisão de 09/11/2026.** O [06B.7](../plans/2026-11-09-prometeus-cadence-06b7-prospeccao-em-etapas.md) define o fluxo padrão e o aceite das operações avulsas. A jornada integrada descrita neste documento é histórica. Os contratos de investigação, fontes, evidência e revisão continuam aplicáveis a cada módulo.
+
 **Baseline:**27/10/2026. **Origem:** escopo aprovado e contrato próprio detalhado por solicitação do operador. Implementação pendente nos pacotes abaixo.
 
 **PRD:** [completo](2026-10-27-prometeus-cadence-complete-prd.md). **Arquitetura/segurança/execução:** [contratos compartilhados](2026-10-27-prometeus-cadence-technical-contracts.md).
@@ -16,7 +18,7 @@ Base inspecionada:
 - src/server/prospecting/ai/platform.ts
 - src/server/planning/confirmation.ts
 
-## Jornada
+## Jornada integrada histórica
 
 Pedido revisado → pesquisa da empresa → identidade/CNPJ → pessoas e contatos atribuídos → qualificação → aplicação revisada → rascunho de cadência → publicação separada.
 
@@ -100,7 +102,7 @@ declare function confirmPeopleApplication(p:Principal,input:Confirm<PeopleApplic
 
 **Plano:** [tarefas](../plans/2026-10-27-prometeus-cadence-06b4-company-people.md).
 
-### 06B.5 — Jornada integrada de prospecção e cadência
+### 06B.5 — Jornada integrada de prospecção e cadência (histórico)
 
 **Requisitos:** R05, R07. **Dependências:** 06B.3, 06B.4, 06D.1, 06D.2.
 
@@ -136,7 +138,7 @@ declare function advanceJourney(lease:JobLease):Promise<JourneyView>;
 
 ### 06IA-H — Homologação das fontes e inteligência
 
-**Requisitos:** R06. **Dependências:** 06B.5, 06IA.
+**Requisitos:** R06. **Dependências do piloto vigente:** 06B.7, 06IA.
 
 **Persistência:** ai_evaluation_run, ai_evaluation_case; snapshots de versões/receipts/métricassem dados brutos pessoais no relatório público
 

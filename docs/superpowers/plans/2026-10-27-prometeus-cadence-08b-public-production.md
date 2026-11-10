@@ -9,7 +9,8 @@
 
 ## Global Constraints
 
-- Pacote planejado; não marcado concluído. Dependências: 08A. Ordem vigente no índice geral;07D só executa produto após seu gate.
+- O aceite público depende do 08A, da homologação operacional por módulo no 06B.6e e das provas reais de IA e fontes do 06IA-H. Readiness, backup, restauração, carga, soak, recuperação e rollback em ambiente controlado podem avançar em paralelo à regressão. O 07D segue condicional.
+- Após as verificações de prontidão aplicáveis e com autorização específica, configurar homologação isolada em HTTPS com acesso restrito, callbacks e receptor de teste. Esse ambiente permite executar os casos MCP, OAuth e webhooks do 08A antes do aceite integral. A ativação da oferta pública e do Stripe live tem gates próprios.
 - Apify/LLM centrais; contexto, canais, dados, cache, quota e resultados privados por workspace. Sem autoelevação de owner a admin da plataforma.
 - Preservar trial de 7 dias, consumo pré-pago e OpenWA 20 mensagens/5 novoscontatos por dia; intervalo 60–180 s e demais gates existentes.
 - Fidelidade ao CadenceFlow por rota/estado/viewport; não criar outra estética. Estados da referência não observados permanecem classificados.
