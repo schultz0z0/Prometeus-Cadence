@@ -69,44 +69,16 @@ const journeys={
     await page.screenshot({path:'output/playwright/usage-limits/essential-plan-mobile.png',fullPage:true});
    }finally{await page.setViewportSize({width:1440,height:900});}
   });
-  await step('jornada herda créditos e permite revisar a escolha antes de buscar',async()=>{
+  await step('gerador oferece as quatro fontes e nenhuma prospecção completa',async()=>{
    await go(page,'/leads/generator');
    if(process.env.QA_EXPECT_SITE_BROWSER==='1'){
     await page.getByText('Status das integrações e histórico',{exact:true}).click();
     await seen(page,'Navegador · disponível');
    }
+   assert.deepEqual(await page.getByRole('radiogroup',{name:'Fonte de busca'}).getByRole('radio').locator('strong').allInnerTexts(),['Google Maps','Busca na web','Base CNPJ','Apollo']);
+   assert.equal(await page.getByRole('button',{name:/prospecção completa/i}).count(),0);
    await page.getByRole('combobox',{name:'Saldo para extrações'}).click();
    await page.getByRole('option',{name:'Créditos adicionais',exact:true}).click();
-   await page.getByRole('button',{name:'Prospecção completa',exact:true}).click();
-   const dialog=page.getByRole('dialog');
-   assert.equal(await dialog.getByRole('combobox',{name:'Saldo para extrações'}).innerText(),'Créditos adicionais');
-   await dialog.getByRole('combobox',{name:'Saldo para extrações'}).click();
-   await page.getByRole('option',{name:'Franquia do plano',exact:true}).click();
-   assert.equal(await dialog.getByRole('combobox',{name:'Saldo para extrações'}).innerText(),'Franquia do plano');
-   await dialog.getByLabel('Quem você quer alcançar').fill('[RE] Esquadrias');
-   await dialog.getByLabel('CNAE principal').fill('2512800');
-   await dialog.getByLabel('Município').fill('Curitiba');
-   await dialog.getByRole('combobox',{name:'Estado (UF)'}).click();
-   await page.getByRole('option',{name:'PR · Paraná',exact:true}).click();
-   await dialog.getByRole('button',{name:'Revisar prospecção',exact:true}).click();
-   await dialog.getByText(/Base CNPJ ativa · CNAE 2512800/).waitFor();
-   await dialog.getByText(/Curitiba, PR/).waitFor();
-   if(process.env.QA_EXPECT_REGISTRY_SLICES==='1')await dialog.getByText(/duas faixas de abertura/).waitFor();
-   const evidence='output/playwright/registry-first';
-   mkdirSync(evidence,{recursive:true});
-   await page.setViewportSize({width:1920,height:855});
-   await page.screenshot({path:evidence+'/review-1920.png',animations:'disabled'});
-   await page.setViewportSize({width:390,height:844});
-   try{
-    assert.ok(await dialog.getByText(/Base CNPJ ativa/).isVisible());
-    assert.ok(await dialog.evaluate(el=>{
-     const box=el.getBoundingClientRect();
-     return box.left>=0&&box.right<=innerWidth+1&&el.scrollWidth<=el.clientWidth+1;
-    }),'o diálogo cabe no viewport de 390 px');
-    await page.screenshot({path:evidence+'/review-390.png',animations:'disabled'});
-   }finally{await page.setViewportSize({width:1440,height:900});}
-   await dialog.getByRole('button',{name:'Voltar',exact:true}).click();
-   await dialog.getByRole('button',{name:'Cancelar',exact:true}).click();
    assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);
   });
   await step('revisa um pacote com o preço do servidor, sem confirmar',async()=>{await planTab(page);await page.locator('.billing-addon-card').first().getByRole('button').click();const review=page.getByRole('dialog');await review.getByText('Revisar alteração de cobrança').waitFor();await review.getByText('R$ 97,00').first().waitFor();await review.getByRole('button',{name:'Voltar'}).click();await review.waitFor({state:'detached'});});

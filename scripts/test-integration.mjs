@@ -90,6 +90,7 @@ const known = [
   "prospecting-results",
   "prospecting-worker",
   "prospecting-pipeline",
+  "06b7-staged-generation",
   "ai-settings",
   "ai-routing-pipeline",
   "ai-probe",

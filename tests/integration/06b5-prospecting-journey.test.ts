@@ -105,20 +105,19 @@ test('discovery reads a page that fits the technical capacity of one day',async(
  assert.deepEqual(sizes,[2]);
  assert.equal((await getJob(f.p,jobId)).counts.rejected,2);
 });
-test('registry-first HTTP journey replaces a homonym and resumes website collection in the same execution',async t=>{
+test('registry-first journey replaces a homonym and resumes website collection in the same execution',async t=>{
  const f=await fixture(1),calls:string[]=[];
  const before=process.env.SITE_BROWSER_TOKEN;
  process.env.SITE_BROWSER_TOKEN='fixture-only-site-browser-token-00001';
  t.after(()=>{if(before===undefined)delete process.env.SITE_BROWSER_TOKEN;else process.env.SITE_BROWSER_TOKEN=before;});
  const input:JourneyInput={...f.input,location:'Curitiba, PR',registry:{cnae:'2512800',city:'Curitiba',uf:'PR'}};
- const call=(body:unknown)=>journeyRequest(new Request(base+'/api/prospecting/journeys',{method:'POST',headers:f.headers,body:JSON.stringify(body)}));
- const review=await (await call({action:'prepare',input})).json();
+ const review=await prepareJourney(f.p,input);
  assert.deepEqual(review.blockers,[]);
  assert.equal(review.input.location,'Curitiba, PR');
- const body={action:'confirm',input,token:review.token,requestId:randomUUID()};
- const journey=await (await call(body)).json();
- const id=journey.stages[0].jobId;
- assert.equal((await (await call(body)).json()).stages[0].jobId,id);
+ const body={input,token:review.token,requestId:randomUUID()};
+ const journey=await confirmJourney(f.p,body);
+ const id=journey.stages[0].jobId!;
+ assert.equal((await confirmJourney(f.p,body)).stages[0].jobId,id);
  const record={name:'[RE] Esquadrias Exemplo',city:'Curitiba',phone:'+5541999991234',address:'Rua Exemplo, 10',cnpj:'37297479000180',cnae:'2512800'};
  const rejected={...record,name:'[RE] Homônimo',cnpj:'11222333000181',source:'CNPJ' as const,sourceRef:'first',state:'PR',facts:{registrationStatus:'ATIVA'}};
  const accepted={...record,source:'CNPJ' as const,sourceRef:'second',state:'PR',facts:{registrationStatus:'ATIVA'}};
@@ -534,14 +533,33 @@ test('preparing cadence has no side effects, repeated confirmation queues once a
  const snap=await readWorkspaceSnapshot(f.p);assert.equal(snap.data.cadences.length,1);assert.equal(snap.data.cadences[0].status,'draft');assert.equal(snap.data.cadences[0].steps.length,1);assert.equal(snap.data.cadences[0].origin?.jobId,jobId);assert.equal((await getJourney(f.p,j.id)).state,'ready');
  assert.equal(await testAdmin(async c=>Number((await c.query('SELECT count(*) n FROM app.message_outbox WHERE workspace_id=$1',[f.p.workspaceId])).rows[0].n)),0);
 });
-test('HTTP authenticates and scopes every operation, rejects invalid bodies and stale reviews, and replays once',async()=>{
+test('HTTP authenticates and scopes history; the legacy service rejects invalid input and stale reviews, and replays once',async()=>{
  const f=await fixture(),call=(body:unknown,headers:Headers=f.headers,id?:string,action?:string)=>journeyRequest(new Request(base+'/api/prospecting/journeys',{method:'POST',headers,body:JSON.stringify(body)}),id,action);
  assert.ok([401,403].includes((await call({action:'prepare',input:f.input},new Headers({origin:base}))).status));
- assert.equal((await call({action:'prepare',input:{...f.input,limit:501}})).status,422);
- const review=await(await call({action:'prepare',input:f.input})).json(),body={action:'confirm',input:f.input,token:review.token,requestId:randomUUID()},first=await call(body);assert.equal(first.status,200);const j=await first.json();assert.equal((await(await call(body)).json()).id,j.id);
+ await assert.rejects(prepareJourney(f.p,{...f.input,limit:501}),{status:422});
+ const review=await prepareJourney(f.p,f.input),body={input:f.input,token:review.token,requestId:randomUUID()},j=await confirmJourney(f.p,body);assert.equal((await confirmJourney(f.p,body)).id,j.id);
  const foreign=await fixture();assert.equal((await journeyRequest(new Request(base+'/api/prospecting/journeys?id='+j.id,{headers:foreign.headers}))).status,404);
- await testAdmin(c=>c.query('UPDATE auth.member SET role=\'viewer\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));assert.equal((await call({action:'prepare',input:f.input})).status,403);
- const g=await fixture(),r=await(await call({action:'prepare',input:g.input},g.headers)).json();await testAdmin(c=>c.query('INSERT INTO app.context_version(workspace_id,version,payload) VALUES($1,2,$2)',[g.p.workspaceId,{version:2,approvedAt:new Date().toISOString(),offer:'Nova',idealCustomer:'Novo'}]));assert.equal((await call({action:'confirm',input:g.input,token:r.token,requestId:randomUUID()},g.headers)).status,409);
+ await testAdmin(c=>c.query('UPDATE auth.member SET role=\'viewer\' WHERE "organizationId"=$1 AND "userId"=$2',[f.p.workspaceId,f.p.userId]));await assert.rejects(prepareJourney(f.p,f.input),{status:403});
+ const g=await fixture(),r=await prepareJourney(g.p,g.input);await testAdmin(c=>c.query('INSERT INTO app.context_version(workspace_id,version,payload) VALUES($1,2,$2)',[g.p.workspaceId,{version:2,approvedAt:new Date().toISOString(),offer:'Nova',idealCustomer:'Novo'}]));await assert.rejects(confirmJourney(g.p,{input:g.input,token:r.token,requestId:randomUUID()}),{status:409});
+});
+
+test('06B.7 keeps legacy history and pause without accepting new integrated work',async()=>{
+ const f=await fixture(),{journey}=await start(f);
+ const url=base+'/api/prospecting/journeys';
+ const post=(body:unknown,id?:string,action?:string)=>journeyRequest(new Request(url,{method:'POST',headers:f.headers,body:JSON.stringify(body)}),id,action);
+ const jobs=()=>testAdmin(async c=>Number((await c.query('SELECT count(*) n FROM app.prospecting_job WHERE workspace_id=$1',[f.p.workspaceId])).rows[0].n));
+ const before=await jobs();
+ const review=await prepareJourney(f.p,f.input);
+ for(const response of [
+  await post({action:'prepare',input:f.input}),
+  await post({action:'confirm',input:f.input,token:review.token,requestId:randomUUID()}),
+  await post({action:'prepare'},journey.id,'resume'),
+  await post({channels:['EMAIL']},journey.id,'prepare-cadence')
+ ]){assert.equal(response.status,409);assert.equal((await response.json()).code,'LEGACY_JOURNEY_ARCHIVED');}
+ const history=await journeyRequest(new Request(url+'?jobId='+journey.stages[0].jobId,{headers:f.headers}));
+ assert.equal(history.status,200);assert.equal((await history.json()).id,journey.id);
+ assert.equal((await post({},journey.id,'cancel')).status,200);
+ assert.equal(await jobs(),before);
 });
 
 // Review regressions exercise real leases/roles and domain rows, never live providers.
