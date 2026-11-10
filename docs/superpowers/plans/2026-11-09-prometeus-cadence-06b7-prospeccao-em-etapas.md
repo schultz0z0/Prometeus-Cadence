@@ -19,7 +19,7 @@ O operador aprovou o fluxo em etapas em 09/11/2026 após a rechecagem com RES no
 
 **Arquivos de partida** `src/modules/prospecting/server-generator.tsx`, `source-picker.tsx`, `src/modules/automations/server-audience-wizard.tsx`, `src/server/research/journey-http.ts`, `src/server/prospecting/service.ts`, `tests/integration/06b5-prospecting-journey.test.ts`, `tests/integration/prospecting-pipeline.test.ts` e `tests/manual/full-journeys.mjs`.
 
-- [ ] Cobrir em RED a presença das quatro fontes e a ausência do acionador Prospecção completa no fluxo padrão. Incluir o acionador de `JourneyStart` no assistente de público das automações. Inventariar entradas no assistente e nas ajudas. Exercitar o histórico com job legado e tentativa direta de criar jornada integrada por um workspace comum. Garantir que o bloqueio deixa zero efeitos.
+- [ ] Cobrir em RED a presença das quatro fontes e a ausência do acionador Prospecção completa no fluxo padrão. Incluir o acionador de `JourneyStart` no assistente de público das automações. Inventariar entradas no assistente e nas ajudas. Exercitar o histórico com job legado e tentativa direta, pela API, de criar ou reabrir jornada integrada. O bloqueio vale para qualquer workspace e papel, responde 409 com `LEGACY_JOURNEY_ARCHIVED` e deixa zero efeitos e zero jobs novos.
 - [ ] Retirar a entrada padrão e usar uma guarda de servidor para novas jornadas integradas. Preservar leitura, estados, cancelamento e reconciliação autorizada dos registros históricos. Tratar uma retomada que abriria trabalho novo como uma ação separada da leitura do histórico. Manter os jobs avulsos e a investigação de empresa pelos pontos que já existem.
 - [ ] Validar criação ou reutilização de lista, filtros por fonte, deduplicação e carregamento, falha, parcial e sucesso. Usar cenários com Maps sem CNPJ, Base CNPJ sem site, Web com resultado de empresa verificado e Apollo sem conexão. A revisão distingue fonte indisponível de ausência de resultados. Identidade e filtros próprios da fonte governam o aceite.
 - [ ] Conferir que o consumo comercial acompanha somente as inserções elegíveis. Preservar franquias diárias e mensais, renovação mensal sem acumular, créditos adicionais com teto separado e escolha explícita do saldo. Rodar a integração de prospecção e a jornada `pack` atualizada.
@@ -33,6 +33,8 @@ O operador aprovou o fluxo em etapas em 09/11/2026 após a rechecagem com RES no
 - [ ] Testar evidência atribuída à empresa, domínio institucional em vez de um buscador ou diretório, recuperação após falha, revisão e aplicação por papel. Validar que sugestões geradas ficam separadas da aprovação humana e do envio. Rodar a suíte focada em GREEN.
 
 ## 3. Enriquecedor de decisores
+
+> **Decisão do operador em 10/11/2026.** O Enriquecedor age em qualquer lead com CNPJ válido, qualificado ou não. Lead sem CNPJ passa antes pelo Qualificador, e a investigação `companyPeople` deixa de ter entrada na tela. Onde os itens abaixo falarem em empresa qualificada ou em entrada separada para empresa sem CNPJ, vale esta decisão. [Relatório](../../validation/06b7-prospeccao-em-etapas.md)
 
 **Arquivos de partida** `src/modules/prospecting/enrichment.tsx`, `src/server/research/people.ts`, `src/server/prospecting/enrichment.ts`, `src/server/prospecting/enrichment-context.ts`, `tests/integration/06b4-company-people.test.ts` e `tests/integration/prospecting-pipeline.test.ts`. O lote clássico usa `enrichment-context.ts`. O modo `companyPeople` investiga identidade no serviço `people.ts`.
 

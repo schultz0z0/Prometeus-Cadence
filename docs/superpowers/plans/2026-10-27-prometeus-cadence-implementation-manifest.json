@@ -2,7 +2,7 @@
   "version": 1,
   "date": "2026-10-27",
   "scope": "approved-product-baseline;staged-prospecting-approved;legacy-integrated-journey-deferred",
-  "next": "06B.7",
+  "next": "06B.6e",
   "end": "08B",
   "packages": [
     {
@@ -417,7 +417,7 @@
       "conditional": false,
       "continuous": false,
       "plan": "docs/superpowers/plans/2026-11-09-prometeus-cadence-06b7-prospeccao-em-etapas.md",
-      "status": "planned",
+      "status": "implemented-local",
       "dependencyScope": "Para iniciar 06B.7, usar a implementação local do 06B.6d. O aceite operacional do navegador vem depois no 06B.6e.",
       "modify": [
         "src/modules/prospecting/server-generator.tsx",
@@ -432,9 +432,8 @@
       "evidence": "docs/validation/06b7-prospeccao-em-etapas.md",
       "routes": ["/leads/generator", "/leads/qualifier", "/leads/enrich", "/executions/[id]"],
       "pending": [
-        "Retirar a jornada integrada do fluxo padrão e preservar o histórico",
-        "Validar geração por fonte, qualificação revisável e elegibilidade de decisores",
-        "Comparar as três telas e liberar homologação real do recorte"
+        "Comparar as três telas com a referência ao vivo; a prova local usou a captura arquivada",
+        "Homologação real por módulo no 06B.6e e 06IA-H, com escopo e limite autorizados"
       ]
     },
     {
