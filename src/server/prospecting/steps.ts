@@ -16,6 +16,7 @@ import {capacityConfigurationError} from './usage.ts';
 import {loopbackSiteBrowser,siteCollectorVersion} from './site-browser.ts';
 import {prospectingConfig} from './config.ts';
 import {registrySliceRemaining,registryWindow} from './registry-first.ts';
+import {webCompanyPage} from './web-results.ts';
 export {runQualification} from './qualification.ts';
 export interface GenerationAdapters{apify?:SourceAdapter;apollo?:ApolloAdapter;signal?:AbortSignal;collect?:QualificationAdapters['collect'];siteBrowser?:QualificationAdapters['siteBrowser']}
 export function providerContext(job:any,source:'MAPS'|'WEB'|'CNPJ'|'APOLLO'|'CRAWL',operationId:string,signal:AbortSignal):ProviderContext{
@@ -44,6 +45,7 @@ export async function runGeneration(lease:JobLease,adapters:GenerationAdapters={
   if(job.checkpoint.registryFirst)ctx.profile.registryFirst=true;
   if(slices)ctx.profile.registryWindow=registryWindow(batch);
   const admit=(page:CandidatePage)=>{
+    if(input.source==='WEB')page=webCompanyPage(page);
     if(slices){
       if(page.rawCount>sliceRemaining)throw new ProviderError('CNPJ_WINDOW_LIMIT_EXCEEDED');
       if(page.rawCount===sliceRemaining)page={...page,exhausted:true};

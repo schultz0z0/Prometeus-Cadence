@@ -40,8 +40,8 @@ export async function ingestPage(c:PoolClient,lease:JobLease,page:CandidatePage)
   await settleUsage(c,lease.jobId,page.usage);
   await c.query("INSERT INTO app.prospecting_receipt VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4)",[lease.jobId,page.receiptId,hash,counts]);
   const reasons={...job.checkpoint.discoveryReasons};
-  if(job.checkpoint.registryFirst)for(const rejection of page.rejected)reasons[rejection.reason]=(reasons[rejection.reason]??0)+1;
-  await c.query("UPDATE app.prospecting_job SET counts=$2,checkpoint=(checkpoint-'registryPage')||$3::jsonb,revision=revision+1,updated_at=now() WHERE id=$1",[lease.jobId,next,{cursor:page.nextCursor,exhausted:page.exhausted,...(job.checkpoint.registryFirst?{discoveryReasons:reasons}:{}),...(page.examinedCnpjs?{examinedCnpjs:[...(job.checkpoint.examinedCnpjs??[]),...page.examinedCnpjs]}:{})}]);
+  if(job.checkpoint.registryFirst||input.source==='WEB')for(const rejection of page.rejected)reasons[rejection.reason]=(reasons[rejection.reason]??0)+1;
+  await c.query("UPDATE app.prospecting_job SET counts=$2,checkpoint=(checkpoint-'registryPage')||$3::jsonb,revision=revision+1,updated_at=now() WHERE id=$1",[lease.jobId,next,{cursor:page.nextCursor,exhausted:page.exhausted,...(job.checkpoint.registryFirst||input.source==='WEB'?{discoveryReasons:reasons}:{}),...(page.examinedCnpjs?{examinedCnpjs:[...(job.checkpoint.examinedCnpjs??[]),...page.examinedCnpjs]}:{})}]);
   if(counts.inserted)await c.query("UPDATE app.workspace_meta SET revision=revision+1 WHERE workspace_id=current_setting('app.workspace_id')");
   return counts;
 }

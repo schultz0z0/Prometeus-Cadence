@@ -8,7 +8,9 @@ export class ApolloAdapter{
   async search(ctx:ProviderContext,input:GenerationInput,page:number):Promise<CandidatePage>{
     if(!Number.isInteger(page)||page<1||page>ctx.maxPages||page>Math.ceil(input.limit/100))throw new ProviderError('PAGE_LIMIT');
     const perPage=Math.min(100,input.limit),limit=Math.min(perPage,input.limit-(page-1)*perPage),f=input.filters;
-    const raw=await providerJson(this.fetcher,'https://api.apollo.io/api/v1/mixed_companies/search',{method:'POST',headers:{'x-api-key':ctx.credential,'content-type':'application/json'},body:JSON.stringify({q_organization_keyword_tags:[f.term],...(f.location?{organization_locations:[f.location]}:{}),page,per_page:perPage})},ctx.signal) as any;
+    const request={method:'POST',headers:{'x-api-key':ctx.credential,'content-type':'application/json'},body:JSON.stringify({q_organization_keyword_tags:[f.term],...(f.location?{organization_locations:[f.location]}:{}),page,per_page:perPage})};
+    // Free Apollo plans refuse mixed company search with 403 but allow organization search, which takes the same filters.
+    const raw=await providerJson(this.fetcher,'https://api.apollo.io/api/v1/mixed_companies/search',request,ctx.signal).catch(e=>{if(e instanceof ProviderError&&e.code==='HTTP_403')return providerJson(this.fetcher,'https://api.apollo.io/api/v1/organizations/search',request,ctx.signal);throw e;}) as any;
     if(!Array.isArray(raw?.organizations)||raw.organizations.length>perPage)throw new ProviderError('INVALID_ORGANIZATIONS',0,true);
     const accepted=raw.organizations.slice(0,limit);
     const candidates=[],rejected=[];

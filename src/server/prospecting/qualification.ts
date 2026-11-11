@@ -15,6 +15,8 @@ import {ApifyAdapter} from './providers/apify.ts';
 import {normalizeCnpj,normalizeSite} from './normalize.ts';
 import type {SourceAdapter} from './providers/types.ts';
 import {providerContext} from './steps.ts';
+import {institutionalSite} from './web-results.ts';
+export {institutionalSite};
 import {ProviderError} from './providers/transport.ts';
 import {AppError} from '../errors.ts';
 import {runConventional,conventionalUnit} from './ai/conventional.ts';
@@ -35,13 +37,6 @@ export interface QualificationAdapters{
 }
 
 const discoveryLimit=5;
-const platformDomains=['google.com','google.com.br','googleusercontent.com','gstatic.com','goo.gl','google.site','instagram.com','facebook.com','linkedin.com','youtube.com','whatsapp.com','wa.me','linktr.ee','cnpj.biz','casadosdados.com.br','econodata.com.br','apontador.com.br','guiamais.com.br'];
-export function institutionalSite(value:unknown){
-  const site=normalizeSite(value);
-  if(!site)return undefined;
-  const host=new URL(site).hostname;
-  return platformDomains.some(domain=>host===domain||host.endsWith('.'+domain))?undefined:site;
-}
 const siteWords=(value:string)=>value.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().match(/[a-z0-9]+/g)??[];
 const identityWords=(value:string)=>{
   const words=siteWords(value);

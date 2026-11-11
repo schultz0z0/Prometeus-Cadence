@@ -59,11 +59,36 @@ Uma rodada com registro temporário (contatos mascarados) mostrou o que a IA rec
 
 Conclusão: com fontes públicas e a regra atual, o Enriquecedor tende a zero entregas em pequenas empresas. Isso é limite de produto e de fonte de dados, não de código.
 
+## Decisores sem contato publicado
+
+Decisão do operador em 10/11/2026: o Enriquecedor registra na ficha da empresa os decisores encontrados no cadastro, mesmo sem contato publicado. São os sócios do QSA ou, no MEI, o titular, cujo nome vem na própria razão social.
+
+- Sem contato pessoal não há cobrança de crédito, e a pessoa não entra na lista de decisores usada em cadências. Só entra quem tem e-mail ou telefone publicado e atribuído.
+- O filtro "contato enriquecido" da lista de contatos continua contando só quem tem contato.
+- A regra vale na tela, no servidor e no banco (migração `115-enrichment-contactless-partners.sql`, para cobrança e aplicação).
+- A ficha do lead e a tela de resultados indicam "sem contato pessoal publicado, nome e cargo do cadastro da empresa".
+
+Rodada real de confirmação: 4 empresas, 3 com decisores registrados (1 titular de MEI, 2 empresas com dois sócios cada), 0 créditos cobrados, nenhuma reserva aberta. Uma limitada não trouxe QSA na fonte cadastral.
+
+## Busca na web
+
+A geração pela Busca na web passou a admitir só o site próprio de uma empresa (`src/server/prospecting/web-results.ts`). Ficam de fora buscadores, redes sociais, diretórios e agregadores, além de títulos de lista ("Melhores…", "Top 10…", "Empresas de…"). Os descartes aparecem como "Resultado de lista, diretório ou rede social, não site de empresa". O nome do lead passa a ser o trecho do título que corresponde ao domínio, e um telefone no título vira o telefone do lead. A lista de plataformas é a mesma usada pelo Qualificador para recusar sites que não são institucionais.
+
+Rodada real (5 resultados, "escritório de contabilidade", Curitiba): 4 leads com site próprio e 1 descarte. Dois nomes saíram limpos ("FALAVINHA NEXT", "Kitron Contábil"). Em dois casos o título não tinha trecho correspondente ao domínio e o nome ficou genérico ("Escritório de Contabilidade em Curitiba", "CONTABILIDADE CURITIBA"). Um descarte não é reposto na mesma execução, então a busca pode entregar menos que o pedido.
+
+## Apollo com plano gratuito
+
+Com a chave do operador, a busca Apollo do app recebeu HTTP 403: o plano gratuito bloqueia `mixed_companies/search`. O adaptador passou a tentar `organizations/search`, liberado no plano, com os mesmos filtros, apenas quando a primeira recusa com 403. Rodada real no workspace do operador: 1 empresa inserida em 4 s, com site e cidade. O plano gratuito não dá acesso a busca nem enriquecimento de pessoas.
+
+## Leitor de sites
+
+Em 12 leituras de 6 sites reais, o resultado se repetiu em cada site; o caso da Prodont vazia não foi reproduzido. Sites sem `/sobre` e `/contato` ficam só com a página inicial. Quando o `robots.txt` não pode ser lido, o site é tratado como fechado.
+
 ## Achados abertos
 
-1. **Busca na web traz páginas de resultado, não empresas.** Na rodada 1, dois dos três leads eram "Melhores empresas de Contabilidade em Curitiba" e "Mapa". Na rodada 2 os três eram sites de escritórios, mas com o título da página como nome ("Escritório de Contabilidade em Curitiba | (41) …"). A fonte precisa filtrar diretórios e extrair o nome da empresa.
+1. **Busca na web (corrigida, ver acima).** Antes: Na rodada 1, dois dos três leads eram "Melhores empresas de Contabilidade em Curitiba" e "Mapa". Na rodada 2 os três eram sites de escritórios, mas com o título da página como nome ("Escritório de Contabilidade em Curitiba | (41) …"). A fonte precisa filtrar diretórios e extrair o nome da empresa.
 2. **Maps → CNPJ: 3 de 5 após a correção.** Amostra pequena, um nicho e uma cidade. Dois de cinco continuam sem CNPJ e, portanto, fora do Enriquecedor.
-3. **Nenhum decisor com contato entregue.** Em cinco execuções do Enriquecedor, com MEIs da Base CNPJ e clínicas do Maps, o resultado foi sempre abstenção sem cobrança. A regra exige contato pessoal atribuído por citação literal; falta um caso real em que ela seja satisfeita.
+3. **Nenhum decisor com contato entregue.** Os decisores passaram a ser registrados sem contato, mas nenhuma rodada encontrou contato pessoal publicado; obter celular ou e-mail de sócio exigiria um provedor pago de dados de pessoas, que não foi avaliado. Em cinco execuções do Enriquecedor, com MEIs da Base CNPJ e clínicas do Maps, o resultado foi sempre abstenção sem cobrança. A regra exige contato pessoal atribuído por citação literal; falta um caso real em que ela seja satisfeita.
 
 ## Limites desta prova
 

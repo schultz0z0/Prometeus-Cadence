@@ -19,6 +19,7 @@ const discoveryLabels:Record<string,string>={
   MAPS_IDENTITY_UNVERIFIED:'Estabelecimento sem correspondência confirmada no Maps',
   SITE_IDENTITY_UNVERIFIED:'Site institucional sem vínculo confirmado',
   MISSING_IDENTITY:'Registro sem identificação suficiente',
+  NOT_A_COMPANY_SITE:'Resultado de lista, diretório ou rede social, não site de empresa',
 };
 const activeStates=['queued','running','waiting_provider','cancelling'];
 export function useProspectingJob(id:string){

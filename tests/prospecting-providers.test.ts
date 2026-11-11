@@ -40,6 +40,16 @@ test('Apollo uses company search with bounded paid pages and does not fabricate 
   await assert.rejects(()=>adapter.search({...context(),maxPages:1},{...input,source:'APOLLO'},2));
 });
 
+test('Apollo falls back to organization search when the plan forbids mixed company search, and only then',async()=>{
+  const calls:string[]=[];
+  const adapter=new ApolloAdapter(async(u,init)=>{calls.push(String(u).replace('https://api.apollo.io/api/v1/',''));assert.equal(JSON.parse(init!.body as string).q_organization_keyword_tags[0],'software');
+    return String(u).endsWith('/mixed_companies/search')?new Response('{}',{status:403}):Response.json({organizations:[{id:'apollo1',name:'A',primary_domain:'example.com'}],pagination:{total_pages:1}});});
+  const page=await adapter.search({...context(),profile:providerProfile('APOLLO')},{...input,source:'APOLLO',filters:{term:'software'}},1);
+  assert.deepEqual(calls,['mixed_companies/search','organizations/search']);assert.equal(page.candidates[0].name,'A');
+  const failing=new ApolloAdapter(async()=>new Response('{}',{status:401}));
+  await assert.rejects(()=>failing.search({...context(),profile:providerProfile('APOLLO')},{...input,source:'APOLLO',filters:{term:'software'}},1),{code:'HTTP_401'});
+});
+
 test('web pages flatten organic results with a stable candidate offset',async()=>{
   const ctx={...context(),profile:providerProfile('WEB',{actor:'apify/google-search-scraper',build:'pinned'})};
   const rows=[{organicResults:Array.from({length:5},(_,i)=>({url:'https://example.com/'+i,title:'Empresa '+i}))}];
