@@ -1,6 +1,6 @@
 {
- "date": "2026-11-10T11:57:24.453Z",
- "sourceHash": "7f872c745b1f9ec5084df45bedf9b37fe89cc4245dbbd35587a41b09aa7ee374",
+ "date": "2026-11-11T04:48:10.057Z",
+ "sourceHash": "3142020d643101e44eeebfd850f4c085b121069438fba3abfc70d2a80da5ab55",
  "note": "Navegador sem acesso a outros hosts; contas sem canais ativos; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
  "runs": [
   {
@@ -683,6 +683,150 @@
     },
     {
      "name": "sem canal, as caixas levam à conexão",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "popups-more",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "configurações: como funciona esta área",
+     "ok": true
+    },
+    {
+     "name": "segurança: ativar autenticador",
+     "ok": true
+    },
+    {
+     "name": "automação: colar em lote",
+     "ok": true
+    },
+    {
+     "name": "lead: investigar sócios e gestores",
+     "ok": true
+    },
+    {
+     "name": "cabeçalho: ajuda contextual",
+     "ok": true
+    },
+    {
+     "name": "gerador: revisar busca sem confirmar",
+     "ok": true
+    },
+    {
+     "name": "plano: revisar teste grátis sem ativar",
+     "ok": true
+    },
+    {
+     "name": "API: criar uma chave local",
+     "ok": true
+    },
+    {
+     "name": "API: revogar chave, sem confirmar",
+     "ok": true
+    },
+    {
+     "name": "API: gerar chave nova, sem confirmar",
+     "ok": true
+    },
+    {
+     "name": "webhook: criar um destino local com segredo",
+     "ok": true
+    },
+    {
+     "name": "webhook: gerar segredo novo, sem confirmar",
+     "ok": true
+    },
+    {
+     "name": "webhook: excluir, sem confirmar",
+     "ok": true
+    },
+    {
+     "name": "cadastro: termos de uso",
+     "ok": true
+    },
+    {
+     "name": "nada foi criado nem cobrado",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "roles-matrix",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "leituras: membros leem, papel desconhecido não",
+     "ok": true
+    },
+    {
+     "name": "contatos: membros leem, papel desconhecido não",
+     "ok": true
+    },
+    {
+     "name": "execuções: membros leem, papel desconhecido não",
+     "ok": true
+    },
+    {
+     "name": "prospecção: membros preparam a revisão, papel desconhecido não",
+     "ok": true
+    },
+    {
+     "name": "planejamento com IA: membros preparam, papel desconhecido não",
+     "ok": true
+    },
+    {
+     "name": "dados: membros passam pela autorização da fusão",
+     "ok": true
+    },
+    {
+     "name": "chaves de integração: só dono e administrador",
+     "ok": true
+    },
+    {
+     "name": "cobrança: só dono e administrador",
+     "ok": true
+    },
+    {
+     "name": "IA da plataforma: nenhum papel do workspace altera",
+     "ok": true
+    },
+    {
+     "name": "nada foi executado nem cobrado",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "network-forms",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "gerador em 503 avisa, mantém os campos e revisa ao tentar de novo",
+     "ok": true
+    },
+    {
+     "name": "prévia do enriquecedor em 503 avisa dentro do diálogo e mantém o foco",
+     "ok": true
+    },
+    {
+     "name": "novo webhook em 503 mantém o rascunho e o foco no diálogo",
+     "ok": true
+    },
+    {
+     "name": "histórico de execuções em 503 avisa e recupera",
+     "ok": true
+    },
+    {
+     "name": "nada foi executado",
      "ok": true
     }
    ]
