@@ -519,7 +519,7 @@
    "id": "transversal: demais popups, pelo mesmo componente",
    "kind": "state",
    "status": "pending",
-   "note": "Foram abertos 14 popups de módulo, o detalhe de Relatórios e os formulários Gmail e SMTP. Permanecem usos condicionais do componente Modal sem prova individual."
+   "note": "Jornadas popups, module-popups e popups-more abrem 36 popups locais com nome acessível, sem transbordo, fechando com Esc e devolvendo o foco. Faltam os que exigem conexão externa ativa (LinkedIn, WhatsApp, Google, MCP, desconexões) ou uma execução em estado específico (revisão de resultados, fusão de duplicados, edição de automação, pausa do SDR, reconciliação)."
   },
   {
    "id": "transversal: operador recusado em cobrança",
@@ -540,7 +540,8 @@
    "id": "transversal: administrador e demais áreas por papel",
    "kind": "state",
    "status": "pending",
-   "note": "A jornada admin cobre Membros, Privacidade, caixas de mensagens, configuração de E-mail, Webhooks/API, Apollo, Google Agenda e Sheets sem conexão. Permanecem os demais estados por papel."
+   "note": "Jornada roles-matrix: dono, administrador, operador e um papel fora do produto contra as rotas de leitura, prospecção, planejamento, dados, chaves de integração, cobrança e IA da plataforma; papel desconhecido é recusado em tudo. A jornada admin cobre as telas de Membros, Privacidade, caixas, E-mail, Webhooks/API, Apollo, Agenda e Sheets.",
+   "run": "roles-matrix"
   },
   {
    "id": "transversal: autorização visual de Agenda e Sheets por papel",
@@ -594,7 +595,8 @@
    "id": "transversal: rede nos demais formulários, leituras e foco após erro",
    "kind": "state",
    "status": "pending",
-   "note": "Chave de API, template, cadência, contatos, relatórios e configuração de e-mail exercitados. O formulário de lead também cobre 503, offline e lentidão."
+   "note": "Jornada network-forms: Gerador, prévia do Enriquecedor, novo webhook e histórico de execuções em 503, com aviso, rascunho e foco preservados e recuperação. Jornadas network e network-more cobrem lead, chave de API, template, cadência, contatos, relatórios e e-mail.",
+   "run": "network-forms"
   },
   {
    "id": "transversal: revisão da sequência e preservação do rascunho de cadência após 503",

@@ -790,6 +790,54 @@ const journeys={
   await open(guest,'/register',async()=>{await guest.getByRole('button',{name:'Continuar'}).click();return guest.getByRole('button',{name:'Termos de Uso'});},'cadastro: termos de uso');
   await step('nada foi criado nem cobrado',async()=>{for(const ws of [a.workspace,fresh.workspace])assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[ws])).rows[0].n,0);assert.equal((await db.query("SELECT state FROM app.billing_account WHERE workspace_id=$1",[fresh.workspace])).rows[0].state!=='trialing',true);});
  },
+ async 'roles-matrix'(step){
+  // Server-side authority per role. "viewer" is not a product role: any role outside owner, admin and operator must be refused everything.
+  const owner=await account('rm-dono',{plan:'pro',paid:true}),admin=await account('rm-admin'),operator=await account('rm-operador'),stranger=await account('rm-leitor');
+  for(const [who,role] of [[admin,'admin'],[operator,'operator'],[stranger,'viewer']]){await db.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),owner.workspace,who.user,role]);const r=await who.page.request.post(origin+'/api/identity',{headers:{origin,'content-type':'application/json'},data:{type:'switch',workspaceId:owner.workspace}});assert.equal(r.status(),200);}
+  const list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[owner.workspace,list,'[RE] Lista papéis']);
+  const call=async(who,method,path,data)=>{const r=method==='GET'?await who.page.request.get(origin+path,{headers:{origin,'x-cadence-workspace':owner.workspace}}):await who.page.request.post(origin+path,{headers:{origin,'content-type':'application/json','x-cadence-workspace':owner.workspace},data});return r.status();};
+  const roles={owner,admin,operator,stranger},ok=s=>s>=200&&s<300,allowed=s=>s!==401&&s!==403;
+  const rule=async(name,method,path,data,expect)=>step(name,async()=>{for(const [role,who] of Object.entries(roles)){const status=await call(who,method,path,data),want=expect[role];assert.ok(want==='ok'?ok(status):want==='allowed'?allowed(status):status===403,`${role}: ${status} (${want})`);}});
+  await rule('leituras: membros leem, papel desconhecido não','GET','/api/workspace/snapshot',undefined,{owner:'ok',admin:'ok',operator:'ok',stranger:'denied'});
+  await rule('contatos: membros leem, papel desconhecido não','GET','/api/contacts',undefined,{owner:'ok',admin:'ok',operator:'ok',stranger:'denied'});
+  await rule('execuções: membros leem, papel desconhecido não','GET','/api/prospecting/jobs',undefined,{owner:'ok',admin:'ok',operator:'ok',stranger:'denied'});
+  await rule('prospecção: membros preparam a revisão, papel desconhecido não','POST','/api/prospecting/prepare',{kind:'generation',source:'MAPS',destination:{mode:'existing',listId:list},filters:{term:'[RE] padaria',location:'Curitiba, PR'},limit:1,dedupScope:'workspace',funding:'plan'},{owner:'ok',admin:'ok',operator:'ok',stranger:'denied'});
+  await rule('planejamento com IA: membros preparam, papel desconhecido não','POST','/api/planning/prepare',{kind:'planning',task:'audience_plan',description:'[RE] público',channel:'email',timezone:'America/Sao_Paulo'},{owner:'ok',admin:'ok',operator:'ok',stranger:'denied'});
+  await rule('dados: membros passam pela autorização da fusão','POST','/api/data-lifecycle',{action:'prepare-merge',input:{groups:[]}},{owner:'allowed',admin:'allowed',operator:'allowed',stranger:'denied'});
+  await rule('chaves de integração: só dono e administrador','POST','/api/integrations/credentials',{kind:'apollo',secret:'re-role-matrix-not-a-key-000000'},{owner:'ok',admin:'ok',operator:'denied',stranger:'denied'});
+  await rule('cobrança: só dono e administrador','POST','/api/billing/prepare',{kind:'cancel'},{owner:'allowed',admin:'allowed',operator:'denied',stranger:'denied'});
+  await rule('IA da plataforma: nenhum papel do workspace altera','POST','/api/prospecting/ai/policy',{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}},{owner:'denied',admin:'denied',operator:'denied',stranger:'denied'});
+  await step('nada foi executado nem cobrado',async()=>{assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[owner.workspace])).rows[0].n,0);});
+ },
+ async 'network-forms'(step){
+  const a=await account('rede3',{plan:'pro'}),{page}=a,list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista rede 3']);await lead(a.workspace,list,{name:'[RE] Empresa CNPJ',cnpj:'37297479000180'});
+  const down=(glob,method)=>page.route(glob,r=>r.request().method()===method?r.fulfill({status:503,contentType:'application/json',body:'{}'}):r.fallback());
+  const alert=async(scope)=>{const e=scope.getByRole('alert').first();await e.waitFor({timeout:20000});assert.ok((await e.innerText()).trim().length>0,'empty error');};
+  await step('gerador em 503 avisa, mantém os campos e revisa ao tentar de novo',async()=>{
+   await go(page,'/leads/generator');const name=page.getByRole('textbox',{name:'Nome da lista'}),term=page.getByRole('textbox',{name:/Nicho da busca/}),place=page.getByRole('textbox',{name:'Localização'});
+   await name.fill('[RE] Rede gerador');await term.fill('[RE] padarias');await place.fill('Curitiba, PR');
+   await down('**/api/prospecting/prepare','POST');const submit=page.getByRole('button',{name:'Revisar busca'});await submit.click();await alert(page);
+   assert.equal(await name.inputValue(),'[RE] Rede gerador');assert.equal(await term.inputValue(),'[RE] padarias');assert.equal(await submit.isEnabled(),true);
+   await page.unroute('**/api/prospecting/prepare');await submit.click();const d=page.getByRole('dialog').first();await d.waitFor();await page.keyboard.press('Escape');await d.waitFor({state:'detached'});
+  });
+  await step('prévia do enriquecedor em 503 avisa dentro do diálogo e mantém o foco',async()=>{
+   await go(page,'/leads/enrich');await page.getByRole('row').filter({hasText:'[RE] Lista rede 3'}).getByRole('button',{name:'Enriquecer'}).click();const d=page.getByRole('dialog').first();await d.waitFor();
+   await down('**/api/prospecting/prepare','POST');await d.getByRole('button',{name:/Ver preview e custo/}).click();await alert(d);
+   assert.ok(await d.evaluate(x=>x.contains(document.activeElement)),'focus left the dialog');
+   await page.unroute('**/api/prospecting/prepare');await page.keyboard.press('Escape');await d.waitFor({state:'detached'});
+  });
+  await step('novo webhook em 503 mantém o rascunho e o foco no diálogo',async()=>{
+   await go(page,'/settings/webhooks');await page.getByRole('button',{name:'Novo webhook'}).click();const d=page.getByRole('dialog').first();const url=d.getByLabel('URL');await d.getByLabel('Nome').fill('[RE] Webhook rede');await url.fill('https://example.com/webhook');
+   await down('**/api/integrations','POST');await d.getByRole('button',{name:/Salvar|Criar/}).last().click();await page.waitForTimeout(1500);await page.unroute('**/api/integrations');
+   assert.equal(await url.inputValue(),'https://example.com/webhook');assert.ok(await d.evaluate(x=>x.contains(document.activeElement)),'focus left the dialog');assert.ok((await d.innerText()).match(/Não foi possível|indispon|Tente|conexão/i),'no error in the dialog');
+   await page.keyboard.press('Escape');
+  });
+  await step('histórico de execuções em 503 avisa e recupera',async()=>{
+   await down('**/api/prospecting/jobs*','GET');await go(page,'/executions?view=jobs');const retry=page.getByRole('button',{name:/Tentar (novamente|de novo)/}).first();await retry.waitFor({timeout:20000});
+   await page.unroute('**/api/prospecting/jobs*');await retry.click();await until(async()=>!(await page.getByRole('button',{name:/Tentar (novamente|de novo)/}).count()),'recovered');
+  });
+  await step('nada foi executado',async()=>{assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);});
+ },
  async onboarding(step){
   const a=await account('incompleto'),{page}=a;
   await step('cadastro incompleto vai para o complemento',async()=>{await db.query('UPDATE auth."user" SET "registrationRequired"=true WHERE id=$1',[a.user]);await go(page,'/onboarding/entry');await page.waitForURL(u=>u.pathname==='/onboarding/profile',{timeout:20000});await page.getByLabel('Telefone').waitFor();});
@@ -798,7 +846,7 @@ const journeys={
 };
 const runs=[];
 // What each journey is meant to provoke. Anything else on the page fails it.
-const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /],'onboarding-finish':[/^403 GET /],admin:[/^409 GET /,/^403 GET \/api\/integrations$/],'network-more':[/^503 GET \/api\/(contacts|reports)/,/^503 POST \/api\/(integrations|workspace\/commands)$/],'execution-diary':[/^503 GET \/api\/execution-diary$/],'mail-config':[/^503 (GET|POST) \/api\/mailboxes$/],'cadence-editor':[/^503 POST \/api\/workspace\/commands$/]};
+const allowed={pack:[/^422 POST \/api\/billing\/prepare$/],network:[/^503 POST \/api\/workspace\/commands$/],roles:[/^403 POST \/api\/billing\/prepare$/,/^40[39] GET /],onboarding:[/^403 GET /],'onboarding-finish':[/^403 GET /],admin:[/^409 GET /,/^403 GET \/api\/integrations$/],'network-more':[/^503 GET \/api\/(contacts|reports)/,/^503 POST \/api\/(integrations|workspace\/commands)$/],'execution-diary':[/^503 GET \/api\/execution-diary$/],'mail-config':[/^503 (GET|POST) \/api\/mailboxes$/],'cadence-editor':[/^503 POST \/api\/workspace\/commands$/],'roles-matrix':[/^40[39] (GET|POST) /,/^422 POST \/api\/data-lifecycle$/],'network-forms':[/^503 (GET|POST) \/api\/(prospecting|integrations)/]};
 try{
  if(!only||only==='signup')await new Promise(w=>setTimeout(w,70000));
  for(const [id,run] of Object.entries(journeys)){
