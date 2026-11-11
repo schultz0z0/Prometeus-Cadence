@@ -2,6 +2,7 @@
 import { SelectField } from "@/components/ui/select-field";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useDemo, useRepository, useAction } from "@/demo/provider";
 import { createManualAutomationOperation } from "@/domain/automation";
 import { sourceLabels, type Source, type Schedule } from "@/domain/model";
@@ -96,9 +97,8 @@ export function ManualWizard({
   return (
     <div className="workflow-reference manual-automation-reference">
       <PageHeader
-        title="Nova Automação"
+        title={<span className="wizard-title"><Link className="wizard-back" href="/automations" aria-label="Voltar para automações"><Icon name="ArrowLeft" size={18} /></Link>Nova Automação</span>}
         description="Configure sua automação de prospecção"
-        back="/automations"
       />
       <div className="manual-tabs" role="tablist">
         {names.map((x, i) => (

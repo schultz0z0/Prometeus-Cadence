@@ -1199,3 +1199,10 @@ kbd {
   .research-generator-entry .btn, .reference-screen-tours .btn { max-width: 100%; white-space: normal; }
   .reference-onboarding-help { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Reference layout: the empty WhatsApp inbox sits in the middle of the area; the empty mailbox list sits in a card; the wizard back arrow sits on the title line. */
+.whatsapp-empty-center{min-height:calc(100vh - 160px);display:grid;place-items:center}
+.email-empty-panel .empty-state{padding:40px 20px;min-height:0}
+.wizard-title{display:inline-flex;align-items:center;gap:10px}
+.wizard-back{display:inline-flex;color:var(--muted);border-radius:6px;padding:2px}
+.wizard-back:hover{color:var(--text)}
