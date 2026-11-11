@@ -178,6 +178,7 @@ test('06B.7 the decision-maker model sees every collected site page, not only th
 test('06B.7 a partner found only in the registry is recorded on the company without charge and is not delivered as a contact',async()=>{
  const f=await fixture(),job=await run(f,false),item=(await listJobItems(f.p,job.id)).items[0];
  assert.equal(item.enrichment?.charged,false);assert.equal(await consumed(f.p,'enrichment'),0);
+ assert.equal(item.status,'skipped','nothing to approve: the partner is already on the company record');assert.equal((await getJob(f.p,job.id)).counts.pending,0);
  assert.equal(item.enrichment?.people[0].name,'Ana Silva');assert.equal(item.enrichment?.people[0].email,undefined);
  await assert.rejects(applyJobResults(f.p,job.id,{requestId:randomUUID(),itemIds:[item.id]}),'no person without a contact enters the decision-maker list');
  const snapshot=await readWorkspaceSnapshot(f.p);assert.equal(snapshot.data.lists.length,1);
