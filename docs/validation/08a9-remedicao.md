@@ -1,6 +1,23 @@
 # 08A.9 — Remedição no código atual
 
 
+## Remedição de 11/11/2026, segunda (commit `2f69e0e`)
+
+Dois módulos passaram a ter prova real:
+
+- **Assistente:** respostas da IA real com citação, e uma proposta cancelada. Detalhes em `2026-11-11-assistant-real-ai.md`.
+- **Pesquisa e enriquecimento:** primeiro decisor com e-mail publicado, cobrado e aplicado. Detalhes em `06b6e-homologacao-por-modulo.md`.
+
+Resultado das medições no código atual:
+
+| Medição | Resultado |
+| --- | --- |
+| Jornadas clicadas | 30 de 30, resíduo zero |
+| Varredura de rotas | 584 de 584, resíduo zero |
+| Testes unitários | 474 de 474 |
+| Integração de enriquecimento | 20 de 20 |
+| Auditor | **121 de 138**, aceite integral negado |
+
 ## Remedição de 11/11/2026 (commit `4be2f22`, ajustes visuais)
 
 Depois dos três ajustes visuais da revisão por área (`2026-11-11-visual-self-review.md`), as medições foram regeradas no código atual: jornadas clicadas 30 de 30, varredura 584 de 584 com isolamento confirmado, resíduo zero, unitários 472 de 472. Auditor: **119 de 138**, aceite integral negado. A integração completa não foi reexecutada; os ajustes tocaram só a interface.
