@@ -1,5 +1,10 @@
 # 08A.9 — Remedição no código atual
 
+
+## Remedição de 11/11/2026 (commit `4be2f22`, ajustes visuais)
+
+Depois dos três ajustes visuais da revisão por área (`2026-11-11-visual-self-review.md`), as medições foram regeradas no código atual: jornadas clicadas 30 de 30, varredura 584 de 584 com isolamento confirmado, resíduo zero, unitários 472 de 472. Auditor: **119 de 138**, aceite integral negado. A integração completa não foi reexecutada; os ajustes tocaram só a interface.
+
 Em 10/11/2026, depois do 06B.7, da correção do OAuth, do esquema de decisores e da descoberta de CNPJ (commit `41afad0`), as medições globais foram regeradas sem alteração de código durante a execução.
 
 | Medição | Resultado |
