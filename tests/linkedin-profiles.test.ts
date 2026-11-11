@@ -13,3 +13,8 @@ test('a profile becomes a decision maker only when the name matches a registry p
  const found=linkedinDecisors(partners,profiles,['EMPRESA EXEMPLO LTDA']);
  assert.deepEqual(found.map(f=>[f.partner.name,f.profile.url,f.role,f.profile.email??null]),[['ANA MARIA DA SILVA','https://www.linkedin.com/in/ana-silva-exemplo','Sócia-diretora','ana@empresaexemplo.com.br'],['JOSE PEREIRA','https://www.linkedin.com/in/jose-p','Sócia-diretora',null]],'the homonym at another company is dropped; a matching profile without e-mail still gives role and link');
 });
+test('the profile search uses first and last name in quotes and the short company name as keywords',async()=>{
+ const {linkedinQuery}=await import('../src/domain/enrichment.ts');
+ assert.equal(linkedinQuery('BRUNA RAFAELA DE ASSIS SILVA','SENSOR CORRETORA DE SEGUROS DE VIDA LTDA'),'"Bruna Silva" Sensor Corretora site:linkedin.com/in');
+ assert.equal(linkedinQuery('Ana Silva','Empresa Exemplo'),'"Ana Silva" Exemplo site:linkedin.com/in');
+});

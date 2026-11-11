@@ -19,6 +19,12 @@ export function registryDecisionMakers(registry:{companyName?:string;facts?:Reco
 }
 const words=(v:string):string[]=>v.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().match(/[a-z0-9]+/g)??[];
 const legal=new Set(['ltda','eireli','epp','me','sa','s','a','de','da','do','das','dos','e','servicos','comercio','industria','clinica','odontologica','empresa','grupo']);
+// Registry names are full legal names; LinkedIn shows first and last name. The company stays loose: the match below rejects homonyms.
+export function linkedinQuery(partnerName:string,companyName:string){
+ const cap=(w:string)=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase(),parts=partnerName.trim().split(/\s+/),name=[parts[0],parts.length>1?parts[parts.length-1]:''].filter(Boolean).map(cap).join(' ');
+ const company=companyName.split(/\s+/).filter(w=>{const k=words(w)[0];return k&&k.length>2&&!legal.has(k);}).slice(0,2).map(cap).join(' ');
+ return `"${name}" ${company} site:linkedin.com/in`.replace(/\s+/g,' ');
+}
 // A LinkedIn profile belongs to a registry partner only when first and last name match and the current company matches the lead.
 export function linkedinDecisors(partners:readonly {name:string;role:string}[],profiles:readonly {url:string;name:string;headline?:string;positions:{title:string;company:string}[];email?:string}[],companyNames:readonly string[]){
  const company=new Set(companyNames.flatMap(words).filter(w=>w.length>3&&!legal.has(w)));

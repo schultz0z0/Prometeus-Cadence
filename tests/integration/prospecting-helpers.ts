@@ -11,7 +11,7 @@ export function configureProspectingTest(){
     PROSPECTING_WORKSPACE_DAILY_UNITS:JSON.stringify({candidates:1000,apifyRuns:10,apolloPages:10,jevCalls:1000,codexCalls:10}),
     PROSPECTING_GLOBAL_DAILY_UNITS:JSON.stringify({candidates:100000,apifyRuns:1000,apolloPages:1000,jevCalls:100000,codexCalls:1000}),
     APIFY_TOKEN:'fixture-not-a-live-token',APIFY_MAPS_ACTOR:'compass/crawler-google-places',APIFY_MAPS_BUILD:'fixture-build',APIFY_MAX_CHARGE_USD:'0.1',
-    APIFY_WEB_ACTOR:'',APIFY_WEB_BUILD:'',APIFY_CNPJ_ACTOR:'',APIFY_CNPJ_BUILD:'',APIFY_SITE_ACTOR:'',APIFY_SITE_BUILD:'',
+    APIFY_WEB_ACTOR:'',APIFY_WEB_BUILD:'',APIFY_CNPJ_ACTOR:'',APIFY_CNPJ_BUILD:'',APIFY_SITE_ACTOR:'',APIFY_SITE_BUILD:'',APIFY_LINKEDIN_ACTOR:'',APIFY_LINKEDIN_BUILD:'',
   });
 }
 export async function prospectingUser(options:{billing?:boolean;platformAi?:boolean;qaName?:string}={}){
