@@ -136,6 +136,9 @@ export function EmptyState({
 }
 /** Modal dialogs sit in the top layer, above any z-index; a popover joins it and stays visible over them. */
 export const showAboveDialogs = (el: HTMLElement | null) => { if (el && !el.matches(":popover-open")) el.showPopover?.(); };
+// A dialog opened after an async call finds the focus on the page: its trigger was disabled while waiting. Remember the last real focus.
+let lastFocused: HTMLElement | null = null;
+if (typeof document !== "undefined") document.addEventListener("focusin", (e) => { if (e.target instanceof HTMLElement && !e.target.closest("dialog")) lastFocused = e.target; }, true);
 export function Modal({
   title,
   description,
@@ -154,7 +157,7 @@ export function Modal({
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   useEffect(() => {
-    const dialog = ref.current, opener = document.activeElement as HTMLElement | null;
+    const dialog = ref.current, active = document.activeElement as HTMLElement | null, opener = active && active !== document.body ? active : lastFocused;
     dialog?.showModal();
     // showModal moves focus to the dialog; React's autoFocus renders no attribute for it to honor.
     dialog?.querySelector<HTMLElement>("[data-autofocus]")?.focus();

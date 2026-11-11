@@ -757,6 +757,39 @@ const journeys={
   },'gerador: abrir sugestão de IA sem confirmar');
   await step('sem canal, as caixas levam à conexão',async()=>{await go(page,'/messages/whatsapp');await page.getByRole('link',{name:'Conectar WhatsApp'}).click();await page.waitForURL(u=>u.pathname==='/settings/whatsapp');await go(page,'/inbox');await page.getByRole('link',{name:'Conectar e-mail'}).click();await page.waitForURL(u=>u.pathname==='/settings/email');});
  },
+ async 'popups-more'(step){
+  // Remaining Modal uses reachable without an external connection: name, no overflow, Escape closes, focus returns to the trigger.
+  const a=await account('popups3',{plan:'pro'}),fresh=await account('popups4'),list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista popups']);const leadId=await lead(a.workspace,list,{name:'[RE] Empresa Popup'});
+  const open=(page,route,trigger,name)=>step(name,async()=>{
+   await go(page,route);const t=await trigger();await t.click();const d=page.getByRole('dialog').first();await d.waitFor();
+   assert.ok((await d.getAttribute('aria-labelledby'))||(await d.getAttribute('aria-label')),'the dialog has an accessible name');
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=1,'no horizontal overflow');
+   await page.keyboard.press('Escape');await d.waitFor({state:'detached'});
+   await until(()=>t.evaluate(e=>e===document.activeElement||e.contains(document.activeElement)),'focus returns to the trigger',5000);
+  });
+  const p=a.page;
+  await open(p,'/settings/account',()=>p.getByRole('button',{name:'Como funciona esta área'}),'configurações: como funciona esta área');
+  await open(p,'/settings/security',async()=>{const b=p.getByRole('button',{name:'Ativar autenticador'});await until(()=>b.isEnabled(),'factor loaded');return b;},'segurança: ativar autenticador');
+  await open(p,'/automations/new',async()=>{await p.getByLabel(/Nome da automação/).fill('[RE] Automação popup');await p.getByRole('button',{name:'Próximo'}).click();return p.getByRole('button',{name:'Colar em lote'}).first();},'automação: colar em lote');
+  await open(p,'/leads/'+leadId,()=>p.getByRole('button',{name:'Investigar sócios e gestores'}),'lead: investigar sócios e gestores');
+  await open(p,'/dashboard',()=>p.getByRole('button',{name:'Ajuda desta tela'}),'cabeçalho: ajuda contextual');
+  await open(p,'/leads/generator',async()=>{await p.getByRole('textbox',{name:'Nome da lista'}).fill('[RE] Revisão');await p.getByRole('textbox',{name:/Nicho da busca/}).fill('[RE] padarias');await p.getByRole('textbox',{name:'Localização'}).fill('Curitiba, PR');return p.getByRole('button',{name:'Revisar busca'});},'gerador: revisar busca sem confirmar');
+  await open(fresh.page,'/settings/plan',()=>fresh.page.getByRole('button',{name:'Começar o teste grátis'}),'plano: revisar teste grátis sem ativar');
+  // Confirmations that need an object first: one API key and one webhook, both local and inert.
+  await step('API: criar uma chave local',async()=>{await go(p,'/settings/webhooks');await p.getByRole('button',{name:'Nova chave'}).click();const d=p.getByRole('dialog').first();await d.getByRole('textbox').first().fill('[RE] Chave popup');await d.getByRole('button',{name:'Criar chave'}).click();await p.getByRole('button',{name:'Fechar',exact:true}).last().click();await until(async()=>!(await p.getByRole('dialog').count()),'key dialog closed');});
+  await open(p,'/settings/webhooks',()=>p.getByRole('button',{name:'Revogar'}).first(),'API: revogar chave, sem confirmar');
+  await open(p,'/settings/webhooks',()=>p.getByRole('button',{name:'Gerar nova'}).first(),'API: gerar chave nova, sem confirmar');
+  await step('webhook: criar um destino local com segredo',async()=>{await go(p,'/settings/webhooks');await p.getByRole('button',{name:'Novo webhook'}).click();const d=p.getByRole('dialog').first();await d.getByLabel('Nome').fill('[RE] Webhook popup');await d.getByLabel('URL').fill('https://example.com/webhook');await d.getByRole('button',{name:/Salvar|Criar/}).last().click();
+   // Saving may keep a dialog open to show the result; the list is the proof.
+   await until(async()=>{if(await p.getByRole('dialog').count())await p.keyboard.press('Escape');return (await p.getByRole('button',{name:'Gerar segredo'}).count())+(await p.getByRole('button',{name:'Gerar novo'}).count())>0;},'webhook listed');
+   if(!(await p.getByRole('button',{name:'Gerar novo'}).count())){await p.getByRole('button',{name:'Gerar segredo'}).first().click();await p.getByRole('button',{name:'Copiar'}).first().waitFor();await go(p,'/settings/webhooks');await p.getByRole('button',{name:'Gerar novo'}).first().waitFor();}
+   await until(async()=>!(await p.getByRole('dialog').count()),'no dialog left open');});
+  await open(p,'/settings/webhooks',()=>p.getByRole('button',{name:'Gerar novo'}).first(),'webhook: gerar segredo novo, sem confirmar');
+  await open(p,'/settings/webhooks',()=>p.getByRole('button',{name:'Excluir'}).first(),'webhook: excluir, sem confirmar');
+  const guest=(await newContext()).page;
+  await open(guest,'/register',async()=>{await guest.getByRole('button',{name:'Continuar'}).click();return guest.getByRole('button',{name:'Termos de Uso'});},'cadastro: termos de uso');
+  await step('nada foi criado nem cobrado',async()=>{for(const ws of [a.workspace,fresh.workspace])assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[ws])).rows[0].n,0);assert.equal((await db.query("SELECT state FROM app.billing_account WHERE workspace_id=$1",[fresh.workspace])).rows[0].state!=='trialing',true);});
+ },
  async onboarding(step){
   const a=await account('incompleto'),{page}=a;
   await step('cadastro incompleto vai para o complemento',async()=>{await db.query('UPDATE auth."user" SET "registrationRequired"=true WHERE id=$1',[a.user]);await go(page,'/onboarding/entry');await page.waitForURL(u=>u.pathname==='/onboarding/profile',{timeout:20000});await page.getByLabel('Telefone').waitFor();});
