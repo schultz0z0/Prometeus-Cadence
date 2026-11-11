@@ -1,5 +1,5 @@
 import type {Fetch} from './types.ts';
-import {providerJson,ProviderError} from './transport.ts';
+import {ProviderError} from './transport.ts';
 // Operator decision of 2026-11-10: read LinkedIn profiles through a no-cookie Apify actor; risk recorded in docs/validation/2026-11-10-linkedin-scrapers-evaluation.md.
 export const linkedinActor='harvestapi/linkedin-profile-scraper';
 export interface LinkedinProfile{url:string;name:string;headline?:string;positions:{title:string;company:string}[];email?:string}
@@ -15,11 +15,16 @@ export function parseLinkedinProfiles(rows:unknown[]):(LinkedinProfile|undefined
   return {url,name,...(text(r.headline)?{headline:text(r.headline)}:{}),positions,...(email?{email:String(email.email).toLowerCase()}:{})};
  });
 }
-export async function readLinkedinProfiles(urls:string[],signal:AbortSignal,fetcher:Fetch=fetch):Promise<LinkedinProfile[]>{
+// The actor needs well over the 30 s of the shared transport. LinkedIn is an optional complement: a slow, failed or lost read
+// returns no profiles and the enrichment goes on. shortcut: a lost response may still be billed (capped by APIFY_LINKEDIN_MAX_CHARGE_USD); switch to start/poll if reads become frequent.
+export async function readLinkedinProfiles(urls:string[],signal:AbortSignal,fetcher:Fetch=fetch,deadlineMs=125000):Promise<LinkedinProfile[]>{
  const build=process.env.APIFY_LINKEDIN_BUILD,token=process.env.APIFY_TOKEN,maxUsd=Number(process.env.APIFY_LINKEDIN_MAX_CHARGE_USD??'0.05');
  if(process.env.APIFY_LINKEDIN_ACTOR!==linkedinActor||!build||!/^[-\w.]{1,100}$/.test(build)||!token)throw new ProviderError('PROFILE_UNAVAILABLE');
- // shortcut: a synchronous run is not reconcilable if the response is lost; one run costs about one cent per profile.
- const raw=await providerJson(fetcher,`https://api.apify.com/v2/acts/${linkedinActor.replace('/','~')}/run-sync-get-dataset-items?build=${encodeURIComponent(build)}&maxTotalChargeUsd=${maxUsd}&timeout=110`,{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json'},body:JSON.stringify({profileScraperMode:'Profile details + email search ($10 per 1k)',urls:urls.slice(0,4)})},signal);
- if(!Array.isArray(raw))throw new ProviderError('INVALID_DATASET');
- return parseLinkedinProfiles(raw).filter((p):p is LinkedinProfile=>!!p);
+ signal.throwIfAborted();
+ try{
+  const response=await fetcher(`https://api.apify.com/v2/acts/${linkedinActor.replace('/','~')}/run-sync-get-dataset-items?build=${encodeURIComponent(build)}&maxTotalChargeUsd=${maxUsd}&timeout=${Math.floor(deadlineMs/1000)-5}`,{method:'POST',redirect:'error',headers:{authorization:'Bearer '+token,'content-type':'application/json'},body:JSON.stringify({profileScraperMode:'Profile details + email search ($10 per 1k)',urls:urls.slice(0,4)}),signal:AbortSignal.any([signal,AbortSignal.timeout(deadlineMs)])});
+  if(!response.ok)return [];
+  const raw=await response.json();
+  return Array.isArray(raw)?parseLinkedinProfiles(raw).filter((p):p is LinkedinProfile=>!!p):[];
+ }catch(error){if(signal.aborted)throw error;return [];}
 }

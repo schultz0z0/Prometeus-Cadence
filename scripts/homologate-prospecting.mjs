@@ -51,7 +51,7 @@ try{
  const gen=(source,filters)=>({kind:'generation',source,destination:{mode:'new',name:'[RE] HML '+source},filters,limit,dedupScope:'workspace',funding:'plan'});
  const lists={};
  const only=process.argv.find(a=>a.startsWith('--sources='))?.slice(10).split(',');
- for(const [source,filters] of [['MAPS',{term:'clínica odontológica',location:'Curitiba, PR'}],['CNPJ',{term:'esquadrias',location:'Curitiba',includeCnae:'2512800',states:'PR'}],['WEB',{term:'escritório de contabilidade',location:'Curitiba, PR'}]]){
+ for(const [source,filters] of [['MAPS',{term:'clínica odontológica',location:'Curitiba, PR'}],['CNPJ',process.argv.includes('--software')?{term:'software',location:'Curitiba',includeCnae:'6201501',states:'PR'}:{term:'esquadrias',location:'Curitiba',includeCnae:'2512800',states:'PR'}],['WEB',{term:'escritório de contabilidade',location:'Curitiba, PR'}]]){
   if(only&&!only.includes(source))continue;
   const round=await run('gerador:'+source,gen(source,filters));
   if(round.jobId){const listId=(await db.query('SELECT list_id FROM app.prospecting_job WHERE id=$1',[round.jobId])).rows[0]?.list_id;if(listId){lists[source]=listId;round.leads=shape(await leadsOf(listId));}}
