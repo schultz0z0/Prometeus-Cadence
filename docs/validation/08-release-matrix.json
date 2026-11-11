@@ -519,7 +519,15 @@
    "id": "transversal: demais popups, pelo mesmo componente",
    "kind": "state",
    "status": "pending",
-   "note": "Jornadas popups, module-popups e popups-more abrem 36 popups locais com nome acessível, sem transbordo, fechando com Esc e devolvendo o foco. Faltam os que exigem conexão externa ativa (LinkedIn, WhatsApp, Google, MCP, desconexões) ou uma execução em estado específico (revisão de resultados, fusão de duplicados, edição de automação, pausa do SDR, reconciliação)."
+   "run": "popups-states",
+   "note": "Jornadas popups, module-popups, popups-more e popups-states abrem 42 popups locais com nome acessível, sem transbordo, fechando com Esc e devolvendo o foco. popups-states prepara os estados específicos: reconciliar chamada externa, revisar aplicação de resultados, fundir e desfazer duplicados, editar automação, pausar o SDR (estado ativo só na resposta do navegador) e reconciliar e-mail incerto, este sobre o diálogo da conversa. Os popups de conexões externas ativas ficam no item seguinte."
+  },
+  {
+   "id": "transversal: popups de conexões externas ativas",
+   "kind": "state",
+   "status": "blocked",
+   "blockedBy": "conexões reais do operador (LinkedIn, WhatsApp, Google, MCP)",
+   "note": "Desconectar LinkedIn, Agenda, Planilhas, Apollo, ChatGPT e remetente de WhatsApp, revogar MCP, publicar comentário e mensagens do LinkedIn só aparecem com a conexão ativa. Usam o mesmo componente já provado nas jornadas de popups."
   },
   {
    "id": "transversal: operador recusado em cobrança",
@@ -675,7 +683,7 @@
    "id": "visual: comparação com a referência por área",
    "kind": "state",
    "status": "pending",
-   "note": "Comparações em docs/validation/08a3-remaining.md, 08a4-execution-diary.md, 08a5-selectors.md e 08a6-local-closure.md. Há diferenças abertas e o aceite visual é do usuário."
+   "note": "Revisão por área em docs/validation/2026-11-11-visual-self-review.md, desktop e celular (390 px) em página inteira. Diferenças restantes são de estado (conta nova sem dados) ou escolhas do operador. O aceite visual é do usuário."
   },
   {
    "id": "módulo: cobrança, anual, adicionais e cupom",

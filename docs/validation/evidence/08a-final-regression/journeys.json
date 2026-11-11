@@ -1,6 +1,6 @@
 {
- "date": "2026-11-11T12:10:18.122Z",
- "sourceHash": "b8b8f04f972267e69802e2acd5f851bd1d4224ca9c166044763dba622ed2b226",
+ "date": "2026-11-11T15:44:19.886Z",
+ "sourceHash": "fc527a5e1e47d8cec1d49e49290f5701c4cd3b1b090f364b7be96f35d16927eb",
  "note": "Navegador sem acesso a outros hosts; contas sem canais ativos; nada enviado; sem IA ou pesquisa paga; nenhuma confirmação no Stripe.",
  "runs": [
   {
@@ -610,6 +610,10 @@
      "ok": true
     },
     {
+     "name": "chips de canal filtram o funil: sem e-mail publicado, o filtro E-mail zera",
+     "ok": true
+    },
+    {
      "name": "funil segura 320 px com contatos",
      "ok": true
     },
@@ -751,6 +755,42 @@
     },
     {
      "name": "nada foi criado nem cobrado",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "id": "popups-states",
+   "ok": true,
+   "crash": null,
+   "unexpected": [],
+   "steps": [
+    {
+     "name": "execução: reconciliar chamada externa, sem confirmar",
+     "ok": true
+    },
+    {
+     "name": "execução: revisar aplicação de resultados, sem aplicar",
+     "ok": true
+    },
+    {
+     "name": "dados: fundir duplicados e desfazer, cada confirmação revisada sem confirmar antes",
+     "ok": true
+    },
+    {
+     "name": "automações: editar automação, sem salvar",
+     "ok": true
+    },
+    {
+     "name": "SDR: pausar agente ativo, sem confirmar",
+     "ok": true
+    },
+    {
+     "name": "e-mail: reconciliar resultado incerto, sem confirmar",
+     "ok": true
+    },
+    {
+     "name": "nada foi enviado, cobrado ou reconciliado",
      "ok": true
     }
    ]

@@ -715,6 +715,15 @@ const journeys={
  async 'reports-data'(step){
   const a=await account('relatorios',{plan:'pro'}),{page}=a,list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista relatório']);for(let i=0;i<7;i++)await lead(a.workspace,list,{name:'[RE] Relatório '+i});
   await step('o funil conta os contatos reais',async()=>{await go(page,'/reports/funnel');const card=page.locator('.reports-funnel-metrics section',{hasText:'Total Leads'});await until(async()=>/\b7\b/.test(await card.innerText()),'seven contacts on the card');});
+  await step('chips de canal filtram o funil: sem e-mail publicado, o filtro E-mail zera',async()=>{
+   const card=page.locator('.reports-funnel-metrics section',{hasText:'Total Leads'}),chips=page.getByRole('group',{name:'Canal do funil'});
+   assert.deepEqual(await chips.getByRole('button').allInnerTexts(),['Todos','E-mail','WhatsApp']);
+   assert.equal(await chips.getByRole('button',{name:'Todos'}).getAttribute('aria-pressed'),'true');
+   await page.setViewportSize({width:1920,height:855});mkdirSync('output/playwright/visual-audit',{recursive:true});await page.screenshot({path:'output/playwright/visual-audit/funnel-chips-1920.png',animations:'disabled'});
+   await chips.getByRole('button',{name:'E-mail'}).click();await until(async()=>/\b0\b/.test(await card.innerText()),'email filter excludes contacts without e-mail');
+   await chips.getByRole('button',{name:'Todos'}).click();await until(async()=>/\b7\b/.test(await card.innerText()),'all channels again');
+   await page.setViewportSize({width:1440,height:900});
+  });
   await step('funil segura 320 px com contatos',async()=>{await page.setViewportSize({width:320,height:700});await go(page,'/reports/funnel');assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=1);await page.setViewportSize({width:1440,height:900});});
   const {cadenceName}=await seedExecutionDiary(db,a.workspace,a.user);
   await step('envios registrados aparecem no total e no filtro de cadência',async()=>{
@@ -789,6 +798,69 @@ const journeys={
   const guest=(await newContext()).page;
   await open(guest,'/register',async()=>{await guest.getByRole('button',{name:'Continuar'}).click();return guest.getByRole('button',{name:'Termos de Uso'});},'cadastro: termos de uso');
   await step('nada foi criado nem cobrado',async()=>{for(const ws of [a.workspace,fresh.workspace])assert.equal((await db.query('SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1',[ws])).rows[0].n,0);assert.equal((await db.query("SELECT state FROM app.billing_account WHERE workspace_id=$1",[fresh.workspace])).rows[0].state!=='trialing',true);});
+ },
+ async 'popups-states'(step){
+  // Popups that only exist in a specific state. Seeds are terminal or inert (no queued/running job, disconnected channel); the SDR "active" state is only patched into the browser's copy of the response, nothing is activated.
+  const a=await account('popups5',{plan:'pro',paid:true}),{page}=a,list=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[a.workspace,list,'[RE] Lista estados popup']);
+  const leadId=await lead(a.workspace,list,{name:'[RE] Empresa revisão',email:'dup@example.com'});await lead(a.workspace,list,{name:'[RE] Repetida',email:'dup@example.com'});
+  const check=async(trigger,name)=>{
+   const t=await trigger(),before=await page.getByRole('dialog').count();await t.click();const d=page.getByRole('dialog').nth(before);await d.waitFor();
+   assert.ok((await d.getAttribute('aria-labelledby'))||(await d.getAttribute('aria-label')),name+': nome acessível');
+   if(before)await page.screenshot({path:out+'/popups-stacked.png'});
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=1,name+': sem transbordo');
+   await page.keyboard.press('Escape');await d.waitFor({state:'detached'});
+   await until(()=>t.evaluate(e=>e===document.activeElement||e.contains(document.activeElement)),name+': foco volta ao gatilho',5000);
+  };
+  const job=async(kind,state,input,counts)=>{const id=randomUUID();await db.query('INSERT INTO app.prospecting_job(workspace_id,id,actor_id,list_id,request_id,body_hash,kind,source,state,input,profile_version,checkpoint,counts) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',[a.workspace,id,a.user,list,randomUUID(),'fixture',kind,kind==='qualification'?'QUALIFY':'MAPS',state,input,'fixture',{fixture:true,context:null},counts]);return id;};
+  await step('execução: reconciliar chamada externa, sem confirmar',async()=>{
+   const id=await job('generation','needs_reconciliation',{kind:'generation',source:'MAPS',destination:{mode:'existing',listId:list},filters:{term:'[RE] fixture',location:'QA'},limit:2,dedupScope:'workspace'},{found:0,inserted:0,duplicates:0,rejected:0,pending:0});
+   await db.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES($1,$2,$3,'apify','start','uncertain',$4)",[a.workspace,id,randomUUID(),{reservedUnits:{apifyRuns:1}}]);
+   await go(page,'/executions/'+id);await check(()=>page.getByRole('button',{name:'Reconciliar chamada'}),'reconciliar chamada');
+  });
+  await step('execução: revisar aplicação de resultados, sem aplicar',async()=>{
+   const id=await job('qualification','completed',{kind:'qualification',listId:list,leadIds:[leadId],modules:['email'],summaryPolicy:'all',escalation:'off'},{found:1,inserted:0,duplicates:0,rejected:0,pending:1});
+   const evidence=randomUUID();await db.query('INSERT INTO app.lead_evidence VALUES($1,$2,$3,$4,$5,$6,$7,false,now())',[a.workspace,evidence,leadId,id,'https://example.com/','[RE] Fixture: contato re@example.com','fixture']);
+   await db.query('INSERT INTO app.prospecting_item(workspace_id,job_id,id,lead_id,name,status,payload) VALUES($1,$2,$3,$4,$5,$6,$7)',[a.workspace,id,randomUUID(),leadId,'[RE] Empresa revisão','pending_review',{results:[{module:'email',status:'pending_review',proposed:{email:'re@example.com'},base:{email:'dup@example.com'},reasons:['QA_SYNTHETIC_FIXTURE'],evidenceIds:[evidence],usage:null,contextVersion:0}]}]);
+   await go(page,'/executions/'+id);await page.getByRole('checkbox',{name:'Selecionar [RE] Empresa revisão'}).check();
+   await check(()=>page.getByRole('button',{name:/Revisar aplicação/}),'revisar aplicação');
+  });
+  await step('dados: fundir duplicados e desfazer, cada confirmação revisada sem confirmar antes',async()=>{
+   await go(page,'/settings/dados');await page.getByRole('button',{name:'Procurar duplicados'}).click();await page.getByRole('checkbox',{name:/Fundir grupo/}).first().check();
+   await check(()=>page.getByRole('button',{name:/^Fundir 1 grupo/}),'fundir duplicados');
+   await page.getByRole('button',{name:/^Fundir 1 grupo/}).click();await page.getByRole('dialog').getByRole('button',{name:'Fundir',exact:true}).click();await page.getByRole('dialog').waitFor({state:'detached'});
+   await check(()=>page.getByRole('button',{name:/Desfazer/}).first(),'desfazer fusão');
+  });
+  await step('automações: editar automação, sem salvar',async()=>{
+   const id=randomUUID();await db.query('INSERT INTO app.automation VALUES($1,$2,$3,$4)',[a.workspace,id,list,{id,name:'[RE] Automação editar',description:'[RE] fixture',listId:list,source:'QUALIFY',status:'paused',schedule:{frequency:'daily',time:'08:00',timezone:'America/Sao_Paulo',weekdays:[1,2,3,4,5]},dailyLimit:10,filters:{},modules:['Qualificação por IA'],createdAt:new Date().toISOString()}]);
+   await go(page,'/automations');await check(()=>page.getByRole('button',{name:'Editar [RE] Automação editar'}),'editar automação');
+  });
+  await step('SDR: pausar agente ativo, sem confirmar',async()=>{
+   const {defaultSdrDraft}=await import('../../src/domain/sdr-policy.ts');
+   await db.query("INSERT INTO app.sdr_agent(workspace_id,name,draft,created_by) VALUES($1,'[RE] Agente pausa',$2,$3)",[a.workspace,defaultSdrDraft(),a.user]);
+   await page.route('**/api/sdr/agents',async r=>{if(r.request().method()!=='GET')return r.continue();const res=await r.fetch(),j=await res.json();for(const g of j.agents)Object.assign(g,{state:'active',activeRevision:g.revision,activatedAt:new Date().toISOString()});await r.fulfill({response:res,json:j});});
+   try{await go(page,'/sdr');await page.getByRole('button',{name:'Abrir'}).first().click();await check(()=>page.getByRole('button',{name:'Pausar',exact:true}),'pausar agente');}
+   finally{await page.unroute('**/api/sdr/agents');}
+   assert.equal((await db.query('SELECT state FROM app.sdr_agent WHERE workspace_id=$1',[a.workspace])).rows[0].state,'draft');
+  });
+  await step('e-mail: reconciliar resultado incerto, sem confirmar',async()=>{
+   const [connection,sender,identity,conversation,message]=Array.from({length:5},()=>randomUUID());
+   await db.query("INSERT INTO app.channel_connection (workspace_id,id,provider,name,public_id,state,identifiers,created_by,channel) VALUES ($1,$2,'smtp-imap','[RE] Inativo',$2,'disconnected','{}',$3,'EMAIL')",[a.workspace,connection,a.user]);
+   await db.query("INSERT INTO app.channel_sender (workspace_id,id,connection_id,provider,external_id,identity_scope,ready,channel) VALUES ($1,$2,$3,'smtp-imap',$2,$2,false,'EMAIL')",[a.workspace,sender,connection]);
+   await db.query("INSERT INTO app.channel_identity (workspace_id,id,scope,external_id) VALUES ($1,$2,$3,'re-incerto@example.com')",[a.workspace,identity,sender]);
+   await db.query("INSERT INTO app.channel_conversation (workspace_id,id,connection_id,sender_id,identity_id,lead_id,channel) VALUES ($1,$2,$3,$4,$5,$6,'EMAIL')",[a.workspace,conversation,connection,sender,identity,leadId]);
+   await db.query("INSERT INTO app.channel_message (workspace_id,id,connection_id,sender_id,identity_id,conversation_id,direction,text,state,created_at,channel) VALUES ($1,$2,$3,$4,$5,$6,'outbound','[RE] Texto incerto','uncertain',now(),'EMAIL')",[a.workspace,message,connection,sender,identity,conversation]);
+   // A disconnected mailbox: the mail worker does not sync or send from it.
+   const thread=randomUUID();await db.query("INSERT INTO app.email_mailbox(workspace_id,id,provider,address,state) VALUES($1,$2,'smtp-imap','re-caixa@example.com','disconnected')",[a.workspace,connection]);
+   await db.query("INSERT INTO app.email_thread(workspace_id,id,mailbox_id,conversation_id,thread_key,subject) VALUES($1,$2,$3,$4,$2,'[RE] Assunto incerto')",[a.workspace,thread,connection,conversation]);
+   await db.query("INSERT INTO app.email_message(workspace_id,message_id,mailbox_id,thread_id,subject,from_address,to_addresses,origin,classification) VALUES($1,$2,$3,$4,'[RE] Assunto incerto','re-caixa@example.com','[\"re-incerto@example.com\"]','app','human')",[a.workspace,message,connection,thread]);
+   await go(page,'/inbox');await page.getByRole('button',{name:'Enviados'}).click();await page.getByText('[RE] Assunto incerto').first().click();
+   await check(()=>page.getByRole('button',{name:'Reconciliar com evidência'}),'reconciliar e-mail');
+  });
+  await step('nada foi enviado, cobrado ou reconciliado',async()=>{
+   assert.equal((await db.query("SELECT count(*)::int n FROM app.prospecting_job WHERE workspace_id=$1 AND state='needs_reconciliation'",[a.workspace])).rows[0].n,1);
+   assert.equal((await db.query("SELECT count(*)::int n FROM app.channel_message WHERE workspace_id=$1 AND state='uncertain'",[a.workspace])).rows[0].n,1);
+   assert.equal((await db.query('SELECT count(*)::int n FROM app.billing_operation WHERE workspace_id=$1',[a.workspace])).rows[0].n,0);
+  });
  },
  async 'roles-matrix'(step){
   // Server-side authority per role. "viewer" is not a product role: any role outside owner, admin and operator must be refused everything.

@@ -1,6 +1,6 @@
 {
- "date": "2026-11-11T12:20:37.358Z",
- "sourceHash": "b8b8f04f972267e69802e2acd5f851bd1d4224ca9c166044763dba622ed2b226",
+ "date": "2026-11-11T15:56:34.838Z",
+ "sourceHash": "fc527a5e1e47d8cec1d49e49290f5701c4cd3b1b090f364b7be96f35d16927eb",
  "note": "Só navegação; hosts externos bloqueados; contas descartáveis removidas ao fim.",
  "results": [
   {
@@ -3239,7 +3239,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/b693b5db-93c8-4e16-aa84-f72d96a1eb9d",
+   "path": "/leads/9f56c80f-6f43-4938-a79c-fe5da861df6b",
    "theme": "light",
    "fontSize": 16
   },
@@ -3249,7 +3249,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/b693b5db-93c8-4e16-aa84-f72d96a1eb9d",
+   "path": "/leads/9f56c80f-6f43-4938-a79c-fe5da861df6b",
    "theme": "light",
    "fontSize": 16
   },
@@ -3259,7 +3259,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/b693b5db-93c8-4e16-aa84-f72d96a1eb9d",
+   "path": "/leads/9f56c80f-6f43-4938-a79c-fe5da861df6b",
    "theme": "light",
    "fontSize": 16
   },
@@ -3269,7 +3269,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/b693b5db-93c8-4e16-aa84-f72d96a1eb9d",
+   "path": "/leads/9f56c80f-6f43-4938-a79c-fe5da861df6b",
    "theme": "light",
    "fontSize": 16,
    "keyboard": {
@@ -3284,7 +3284,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/b693b5db-93c8-4e16-aa84-f72d96a1eb9d",
+   "path": "/leads/9f56c80f-6f43-4938-a79c-fe5da861df6b",
    "theme": "light",
    "fontSize": 16
   },
@@ -3294,7 +3294,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/b693b5db-93c8-4e16-aa84-f72d96a1eb9d",
+   "path": "/leads/9f56c80f-6f43-4938-a79c-fe5da861df6b",
    "theme": "dark",
    "fontSize": 16
   },
@@ -3304,7 +3304,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/b693b5db-93c8-4e16-aa84-f72d96a1eb9d",
+   "path": "/leads/9f56c80f-6f43-4938-a79c-fe5da861df6b",
    "theme": "light",
    "fontSize": 16
   },
@@ -3314,7 +3314,7 @@
    "account": "a",
    "status": 200,
    "ok": true,
-   "path": "/leads/b693b5db-93c8-4e16-aa84-f72d96a1eb9d",
+   "path": "/leads/9f56c80f-6f43-4938-a79c-fe5da861df6b",
    "theme": "light",
    "fontSize": 18
   },
@@ -5993,7 +5993,7 @@
    "theme": "light",
    "fontSize": 16,
    "keyboard": {
-    "available": 19,
+    "available": 22,
     "visited": 8,
     "failures": []
    }

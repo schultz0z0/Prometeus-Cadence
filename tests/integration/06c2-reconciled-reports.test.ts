@@ -44,6 +44,13 @@ test('accepted messages, real inbound classification and correlated DSN reconcil
  assert.deepEqual(diary.counts,{success:0,error:1,skipped:0,progress:0});
  assert.match(diary.items[0].event,/devolvido/i);
 });
+test('funnel channel filter counts only that channel and its drilldown matches',async()=>{
+ const f=await fixture();await dispatchOne(f.lease,{now:()=>f.now,mailAdapter:adapter(async()=>({kind:'accepted',remoteId:'report-'+randomUUID(),acceptedAt:new Date().toISOString()}))});await ingest(f,[incoming(f)]);
+ const q={...query(f.cadence.id),view:'funnel' as const},all=await readReport(f.u.p,q),mail=await readReport(f.u.p,{...q,channel:'EMAIL'}),wa=await readReport(f.u.p,{...q,channel:'WHATSAPP'});
+assert.equal(mail.totals.leads,all.totals.leads);assert.equal(mail.totals.enrolled,1);assert.equal(mail.totals.replies,1);
+ assert.equal(wa.totals.enrolled,0);assert.equal(wa.totals.replies,0);
+ assert.equal((await readReportDetail(f.u.p,'replies',{...q,channel:'EMAIL'})).items.length,1);assert.equal((await readReportDetail(f.u.p,'replies',{...q,channel:'WHATSAPP'})).items.length,0);
+});
 test('report HTTP authenticates scope and rejects invalid calendar dates instead of normalizing them',async()=>{
  const f=await prospectingUser(),q=query(),url='http://127.0.0.1:3210/api/reports?'+new URLSearchParams(q);
  assert.equal((await reportRequest(new Request(url))).status,401);const headers=new Headers(f.headers);headers.set('x-cadence-workspace','other');assert.equal((await reportRequest(new Request(url,{headers}))).status,409);

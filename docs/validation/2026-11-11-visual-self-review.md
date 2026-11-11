@@ -22,11 +22,25 @@ Dashboard, Contatos, Gerador, Qualificador, Enriquecedor, Importar leads, Cadên
 - LinkedIn › campanhas foi capturado ainda carregando. O estado vazio existe e foi conferido à parte.
 - Webhooks tem uma seção de API a mais. CRM e apps mostra o FunnelsFlow desconectado, que é o estado da conta.
 
+## Segunda rodada (11/11/2026, à tarde)
+
+| Área | Diferença | Ajuste |
+| --- | --- | --- |
+| Relatório de funil | Faltavam os filtros por canal (Todos, E-mail, WhatsApp) | Filtros implementados com dados reais: mensagens, respostas e opt-outs pelo canal registrado; inscrições pelo canal das etapas da cadência publicada; contatos pelo e-mail ou telefone publicado. O detalhe de cada indicador respeita o filtro. |
+| Relatórios (estado vazio) | Ilustração menor e solta; título e botão maiores; ícones dos cartões sem o círculo (variável de cor inexistente) | Ilustração do gráfico emoldurado como na referência, tipografia e botão no tamanho da referência, círculo dos ícones corrigido, ícone da aba Visão geral |
+| Funil no celular | O desenho do funil virava uma faixa fina | O funil ocupa a altura útil, como na referência |
+| Webhooks e API, CRM e apps no celular | Botão e selo de estado espremiam o título e o texto | Em telas estreitas, a ação ou o selo desce para a linha de baixo |
+
+As capturas passaram a ser de página inteira, como as da referência.
+
+## Celular (390 px)
+
+As 29 áreas foram comparadas lado a lado em página inteira. Fora os quatro ajustes acima, as diferenças são de estado: conta nova sem dados, trial de 7 dias, OpenWA. A aba de Configurações não mostra o rótulo de grupo "CONTA" da referência, uma diferença menor.
+
 ## Diferenças que ficam
 
-- **Relatório de funil:** faltam os filtros por canal (chips) da referência. É uma funcionalidade e precisa de marco próprio, não de ajuste visual.
-- **Relatórios:** a ilustração do estado vazio é menor que a da referência. Diferença menor.
+- **Configurações no celular:** sem o rótulo de grupo "CONTA" na faixa de abas. Diferença menor.
 
 ## Limites
 
-As capturas cobrem só a primeira tela (855 px), enquanto as da referência são da página inteira. Celular (390 px) não foi revisado nesta rodada. Os estados com dados reais não foram comparados.
+Os estados com dados reais não foram comparados com a referência.

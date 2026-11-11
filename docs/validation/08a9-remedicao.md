@@ -1,6 +1,30 @@
 # 08A.9 — Remedição no código atual
 
 
+## Remedição de 11/11/2026, terceira (pendências locais)
+
+O que mudou:
+
+- **Popups de estados específicos:** a jornada `popups-states` prepara seis estados numa conta descartável e abre cada popup, conferindo nome acessível, ausência de transbordo, fechamento com Esc e retorno do foco. Os estados são: reconciliar chamada externa, revisar aplicação de resultados, fundir e desfazer duplicados, editar automação, pausar o SDR e reconciliar e-mail incerto (sobre o diálogo da conversa). Nada é ativado, enviado, cobrado ou reconciliado.
+- **Popups com conexão ativa:** viraram item próprio, bloqueado até as conexões reais do operador.
+- **Filtros por canal no funil:** Todos, E-mail e WhatsApp com dados reais, inclusive no detalhe de cada indicador. Coberto por teste de integração e pela jornada `reports-data`.
+- **Visual:** estado vazio de Relatórios no padrão da referência. No celular, o funil não fica mais achatado e os cabeçalhos de Webhooks e CRM e apps não espremem mais o texto. A revisão no celular está em `2026-11-11-visual-self-review.md`.
+
+| Medição | Resultado |
+| --- | --- |
+| Jornadas clicadas | 31 de 31, resíduo zero |
+| Varredura de rotas | 584 de 584, resíduo zero |
+| Testes unitários | 474 de 474 |
+| Integração de relatórios | 14 de 14 |
+| Auditor | **122 de 139**, aceite integral negado |
+
+Ficam 17 itens:
+
+- **16 bloqueados**, que dependem de conexões, envios ou URL pública do operador.
+- **1 pendente**, o aceite visual do usuário.
+
+Nenhum item local ficou aberto.
+
 ## Remedição de 11/11/2026, segunda (commit `2f69e0e`)
 
 Dois módulos passaram a ter prova real:
