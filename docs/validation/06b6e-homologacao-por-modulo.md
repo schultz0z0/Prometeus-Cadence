@@ -84,6 +84,17 @@ Com a chave do operador, a busca Apollo do app recebeu HTTP 403: o plano gratuit
 
 Em 12 leituras de 6 sites reais, o resultado se repetiu em cada site; o caso da Prodont vazia não foi reproduzido. Sites sem `/sobre` e `/contato` ficam só com a página inicial. Quando o `robots.txt` não pode ser lido, o site é tratado como fechado.
 
+## LinkedIn dos sócios
+
+Decisão do operador em 10/11/2026: o Enriquecedor pesquisa no Google o perfil de até dois sócios e lê os perfis encontrados com o raspador `harvestapi/linkedin-profile-scraper`, sem cookies. Um perfil só é aceito quando o nome bate com o sócio do cadastro e a empresa atual bate com a do lead; o e-mail aparece como encontrado pelo fornecedor. O raspador não devolve telefone. [Avaliação e riscos](2026-11-10-linkedin-scrapers-evaluation.md)
+
+Rodadas reais:
+
+- **Clínicas e MEIs (Base CNPJ e Maps):** nenhum perfil encontrado. A primeira versão pesquisava o nome completo do cadastro entre aspas, que nunca bate com o nome exibido no LinkedIn. Passou a usar primeiro e último nome.
+- **Empresas de software de Curitiba (CNAE 6201-5/01):** a leitura dos perfis estourava o prazo de 30 s do transporte comum e travava a execução em reconciliação. Corrigido: prazo próprio de até 125 s e, se falhar, o Enriquecedor segue sem perfis. Na repetição, as 3 empresas foram processadas. Uma teve dois perfis homônimos lidos e corretamente descartados (outra empresa e empresa não informada); as outras duas não tinham perfil encontrável. Nenhum e-mail.
+
+Conclusão: a fonte funciona e protege contra homônimos, mas o rendimento em pequenas empresas de Curitiba foi zero nas amostras. O custo foi baixo: uma leitura de dois perfis e as pesquisas no Google.
+
 ## Achados abertos
 
 1. **Busca na web (corrigida, ver acima).** Antes: Na rodada 1, dois dos três leads eram "Melhores empresas de Contabilidade em Curitiba" e "Mapa". Na rodada 2 os três eram sites de escritórios, mas com o título da página como nome ("Escritório de Contabilidade em Curitiba | (41) …"). A fonte precisa filtrar diretórios e extrair o nome da empresa.
