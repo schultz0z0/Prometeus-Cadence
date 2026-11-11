@@ -12,3 +12,9 @@ test('06B.7 the enricher acts on every lead with a valid CNPJ, qualified or not,
  assert.match(screen,/enrichmentBatch\(/);assert.match(screen,/\/leads\/qualifier/);
  assert.doesNotMatch(screen,/companyPeople|com ou sem CNPJ|sai do cache/);
 });
+test('06B.7 registry decision makers come from the QSA, or from the owner name of a sole proprietorship',async()=>{
+ const {registryDecisionMakers}=await import('../src/domain/enrichment.ts');
+ assert.deepEqual(registryDecisionMakers({companyName:'ALFA LTDA',facts:{decisionMakers:[{name:'Ana Silva',role:'Sócio-Administrador'},{name:'Ana Silva',role:'Sócio-Administrador'}]}}),[{name:'Ana Silva',role:'Sócio-Administrador'}]);
+ assert.deepEqual(registryDecisionMakers({companyName:'53.504.416 CLEVERSON SAO GREGORIO',facts:{}}),[{name:'CLEVERSON SAO GREGORIO',role:'Titular (MEI)'}]);
+ assert.deepEqual(registryDecisionMakers({companyName:'ALUPREMIUM SOLUCOES LTDA',facts:{}}),[]);
+});

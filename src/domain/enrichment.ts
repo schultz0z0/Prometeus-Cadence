@@ -10,6 +10,13 @@ export function enrichmentBatch(leads:readonly {id:string;cnpj?:string;listId:st
  const unique=new Map<string,string>();for(const lead of [...leads].sort((a,b)=>a.id.localeCompare(b.id))){if(lead.listId!==listId)continue;const cnpj=validCnpj(lead.cnpj);if(!cnpj)continue;if(!unique.has(cnpj))unique.set(cnpj,lead.id);}
  const ids=[...unique.values()];return{total:ids.length,leadIds:ids.slice(Math.max(0,page)*100,Math.max(0,page)*100+100)};
 }
+// Decision makers named by the registry: the QSA, or the holder of a sole proprietorship, whose legal name is "<CNPJ base> <owner name>".
+export function registryDecisionMakers(registry:{companyName?:string;facts?:Record<string,unknown>}):{name:string;role:string}[]{
+ const qsa=Array.isArray(registry.facts?.decisionMakers)?(registry.facts!.decisionMakers as {name?:unknown;role?:unknown}[]).filter((p):p is {name:string;role:string}=>typeof p?.name==='string'&&typeof p?.role==='string'):[];
+ if(qsa.length)return [...new Map(qsa.map(p=>[p.name.toLowerCase(),{name:p.name,role:p.role}])).values()].slice(0,10);
+ const owner=registry.companyName?.match(/^\d{2}\.\d{3}\.\d{3}\s+(\S.{3,})$/)?.[1];
+ return owner?[{name:owner.trim(),role:'Titular (MEI)'}]:[];
+}
 export function companyPeopleBatch(leads:readonly {id:string;listId:string}[],listId:string,page:number){const ids=leads.filter(l=>l.listId===listId).map(l=>l.id).sort();return{total:ids.length,leadIds:ids.slice(Math.max(0,page)*100,Math.max(0,page)*100+100)};}
 const personSchema=z.strictObject({name:z.string().trim().min(5).max(200),role:z.string().trim().min(2).max(150),email:z.string().trim().max(254).optional(),phone:z.string().trim().max(40).optional(),linkedin:z.string().url().max(500).optional(),evidenceId:z.string().min(1).max(120),quote:z.string().min(10).max(1200)});
 const schema=z.strictObject({people:z.array(personSchema).max(10)});

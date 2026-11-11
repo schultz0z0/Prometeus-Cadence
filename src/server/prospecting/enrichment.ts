@@ -1,6 +1,6 @@
 import type {JobLease,Evidence,Decision} from '../../domain/prospecting.ts';
 import type {Lead} from '../../domain/model.ts';
-import {validateDecisorEvidence,type Decisor,type EnrichmentResult} from '../../domain/enrichment.ts';
+import {validateDecisorEvidence,type Decisor,type EnrichmentResult,registryDecisionMakers} from '../../domain/enrichment.ts';
 import {withLeasedTransaction} from './worker-db.ts';import {readLeasedJob,finishJob,performStep,performSiteRead,handleStepFailure} from './journal.ts';
 import {sourceResult,preflight,type QualificationAdapters} from './qualification.ts';
 import {decide} from './ai/jev.ts';
@@ -32,7 +32,7 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
   const lead=job.checkpoint.bases[group.leadId] as Lead;
   const registry=await sourceResult(lease,job,lead,'registry',deps,{partners:true});if(registry===null)return;
   if(registry.cnpj&&registry.cnpj!==group.cnpj)throw new AppError(409,'A consulta não corresponde ao CNPJ revisado.','CNPJ_IDENTITY_MISMATCH');
-  const names=Array.isArray(registry.facts?.decisionMakers)?registry.facts.decisionMakers.map((p:any)=>p.name).filter((n:any)=>typeof n==='string').slice(0,50):[];
+  const partners=registryDecisionMakers(registry),names=partners.map(p=>p.name);
   let site=lead.site;if(!site){const website=await sourceResult(lease,job,lead,'website',deps);if(website===null)return;site=website.site;}
   const linked=await sourceResult(lease,job,{...lead,name:[lead.companyName||lead.name,...names.slice(0,2),'diretor sócio contato site:linkedin.com/in/'].join(' ')},'website',deps,{suffix:'linkedin'});if(linked===null)return;
   const pages:Evidence[]=[...(registry.evidence??[]),...(linked.evidence??[])];
@@ -51,6 +51,9 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
     try{return {people:validateDecisorEvidence(generated.value,evidence,lead,names,registry.phone?[registry.phone]:[]),usage:generated.usage,invalid:false};}
     catch{return {people:[] as Decisor[],usage:generated.usage,invalid:true};}
    },r=>r.usage);if(result.invalid)throw new ProviderError('INVALID_DECISOR_RESULT');people=result.people;
+   // Registry partners are recorded on the company even without a published contact; they are never charged or delivered as contacts.
+   const source=evidence.find(e=>registry.evidence?.some(r=>r.hash===e.hash));
+   if(source)for(const p of partners)if(!people.some(d=>d.name.toLowerCase()===p.name.toLowerCase()))people.push({...p,evidenceId:source.id,sourceUrl:source.url,quote:p.name+' · '+p.role,whatsapp:'unverified'});
    if(job.checkpoint.execution.aiRoute.decisionProvider==='jev'){
     assessment=await performStep(lease,'decisor-assessment:'+group.leadId,'openrouter',{jevCalls:1},async()=>{
      await preflight(lease,job,deps,true);
@@ -63,9 +66,9 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
    await assertAiRouteCurrent(c,job);
    await c.query("SELECT set_config('app.enrichment_token',$1,true),set_config('app.enrichment_fence',$2,true)",[lease.token,String(lease.fence)]);
    const prior=(await c.query('SELECT * FROM app.enrichment_resolution WHERE cnpj=$1 AND contract=$2 AND expires_at>clock_timestamp() ORDER BY resolved_at DESC,id DESC LIMIT 1',[group.cnpj,checkpoint.contract])).rows[0];if(prior)return {row:prior,cached:true};
-   const row=(await c.query("INSERT INTO app.enrichment_resolution(workspace_id,id,cnpj,contract,job_id,lead_id,people,expires_at,assessment) VALUES($1,$2,$3,$4,$5,$6,$7,clock_timestamp()+$8::interval,$9) RETURNING *",[lease.workspaceId,hashValue({job:lease.jobId,cnpj:group.cnpj}),group.cnpj,checkpoint.contract,lease.jobId,group.leadId,JSON.stringify(people),people.length?'30 days':'1 day',assessment??null])).rows[0];return{row,cached:false};
+   const row=(await c.query("INSERT INTO app.enrichment_resolution(workspace_id,id,cnpj,contract,job_id,lead_id,people,expires_at,assessment) VALUES($1,$2,$3,$4,$5,$6,$7,clock_timestamp()+$8::interval,$9) RETURNING *",[lease.workspaceId,hashValue({job:lease.jobId,cnpj:group.cnpj}),group.cnpj,checkpoint.contract,lease.jobId,group.leadId,JSON.stringify(people),people.some(p=>p.email||p.phone)?'30 days':'1 day',assessment??null])).rows[0];return{row,cached:false};
   });
-  await record(lease,job,group,{cnpj:group.cnpj,people:resolution.row.people,cacheId:resolution.row.id,cached:resolution.cached,charged:!resolution.cached&&people.length>0,resolvedAt:new Date(resolution.row.resolved_at).toISOString(),...(resolution.row.assessment?{assessment:resolution.row.assessment}:{})});
+  await record(lease,job,group,{cnpj:group.cnpj,people:resolution.row.people,cacheId:resolution.row.id,cached:resolution.cached,charged:!resolution.cached&&people.some(p=>p.email||p.phone),resolvedAt:new Date(resolution.row.resolved_at).toISOString(),...(resolution.row.assessment?{assessment:resolution.row.assessment}:{})});
  }catch(error){await handleStepFailure(lease,error);}
 }
 export async function cancelRemoteRuns(lease:JobLease,job:any,deps:QualificationAdapters){

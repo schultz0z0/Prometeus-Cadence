@@ -34,7 +34,7 @@ async function run(f:Awaited<ReturnType<typeof fixture>>,useful:boolean){const j
 test('enrichment preview has no side effects and empty evidence consumes zero commercial credit',async()=>{
  const f=await fixture(),before=await readWorkspaceSnapshot(f.p);assert.equal(before.data.lists.length,1);assert.equal(await consumed(f.p,'enrichment'),0);
  const job=await run(f,false);assert.equal((await getJob(f.p,job.id)).state,'completed');assert.equal(await consumed(f.p,'enrichment'),0);assert.equal((await readWorkspaceSnapshot(f.p)).data.lists.length,1);
- assert.equal((await listJobItems(f.p,job.id)).items[0].enrichment?.people.length,0);
+ assert.deepEqual((await listJobItems(f.p,job.id)).items[0].enrichment?.people.map(p=>[p.name,p.role,!!p.email,!!p.phone]),[['Ana Silva','diretora comercial',false,false]],'the QSA partner is recorded without a contact');
 });
 test('useful enrichment consumes one credit; reviewed delivery is idempotent and cached retry costs no new call',async()=>{
  const f=await fixture(),imports=await consumed(f.p,'imports'),job=await run(f,true);assert.equal((await getJob(f.p,job.id)).state,'completed');assert.equal(await consumed(f.p,'enrichment'),1);
@@ -174,4 +174,11 @@ test('06B.7 the decision-maker model sees every collected site page, not only th
  for(let i=0;i<8&&!['completed','partial','failed'].includes((await getJob(f.p,job.id)).state);i++)await runEnrichment(await grantTestLease(f.p,job.id),deps);
  assert.ok(seen.includes('/contato'),'the contact page reaches the model: '+JSON.stringify(seen));
  assert.equal((await listJobItems(f.p,job.id)).items[0].enrichment?.people.length,1);
+});
+test('06B.7 a partner found only in the registry is recorded on the company without charge and is not delivered as a contact',async()=>{
+ const f=await fixture(),job=await run(f,false),item=(await listJobItems(f.p,job.id)).items[0];
+ assert.equal(item.enrichment?.charged,false);assert.equal(await consumed(f.p,'enrichment'),0);
+ assert.equal(item.enrichment?.people[0].name,'Ana Silva');assert.equal(item.enrichment?.people[0].email,undefined);
+ await assert.rejects(applyJobResults(f.p,job.id,{requestId:randomUUID(),itemIds:[item.id]}),'no person without a contact enters the decision-maker list');
+ const snapshot=await readWorkspaceSnapshot(f.p);assert.equal(snapshot.data.lists.length,1);
 });
