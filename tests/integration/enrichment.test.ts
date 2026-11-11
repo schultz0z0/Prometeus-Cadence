@@ -183,3 +183,15 @@ test('06B.7 a partner found only in the registry is recorded on the company with
  await assert.rejects(applyJobResults(f.p,job.id,{requestId:randomUUID(),itemIds:[item.id]}),'no person without a contact enters the decision-maker list');
  const snapshot=await readWorkspaceSnapshot(f.p);assert.equal(snapshot.data.lists.length,1);
 });
+test('06B.7 a partner found on LinkedIn adds role, profile and a provider e-mail labelled as such, and is charged once',async t=>{
+ Object.assign(process.env,{APIFY_LINKEDIN_ACTOR:'harvestapi/linkedin-profile-scraper',APIFY_LINKEDIN_BUILD:'fixture-build'});t.after(()=>{delete process.env.APIFY_LINKEDIN_ACTOR;delete process.env.APIFY_LINKEDIN_BUILD;});
+ const f=await fixture(),job=await confirmJob(f.p,{requestId:randomUUID(),input:f.input,reviewToken:f.review.token}),base=adapters(false),searched:string[]=[];
+ const profileUrl='https://br.linkedin.com/in/ana-silva-exemplo';
+ const deps={...base,apify:{...base.apify,start:async(ctx:any,request:any)=>{const term=String(request?.filters?.term??'');if(ctx.profile.source==='WEB'&&term.includes('site:linkedin.com/in')){searched.push(term);return{kind:'inline' as const,page:{receiptId:'li-search',candidates:[{name:'Ana Silva - Empresa Exemplo | LinkedIn',source:'WEB' as const,sourceRef:profileUrl,evidence:[{id:'li',url:profileUrl,text:'Ana Silva - Diretora - Empresa Exemplo',hash:'li',fetchedAt:new Date().toISOString(),truncated:false}]}],nextCursor:null,exhausted:true,rawCount:1,rejected:[],usage:{provider:'apify',operationId:ctx.operationId,units:{apifyRuns:1},costUsd:null,costKind:'unknown' as const}}};}return base.apify.start(ctx);}},
+  linkedin:async(urls:string[])=>{assert.deepEqual(urls,['https://www.linkedin.com/in/ana-silva-exemplo']);return [{url:urls[0],name:'Ana Silva',headline:'Diretora comercial',positions:[{title:'Diretora comercial',company:'Empresa Exemplo'}],email:'ana@empresa.example'}];}};
+ for(let i=0;i<8&&!['completed','partial','failed'].includes((await getJob(f.p,job.id)).state);i++)await runEnrichment(await grantTestLease(f.p,job.id),deps as any);
+ assert.equal((await getJob(f.p,job.id)).state,'completed');assert.ok(searched.some(t=>t.includes('Ana Silva')),'searched the partner profile on Google');
+ const item=(await listJobItems(f.p,job.id)).items[0],ana=item.enrichment?.people.find(p=>p.name==='Ana Silva')!;
+ assert.equal(ana.email,'ana@empresa.example');assert.equal(ana.role,'Diretora comercial');assert.equal(ana.linkedin,'https://www.linkedin.com/in/ana-silva-exemplo');assert.equal(ana.contactBasis,'provider');
+ assert.equal(item.enrichment?.charged,true);assert.equal(await consumed(f.p,'enrichment'),1);assert.equal(item.status,'pending_review');
+});

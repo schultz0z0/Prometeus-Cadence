@@ -26,7 +26,11 @@ Todos afirmam funcionar sem cookies e sem conta do LinkedIn. Isso tira o risco d
 - **Dependência de fornecedor.** Se o fornecedor do raspador for processado ou bloqueado, a fonte some de uma hora para outra, como aconteceu com a Proxycurl.
 - **LGPD.** Perfil público continua sendo dado pessoal. Coletar em massa para prospecção pede base legal registrada (provavelmente legítimo interesse, com avaliação de impacto), transparência e atendimento a pedidos de exclusão. Isso não é parecer jurídico; precisa de leitura de um advogado.
 
-## Recomendação
+## Decisão do operador
+
+Em 10/11/2026 o operador decidiu usar a leitura de perfis, ciente dos riscos acima: o Google encontra o perfil do sócio e o raspador `harvestapi/linkedin-profile-scraper` (versão 0.0.141, sem cookies) lê cargo e e-mail. O e-mail aparece rotulado como encontrado pelo fornecedor, nunca como publicado pela pessoa. A fonte só funciona com `APIFY_LINKEDIN_ACTOR` e `APIFY_LINKEDIN_BUILD` configurados. O raspador não devolve telefone. A leitura jurídica sobre LGPD e contrato do LinkedIn continua pendente.
+
+## Recomendação anterior à decisão
 
 Não ativar raspagem de LinkedIn em nenhum módulo agora.
 

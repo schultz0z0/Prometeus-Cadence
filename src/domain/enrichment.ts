@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import type {Evidence,Decision} from './prospecting.ts';
-export interface Decisor{name:string;role:string;email?:string;phone?:string;linkedin?:string;evidenceId:string;sourceUrl:string;quote:string;whatsapp:'unverified'|'published_link'}
+export interface Decisor{name:string;role:string;email?:string;phone?:string;linkedin?:string;evidenceId:string;sourceUrl:string;quote:string;whatsapp:'unverified'|'published_link';contactBasis?:'provider'}
 export interface EnrichmentOptions{maxCredits:number;destinationName:string}
 export interface ContactEnrichment{people:Decisor[];jobId:string;resolvedAt:string;delivered:boolean}
 export interface EnrichmentResult{cnpj:string;people:Decisor[];cacheId:string;cached:boolean;charged:boolean;resolvedAt:string;assessment?:Decision}
@@ -16,6 +16,21 @@ export function registryDecisionMakers(registry:{companyName?:string;facts?:Reco
  if(qsa.length)return [...new Map(qsa.map(p=>[p.name.toLowerCase(),{name:p.name,role:p.role}])).values()].slice(0,10);
  const owner=registry.companyName?.match(/^\d{2}\.\d{3}\.\d{3}\s+(\S.{3,})$/)?.[1];
  return owner?[{name:owner.trim(),role:'Titular (MEI)'}]:[];
+}
+const words=(v:string):string[]=>v.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().match(/[a-z0-9]+/g)??[];
+const legal=new Set(['ltda','eireli','epp','me','sa','s','a','de','da','do','das','dos','e','servicos','comercio','industria','clinica','odontologica','empresa','grupo']);
+// A LinkedIn profile belongs to a registry partner only when first and last name match and the current company matches the lead.
+export function linkedinDecisors(partners:readonly {name:string;role:string}[],profiles:readonly {url:string;name:string;headline?:string;positions:{title:string;company:string}[];email?:string}[],companyNames:readonly string[]){
+ const company=new Set(companyNames.flatMap(words).filter(w=>w.length>3&&!legal.has(w)));
+ const out:{partner:{name:string;role:string};profile:(typeof profiles)[number];role:string}[]=[];
+ for(const profile of profiles){
+  const name=words(profile.name);if(name.length<2)continue;
+  const partner=partners.find(p=>{const w=words(p.name);return w[0]===name[0]&&w.includes(name[name.length-1]);});
+  const position=profile.positions.find(p=>words(p.company).some(w=>company.has(w)));
+  if(!partner||!(position||words(profile.headline??'').some(w=>company.has(w)))||out.some(o=>o.partner===partner))continue;
+  out.push({partner,profile,role:position?.title??partner.role});
+ }
+ return out;
 }
 export function companyPeopleBatch(leads:readonly {id:string;listId:string}[],listId:string,page:number){const ids=leads.filter(l=>l.listId===listId).map(l=>l.id).sort();return{total:ids.length,leadIds:ids.slice(Math.max(0,page)*100,Math.max(0,page)*100+100)};}
 const personSchema=z.strictObject({name:z.string().trim().min(5).max(200),role:z.string().trim().min(2).max(150),email:z.string().trim().max(254).optional(),phone:z.string().trim().max(40).optional(),linkedin:z.string().url().max(500).optional(),evidenceId:z.string().min(1).max(120),quote:z.string().min(10).max(1200)});

@@ -32,7 +32,7 @@ import {buildAiSkill} from '../../domain/ai-skills.ts';
 import type {DecisorGenerator} from './ai/decisors.ts';
 export interface QualificationAdapters{
   signal?:AbortSignal;apify?:SourceAdapter;siteBrowser?:SiteBrowser;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
-  collect?:(...args:Parameters<typeof fetchEvidencePack>)=>Promise<Evidence[]>;checkEmail?:typeof checkEmailDns;decisors?:DecisorGenerator;
+  collect?:(...args:Parameters<typeof fetchEvidencePack>)=>Promise<Evidence[]>;checkEmail?:typeof checkEmailDns;decisors?:DecisorGenerator;linkedin?:typeof import('./providers/linkedin-profiles.ts').readLinkedinProfiles;
   decide?:typeof decide;generate?:typeof generate;
 }
 

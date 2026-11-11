@@ -1,8 +1,9 @@
 import type {JobLease,Evidence,Decision} from '../../domain/prospecting.ts';
 import type {Lead} from '../../domain/model.ts';
-import {validateDecisorEvidence,type Decisor,type EnrichmentResult,registryDecisionMakers} from '../../domain/enrichment.ts';
+import {validateDecisorEvidence,type Decisor,type EnrichmentResult,registryDecisionMakers,linkedinDecisors} from '../../domain/enrichment.ts';
+import {readLinkedinProfiles,linkedinProfileUrl,type LinkedinProfile} from './providers/linkedin-profiles.ts';
 import {withLeasedTransaction} from './worker-db.ts';import {readLeasedJob,finishJob,performStep,performSiteRead,handleStepFailure} from './journal.ts';
-import {sourceResult,preflight,type QualificationAdapters} from './qualification.ts';
+import {sourceResult,sourceResults,preflight,type QualificationAdapters} from './qualification.ts';
 import {decide} from './ai/jev.ts';
 import {providerContext} from './steps.ts';import {ApifyAdapter} from './providers/apify.ts';import {ProviderError} from './providers/transport.ts';
 import {saveEvidence} from './evidence.ts';import {hashValue} from './review.ts';import {fetchEvidencePack} from './extraction/fetch-page.ts';
@@ -35,7 +36,19 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
   const partners=registryDecisionMakers(registry),names=partners.map(p=>p.name);
   let site=lead.site;if(!site){const website=await sourceResult(lease,job,lead,'website',deps);if(website===null)return;site=website.site;}
   const linked=await sourceResult(lease,job,{...lead,name:[lead.companyName||lead.name,...names.slice(0,2),'diretor sócio contato site:linkedin.com/in/'].join(' ')},'website',deps,{suffix:'linkedin'});if(linked===null)return;
-  const pages:Evidence[]=[...(registry.evidence??[]),...(linked.evidence??[])];
+  // Operator decision of 2026-11-10: Google finds a partner's LinkedIn profile and a no-cookie actor reads role and a provider-checked e-mail.
+  let profiles:LinkedinProfile[]=[];
+  if(prospectingConfig().linkedinReady&&prospectingConfig().ready.WEB&&partners.length){
+   const urls:string[]=[];
+   for(const [i,partner] of partners.slice(0,2).entries()){
+    const found=await sourceResults(lease,job,{...lead,name:`"${partner.name}" "${lead.companyName||lead.name}" site:linkedin.com/in`},'website',deps,{limit:3,suffix:'linkedin-person:'+i});if(found===null)return;
+    for(const r of found)for(const u of [r.sourceRef,...(r.evidence??[]).map(e=>e.url)].map(linkedinProfileUrl))if(u&&!urls.includes(u))urls.push(u);
+   }
+   if(urls.length)profiles=await performStep(lease,'linkedin-profiles:'+group.leadId,'apify',{apifyRuns:1},()=>(deps.linkedin??readLinkedinProfiles)(urls.slice(0,4),deps.signal??new AbortController().signal));
+  }
+  const matches=linkedinDecisors(partners,profiles,[lead.companyName??'',lead.name]);
+  const profilePages:Evidence[]=matches.map(m=>{const text=`Perfil LinkedIn de ${m.profile.name}. Cargo atual: ${m.role}.${m.profile.email?` E-mail encontrado pelo fornecedor a partir do perfil, com caixa validada: ${m.profile.email}.`:''}`;return{id:hashValue({profile:m.profile.url}),url:m.profile.url,text,hash:hashValue(text),fetchedAt:new Date().toISOString(),truncated:false};});
+  const pages:Evidence[]=[...(registry.evidence??[]),...profilePages,...(linked.evidence??[])];
   for(const [index,url]of [site,linked.site].filter((u,i,a):u is string=>!!u&&!!siteUrl(u)&&a.indexOf(u)===i).entries()){
    const collected=await performSiteRead(lease,'decisor-evidence:'+group.leadId+':'+index,()=> (deps.collect??fetchEvidencePack)(url,{signal:deps.signal??new AbortController().signal,browser:deps.siteBrowser},index===0));pages.push(...collected);
   }
@@ -51,6 +64,10 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
     try{return {people:validateDecisorEvidence(generated.value,evidence,lead,names,registry.phone?[registry.phone]:[]),usage:generated.usage,invalid:false};}
     catch{return {people:[] as Decisor[],usage:generated.usage,invalid:true};}
    },r=>r.usage);if(result.invalid)throw new ProviderError('INVALID_DECISOR_RESULT');people=result.people;
+   // A LinkedIn match fills the partner's role, profile and provider e-mail; the e-mail is labelled as found by the provider, not published by the person.
+   for(const m of matches){const page=evidence.find(e=>e.url===m.profile.url);if(!page)continue;const known=people.find(d=>d.name.toLowerCase()===m.partner.name.toLowerCase());
+    const person:Decisor={name:m.partner.name,role:m.role,linkedin:m.profile.url,evidenceId:page.id,sourceUrl:m.profile.url,quote:page.text.slice(0,600),whatsapp:'unverified',...(m.profile.email?{email:m.profile.email,contactBasis:'provider' as const}:{})};
+    if(!known)people.push(person);else if(!known.email&&!known.phone)Object.assign(known,person);}
    // Registry partners are recorded on the company even without a published contact; they are never charged or delivered as contacts.
    const source=evidence.find(e=>registry.evidence?.some(r=>r.hash===e.hash));
    if(source)for(const p of partners)if(!people.some(d=>d.name.toLowerCase()===p.name.toLowerCase()))people.push({...p,evidenceId:source.id,sourceUrl:source.url,quote:p.name+' · '+p.role,whatsapp:'unverified'});

@@ -1,0 +1,15 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {parseLinkedinProfiles} from '../src/server/prospecting/providers/linkedin-profiles.ts';
+import {linkedinDecisors} from '../src/domain/enrichment.ts';
+const row=(o:Record<string,unknown>)=>({linkedinUrl:'https://www.linkedin.com/in/ana-silva-exemplo',firstName:'Ana',lastName:'Silva',headline:'Sócia na Empresa Exemplo',currentPosition:[{position:'Sócia-diretora',companyName:'Empresa Exemplo Ltda'}],emails:[{email:'ana@empresaexemplo.com.br',status:'valid',deliverable:true,catchAllDomain:false}],...o});
+test('profile rows keep only a deliverable, non catch-all e-mail and a LinkedIn profile URL',()=>{
+ const [ok,risky,bad]=parseLinkedinProfiles([row({}),row({linkedinUrl:'https://www.linkedin.com/in/ana-2',emails:[{email:'x@y.com',status:'risky',deliverable:false}]}),row({linkedinUrl:'https://evil.example/in/ana'})]);
+ assert.deepEqual(ok,{url:'https://www.linkedin.com/in/ana-silva-exemplo',name:'Ana Silva',headline:'Sócia na Empresa Exemplo',positions:[{title:'Sócia-diretora',company:'Empresa Exemplo Ltda'}],email:'ana@empresaexemplo.com.br'});
+ assert.equal(risky?.email,undefined);assert.equal(bad,undefined,'only linkedin.com/in profiles are accepted');
+});
+test('a profile becomes a decision maker only when the name matches a registry partner and the current company matches the lead',()=>{
+ const partners=[{name:'ANA MARIA DA SILVA',role:'Sócio-Administrador'},{name:'JOSE PEREIRA',role:'Sócio'}];
+ const profiles=parseLinkedinProfiles([row({}),row({linkedinUrl:'https://www.linkedin.com/in/ana-silva-outra',currentPosition:[{position:'Gerente',companyName:'Outra Companhia'}],headline:'Gerente'}),row({linkedinUrl:'https://www.linkedin.com/in/jose-p',firstName:'José',lastName:'Pereira',emails:[]})]).filter(p=>p!==undefined);
+ const found=linkedinDecisors(partners,profiles,['EMPRESA EXEMPLO LTDA']);
+ assert.deepEqual(found.map(f=>[f.partner.name,f.profile.url,f.role,f.profile.email??null]),[['ANA MARIA DA SILVA','https://www.linkedin.com/in/ana-silva-exemplo','Sócia-diretora','ana@empresaexemplo.com.br'],['JOSE PEREIRA','https://www.linkedin.com/in/jose-p','Sócia-diretora',null]],'the homonym at another company is dropped; a matching profile without e-mail still gives role and link');
+});
