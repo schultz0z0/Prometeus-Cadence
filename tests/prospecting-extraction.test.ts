@@ -49,3 +49,9 @@ test('apex to www canonical redirects retain company evidence',async()=>{
   const pages=await fetchEvidencePack('https://example.com',{signal:new AbortController().signal,resolve,request:async approved=>approved.url.hostname==='example.com'?{status:301,headers:{location:'https://www.example.com/'},body:Buffer.alloc(0)}:{status:200,headers:{'content-type':'text/html'},body:Buffer.from('<p>Dental clinic providing orthodontics and general dentistry.</p>')}});
   assert.equal(pages.length,1);assert.ok(pages[0].url.includes('www.example.com'));
 });
+test('a partner e-mail at the page end keeps its literal passage inside the per-page budget',async()=>{
+  const html='<p>'+'Áreas de atuação do escritório. '.repeat(400)+'</p><section><h3>Adelino Venturi Júnior</h3><p>Sócio Venturi Silva. OAB/PR 27.058; venturi@example.com</p></section>';
+  const pages=await fetchEvidencePack('https://example.com',{signal:new AbortController().signal,resolve,request:async()=>({status:200,headers:{'content-type':'text/html'},body:Buffer.from(html)})},true);
+  const head=pages[0].text.slice(0,4000);
+  assert.match(head,/Trechos com contato: «[^»]*Adelino Venturi Júnior[^»]*venturi@example\.com»/);
+});

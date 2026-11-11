@@ -68,7 +68,21 @@ try{
  // Enriquecedor: qualquer lead com CNPJ válido; primeiro a lista da Base CNPJ, depois a do Maps se a qualificação achou CNPJ.
  const valid=l=>/^[A-Z0-9]{12}[0-9]{2}$/.test(String(l.payload.cnpj??'').replace(/[.\/\s-]/g,'').toUpperCase());
  for(const source of ['CNPJ','MAPS','SEED']){if(!lists[source])continue;const leads=(await leadsOf(lists[source])).filter(valid).slice(0,3);if(!leads.length){report.rounds.push({name:'enriquecedor:'+source,state:'sem lead com CNPJ'});console.log('enriquecedor:'+source,'sem lead com CNPJ');continue;}
-  const round=await run('enriquecedor:'+source,{kind:'qualification',listId:lists[source],leadIds:leads.map(l=>l.id),modules:['decisors'],summaryPolicy:'all',escalation:'off',enrichment:{maxCredits:leads.length,destinationName:'[RE] HML Decisores '+source}},15);round.results=summarize(round.items??[]);delete round.items;}
+  const round=await run('enriquecedor:'+source,{kind:'qualification',listId:lists[source],leadIds:leads.map(l=>l.id),modules:['decisors'],summaryPolicy:'all',escalation:'off',enrichment:{maxCredits:leads.length,destinationName:'[RE] HML Decisores '+source}},15);round.results=summarize(round.items??[]);
+  // Aplica os decisores com contato e confere quantos contatos chegaram à lista de destino.
+  const ready=(round.items??[]).filter(i=>i.status==='pending_review').map(i=>i.id);
+  if(ready.length&&round.jobId)try{round.applied=await call('/jobs/'+round.jobId+'/apply',{requestId:randomUUID(),itemIds:ready});round.delivered=(await db.query("SELECT count(*)::int n,count(*) FILTER (WHERE payload->>'email'<>'')::int emails FROM app.lead l JOIN app.list li ON li.workspace_id=l.workspace_id AND li.id=l.list_id WHERE l.workspace_id=$1 AND li.name LIKE '[RE] HML Decisores%'",[ws])).rows[0];}catch(e){round.applyError=String(e.message).slice(0,200);}
+  console.log('aplicação',JSON.stringify(round.delivered??round.applyError??null));delete round.items;}
+ // --assistant: duas perguntas reais ao assistente (ajuda e pedido de ação); a proposta é cancelada, nada é executado.
+ if(process.argv.includes('--assistant')){
+  const listId=randomUUID();await db.query('INSERT INTO app.list VALUES($1,$2,$3)',[ws,listId,'[RE] HML clínicas Curitiba']);
+  const ask=async(text,threadId)=>{const t=Date.now(),res=await page.request.post(origin+'/api/assistant',{headers,data:{requestId:randomUUID(),text,contextRoute:'/dashboard',...(threadId?{threadId}:{})},timeout:90000});const b=await res.json();
+   const m=b.message??{};const round={name:'assistente',question:text,status:res.status(),seconds:Math.round((Date.now()-t)/1000),fallback:m.fallback,citations:m.citations,proposal:m.proposal?{kind:m.proposal.kind,state:m.proposal.state,summary:m.proposal.summary}:null,answer:String(m.text??b.message??'').slice(0,400),remaining:b.remaining};
+   if(m.proposal?.id){const c=await page.request.post(origin+`/api/assistant/${m.proposal.id}/cancel`,{headers,data:{}});round.cancelled=(await c.json()).state;}
+   report.rounds.push(round);console.log('assistente',res.status(),'fallback='+m.fallback,JSON.stringify(round.citations),round.proposal?.kind??'',round.cancelled??'');return b.threadId;};
+  const thread=await ask('Como eu conecto o WhatsApp para enviar mensagens?');
+  await ask('Qualifique a lista "[RE] HML clínicas Curitiba" para mim.',thread);
+ }
  report.billing=(await db.query('SELECT unit,sum(quantity)::int AS consumed FROM app.billing_consumption WHERE workspace_id=$1 GROUP BY unit',[ws])).rows;
  report.reservations=(await db.query('SELECT unit,count(*)::int AS open FROM app.billing_reservation WHERE workspace_id=$1 AND NOT closed GROUP BY unit',[ws])).rows;
  await context.close();

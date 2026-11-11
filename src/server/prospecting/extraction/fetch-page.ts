@@ -66,7 +66,7 @@ function browserReader(browser:SiteBrowser,signal:AbortSignal){
       const evidence={id:randomUUID(),url,fetchedAt:new Date().toISOString(),hash:'',text:page.text+' '+attributes,truncated:!!page.truncated};
       const found=extractContacts([evidence]);
       const contacts=[...found.emails,...found.phones,...extractCnpjs([evidence])].join(' ');
-      const full=(contacts?'Contatos publicados: '+contacts+'\n':'')+(socialLinks.length?'Links públicos: '+socialLinks.join(' ')+'\n':'')+page.text;
+      const full=(contacts?'Contatos publicados: '+contacts+'\n':'')+contactPassages(page.text)+(socialLinks.length?'Links públicos: '+socialLinks.join(' ')+'\n':'')+page.text;
       const text=full.slice(0,12000);
       const links=(page.links??[]).flatMap(link=>{const canonical=siteUrl(link,url);return canonical?[canonical]:[];});
       return {...evidence,text,hash:createHash('sha256').update(text).digest('hex'),truncated:evidence.truncated||text.length<full.length,links,socialLinks,externalLinks};
@@ -99,10 +99,21 @@ async function readFixturePage(value:string,options:ReadOptions&{request:PageReq
       if(!decode)throw Error('PAGE_ENCODING');body=decode(body,{maxOutputLength:maxBytes});
     }
     const parsed=parsePage(body.toString('utf8'),approved.url.toString());
-    const full=(parsed.contactText?'Contatos publicados: '+parsed.contactText+'\n':'')+(parsed.socialLinks.length?'Links públicos: '+parsed.socialLinks.join(' ')+'\n':'')+parsed.text,text=full.slice(0,12000);
+    const full=(parsed.contactText?'Contatos publicados: '+parsed.contactText+'\n':'')+contactPassages(parsed.text)+(parsed.socialLinks.length?'Links públicos: '+parsed.socialLinks.join(' ')+'\n':'')+parsed.text,text=full.slice(0,12000);
     return{id:randomUUID(),url:approved.url.toString(),fetchedAt:new Date().toISOString(),text,hash:createHash('sha256').update(text).digest('hex'),truncated:full.length>12000,links:parsed.links,socialLinks:parsed.socialLinks,externalLinks:parsed.externalLinks};
   }throw Error('REDIRECT_LIMIT');
 }
+// A team block with a partner's e-mail often sits past the evidence budget at the page end; its literal passage goes first.
+export function contactPassages(text:string){
+  const out:string[]=[];
+  for(const m of text.matchAll(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g)){
+    const passage=text.slice(Math.max(0,m.index-160),m.index+m[0].length).replace(/\s+/g,' ').trim();
+    if(!out.some(o=>o.includes(passage)))out.push(passage);
+    if(out.length>=6)break;
+  }
+  return out.length?'Trechos com contato: '+out.map(s=>'«'+s+'»').join(' ')+'\n':'';
+}
+
 export async function fetchEvidencePack(url:string,options:ReadOptions,deep=false){
   const read=options.request?(next:string)=>fetchPublicPage(next,options):browserReader(options.browser??loopbackSiteBrowser,options.signal);
   const pages:RenderedEvidence[]=[];const base=new URL(url);base.hash='';

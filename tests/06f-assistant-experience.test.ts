@@ -23,6 +23,8 @@ test('help manifest answers from local articles with real app destinations',()=>
  assert.equal(matchHelp('por que minha cadência não saiu hoje','/dashboard')[0].id,'cadence-not-sent');
  // Route context breaks ties toward the current area.
  assert.equal(matchHelp('como funciona','/settings/whatsapp')[0].id,'whatsapp-connect');
+ assert.equal(matchHelp('Qualifique a lista de clínicas','/dashboard')[0].id,'qualifier');
+ assert.equal(matchHelp('quem são os sócios e decisores dessa empresa?','/dashboard')[0].id,'enricher');
  assert.deepEqual(matchHelp('qwertyuiop zxcv','/dashboard'),[]);
  // Verb forms match by stem: 'qualifica' finds the qualifier even on the contacts page.
  assert.equal(matchHelp('Qualifica a lista de clínicas pra mim','/contacts')[0].id,'qualifier');

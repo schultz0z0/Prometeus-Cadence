@@ -50,7 +50,7 @@ export function validateDecisorEvidence(raw:unknown,evidence:Evidence[],company:
   const e=evidence.find(e=>e.id===p.evidenceId);if(!e||!e.text.includes(p.quote))continue;
   let source:URL;try{source=new URL(e.url);if(!['https:','http:'].includes(source.protocol)||source.username||source.password)continue;}catch{continue;}
   const quote=fold(p.quote),name=fold(p.name),role=fold(p.role);
-  if(name.split(' ').length<2||/^(equipe|time|contato|comercial|atendimento)\b/.test(name)||!quote.includes(name)||!quote.includes(role)||!/(socio|fundador|diretor|presidente|gerente|propriet|administr|\bceo\b|\bowner\b|\bfounder\b|\bhead\b|\bpartner\b)/.test(role))continue;
+  if(name.split(' ').length<2||/^(equipe|time|contato|comercial|atendimento)\b/.test(name)||!quote.includes(name)||!quote.includes(role)||!/(soci[oa]|fundador|diretor|presidente|gerente|propriet|administr|\bceo\b|\bowner\b|\bfounder\b|\bhead\b|\bpartner\b)/.test(role))continue;
   if(!knownNames.some(n=>fold(n)===name)&&![company.name,company.companyName].some(n=>n&&fold(n).length>=4&&quote.includes(fold(n))))continue;
   const email=p.email?.toLowerCase(),phone=normalizePersonalPhone(p.phone);
   if(p.email&&(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email!)||!quote.includes(email!)||email===company.email?.toLowerCase()||/^(contato|comercial|atendimento|info|suporte|sac|vendas|financeiro|hello|sales|contact|office)([.+_-]|@)/.test(email!)))continue;
@@ -63,7 +63,10 @@ export function validateDecisorEvidence(raw:unknown,evidence:Evidence[],company:
   const ownsContact=(at:number)=>{
    const before=quote.slice(Math.max(0,at-220),at);
    const owners=[...before.matchAll(/\b(?:contato pessoal|contato direto|personal contact|direct contact|e-?mail(?: pessoal)?|telefone(?: pessoal)?|celular(?: pessoal)?)\s+(?:de|do|da|of)\s+([^:;]+?)\s*:/g)];
-   return owners.at(-1)?.[1].trim()===name;
+   if(owners.at(-1)?.[1].trim()===name)return true;
+   // Team card: name, role and the person's own mailbox in one block, nothing else attributed in between.
+   const nameAt=quote.lastIndexOf(name,at),between=nameAt<0?'':quote.slice(nameAt+name.length,at),local=quote.slice(at).split('@')[0];
+   return !!email&&at===quote.indexOf(email)&&nameAt>=0&&between.length<=120&&between.includes(role)&&!between.includes('@')&&name.split(' ').some(w=>w.length>=3&&local.split(/[._-]/).includes(w));
   };
   if(email&&!ownsContact(quote.indexOf(email))||phone&&publishedPhone&&!ownsContact(quote.indexOf(fold(publishedPhone))))continue;
   if(p.phone&&publishedPhone){const beforePhone=quote.slice(Math.max(0,quote.indexOf(fold(publishedPhone))-70),quote.indexOf(fold(publishedPhone)));if(/(?:telefone|phone|contato|celular)\s*(?:geral|corporativo|da empresa|da equipe)|(?:central|recepcao|atendimento)\s*[:\-]/.test(beforePhone))continue;}

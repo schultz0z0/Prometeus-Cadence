@@ -29,3 +29,15 @@ test('a nearby corporate phone is not personal and an explicitly attributed phon
  assert.equal(validateDecisorEvidence({people:[{...person,email:undefined,phone:'21988887777',quote}]},[{...evidence[0],text:quote}],{name:'Empresa Exemplo'}).length,0);
  assert.equal(validateDecisorEvidence({people:[person]},evidence,company,[],['+5521988887777']).length,0);
 });
+test('a team card attributes the partner own mailbox; a mailbox of someone else or one shared by two cards is refused',()=>{
+ const card='Nara Elaine Xavier da Silva Sócia Venturi Silva OAB/PR 29.378 nara@venturisilva.adv.br Adelino Venturi Júnior Sócio Venturi Silva OAB/PR 27.058 venturi@venturisilva.adv.br';
+ const ev:Evidence[]=[{id:'c1',url:'https://venturisilva.adv.br/',text:card,hash:'h',fetchedAt:'2026-11-11T12:00:00Z',truncated:false}];
+ const known=['NARA ELAINE XAVIER DA SILVA','ADELINO VENTURI JUNIOR'],firm={name:'Venturi Silva Advogados Associados'};
+ const nara={name:'Nara Elaine Xavier da Silva',role:'Sócia',email:'nara@venturisilva.adv.br',phone:'',evidenceId:'c1',quote:card.slice(0,card.indexOf(' Adelino'))};
+ const adelino={name:'Adelino Venturi Júnior',role:'Sócio',email:'venturi@venturisilva.adv.br',phone:'',evidenceId:'c1',quote:card};
+ assert.deepEqual(validateDecisorEvidence({people:[nara,adelino]},ev,firm,known).map(p=>p.email),['nara@venturisilva.adv.br','venturi@venturisilva.adv.br']);
+ // Mailbox that does not carry the person's name, and another person's card between name and mailbox.
+ assert.equal(validateDecisorEvidence({people:[{...adelino,name:'Nara Elaine Xavier da Silva',role:'Sócia',email:'venturi@venturisilva.adv.br'}]},ev,firm,known).length,0);
+ const swapped='Nara Silva Sócia OAB/PR 1 joao@venturisilva.adv.br';
+ assert.equal(validateDecisorEvidence({people:[{...nara,name:'Nara Silva',email:'joao@venturisilva.adv.br',quote:swapped}]},[{...ev[0],text:swapped}],firm,['NARA SILVA']).length,0);
+});

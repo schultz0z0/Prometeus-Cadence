@@ -95,16 +95,36 @@ Rodadas reais:
 
 Conclusão: a fonte funciona e protege contra homônimos, mas o rendimento em pequenas empresas de Curitiba foi zero nas amostras. O custo foi baixo: uma leitura de dois perfis e as pesquisas no Google.
 
+## Primeiro decisor com contato entregue (11/11/2026)
+
+Semente: um escritório de advocacia com CNPJ válido (São José dos Pinhais/PR), cujo site publica um bloco de equipe com nome, cargo, OAB e e-mail de cada sócio. Rodadas com `--seed` e o worker contínuo.
+
+Quatro defeitos impediam a entrega, e foram corrigidos nesta ordem:
+
+1. **Navegador de coleta parado.** O Docker reiniciou e os dois contêineres do leitor de sites não têm política de reinício. A execução ficou em `WAITING_SITE_BROWSER` e retomou sozinha quando os contêineres subiram. É falha e recuperação reais; o operador precisa saber que esses contêineres não voltam sozinhos.
+2. **O bloco da equipe ficava fora do orçamento.** O leitor divide 12.000 caracteres entre até três páginas (4.000 cada) e corta do fim. O bloco da equipe estava no fim da página. Agora, para cada e-mail publicado, o trecho literal ao redor (até 160 caracteres antes) vai para o topo da evidência, em "Trechos com contato" (`contactPassages` em `fetch-page.ts`).
+3. **O validador só aceitava a forma "e-mail de Fulano:".** Um cartão de equipe nunca atendia a essa forma. Regra nova, só para e-mail: o cartão vale quando o e-mail vem logo depois do nome e do cargo da pessoa, a até 120 caracteres, sem outro e-mail no meio, e a caixa contém parte do nome da pessoa. Telefone continua com a regra estrita. O contrato subiu para `decisors-public-evidence-v5`, para não reaproveitar abstenções antigas.
+4. **Cargo no feminino era recusado.** A lista de cargos aceitava "sócio", mas não "sócia".
+
+Resultado da rodada final, com fornecedores e IA reais:
+
+- Execução concluída em 61 s.
+- Item em revisão com 3 pessoas: duas sócias e sócios com o e-mail publicado no site, e um registro sem contato.
+- 1 crédito de enriquecimento consumido e nenhuma reserva aberta.
+- A aplicação gravou 2 decisores, ambos com e-mail, na lista de destino.
+
+As contas `[RE]` usadas foram removidas, sem resíduo. Testes: `tests/enrichment.test.ts` (cartão com o trecho real, caixa de outra pessoa e cartão trocado) e `tests/prospecting-extraction.test.ts` (trecho no topo de uma página longa).
+
 ## Achados abertos
 
 1. **Busca na web (corrigida, ver acima).** Antes: Na rodada 1, dois dos três leads eram "Melhores empresas de Contabilidade em Curitiba" e "Mapa". Na rodada 2 os três eram sites de escritórios, mas com o título da página como nome ("Escritório de Contabilidade em Curitiba | (41) …"). A fonte precisa filtrar diretórios e extrair o nome da empresa.
 2. **Maps → CNPJ: 3 de 5 após a correção.** Amostra pequena, um nicho e uma cidade. Dois de cinco continuam sem CNPJ e, portanto, fora do Enriquecedor.
-3. **Nenhum decisor com contato entregue.** Os decisores passaram a ser registrados sem contato, mas nenhuma rodada encontrou contato pessoal publicado; obter celular ou e-mail de sócio exigiria um provedor pago de dados de pessoas, que não foi avaliado. Em cinco execuções do Enriquecedor, com MEIs da Base CNPJ e clínicas do Maps, o resultado foi sempre abstenção sem cobrança. A regra exige contato pessoal atribuído por citação literal; falta um caso real em que ela seja satisfeita.
+3. **Decisor com contato: resolvido em 11/11 (seção acima).** Antes: Os decisores passaram a ser registrados sem contato, mas nenhuma rodada encontrou contato pessoal publicado; obter celular ou e-mail de sócio exigiria um provedor pago de dados de pessoas, que não foi avaliado. Em cinco execuções do Enriquecedor, com MEIs da Base CNPJ e clínicas do Maps, o resultado foi sempre abstenção sem cobrança. A regra exige contato pessoal atribuído por citação literal; falta um caso real em que ela seja satisfeita.
 
 ## Limites desta prova
 
 - Amostra de 3 leads por fonte, uma cidade, um nicho por fonte. Serve para provar execução, não rendimento.
-- Nenhum decisor com contato foi entregue, então lista de pessoas, cobrança de 1 crédito e aplicação do resultado do Enriquecedor continuam sem prova real.
+- A entrega com contato foi provada em um único escritório. O rendimento em pequenas empresas sem bloco de equipe no site continua baixo.
 - Apollo não foi exercitado (sem chave com acesso à pesquisa).
 - O motivo da abstenção do Enriquecedor não aparece no item; a empresa surge apenas como ignorada.
 - A leitura de site pelo Chromium ocorreu dentro do Qualificador e do Enriquecedor, mas não foi inspecionada página a página nesta rodada.

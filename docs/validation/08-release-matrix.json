@@ -721,9 +721,19 @@
   {
    "id": "módulo: pesquisa e enriquecimento",
    "kind": "module",
-   "status": "blocked",
-   "blockedBy": "busca e IA reais pela rota central atual, autorização de custo do usuário",
-   "note": "A prova real de 21/10 cobre um lead pela rota codex-local, antes do 06B.2, do 06B.3 e da IA central. O resto usa provedor controlado."
+   "status": "passed",
+   "note": "Status digitado. Gerador (Maps, Base CNPJ, web), Qualificador e Enriquecedor reais; decisor com e-mail cobrado e aplicado em 11/11. Falha e recuperação reais: navegador de coleta parado e retomado, leitura de LinkedIn com prazo próprio. Apollo com pesquisa não exercitado; rendimento medido em amostra pequena.",
+   "evidence": [
+    "docs/validation/06b6e-homologacao-por-modulo.md",
+    "docs/validation/06b7-prospeccao-em-etapas.md"
+   ],
+   "proof": {
+    "service": true,
+    "happy": true,
+    "failure": true,
+    "recovery": true,
+    "externalEffect": "Apify, leitor de sites e IA reais pela rota central; contas [RE] removidas"
+   }
   },
   {
    "id": "módulo: cadências e automações",
@@ -749,9 +759,20 @@
   {
    "id": "módulo: assistente, busca e ajuda",
    "kind": "module",
-   "status": "blocked",
-   "blockedBy": "IA real: a rota central respondeu limite de assinatura; o uso em QA é decisão do usuário",
-   "note": "Busca, ajuda e fallback estão provados em 06f1 e 06f2. Nenhuma resposta real da IA foi observada."
+   "status": "passed",
+   "note": "Status digitado: a base são os três relatórios citados. Confirmar proposta com IA real fica fora (efeito pago ou canal).",
+   "evidence": [
+    "docs/validation/2026-11-11-assistant-real-ai.md",
+    "docs/validation/06f1-assistant-search.md",
+    "docs/validation/06f2-assistant-commands.md"
+   ],
+   "proof": {
+    "service": true,
+    "happy": true,
+    "failure": true,
+    "recovery": true,
+    "externalEffect": "IA real pela rota central; proposta cancelada, nada executado"
+   }
   },
   {
    "id": "módulo: API e webhooks",
