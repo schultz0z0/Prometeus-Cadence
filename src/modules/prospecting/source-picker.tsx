@@ -20,8 +20,8 @@ export const sources: {
     value: "WEB",
     label: "Busca na web",
     description:
-      "Busca pública por nicho e localização, com resultados para revisar e qualificar.",
-    fields: "Traz: nome, site, cidade; contato via qualificação",
+      "Qualquer nicho que você descrever; a busca descarta o que não é site de empresa.",
+    fields: "Traz: nome, site, cidade; e-mail e telefone via qualificação",
     icon: "Globe",
   },
   {

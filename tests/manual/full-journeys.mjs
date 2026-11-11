@@ -101,7 +101,7 @@ const journeys={
     assert.equal((await row.getByRole('cell').nth(1).innerText()).trim(),'2','lead com CNPJ é elegível, qualificado ou não');
     assert.equal(await row.getByRole('link',{name:'encontre o CNPJ no Qualificador'}).getAttribute('href'),'/leads/qualifier');
     await row.getByText('1 sem CNPJ').waitFor();
-    await row.getByRole('button',{name:'Ver preview'}).click();
+    await row.getByRole('button',{name:'Enriquecer'}).click();
     await page.getByRole('dialog',{name:'Preview de enriquecimento'}).getByText('2 empresas · 2 empresas neste lote.').waitFor();
     await page.keyboard.press('Escape');
    }finally{await page.setViewportSize({width:1440,height:900});}
