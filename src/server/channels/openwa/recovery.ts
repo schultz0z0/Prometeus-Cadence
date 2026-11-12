@@ -1,6 +1,7 @@
 import 'server-only';import {randomUUID} from 'node:crypto';
 import {dispatchPool} from '../../messaging/worker-db.ts';import {decryptCredential} from '../crypto.ts';import {createOpenwaClient,OpenwaClientError} from './client.ts';import {normalizeOpenwaEvents,resolveLidIdentities} from './events.ts';import type {IngressContext} from '../ingress-contracts.ts';import type {OpenwaRemoteMessage,OpenwaTickOptions} from '../../../domain/openwa.ts';import type {WebhookEvent} from '../../../domain/whatsapp.ts';
 interface Lease {workspaceId:string;connectionId:string;revision:number;token:string;fence:number}
+const clockSkewMs=120000;
 const args=(lease:Lease)=>[lease.workspaceId,lease.connectionId,lease.token,lease.fence];
 function normalizeRead(message:OpenwaRemoteMessage,ctx:IngressContext):WebhookEvent[]{
  if(!/^\d{6,20}@(c\.us|s\.whatsapp\.net|lid)$/.test(message.chatId))return [];
@@ -25,7 +26,8 @@ export async function runOpenwaRecoveryTick(options:OpenwaTickOptions&{maxMessag
    const page=await client.readMessages(c.identifiers.sessionId,{limit:20,since:Date.parse(r.checkpoint),until:Date.parse(r.window_until),...(r.cursor?{after:r.cursor}:{})});
    if(page.unknownTimestampTotal>0||page.nextCursor&&(r.pages>=4||page.nextCursor===r.cursor))throw new OpenwaClientError('OPENWA_RECOVERY_GAP');
    const events:WebhookEvent[]=[];
-   for(const message of page.items){if(message.timestamp===null||message.timestamp*1000<Date.parse(r.checkpoint)||message.timestamp*1000>Date.parse(r.window_until))throw new OpenwaClientError('OPENWA_RECOVERY_GAP');events.push(...normalizeRead(message,ctx));}
+   // OpenWA picks the window by its own record time, while `timestamp` is WhatsApp's clock: allow that skew, not a real gap.
+   for(const message of page.items){if(message.timestamp===null||message.timestamp*1000<Date.parse(r.checkpoint)-clockSkewMs||message.timestamp*1000>Date.parse(r.window_until)+clockSkewMs)throw new OpenwaClientError('OPENWA_RECOVERY_GAP');events.push(...normalizeRead(message,ctx));}
    for(const receipt of scope.receipts){if(signal.aborted)break;remaining--;const found=await client.readRemoteMessage(c.identifiers.sessionId,receipt.remote_id);if(found&&found.fromMe&&found.chatId===receipt.external_id)events.push(...normalizeRead(found,ctx));}
    if(options.signal?.aborted)break;
    const result=(await dispatchPool().query('SELECT app.finish_openwa_recovery($1,$2,$3,$4,$5) AS value',[...args(lease),JSON.stringify({kind:'page',events:await resolveLidIdentities(events,lid=>client.resolvePhone(c.identifiers.sessionId,lid)),cursor:page.nextCursor})])).rows[0].value;if(result)processed++;

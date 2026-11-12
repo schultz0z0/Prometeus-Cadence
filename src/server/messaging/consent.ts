@@ -6,7 +6,7 @@ import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
 import {lockWorkspace} from '../prospecting/ingestion.ts';
 import {requireChannelAdmin,commandHash,priorCommand,completeCommand} from '../channels/repository.ts';
-import {whatsappIdentityScope} from '../../domain/whatsapp-identity.ts';
+import {whatsappIdentityScope,leadWhatsappPhone} from '../../domain/whatsapp-identity.ts';
 import {ensurePhoneIdentity} from './replies.ts';
 import {normalizeMailAddress} from '../../domain/mail-policy.ts';
 const consentSchema=z.strictObject({requestId:z.uuid(),identityId:z.uuid(),purpose:z.enum(['service','campaign','test']),source:z.string().trim().min(1).max(200),occurredAt:z.iso.datetime(),evidence:z.string().trim().min(1).max(4000)});
@@ -35,7 +35,7 @@ export async function recordLeadConsent(p:Principal,input:unknown):Promise<void>
  await withWorkspaceTransaction(p,async c=>{
   await requireChannelAdmin(c);await lockWorkspace(c);const hash=commandHash({action:'lead.consent',input:b});if(await priorCommand(c,p,b.requestId,hash))return;
   const lead=(await c.query('SELECT payload FROM app.lead WHERE id=$1',[b.leadId])).rows[0]?.payload;
-  if(!lead)throw new AppError(404,'Lead não encontrado.');const normalized=String(lead.phone??'').trim().startsWith('+')?'+'+String(lead.phone).replace(/\D/g,''):null;
+  if(!lead)throw new AppError(404,'Lead não encontrado.');const normalized=leadWhatsappPhone(lead.phone);
   if(normalized!==b.phone)throw new AppError(409,'O telefone do lead mudou. Revise o consentimento.');
   const sender=(await c.query('SELECT s.*,c.external_account_id,c.credentials_verified FROM app.channel_sender s JOIN app.channel_connection c ON c.workspace_id=s.workspace_id AND c.id=s.connection_id WHERE s.id=$1',[b.senderId])).rows[0];
   if(sender?.provider==='twilio')throw new AppError(410,'Twilio foi aposentado.','PROVIDER_RETIRED');
