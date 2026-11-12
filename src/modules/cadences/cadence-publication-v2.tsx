@@ -1,6 +1,7 @@
 'use client';
 import { SelectField } from "@/components/ui/select-field";
 import {useEffect,useRef,useState} from 'react';
+import {leadWhatsappPhone} from '@/domain/whatsapp-identity';
 import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useDemo} from '@/demo/provider';
 import {useMail,useMessaging,useChannels,useIdentity,useWorkspaceRevision} from '@/client/workspace-provider';
@@ -21,7 +22,7 @@ export function PublicationSnapshotPreview({snapshot}:{snapshot:VersionedPublica
 }
 function CampaignConsent({cadence,senders,onRecorded}:{cadence:Cadence;senders:{id:string;label:string}[];onRecorded:()=>void}){
  const demo=useDemo(),mail=useMail(),messaging=useMessaging(),leads=eligibleCadenceLeads(cadence,demo.leads),[leadId,setLeadId]=useState(''),[channel,setChannel]=useState<'EMAIL'|'WHATSAPP'>('EMAIL'),[senderId,setSenderId]=useState(''),[source,setSource]=useState(''),[when,setWhen]=useState(''),[evidence,setEvidence]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),pending=useRef(false),command=useRef<{key:string;run:()=>Promise<void>}|null>(null),lead=leads.find(l=>l.id===leadId);
- return <details><summary>Registrar autorização de campanha</summary><form className="stack section-gap" onSubmit={async e=>{e.preventDefault();if(!lead||!mail||!messaging||pending.current)return;pending.current=true;setBusy(true);setMessage('');try{const input={leadId,source,occurredAt:new Date(when).toISOString(),evidence},key=JSON.stringify({input,channel,senderId,address:lead.email,phone:lead.phone});if(command.current?.key!==key){const emailInput={...input,address:lead.email??'',purpose:'campaign' as const},whatsappInput={...input,senderId,phone:lead.phone??''};command.current={key,run:()=>channel==='EMAIL'?mail.recordConsent(emailInput):messaging.recordLeadConsent(whatsappInput)};}
+ return <details><summary>Registrar autorização de campanha</summary><form className="stack section-gap" onSubmit={async e=>{e.preventDefault();if(!lead||!mail||!messaging||pending.current)return;pending.current=true;setBusy(true);setMessage('');try{const input={leadId,source,occurredAt:new Date(when).toISOString(),evidence},key=JSON.stringify({input,channel,senderId,address:lead.email,phone:leadWhatsappPhone(lead.phone)??lead.phone});if(command.current?.key!==key){const emailInput={...input,address:lead.email??'',purpose:'campaign' as const},whatsappInput={...input,senderId,phone:leadWhatsappPhone(lead.phone)??lead.phone??''};command.current={key,run:()=>channel==='EMAIL'?mail.recordConsent(emailInput):messaging.recordLeadConsent(whatsappInput)};}
   await command.current!.run();
   command.current=null;onRecorded();setMessage('Autorização registrada. Prepare uma nova revisão.');
  }catch(error){setMessage(error instanceof Error?error.message:'Falha ao registrar autorização.');}finally{pending.current=false;setBusy(false);}}}>

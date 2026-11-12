@@ -8,7 +8,7 @@ import type {PublicationInputV2,PublicationSnapshotV2,PublicationReviewV2,Public
 import type {TemplateView,OutboundContent} from '../../domain/whatsapp.ts';
 import {renderMessage,validateCadence} from '../../domain/cadence.ts';
 import {normalizeMailAddress,validateMailContent,validateRenderedMail,evaluateMailPolicy,renderMailBody} from '../../domain/mail-policy.ts';
-import {whatsappIdentityScope,whatsappPhoneExternalId} from '../../domain/whatsapp-identity.ts';
+import {whatsappIdentityScope,whatsappPhoneExternalId,leadWhatsappPhone} from '../../domain/whatsapp-identity.ts';
 import {evaluateSendPolicy} from '../../domain/whatsapp-policy.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {readApprovedContext} from '../context/repository.ts';
@@ -76,7 +76,7 @@ export async function publicationV2State(c:PoolClient,p:Principal,input:Publicat
     else {content={kind:'email',subject:renderMessage(content.subject,lead).text,text:renderMessage(content.text,lead).text,signature:content.signature};blockers.push(...validateMailContent(content).map(b=>b+':'+step.id));if(content.signature!==mailbox?.signature)blockers.push('MAIL_SIGNATURE_CHANGED:'+step.id);preview=content.subject+'\n\n'+content.text+(content.signature?'\n\n'+content.signature:'');}
     if(!snapshot.limits.channels.EMAIL)blockers.push('EMAIL_LIMIT_REQUIRED');
    }else{
-    address=lead.phone?.trim().startsWith('+')?'+'+lead.phone.replace(/\D/g,''):'';if(!/^\+[1-9]\d{6,14}$/.test(address))blockers.push('VALID_PHONE_REQUIRED:'+leadId);
+    address=leadWhatsappPhone(lead.phone)??'';if(!/^\+[1-9]\d{6,14}$/.test(address))blockers.push('VALID_PHONE_REQUIRED:'+leadId);
     scope=whatsappIdentityScope(conn.provider,conn.id,conn.external_account_id);
     if(content.kind==='email')blockers.push('WHATSAPP_CONTENT_REQUIRED:'+step.id);
     else if(content.kind==='text'){content={kind:'text',text:renderMessage(content.text,lead).text};preview=content.text;}

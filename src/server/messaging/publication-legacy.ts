@@ -7,7 +7,7 @@ import type {Cadence,Lead} from '../../domain/model.ts';
 import type {PublicationReview,PublicationSnapshot,PublicationView} from '../../domain/cadence-runtime.ts';
 import type {OutboundContent,TemplateView} from '../../domain/whatsapp.ts';
 import {renderMessage,validateCadence} from '../../domain/cadence.ts';
-import {whatsappIdentityScope,whatsappPhoneExternalId} from '../../domain/whatsapp-identity.ts';
+import {whatsappIdentityScope,whatsappPhoneExternalId,leadWhatsappPhone} from '../../domain/whatsapp-identity.ts';
 import {evaluateSendPolicy} from '../../domain/whatsapp-policy.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {readApprovedContext} from '../context/repository.ts';
@@ -22,7 +22,7 @@ const id=z.string().min(1).max(120);
 const publicationSchema=z.strictObject({cadenceId:id,expectedRevision:z.number().int().min(0),senderId:z.uuid(),bindings:z.record(id,contentSchema),leadIds:z.array(id).min(1).max(500).refine(v=>new Set(v).size===v.length)});
 const confirmSchema=publicationSchema.extend({requestId:z.uuid(),reviewToken:z.string().max(8192)});
 const secret=()=>{if(!process.env.BETTER_AUTH_SECRET)throw Error('Review signing unavailable');return process.env.BETTER_AUTH_SECRET;};
-function phone(value:string|undefined){if(!value?.trim().startsWith('+'))return null;const result='+'+value.replace(/\D/g,'');return /^\+[1-9]\d{6,14}$/.test(result)?result:null;}
+const phone=(value:string|undefined)=>leadWhatsappPhone(value);
 function templatePreview(template:TemplateView,variables:Record<string,string>){return template.components.map(c=>c.text.replace(/\{\{\s*(\w+)\s*\}\}/g,(_match,key:string)=>variables[c.type+'.'+key]??'{{'+key+'}}')).join('\n');}
 export async function publicationState(c:PoolClient,p:Principal,input:z.infer<typeof publicationSchema>){
  await requireChannelAdmin(c);const revision=Number((await c.query('SELECT revision FROM app.workspace_meta WHERE workspace_id=$1',[p.workspaceId])).rows[0]?.revision??0);
