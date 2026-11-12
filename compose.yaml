@@ -63,6 +63,7 @@ services:
       INGRESS_DATABASE_URL: postgresql://cadence_ingress:${CADENCE_INGRESS_PASSWORD:?Run npm run env:init}@db:5432/${OPENWA_INGRESS_DATABASE:-prometeus_cadence}
       CHANNEL_KEYRING_JSON: ${CHANNEL_KEYRING_JSON:?Run npm run env:init}
       CHANNEL_ACTIVE_KEY_ID: ${CHANNEL_ACTIVE_KEY_ID:?Run npm run env:init}
+      OPENWA_API_ORIGIN: http://openwa:2785
     restart: unless-stopped
 volumes:
   cadence_pgdata:

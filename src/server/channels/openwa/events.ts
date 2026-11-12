@@ -2,6 +2,7 @@ import {createHmac,createHash,timingSafeEqual} from 'node:crypto';import {z} fro
 import type {AuthenticatedBatch,WebhookEvent} from '../../../domain/whatsapp.ts';
 import type {IngressContext} from '../ingress-contracts.ts';import {AppError,errorResponse} from '../../errors.ts';
 import {openwaId,openwaRawMessageId,openwaSeconds,openwaStatus} from './wire.ts';
+import {whatsappPhoneExternalId} from '../../../domain/whatsapp-identity.ts';
 const envelope=z.object({event:z.string().min(1).max(100),sessionId:openwaId,timestamp:z.string().datetime({offset:true}),idempotencyKey:z.string().min(1).max(1024),deliveryId:z.string().regex(/^(dlv_)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),data:z.record(z.string(),z.unknown())});
 const digest=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 // A rejected event logs only which fields failed, never their values (message text stays out of logs).
@@ -41,7 +42,15 @@ export function normalizeOpenwaEvents(body:unknown,ctx:IngressContext):WebhookEv
   return [];
  });
 }
-export async function authenticateOpenwaWebhook(request:Request,publicId:string,deps:{lookup?:(id:string)=>Promise<IngressContext|null>;now?:()=>string}={}):Promise<AuthenticatedBatch>{
+// WhatsApp may address a contact by @lid only; with its phone the reply joins the identity a send used.
+export async function resolveLidIdentities(events:WebhookEvent[],resolve:(lid:string)=>Promise<string|null>):Promise<WebhookEvent[]>{
+ return Promise.all(events.map(async e=>{
+  if(e.kind!=='inbound'||e.identity.phone||!e.identity.externalId.endsWith('@lid'))return e;
+  const phone=await resolve(e.identity.externalId).catch(()=>null);
+  return phone?{...e,identity:{...e.identity,externalId:whatsappPhoneExternalId(e.identity.scope,phone),phone}}:e;
+ }));
+}
+export async function authenticateOpenwaWebhook(request:Request,publicId:string,deps:{lookup?:(id:string)=>Promise<IngressContext|null>;now?:()=>string;resolvePhone?:(sessionId:string,apiKey:string,lid:string)=>Promise<string|null>}={}):Promise<AuthenticatedBatch>{
  if(Number(request.headers.get('content-length'))>1048576)throw new AppError(413,'Callback limitado a 1 MiB.');
  if(!request.headers.get('content-type')?.toLowerCase().startsWith('application/json'))throw new AppError(415,'Tipo de callback inválido.');
  const chunks:Uint8Array[]=[];let length=0;const reader=request.body?.getReader();
@@ -58,8 +67,9 @@ export async function authenticateOpenwaWebhook(request:Request,publicId:string,
  if(!version)throw new AppError(403,'Assinatura inválida.');
  let body:unknown;try{body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{throw new AppError(422,'Callback JSON inválido.');}
  const effective={...ctx,externalAccountId:version.externalAccountId!,identifiers:version.identifiers??ctx.identifiers};
- return {connectionId:ctx.id,credentialRevision:version.revision,bodyHash:createHash('sha256').update(bytes).digest('hex'),receivedAt:deps.now?.()??new Date().toISOString(),events:normalizeOpenwaEvents(body,effective)};
+ return {connectionId:ctx.id,credentialRevision:version.revision,bodyHash:createHash('sha256').update(bytes).digest('hex'),receivedAt:deps.now?.()??new Date().toISOString(),events:await resolveLidIdentities(normalizeOpenwaEvents(body,effective),lid=>{const apiKey=version.credentials.apiKey;return apiKey?(deps.resolvePhone??gatewayPhone)(effective.externalAccountId,apiKey,lid):Promise.resolve(null);})};
 }
+async function gatewayPhone(sessionId:string,apiKey:string,lid:string){const origin=process.env.OPENWA_API_ORIGIN;if(!origin)return null;const {createOpenwaClient}=await import('./client.ts');return createOpenwaClient({origin,apiKey}).resolvePhone(sessionId,lid);}
 export async function handleChannelIngress(request:Request):Promise<Response>{
  try{
   const url=new URL(request.url),match=/^\/api\/channel-webhooks\/openwa\/([A-Za-z0-9_-]{8,100})$/.exec(url.pathname);

@@ -1,5 +1,5 @@
 import 'server-only';import {randomUUID} from 'node:crypto';
-import {dispatchPool} from '../../messaging/worker-db.ts';import {decryptCredential} from '../crypto.ts';import {createOpenwaClient,OpenwaClientError} from './client.ts';import {normalizeOpenwaEvents} from './events.ts';import type {IngressContext} from '../ingress-contracts.ts';import type {OpenwaRemoteMessage,OpenwaTickOptions} from '../../../domain/openwa.ts';import type {WebhookEvent} from '../../../domain/whatsapp.ts';
+import {dispatchPool} from '../../messaging/worker-db.ts';import {decryptCredential} from '../crypto.ts';import {createOpenwaClient,OpenwaClientError} from './client.ts';import {normalizeOpenwaEvents,resolveLidIdentities} from './events.ts';import type {IngressContext} from '../ingress-contracts.ts';import type {OpenwaRemoteMessage,OpenwaTickOptions} from '../../../domain/openwa.ts';import type {WebhookEvent} from '../../../domain/whatsapp.ts';
 interface Lease {workspaceId:string;connectionId:string;revision:number;token:string;fence:number}
 const args=(lease:Lease)=>[lease.workspaceId,lease.connectionId,lease.token,lease.fence];
 function normalizeRead(message:OpenwaRemoteMessage,ctx:IngressContext):WebhookEvent[]{
@@ -28,7 +28,7 @@ export async function runOpenwaRecoveryTick(options:OpenwaTickOptions&{maxMessag
    for(const message of page.items){if(message.timestamp===null||message.timestamp*1000<Date.parse(r.checkpoint)||message.timestamp*1000>Date.parse(r.window_until))throw new OpenwaClientError('OPENWA_RECOVERY_GAP');events.push(...normalizeRead(message,ctx));}
    for(const receipt of scope.receipts){if(signal.aborted)break;remaining--;const found=await client.readRemoteMessage(c.identifiers.sessionId,receipt.remote_id);if(found&&found.fromMe&&found.chatId===receipt.external_id)events.push(...normalizeRead(found,ctx));}
    if(options.signal?.aborted)break;
-   const result=(await dispatchPool().query('SELECT app.finish_openwa_recovery($1,$2,$3,$4,$5) AS value',[...args(lease),JSON.stringify({kind:'page',events,cursor:page.nextCursor})])).rows[0].value;if(result)processed++;
+   const result=(await dispatchPool().query('SELECT app.finish_openwa_recovery($1,$2,$3,$4,$5) AS value',[...args(lease),JSON.stringify({kind:'page',events:await resolveLidIdentities(events,lid=>client.resolvePhone(c.identifiers.sessionId,lid)),cursor:page.nextCursor})])).rows[0].value;if(result)processed++;
   }catch(error){if(options.signal?.aborted)break;failed++;try{await dispatchPool().query('SELECT app.finish_openwa_recovery($1,$2,$3,$4,$5)',[...args(lease),JSON.stringify({kind:'failure',code:error instanceof OpenwaClientError?error.code:'OPENWA_RECOVERY_FAILED'})]);}catch{/* Stale responses have no authority. */}}
  }
  return {processed,failed};

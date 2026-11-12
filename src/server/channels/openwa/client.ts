@@ -54,6 +54,8 @@ export function createOpenwaClient({origin,apiKey,fetchImpl=fetch}:{origin:strin
   async startSession(id:string,signal?:AbortSignal){await call('POST',sessionPath(id)+'/start',undefined,45000,signal);},
   async stopSession(id:string){await call('POST',sessionPath(id)+'/stop');},
   async readQr(id:string){const value=await call('GET',sessionPath(id)+'/qr');return parse(()=>parseOpenwaQr(value));},
+  // Best-effort: WhatsApp may withhold the number behind an @lid; null then.
+  async resolvePhone(id:string,contactId:string){if(!/^\d{6,20}@lid$/.test(contactId))throw new OpenwaClientError('OPENWA_PROTOCOL_INVALID');const value=await call('GET',sessionPath(id)+'/contacts/'+encodeURIComponent(contactId)+'/phone',undefined,5000);return parse(()=>{const phone=z.object({phone:z.union([z.string(),z.number()]).nullable()}).parse(value).phone;const digits=phone===null?null:String(phone);if(digits!==null&&!/^\d{6,15}$/.test(digits))throw Error();return digits?'+'+digits:null;});},
   async listScopedKeys(){const value=await call('GET','/auth/api-keys');return parse(()=>z.array(keySchema).max(1000).parse(value));},
   async createScopedKey(id:string,name:string){
    openwaId.parse(id);safeName.parse(name);const value=await call('POST','/auth/api-keys',{name,role:'operator',allowedSessions:[id]});

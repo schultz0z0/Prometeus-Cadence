@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {createHmac} from 'node:crypto';
-import {authenticateOpenwaWebhook,normalizeOpenwaEvents} from '../src/server/channels/openwa/events.ts';
+import {authenticateOpenwaWebhook,normalizeOpenwaEvents,resolveLidIdentities} from '../src/server/channels/openwa/events.ts';
 import type {IngressContext} from '../src/server/channels/ingress-contracts.ts';
 const fixture=(name:string)=>JSON.parse(readFileSync(new URL(`./fixtures/openwa/${name}.json`,import.meta.url),'utf8'));
 const session='11111111-1111-4111-8111-111111111111',secret='f'.repeat(64);
@@ -27,4 +27,12 @@ test('ACK/failure event dedup is derived from signed message and status, not ret
  assert.throws(()=>normalizeOpenwaEvents({...ack,deliveryId:'dlv_not-an-id'},ctx),{status:422});
  const failed={...ack,event:'message.failed',data:{...ack.data,status:'failed'}};assert.equal(normalizeOpenwaEvents(failed,ctx)[0].dedupKey,normalizeOpenwaEvents({...failed,event:'message.ack'},ctx)[0].dedupKey);
  const restricted=normalizeOpenwaEvents(fixture('restriction'),ctx)[0];assert.equal(restricted.kind,'session');assert.equal('qrCode' in restricted,false);
+});
+test('an @lid sender takes its phone identity when OpenWA resolves it, and stays opaque when it cannot',async()=>{
+ const inbound=fixture('inbound'),lidEvents=normalizeOpenwaEvents({...inbound,data:{...inbound.data,from:'123456789012345@lid',chatId:'123456789012345@lid'}},ctx);
+ const [resolved]=await resolveLidIdentities(lidEvents,async lid=>{assert.equal(lid,'123456789012345@lid');return '+5521999990000';});
+ assert.ok(resolved.kind==='inbound');assert.deepEqual(resolved.identity,{scope:'openwa:'+ctx.id,externalId:'5521999990000@c.us',phone:'+5521999990000'});
+ assert.equal(resolved.dedupKey,lidEvents[0].dedupKey);
+ for(const resolve of [async()=>null,async()=>{throw Error('gateway down');}]){const [same]=await resolveLidIdentities(lidEvents,resolve);assert.deepEqual(same,lidEvents[0]);}
+ const phoneEvents=normalizeOpenwaEvents(inbound,ctx);assert.deepEqual(await resolveLidIdentities(phoneEvents,async()=>{throw Error('must not be called');}),phoneEvents);
 });
