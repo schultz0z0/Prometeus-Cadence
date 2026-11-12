@@ -22,6 +22,9 @@ test('individual text/media use connection identity, opaque LID stays opaque and
 });
 test('ACK/failure event dedup is derived from signed message and status, not retry headers or delivery ID',()=>{
  const ack=fixture('ack'),a=normalizeOpenwaEvents(ack,ctx)[0],b=normalizeOpenwaEvents({...ack,deliveryId:'66666666-6666-4666-8666-666666666666',idempotencyKey:'changed'},ctx)[0];assert.equal(a.dedupKey,b.dedupKey);assert.equal(a.kind,'status');
+ // Current OpenWA prefixes delivery IDs with "dlv_"; anything else still fails.
+ assert.equal(normalizeOpenwaEvents({...ack,deliveryId:'dlv_66666666-6666-4666-8666-666666666666'},ctx)[0].dedupKey,a.dedupKey);
+ assert.throws(()=>normalizeOpenwaEvents({...ack,deliveryId:'dlv_not-an-id'},ctx),{status:422});
  const failed={...ack,event:'message.failed',data:{...ack.data,status:'failed'}};assert.equal(normalizeOpenwaEvents(failed,ctx)[0].dedupKey,normalizeOpenwaEvents({...failed,event:'message.ack'},ctx)[0].dedupKey);
  const restricted=normalizeOpenwaEvents(fixture('restriction'),ctx)[0];assert.equal(restricted.kind,'session');assert.equal('qrCode' in restricted,false);
 });

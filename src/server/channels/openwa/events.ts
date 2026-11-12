@@ -2,9 +2,10 @@ import {createHmac,createHash,timingSafeEqual} from 'node:crypto';import {z} fro
 import type {AuthenticatedBatch,WebhookEvent} from '../../../domain/whatsapp.ts';
 import type {IngressContext} from '../ingress-contracts.ts';import {AppError,errorResponse} from '../../errors.ts';
 import {openwaId,openwaRawMessageId,openwaSeconds,openwaStatus} from './wire.ts';
-const envelope=z.object({event:z.string().min(1).max(100),sessionId:openwaId,timestamp:z.string().datetime({offset:true}),idempotencyKey:z.string().min(1).max(1024),deliveryId:openwaId,data:z.record(z.string(),z.unknown())});
+const envelope=z.object({event:z.string().min(1).max(100),sessionId:openwaId,timestamp:z.string().datetime({offset:true}),idempotencyKey:z.string().min(1).max(1024),deliveryId:z.string().regex(/^(dlv_)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),data:z.record(z.string(),z.unknown())});
 const digest=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
-const parse=<T>(action:()=>T)=>{try{return action();}catch(error){if(error instanceof AppError)throw error;throw new AppError(422,'Evento OpenWA inválido.','OPENWA_EVENT_INVALID');}};
+// A rejected event logs only which fields failed, never their values (message text stays out of logs).
+const parse=<T>(action:()=>T)=>{try{return action();}catch(error){if(error instanceof AppError)throw error;if(error instanceof z.ZodError)console.warn('OPENWA_EVENT_INVALID',JSON.stringify(error.issues.map(i=>({path:i.path.join('.'),code:i.code}))));throw new AppError(422,'Evento OpenWA inválido.','OPENWA_EVENT_INVALID');}};
 const chat=z.string().min(1).max(256);
 export function normalizeOpenwaEvents(body:unknown,ctx:IngressContext):WebhookEvent[]{
  return parse(()=>{
