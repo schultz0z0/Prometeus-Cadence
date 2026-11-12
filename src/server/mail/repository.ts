@@ -12,15 +12,15 @@ import {mailboxSaveSchema} from './schemas.ts';
 import type {MailConfig} from './contracts.ts';
 
 export async function mailboxRow(c:PoolClient,id:string,lock=false):Promise<Record<string,any>> {
- const row=(await c.query('SELECT m.*,c.name,c.revision,c.identifiers,c.created_by,c.provider,c.token_expires_at FROM app.email_mailbox m JOIN app.channel_connection c ON c.workspace_id=m.workspace_id AND c.id=m.id WHERE m.id=$1'+(lock?' FOR UPDATE OF m,c':''),[id])).rows[0];
- if(!row)throw new AppError(404,'Caixa de e-mail não encontrada.');return row;
+ const row=(await c.query('SELECT m.*,c.name,c.revision,c.identifiers,c.created_by,c.provider,c.token_expires_at,c.archived_at FROM app.email_mailbox m JOIN app.channel_connection c ON c.workspace_id=m.workspace_id AND c.id=m.id WHERE m.id=$1'+(lock?' FOR UPDATE OF m,c':''),[id])).rows[0];
+ if(!row)throw new AppError(404,'Caixa de e-mail não encontrada.');if(row.archived_at)throw new AppError(410,'Esta caixa foi removida. Conecte outra para continuar.','CHANNEL_ARCHIVED');return row;
 }
 export async function mailboxView(c:PoolClient,row:Record<string,any>):Promise<MailboxView> {
  const sender=(await c.query('SELECT id,daily_limit FROM app.channel_sender WHERE connection_id=$1 AND channel=\'EMAIL\' ORDER BY id LIMIT 1',[row.id])).rows[0];
  return {id:row.id,senderId:sender?.id??null,provider:row.provider as MailProvider,name:row.name,address:row.address,revision:Number(row.revision),state:row.state,hasSecrets:!!row.identifiers?.hasSecrets,sendVerified:row.send_verified,readVerified:row.read_verified,lastSyncedAt:row.last_synced_at?.toISOString()??null,syncState:row.sync_state,dailyLimit:sender?.daily_limit??null,signature:row.signature,lastError:row.last_error};
 }
 export async function listMailboxes(p:Principal):Promise<MailboxView[]> {
- return withWorkspaceTransaction(p,async c=>{const ids=(await c.query('SELECT id FROM app.email_mailbox ORDER BY created_at,id LIMIT 100')).rows;return Promise.all(ids.map(async r=>mailboxView(c,await mailboxRow(c,r.id))));});
+ return withWorkspaceTransaction(p,async c=>{const ids=(await c.query('SELECT m.id FROM app.email_mailbox m JOIN app.channel_connection c ON c.workspace_id=m.workspace_id AND c.id=m.id WHERE c.archived_at IS NULL ORDER BY m.created_at,m.id LIMIT 100')).rows;return Promise.all(ids.map(async r=>mailboxView(c,await mailboxRow(c,r.id))));});
 }
 export async function readMailConfig(c:PoolClient,id:string,expectedRevision?:number):Promise<MailConfig> {
  await requireChannelAdmin(c);const row=await mailboxRow(c,id);

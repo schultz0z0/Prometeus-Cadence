@@ -5,6 +5,7 @@ import {getPools} from '../../src/server/db/pool.ts';
 import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
 import {listMailboxes,saveMailbox,readMailConfig} from '../../src/server/mail/repository.ts';
 import {disconnectMailbox} from '../../src/server/mail/connections.ts';
+import {archiveConnection} from '../../src/server/channels/archive.ts';
 import {readConnections} from '../../src/server/channels/repository.ts';
 import {providerAdapter} from '../../src/server/channels/connections.ts';
 import {mailUser,smtpMailboxInput,testAdmin} from './mail-helpers.ts';
@@ -29,6 +30,14 @@ test('mailbox commands isolate tenants preserve blank passwords and never read b
  await assert.rejects(dispatchPool().query('SELECT * FROM app.channel_credential'),{code:'42501'});
  await assert.rejects(testAdmin(c=>c.query("UPDATE app.email_mailbox SET state='ready' WHERE workspace_id=$1 AND id=$2",[a.p.workspaceId,first.id])),{code:'23514'});
  const closed=await disconnectMailbox(a.p,{id:first.id,expectedRevision:2,requestId:randomUUID()});assert.equal(closed.state,'disconnected');assert.equal(closed.revision,3);
+});
+test('a mailbox is removed from the list only after it is disconnected',async()=>{
+ const a=await mailUser(),box=await saveMailbox(a.p,smtpMailboxInput());
+ await assert.rejects(archiveConnection(a.p,box.id,{expectedRevision:box.revision,requestId:randomUUID()}),{status:409});
+ const closed=await disconnectMailbox(a.p,{id:box.id,expectedRevision:box.revision,requestId:randomUUID()});
+ assert.deepEqual(await archiveConnection(a.p,box.id,{expectedRevision:closed.revision,requestId:randomUUID()}),{archived:true});
+ assert.deepEqual(await listMailboxes(a.p),[]);
+ await assert.rejects(disconnectMailbox(a.p,{id:box.id,expectedRevision:closed.revision+1,requestId:randomUUID()}),{status:410});
 });
 test('mailbox saves recheck roles and reject unexpected config no provider downgrade to Twilio',async()=>{
  const a=await mailUser();

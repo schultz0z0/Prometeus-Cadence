@@ -1,6 +1,7 @@
 import 'server-only';
 import {z} from 'zod';
 import {channelHttp} from '../channels/request.ts';
+import {archiveConnection} from '../channels/archive.ts';
 import {requirePrincipal} from '../auth/principal.ts';
 import {AppError,errorResponse} from '../errors.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
@@ -35,6 +36,7 @@ export function mailboxHttp(request:Request,params:Record<string,string>,deps:{t
  if(action==='pilot-confirm')return runChannelPilot(p,{...(body as Record<string,unknown>),connectionId:id});
  if(action==='test-prepare')return prepareMailTest(p,id,body);if(action==='test-confirm')return confirmMailTest(p,id,body);
  if(action==='disconnect')return disconnectMailbox(p,{...(body as Record<string,unknown>),id});
+ if(action==='archive')return archiveConnection(p,id,body);
  if(action==='limits'){
   const parsed=limitsSchema.safeParse(body);if(!parsed.success)throw new AppError(422,'Revise os limites e os intervalos de envio.');const b=parsed.data;
   return withWorkspaceTransaction(p,async c=>{await requireChannelAdmin(c);await lockWorkspace(c);const hash=commandHash({action:'mail.limits',id,b}),old=await priorCommand(c,p,b.requestId,hash);if(old)return old;

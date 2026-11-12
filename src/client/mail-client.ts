@@ -30,6 +30,7 @@ export function createMailClient(options:WorkspaceTransportOptions){
   verify:(id:string,input:{expectedRevision:number})=>action<MailboxView>(id,'verify',input),
   sync:(id:string,input:{expectedRevision:number})=>action<MailDetail>(id,'sync',input),
   disconnect:(id:string,input:{expectedRevision:number})=>action<MailboxView>(id,'disconnect',input),
+  archive:(id:string,input:{expectedRevision:number})=>action<{archived:true}>(id,'archive',input),
   limits:(id:string,input:MailLimitsInput)=>commands.run<{saved:true}>(input,path(id,'limits'),{...input}),
   resume:(id:string,input:{expectedRevision:number;acknowledge:true;reason:string})=>commands.run<{reviewed:true}>(input,path(id,'resume'),input),
   diagnose:(id:string,selector?:string)=>api.request<MailDiagnostics>(path(id,'diagnostics')+(selector?'?selector='+encodeURIComponent(selector):'')),

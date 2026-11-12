@@ -35,7 +35,9 @@ export async function runMigrations(
         )
       ).rows[0];
       if (old) {
-        if (old.checksum !== checksum)
+        // A checkout may have applied the same SQL with CRLF line endings; only the text matters.
+        const lf = sql.replace(/\r\n/g, "\n"), sameText = [lf, lf.replace(/\n/g, "\r\n")].some((v) => createHash("sha256").update(v).digest("hex") === old.checksum);
+        if (!sameText)
           throw Error(`Migration checksum mismatch: ${name}`);
         continue;
       }
