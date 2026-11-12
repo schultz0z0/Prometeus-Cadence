@@ -1,6 +1,7 @@
 name: prometeus-site-browser
 services:
   site-browser:
+    restart: unless-stopped
     image: prometeus-site-browser:local
     build:
       context: ./site-browser
@@ -18,6 +19,7 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
   site-browser-gateway:
+    restart: unless-stopped
     image: prometeus-site-browser:local
     command: [gateway]
     init: true
