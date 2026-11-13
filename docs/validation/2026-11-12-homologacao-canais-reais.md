@@ -36,6 +36,9 @@ Lista "Homologação · Contabilidade RJ 2". Nenhuma mensagem foi enviada a esse
 | Qualificação (8 módulos) | 10 leads em 17 min; 11 chamadas Gemini, 20 execuções Apify (US$ 0,12, 1 tempo esgotado); CNPJ confirmado em 5, 1 lead aderente, 9 pendentes por falta de dado de porte nas fontes |
 | Revisão | "Selecionar todos" marcou os 10; endereço da Receita rejeitado num lead e mantido o do Maps; aplicação conferida no banco |
 
+| Enriquecedor | 5 empresas com CNPJ em 10 min; 9 sócios do cadastro registrados na ficha, sem contato pessoal publicado; nenhum crédito comercial consumido; nenhuma lista de decisores criada. US$ 0,16 no Apify (CNPJ 0,04; busca Google 0,06; LinkedIn 0,06) |
+| LinkedIn dos sócios | A busca no Google trouxe 8 perfis de outras pessoas; o app descartou todos, sem associar a sócios |
+
 Defeitos encontrados e corrigidos nesta etapa:
 
 - Chaves de OpenAI e Gemini só entravam pelo arquivo de ambiente; agora o administrador da plataforma as cadastra na tela, com validação no provedor.
@@ -47,5 +50,6 @@ Defeitos encontrados e corrigidos nesta etapa:
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
 - Mensagens recebidas enquanto o número está pausado não são relidas ao liberar.
+- O Enriquecedor paga a leitura de perfis do LinkedIn cujo resultado de busca não cita o nome do sócio; todos acabam descartados.
 - A consulta cadastral propõe trocar cidade, estado e endereço já preenchidos pelo formato da Receita (maiúsculas, UF); a revisão permite rejeitar, mas a proposta poderia ser omitida.
 - A faixa "teste grátis" do topo continuou visível depois da assinatura Pro; não investigado.
