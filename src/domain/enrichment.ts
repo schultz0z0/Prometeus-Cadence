@@ -25,6 +25,11 @@ export function linkedinQuery(partnerName:string,companyName:string){
  const company=companyName.split(/\s+/).filter(w=>{const k=words(w)[0];return k&&k.length>2&&!legal.has(k);}).slice(0,2).map(cap).join(' ');
  return `"${name}" ${company} site:linkedin.com/in`.replace(/\s+/g,' ');
 }
+/** A search hit worth paying to read: its title, snippet or URL carries the partner's first and last name. */
+export function mentionsPartner(text:string,partnerName:string){
+ const partner=words(partnerName),found=new Set(words(decodeURIComponent(text.replace(/%(?![0-9a-f]{2})/gi,'%25'))));
+ return partner.length>1&&found.has(partner[0])&&found.has(partner[partner.length-1]);
+}
 // A LinkedIn profile belongs to a registry partner only when first and last name match and the current company matches the lead.
 export function linkedinDecisors(partners:readonly {name:string;role:string}[],profiles:readonly {url:string;name:string;headline?:string;positions:{title:string;company:string}[];email?:string}[],companyNames:readonly string[]){
  const company=new Set(companyNames.flatMap(words).filter(w=>w.length>3&&!legal.has(w)));

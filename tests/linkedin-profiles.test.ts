@@ -28,3 +28,9 @@ test('a slow or failed profile read degrades to no profiles instead of blocking 
  assert.deepEqual(await readLinkedinProfiles(url,signal,slow,50),[]);assert.equal(waited,1,'the read stops at its own deadline');
  assert.equal((await readLinkedinProfiles(url,signal,async()=>Response.json([{linkedinUrl:url[0],firstName:'Ana',lastName:'Silva',currentPosition:[]}]))).length,1);
 });
+test('only search hits naming the partner are worth reading',async()=>{
+ const {mentionsPartner}=await import('../src/domain/enrichment.ts');
+ assert.equal(mentionsPartner('https://www.linkedin.com/in/carlos-brasileiro-contabilidade-41a3b12b8 Carlos Brasileiro Contabilidade','CARLOS ALBERTO BRASILEIRO'),true);
+ assert.equal(mentionsPartner('https://www.linkedin.com/in/luizmouraa Luiz Moura, PhD - Professor UFRJ','FABIO ALMEIDA BARBALHO'),false);
+ assert.equal(mentionsPartner('https://www.linkedin.com/in/b%C3%A1rbara-amaro Bárbara Amaro','BARBARA SOUZA AMARO'),true);
+});

@@ -1,6 +1,6 @@
 import type {JobLease,Evidence,Decision} from '../../domain/prospecting.ts';
 import type {Lead} from '../../domain/model.ts';
-import {validateDecisorEvidence,type Decisor,type EnrichmentResult,registryDecisionMakers,linkedinDecisors,linkedinQuery} from '../../domain/enrichment.ts';
+import {validateDecisorEvidence,type Decisor,type EnrichmentResult,registryDecisionMakers,linkedinDecisors,linkedinQuery,mentionsPartner} from '../../domain/enrichment.ts';
 import {readLinkedinProfiles,linkedinProfileUrl,type LinkedinProfile} from './providers/linkedin-profiles.ts';
 import {withLeasedTransaction} from './worker-db.ts';import {readLeasedJob,finishJob,performStep,performSiteRead,handleStepFailure} from './journal.ts';
 import {sourceResult,sourceResults,preflight,type QualificationAdapters} from './qualification.ts';
@@ -42,7 +42,8 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
    const urls:string[]=[];
    for(const [i,partner] of partners.slice(0,2).entries()){
     const found=await sourceResults(lease,job,{...lead,name:linkedinQuery(partner.name,lead.name||lead.companyName||'')},'website',deps,{limit:3,suffix:'linkedin-person:'+i});if(found===null)return;
-    for(const r of found)for(const u of [r.sourceRef,...(r.evidence??[]).map(e=>e.url)].map(linkedinProfileUrl))if(u&&!urls.includes(u))urls.push(u);
+    // Only hits naming the partner are read: the profile reader is billed per profile, and other people's profiles are discarded anyway.
+    for(const r of found)for(const [u,text] of [[r.sourceRef,r.name??''] as const,...(r.evidence??[]).map(e=>[e.url,e.text] as const)].map(([url,text])=>[linkedinProfileUrl(url),`${url??''} ${text}`] as const))if(u&&!urls.includes(u)&&mentionsPartner(text,partner.name))urls.push(u);
    }
    if(urls.length)profiles=await performStep(lease,'linkedin-profiles:'+group.leadId,'apify',{apifyRuns:1},()=>(deps.linkedin??readLinkedinProfiles)(urls.slice(0,4),deps.signal??new AbortController().signal));
   }
