@@ -45,11 +45,11 @@ Defeitos encontrados e corrigidos nesta etapa:
 - O extrator de telefones propunha números sem DDD ou trocava o celular do Maps pelo fixo do site; agora normaliza para +55 com DDD e mantém o telefone que o lead já tem.
 - A revisão só aceitava o lead inteiro; agora há "Selecionar todos" e escolha campo a campo.
 - A consulta cadastral trocava cidade, estado e endereço já preenchidos pelo formato da Receita; agora só preenche campos vazios.
+- O Enriquecedor pagava a leitura de perfis do LinkedIn de outras pessoas; agora só lê o perfil cujo resultado de busca cita o nome do sócio.
 - A busca de CNPJ falhava com 403: a versão fixada do robô de busca do Google foi removida pelo Apify; fixada a 0.0.489.
 
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
 - Mensagens recebidas enquanto o número está pausado não são relidas ao liberar.
-- O Enriquecedor paga a leitura de perfis do LinkedIn cujo resultado de busca não cita o nome do sócio; todos acabam descartados.
 - A faixa "teste grátis" do topo continuou visível depois da assinatura Pro; não investigado.
