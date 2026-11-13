@@ -16,7 +16,7 @@ export async function listProviderModels(provider:ApiKeyProvider,key:string,fetc
  const signal=AbortSignal.timeout(20000);let ids:string[];
  try{
   if(provider==='gemini'){const raw:any=await providerJson(fetcher,'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000',{headers:{'x-goog-api-key':key}},signal);
-   ids=(raw?.models??[]).filter((m:any)=>Array.isArray(m?.supportedGenerationMethods)&&m.supportedGenerationMethods.includes('generateContent')).map((m:any)=>String(m.name??'').replace(/^models\//,'')).filter((id:string)=>/^gemini/.test(id));}
+   ids=(raw?.models??[]).filter((m:any)=>Array.isArray(m?.supportedGenerationMethods)&&m.supportedGenerationMethods.includes('generateContent')).map((m:any)=>String(m.name??'').replace(/^models\//,'')).filter((id:string)=>/^gemini/.test(id)&&!/tts|image|transcribe|robotics|computer-use|nano-banana|customtools|embedding|live|audio/.test(id));}
   else{const raw:any=await providerJson(fetcher,'https://api.openai.com/v1/models',{headers:{authorization:'Bearer '+key}},signal);
    ids=(raw?.data??[]).map((m:any)=>String(m?.id??'')).filter((id:string)=>/^(gpt-|o\d|chatgpt-)/.test(id)&&!/audio|realtime|tts|transcribe|image|search|instruct/.test(id));}
  }catch(error){
