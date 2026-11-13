@@ -24,9 +24,28 @@ Workspace único "Agência Prometeus", conta administradora da plataforma. O ope
 - Telefone de lead sem +55 bloqueava autorização e publicação de WhatsApp; passa a ser lido como brasileiro.
 - A recuperação do OpenWA pausava o número a cada envio por 0,3 s de diferença entre o relógio do OpenWA e o do WhatsApp; agora tolera até 2 minutos.
 
+## Prospecção real — 13/11/2026
+
+Lista "Homologação · Contabilidade RJ 2". Nenhuma mensagem foi enviada a esses leads.
+
+| Etapa | Resultado |
+| --- | --- |
+| Geração (Maps) | 10 escritórios de contabilidade do Rio em 16 s; 10 inseridos, sem duplicados; US$ 0,04 no Apify |
+| IA da plataforma | Chave do Gemini cadastrada pela nova tela de Provedores de IA, guardada cifrada; teste de conexão com `gemini-4-hydrogen` aprovado |
+| Contexto de IA | Perfil de cliente ideal preenchido e aprovado (v4); sem ele a IA não decidia aderência |
+| Qualificação (8 módulos) | 10 leads em 17 min; 11 chamadas Gemini, 20 execuções Apify (US$ 0,12, 1 tempo esgotado); CNPJ confirmado em 5, 1 lead aderente, 9 pendentes por falta de dado de porte nas fontes |
+| Revisão | "Selecionar todos" marcou os 10; endereço da Receita rejeitado num lead e mantido o do Maps; aplicação conferida no banco |
+
+Defeitos encontrados e corrigidos nesta etapa:
+
+- Chaves de OpenAI e Gemini só entravam pelo arquivo de ambiente; agora o administrador da plataforma as cadastra na tela, com validação no provedor.
+- O extrator de telefones propunha números sem DDD ou trocava o celular do Maps pelo fixo do site; agora normaliza para +55 com DDD e mantém o telefone que o lead já tem.
+- A revisão só aceitava o lead inteiro; agora há "Selecionar todos" e escolha campo a campo.
+- A busca de CNPJ falhava com 403: a versão fixada do robô de busca do Google foi removida pelo Apify; fixada a 0.0.489.
+
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
-- Geração e qualificação de leads reais: o token do Apify configurado foi recusado e precisa ser trocado pelo operador.
 - Mensagens recebidas enquanto o número está pausado não são relidas ao liberar.
+- A consulta cadastral propõe trocar cidade, estado e endereço já preenchidos pelo formato da Receita (maiúsculas, UF); a revisão permite rejeitar, mas a proposta poderia ser omitida.
 - A faixa "teste grátis" do topo continuou visível depois da assinatura Pro; não investigado.
