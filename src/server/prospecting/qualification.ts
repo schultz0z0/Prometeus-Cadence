@@ -252,7 +252,7 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
           }
           if(module==='registry'&&source.cnpj&&source.cnpj!==registryCnpj)throw new ProviderError('CNPJ_IDENTITY_MISMATCH');
           result.evidenceIds.push(...await withLeasedTransaction(lease,c=>saveEvidence(c,lease.jobId,lead.id,source.evidence??[])));
-          for(const key of (module==='website'?['site']:['cnpj','companyName','city','state','capital','size','legalNature','cnae','openedAt','address']) as (keyof Lead)[])if(source[key as keyof typeof source])Object.assign(result.proposed,{[key]:source[key as keyof typeof source]});if(!Object.keys(result.proposed).length&&result.status!=='skipped'){result.status='skipped';result.reasons=['NO_RESULT'];}}
+          for(const key of (module==='website'?['site']:['cnpj','companyName','city','state','capital','size','legalNature','cnae','openedAt','address']) as (keyof Lead)[])if(source[key as keyof typeof source]&&(module==='website'||!base[key]))Object.assign(result.proposed,{[key]:source[key as keyof typeof source]});if(!Object.keys(result.proposed).length&&result.status!=='skipped'){result.status='skipped';result.reasons=['NO_RESULT'];}}
       }else if(module==='validateEmail'){
         const validation=lead.email?await (deps.checkEmail??checkEmailDns)(lead.email):null;result.status='succeeded';result.reasons=[!validation?'NO_EMAIL':validation.format?'FORMAT_VALID':'FORMAT_INVALID',validation?.dns===true?'MAIL_DOMAIN_FOUND':'MAIL_DOMAIN_UNKNOWN','MAILBOX_NOT_VERIFIED'];
         if(validation&&lead.email)result.emailAssessment=assessEmail(lead.email,validation,new Date().toISOString());
@@ -291,6 +291,10 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
         }
       }
       if(!skip&&result.status!=='failed'&&input.options?.disqualifyNoEmail&&!chooseNextModule(input,[...prior,result])&&!lead.email&&[...prior,result].some(r=>r.module==='email'&&r.reasons.includes('CONTACT_NOT_FOUND'))){result.status='pending_review';result.proposed.qualification='disqualified';result.proposed.reason='E-mail não encontrado nas fontes coletadas; regra de seleção configurada pelo usuário.';result.reasons.push('USER_NO_EMAIL_RULE');}
+      // The registry only fills what the lead lacks (Maps city/address read better than the Receita format), and a proposal equal to the current value is noise.
+      // `qualified` is kept even when unchanged: the summary policy reads it.
+      for(const key of Object.keys(result.proposed) as (keyof Lead)[])if(result.proposed[key as keyof typeof result.proposed]===(base[key]??null)&&!(key==='qualification'&&base[key]==='qualified'))delete result.proposed[key as keyof typeof result.proposed];
+      if(result.status==='pending_review'&&module!=='qualify'&&!Object.keys(result.proposed).length){result.status='skipped';result.reasons=[...result.reasons,'NO_CHANGE'];}
       for(const key of Object.keys(result.proposed) as (keyof Lead)[])Object.assign(result.base,{[key]:base[key]??null});
       await withLeasedTransaction(lease,c=>recordModuleResult(c,lease,leadId,result));
       return;

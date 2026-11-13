@@ -126,10 +126,12 @@ test('registry discovers a unique valid CNPJ from public evidence and keeps look
   assert.equal(lookups,1);assert.equal(item.results[0].status,'pending_review');assert.equal(item.results[0].proposed.cnpj,'37297479000180');assert.ok(item.results[0].evidenceIds.length);
   assert.equal((await readWorkspaceSnapshot(p)).data.leads[0].cnpj,undefined);
   const snapshot=await readWorkspaceSnapshot(p);
-  await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...lead,cnpj:'37.297.479/0001-80'}}});
+  await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...lead,cnpj:'37.297.479/0001-80',city:'Curitiba (Maps)'}}});
   const formattedReview=await prepareJob(p,input),formatted=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:formattedReview.token});
   await runQualification(await grantTestLease(p,formatted.id),deps);
   assert.equal((await listJobItems(p,formatted.id)).items[0].results[0].status,'pending_review');
+  // A city the lead already has stays; the registry only fills empty fields.
+  const filled=(await listJobItems(p,formatted.id)).items[0].results[0].proposed as Record<string,unknown>;assert.equal(filled.city,undefined);assert.equal(filled.state,'PR');
 });
 
 test('website discovery rejects generic results and supplies evidence before registry lookup',async()=>{
