@@ -26,8 +26,8 @@ function AppShellContent({children}:{children:React.ReactNode}){
     const identity = useIdentity();
     const billing = useShellBilling(identity?.activeWorkspaceId ?? null);
     const paid = !!billing && ["active", "past_due", "attention", "canceled"].includes(billing.status);
-    // A running trial or pilot has nothing left to start.
-    const started = paid || billing?.status === "trial" || billing?.status === "pilot";
+    // A running trial or pilot has nothing left to start; until the plan loads nothing invites a trial (a Pro workspace saw it flash).
+    const started = !billing || paid || billing.status === "trial" || billing.status === "pilot";
     const planLabel = billing?.plan === "pro" ? "Pro" : "Essential";
     const sidebar = useRef<HTMLElement>(null);
     const menu = useRef<HTMLButtonElement>(null);
@@ -179,7 +179,7 @@ function AppShellContent({children}:{children:React.ReactNode}){
         </button>
       </aside>
       <div className="workspace" inert={smallScreen && mobile}>
-        {!paid && <div className="trial-banner" data-unstarted={!started||undefined}><span>{billing?.status === "trial" ? "Seu teste está ativo. Explore os recursos do seu plano." : billing?.status === "pilot" ? "Você está no piloto local de homologação." : "Você está montando a sua prospecção. Pra ligar, comece o teste grátis de 7 dias."}</span><Link href="/settings/plan">{billing?.status === "trial" || billing?.status === "pilot" ? "Ver meu plano" : "Começar o teste"}</Link></div>}
+        {billing && !paid && <div className="trial-banner" data-unstarted={!started||undefined}><span>{billing?.status === "trial" ? "Seu teste está ativo. Explore os recursos do seu plano." : billing?.status === "pilot" ? "Você está no piloto local de homologação." : "Você está montando a sua prospecção. Pra ligar, comece o teste grátis de 7 dias."}</span><Link href="/settings/plan">{billing?.status === "trial" || billing?.status === "pilot" ? "Ver meu plano" : "Começar o teste"}</Link></div>}
         <header className="topbar">
           <div className="row">
             <button className="icon-btn mobile-menu" ref={menu} aria-label="Abrir menu" aria-expanded={mobile} onClick={() => setMobile(true)}>

@@ -46,10 +46,10 @@ Defeitos encontrados e corrigidos nesta etapa:
 - A revisão só aceitava o lead inteiro; agora há "Selecionar todos" e escolha campo a campo.
 - A consulta cadastral trocava cidade, estado e endereço já preenchidos pelo formato da Receita; agora só preenche campos vazios.
 - O Enriquecedor pagava a leitura de perfis do LinkedIn de outras pessoas; agora só lê o perfil cujo resultado de busca cita o nome do sócio.
+- A faixa "teste grátis" aparecia num workspace Pro enquanto o plano carregava; agora só aparece depois de o plano carregar.
 - A busca de CNPJ falhava com 403: a versão fixada do robô de busca do Google foi removida pelo Apify; fixada a 0.0.489.
 
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
 - Mensagens recebidas enquanto o número está pausado não são relidas ao liberar.
-- A faixa "teste grátis" do topo continuou visível depois da assinatura Pro; não investigado.
