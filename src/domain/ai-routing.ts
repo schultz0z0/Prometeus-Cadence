@@ -20,6 +20,8 @@ export function resolveAiRoute(policy:AiPolicy,runtime:AiRuntime,check:Connectio
 }
 export function aiRouteView(route:AiRoute):AiRouteView{const{configFingerprint:_,...conventional}=route.conventional;return{...route,conventional};}
 export interface CodexDiagnostic{available:boolean;authenticated:boolean;authMode:'chatgpt'|'other'|'unknown';version:string|null;code:string|null}
-export interface AiSettingsView{policy:AiPolicy;canManage:boolean;providers:Record<ConventionalProvider,{configured:boolean;model:string}>;jevConfigured:boolean;route:AiRouteView|null;blockers:string[];lastCheck:Omit<ConnectionCheck,'configFingerprint'>|null;diagnostic?:CodexDiagnostic;chatgpt?:import('./chatgpt-oauth.ts').ChatGptOAuthView}
+export type ApiKeyProvider='openai'|'gemini';
+export interface ApiKeyView{revision:number;model:string;models:string[];hint:string;updatedAt:string}
+export interface AiSettingsView{apiKeys?:Record<ApiKeyProvider,ApiKeyView|null>;policy:AiPolicy;canManage:boolean;providers:Record<ConventionalProvider,{configured:boolean;model:string}>;jevConfigured:boolean;route:AiRouteView|null;blockers:string[];lastCheck:Omit<ConnectionCheck,'configFingerprint'>|null;diagnostic?:CodexDiagnostic;chatgpt?:import('./chatgpt-oauth.ts').ChatGptOAuthView}
 export interface AiTestDraft{sampleId:string}
 export interface AiTestReview{draft:AiTestDraft;token:string;expiresAt:string;route:AiRouteView|null;usage:import('./prospecting.ts').UsageEstimate[];blockers:string[]}

@@ -1,5 +1,5 @@
 import type {ProspectingInput,Review,JobView,JobItemView,Page,ProviderCapabilities,JobFilters} from '../domain/prospecting.ts';
-import type {AiSettingsView,AiPolicy,AiTestReview,CodexDiagnostic} from '../domain/ai-routing.ts';
+import type {AiSettingsView,AiPolicy,AiTestReview,CodexDiagnostic,ApiKeyProvider,ApiKeyView} from '../domain/ai-routing.ts';
 import type {ChatGptOAuthView} from '../domain/chatgpt-oauth.ts';
 import type {JourneyView} from '../domain/prospecting-journey.ts';
 import {createWorkspaceTransport} from './workspace-transport.ts';
@@ -19,6 +19,7 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
     disconnectChatgpt:(expectedRevision:number)=>request<ChatGptOAuthView>('/ai/oauth/disconnect',{expectedRevision}),
     saveAiPolicy(policy:AiPolicy){const key='policy:'+JSON.stringify(policy),prior=settingsFlights.get(key);if(prior)return prior;
       const{revision,...values}=policy;const promise=request<AiPolicy>('/ai/policy',{requestId:stableId(key),expectedRevision:revision,policy:values}).then(result=>{requestIds.delete(key);settingsFlights.delete(key);return result;}).catch(e=>{settingsFlights.delete(key);throw e;});settingsFlights.set(key,promise);return promise;},
+    saveAiKey:(body:{provider:ApiKeyProvider;expectedRevision:number;key?:string;model?:string;remove?:true})=>request<ApiKeyView|null>('/ai/keys',body),
     diagnoseAi:()=>request<CodexDiagnostic>('/ai/diagnostics',{}),
     prepareAiTest:()=>request<AiTestReview>('/ai/test/prepare',{}),
     confirmAiTest(review:AiTestReview){const key='probe:'+review.draft.sampleId,flight=key+review.token,prior=confirmations.get(flight);if(prior)return prior;
