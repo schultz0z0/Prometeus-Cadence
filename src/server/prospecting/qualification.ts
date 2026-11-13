@@ -265,7 +265,10 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
         else if(module==='deep'){result.status='succeeded';result.reasons=['PUBLIC_PAGES_ONLY'];}
         else if(module==='email'||module==='phone'){
           const facts=extractContacts(evidence),value=module==='email'?facts.emails[0]:facts.phones[0];
-          if(value)result.proposed={[module]:value};else{result.status='skipped';result.reasons=['CONTACT_NOT_FOUND'];}
+          // The phone the lead already has (usually the Maps number) is kept: site pages mostly list switchboards. Same email is not re-proposed.
+          if(module==='phone'&&lead.phone){result.status='skipped';result.reasons=['ALREADY_HAS_PHONE'];}
+          else if(module==='email'&&value&&value===lead.email?.toLowerCase()){result.status='skipped';result.reasons=['ALREADY_HAS_EMAIL'];}
+          else if(value)result.proposed={[module]:value};else{result.status='skipped';result.reasons=['CONTACT_NOT_FOUND'];}
         }else{
           const context=job.checkpoint.context as CompanyProfile|null,criteria=JSON.stringify({offer:context?.offer,idealCustomer:context?.idealCustomer,products:context?.products,pains:context?.pains,customCriteria:job.checkpoint.automation?.qualificationCriteria,product:job.checkpoint.product,language:input.options?.language??'pt-BR'});
           const aiRoute=job.checkpoint.execution?.aiRoute as AiRoute|undefined;

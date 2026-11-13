@@ -55,3 +55,7 @@ test('a partner e-mail at the page end keeps its literal passage inside the per-
   const head=pages[0].text.slice(0,4000);
   assert.match(head,/Trechos com contato: «[^»]*Adelino Venturi Júnior[^»]*venturi@example\.com»/);
 });
+test('extracted phones are Brazilian E.164 with DDD; numbers without area code are dropped',()=>{
+  const phones=extractContacts([{id:'p',url:'https://example.com',text:'Ligue (21) 99993-5215, 9993-5215 ou 21964947833'} as any]).phones;
+  assert.deepEqual(phones,['+5521999935215','+5521964947833']);
+});

@@ -7,9 +7,9 @@ import {runQualification} from '../../src/server/prospecting/qualification.ts';
 import {applyJobResults} from '../../src/server/prospecting/application.ts';
 import {readWorkspaceSnapshot} from '../../src/server/workspaces/commands.ts';
 configureProspectingTest();beforeEach(resetRateLimits);after(async()=>{await workerPool().end();await closeProspectingPools();});
-async function fixture(module:string,options?:unknown,site?:string){
+async function fixture(module:string|string[],options?:unknown,site?:string){
  const {p}=await prospectingUser(),listId=randomUUID(),leadId=randomUUID();await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:0,command:{type:'leads.import',list:{id:listId,name:'QA Options'},leads:[{id:leadId,listId,name:'[RE] Exemplo',email:'ana@example.com',...(site?{site}:{}),source:'MANUAL',qualification:'pending',favorite:false,createdAt:new Date().toISOString()}]}});
- const input={kind:'qualification',listId,leadIds:[leadId],modules:[module],summaryPolicy:'all',escalation:'off',...(options?{options}:{})},review=await prepareJob(p,input),job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});return{p,job,input,listId,leadId,lease:await grantTestLease(p,job.id)};
+ const input={kind:'qualification',listId,leadIds:[leadId],modules:Array.isArray(module)?module:[module],summaryPolicy:'all',escalation:'off',...(options?{options}:{})},review=await prepareJob(p,input),job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token});return{p,job,input,listId,leadId,lease:await grantTestLease(p,job.id)};
 }
 test('qualification filters skip before provider calls and persist the exact reason',async()=>{
  const {p,job,lease}=await fixture('email',{onlyWithSite:true});let calls=0;
@@ -52,4 +52,14 @@ test('06B.7 a lead without site or CNPJ keeps each selected module independent a
  assert.deepEqual(results.map((r:any)=>[r.module,r.status,r.reasons]),[['registry','skipped',['NO_CNPJ']],['email','skipped',['NO_EVIDENCE']]]);
  assert.equal(starts,0);
  const lead=(await readWorkspaceSnapshot(p)).data.leads.find(l=>l.id===leadId)!;assert.equal(lead.qualification,'pending');assert.equal(lead.phone,'+5541999990001');
+});
+test('a reviewer applies some proposed fields of a lead and rejects the others',async()=>{
+ const f=await fixture(['email','phone'],undefined,'https://example.com');
+ const contact={...page,text:'Contato publicado ana.nova@example.com, telefone (41) 3013-6190 ou 3013-6190'};
+ await runQualification(f.lease,{collect:async()=>[contact]});for(let i=0;i<5&&(await getJob(f.p,f.job.id)).state!=='completed';i++)await runQualification(await grantTestLease(f.p,f.job.id),{collect:async()=>[contact]});
+ const item=(await listJobItems(f.p,f.job.id)).items[0];
+ assert.deepEqual(item.results.map(r=>r.proposed),[{email:'ana.nova@example.com'},{phone:'+554130136190'}]);
+ await applyJobResults(f.p,f.job.id,{requestId:randomUUID(),itemIds:[item.id],rejected:{[item.id]:['email']}});
+ const lead=(await readWorkspaceSnapshot(f.p)).data.leads.find(l=>l.id===f.leadId)!;
+ assert.equal(lead.email,'ana@example.com');assert.equal(lead.phone,'+554130136190');
 });

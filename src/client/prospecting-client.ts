@@ -36,9 +36,9 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
     get:(id:string)=>request<JobView>('/jobs/'+encodeURIComponent(id)),
     items:(id:string,cursor?:string)=>request<Page<JobItemView>>('/jobs/'+encodeURIComponent(id)+'/items'+(cursor?'?cursor='+encodeURIComponent(cursor):'')),
     cancel:(id:string)=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/cancel',{}),
-    apply(id:string,itemIds:string[]){
-      const key=id+JSON.stringify([...itemIds].sort()),prior=applications.get(key);if(prior)return prior;
-      const promise=request<{applied:number;revision:number;listId?:string}>('/jobs/'+encodeURIComponent(id)+'/apply',{requestId:stableId('apply:'+key),itemIds}).catch(error=>{applications.delete(key);throw error;});applications.set(key,promise);return promise;
+    apply(id:string,itemIds:string[],rejected:Record<string,string[]>={}){
+      const kept=Object.fromEntries(Object.entries(rejected).filter(([item,keys])=>itemIds.includes(item)&&keys.length)),key=id+JSON.stringify([...itemIds].sort())+JSON.stringify(kept),prior=applications.get(key);if(prior)return prior;
+      const promise=request<{applied:number;revision:number;listId?:string}>('/jobs/'+encodeURIComponent(id)+'/apply',{requestId:stableId('apply:'+key),itemIds,...(Object.keys(kept).length?{rejected:kept}:{})}).catch(error=>{applications.delete(key);throw error;});applications.set(key,promise);return promise;
     },
     reconcile:(id:string,body:{operationId?:string;runId?:string;confirmNotStarted?:true;resultUnavailable?:true})=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/reconcile',body),
     dispose(){workspace.dispose();confirmations.clear();requestIds.clear();applications.clear();settingsFlights.clear();},

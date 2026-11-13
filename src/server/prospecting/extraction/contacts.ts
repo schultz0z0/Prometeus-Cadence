@@ -9,10 +9,15 @@ export function extractCnpjs(evidence:Evidence[]):string[]{
     return digit(value.slice(0,12))===value[12]&&digit(value.slice(0,13))===value[13];
   }))];
 }
+/** Brazilian number in E.164, or null when the DDD is missing or the number is not a valid landline/mobile. */
+export function brazilPhone(raw:string):string|null{
+  const digits=raw.replace(/\D/g,'').replace(/^55(?=\d{10,11}$)/,'');
+  return /^[1-9][1-9](?:9\d{8}|[2-5]\d{7})$/.test(digits)?'+55'+digits:null;
+}
 export function extractContacts(evidence:Evidence[]):ContactFacts{
   const text=evidence.map(e=>e.text).join(' ');
   const emails=[...new Set((text.match(/[A-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)??[]).map(x=>x.toLowerCase()))].slice(0,20);
-  const phones=[...new Set((text.match(/(?<!\d)(?:\+55\d{10,11}|\d{10,11})(?!\d)|(?:\+55\s*)?(?:\(?\d{2}\)?\s*)?\d{4,5}[-\s]\d{4}/g)??[]).map(x=>x.replace(/[^+\d]/g,'')))].filter(x=>/^\+?\d{8,15}$/.test(x)).slice(0,20);
+  const phones=[...new Set((text.match(/(?<!\d)(?:\+55\d{10,11}|\d{10,11})(?!\d)|(?:\+55\s*)?(?:\(?\d{2}\)?\s*)?\d{4,5}[-\s]\d{4}/g)??[]).map(brazilPhone).filter((x):x is string=>!!x))].slice(0,20);
   return{emails,phones,evidenceIds:evidence.map(e=>e.id)};
 }
 export async function checkEmailDns(email:string,resolveMx:typeof dns.resolveMx=dns.resolveMx){

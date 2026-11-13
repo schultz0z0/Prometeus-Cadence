@@ -9,11 +9,12 @@ import {hashValue} from './review.ts';
 import {lockWorkspace} from './ingestion.ts';
 import {readApprovedContext} from '../context/repository.ts';
 import {qualificationFingerprint} from '../../domain/qualification-policy.ts';
-const schema=z.strictObject({requestId:z.uuid(),itemIds:z.array(z.string().min(1).max(120)).min(1).max(100).refine(ids=>new Set(ids).size===ids.length)});
+const schema=z.strictObject({requestId:z.uuid(),itemIds:z.array(z.string().min(1).max(120)).min(1).max(100).refine(ids=>new Set(ids).size===ids.length),rejected:z.record(z.string().min(1).max(120),z.array(z.string().min(1).max(40)).max(20)).optional()});
 const editable=new Set(['email','phone','site','city','state','cnpj','companyName','summary','qualification','reason','capital','size','legalNature','cnae','openedAt','address']);
 export async function applyJobResults(p:Principal,jobId:string,body:unknown):Promise<{applied:number;revision:number}>{
   const parsed=schema.safeParse(body);if(!parsed.success)throw new AppError(422,'Seleção inválida.');
-  const {requestId,itemIds}=parsed.data,hash=hashValue({action:'prospecting.apply',jobId,itemIds:[...itemIds].sort()});
+  const {requestId,itemIds}=parsed.data,rejected=parsed.data.rejected??{},hash=hashValue({action:'prospecting.apply',jobId,itemIds:[...itemIds].sort(),...(Object.keys(rejected).length?{rejected:Object.fromEntries(Object.entries(rejected).sort().map(([k,v])=>[k,[...v].sort()]))}:{})});
+  if(Object.keys(rejected).some(id=>!itemIds.includes(id)))throw new AppError(422,'Seleção inválida.');
   return withWorkspaceTransaction(p,async c=>{
     requirePermission({...p,role:(await c.query('SELECT app.current_role() AS role')).rows[0].role},'data.write');await lockWorkspace(c);
     const old=(await c.query('SELECT * FROM app.command_result WHERE request_id=$1',[requestId])).rows[0];
@@ -44,6 +45,7 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
       for(const result of item.payload.results as ModuleResult[]){
         if(result.status!=='pending_review')continue;
         for(const [key,value]of Object.entries(result.proposed)){
+          if(rejected[item.id]?.includes(key))continue;
           if(!editable.has(key))throw new AppError(409,'A proposta contém campo inválido.');
           if(hashValue(lead[key]??null)!==hashValue((result.base as Record<string,unknown>)[key]??null))throw new AppError(409,`O campo ${key} de ${item.name} mudou. Prepare novamente. Não foi aplicada nenhuma alteração.`,'RESULT_CONFLICT');
           proposed[key]=value;
