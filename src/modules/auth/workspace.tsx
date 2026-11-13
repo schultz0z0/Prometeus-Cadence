@@ -40,6 +40,8 @@ export function WorkspaceSetup({ invitationId }: { invitationId?: string }) {
         if (!r.ok) throw Error(data.message??'Não foi possível carregar sua conta.');
         if(data.registrationRequired){location.assign('/onboarding/profile?next='+encodeURIComponent(next));return;}
         setWorkspaces(data.workspaces);
+        // A sign-in with exactly one workspace goes straight into it; choosing only makes sense among several.
+        if(!invitationId&&data.workspaces.length===1){await identityPost({type:'switch',workspaceId:data.workspaces[0].id});location.assign(next.startsWith('/onboarding')?'/dashboard':next);}
       })
       .catch(e => setError(e instanceof Error?e.message:"Não foi possível carregar sua conta."))
       .finally(()=>setLoading(false));
