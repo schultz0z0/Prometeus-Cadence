@@ -19,7 +19,13 @@ test('late REST response after logout has no authority and oversized history cre
  f.mock.mock.mockImplementation(async(url:any,init:any)=>{if(new URL(String(url)).pathname.endsWith('/messages')){if(!during){during=true;await requestOpenwaDisconnect(f.u.p,f.id,{requestId:randomUUID(),expectedRevision:1});}return Response.json({messages:[{id:randomUUID(),sessionId:f.gateway.session.id,waMessageId:'late-remote',chatId:'15550000002@c.us',from:'15550000002@c.us',to:'15550000001@c.us',body:'Late fixture',type:'text',timestamp:Math.floor(Date.now()/1000),direction:'incoming',status:'sent'}],total:1});}return f.gateway.fetch(url,init);});
  await runOpenwaRecoveryTick({now:now(),maxConnections:1,maxMessages:20});assert.equal(await testAdmin(async c=>(await c.query('SELECT count(*) FROM app.channel_message WHERE connection_id=$1',[f.id])).rows[0].count),'0');
  const g=await ready(t);await testAdmin(c=>c.query("INSERT INTO app.openwa_recovery(workspace_id,connection_id,revision,checkpoint,next_at) SELECT workspace_id,connection_id,revision,clock_timestamp()-interval '1 day',clock_timestamp()-interval '1 second' FROM app.openwa_connection WHERE connection_id=$1",[g.id]));
- await runOpenwaRecoveryTick({now:now(),maxConnections:1,maxMessages:20});assert.equal(await testAdmin(async c=>(await c.query('SELECT automation_paused FROM app.openwa_connection WHERE connection_id=$1',[g.id])).rows[0].automation_paused),true);
+ // A day-long pause is read back in 15-minute windows: the first one advances the checkpoint and the number stays active.
+ const windows:string[]=[];g.mock.mock.mockImplementation(async(url:any,init:any)=>{const u=new URL(String(url));if(u.pathname.endsWith('/messages')){windows.push(u.searchParams.get('since')+'-'+u.searchParams.get('until'));return Response.json({messages:[],total:0,unknownTimestampTotal:0});}return g.gateway.fetch(url,init);});
+ const before=await testAdmin(async c=>(await c.query('SELECT checkpoint FROM app.openwa_recovery WHERE connection_id=$1',[g.id])).rows[0].checkpoint);
+ await runOpenwaRecoveryTick({now:now(),maxConnections:1,maxMessages:20});
+ const after=await testAdmin(async c=>(await c.query('SELECT r.checkpoint,r.error_code,o.automation_paused FROM app.openwa_recovery r JOIN app.openwa_connection o USING(workspace_id,connection_id) WHERE r.connection_id=$1',[g.id])).rows[0]);
+ assert.equal(after.automation_paused,false);assert.equal(after.error_code,null);
+ const advanced=after.checkpoint.getTime()-before.getTime();assert.ok(advanced>13*60000&&advanced<=15*60000,'advanced '+advanced);
 });
 test('known outbound ACK is read through the scoped API; missing history is not non-acceptance and failed recovery backs off five times',async t=>{
  const f=await ready(t);await testAdmin(c=>c.query("UPDATE app.openwa_recovery SET next_at=clock_timestamp()+interval '1 day' WHERE connection_id<>$1",[f.id]));
