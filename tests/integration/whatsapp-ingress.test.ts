@@ -35,3 +35,9 @@ test('status evidence is idempotent and never regresses delivered/read on late s
  const result=await testAdmin(async c=>(await c.query('SELECT state,delivered_at,read_at FROM app.channel_message WHERE workspace_id=$1 AND id=$2',[f.u.p.workspaceId,id])).rows[0]);assert.equal(result.state,'read');assert.ok(result.delivered_at);assert.ok(result.read_at);
  const evidence=await testAdmin(async c=>(await c.query('SELECT count(*) FROM app.channel_status_evidence WHERE workspace_id=$1 AND remote_id=$2',[f.u.p.workspaceId,remote])).rows[0].count);assert.equal(Number(evidence),4);
 });
+test('an inbound stamped a few seconds ahead of the server still opens the conversation service window',async()=>{
+ const f=await verifiedMetaFixture(),now=Math.floor(Date.now()/1000);
+ assert.equal((await webhookRequest(f.request({messages:[{id:'wamid.skew.'+randomUUID(),from:'5541977777777',timestamp:String(now+5),type:'text',text:{body:'Oi'}}]}),f.publicId,'meta')).status,200);
+ const at=await testAdmin(async c=>(await c.query('SELECT last_inbound_at FROM app.channel_conversation WHERE workspace_id=$1',[f.u.p.workspaceId])).rows[0].last_inbound_at);
+ assert.ok(at&&at.getTime()<=Date.now()&&at.getTime()>Date.now()-60000,'window opened at '+at);
+});
