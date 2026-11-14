@@ -40,7 +40,8 @@ services:
       SESSION_DATA_PATH: /app/data/sessions
       LOG_LEVEL: warn
       SEND_PACING_ENABLED: 'true'
-      SEND_PACING_WARMUP_SCHEDULE: ${OPENWA_PLATFORM_DAILY_CAP:-20}
+      # Whole-number ceiling: 20 outreach + 60 replies. The app splits it (app.openwa_platform_limits); this is the gateway backstop.
+      SEND_PACING_WARMUP_SCHEDULE: ${OPENWA_SESSION_DAILY_CAP:-80}
       SEND_PACING_COLD_DAILY_CAP: ${OPENWA_PLATFORM_NEW_CONVERSATION_CAP:-5}
       SEND_PACING_BREAKER_THRESHOLD: '5'
       SEND_PACING_BREAKER_COOLDOWN_MS: '900000'

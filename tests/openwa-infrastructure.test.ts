@@ -17,7 +17,7 @@ test('rendered Compose keeps gateway loopback, receiver private and isolates per
  const rendered=JSON.parse(execFileSync('docker',['compose','--env-file','.env.example','--profile','channels','config','--format','json'],{encoding:'utf8',env:fixtureEnv,windowsHide:true}));
  const gateway=rendered.services.openwa,receiver=rendered.services['channel-ingress'];
  assert.ok(gateway&&receiver);assert.equal(gateway.ports.length,1);assert.equal(gateway.ports[0].host_ip,'127.0.0.1');assert.equal(gateway.ports[0].published,'2785');assert.equal(receiver.ports,undefined);
- assert.equal(gateway.environment.API_MASTER_KEY,'fixture-admin-key-not-live');assert.equal(gateway.environment.SEND_PACING_WARMUP_SCHEDULE,'20');assert.equal(gateway.environment.SEND_PACING_COLD_DAILY_CAP,'5');
+ assert.equal(gateway.environment.API_MASTER_KEY,'fixture-admin-key-not-live');assert.equal(gateway.environment.SEND_PACING_WARMUP_SCHEDULE,'80');assert.equal(gateway.environment.SEND_PACING_COLD_DAILY_CAP,'5');
  assert.equal(gateway.environment.ENGINE_TYPE,'baileys');assert.equal(receiver.environment.OPENWA_API_ORIGIN,'http://openwa:2785');assert.equal(gateway.environment.WEBHOOK_SSRF_PROTECT,'true');assert.equal(gateway.environment.SSRF_ALLOWED_HOSTS,'channel-ingress');
  assert.equal(gateway.volumes[0].target,'/app/data');assert.match(gateway.volumes[0].source,/openwa/);
  for(const service of [gateway,receiver]){assert.equal(service.restart,'unless-stopped');for(const volume of service.volumes??[])assert.doesNotMatch(volume.source,/docker\.sock|docker_engine/);}

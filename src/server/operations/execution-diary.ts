@@ -27,6 +27,9 @@ const delayReasons = {
   EMAIL_DAILY_LIMIT:'Limite diário de e-mail atingido. O envio foi adiado.',
   OPENWA_DAILY_LIMIT:'Limite diário do WhatsApp atingido. O envio foi adiado.',
   OPENWA_NEW_CONVERSATION_LIMIT:'Limite de novas conversas do WhatsApp atingido. O envio foi adiado.',
+  OPENWA_REPLY_LIMIT:'Limite diário de respostas do WhatsApp atingido. A resposta foi adiada.',
+  OPENWA_PACING:'Aguardando o intervalo entre envios do WhatsApp, para não parecer disparo em massa.',
+  OPENWA_LOW_REPLY_RATE:'Poucos contatos responderam nos últimos 7 dias. Os envios ativos do WhatsApp foram adiados para proteger o número.',
   SENDER_INTERVAL:'Aguardando o intervalo entre envios.',
 };
 

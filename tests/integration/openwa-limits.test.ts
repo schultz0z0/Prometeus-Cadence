@@ -52,3 +52,22 @@ test('service without an inbound timestamp cannot use SQL null to bypass consent
  await testAdmin(c=>c.query("UPDATE app.message_outbox SET prepared_send=jsonb_set(prepared_send,'{purpose}','\"service\"') WHERE message_id=$1",[row.message]));
  assert.equal((await reserve(row)).code,'OPT_IN_REQUIRED');
 });
+const inbound=(row:{message:string})=>testAdmin(c=>c.query("INSERT INTO app.channel_message(workspace_id,id,connection_id,sender_id,identity_id,conversation_id,direction,text,state,occurred_at) SELECT workspace_id,$2,connection_id,sender_id,identity_id,conversation_id,'inbound','Oi','received',clock_timestamp() FROM app.channel_message WHERE id=$1",[row.message,randomUUID()]));
+const asService=(row:{message:string})=>testAdmin(c=>c.query("UPDATE app.message_outbox SET prepared_send=jsonb_set(prepared_send,'{purpose}','\"service\"') WHERE message_id=$1",[row.message]));
+test('replies to someone who wrote in 24 h have their own budget and never spend outreach',async t=>{
+ const f=await ready(t);await testAdmin(c=>c.query('UPDATE app.channel_sender SET daily_limit=1,new_conversation_limit=1 WHERE id=$1',[f.sender.id]));
+ const first=await pending(f);assert.equal((await reserve(first)).allowed,true);assert.equal((await reserve(await pending(f,first.identity))).code,'OPENWA_DAILY_LIMIT');
+ await testAdmin(c=>c.query('UPDATE app.openwa_platform_limits SET reply_cap=1'));t.after(()=>testAdmin(c=>c.query('UPDATE app.openwa_platform_limits SET reply_cap=60')));
+ const reply=await pending(f,first.identity);await inbound(reply);await asService(reply);assert.equal((await reserve(reply)).allowed,true);
+ const again=await pending(f,first.identity);await asService(again);assert.equal((await reserve(again)).code,'OPENWA_REPLY_LIMIT');
+});
+test('outreach waits a random gap after the previous send and stops when few contacts answer',async t=>{
+ const f=await ready(t);await testAdmin(c=>c.query('UPDATE app.openwa_platform_limits SET active_gap_min_seconds=300,active_gap_max_seconds=300'));t.after(()=>testAdmin(c=>c.query('UPDATE app.openwa_platform_limits SET active_gap_min_seconds=0,active_gap_max_seconds=0')));
+ const a=await pending(f);assert.equal((await reserve(a)).allowed,true);
+ const b=await pending(f,a.identity),held=await reserve(b);assert.equal(held.code,'OPENWA_PACING');assert.ok(Math.abs(Date.parse(held.retryAt)-Date.now()-300000)<5000);
+ assert.equal((await reserve(b,new Date(Date.now()+301000).toISOString())).allowed,true);
+ const g=await ready(t);await testAdmin(c=>c.query('UPDATE app.openwa_platform_limits SET active_gap_min_seconds=0,active_gap_max_seconds=0'));
+ // Ten contacts reached two days ago, none answered.
+ for(let i=0;i<10;i++){const row=await pending(g);await testAdmin(c=>c.query("INSERT INTO app.openwa_usage_reservation(workspace_id,attempt_id,message_id,sender_id,identity_id,period_date,new_contact,consumed,created_at) VALUES($1,$2,$3,$4,$5,current_date-2,true,true,clock_timestamp()-interval '2 days')",[row.ws,row.attempt,row.message,g.sender.id,row.identity]));}
+ assert.equal((await reserve(await pending(g))).code,'OPENWA_LOW_REPLY_RATE');
+});

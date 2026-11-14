@@ -138,6 +138,8 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA auth GRANT SELECT,INSERT,UPDATE,DELETE ON TAB
 ALTER DEFAULT PRIVILEGES IN SCHEMA auth GRANT USAGE,SELECT ON SEQUENCES TO cadence_auth;
 ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO cadence_app;`);
   await runMigrations(migrator,'db/migrations');
+  // Suites send several OpenWA messages in one instant; the outreach gap is exercised by its own test.
+  await migrator.query('UPDATE app.openwa_platform_limits SET active_gap_min_seconds=0,active_gap_max_seconds=0');
  }finally{await migrator.end();}
  const result=spawnSync(process.execPath,args,{stdio:'inherit',env:process.env});process.exitCode=result.status??1;
 }finally{

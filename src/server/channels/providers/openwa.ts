@@ -7,7 +7,18 @@ function gateway(config:ProviderConfig,fetchImpl:typeof fetch){
  const sessionId=openwaId.parse(config.identifiers.sessionId),client=createOpenwaClient({origin,apiKey:config.credentials.apiKey,fetchImpl});return {origin,sessionId,client};
 }
 const refused=(code:string):SendOutcome=>({kind:'not_accepted',code,retryable:false,retryAfterMs:null});
-export function createOpenwaAdapter(fetchImpl:typeof fetch=fetch):ProviderAdapter{return {
+type Remote={origin:string;sessionId:string;apiKey:string};
+export type ReplyPresence=(remote:Remote,chatId:string,text:string)=>Promise<void>;
+const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
+/** Read, pause, then "typing…" for about the time a person takes to write the reply: instant machine answers are what WhatsApp flags.
+ * Best effort: a presence call that fails never blocks or delays the send beyond its own timeout. */
+export function replyPresence(fetchImpl:typeof fetch=fetch,pause=sleep):ReplyPresence{return async(remote,chatId,text)=>{
+ const post=(path:string,body:unknown)=>fetchImpl(new URL(`/api/sessions/${remote.sessionId}/chats/${path}`,remote.origin),{method:'POST',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(5000),headers:{'x-api-key':remote.apiKey,'content-type':'application/json'},body:JSON.stringify(body)}).catch(()=>null);
+ await post('read',{chatId});await pause(1000+Math.random()*2000);
+ await post('typing',{chatId,state:'typing'});await pause(Math.min(8000,1500+text.length*40));
+ await post('typing',{chatId,state:'paused'});
+};}
+export function createOpenwaAdapter(fetchImpl:typeof fetch=fetch,presence:ReplyPresence=replyPresence(fetchImpl)):ProviderAdapter{return {
  async verifyAssets(config){const {client,sessionId}=gateway(config,fetchImpl),session=await client.readSession(sessionId);if(session.status!=='ready'||!session.engineLoaded||!session.phone||session.restriction)throw new ChannelProviderError('OPENWA_SESSION_UNAVAILABLE');return {externalAccountId:sessionId,tokenExpiresAt:null,senders:[{externalId:'+'+session.phone,address:'+'+session.phone,identityScope:'openwa:'+config.connectionId,capabilities:{supportsText:true,supportsOfficialTemplates:false,requiresServiceWindow:false}}]};},
  async listTemplates(){return [];},
  async sendOnce(config,send:PreparedSend):Promise<SendOutcome>{
@@ -17,6 +28,7 @@ export function createOpenwaAdapter(fetchImpl:typeof fetch=fetch):ProviderAdapte
   if(send.content.kind!=='text'||!send.content.text.trim()||send.content.text.length>4096||/\{\{[^{}]*\}\}/.test(send.content.text))return refused('OPENWA_TEXT_REQUIRED');
   const chatId=send.identity.externalId;
   if(!/^\d{6,20}@(c\.us|s\.whatsapp\.net|lid)$/.test(chatId))return refused('OPENWA_RECIPIENT_INVALID');
+  if(send.purpose==='service')await presence({origin:remote.origin,sessionId:remote.sessionId,apiKey:config.credentials.apiKey},chatId,send.content.text);
   try{
    const response=await fetchImpl(new URL(`/api/sessions/${remote.sessionId}/messages/send-text`,remote.origin),{method:'POST',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(30000),headers:{'x-api-key':config.credentials.apiKey,'idempotency-key':send.traceId,'content-type':'application/json'},body:JSON.stringify({chatId,text:send.content.text})});
    const bytes=await readBoundedBody(response,1048576);const body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
