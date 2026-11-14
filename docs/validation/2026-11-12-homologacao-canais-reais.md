@@ -63,6 +63,14 @@ Defeitos encontrados e corrigidos nesta etapa:
 - O modo de desenvolvimento compilava telas por até 16 s e o navegador desistia aos 15 s ("signal timed out"); a homologação passou a rodar o build de produção.
 - A busca de CNPJ falhava com 403: a versão fixada do robô de busca do Google foi removida pelo Apify; fixada a 0.0.489.
 
+- A mesma recuperação contava o envio próprio em andamento como mensagem sem horário (contador do gateway) e pausou o número durante uma resposta do SDR (14/11/2026); corrigido.
+
+## Limites anti-banimento (14/11/2026)
+
+- Com teto de 1 resposta/dia, a 1ª resposta aprovada saiu e a 2ª ficou adiada com `OPENWA_REPLY_LIMIT`; ao voltar o teto a 60 e liberar, foi entregue.
+- Antes de cada resposta o contato viu "digitando…" (confirmado pelo operador); o envio levou 9–15 s após a aprovação.
+- Após liberar a pausa direto no banco, a recuperação releu a janela e trouxe a mensagem recebida durante a pausa.
+
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
