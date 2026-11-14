@@ -54,3 +54,9 @@ test('every infrastructure HTTP surface rejects a customer owner without returni
  }
  const r=await chatgptOAuthHttp(new Request(base+'/api/prospecting/ai/oauth/status',{headers:customer.headers}),'status');assert.equal(r.status,403);assert.ok(!(await r.text()).includes('email'));
 });
+test('the SDR worker reads the platform policy without a workspace member role',async()=>{
+ const admin=await prospectingUser();await configurePlatformAiTest(admin.p);
+ await saveAiPolicy(admin.p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'gemini',jevEnabled:false}});
+ const {workerPool}=await import('../../src/server/prospecting/worker-db.ts');const c=await workerPool().connect();
+ try{assert.equal((await readAiPolicy(c)).conventionalProvider,'gemini');}finally{c.release();}
+});
