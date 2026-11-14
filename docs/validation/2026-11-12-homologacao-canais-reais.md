@@ -67,3 +67,8 @@ Defeitos encontrados e corrigidos nesta etapa:
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
 - Mensagens recebidas enquanto o número está pausado não são relidas ao liberar.
+
+## Melhorias pedidas pelo operador
+
+- **Inbox do WhatsApp mais próxima do WhatsApp Web**, mantendo a identidade do Cadence: lista de conversas e conversa lado a lado, conversa com rolagem própria que abre nas mensagens mais recentes (sem descer a página inteira), histórico antigo carregado sob demanda ao subir, emojis e mais recursos de resposta direto na conversa, mantendo o cache e a paginação do histórico. Divergência visual em relação ao CadenceFlow: precisa de aprovação explícita ou fica para a personalização Prometeus.
+- **"Retomar envios" sem reconectar**: hoje, depois de uma pausa de segurança do número, a única forma de liberar é reconectar o WhatsApp. Um botão de retomada após revisar as mensagens do período evita a reconexão.
