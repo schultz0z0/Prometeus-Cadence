@@ -113,6 +113,7 @@ import {
   Lightbulb,
   KeyRound,
   CornerDownLeft,
+  Smile,
   type LucideIcon,
 } from "lucide-react";
 const icons: Record<string, LucideIcon> = {
@@ -227,6 +228,7 @@ const icons: Record<string, LucideIcon> = {
   Lightbulb,
   KeyRound,
   CornerDownLeft,
+  Smile,
 };
 export function Icon({
   name,
