@@ -43,7 +43,7 @@ test('expired recovery lease cannot ingest a late snapshot',async t=>{
 });
 test('our own send still pending without a WhatsApp timestamp is not a recovery gap',async t=>{
  const f=await ready(t);await testAdmin(c=>c.query("UPDATE app.openwa_recovery SET next_at=clock_timestamp()+interval '1 day' WHERE connection_id<>$1",[f.id]));
- f.mock.mock.mockImplementation(async(url:any,init:any)=>{if(new URL(String(url)).pathname.endsWith('/messages'))return Response.json({messages:[{id:randomUUID(),sessionId:f.gateway.session.id,waMessageId:'true_15550000002@c.us_PENDING',chatId:'15550000002@c.us',direction:'outgoing',status:'pending',timestamp:null,type:'text',body:'Resposta'}],total:1,unknownTimestampTotal:0});return f.gateway.fetch(url,init);});
+ f.mock.mock.mockImplementation(async(url:any,init:any)=>{if(new URL(String(url)).pathname.endsWith('/messages'))return Response.json({messages:[{id:randomUUID(),sessionId:f.gateway.session.id,waMessageId:'true_15550000002@c.us_PENDING',chatId:'15550000002@c.us',direction:'outgoing',status:'pending',timestamp:null,type:'text',body:'Resposta'}],total:1,unknownTimestampTotal:1});return f.gateway.fetch(url,init);});
  assert.equal((await runOpenwaRecoveryTick({now:now(),maxConnections:1,maxMessages:20})).failed,0);
  assert.equal(await testAdmin(async c=>(await c.query('SELECT automation_paused FROM app.openwa_connection WHERE connection_id=$1',[f.id])).rows[0].automation_paused),false);
 });

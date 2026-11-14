@@ -25,7 +25,9 @@ export async function runOpenwaRecoveryTick(options:OpenwaTickOptions&{maxMessag
    const client=createOpenwaClient({origin,apiKey:credentials.apiKey,fetchImpl:(url,init)=>fetch(url,{...init,signal:init?.signal?AbortSignal.any([signal,init.signal]):signal})});
    const ctx:IngressContext={id:lease.connectionId,workspaceId:lease.workspaceId,publicId:c.public_id,provider:'openwa',revision:Number(lease.revision),state:'ready',externalAccountId:c.external_account_id,identifiers:c.identifiers,senders:scope.senders,credentialVersions:[]};
    const page=await client.readMessages(c.identifiers.sessionId,{limit:20,since:Date.parse(r.checkpoint),until:Date.parse(r.window_until),...(r.cursor?{after:r.cursor}:{})});
-   if(page.unknownTimestampTotal>0||page.nextCursor&&(r.pages>=4||page.nextCursor===r.cursor))throw new OpenwaClientError('OPENWA_RECOVERY_GAP');
+   // The gateway counts our own unacknowledged sends as unknown-time rows; only unexplained ones are a gap.
+   const ownPending=page.items.filter(m=>m.timestamp===null&&m.fromMe&&!['delivered','read','failed'].includes(m.status)).length;
+   if(page.unknownTimestampTotal>ownPending||page.nextCursor&&(r.pages>=4||page.nextCursor===r.cursor))throw new OpenwaClientError('OPENWA_RECOVERY_GAP');
    const events:WebhookEvent[]=[];
    // OpenWA picks the window by its own record time, while `timestamp` is WhatsApp's clock: allow that skew, not a real gap.
    for(const message of page.items){if(message.timestamp===null&&message.fromMe&&!['delivered','read','failed'].includes(message.status))continue;if(message.timestamp===null||message.timestamp*1000<Date.parse(r.checkpoint)-clockSkewMs||message.timestamp*1000>Date.parse(r.window_until)+clockSkewMs)throw new OpenwaClientError('OPENWA_RECOVERY_GAP');events.push(...normalizeRead(message,ctx));}
