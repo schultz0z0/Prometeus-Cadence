@@ -1177,7 +1177,8 @@ kbd {
 .whatsapp-sdr-dock:empty { display: none; }
 .whatsapp-sdr-dock .reply-composer { margin: 0; padding: 12px 16px; }
 .whatsapp-sdr-dock h3 { font-size: .92rem; margin: 0; }
-.whatsapp-composer { flex-shrink: 0; display: grid; gap: 6px; padding: 8px 12px 10px; border-top: 1px solid var(--border); background: var(--surface); max-height: 50%; overflow: auto; }
+/* No overflow here: it clipped the emoji panel that opens above. The textarea keeps its own max-height. */
+.whatsapp-composer { flex-shrink: 0; display: grid; gap: 6px; padding: 8px 12px 10px; border-top: 1px solid var(--border); background: var(--surface); position: relative; z-index: 5; }
 .whatsapp-composer-hint { color: var(--muted); font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .whatsapp-composer-row { display: flex; align-items: flex-end; gap: 8px; }
 .whatsapp-composer-row textarea { flex: 1; min-width: 0; resize: none; field-sizing: content; min-height: 40px; max-height: 160px; padding: 9px 14px; border-radius: 20px; line-height: 1.4; }

@@ -17,6 +17,11 @@ export function WhatsappHistory({messages,hasOlder,onOlder,onReconcile}:{message
   el.scrollTop=nextScrollTop({scrollHeight:el.scrollHeight,scrollTop:el.scrollTop,prevHeight:prev.current.height,prepended:!!prev.current.first&&first!==prev.current.first,stick:stick.current});
   prev.current={height:el.scrollHeight,first};
  },[messages]);
+ // Panels below load after the history and shrink it; while reading the newest message, stay on it.
+ useLayoutEffect(()=>{
+  const el=ref.current;if(!el||typeof ResizeObserver==='undefined')return;
+  const keep=new ResizeObserver(()=>{if(stick.current)el.scrollTop=el.scrollHeight;});keep.observe(el);return()=>keep.disconnect();
+ },[]);
  async function older(){
   if(loading.current||!hasOlder)return;loading.current=true;setOlderBusy(true);setOlderError('');
   try{await onOlder();}catch(e){setOlderError(e instanceof Error?e.message:'Não foi possível carregar as mensagens anteriores.');}finally{loading.current=false;setOlderBusy(false);}
