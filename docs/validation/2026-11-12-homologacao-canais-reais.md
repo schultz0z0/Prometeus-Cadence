@@ -39,6 +39,16 @@ Lista "Homologação · Contabilidade RJ 2". Nenhuma mensagem foi enviada a esse
 | Enriquecedor | 5 empresas com CNPJ em 10 min; 9 sócios do cadastro registrados na ficha, sem contato pessoal publicado; nenhum crédito comercial consumido; nenhuma lista de decisores criada. US$ 0,16 no Apify (CNPJ 0,04; busca Google 0,06; LinkedIn 0,06) |
 | LinkedIn dos sócios | A busca no Google trouxe 8 perfis de outras pessoas; o app descartou todos, sem associar a sócios |
 
+## Agente SDR — 14/11/2026
+
+Agente "SDR Prometeus" no WhatsApp gerenciado, 24 h, aprovação antes de cada resposta, testado só com o número pessoal do operador.
+
+| Caso | Resultado |
+| --- | --- |
+| Simulador | Resposta coerente com o contexto e pergunta do script |
+| Pergunta fora da base (produto Rastro) | Passou a conversa ao responsável e notificou; nada enviado |
+| Pergunta coberta pelo contexto | Rascunho em 2 s, campo do script extraído (porte: 12 pessoas), aprovado e entregue no aparelho |
+
 Defeitos encontrados e corrigidos nesta etapa:
 
 - Chaves de OpenAI e Gemini só entravam pelo arquivo de ambiente; agora o administrador da plataforma as cadastra na tela, com validação no provedor.
@@ -47,6 +57,10 @@ Defeitos encontrados e corrigidos nesta etapa:
 - A consulta cadastral trocava cidade, estado e endereço já preenchidos pelo formato da Receita; agora só preenche campos vazios.
 - O Enriquecedor pagava a leitura de perfis do LinkedIn de outras pessoas; agora só lê o perfil cujo resultado de busca cita o nome do sócio.
 - A faixa "teste grátis" aparecia num workspace Pro enquanto o plano carregava; agora só aparece depois de o plano carregar.
+- O worker do SDR não lia a política de IA (não é membro de workspace) e bloqueava todo turno como IA indisponível.
+- Mensagens do WhatsApp chegam com horário ~3 s adiantado e não abriam a janela de 24 h; a resposta do SDR exigia autorização. Agora aceita até 2 min.
+- A recuperação do OpenWA tratava o envio próprio ainda sem confirmação como lacuna e pausava o número.
+- O modo de desenvolvimento compilava telas por até 16 s e o navegador desistia aos 15 s ("signal timed out"); a homologação passou a rodar o build de produção.
 - A busca de CNPJ falhava com 403: a versão fixada do robô de busca do Google foi removida pelo Apify; fixada a 0.0.489.
 
 ## Pendências
