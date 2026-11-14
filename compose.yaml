@@ -39,6 +39,11 @@ services:
       DATABASE_NAME: /app/data/openwa.sqlite
       SESSION_DATA_PATH: /app/data/sessions
       LOG_LEVEL: warn
+      # Only this app's worker calls the gateway; its status/recovery polling passes the public default of 1000 requests/hour,
+      # and a run of 429s paused the number (14/11/2026). Sends are bounded by SEND_PACING below, not by these.
+      RATE_LIMIT_SHORT_LIMIT: '50'
+      RATE_LIMIT_MEDIUM_LIMIT: '1000'
+      RATE_LIMIT_LONG_LIMIT: '20000'
       SEND_PACING_ENABLED: 'true'
       # Whole-number ceiling: 20 outreach + 60 replies. The app splits it (app.openwa_platform_limits); this is the gateway backstop.
       SEND_PACING_WARMUP_SCHEDULE: ${OPENWA_SESSION_DAILY_CAP:-80}
