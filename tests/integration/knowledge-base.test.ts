@@ -68,3 +68,32 @@ test('ingestion: a document becomes ready with all its chunks, or fails with non
  await runKnowledgeTick({limit:1},{blobs,extract:async()=>({pages:1,sections:[{label:'x',text:'retomado'}]}),embed:async t=>unit(t)});
  assert.equal((await doc(retry.id)).state,'ready');
 });
+test('documents api: upload, list by any member, type and size checks, removal, isolation',async()=>{
+ const svc=await import('../../src/server/knowledge/service.ts');
+ const files=new Map<string,Uint8Array>(),store={put:async(_w:string,k:string,b:Uint8Array)=>{files.set(k,b);},get:async(_w:string,k:string)=>files.get(k)!,remove:async(_w:string,k:string)=>{files.delete(k);}};
+ await drain();const a=await company(),b=await company();
+ const doc=await svc.uploadDocument(a.p,{name:'precos.csv',bytes:new TextEncoder().encode('Serviço;Preço\nSDR;R$ 900\n')},{store});
+ assert.deepEqual([doc.state,doc.mime,doc.title],['uploaded','text/csv','precos.csv']);assert.equal(files.size,1);
+ const op=await prospectingUser({billing:false});
+ await testAdmin(c=>c.query('INSERT INTO auth.member(id,"organizationId","userId",role,"createdAt") VALUES($1,$2,$3,$4,now())',[randomUUID(),a.p.workspaceId,op.p.userId,'operator']));
+ const opP={...op.p,workspaceId:a.p.workspaceId};
+ assert.equal((await svc.listDocuments(opP)).documents.length,1);
+ await assert.rejects(svc.uploadDocument(opP,{name:'x.csv',bytes:new TextEncoder().encode('a;b\n1;2\n')},{store}),{status:403});
+ await assert.rejects(svc.uploadDocument(a.p,{name:'virus.pdf',bytes:new Uint8Array([77,90,144,0,3,0])},{store}),{status:422});
+ await assert.rejects(svc.uploadDocument(a.p,{name:'grande.csv',bytes:new Uint8Array(10485761).fill(65)},{store}),{status:413});
+ await assert.rejects(svc.uploadDocument(a.p,{name:'precos.csv',bytes:new TextEncoder().encode('Serviço;Preço\nSDR;R$ 900\n')},{store}),{status:409});
+ assert.equal(files.size,1,'a refused upload leaves no file behind');
+ await assert.rejects(svc.setDocumentState(b.p,doc.id,{expectedRevision:doc.revision,state:'archived'}),{status:404});
+ await svc.deleteDocument(a.p,doc.id,{store});
+ assert.equal(files.size,0);assert.equal((await svc.listDocuments(a.p)).documents.length,0);
+});
+test('documents http: oversized or non-multipart bodies are refused before reading',async()=>{
+ const {knowledgeRequest}=await import('../../src/server/knowledge/http.ts');const {base}=await import('./helpers.ts');
+ const u=await company(),h=new Headers(u.headers);h.set('x-cadence-workspace',u.p.workspaceId);
+ assert.equal((await knowledgeRequest(new Request(base+'/api/knowledge/documents'))).status,401);
+ const big=new Headers(h);big.set('content-type','multipart/form-data; boundary=x');big.set('content-length',String(12*1024*1024));
+ assert.equal((await knowledgeRequest(new Request(base+'/api/knowledge/documents',{method:'POST',headers:big,body:'x'}))).status,413);
+ const plain=new Headers(h);plain.set('content-type','application/json');
+ assert.equal((await knowledgeRequest(new Request(base+'/api/knowledge/documents',{method:'POST',headers:plain,body:'{}'}))).status,422);
+ const ok=await knowledgeRequest(new Request(base+'/api/knowledge/documents',{headers:h}));assert.equal(ok.status,200);assert.deepEqual((await ok.json()).documents,[]);
+});
