@@ -1272,3 +1272,9 @@ kbd {
 .wizard-title{display:inline-flex;align-items:center;gap:10px}
 .wizard-back{display:inline-flex;color:var(--muted);border-radius:6px;padding:2px}
 .wizard-back:hover{color:var(--text)}
+
+/* Company knowledge base (Configurações) */
+.error-text { color: var(--red); display: block; }
+.knowledge-preview { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 0; font: inherit; font-size: 13px; max-height: 220px; overflow: auto; }
+.notice.warning { background: var(--primary-subtle); color: var(--text); }
+.notice.warning > svg { color: var(--primary); }

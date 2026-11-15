@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { SelectField } from "@/components/ui/select-field";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/ui/icon";
@@ -11,7 +12,7 @@ import { SdrOverview } from "@/modules/settings/sdr-overview";
 type Agent = { id: string; revision: number; state: "draft" | "active" | "paused"; name: string; draft: SdrDraft; activeRevision: number | null; activatedAt: string | null; pausedAt: string | null; pendingChanges: boolean };
 type Knowledge = { id: string; revision: number; kind: "faq" | "note"; title: string; body: string; state: "draft" | "approved" | "archived" };
 type Channel = { id: string; name: string; channel: string; provider: string; agentId: string | null; agentName: string | null; ready: boolean };
-type View = { entitled: boolean; canManage: boolean; agents: Agent[]; channels: Channel[]; members: { id: string; name: string }[]; knowledge: Knowledge[]; context: { approved: boolean }; simulationsLeft: number };
+type View = { entitled: boolean; canManage: boolean; agents: Agent[]; channels: Channel[]; members: { id: string; name: string }[]; knowledge: Knowledge[]; documents?: { id: string; title: string; state: string }[]; context: { approved: boolean }; simulationsLeft: number };
 type Review = { revision: number; summary: { name: string; channels: { id: string; name: string; provider: string }[]; hours: SdrDraft["hours"]; maxRepliesPerDay: number; approvalMode: string; questions: number; handoff: { member: string | null; rules: number }; knowledge: number }; blockers: string[]; warnings: string[]; token: string };
 const stateLabel = { draft: ["Rascunho", "neutral"], active: ["Ativo", "green"], paused: ["Pausado", "orange"] } as const;
 const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -99,6 +100,11 @@ function AgentEditor({ view, agent, onClose, onSaved, onReload }: { view: View; 
       {!view.knowledge.length && <p className="muted">Nenhum item na base. Adicione abaixo, em Base de conhecimento.</p>}
       {d.knowledgeIds.filter(id => !view.knowledge.some(k => k.id === id)).map(id => <label key={id} className="checkbox-row"><input type="checkbox" checked onChange={() => set("knowledgeIds", d.knowledgeIds.filter(x => x !== id))} /><span>Item arquivado <small className="muted">· desmarque para tirar do agente</small></span></label>)}
       {view.knowledge.map(k => <label key={k.id} className="checkbox-row"><input type="checkbox" checked={d.knowledgeIds.includes(k.id)} onChange={e => set("knowledgeIds", e.target.checked ? [...d.knowledgeIds, k.id] : d.knowledgeIds.filter(x => x !== k.id))} /><span>{k.title} <small className="muted">· {k.kind === "faq" ? "pergunta frequente" : "nota"} · {k.state === "approved" ? "aprovado" : "rascunho"}</small></span></label>)}
+      <h3>Documentos da empresa que este agente usa</h3>
+      <p className="muted">O agente busca nos documentos marcados só o que a conversa pedir. Envie e aprove documentos em <Link href="/settings/knowledge">Configurações → Base de conhecimento da empresa</Link>.</p>
+      {!(view.documents ?? []).length && <p className="muted">Nenhum documento na base da empresa ainda.</p>}
+      {(d.documentIds ?? []).filter(id => !(view.documents ?? []).some(x => x.id === id)).map(id => <label key={id} className="checkbox-row"><input type="checkbox" checked onChange={() => set("documentIds", d.documentIds.filter(x => x !== id))} /><span>Documento removido <small className="muted">· desmarque para salvar</small></span></label>)}
+      {(view.documents ?? []).map(x => <label key={x.id} className="checkbox-row"><input type="checkbox" checked={(d.documentIds ?? []).includes(x.id)} onChange={e => set("documentIds", e.target.checked ? [...(d.documentIds ?? []), x.id] : d.documentIds.filter(y => y !== x.id))} /><span>{x.title} <small className="muted">· {x.state === "approved" ? "aprovado" : x.state === "ready" ? "pronto, aguardando aprovação" : x.state === "failed" ? "falhou" : "processando"}</small></span></label>)}
     </div></section>
     {error && <div role="alert"><Notice tone="error">{error}</Notice></div>}
     {saved && <p role="status" className="muted">{saved}</p>}
@@ -107,7 +113,7 @@ function AgentEditor({ view, agent, onClose, onSaved, onReload }: { view: View; 
   </>;
 }
 function Simulation({ agent, left, dirty, onDone }: { agent: Agent; left: number; dirty: boolean; onDone: () => void }) {
-  const api = useConnectorApi(), [text, setText] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState(""), [out, setOut] = useState<{ reply: string; decision: string; fields: { field: string; value: string }[]; remaining: number } | null>(null);
+  const api = useConnectorApi(), [text, setText] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState(""), [out, setOut] = useState<{ reply: string; decision: string; fields: { field: string; value: string }[]; remaining: number; sources?: { id: string; title: string; label: string }[]; alerts?: { value: string }[] } | null>(null);
   async function run() { setBusy(true); setError(""); try { setOut(await api(`/api/sdr/agents/${agent.id}/simulate`, { incoming: text })); onDone(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
   return <section className="reference-panel"><header><Icon name="Sparkles" /><div><h2>Simular uma conversa</h2><p>Escreva o que um lead mandaria e veja a resposta do agente com o rascunho salvo. Nada é enviado.</p></div></header><div className="reference-panel-body">
     <Field label="Mensagem do lead" help={`${out?.remaining ?? left} simulações restantes hoje neste workspace.`}><textarea rows={3} maxLength={1000} value={text} placeholder="Ex.: Oi, quanto custa?" onChange={e => setText(e.target.value)} /></Field>
@@ -115,6 +121,8 @@ function Simulation({ agent, left, dirty, onDone }: { agent: Agent; left: number
     <div className="form-actions"><Button variant="primary" disabled={busy || !text.trim()} onClick={run}>{busy ? "Simulando…" : "Simular"}</Button></div>
     {error && <div role="alert"><Notice tone="error">{error}</Notice></div>}
     {out && <div className="sdr-sim-result" aria-live="polite"><small>{out.decision === "handoff" ? "PASSARIA PARA O SEU TIME" : out.decision === "abstain" ? "NÃO RESPONDERIA" : "RESPOSTA SUGERIDA"} · simulação, não enviada</small><p>{out.reply || "—"}</p>
+      {!!out.alerts?.length && <Notice tone="warning">Valor sem fonte aprovada: {out.alerts.map(a => a.value).join(", ")}. Numa conversa real, confira antes de aprovar.</Notice>}
+      {!!out.sources?.length && <p className="muted">Fontes: {out.sources.map(s => `${s.title} (${s.label})`).join(" · ")}</p>}
       {!!out.fields.length && <dl>{out.fields.map(f => <div key={f.field}><dt>{f.field}</dt><dd>{f.value}</dd></div>)}</dl>}</div>}
   </div></section>;
 }

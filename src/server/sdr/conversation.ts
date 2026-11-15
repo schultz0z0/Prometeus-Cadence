@@ -19,8 +19,8 @@ const sdrError=(e:unknown)=>{const k=e instanceof Error?failures[e.message]:unde
 const tx=<T,>(p:Principal,fn:(c:PoolClient)=>Promise<T>)=>withWorkspaceTransaction(p,async c=>{
  if(!(await c.query('SELECT app.current_role() r')).rows[0].r)throw new AppError(403,failures.SDR_ACCESS[1]);return fn(c);
 }).catch(e=>{throw sdrError(e);});
-export interface SdrTurnView{id:string;state:string;text:string|null;fields:{field:string;value:string}[];reason:string|null;messageId:string|null;createdAt:string;proposal:SdrProposal|null;followupAttempt:number}
-const turnView=(r:Record<string,any>):SdrTurnView=>({id:r.id,state:r.state,text:r.text,fields:r.fields,reason:r.reason,messageId:r.message_id,createdAt:r.created_at.toISOString(),proposal:r.proposal,followupAttempt:r.followup_attempt});
+export interface SdrTurnView{id:string;state:string;text:string|null;fields:{field:string;value:string}[];reason:string|null;messageId:string|null;createdAt:string;proposal:SdrProposal|null;followupAttempt:number;sources:{id:string;documentId:string;title:string;label:string}[];alerts:{kind:'unsourced-value';value:string}[]}
+const turnView=(r:Record<string,any>):SdrTurnView=>({id:r.id,state:r.state,text:r.text,fields:r.fields,reason:r.reason,messageId:r.message_id,createdAt:r.created_at.toISOString(),proposal:r.proposal,followupAttempt:r.followup_attempt,sources:r.sources??[],alerts:r.alerts??[]});
 export async function readSdrConversation(p:Principal,id:string){return tx(p,async c=>{
  const cc=(await c.query('SELECT connection_id FROM app.channel_conversation WHERE id=$1',[id])).rows[0];if(!cc)throw new AppError(404,failures.SDR_NOT_FOUND[1]);
  const thread=(await c.query('SELECT owner,revision FROM app.sdr_thread_state WHERE conversation_id=$1',[id])).rows[0];

@@ -12,6 +12,7 @@ import { Plan } from "./plan";
 import { Members as WorkspaceMembers } from "./members";
 import { Security } from "./security";
 import { AiSettings } from "./ai";
+import { CompanyKnowledge } from "./company-knowledge";
 import { useIdentity } from "@/client/workspace-provider";
 import { Icon } from "@/components/ui/icon";
 import {
@@ -55,6 +56,8 @@ export function SettingsLayout({ section = "account" }: { section?: string }) {
           identity?.platformAiAdmin ? <AiSettings /> : <Notice>A infraestrutura de IA é gerenciada pela plataforma. Personalize as informações da sua empresa em Contexto de IA.</Notice>
         ) : section === "context" ? (
           <CompanyContext />
+        ) : section === "knowledge" ? (
+          <CompanyKnowledge />
         ) : ["email", "whatsapp", "dispatch-limits"].includes(section) ? (
           <Channels section={section} />
         ) : area === "apps" ? (

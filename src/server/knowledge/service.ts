@@ -30,8 +30,8 @@ export function knowledgeMime(name:string,bytes:Uint8Array):KnowledgeMime|null{
  if(bytes.includes(0))return null;try{new TextDecoder('utf-8',{fatal:true}).decode(bytes);return mime;}catch{return null;}
 }
 export async function listDocuments(p:Principal){return tx(p,async c=>{
- if(!(await c.query('SELECT app.current_role() r')).rows[0].r)throw new AppError(403,failures.SDR_ACCESS[1]);
- return {documents:(await c.query("SELECT * FROM app.knowledge_document WHERE state<>'archived' ORDER BY created_at DESC,id")).rows.map(view)};
+ const role=(await c.query('SELECT app.current_role() r')).rows[0].r as string|null;if(!role)throw new AppError(403,failures.SDR_ACCESS[1]);
+ return {canManage:['owner','admin'].includes(role),documents:(await c.query("SELECT * FROM app.knowledge_document WHERE state<>'archived' ORDER BY created_at DESC,id")).rows.map(view)};
 });}
 export async function uploadDocument(p:Principal,file:{name:string;bytes:Uint8Array},deps:{store?:BlobStore}={}):Promise<KnowledgeDocumentView>{
  if(file.bytes.length>10485760)throw new AppError(413,'O arquivo passa de 10 MB.');

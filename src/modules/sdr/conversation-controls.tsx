@@ -6,7 +6,7 @@ import { whatsappBlocker } from "@/client/whatsapp-copy";
 import { Badge, Button, Field, LinkButton, Notice } from "@/components/ui/primitives";
 import { useConnectorApi } from "@/modules/settings/apollo-connection";
 // 07B.2: the agent inside the WhatsApp inbox: the draft waiting for a person, take over and resume. No parallel SDR chat.
-type Turn = { id: string; state: string; text: string | null; fields: { field: string; value: string }[]; reason: string | null; proposal: { kind: "calendar-options" } | { kind: "followup-consent"; quote: string } | null; followupAttempt: number };
+type Turn = { id: string; state: string; text: string | null; fields: { field: string; value: string }[]; reason: string | null; proposal: { kind: "calendar-options" } | { kind: "followup-consent"; quote: string } | null; followupAttempt: number; sources?: { id: string; title: string; label: string }[]; alerts?: { value: string }[] };
 type Booking = { id: string; start: string; end: string; state: string; revision: number; timezone: string };
 type Followup = { id: string; quote: string; attempts: number; nextAt: string; expiresAt: string };
 type View = { booking: Booking | null; followup: Followup | null; canConsent: boolean; agent: { name: string; withinHours: boolean; inService: boolean; followupAvailable: boolean } | null; owner: "agent" | "human"; revision: number; turn: Turn | null };
@@ -42,6 +42,8 @@ export function SdrConversationControls({ conversationId, onSent }: { conversati
     {t?.state === "pending-approval" && <div className="stack">
       <Field label="Rascunho do agente: nada sai sem o seu ok"><textarea rows={4} maxLength={4096} value={text} disabled={busy} onChange={e => { setText(e.target.value); setPrepared(null); }} /></Field>
       {t.followupAttempt > 0 && <p className="muted">Retorno {t.followupAttempt} de 2, autorizado pelo contato.</p>}
+      {!!t.alerts?.length && <Notice tone="warning">Valor sem fonte aprovada: {t.alerts.map(a => a.value).join(", ")}. Confira antes de aprovar.</Notice>}
+      {!!t.sources?.length && <p className="muted">Fontes: {t.sources.map(s => `${s.title} (${s.label})`).join(" · ")}</p>}
       {!!t.fields.length && <p className="muted">Respostas do script: {t.fields.map(f => `${f.field}: ${f.value}`).join(" · ")}</p>}
       {prepared ? <><div className="message-preview">{prepared.review.preview}</div>{prepared.review.blockers.map(b => <p role="alert" key={b}>{whatsappBlocker(b)}</p>)}
         <div className="form-actions"><Button disabled={busy} onClick={() => setPrepared(null)}>Voltar</Button><Button variant="primary" disabled={busy || prepared.review.blockers.length > 0} onClick={() => act(async () => { await post("approve-reply", { turnId: t.id, text, reviewToken: prepared.review.token, requestId: request.current }); setPrepared(null); await onSent(); })}>{busy ? "Aprovando…" : "Aprovar e enviar"}</Button></div></>

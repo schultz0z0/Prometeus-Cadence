@@ -4,6 +4,7 @@ export const settingsGroups = [
     items: [
       ["Conta", "account"],
       ["Contexto de IA", "context"],
+      ["Base de conhecimento da empresa", "knowledge"],
       ["Provedores de IA", "ai"],
       ["Notificações", "notifications"],
       ["Membros", "seats"],
