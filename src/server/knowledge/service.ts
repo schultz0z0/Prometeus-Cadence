@@ -8,7 +8,7 @@ import {localBlobStore} from '../files/local-store.ts';
 import type {BlobStore} from '../files/blob-store.ts';
 import type {KnowledgeMime} from './extract.ts';
 // Company knowledge base: documents belong to the workspace; owners/admins manage them, every member reads the list.
-export interface KnowledgeDocumentView{id:string;revision:number;title:string;mime:string;bytes:number;state:'uploaded'|'processing'|'ready'|'approved'|'failed'|'archived';error:string|null;pages:number|null;chunks:number|null;approvedAt:string|null;createdAt:string}
+export interface KnowledgeDocumentView{id:string;revision:number;title:string;mime:string;bytes:number;state:'uploaded'|'processing'|'ready'|'approved'|'failed'|'archived';error:string|null;pages:number|null;chunks:number|null;approvedAt:string|null;createdAt:string;sourceUrl:string|null}
 const failures:Record<string,[number,string]>={
  SDR_ACCESS:[403,'Seu papel não permite esta alteração.'],
  SDR_PLAN:[409,'A base de conhecimento da empresa faz parte do plano Pro com assinatura ativa.'],
@@ -19,7 +19,7 @@ const failures:Record<string,[number,string]>={
  KNOWLEDGE_STATE:[409,'Só um documento pronto pode ser aprovado.'],
 };
 const tx=<T,>(p:Principal,fn:(c:PoolClient)=>Promise<T>)=>withWorkspaceTransaction(p,fn).catch(e=>{const k=e instanceof Error?failures[e.message]:undefined;throw k?new AppError(k[0],k[1],e.message):e;});
-const view=(r:Record<string,any>):KnowledgeDocumentView=>({id:r.id,revision:Number(r.revision),title:r.title,mime:r.mime,bytes:Number(r.bytes),state:r.state,error:r.error,pages:r.pages,chunks:r.chunks,approvedAt:r.approved_at?.toISOString()??null,createdAt:r.created_at.toISOString()});
+const view=(r:Record<string,any>):KnowledgeDocumentView=>({id:r.id,revision:Number(r.revision),title:r.title,mime:r.mime,bytes:Number(r.bytes),state:r.state,error:r.error,pages:r.pages,chunks:r.chunks,approvedAt:r.approved_at?.toISOString()??null,createdAt:r.created_at.toISOString(),sourceUrl:r.source_url??null});
 const types:Record<string,KnowledgeMime>={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',csv:'text/csv',txt:'text/plain',md:'text/markdown'};
 /** Type comes from the extension and must match the first bytes; text types must be valid UTF-8 without NUL. */
 export function knowledgeMime(name:string,bytes:Uint8Array):KnowledgeMime|null{

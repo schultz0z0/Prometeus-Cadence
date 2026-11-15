@@ -9,6 +9,7 @@ import {grantTestLease,closeProspectingPools,testAdmin,countRows} from './prospe
 import {resetRateLimits} from './helpers.ts';
 import {preparePlanning,confirmPlanning,getPlanning} from '../../src/server/planning/service.ts';
 import {runPlanning} from '../../src/server/planning/execution.ts';
+import {SITE_DOCUMENT_CHARS} from '../../src/server/knowledge/site.ts';
 import {planningRequest} from '../../src/server/planning/http.ts';
 import {saveAiPolicy} from '../../src/server/prospecting/ai/settings.ts';
 import {conventionalConfig} from '../../src/server/prospecting/ai/config.ts';
@@ -135,8 +136,12 @@ test('context reading asks for a twelve-page site read and keeps every page as a
  const {p}=await setup(),review=await preparePlanning(p,context),job=await confirmPlanning(p,{requestId:randomUUID(),input:context,reviewToken:review.token}),counter={calls:0};
  const [page]=planningSources();let budget:unknown;
  const pages=Array.from({length:12},(_,i)=>({id:'page_'+(i+1),url:'https://example.com/servicos/'+i,text:page.text,hash:page.hash,fetchedAt:page.obtainedAt,truncated:false}));
- await runPlanning(await grantTestLease(p,job.id),{generate:fakeGenerate(counter),collect:async(_url,_options,_deep,requested)=>{budget=requested;return pages;}});
- assert.deepEqual(budget,{pages:12,chars:48000});
+ const synced:any[]=[];let prompt=0;
+ const long=pages.map(x=>({...x,text:x.text+' '+'serviço detalhado '.repeat(1000)}));
+ await runPlanning(await grantTestLease(p,job.id),{generate:async(ctx:any,data:any)=>{prompt=data.sources.reduce((n:number,s:any)=>n+s.text.length,0);return fakeGenerate(counter)(ctx,data);},syncSite:async(i)=>{synced.push(i);return {added:12,updated:0,skipped:0,removed:0};},collect:async(_url,_options,_deep,requested)=>{budget=requested;return long;}});
+ assert.deepEqual(budget,{pages:12,chars:SITE_DOCUMENT_CHARS});
+ assert.equal(synced.length,1,'the company site pages go to the knowledge base once');assert.equal(synced[0].workspaceId,p.workspaceId);assert.deepEqual(synced[0].pages.map((x:any)=>x.text),long.map(x=>x.text),'the base gets each page in full');
+ assert.ok(prompt<=48000&&prompt>0,'the proposal keeps the 48k-char budget');
  const completed=await getPlanning(p,job.id);assert.equal(completed.job.state,'completed');
  assert.equal((completed as any).sources.length,12);assert.deepEqual((completed as any).sources.map((s:any)=>s.url).sort(),pages.map(s=>s.url).sort());
 });

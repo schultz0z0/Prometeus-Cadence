@@ -6,7 +6,8 @@ import type {PlanningInput,PlanningEvidence,PlanningProposal} from '../../domain
 import type {AiRoute} from '../../domain/ai-routing.ts';
 import {withLeasedTransaction} from '../prospecting/worker-db.ts';
 import {readLeasedJob,performStep,performSiteRead,finishJob,UncertainStep} from '../prospecting/journal.ts';
-import {fetchEvidencePack} from '../prospecting/extraction/fetch-page.ts';
+import {fetchEvidencePack,fitEvidenceBudget} from '../prospecting/extraction/fetch-page.ts';
+import {syncSiteDocuments,SITE_DOCUMENT_CHARS} from '../knowledge/site.ts';
 import {maxPublicPages} from './contracts.ts';
 import {generatePlanning} from './model.ts';
 import {rankPlanningOptions} from './ranking.ts';
@@ -22,7 +23,7 @@ import {readApprovedContext} from '../context/repository.ts';
 import {requirePermission} from '../auth/permissions.ts';
 import {ProviderError} from '../prospecting/providers/transport.ts';
 import {AppError} from '../errors.ts';
-export interface PlanningAdapters{signal?:AbortSignal;collect?:(...args:Parameters<typeof fetchEvidencePack>)=>Promise<Evidence[]>;planningGenerate?:typeof generatePlanning;rank?:typeof rankPlanningOptions;diagnose?:typeof diagnoseCodex}
+export interface PlanningAdapters{signal?:AbortSignal;collect?:(...args:Parameters<typeof fetchEvidencePack>)=>Promise<Evidence[]>;planningGenerate?:typeof generatePlanning;rank?:typeof rankPlanningOptions;diagnose?:typeof diagnoseCodex;syncSite?:typeof syncSiteDocuments}
 // Planning's generate adapter is named separately from the existing summary adapter.
 export type PlanningExecutionAdapters=Omit<PlanningAdapters,'planningGenerate'>&{generate?:typeof generatePlanning};
 async function preflight(lease:JobLease,job:any,deps:PlanningExecutionAdapters,freshOperationId?:string){
@@ -63,7 +64,11 @@ export async function runPlanning(lease:JobLease,deps:PlanningExecutionAdapters=
    await preflight(lease,job,deps);
    const sources:PlanningEvidence[]=[];
    if(input.task==='context_read'){
-    const pages=await(deps.collect??fetchEvidencePack)(input.domain,{signal},true,{pages:maxPublicPages,chars:48000});
+    // Read once in full: the company site's pages become knowledge documents; the proposal gets the 48k-char budget.
+    const read=await(deps.collect??fetchEvidencePack)(input.domain,{signal},true,{pages:maxPublicPages,chars:SITE_DOCUMENT_CHARS});
+    if(input.target.kind==='company'&&read.length)await(deps.syncSite??syncSiteDocuments)({workspaceId:lease.workspaceId,userId:lease.actorId,pages:read,signal})
+     .catch(error=>{if(signal.aborted)throw error;console.error('[knowledge] site pages not saved',error instanceof Error?error.message:error);});
+    const pages=fitEvidenceBudget(read,48000);
     for(const p of pages.slice(0,maxPublicPages))sources.push({id:p.id,kind:'public_page',url:p.url,text:p.text,hash:p.hash,obtainedAt:p.fetchedAt});
     if(!sources.length)throw new AppError(409,'Não foi possível obter conteúdo público deste domínio.','NO_PUBLIC_EVIDENCE');
    }else{

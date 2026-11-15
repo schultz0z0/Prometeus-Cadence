@@ -169,6 +169,9 @@ export async function fetchEvidencePack(url:string,options:ReadOptions,deep=fals
       else if(index===0&&deep){const canonical=new URL(evidence.url);for(const link of [...evidence.links.filter(isContactLink),new URL('/sobre',canonical).toString(),new URL('/contato',canonical).toString()])if(!visited.has(link)&&!urls.includes(link))urls.push(link);}
     }catch(error){if(fatal(error))throw error;if(index===0&&site)await discover(base.toString(),[]);else if(index===0&&deep)urls.push(new URL('/sobre',base).toString(),new URL('/contato',base).toString());}
   }
-  // Retain room for contact/about evidence even when the homepage fills the budget.
-  let remaining=budget?.chars??12000;return pages.map((page,index)=>{const share=Math.floor(remaining/(pages.length-index)),text=page.text.slice(0,share);remaining-=text.length;return{...page,text,hash:createHash('sha256').update(text).digest('hex'),truncated:page.truncated||text.length<page.text.length};}).filter(page=>page.text);
+  return fitEvidenceBudget(pages,budget?.chars??12000);
+}
+// Retain room for contact/about evidence even when the homepage fills the budget.
+export function fitEvidenceBudget<T extends Evidence>(pages:T[],chars:number):T[]{
+  let remaining=chars;return pages.map((page,index)=>{const share=Math.floor(remaining/(pages.length-index)),text=page.text.slice(0,share);remaining-=text.length;return{...page,text,hash:createHash('sha256').update(text).digest('hex'),truncated:page.truncated||text.length<page.text.length};}).filter(page=>page.text);
 }
