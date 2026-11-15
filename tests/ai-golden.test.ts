@@ -30,7 +30,7 @@ test('sdr turn request',async()=>{
  golden('sdr-turn',{prompt:sdrPrompt({draft:{...defaultSdrDraft(),instructions:'Tom direto.',qualification:[{question:'Quantas pessoas?',field:'porte',required:false}]},context:company,knowledge:[{kind:'faq',title:'Preço',body:'Sob consulta'}],history:[{direction:'inbound',text:'oi'}],incoming:'quanto custa?',followup:null,meeting:null}),schema:sdrOutputJsonSchema,maxOutputTokens:4096});
 });
 test('assistant request',async()=>{
- const {assistantPrompt}=await import('../src/server/assistant/service.ts');const {assistantOutputJsonSchema}=await import('../src/domain/assistant-actions.ts');const {matchHelp}=await import('../src/domain/help-manifest.ts');
+ const {assistantPrompt}=await import('../src/server/assistant/prompt.ts');const {assistantOutputJsonSchema}=await import('../src/domain/assistant-actions.ts');const {matchHelp}=await import('../src/domain/help-manifest.ts');
  const facts={leads:10,lists:2,emailReady:true,whatsappReady:true,cadencesActive:1,cadencesTotal:3,billing:'Pro'};
  golden('assistant-answer',{prompt:assistantPrompt({question:'Como crio uma cadência?',route:'/cadences',facts,articles:matchHelp('Como crio uma cadência?','/cadences'),history:[{role:'user',text:'oi'}],catalog:{lists:[{id:'l1',name:'Logística',leads:10}],conversations:[]}}),schema:assistantOutputJsonSchema,maxOutputTokens:4096});
 });

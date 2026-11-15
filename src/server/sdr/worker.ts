@@ -26,7 +26,7 @@ export async function runSdrTick(o:{limit:number;now?:Date;workspaceId?:string;s
    }
    if(!route){await finish(null,null,[],null,'AI_UNAVAILABLE');continue;}
    const draft=sdrDraftSchema.parse(claim.config),fields=draft.qualification.map(q=>q.field),signal=AbortSignal.any([AbortSignal.timeout(90000),...(o.signal?[o.signal]:[])]);
-   const r=await(deps.generate??runConventionalJson)({operationId:'sdr-turn:'+claim.turnId,workspaceId:claim.workspaceId,signal,route},
+   const r=await(deps.generate??runConventionalJson)({operationId:'sdr-turn:'+claim.turnId,workspaceId:claim.workspaceId,signal,route,agent:'sdr',operation:'sdr-turn'},
     {prompt:sdrPrompt({draft,context:claim.context,knowledge:claim.knowledge,history:claim.history,incoming:claim.incoming,followup:claim.followup,meeting:claim.meeting}),schema:sdrOutputJsonSchema,maxOutputTokens:4096,parse:v=>parseSdrOutput(v,fields)});
    const out=r.value,empty=out.decision==='reply'&&!out.reply;
    await finish(empty?'abstain':out.decision,out.reply||null,out.fields,r.usage,empty?'EMPTY_REPLY':null,sdrProposal(out,claim.incoming,draft.followupEnabled));

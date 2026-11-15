@@ -100,7 +100,7 @@ export async function simulateSdr(p:Principal,raw:unknown,deps:SdrDeps={}){
  });
  const fields=ctx.draft.qualification.map(q=>q.field),signal=AbortSignal.any([AbortSignal.timeout(60000),...(deps.signal?[deps.signal]:[])]);
  let out:SdrOutput;
- try{out=(await(deps.generate??runConventionalJson)({operationId:'sdr-simulation:'+randomUUID(),workspaceId:p.workspaceId,signal,route:ctx.route},
+ try{out=(await(deps.generate??runConventionalJson)({operationId:'sdr-simulation:'+randomUUID(),workspaceId:p.workspaceId,signal,route:ctx.route,agent:'sdr',operation:'sdr-simulation'},
   {prompt:ctx.prompt,schema:sdrOutputJsonSchema,maxOutputTokens:4096,parse:v=>parseSdrOutput(v,fields)})).value;}
  catch{throw new AppError(502,'A IA não respondeu à simulação. Tente de novo.');}
  return {reply:out.reply,decision:out.decision,fields:out.fields,sent:false as const,remaining:ctx.left};

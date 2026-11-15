@@ -87,7 +87,7 @@ export async function runPlanning(lease:JobLease,deps:PlanningExecutionAdapters=
   const slot=(release:boolean)=>withLeasedTransaction(lease,async c=>Boolean((await c.query('SELECT app.codex_prospecting_slot($1,$2,$3,$4) AS ok',[lease.jobId,lease.token,lease.fence,release])).rows[0].ok));
   const generated=await performStep(lease,step,conventional.provider==='codex-local'?'codex':conventional.provider,{[conventionalUnit(conventional.provider)]:1},async()=>{
    await preflight(lease,job,deps,operationId);
-   try{return await(deps.generate??generatePlanning)({jobId:lease.jobId,workspaceId:lease.workspaceId,operationId,route:conventional,signal,acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{request:input,sources,context:job.checkpoint.context,product:job.checkpoint.product,base:job.checkpoint.planning.base});}
+   try{return await(deps.generate??generatePlanning)({jobId:lease.jobId,workspaceId:lease.workspaceId,operationId,route:conventional,signal,agent:'prospecting',operation:'planning',acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{request:input,sources,context:job.checkpoint.context,product:job.checkpoint.product,base:job.checkpoint.planning.base});}
    catch(error){await withLeasedTransaction(lease,c=>recordConnectionCheck(c,lease,{operationId,route:conventional,outcome:error instanceof ProviderError&&error.uncertain?'uncertain':'failed',code:error instanceof ProviderError?error.code:'PLANNING_FAILED'}));throw error;}
   },r=>r.usage);
   // Content is immutable. Ranking is a separate durable assessment in the journal.

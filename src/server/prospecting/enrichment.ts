@@ -61,7 +61,7 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
    const slot=(release:boolean)=>withLeasedTransaction(lease,async c=>Boolean((await c.query('SELECT app.codex_prospecting_slot($1,$2,$3,$4) AS ok',[lease.jobId,lease.token,lease.fence,release])).rows[0].ok));
    const result=await performStep(lease,step,route.provider==='codex-local'?'codex':route.provider,{[conventionalUnit(route.provider)]:1},async()=>{
     await withLeasedTransaction(lease,c=>assertAiRouteCurrent(c,job,operationId));
-    const generated=await(deps.decisors??generateDecisors)({workspaceId:lease.workspaceId,operationId,signal:deps.signal??new AbortController().signal,route,acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{company:lead,knownNames:names,evidence,context:job.checkpoint.context,product:job.checkpoint.product,request:{targetCompany:lead.name,cnpj:group.cnpj}});
+    const generated=await(deps.decisors??generateDecisors)({workspaceId:lease.workspaceId,operationId,signal:deps.signal??new AbortController().signal,route,agent:'prospecting',operation:'decisors',acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{company:lead,knownNames:names,evidence,context:job.checkpoint.context,product:job.checkpoint.product,request:{targetCompany:lead.name,cnpj:group.cnpj}});
     try{return {people:validateDecisorEvidence(generated.value,evidence,lead,names,registry.phone?[registry.phone]:[]),usage:generated.usage,invalid:false};}
     catch{return {people:[] as Decisor[],usage:generated.usage,invalid:true};}
    },r=>r.usage);if(result.invalid)throw new ProviderError('INVALID_DECISOR_RESULT');people=result.people;

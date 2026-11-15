@@ -17,7 +17,7 @@ for(const provider of ['codex-local','openai','gemini'] as const)test(`${provide
  const saved={...process.env};Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'w',PROSPECTING_ENABLED:'true',CADENCE_RUNTIME_MODE:'local',BETTER_AUTH_URL:'http://127.0.0.1:3210',CODEX_LOCAL_ENABLED:'true',CODEX_BINARY:process.execPath,CODEX_MODEL:'fixture',CODEX_TEST_WORKSPACE_IDS:'w',OPENAI_API_KEY:'private-fixture',OPENAI_MODEL:'fixture',GEMINI_API_KEY:'private-fixture',GEMINI_MODEL:'fixture'});
  try{
   for(const [request,payload] of cases){let calls=0;const route=conventionalConfig('w').conventional[provider].route;
-   const result=await generatePlanning({workspaceId:'w',jobId:'job',operationId:'op',signal:new AbortController().signal,route,acquireSlot:async()=>true,releaseSlot:async()=>{}},{request,sources:planningSources(),context:null,product:null,base},{
+   const result=await generatePlanning({workspaceId:'w',jobId:'job',operationId:'op',agent:'prospecting',operation:'planning',signal:new AbortController().signal,route,acquireSlot:async()=>true,releaseSlot:async()=>{}},{request,sources:planningSources(),context:null,product:null,base},{
     fetcher:async(url,init)=>{calls++;const body=JSON.parse(init!.body as string);assert.equal(body.tools,undefined);assert.ok(!JSON.stringify(body).includes('private-fixture'));assert.ok(!JSON.stringify(body).includes(route.configFingerprint));
      if(provider==='openai'){assert.equal(body.max_output_tokens,8192);assert.equal(body.store,false);return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(payload)}]}]});}
      assert.equal(body.generationConfig.maxOutputTokens,8192);return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(payload)}]}}]});},
@@ -31,7 +31,7 @@ for(const provider of ['codex-local','openai','gemini'] as const)test(`${provide
 });
 test('invalid planning facts and malformed content remain uncertain without corrective inference',async()=>{
  const saved={...process.env};Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'w',PROSPECTING_ENABLED:'true',OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});
- try{let calls=0;await assert.rejects(()=>generatePlanning({workspaceId:'w',jobId:'job',operationId:'op',route:conventionalConfig('w').conventional.openai.route,signal:new AbortController().signal},{request:cases[0][0],sources:planningSources(),context:null,product:null,base},{fetcher:async()=>{calls++;return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({fields:{offer:{value:'Preço',quote:'R$99',evidenceIds:['foreign']}}})}]}]});}}),(e:any)=>e.uncertain===true);assert.equal(calls,1);
+ try{let calls=0;await assert.rejects(()=>generatePlanning({workspaceId:'w',jobId:'job',operationId:'op',agent:'prospecting',operation:'planning',route:conventionalConfig('w').conventional.openai.route,signal:new AbortController().signal},{request:cases[0][0],sources:planningSources(),context:null,product:null,base},{fetcher:async()=>{calls++;return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({fields:{offer:{value:'Preço',quote:'R$99',evidenceIds:['foreign']}}})}]}]});}}),(e:any)=>e.uncertain===true);assert.equal(calls,1);
  }finally{for(const k of Object.keys(process.env))if(!(k in saved))delete process.env[k];Object.assign(process.env,saved);}
 });
 test('JEV ranks the three fixed choices only and abstention is not fabricated confidence',async()=>{
@@ -47,6 +47,6 @@ test('audience generation cannot silently change the reviewed channel or timezon
  const saved={...process.env};Object.assign(process.env,{PLATFORM_AI_WORKSPACE_ID:'w',PROSPECTING_ENABLED:'true',OPENAI_API_KEY:'fixture',OPENAI_MODEL:'fixture'});
  try{for(const mutate of [(v:any)=>v.options[0].channel='email',(v:any)=>v.options[0].schedules.search.timezone='UTC']){
   const payload=audienceResult();mutate(payload);
-  await assert.rejects(()=>generatePlanning({workspaceId:'w',jobId:'job',operationId:'op',route:conventionalConfig('w').conventional.openai.route,signal:new AbortController().signal},{request:cases[1][0],sources:[],context:null,product:null,base},{fetcher:async()=>Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(payload)}]}]})}),(e:any)=>e.uncertain===true);
+  await assert.rejects(()=>generatePlanning({workspaceId:'w',jobId:'job',operationId:'op',agent:'prospecting',operation:'planning',route:conventionalConfig('w').conventional.openai.route,signal:new AbortController().signal},{request:cases[1][0],sources:[],context:null,product:null,base},{fetcher:async()=>Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(payload)}]}]})}),(e:any)=>e.uncertain===true);
  }}finally{for(const k of Object.keys(process.env))if(!(k in saved))delete process.env[k];Object.assign(process.env,saved);}
 });

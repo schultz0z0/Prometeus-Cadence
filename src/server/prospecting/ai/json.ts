@@ -10,10 +10,11 @@ import {oauthStore} from '../../ai-oauth/store.ts';
 import {oauthAccessToken} from '../../ai-oauth/session.ts';
 import {chatgptJson} from '../../ai-oauth/protocol.ts';
 import {platformAiWorkspace} from './platform.ts';
+import {assertAgentOperation,type AiAgentId,type AiOperation} from '../../../domain/ai-agents.ts';
 export const conventionalUnit=(p:ConventionalRoute['provider']):Unit=>p==='codex-local'||p==='chatgpt-oauth'?'codexCalls':p==='openai'?'openaiCalls':'geminiCalls';
-export interface ConventionalContext{operationId:string;workspaceId:string;signal:AbortSignal;route:ConventionalRoute;acquireSlot?:()=>Promise<boolean>;releaseSlot?:()=>Promise<void>}
+export interface ConventionalContext{operationId:string;workspaceId:string;signal:AbortSignal;route:ConventionalRoute;agent:AiAgentId;operation:AiOperation;acquireSlot?:()=>Promise<boolean>;releaseSlot?:()=>Promise<void>}
 export type JsonDependencies={fetcher?:Fetch;runCodex?:CodexRun;oauthSession?:typeof oauthAccessToken};
-export function assertConventionalConfiguration(ctx:ConventionalContext){
+export function assertConventionalConfiguration(ctx:Pick<ConventionalContext,'workspaceId'|'route'>){
  const configured=conventionalConfig(ctx.workspaceId).conventional[ctx.route.provider];
  if(process.env.PROSPECTING_ENABLED!=='true'||!configured?.configured||configured.route.configFingerprint!==ctx.route.configFingerprint)throw new ProviderError('AI_CONFIGURATION_CHANGED');
 }
@@ -25,6 +26,7 @@ export async function ensureOAuthCompanion(workspaceId:string,route:Conventional
  assertConventionalConfiguration(ctx);signal.throwIfAborted();return token;
 }
 export async function runConventionalJson<T>(ctx:ConventionalContext,request:{prompt:string;schema:unknown;maxOutputTokens:number;parse:(raw:unknown)=>T},deps:JsonDependencies={}):Promise<{value:T;usage:ProviderUsage}>{
+ try{assertAgentOperation(ctx.agent,ctx.operation);}catch{throw new ProviderError('AI_AGENT_OPERATION');}
  assertConventionalConfiguration(ctx);
  if(![4096,8192].includes(request.maxOutputTokens))throw new ProviderError('INVALID_OUTPUT_BUDGET');
  let raw:{value:unknown;inputTokens?:number;outputTokens?:number};

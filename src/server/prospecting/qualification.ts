@@ -340,7 +340,7 @@ async function conventionalStep(lease:JobLease,job:any,leadId:string,task:'quali
  return performStep(lease,step,route.provider==='codex-local'?'codex':route.provider,{[conventionalUnit(route.provider)]:1},async()=>{
   // This callback runs only for a newly prepared intent, never journal replay.
   await preflight(lease,job,deps,false,operationId);
-  try{return await(deps.conventional??runConventional)({operationId,workspaceId:lease.workspaceId,signal:deps.signal??new AbortController().signal,route,acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{task,criteria,evidence,facts:{name:job.checkpoint.bases[leadId].name},company:job.checkpoint.context,product:job.checkpoint.product,request:{criteria:job.checkpoint.automation?.qualificationCriteria,modules:job.input.modules},language:job.input.options?.language});}
+  try{return await(deps.conventional??runConventional)({operationId,workspaceId:lease.workspaceId,signal:deps.signal??new AbortController().signal,route,agent:'prospecting',operation:'qualify',acquireSlot:()=>slot(false),releaseSlot:async()=>{await slot(true);}},{task,criteria,evidence,facts:{name:job.checkpoint.bases[leadId].name},company:job.checkpoint.context,product:job.checkpoint.product,request:{criteria:job.checkpoint.automation?.qualificationCriteria,modules:job.input.modules},language:job.input.options?.language});}
   catch(error){await withLeasedTransaction(lease,c=>recordConnectionCheck(c,lease,{operationId,route,outcome:error instanceof ProviderError&&error.uncertain?'uncertain':'failed',code:error instanceof ProviderError?error.code:'CONVENTIONAL_FAILED'}));throw error;}
  },r=>r.task==='qualify'?r.decision.usage:r.generation.usage);
 }
