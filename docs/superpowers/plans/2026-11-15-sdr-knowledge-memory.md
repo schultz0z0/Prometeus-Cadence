@@ -4,7 +4,7 @@
 
 **Goal:** O Agente SDR passa a usar documentos aprovados da empresa (busca híbrida em `pgvector`, com citação) e memória longa da conversa (resumo + fatos do lead), mantendo a base direta de FAQ/notas como hoje.
 
-**Architecture:** Documentos ficam no `BlobStore` existente; o worker (trilha `sdr`) extrai texto, quebra em trechos e grava embeddings Gemini (1536) em `app.knowledge_chunk`, com RLS forçado por workspace. No turno, o worker do SDR planeja até 3 buscas, consulta uma função `SECURITY DEFINER` com o workspace do turno, funde os rankings (RRF) e passa os trechos à chamada de resposta, que devolve citações, resumo e fatos. Tudo pelo agente `sdr` (operações novas).
+**Architecture:** A base é da empresa (workspace), gerida em Configurações; cada agente escolhe os documentos que usa e, nesta fase, só o SDR consulta. Documentos ficam no `BlobStore` existente; o worker (trilha nova `knowledge`, serviço da plataforma, fora dos agentes) extrai texto, quebra em trechos e grava embeddings Gemini (1536) em `app.knowledge_chunk`, com RLS forçado por workspace. No turno, o worker do SDR planeja até 3 buscas, consulta uma função `SECURITY DEFINER` com o workspace do turno, funde os rankings (RRF) e passa os trechos à chamada de resposta, que devolve citações, resumo e fatos. Tudo pelo agente `sdr` (operações novas).
 
 **Tech Stack:** Next.js 16, Postgres 18 + `pgvector`, TypeScript `--experimental-strip-types`, `node:test`, Gemini (`gemini-embedding-2`, geração pela rota do agente `sdr`), novas dependências `unpdf`, `mammoth`, `exceljs`.
 
@@ -27,7 +27,9 @@
 
 - A ativação (`app.sdr_activate`) não muda: os documentos escolhidos são filtrados como `approved` no momento da busca, e o editor mostra bloqueio (em `sdrBlockers`) se algum escolhido não estiver aprovado. Documento nunca entra no snapshot da revisão.
 - O texto da regra de preço muda no prompt do SDR; a fixture `tests/fixtures/ai-golden/sdr-turn.json` é regravada **uma vez** na Task 9, de propósito, e as outras 7 fixtures não podem mudar.
-- Operações novas do agente `sdr`: `sdr-search-plan`, `sdr-embed`, `sdr-transcribe` em `src/domain/ai-agents.ts`.
+- Operação nova do agente `sdr`: só `sdr-search-plan` (a chamada que planeja as buscas). Embedding de consulta e de documento e a transcrição de PDF não passam por `runConventionalJson`: usam o modelo de embedding fixo e o modelo da plataforma. O uso da ingestão é gravado no documento (`service:'knowledge'`) e o embedding da consulta no turno do SDR (`agent:'sdr'`).
+- A busca liga `SET LOCAL hnsw.iterative_scan = relaxed_order` antes da consulta vetorial filtrada.
+- API e tela são da empresa: `/api/knowledge/documents` e Configurações → Base de conhecimento da empresa; o editor do SDR só escolhe documentos.
 
 ## Review Focus
 
@@ -106,7 +108,7 @@ export async function extractDocument(bytes:Uint8Array,mime:KnowledgeMime,deps:{
 ### Task 4: Embeddings e transcrição no Gemini
 
 **Files:**
-- Modify: `src/domain/ai-agents.ts` (operações `sdr-search-plan`, `sdr-embed`, `sdr-transcribe` no agente `sdr`)
+- Modify: `src/domain/ai-agents.ts` (operação `sdr-search-plan` no agente `sdr`)
 - Modify: `src/server/prospecting/ai/gemini.ts`
 - Test: `tests/knowledge-gemini.test.ts`, `tests/ai-agents.test.ts`
 
@@ -126,7 +128,7 @@ export async function geminiTranscribePdf(model:string,bytes:Uint8Array,signal:A
 
 **Files:**
 - Create: `src/server/knowledge/ingest.ts`
-- Modify: `scripts/runtime-lane.ts` (trilha `sdr` chama também `runKnowledgeTick({limit:2,signal})`)
+- Modify: `scripts/runtime-lane.ts`, `scripts/runtime-supervisor.ts`, `scripts/runtime-control.mjs` (trilha nova `knowledge` com `runKnowledgeTick({limit:2,signal})`; o status passa a listar 12 serviços)
 - Test: `tests/integration/knowledge-base.test.ts`
 
 **Interfaces:**
@@ -134,28 +136,28 @@ export async function geminiTranscribePdf(model:string,bytes:Uint8Array,signal:A
 export type IngestDeps={extract?:typeof extractDocument;embed?:typeof geminiEmbed;transcribe?:(bytes:Uint8Array)=>Promise<string>;blobs?:BlobStore};
 export async function runKnowledgeTick(o:{limit:number;now?:Date;signal?:AbortSignal},deps?:IngestDeps):Promise<{processed:number}>
 ```
-Grava `usage` no documento: `{agent:'sdr',embedTokens,transcribeTokens}`.
+Grava `usage` no documento: `{service:'knowledge',embedTokens,transcribeTokens}`.
 
 - [ ] **Step 1: Testes que falham** (deps falsos): documento `uploaded` vira `ready` com trechos e embeddings; `extract` lançando `KNOWLEDGE_UNREADABLE` → `failed` com esse código e zero trechos; `embed` falhando no 2º lote → `failed`, zero trechos; reserva expirada é retomada por outro tick.
 - [ ] **Step 2: Rodar e ver falhar** — `node scripts/test-integration.mjs knowledge-base`.
-- [ ] **Step 3: Implementar e ligar na trilha `sdr`.**
+- [ ] **Step 3: Implementar e ligar na trilha `knowledge`.**
 - [ ] **Step 4: Rodar** — PASS.
 - [ ] **Step 5: Commit** `feat(knowledge): worker ingestion with all-or-nothing chunks`
 
 ### Task 6: API dos documentos
 
 **Files:**
-- Create: `src/server/knowledge/service.ts`, `src/app/api/sdr/documents/route.ts`, `src/app/api/sdr/documents/[id]/[action]/route.ts`
-- Modify: `src/client/` (cliente do SDR: `listDocuments`, `uploadDocument`, `setDocumentState`, `deleteDocument`, `previewDocument`)
+- Create: `src/server/knowledge/service.ts`, `src/app/api/knowledge/documents/route.ts`, `src/app/api/knowledge/documents/[id]/[action]/route.ts`
+- Create: `src/client/knowledge-client.ts` (`listDocuments`, `uploadDocument`, `setDocumentState`, `deleteDocument`, `previewDocument`)
 - Test: `tests/integration/knowledge-base.test.ts`
 
 **Interfaces:**
-- `GET /api/sdr/documents` → `{documents:KnowledgeDocumentView[]}`; `POST` multipart (`file`, até 10 MB, mime pela extensão e pelos primeiros bytes) → `KnowledgeDocumentView`.
-- `POST /api/sdr/documents/:id/approve|archive|delete` (`{expectedRevision}` quando aplicável); `GET /api/sdr/documents/:id/preview` → primeiros 5 trechos.
+- `GET /api/knowledge/documents` → `{documents:KnowledgeDocumentView[]}`; `POST` multipart (`file`, até 10 MB, mime pela extensão e pelos primeiros bytes) → `KnowledgeDocumentView`.
+- `POST /api/knowledge/documents/:id/approve|archive|delete` (`{expectedRevision}` quando aplicável); `GET /api/knowledge/documents/:id/preview` → primeiros 5 trechos.
 - `KnowledgeDocumentView={id,title,mime,bytes,state,error:string|null,pages:number|null,chunks:number|null,version:number,approvedAt:string|null}`.
 - Mensagens: `KNOWLEDGE_LIMIT` 422 "Você chegou ao limite de 50 documentos neste workspace."; `KNOWLEDGE_DUPLICATE` 409 "Este arquivo já está na base."; tipo inválido 422 "Envie PDF, Word, Excel, CSV, TXT ou Markdown."; acima de 10 MB 413 "O arquivo passa de 10 MB.".
 
-- [ ] **Step 1: Testes que falham:** owner envia CSV → `uploaded`; operator → 403; 11 MB → 413; `.exe` renomeado para `.pdf` → 422; excluir apaga o arquivo do `BlobStore` e os trechos; workspace B recebe 404 no documento do A.
+- [ ] **Step 1: Testes que falham:** owner envia CSV → `uploaded`; operator lista (200) mas não envia (403); 11 MB → 413; `.exe` renomeado para `.pdf` → 422; excluir apaga o arquivo do `BlobStore` e os trechos; workspace B recebe 404 no documento do A.
 - [ ] **Step 2: Rodar e ver falhar.**
 - [ ] **Step 3: Implementar** no padrão de `messaging/content-http.ts` (origem, tamanho, principal) e de `sdr/http.ts` (erros).
 - [ ] **Step 4: Rodar** — PASS.
@@ -183,9 +185,9 @@ Grava `usage` no documento: `{agent:'sdr',embedTokens,transcribeTokens}`.
 export interface Passage{id:string;documentId:string;title:string;label:string;text:string}
 export async function searchKnowledge(i:{workspaceId:string;documentIds:string[];queries:string[];signal:AbortSignal},deps?:{embed?:typeof geminiEmbed}):Promise<{passages:Passage[];embedTokens:number}>
 ```
-Uma chamada de embedding para todas as consultas; para cada consulta, `knowledge_search` (k=20); `fuseRanks`; corta em 8 trechos e 24.000 caracteres.
+Uma chamada de embedding para todas as consultas; para cada consulta, `knowledge_search` (k=20) numa transação com `SET LOCAL hnsw.iterative_scan = relaxed_order`; `fuseRanks`; corta em 8 trechos e 24.000 caracteres.
 
-- [ ] **Step 1: Testes que falham** (vetores determinísticos no teste): consulta textual exata ("código ABC-123") acha o trecho mesmo com vetor distante; documento arquivado não aparece; versão nova `ready` não substitui a aprovada até aprovar; workspace B não recebe trechos do A; `documentIds` vazio → nenhuma chamada de embedding.
+- [ ] **Step 1: Testes que falham** (vetores determinísticos no teste): com 300 trechos de outro workspace mais próximos do vetor, a busca filtrada ainda devolve 20 trechos do próprio workspace; consulta textual exata ("código ABC-123") acha o trecho mesmo com vetor distante; documento arquivado não aparece; versão nova `ready` não substitui a aprovada até aprovar; workspace B não recebe trechos do A; `documentIds` vazio → nenhuma chamada de embedding.
 - [ ] **Step 2–4:** ver falhar, implementar, rodar — PASS.
 - [ ] **Step 5: Commit** `feat(knowledge): hybrid retrieval with rank fusion`
 
@@ -210,17 +212,18 @@ Uma chamada de embedding para todas as consultas; para cada consulta, `knowledge
 ### Task 10: Telas
 
 **Files:**
-- Modify: `src/modules/sdr/agent-settings.tsx` (seção "Base de conhecimento" com abas **Perguntas e notas** e **Documentos da empresa**; envio, lista com estado/motivo/páginas/trechos, prévia dos 5 primeiros trechos, aprovar, nova versão, arquivar, excluir com confirmação, escolha dos documentos do agente)
+- Create: `src/modules/settings/company-knowledge.tsx` e a entrada "Base de conhecimento da empresa" em `src/modules/settings/settings-layout.tsx`, ao lado de "Contexto de IA" (envio, lista com estado/motivo/páginas/trechos, prévia dos 5 primeiros trechos, aprovar, nova versão, arquivar, excluir com confirmação; papéis sem gestão só leem)
+- Modify: `src/modules/sdr/agent-settings.tsx` (na seção "Base de conhecimento", além de **Perguntas e notas**, a lista **Documentos da empresa que este agente usa**: aprovados com caixa de seleção e link para a página de Configurações)
 - Modify: `src/modules/sdr/conversation-controls.tsx` (sob o rascunho: "Fontes" com documento e trecho; alerta "Valor sem fonte aprovada: R$ 900. Confira antes de aprovar.")
 - Modify: `src/app/globals.css` só se o padrão existente não cobrir
 
-- [ ] **Step 1:** `npm run typecheck`; build de produção; no Chrome, enviar `precos.csv`, ver `processando → pronto`, abrir a prévia, aprovar, escolher no agente; capturas de tela de cada estado (inclusive falha com `escaneado.pdf` sem transcrição disponível, se aplicável) e no celular (375 px) sem rolagem horizontal.
+- [ ] **Step 1:** `npm run typecheck`; build de produção; no Chrome, em Configurações → Base de conhecimento da empresa, enviar `precos.csv`, ver `processando → pronto`, abrir a prévia, aprovar, escolher no agente; capturas de tela de cada estado (inclusive falha com `escaneado.pdf` sem transcrição disponível, se aplicável) e no celular (375 px) sem rolagem horizontal.
 - [ ] **Step 2: Commit** `feat(sdr): company documents and sources in the agent screens`
 
 ### Task 11: Divergência registrada e homologação real
 
 **Files:**
-- Modify: `AGENTS.md` (divergência: base de documentos, busca, memória e fontes no SDR, pedida em 14/11/2026)
+- Modify: `AGENTS.md` (divergência: base de conhecimento da empresa compartilhada entre agentes, busca, memória e fontes no SDR, pedida em 14 e 15/11/2026)
 - Modify: `docs/validation/2026-11-12-homologacao-canais-reais.md`
 
 - [ ] **Step 1: Suítes completas** — `npm test` e `node scripts/test-integration.mjs` — tudo passando.

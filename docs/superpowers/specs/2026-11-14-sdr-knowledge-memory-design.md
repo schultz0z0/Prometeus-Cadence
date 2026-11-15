@@ -1,6 +1,6 @@
 # Agente SDR: base de conhecimento da empresa, busca agêntica e memória longa
 
-Data: 14/11/2026. Pedido do operador. Status: aguardando aprovação.
+Data: 14/11/2026, revisado em 15/11/2026. Pedido do operador. Status: aprovado; a revisão de 15/11 torna a base da empresa compartilhada entre agentes.
 
 ## Intenção
 
@@ -23,7 +23,7 @@ Este é o último bloco de melhorias do Agente SDR antes de seguir com as demais
 - LangGraph ou qualquer framework de agentes (decisão do operador em 14/11/2026, após pesquisa).
 - Imagem, áudio e vídeo como fonte (Gemini Embedding 2 aceita; fica para uma etapa 2).
 - Importar de site, Google Drive ou Notion (etapa 2; v1 é upload de arquivo).
-- Usar a base da empresa em outros agentes (prospecção, LinkedIn, assistente). O serviço nasce no escopo do workspace para permitir isso depois, mas v1 só liga no SDR.
+- Ligar a base da empresa nos outros agentes (prospecção, LinkedIn, assistente): a base é do workspace e cada agente escolhe o que usa, mas nesta fase só o SDR consulta. Os demais entram em etapas próprias, com testes.
 - Responder sem aprovação: continua travado até o piloto supervisionado, como hoje.
 - Separar formalmente "um agente por setor" (perfil, modelo e custo por setor): aprovado como direção, desenho próprio depois.
 
@@ -51,6 +51,18 @@ Este é o último bloco de melhorias do Agente SDR antes de seguir com as demais
 | B | Igual ao A, mas mandando o arquivo inteiro ao embedding multimodal | Ainda precisa do texto para a resposta; mais custo e complexidade | Etapa 2 (imagem/áudio) |
 | C | File Search gerenciado do Google | Documentos fora do nosso banco, isolamento e dados com o fornecedor | Descartada |
 | — | LangGraph para orquestrar | Não entrega memória nem RAG; checkpointer sem coluna de empresa (fora do RLS); falhas abertas em interrupts com Postgres no JS | Descartada pelo operador |
+
+## Base da empresa, compartilhada (revisão de 15/11/2026)
+
+Decisão do operador: a base é **da empresa (workspace)**, não do SDR. Ela mora em Configurações, ao lado de "Contexto de IA", como **"Base de conhecimento da empresa"**: a empresa sobe, revisa, aprova e remove documentos uma vez. Cada agente escolhe se usa e quais documentos usa; nesta fase só o Agente SDR consulta. Para o SDR, o conhecimento soma três camadas: o **Contexto de IA** aprovado (formulário), os **trechos da base da empresa** buscados por relevância e a **base direta do agente** (FAQ e notas).
+
+O processamento dos documentos (extração, trechos, embeddings) é um serviço da plataforma por workspace, fora de qualquer agente; só a busca no momento da resposta pertence ao agente que consulta.
+
+Ajustes vindos da pesquisa sobre RAG agêntico em produção:
+- **Busca adaptativa:** mensagem curta ou só conversacional não dispara busca (o planejamento devolve zero consultas); a maioria das mensagens de WhatsApp cai nesse caminho barato.
+- **Filtrar antes, não depois:** o índice HNSW do `pgvector` filtra depois de achar vizinhos e pode devolver menos trechos que o pedido quando há filtro por workspace e documento. A busca liga `hnsw.iterative_scan = relaxed_order` (pgvector 0.8 ou mais novo) na transação e confere a quantidade devolvida em teste.
+- **Checagem de fundamentação:** a validação de valores contra trechos citados é a checagem barata e determinística; um juiz de IA extra fica fora por causa do teto de 3 chamadas.
+- **Envenenamento da base:** só owner/admin enviam, e todo documento passa por aprovação com prévia antes de qualquer agente usar.
 
 ## Desenho
 
@@ -105,7 +117,8 @@ O prompt passa a receber: resumo + fatos + últimas 20 mensagens + trechos. O re
 
 ### 5. Telas
 
-- No editor do agente, a seção "Base de conhecimento" ganha duas abas: **Perguntas e notas** (como hoje) e **Documentos da empresa** (nova): enviar arquivo, lista com estado (processando, pronto, aprovado, falhou + motivo), páginas/trechos, aprovar, nova versão, arquivar, excluir, e escolha de quais documentos o agente usa.
+- Em **Configurações → Base de conhecimento da empresa** (página nova; owner/admin gerenciam, os demais papéis só leem): enviar arquivo, lista com estado (processando, pronto, aprovado, falhou + motivo), páginas/trechos, aprovar, nova versão, arquivar, excluir.
+- No editor do agente SDR, a seção "Base de conhecimento" mantém **Perguntas e notas** (como hoje) e ganha **Documentos da empresa que este agente usa**: lista dos documentos aprovados com caixa de seleção e link para a página de Configurações.
 - Antes de aprovar um documento, prévia dos primeiros trechos extraídos, para a empresa ver se a leitura saiu certa (principalmente tabelas).
 - Na revisão do rascunho, sob o texto: **"Fontes"** com documento e página de cada trecho citado, e o alerta de valor sem fonte quando houver.
 - Estados de falha e carregamento com o mesmo padrão visual do app.
