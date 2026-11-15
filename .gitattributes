@@ -3,3 +3,6 @@ db/migrations/*.sql text eol=lf
 db/migrations/018-automation-receipts-and-epochs.sql text eol=crlf
 db/migrations/019-receipt-total-qualification.sql text eol=crlf
 db/migrations/020-received-run-cleanup.sql text eol=crlf
+tests/fixtures/knowledge/*.pdf binary
+tests/fixtures/knowledge/*.xlsx binary
+tests/fixtures/knowledge/*.docx binary
