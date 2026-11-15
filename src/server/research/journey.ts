@@ -40,7 +40,7 @@ const dateSlicesEnabled=()=>process.env.APIFY_CNPJ_DATE_SLICES==='true';
 const dateSliceNotice='A busca pode consultar duas faixas de abertura no mesmo CNAE, município e UF.';
 async function basis(c:PoolClient,p:Principal,input:JourneyInput,checkExtraction=true,dateSlices=dateSlicesEnabled()){
  await authorize(c,p);
- const s=await prospectingReviewState(c,p,discovery(input),{checkExtraction,checkTechnicalCapacity:false}),context=await readApprovedContext(c),policy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),route=policy.conventionalProvider?runtime.conventional[policy.conventionalProvider].route:null;
+ const s=await prospectingReviewState(c,p,discovery(input),{checkExtraction,checkTechnicalCapacity:false}),context=await readApprovedContext(c),policy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId,'prospecting'),route=policy.conventionalProvider?runtime.conventional[policy.conventionalProvider].route:null;
  const resolved=resolveAiRoute(policy,runtime,route?await readConnectionCheck(c,route):null);
  const databaseAuthority=(await c.query('SELECT app.journey_database_authority() value')).rows[0].value;
  const frozen={context,aiRoute:resolved.route,execution:s.checkpoint.execution,policy,sourcePolicy:s.profileVersion,databaseAuthority,...(input.registry?{siteCollector:siteCollectorVersion,...(dateSlices?{registryDateSlices:true}:{})}:{})};

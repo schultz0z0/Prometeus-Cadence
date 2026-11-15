@@ -3,6 +3,7 @@ import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {encryptCredential,decryptCredential,type EncryptedCredential} from '../../channels/crypto.ts';
 import type {ApiKeyProvider,ApiKeyView} from '../../../domain/ai-routing.ts';
+import type {AiAgentId} from '../../../domain/ai-agents.ts';
 import {platformAiWorkspace} from './platform.ts';
 // Platform keys entered by the AI admin. Stored beside the ChatGPT OAuth record, encrypted with the credential key; env stays the fallback.
 interface Stored {metadata:ApiKeyView&{id:string;scope:string;provider:ApiKeyProvider};envelope:EncryptedCredential}
@@ -13,9 +14,9 @@ function record(scope:string,provider:ApiKeyProvider):Stored|null{
  // A record written for another platform scope (or a test scope) is not this platform's key.
  return raw?.metadata?.scope===scope&&raw.metadata.provider===provider&&Number.isSafeInteger(raw.metadata.revision)?raw:null;
 }
-export function apiKeyView(scope:string,provider:ApiKeyProvider):ApiKeyView|null{const m=record(scope,provider)?.metadata;return m?{revision:m.revision,model:m.model,models:m.models,hint:m.hint,updatedAt:m.updatedAt}:null;}
-export function storedApiKey(scope:string|null,provider:ApiKeyProvider):{key:string;model:string}|null{
- const value=scope?record(scope,provider):null;if(!value)return null;return {key:decryptCredential(value.envelope,aad(value.metadata)).key,model:value.metadata.model};
+export function apiKeyView(scope:string,provider:ApiKeyProvider):ApiKeyView|null{const m=record(scope,provider)?.metadata;return m?{revision:m.revision,model:m.model,models:m.models,hint:m.hint,updatedAt:m.updatedAt,agentModels:m.agentModels??{}}:null;}
+export function storedApiKey(scope:string|null,provider:ApiKeyProvider):{key:string;model:string;models:string[];agentModels:Partial<Record<AiAgentId,string>>}|null{
+ const value=scope?record(scope,provider):null;if(!value)return null;return {key:decryptCredential(value.envelope,aad(value.metadata)).key,model:value.metadata.model,models:value.metadata.models,agentModels:value.metadata.agentModels??{}};
 }
 /** The key a provider call must use: the stored platform key, else the server environment. */
 export function providerApiKey(provider:ApiKeyProvider):string{return storedApiKey(platformAiWorkspace(),provider)?.key??(provider==='openai'?process.env.OPENAI_API_KEY:process.env.GEMINI_API_KEY)??'';}
@@ -23,8 +24,18 @@ export function writeApiKey(scope:string,provider:ApiKeyProvider,expectedRevisio
  // shortcut: revision check without a cross-process lock; two admins saving in the same instant means last write wins.
  const current=record(scope,provider);if((current?.metadata.revision??0)!==expectedRevision)throw Error('AI_KEY_CHANGED');
  if(!next){try{unlinkSync(path(provider));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}return null;}
- const metadata:Stored['metadata']={id:current?.metadata.id??randomUUID(),scope,provider,revision:expectedRevision+1,model:next.model,models:next.models,hint:next.key.slice(-4),updatedAt:new Date().toISOString()};
+ const agentModels=Object.fromEntries(Object.entries(current?.metadata.agentModels??{}).filter(([,m])=>next.models.includes(m!)));
+ const metadata:Stored['metadata']={id:current?.metadata.id??randomUUID(),scope,provider,revision:expectedRevision+1,model:next.model,models:next.models,hint:next.key.slice(-4),updatedAt:new Date().toISOString(),agentModels};
  mkdirSync(directory(),{recursive:true,mode:0o700});const file=path(provider),temporary=file+'.'+randomUUID()+'.tmp';
  try{writeFileSync(temporary,JSON.stringify({metadata,envelope:encryptCredential({key:next.key},aad(metadata))}),{mode:0o600,flag:'wx'});renameSync(temporary,file);}finally{try{unlinkSync(temporary);}catch{}}
+ return apiKeyView(scope,provider);
+}
+/** Per-agent model choice, kept in the same encrypted record as the key; empty map = every agent uses the platform model. */
+export function writeAgentModels(scope:string,provider:ApiKeyProvider,expectedRevision:number,agentModels:Partial<Record<AiAgentId,string>>):ApiKeyView|null{
+ const current=record(scope,provider);if(!current||current.metadata.revision!==expectedRevision)throw Error('AI_KEY_CHANGED');
+ if(Object.values(agentModels).some(m=>!current.metadata.models.includes(m!)))throw Error('AI_AGENT_MODEL_INVALID');
+ const metadata:Stored['metadata']={...current.metadata,revision:expectedRevision+1,updatedAt:new Date().toISOString(),agentModels};
+ mkdirSync(directory(),{recursive:true,mode:0o700});const file=path(provider),temporary=file+'.'+randomUUID()+'.tmp';
+ try{writeFileSync(temporary,JSON.stringify({metadata,envelope:encryptCredential(decryptCredential(current.envelope,aad(current.metadata)),aad(metadata))}),{mode:0o600,flag:'wx'});renameSync(temporary,file);}finally{try{unlinkSync(temporary);}catch{}}
  return apiKeyView(scope,provider);
 }

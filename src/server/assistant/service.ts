@@ -36,7 +36,7 @@ async function facts(c:PoolClient):Promise<AssistantFacts>{
 }
 async function route(c:PoolClient,p:Principal,deps:AssistantDeps){
  if(deps.route!==undefined)return deps.route;
- const policy=await readAiPolicy(c),resolved=resolveAiRoute({...policy,mode:'conventional-only',jevEnabled:false},conventionalConfig(p.workspaceId),null);
+ const policy=await readAiPolicy(c),resolved=resolveAiRoute({...policy,mode:'conventional-only',jevEnabled:false},conventionalConfig(p.workspaceId,'assistant'),null);
  // The local Codex binary is slot-gated by background jobs; the synchronous assistant uses HTTP providers only.
  return resolved.route&&resolved.route.conventional.provider!=='codex-local'?resolved.route.conventional:null;
 }

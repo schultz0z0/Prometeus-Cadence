@@ -14,8 +14,8 @@ import {assertAgentOperation,type AiAgentId,type AiOperation} from '../../../dom
 export const conventionalUnit=(p:ConventionalRoute['provider']):Unit=>p==='codex-local'||p==='chatgpt-oauth'?'codexCalls':p==='openai'?'openaiCalls':'geminiCalls';
 export interface ConventionalContext{operationId:string;workspaceId:string;signal:AbortSignal;route:ConventionalRoute;agent:AiAgentId;operation:AiOperation;acquireSlot?:()=>Promise<boolean>;releaseSlot?:()=>Promise<void>}
 export type JsonDependencies={fetcher?:Fetch;runCodex?:CodexRun;oauthSession?:typeof oauthAccessToken};
-export function assertConventionalConfiguration(ctx:Pick<ConventionalContext,'workspaceId'|'route'>){
- const configured=conventionalConfig(ctx.workspaceId).conventional[ctx.route.provider];
+export function assertConventionalConfiguration(ctx:Pick<ConventionalContext,'workspaceId'|'route'>&{agent?:AiAgentId}){
+ const configured=conventionalConfig(ctx.workspaceId,ctx.agent).conventional[ctx.route.provider];
  if(process.env.PROSPECTING_ENABLED!=='true'||!configured?.configured||configured.route.configFingerprint!==ctx.route.configFingerprint)throw new ProviderError('AI_CONFIGURATION_CHANGED');
 }
 export async function ensureOAuthCompanion(workspaceId:string,route:ConventionalRoute,signal:AbortSignal=new AbortController().signal,fetcher?:Fetch,session=oauthAccessToken){

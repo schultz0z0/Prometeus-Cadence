@@ -20,7 +20,7 @@ export async function automationAuthorizationState(c:PoolClient,p:Principal,defi
  if(!definition.schedule)blockers.push('Revise a programação: data inicial, frequência, dias e fuso são obrigatórios.');
  let product=null;if(definition.productId){const row=(await c.query('SELECT approved,archived FROM app.product_profile WHERE id=$1',[definition.productId])).rows[0];product=row&&!row.archived?row.approved:null;if(!product)blockers.push('O produto precisa de uma versão aprovada disponível.');}
  const needsAi=payload.source==='QUALIFY'&&modules.some(m=>m==='qualify'||m==='summary');let aiRoute=null;
- if(needsAi){const aiPolicy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),route=aiPolicy.conventionalProvider?runtime.conventional[aiPolicy.conventionalProvider].route:null,resolution=resolveAiRoute(aiPolicy,runtime,route?await readConnectionCheck(c,route,freshOperationId):null);aiRoute=resolution.route;blockers.push(...resolution.blockers);}
+ if(needsAi){const aiPolicy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId,'prospecting'),route=aiPolicy.conventionalProvider?runtime.conventional[aiPolicy.conventionalProvider].route:null,resolution=resolveAiRoute(aiPolicy,runtime,route?await readConnectionCheck(c,route,freshOperationId):null);aiRoute=resolution.route;blockers.push(...resolution.blockers);}
  if(modules.includes('qualify')&&(!context?.offer||!context.idealCustomer))blockers.push('Aprove oferta e cliente ideal antes de qualificar.');
  let input:ProspectingInput|null=null;
  if(['MAPS','WEB','CNPJ','APOLLO'].includes(payload.source)){

@@ -35,7 +35,7 @@ export async function prospectingReviewState(c:PoolClient,p:Principal,input:Pros
   const {config,policy}=await workspaceProspectingConfig(c);
   let aiRoute:AiRoute|null=null;const aiBlockers:string[]=[];
   if(input.kind==='qualification'&&input.modules.some(m=>['qualify','summary','decisors'].includes(m))){
-    const aiPolicy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId),selected=aiPolicy.conventionalProvider?runtime.conventional[aiPolicy.conventionalProvider].route:null;
+    const aiPolicy=await readAiPolicy(c),runtime=conventionalConfig(p.workspaceId,'prospecting'),selected=aiPolicy.conventionalProvider?runtime.conventional[aiPolicy.conventionalProvider].route:null;
     const resolution=resolveAiRoute(aiPolicy,runtime,selected?await readConnectionCheck(c,selected):null);aiRoute=resolution.route;aiBlockers.push(...resolution.blockers);
   }
   const blockers=[...aiBlockers];
@@ -149,4 +149,4 @@ export async function cancelJob(p:Principal,id:string):Promise<JobView>{return w
   if(state==='cancelled'){await releaseUnused(c,id);if(row.checkpoint?.automation)await c.query('SELECT app.sync_cancelled_automation_job($1)',[id]);}
   await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES($1,$2,'prospecting.cancel')",[p.workspaceId,p.userId]);return jobView(updated);
 });}
-export async function providerCapabilities(p:Principal){const [policy,browser]=await Promise.all([withWorkspaceTransaction(p,readAiPolicy),siteBrowserStatus()]),provider=policy.conventionalProvider,entry=provider?conventionalConfig(p.workspaceId).conventional[provider]:null;const c=prospectingConfig();return {enabled:c.enabled,browser,sources:Object.fromEntries(Object.entries(c.ready).map(([source,configured])=>[source,{configured}])),decision:{model:'typesafe/jev-1.13',configured:c.jevReady},generation:{provider:provider??'none',configured:!!entry?.configured},limits:{perJob:500,pageSize:100}};}
+export async function providerCapabilities(p:Principal){const [policy,browser]=await Promise.all([withWorkspaceTransaction(p,readAiPolicy),siteBrowserStatus()]),provider=policy.conventionalProvider,entry=provider?conventionalConfig(p.workspaceId,'prospecting').conventional[provider]:null;const c=prospectingConfig();return {enabled:c.enabled,browser,sources:Object.fromEntries(Object.entries(c.ready).map(([source,configured])=>[source,{configured}])),decision:{model:'typesafe/jev-1.13',configured:c.jevReady},generation:{provider:provider??'none',configured:!!entry?.configured},limits:{perJob:500,pageSize:100}};}

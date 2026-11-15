@@ -22,7 +22,7 @@ export async function runSdrTick(o:{limit:number;now?:Date;workspaceId?:string;s
    let route=deps.route;
    if(route===undefined){
     const c=await pool.connect();
-    try{const resolved=resolveAiRoute({...await readAiPolicy(c),mode:'conventional-only',jevEnabled:false},conventionalConfig(claim.workspaceId),null);route=resolved.route&&resolved.route.conventional.provider!=='codex-local'?resolved.route.conventional:null;}finally{c.release();}
+    try{const resolved=resolveAiRoute({...await readAiPolicy(c),mode:'conventional-only',jevEnabled:false},conventionalConfig(claim.workspaceId,'sdr'),null);route=resolved.route&&resolved.route.conventional.provider!=='codex-local'?resolved.route.conventional:null;}finally{c.release();}
    }
    if(!route){await finish(null,null,[],null,'AI_UNAVAILABLE');continue;}
    const draft=sdrDraftSchema.parse(claim.config),fields=draft.qualification.map(q=>q.field),signal=AbortSignal.any([AbortSignal.timeout(90000),...(o.signal?[o.signal]:[])]);

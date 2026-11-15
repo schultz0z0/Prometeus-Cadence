@@ -84,7 +84,7 @@ async function lockedAgent(c:PoolClient,id:string){
 const simSchema=z.strictObject({agentId:z.string().min(1).max(200),incoming:z.string().trim().min(1).max(1000)});
 async function aiRoute(c:PoolClient,p:Principal,deps:SdrDeps){
  if(deps.route!==undefined)return deps.route;
- const policy=await readAiPolicy(c),resolved=resolveAiRoute({...policy,mode:'conventional-only',jevEnabled:false},conventionalConfig(p.workspaceId),null);
+ const policy=await readAiPolicy(c),resolved=resolveAiRoute({...policy,mode:'conventional-only',jevEnabled:false},conventionalConfig(p.workspaceId,'sdr'),null);
  return resolved.route&&resolved.route.conventional.provider!=='codex-local'?resolved.route.conventional:null;
 }
 export async function simulateSdr(p:Principal,raw:unknown,deps:SdrDeps={}){

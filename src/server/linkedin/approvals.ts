@@ -66,7 +66,7 @@ export type CommentGenerator=(i:CommentInput)=>Promise<{text:string;usage:{provi
 /** Platform AI, conventional HTTP route of the platform policy; null when no route is configured. */
 export function platformCommentGenerator(c:PoolClient):CommentGenerator{
  return async i=>{
-  const policy=await readAiPolicy(c),resolved=resolveAiRoute({...policy,mode:'conventional-only',jevEnabled:false},conventionalConfig(i.workspaceId),null);
+  const policy=await readAiPolicy(c),resolved=resolveAiRoute({...policy,mode:'conventional-only',jevEnabled:false},conventionalConfig(i.workspaceId,'linkedin'),null);
   const route:ConventionalRoute|null=resolved.route&&resolved.route.conventional.provider!=='codex-local'?resolved.route.conventional:null;
   return route?generateCommentWithRoute(route,i):null;
  };
