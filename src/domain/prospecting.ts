@@ -8,7 +8,7 @@ export type JobInput=ProspectingInput|import('./planning.ts').PlanningInput;
 export type Unit='candidates'|'apifyRuns'|'apolloPages'|'jevCalls'|'codexCalls'|'openaiCalls'|'geminiCalls';
 export type Units=Partial<Record<Unit,number>>;
 export interface UsageEstimate{provider:string;unit:Unit;maxUnits:number;estimatedUsd:number|null;pricingSource:string|null}
-export interface ProviderUsage{provider:string;operationId:string;units:Units;inputTokens?:number;outputTokens?:number;fetchedCount?:number;acceptedCount?:number;costUsd:number|null;costKind:'reported'|'estimated'|'unknown'}
+export interface ProviderUsage{provider:string;operationId:string;units:Units;inputTokens?:number;outputTokens?:number;fetchedCount?:number;acceptedCount?:number;costUsd:number|null;costKind:'reported'|'estimated'|'unknown';agent?:import('./ai-agents.ts').AiAgentId}
 export interface Review<T extends JobInput=ProspectingInput>{token:string;expiresAt:string;input:T;warnings:string[];blockers:string[];profileVersion:string;usage:UsageEstimate[];extractionRemaining?:number|null;qualificationDay?:import('./billing.ts').QualificationDay|null;aiRoute?:import('./ai-routing.ts').AiRouteView|null;enrichmentPreview?:{companies:number;cached:number;maxCredits:number;freshLookups:number}}
 export function groupUsageEstimates(rows:UsageEstimate[]):UsageEstimate[]{
  const grouped=new Map<string,UsageEstimate>();

@@ -19,3 +19,13 @@ test('the AI call refuses a foreign operation before reaching the provider',()=>
   {prompt:'p',schema:{},maxOutputTokens:4096,parse:v=>v},{fetcher:async()=>{calls++;return Response.json({});}}),(e:any)=>e.code==='AI_AGENT_OPERATION');
  assert.equal(calls,0);
 }));
+test('every AI usage record names the agent that spent it',()=>withEnv(async()=>{
+ const {conventionalConfig}=await import('../src/server/prospecting/ai/config.ts');const {runConventionalJson}=await import('../src/server/prospecting/ai/json.ts');
+ const r=await runConventionalJson({operationId:'op',workspaceId:'w',signal:AbortSignal.timeout(5000),route:conventionalConfig('w').conventional.gemini.route,agent:'sdr',operation:'sdr-turn'},
+  {prompt:'p',schema:{},maxOutputTokens:4096,parse:v=>v},{fetcher:async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:'{}'}]}}]})});
+ assert.equal(r.usage.agent,'sdr');
+}));
+test('each agent points at instruction files that exist',async()=>{
+ const {AI_AGENTS}=await import('../src/domain/ai-agents.ts');const {existsSync}=await import('node:fs');
+ for(const a of Object.values(AI_AGENTS))for(const f of a.instructions)assert.ok(existsSync(f),f);
+});

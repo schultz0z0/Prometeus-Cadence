@@ -36,6 +36,6 @@ export async function runConventionalJson<T>(ctx:ConventionalContext,request:{pr
   raw=await chatgptJson(token!,ctx.route.model,request.prompt,request.schema,ctx.signal,deps.fetcher);
  }
  else raw=await(ctx.route.provider==='openai'?openaiJson:geminiJson)(ctx.route.model,request.prompt,request.schema,ctx.signal,deps.fetcher,request.maxOutputTokens);
- const usage:ProviderUsage={provider:ctx.route.provider==='codex-local'?'codex':ctx.route.provider,operationId:ctx.operationId,units:{[conventionalUnit(ctx.route.provider)]:1},inputTokens:raw.inputTokens,outputTokens:raw.outputTokens,costUsd:null,costKind:'unknown'};
+ const usage:ProviderUsage={provider:ctx.route.provider==='codex-local'?'codex':ctx.route.provider,operationId:ctx.operationId,units:{[conventionalUnit(ctx.route.provider)]:1},inputTokens:raw.inputTokens,outputTokens:raw.outputTokens,costUsd:null,costKind:'unknown',agent:ctx.agent};
  try{return {value:request.parse(raw.value),usage};}catch{throw new ProviderError('INVALID_CONVENTIONAL_RESULT',0,true);}
 }

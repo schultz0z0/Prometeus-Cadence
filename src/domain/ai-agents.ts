@@ -4,7 +4,7 @@ export type AiOperation=typeof AI_OPERATIONS[number];
 export type AiAgentId='prospecting'|'linkedin'|'assistant'|'sdr';
 export const AI_AGENTS:Record<AiAgentId,{label:string;operations:readonly AiOperation[];instructions:readonly string[]}>={
  prospecting:{label:'Prospecção',operations:['qualify','decisors','company-people','planning'],instructions:['src/domain/ai-skills.ts','src/server/prospecting/ai/output.ts','src/server/prospecting/ai/decisors.ts','src/server/planning/prompts.ts']},
- linkedin:{label:'LinkedIn',operations:['linkedin-comment'],instructions:['src/server/linkedin/comment-ai.ts']},
+ linkedin:{label:'LinkedIn',operations:['linkedin-comment'],instructions:['src/server/linkedin/comment-prompt.ts']},
  assistant:{label:'Assistente',operations:['assistant-answer'],instructions:['src/server/assistant/prompt.ts']},
  sdr:{label:'Agente SDR',operations:['sdr-turn','sdr-simulation'],instructions:['src/domain/sdr-turn.ts']},
 };
