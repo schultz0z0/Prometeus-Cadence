@@ -1,7 +1,10 @@
 name: prometeus-cadence
 services:
   db:
-    image: postgres:18@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b
+    build:
+      context: .
+      dockerfile: docker/db.Dockerfile
+    image: prometeus-cadence-db:pg18-pgvector-0.8.7
     environment:
       POSTGRES_USER: cadence_owner
       POSTGRES_DB: prometeus_cadence
