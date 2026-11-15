@@ -59,3 +59,10 @@ test('planning budgets reserve one content call and rank only audience or cadenc
   const context=planningInputSchema.parse({kind:'planning',task:'context_read',domain:'example.com',target:{kind:'company'}});
   assert.deepEqual(usageUnits(estimateUsage(context,route)),{openaiCalls:1});
 });
+test('a context read accepts up to twelve public pages as sources and refuses a thirteenth',()=>{
+  const [page]=planningSources().filter(s=>s.kind==='public_page');
+  const pages=(n:number)=>Array.from({length:n},(_,i)=>({...page,id:'page_'+(i+1),url:'https://example.com/p'+i}));
+  const result={fields:{offer:{value:'Clínicas',evidenceIds:['page_12'],quote:'Atendemos clínicas.'}}};
+  assert.equal(validatePlanningResult('context_read',result,pages(12)).success,true);
+  assert.equal(validatePlanningResult('context_read',result,pages(13)).success,false);
+});

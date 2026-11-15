@@ -6,7 +6,7 @@ import type {PlanningEvidence} from '../../domain/planning.ts';
 import {assertJobLease} from '../prospecting/repository.ts';
 import {hashValue} from '../prospecting/review.ts';
 import {AppError} from '../errors.ts';
-import {planningEvidenceSchema} from './contracts.ts';
+import {planningEvidenceSchema,maxPublicPages} from './contracts.ts';
 export async function planningWriteLease(c:PoolClient,lease:JobLease){
  await assertJobLease(c,lease);
  const row=(await c.query("SELECT 1 FROM app.prospecting_job WHERE id=$1 AND kind='planning'",[lease.jobId])).rows[0];
@@ -15,7 +15,7 @@ export async function planningWriteLease(c:PoolClient,lease:JobLease){
 }
 export async function savePlanningEvidence(c:PoolClient,lease:JobLease,sources:PlanningEvidence[]):Promise<PlanningEvidence[]>{
  await planningWriteLease(c,lease);
- if(sources.length>20||new Set(sources.map(s=>s.id)).size!==sources.length||sources.filter(s=>s.kind==='public_page').length>3)throw new AppError(422,'Fontes inválidas.');
+ if(sources.length>20||new Set(sources.map(s=>s.id)).size!==sources.length||sources.filter(s=>s.kind==='public_page').length>maxPublicPages)throw new AppError(422,'Fontes inválidas.');
  const result:PlanningEvidence[]=[];
  for(const source of sources){
   const hash=hashValue(source),old=(await c.query('SELECT body_hash,payload FROM app.planning_evidence WHERE job_id=$1 AND id=$2',[lease.jobId,source.id])).rows[0];

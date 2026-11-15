@@ -72,3 +72,12 @@ export function allows(url:string,rules:Rule[]) {
 }
 
 export const siteRedirectStatuses=[301,302,303,307,308];
+
+export function sitemapLinks(text:string):{kind:'sitemap'|'page';url:string}[] {
+  const kind=/^\s*(?:<\?xml[^>]*>\s*)?<sitemapindex(?:\s|>)/i.test(text)?'sitemap':'page';
+  const entry=kind==='sitemap'?'sitemap':'url';
+  const entities:Record<string,string>={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"};
+  // Parse the direct loc of each standard sitemap entry. Never expand XML entities or extensions.
+  const entries=new RegExp('<'+entry+'(?:\\s[^>]*)?>\\s*<loc(?:\\s[^>]*)?>\\s*([^<]+?)\\s*</loc>','gi');
+  return Array.from(text.matchAll(entries),match=>({kind,url:match[1].replace(/&(amp|lt|gt|quot|apos);/g,(_,key:string)=>entities[key])}));
+}

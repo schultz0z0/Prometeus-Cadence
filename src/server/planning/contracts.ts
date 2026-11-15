@@ -2,6 +2,8 @@ import {z} from 'zod';
 import {contextFields,type PlanningEvidence,type PlanningTask} from '../../domain/planning.ts';
 import {generationSchema,idSchema} from '../prospecting/schemas.ts';
 import {scheduleV2Schema} from '../../domain/schedule.ts';
+// A context read cites up to twelve pages of the company site.
+export const maxPublicPages=12;
 const brief=z.string().trim().max(4000);
 const timezone=z.string().max(100).refine(v=>{try{new Intl.DateTimeFormat('en',{timeZone:v});return true;}catch{return false;}});
 const channel=z.enum(['EMAIL','WHATSAPP']);
@@ -45,7 +47,7 @@ const resultSchemas={
 };
 export function validatePlanningResult(task:PlanningTask,value:unknown,sources:PlanningEvidence[]){
  return resultSchemas[task].superRefine((v,c)=>{
-   if(sources.some(s=>!planningEvidenceSchema.safeParse(s).success)||new Set(sources.map(s=>s.id)).size!==sources.length||sources.filter(s=>s.kind==='public_page').length>3)c.addIssue({code:'custom',message:'Fontes inválidas.'});
+   if(sources.some(s=>!planningEvidenceSchema.safeParse(s).success)||new Set(sources.map(s=>s.id)).size!==sources.length||sources.filter(s=>s.kind==='public_page').length>maxPublicPages)c.addIssue({code:'custom',message:'Fontes inválidas.'});
    if('fields' in v)for(const f of Object.values(v.fields))if(f&&!validateFieldSupport(f,sources.filter(s=>s.kind==='public_page')))c.addIssue({code:'custom',message:'Campo sem suporte literal nas fontes.'});
    if('evidenceIds' in v&&v.evidenceIds.some(id=>!sources.some(s=>s.id===id)))c.addIssue({code:'custom',message:'Referência de fonte inválida.'});
  }).safeParse(value);

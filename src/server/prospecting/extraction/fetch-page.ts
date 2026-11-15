@@ -7,7 +7,7 @@ import {parsePage,isContactLink} from './parse-page.ts';
 import {extractContacts,extractCnpjs} from './contacts.ts';
 import {socialField} from '../../../domain/company-research.ts';
 import {loopbackSiteBrowser,siteBrowserUnavailable,type SiteBrowser} from '../site-browser.ts';
-import {allows,parseRobots,siteUrl,siteRedirectStatuses} from '../site-policy.ts';
+import {allows,parseRobots,siteUrl,siteRedirectStatuses,sitemapLinks} from '../site-policy.ts';
 import {ProviderError} from '../providers/transport.ts';
 export interface PageResponse{status:number;headers:Record<string,string|undefined>;body:Buffer}
 export type PageRequest=(url:ApprovedUrl,signal:AbortSignal)=>Promise<PageResponse>;
@@ -44,7 +44,25 @@ function browserReader(browser:SiteBrowser,signal:AbortSignal){
     policies.set(origin,pending);
     return pending;
   }
-  return async(value:string):Promise<RenderedEvidence>=>{
+  // Page URLs from the robots-declared sitemaps (or /sitemap.xml), expanding sitemap indexes.
+  async function sitemap(home:string){
+    const origin=new URL(home).origin,pages:string[]=[],{sitemaps}=await robots(origin);
+    const queue=(sitemaps.length?sitemaps:['/sitemap.xml']).flatMap(item=>{const url=siteUrl(item,origin);return url?[url]:[];});
+    for(let i=0;i<queue.length&&i<6&&pages.length<200;i++){
+      let url=queue[i];
+      for(let redirects=0;redirects<6;redirects++){
+        const response=await browser.read('sitemap',url,signal);
+        if(siteRedirectStatuses.includes(response.status)&&response.redirect){url=scope(response.redirect,url);continue;}
+        if(response.status>=200&&response.status<300)for(const entry of sitemapLinks(response.text)){
+          const found=siteUrl(entry.url,url);
+          if(found&&entry.kind==='sitemap'){if(!queue.includes(found))queue.push(found);}else if(found)pages.push(found);
+        }
+        break;
+      }
+    }
+    return pages.slice(0,200);
+  }
+  const page=async(value:string):Promise<RenderedEvidence>=>{
     signal.throwIfAborted();
     let url=scope(value);
     for(let i=0;i<6;i++){
@@ -73,11 +91,12 @@ function browserReader(browser:SiteBrowser,signal:AbortSignal){
     }
     throw new ProviderError('REDIRECT_LIMIT');
   };
+  return {page,sitemap};
 }
 
 export function fetchPublicPage(value:string,options:ReadOptions):Promise<RenderedEvidence>{
   if(options.request)return readFixturePage(value,{...options,request:options.request});
-  return browserReader(options.browser??loopbackSiteBrowser,options.signal)(value);
+  return browserReader(options.browser??loopbackSiteBrowser,options.signal).page(value);
 }
 
 // Keeps the HTML parser available to injected fixture transports only.
@@ -114,16 +133,42 @@ export function contactPassages(text:string){
   return out.length?'Trechos com contato: '+out.map(s=>'«'+s+'»').join(' ')+'\n':'';
 }
 
-export async function fetchEvidencePack(url:string,options:ReadOptions,deep=false){
-  const read=options.request?(next:string)=>fetchPublicPage(next,options):browserReader(options.browser??loopbackSiteBrowser,options.signal);
+const assetPath=/\.(?:pdf|jpe?g|png|gif|webp|svg|ico|zip|rar|docx?|xlsx?|pptx?|mp[34]|xml|json|txt|css|js)$/i;
+const sitePriority=(url:string)=>{
+  const path=new URL(url).pathname.toLowerCase();
+  if(/servi|produt|solu|plano|pre(?:c|%c3%a7)o|pricing|product|oferta/.test(path))return 0;
+  if(isContactLink(url))return 1;
+  return /blog|post|noticia|artigo|tag|categor|autor|author/.test(path)?3:2;
+};
+// Services, products, plans and prices first; then about/contact; then the rest; posts last. Shallow pages win ties.
+export function rankSiteLinks(urls:string[]){
+  const depth=(url:string)=>new URL(url).pathname.split('/').filter(Boolean).length;
+  return urls.map((url,index)=>({url,index})).sort((a,b)=>sitePriority(a.url)-sitePriority(b.url)||depth(a.url)-depth(b.url)||a.index-b.index).map(item=>item.url);
+}
+export type EvidenceBudget={pages:number;chars:number};
+
+export async function fetchEvidencePack(url:string,options:ReadOptions,deep=false,budget?:EvidenceBudget){
+  const reader=options.request?null:browserReader(options.browser??loopbackSiteBrowser,options.signal);
+  const site=!!budget&&budget.pages>3,limit=budget?.pages??(deep?3:1);
+  const fatal=(error:unknown)=>options.signal.aborted||siteBrowserUnavailable(error);
+  // A site read retries one timed-out or overloaded response; other readers keep their single attempt.
+  const retry=<T>(call:()=>Promise<T>)=>!site?call():call().catch(error=>{if(fatal(error)||!(error instanceof ProviderError&&(error.status>=500||error.status===429)))throw error;return call();});
+  const read=(next:string)=>retry(()=>reader?reader.page(next):fetchPublicPage(next,options));
   const pages:RenderedEvidence[]=[];const base=new URL(url);base.hash='';
   const urls=[base.toString()];const visited=new Set<string>();
-  for(let index=0;index<urls.length&&index<(deep?3:1);index++){
+  const discover=async(home:string,links:string[])=>{
+    let mapped:string[]=[];
+    try{mapped=reader?await retry(()=>reader.sitemap(home)):[];}catch(error){if(fatal(error))throw error;}
+    const found=[...mapped,...links].flatMap(link=>{const canonical=siteUrl(link,home);return canonical&&!assetPath.test(new URL(canonical).pathname)?[canonical]:[];});
+    for(const link of rankSiteLinks([...new Set(found)]))if(!visited.has(link)&&!urls.includes(link))urls.push(link);
+  };
+  for(let index=0;index<urls.length&&pages.length<limit;index++){
     const next=urls[index];visited.add(next);
-    options.signal.throwIfAborted();try{const evidence=await read(next);if(new URL(evidence.url).hostname.replace(/^www\./,'')!==base.hostname.replace(/^www\./,''))continue;pages.push(evidence);
-      if(index===0&&deep){const canonical=new URL(evidence.url);for(const link of [...evidence.links.filter(isContactLink),new URL('/sobre',canonical).toString(),new URL('/contato',canonical).toString()])if(!visited.has(link)&&!urls.includes(link))urls.push(link);}
-    }catch(error){if(options.signal.aborted||siteBrowserUnavailable(error))throw error;if(index===0&&deep)urls.push(new URL('/sobre',base).toString(),new URL('/contato',base).toString());}
+    options.signal.throwIfAborted();try{const evidence=await read(next);if(new URL(evidence.url).hostname.replace(/^www\./,'')!==base.hostname.replace(/^www\./,''))continue;pages.push(evidence);visited.add(evidence.url);
+      if(index===0&&site)await discover(evidence.url,evidence.links);
+      else if(index===0&&deep){const canonical=new URL(evidence.url);for(const link of [...evidence.links.filter(isContactLink),new URL('/sobre',canonical).toString(),new URL('/contato',canonical).toString()])if(!visited.has(link)&&!urls.includes(link))urls.push(link);}
+    }catch(error){if(fatal(error))throw error;if(index===0&&site)await discover(base.toString(),[]);else if(index===0&&deep)urls.push(new URL('/sobre',base).toString(),new URL('/contato',base).toString());}
   }
   // Retain room for contact/about evidence even when the homepage fills the budget.
-  let remaining=12000;return pages.map((page,index)=>{const budget=Math.floor(remaining/(pages.length-index)),text=page.text.slice(0,budget);remaining-=text.length;return{...page,text,hash:createHash('sha256').update(text).digest('hex'),truncated:page.truncated||text.length<page.text.length};}).filter(page=>page.text);
+  let remaining=budget?.chars??12000;return pages.map((page,index)=>{const share=Math.floor(remaining/(pages.length-index)),text=page.text.slice(0,share);remaining-=text.length;return{...page,text,hash:createHash('sha256').update(text).digest('hex'),truncated:page.truncated||text.length<page.text.length};}).filter(page=>page.text);
 }

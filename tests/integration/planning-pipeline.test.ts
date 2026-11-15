@@ -131,3 +131,12 @@ test('personalized preview binds one saved step and a lead from its list without
  await runPlanning(await grantTestLease(p,job.id),{generate:async(ctx,data)=>{calls++;const text=data.sources.find(s=>s.kind==='lead_fact')!.text;assert.ok(text.includes('SELECTED_STEP'));assert.ok(text.includes('Clínica específica'));assert.ok(!text.includes('OTHER_PRIVATE_STEP'));return {proposal:{task:'message_preview',contractVersion:'planning-v1',jobId:ctx.jobId,base:data.base,body:'Olá {{nome}}, podemos conversar?',evidenceIds:data.sources.map(s=>s.id),recommendedOptionId:null},usage:{provider:'openai',operationId:ctx.operationId,units:{openaiCalls:1},costUsd:null,costKind:'unknown'}};}});
  const result=await getPlanning(p,job.id);assert.equal(calls,1);assert.equal(result.previewStep?.body,'SELECTED_STEP');assert.equal(result.job.state,'completed');assert.equal((await readWorkspaceSnapshot(p)).data.cadences[0].steps[1].body,'SELECTED_STEP');
 });
+test('context reading asks for a twelve-page site read and keeps every page as a source',async()=>{
+ const {p}=await setup(),review=await preparePlanning(p,context),job=await confirmPlanning(p,{requestId:randomUUID(),input:context,reviewToken:review.token}),counter={calls:0};
+ const [page]=planningSources();let budget:unknown;
+ const pages=Array.from({length:12},(_,i)=>({id:'page_'+(i+1),url:'https://example.com/servicos/'+i,text:page.text,hash:page.hash,fetchedAt:page.obtainedAt,truncated:false}));
+ await runPlanning(await grantTestLease(p,job.id),{generate:fakeGenerate(counter),collect:async(_url,_options,_deep,requested)=>{budget=requested;return pages;}});
+ assert.deepEqual(budget,{pages:12,chars:48000});
+ const completed=await getPlanning(p,job.id);assert.equal(completed.job.state,'completed');
+ assert.equal((completed as any).sources.length,12);assert.deepEqual((completed as any).sources.map((s:any)=>s.url).sort(),pages.map(s=>s.url).sort());
+});

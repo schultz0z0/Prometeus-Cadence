@@ -7,6 +7,7 @@ import type {AiRoute} from '../../domain/ai-routing.ts';
 import {withLeasedTransaction} from '../prospecting/worker-db.ts';
 import {readLeasedJob,performStep,performSiteRead,finishJob,UncertainStep} from '../prospecting/journal.ts';
 import {fetchEvidencePack} from '../prospecting/extraction/fetch-page.ts';
+import {maxPublicPages} from './contracts.ts';
 import {generatePlanning} from './model.ts';
 import {rankPlanningOptions} from './ranking.ts';
 import {savePlanningEvidence} from './evidence.ts';
@@ -62,8 +63,8 @@ export async function runPlanning(lease:JobLease,deps:PlanningExecutionAdapters=
    await preflight(lease,job,deps);
    const sources:PlanningEvidence[]=[];
    if(input.task==='context_read'){
-    const pages=await(deps.collect??fetchEvidencePack)(input.domain,{signal},true);
-    for(const p of pages.slice(0,3))sources.push({id:p.id,kind:'public_page',url:p.url,text:p.text,hash:p.hash,obtainedAt:p.fetchedAt});
+    const pages=await(deps.collect??fetchEvidencePack)(input.domain,{signal},true,{pages:maxPublicPages,chars:48000});
+    for(const p of pages.slice(0,maxPublicPages))sources.push({id:p.id,kind:'public_page',url:p.url,text:p.text,hash:p.hash,obtainedAt:p.fetchedAt});
     if(!sources.length)throw new AppError(409,'Não foi possível obter conteúdo público deste domínio.','NO_PUBLIC_EVIDENCE');
    }else{
     if(job.checkpoint.context)sources.push(source('approved-company','approved_context',job.checkpoint.context));

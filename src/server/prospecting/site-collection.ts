@@ -2,17 +2,8 @@ import type {JobLease} from '../../domain/prospecting.ts';
 import {loopbackSiteBrowser,siteBrowserUnavailable,type SiteBrowser} from './site-browser.ts';
 import {claimSiteUrl,openSiteQueue,saveSiteUrl,siteCoverage,siteQueueSnapshot,type SitePageResult,type SiteUrl} from './site-queue.ts';
 import {ProviderError} from './providers/transport.ts';
-import {siteUrl,parseRobots,allows,siteRedirectStatuses} from './site-policy.ts';
+import {siteUrl,parseRobots,allows,siteRedirectStatuses,sitemapLinks} from './site-policy.ts';
 export type {SiteBrowser} from './site-browser.ts';
-
-function sitemapLinks(text:string):SiteUrl[] {
-  const kind=/^\s*(?:<\?xml[^>]*>\s*)?<sitemapindex(?:\s|>)/i.test(text)?'sitemap':'page';
-  const entry=kind==='sitemap'?'sitemap':'url';
-  const entities:Record<string,string>={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"};
-  // Parse the direct loc of each standard sitemap entry. Never expand XML entities or extensions.
-  const entries=new RegExp('<'+entry+'(?:\\s[^>]*)?>\\s*<loc(?:\\s[^>]*)?>\\s*([^<]+?)\\s*</loc>','gi');
-  return Array.from(text.matchAll(entries),match=>({kind,url:match[1].replace(/&(amp|lt|gt|quot|apos);/g,(_,key:string)=>entities[key])}));
-}
 
 function frontier(root:string,base:string,items:SiteUrl[]) {
   const urls=new Map<string,SiteUrl>();
