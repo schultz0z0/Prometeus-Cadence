@@ -17,14 +17,16 @@ export const sdrDraftSchema=z.strictObject({
  approvalMode:z.enum(['all','bounded-auto']),
  followupEnabled:z.boolean(),
  knowledgeIds:z.array(z.string().min(1).max(200)).max(50).refine(v=>new Set(v).size===v.length),
+ // Company knowledge base documents this agent reads (searched at reply time, only while approved).
+ documentIds:z.array(z.string().min(1).max(200)).max(50).refine(v=>new Set(v).size===v.length).default([]),
 });
 export type SdrDraft=z.infer<typeof sdrDraftSchema>;
 export const defaultSdrDraft=():SdrDraft=>({name:'Agente SDR',instructions:'',qualification:[],channelIds:[],
  hours:{timezone:'America/Sao_Paulo',weekdays:[1,2,3,4,5],start:'09:00',end:'18:00',allDay:false},
- handoff:{memberId:'',rules:[]},maxRepliesPerDay:20,approvalMode:'all',followupEnabled:false,knowledgeIds:[]});
+ handoff:{memberId:'',rules:[]},maxRepliesPerDay:20,approvalMode:'all',followupEnabled:false,knowledgeIds:[],documentIds:[]});
 export const SDR_OPENWA_DAILY_CAP=20;
 export type SdrChannelFact={id:string;ready:boolean;provider:string;takenBy:string|null};
-export type SdrFacts={pro:boolean;contextApproved:boolean;channels:SdrChannelFact[];handoffIsMember:boolean;knowledge:{id:string;state:string;revision?:number}[]};
+export type SdrFacts={pro:boolean;contextApproved:boolean;channels:SdrChannelFact[];handoffIsMember:boolean;knowledge:{id:string;state:string;revision?:number}[];documents?:{id:string;state:string}[]};
 export function sdrActivationAllowed(i:{contextApproved:boolean;channelReady:boolean;hasHandoff:boolean;reviewed:boolean}):boolean{
  return i.contextApproved&&i.channelReady&&i.hasHandoff&&i.reviewed;
 }
@@ -43,6 +45,8 @@ export function sdrBlockers(d:SdrDraft,f:SdrFacts):string[]{
  if(!d.handoff.memberId||!f.handoffIsMember)b.push('Escolha um membro do workspace como responsável pela passagem.');
  const known=new Map(f.knowledge.map(k=>[k.id,k.state]));
  if(d.knowledgeIds.some(id=>known.get(id)!=='approved'))b.push('Aprove todos os itens de conhecimento escolhidos (ou tire os que não foram aprovados).');
+ const docs=new Map((f.documents??[]).map(k=>[k.id,k.state]));
+ if(d.documentIds.some(id=>docs.get(id)!=='approved'))b.push('Aprove todos os documentos escolhidos (ou tire os que não foram aprovados).');
  if(d.approvalMode==='bounded-auto')b.push('Responder sem aprovação só fica disponível depois do piloto supervisionado. Por enquanto, cada resposta pede o seu ok.');
  return b;
 }

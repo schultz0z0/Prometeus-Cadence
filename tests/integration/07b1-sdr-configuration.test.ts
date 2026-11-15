@@ -163,3 +163,11 @@ test('07B.1 review: re-activation after edits with the same request id, Pro gate
  // L4: pausing still works after Pro lapsed.
  assert.equal((await pauseSdrAgent(p,{agentId:a.id,expectedRevision:two.revision})).state,'paused');
 });
+test('07B.1 an agent cannot be activated with a company document that is not approved',async()=>{
+ const {u,ch}=await ready(),p=u.p;
+ const doc=await withWorkspaceTransaction(p,async c=>(await c.query("SELECT * FROM app.knowledge_register('precos.csv','text/csv',10,$1,$2)",[randomUUID().replace(/-/g,'')+randomUUID().replace(/-/g,''),randomUUID()])).rows[0]);
+ const a=await saveSdrAgent(p,{expectedRevision:0,draft:draft(p,[ch],{documentIds:[doc.id]})});
+ const review=await prepareSdrActivation(p,{agentId:a.id,revision:a.revision});
+ assert.ok(review.blockers.includes('Aprove todos os documentos escolhidos (ou tire os que não foram aprovados).'));
+ assert.ok((await readSdr(p)).documents.some(d=>d.id===doc.id));
+});

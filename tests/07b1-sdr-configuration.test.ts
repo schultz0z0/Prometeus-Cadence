@@ -38,3 +38,11 @@ test('07B.1 blockers name every missing prerequisite',()=>{
  assert.ok(sdrBlockers({...draft(),channelIds:[]},facts()).some(b=>/canal/i.test(b)));
  assert.ok(sdrBlockers({...draft(),channelIds:['gone']},facts()).some(b=>/canal/i.test(b)),'a channel not in this workspace blocks');
 });
+test('agents choose company documents; only approved ones may be active',()=>{
+ const {documentIds:_,...old}=defaultSdrDraft();
+ assert.deepEqual(sdrDraftSchema.parse(old).documentIds,[],'drafts saved before documents existed stay valid');
+ const d={...draft(),documentIds:['d1']};
+ assert.ok(sdrBlockers(d,facts({documents:[{id:'d1',state:'ready'}]})).includes('Aprove todos os documentos escolhidos (ou tire os que não foram aprovados).'));
+ assert.deepEqual(sdrBlockers(d,facts({documents:[{id:'d1',state:'approved'}]})),[]);
+ assert.equal(sdrDraftSchema.safeParse({...draft(),documentIds:Array.from({length:51},(_,i)=>'d'+i)}).success,false);
+});

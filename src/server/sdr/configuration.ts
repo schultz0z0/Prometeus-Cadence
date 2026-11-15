@@ -55,6 +55,7 @@ export async function readSdr(p:Principal){return tx(p,async c=>{
   agents:(await c.query('SELECT * FROM app.sdr_agent ORDER BY created_at,id')).rows.map(agentView),channels:await channels(c),
   members:(await c.query('SELECT * FROM app.sdr_members()')).rows as {id:string;name:string;role:string}[],
   knowledge:(await c.query("SELECT * FROM app.sdr_knowledge WHERE state<>'archived' ORDER BY kind,title,id")).rows.map(knowledgeView),
+  documents:(await c.query("SELECT id,title,state FROM app.knowledge_document WHERE state<>'archived' ORDER BY title,id")).rows as {id:string;title:string;state:string}[],
   context:{approved:version!=null,version},
   simulationsLeft:Math.max(0,30-Number((await c.query("SELECT count(*) n FROM app.sdr_simulation WHERE created_at>clock_timestamp()-interval '1 day'")).rows[0].n))};
 });}
@@ -115,7 +116,8 @@ async function activationState(c:PoolClient,p:Principal,agentId:string,revision:
  const facts:SdrFacts={pro:(await c.query('SELECT app.sdr_entitled() v')).rows[0].v,contextApproved:version!=null,
   // Only the chosen channels: an unrelated channel changing does not void the review.
   channels:chs.filter(x=>draft.channelIds.includes(x.id)).map(x=>({id:x.id,ready:x.ready,provider:x.provider,takenBy:x.agentId&&x.agentId!==agentId?x.agentName:null})),
-  handoffIsMember:members.some(m=>m.id===draft.handoff.memberId),knowledge};
+  handoffIsMember:members.some(m=>m.id===draft.handoff.memberId),knowledge,
+  documents:draft.documentIds.length?(await c.query('SELECT id,state FROM app.knowledge_document WHERE id=ANY($1) ORDER BY id',[draft.documentIds])).rows as {id:string;state:string}[]:[]};
  const chosen=draft.channelIds.map(id=>chs.find(x=>x.id===id)).filter(x=>!!x);
  const summary={name:draft.name,channels:chosen.map(x=>({id:x.id,name:x.name,channel:x.channel,provider:x.provider})),hours:draft.hours,maxRepliesPerDay:draft.maxRepliesPerDay,
   approvalMode:draft.approvalMode,questions:draft.qualification.length,handoff:{member:members.find(m=>m.id===draft.handoff.memberId)?.name??null,rules:draft.handoff.rules.length},knowledge:draft.knowledgeIds.length,contextVersion:version};
