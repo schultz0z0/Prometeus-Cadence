@@ -221,3 +221,15 @@ test('07B.2 review: fairness, gates on retry and approval, worker lost, purge, p
  const n=await fixture({quota:3});await testAdmin(c=>c.query("UPDATE app.sdr_agent_revision SET config=jsonb_set(config,'{handoff,memberId}','\"gone\"') WHERE workspace_id=$1",[n.p.workspaceId]));
  await inbound(n,'Quero falar com alguém');await tick(gen(reply('Já chamo.','handoff',[])),IN_HOURS,n.p.workspaceId);assert.equal(await rows('notification_item',n.p.workspaceId,"AND event_type='handoff'"),1);
 });
+test('07B.2 long memory: the summary and lead facts of one turn reach the next turn',async()=>{
+ const f=await fixture({quota:5});await inbound(f,'Somos uma clínica com 5 pessoas');
+ const prompts:string[]=[];
+ const deps=(summary:string):SdrWorkerDeps=>({route,generate:async(_c,r)=>{prompts.push(r.prompt);const p=JSON.parse(r.prompt);
+  return{value:r.parse({...reply(),citations:[],needMore:[],summary,facts:[{key:'segmento',value:'clínica',messageId:p.incomingId},{key:'falso',value:'x',messageId:'inventado'}]}),usage:{provider:'openai'}};}});
+ await tick(deps('Clínica com 5 pessoas quer automatizar.'),IN_HOURS,f.p.workspaceId);
+ const state=await testAdmin(async c=>(await c.query('SELECT summary,facts FROM app.sdr_thread_state WHERE conversation_id=$1',[f.conversation])).rows[0]);
+ assert.equal(state.summary,'Clínica com 5 pessoas quer automatizar.');assert.deepEqual(state.facts.map((x:any)=>x.key),['segmento']);
+ await inbound(f,'Quanto custa?');await tick(deps('Perguntou preço.'),IN_HOURS,f.p.workspaceId);
+ const next=JSON.parse(prompts.at(-1)!);assert.equal(next.summary,'Clínica com 5 pessoas quer automatizar.');assert.equal(next.facts[0].value,'clínica');
+ assert.equal((await testAdmin(async c=>(await c.query('SELECT summary FROM app.sdr_thread_state WHERE conversation_id=$1',[f.conversation])).rows[0])).summary,'Perguntou preço.');
+});

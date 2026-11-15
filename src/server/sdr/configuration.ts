@@ -5,7 +5,6 @@ import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
 import type {ConventionalRoute} from '../../domain/ai-routing.ts';
 import {resolveAiRoute} from '../../domain/ai-routing.ts';
-import {parseSdrOutput,sdrOutputJsonSchema,sdrPrompt,type SdrOutput} from '../../domain/sdr-turn.ts';
 import {sdrBlockers,sdrDraftSchema,type SdrDraft,type SdrFacts} from '../../domain/sdr-policy.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
@@ -13,11 +12,10 @@ import {requirePermission} from '../auth/permissions.ts';
 import {createReviewToken,hashValue,verifyReviewToken} from '../prospecting/review.ts';
 import {readAiPolicy} from '../prospecting/ai/settings.ts';
 import {conventionalConfig} from '../prospecting/ai/config.ts';
-import {runConventionalJson,type ConventionalContext} from '../prospecting/ai/json.ts';
+import {composeSdrReply,type Generate,type Search} from './compose.ts';
 // 07B.1: configuration, private knowledge, dry-run simulation and reviewed activation of SDR agents. Nothing here sends.
-type Generate=(ctx:ConventionalContext,request:{prompt:string;schema:unknown;maxOutputTokens:number;parse:(raw:unknown)=>SdrOutput})=>Promise<{value:SdrOutput;usage:{provider:string}}>;
 /** route lets tests stand in for the platform configuration; production resolves it from the workspace policy. */
-export type SdrDeps={generate?:Generate;route?:ConventionalRoute|null;signal?:AbortSignal};
+export type SdrDeps={generate?:Generate;search?:Search;route?:ConventionalRoute|null;signal?:AbortSignal};
 const failures:Record<string,[number,string]>={
  SDR_ACCESS:[403,'Seu papel não permite esta alteração.'],
  SDR_NOT_FOUND:[404,'Não encontrado neste workspace.'],
@@ -97,14 +95,14 @@ export async function simulateSdr(p:Principal,raw:unknown,deps:SdrDeps={}){
   const left=(await c.query('SELECT app.sdr_reserve_simulation($1) n',[a.id])).rows[0].n as number;
   const knowledge=draft.knowledgeIds.length?(await c.query("SELECT kind,title,body FROM app.sdr_knowledge WHERE id=ANY($1) AND state<>'archived' ORDER BY title",[draft.knowledgeIds])).rows:[];
   const context=(await c.query("SELECT payload FROM app.context_version WHERE payload->>'approvedAt' IS NOT NULL ORDER BY version DESC LIMIT 1")).rows[0]?.payload??null;
-  return {draft,route,left,prompt:sdrPrompt({draft,context,knowledge,incoming:s.data.incoming})};
+  return {draft,route,left,context,knowledge};
  });
- const fields=ctx.draft.qualification.map(q=>q.field),signal=AbortSignal.any([AbortSignal.timeout(60000),...(deps.signal?[deps.signal]:[])]);
- let out:SdrOutput;
- try{out=(await(deps.generate??runConventionalJson)({operationId:'sdr-simulation:'+randomUUID(),workspaceId:p.workspaceId,signal,route:ctx.route,agent:'sdr',operation:'sdr-simulation'},
-  {prompt:ctx.prompt,schema:sdrOutputJsonSchema,maxOutputTokens:4096,parse:v=>parseSdrOutput(v,fields)})).value;}
+ const signal=AbortSignal.any([AbortSignal.timeout(60000),...(deps.signal?[deps.signal]:[])]);
+ let r:Awaited<ReturnType<typeof composeSdrReply>>;
+ try{r=await composeSdrReply({workspaceId:p.workspaceId,operationId:'sdr-simulation:'+randomUUID(),operation:'sdr-simulation',route:ctx.route,signal,draft:ctx.draft,context:ctx.context,knowledge:ctx.knowledge,
+  history:[],incoming:s.data.incoming,incomingId:null,followup:null,meeting:null,summary:null,facts:[]},{generate:deps.generate,search:deps.search});}
  catch{throw new AppError(502,'A IA não respondeu à simulação. Tente de novo.');}
- return {reply:out.reply,decision:out.decision,fields:out.fields,sent:false as const,remaining:ctx.left};
+ return {reply:r.out.reply,decision:r.out.decision,fields:r.out.fields,sources:r.sources,alerts:r.alerts,sent:false as const,remaining:ctx.left};
 }
 // ---- Activation (review → confirm) and pause.
 const prepareSchema=z.strictObject({agentId:z.string().min(1).max(200),revision:z.number().int().min(1)});
