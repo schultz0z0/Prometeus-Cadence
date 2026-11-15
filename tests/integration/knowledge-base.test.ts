@@ -97,3 +97,22 @@ test('documents http: oversized or non-multipart bodies are refused before readi
  assert.equal((await knowledgeRequest(new Request(base+'/api/knowledge/documents',{method:'POST',headers:plain,body:'{}'}))).status,422);
  const ok=await knowledgeRequest(new Request(base+'/api/knowledge/documents',{headers:h}));assert.equal(ok.status,200);assert.deepEqual((await ok.json()).documents,[]);
 });
+test('search: filtered vector search still fills k, exact text wins, only approved documents, never another workspace',async()=>{
+ const {searchKnowledge}=await import('../../src/server/knowledge/search.ts');
+ await drain();const a=await company(),b=await company();
+ const noisy=await register(b.p,'outra-empresa.csv');
+ await ingestReady(Array.from({length:300},(_,i)=>({label:'B',text:'Conteúdo da outra empresa '+i,seed:0})));await approve(b.p,noisy.id);
+ const own=await register(a.p,'nossa.csv');
+ await ingestReady([...Array.from({length:24},(_,i)=>({label:'A',text:'Serviço comum número '+i,seed:i+1})),{label:'Tabela',text:'Código ABC-123 custa R$ 900',seed:999}]);await approve(a.p,own.id);
+ const raw=await workerPool().query('SELECT * FROM app.knowledge_search($1,$2,$3,$4,20)',[a.p.workspaceId,[own.id],vec(0),'']);
+ assert.equal(raw.rows.filter(r=>r.vector_rank!==null).length,20,'iterative scan fills k despite closer rows of another workspace');
+ let embedCalls=0;const embed=async(t:string[])=>{embedCalls++;return {vectors:t.map(()=>JSON.parse(vec(0))),inputTokens:1};};
+ const r=await searchKnowledge({workspaceId:a.p.workspaceId,documentIds:[own.id],queries:['código ABC-123'],signal:AbortSignal.timeout(5000)},{embed});
+ assert.equal(embedCalls,1);assert.ok(r.passages.length<=8);const hit=r.passages.find(x=>/ABC-123/.test(x.text));assert.ok(hit,'the exact code is found even with a distant vector');assert.equal(hit.title,'nossa.csv');
+ assert.equal((await searchKnowledge({workspaceId:b.p.workspaceId,documentIds:[own.id],queries:['ABC-123'],signal:AbortSignal.timeout(5000)},{embed})).passages.length,0);
+ const draftDoc=await register(a.p,'rascunho.csv');await ingestReady([{label:'R',text:'Código XYZ-777 ainda não aprovado',seed:5}]);
+ assert.equal((await searchKnowledge({workspaceId:a.p.workspaceId,documentIds:[draftDoc.id],queries:['XYZ-777'],signal:AbortSignal.timeout(5000)},{embed})).passages.length,0);
+ await withWorkspaceTransaction(a.p,async c=>{const r2=(await c.query('SELECT revision FROM app.knowledge_document WHERE id=$1',[own.id])).rows[0];await c.query("SELECT * FROM app.knowledge_set_state($1,$2,'archived')",[own.id,r2.revision]);});
+ assert.equal((await searchKnowledge({workspaceId:a.p.workspaceId,documentIds:[own.id],queries:['ABC-123'],signal:AbortSignal.timeout(5000)},{embed})).passages.length,0);
+ embedCalls=0;assert.deepEqual((await searchKnowledge({workspaceId:a.p.workspaceId,documentIds:[],queries:['x'],signal:AbortSignal.timeout(5000)},{embed})).passages,[]);assert.equal(embedCalls,0);
+});
