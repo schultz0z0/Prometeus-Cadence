@@ -71,6 +71,13 @@ Defeitos encontrados e corrigidos nesta etapa:
 - Antes de cada resposta o contato viu "digitando…" (confirmado pelo operador); o envio levou 9–15 s após a aprovação.
 - Após liberar a pausa direto no banco, a recuperação releu a janela e trouxe a mensagem recebida durante a pausa.
 
+## Agentes de IA por módulo, fase 1 (14/11/2026)
+
+- Quatro agentes (Prospecção, LinkedIn, Assistente, Agente SDR) sobre o provedor único da plataforma; cada chamada declara agente e operação, e um agente não executa operação de outro.
+- Modelo por agente na configuração de IA (só administrador da plataforma); todos em "Padrão da plataforma (gemini-4-hydrogen)".
+- Prova de que nada mudou: 8 pedidos de referência travados antes da mudança e iguais depois; 502/502 testes de unidade; 711/711 de integração (5 pulados, como antes).
+- Rodada real no build de produção: assistente respondeu pelo Gemini; simulação do Agente SDR respondeu e indicou passagem para o time; qualificação por IA de 1 lead concluída, com o uso gravado como `agent: prospecting`.
+
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
