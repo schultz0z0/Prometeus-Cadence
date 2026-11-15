@@ -51,7 +51,7 @@ export async function readAssistant(p:Principal,deps:AssistantDeps={}):Promise<A
  });}catch(e){throw assistantError(e);}
 }
 type Catalog={lists:{id:string;name:string;leads:number}[];conversations:{id:string;channel:string;contact:string;lastInbound:string}[]};
-function prompt(input:{question:string;route:string;facts:AssistantFacts;articles:typeof helpArticles;history:{role:string;text:string}[];catalog:Catalog}){
+export function assistantPrompt(input:{question:string;route:string;facts:AssistantFacts;articles:typeof helpArticles;history:{role:string;text:string}[];catalog:Catalog}){
  return JSON.stringify({
   instructions:['Você é o assistente de ajuda do Prometeus Cadence. Responda em português do Brasil, em até 6 frases curtas, sem markdown.',
    'Use somente os artigos de ajuda e os fatos da conta fornecidos. Se não houver base, diga que não sabe e indique a Central de Ajuda ou o suporte.',
@@ -106,7 +106,7 @@ export async function answerAssistant(p:Principal,raw:unknown,deps:AssistantDeps
    const signal=AbortSignal.any([AbortSignal.timeout(60000),...(deps.signal?[deps.signal]:[])]);
    try{
     const r=await(deps.generate??runConventionalJson)({operationId:'assistant:'+input.requestId,workspaceId:p.workspaceId,signal,route:ctx.route},
-     {prompt:prompt({question:input.text,route:input.contextRoute,facts:ctx.facts,articles,history:ctx.history,catalog:ctx.catalog}),schema:assistantOutputJsonSchema,maxOutputTokens:4096,parse:v=>parseAssistantOutput(v,sources)});
+     {prompt:assistantPrompt({question:input.text,route:input.contextRoute,facts:ctx.facts,articles,history:ctx.history,catalog:ctx.catalog}),schema:assistantOutputJsonSchema,maxOutputTokens:4096,parse:v=>parseAssistantOutput(v,sources)});
     answer=r.value;usage=r.usage;
    }catch{if(signal.aborted&&deps.signal?.aborted)throw new AppError(499,'Pergunta cancelada.');}
   }

@@ -1,0 +1,36 @@
+{
+ "sent": {
+  "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-fixture:generateContent",
+  "body": {
+   "contents": [
+    {
+     "role": "user",
+     "parts": [
+      {
+       "text": "p"
+      }
+     ]
+    }
+   ],
+   "generationConfig": {
+    "responseFormat": {
+     "text": {
+      "mimeType": "APPLICATION_JSON",
+      "schema": {
+       "type": "object"
+      }
+     }
+    },
+    "maxOutputTokens": 4096
+   }
+  }
+ },
+ "route": {
+  "provider": "gemini",
+  "model": "gemini-fixture",
+  "configFingerprint": "2e1f9b2f3b1e1359c19b895955e5ac86ff419268452642a5307f03b591e94739"
+ },
+ "value": {
+  "ok": true
+ }
+}
