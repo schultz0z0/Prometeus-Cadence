@@ -46,3 +46,11 @@ export function fuseRanks(lists:string[][],k=60,limit=8):string[]{
 export function valueMentions(text:string):string[]{
  return [...text.matchAll(/R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d+)?\s?%|\d+\s(?:dias?|semanas?|meses|mês|horas?|anos?)\b/gi)].map(m=>m[0]);
 }
+/** Comparable form of a value mention: 'R$ 900' and 'R$ 900,00' are the same price; 'R$ 90' and 'R$ 900' are not. */
+export function valueKey(v:string):string{
+ const n=(s:string)=>String(Number(s.replace(/\./g,'').replace(',','.')));
+ const money=/^R\$\s?([\d.,]+)$/i.exec(v);if(money)return 'R$'+n(money[1]);
+ const pct=/^([\d,]+)\s?%$/.exec(v);if(pct)return n(pct[1])+'%';
+ const per=/^(\d+)\s(\S+)$/.exec(v);if(per){const u=per[2].toLowerCase();return per[1]+' '+(u.startsWith('dia')?'dia':u.startsWith('sem')?'semana':u.startsWith('m')?'mes':u.startsWith('hora')?'hora':'ano');}
+ return v.toLowerCase();
+}

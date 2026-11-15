@@ -57,3 +57,11 @@ test('a fact only counts when it points to a lead message',async()=>{
  const r=await composeSdrReply(base(),{generate:async()=>({value:parseSdrOutput(reply({citations:[],facts:[{key:'porte',value:'5',messageId:'m1'},{key:'x',value:'y',messageId:'m2'},{key:'z',value:'w',messageId:'m3'},{key:'q',value:'r',messageId:'nao-existe'}]}),[]),usage:{}}),search:async()=>({passages:[],embedTokens:0})});
  assert.deepEqual(r.memory.facts.map(f=>f.key),['porte','z']);assert.equal(r.memory.summary,'Lead perguntou preço.');
 });
+test('value alerts compare values, not substrings',async()=>{
+ const go=(text:string,source:string)=>composeSdrReply(base({draft:{...defaultSdrDraft(),documentIds:['d1']}}),{
+  generate:async(ctx:any,req:any)=>ctx.operation==='sdr-search-plan'?{value:req.parse({queries:['preço']}),usage:{}}:{value:parseSdrOutput(reply({reply:text,citations:['p1']}),[]),usage:{}},
+  search:async()=>({passages:[passage('p1',source)],embedTokens:1})});
+ assert.deepEqual((await go('Custa R$ 90.','Plano: R$ 900 por mês')).alerts.map(a=>a.value),['R$ 90']);
+ assert.deepEqual((await go('Custa R$ 900.','Plano: R$ 900,00 por mês')).alerts,[]);
+ assert.deepEqual((await go('Damos 10% e entregamos em 3 dias.','Reajuste de 110% em 30 dias')).alerts.map(a=>a.value),['10%','3 dias']);
+});

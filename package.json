@@ -38,6 +38,7 @@
     "imapflow": "2.8.0",
     "ipaddr.js": "2.5.0",
     "jose": "6.2.13",
+    "jszip": "3.10.2",
     "lucide-react": "1.60.0",
     "mailparser": "3.12.2",
     "mammoth": "1.13.0",

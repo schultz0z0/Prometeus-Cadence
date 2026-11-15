@@ -26,3 +26,6 @@ test('pdf transcription sends the file inline to the generation model',()=>withE
  const parts=sent.body.contents[0].parts;assert.equal(parts.find((p:any)=>p.inlineData).inlineData.mimeType,'application/pdf');assert.equal(parts.find((p:any)=>p.inlineData).inlineData.data,'JVBERg==');
  assert.equal(r.text,'Agente SDR R$ 900,00');assert.equal(r.inputTokens,300);
 }));
+test('a transcription cut by the output limit is refused, never kept as a partial document',()=>withEnv(async()=>{
+ await assert.rejects(geminiTranscribePdf('gemini-fixture',new Uint8Array([37]),AbortSignal.timeout(5000),async()=>Response.json({candidates:[{finishReason:'MAX_TOKENS',content:{parts:[{text:'primeiras páginas'}]}}]})),(e:any)=>e.code==='GEMINI_TRANSCRIBE_TRUNCATED');
+}));

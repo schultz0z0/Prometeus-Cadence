@@ -1,7 +1,7 @@
 import type {ConventionalRoute} from '../../domain/ai-routing.ts';
 import type {SdrDraft} from '../../domain/sdr-policy.ts';
 import {parseSdrOutput,parseSdrSearchPlan,sdrOutputJsonSchema,sdrPrompt,sdrSearchPlanJsonSchema,sdrSearchPlanPrompt,shouldPlanSearch,type SdrFact,type SdrOutput} from '../../domain/sdr-turn.ts';
-import {valueMentions} from '../../domain/knowledge.ts';
+import {valueKey,valueMentions} from '../../domain/knowledge.ts';
 import type {ConventionalContext} from '../prospecting/ai/json.ts';
 import type {Passage} from '../knowledge/search.ts';
 // One SDR answer: optional search plan, hybrid search over the company documents the agent reads, the reply with citations and
@@ -13,7 +13,6 @@ export interface ComposeInput{workspaceId:string;operationId:string;operation:'s
  knowledge:{kind:string;title:string;body:string}[];history:{id?:string;direction:string;text:string}[];incoming:string;incomingId:string|null;followup:{attempt:number;quote:string}|null;meeting:string|null;summary:string|null;facts:SdrFact[]}
 export interface ComposeResult{out:SdrOutput;usage:unknown;sources:{id:string;documentId:string;title:string;label:string}[];alerts:{kind:'unsourced-value';value:string}[];memory:{summary:string|null;facts:SdrFact[]}}
 const MAX_CALLS=3,MAX_SEARCHES=2,MAX_PASSAGES=8;
-const squash=(s:string)=>s.replace(/\s+/g,'').toLowerCase();
 export async function composeSdrReply(i:ComposeInput,deps:{generate?:Generate;search?:Search}={}):Promise<ComposeResult>{
  // Defaults load lazily: they pull server-only modules the unit tests replace.
  const generate=(deps.generate??(await import('../prospecting/ai/json.ts')).runConventionalJson) as Generate,search=deps.search??(await import('../knowledge/search.ts')).searchKnowledge,fields=i.draft.qualification.map(q=>q.field),docs=i.draft.documentIds;
@@ -30,8 +29,8 @@ export async function composeSdrReply(i:ComposeInput,deps:{generate?:Generate;se
  let out=await answer();
  if(docs.length&&out.needMore.length&&calls<MAX_CALLS&&searches<MAX_SEARCHES){await find(out.needMore);out=await answer();}
  const cited=passages.filter(p=>out.citations.includes(p.id));
- const sourceText=squash([JSON.stringify(i.context??''),...i.knowledge.map(k=>k.body),...cited.map(p=>p.text)].join(' '));
- const alerts=[...new Set(valueMentions(out.reply))].filter(v=>!sourceText.includes(squash(v))).map(value=>({kind:'unsourced-value' as const,value}));
+ const sourced=new Set(valueMentions([JSON.stringify(i.context??''),...i.knowledge.map(k=>k.body),...cited.map(p=>p.text)].join(' ')).map(valueKey));
+ const alerts=[...new Set(valueMentions(out.reply))].filter(v=>!sourced.has(valueKey(v))).map(value=>({kind:'unsourced-value' as const,value}));
  const leadIds=new Set([...i.history.filter(h=>h.direction==='inbound'&&h.id).map(h=>h.id!),...(i.incomingId?[i.incomingId]:[])]);
  const facts=new Map(i.facts.map(f=>[f.key,f]));for(const f of out.facts)if(leadIds.has(f.messageId))facts.set(f.key,f);
  return {out:{...out,citations:cited.map(p=>p.id)},usage:{...(usage as object??{}),calls,embedTokens},sources:cited.map(p=>({id:p.id,documentId:p.documentId,title:p.title,label:p.label})),alerts,

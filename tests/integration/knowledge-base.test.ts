@@ -116,3 +116,19 @@ test('search: filtered vector search still fills k, exact text wins, only approv
  assert.equal((await searchKnowledge({workspaceId:a.p.workspaceId,documentIds:[own.id],queries:['ABC-123'],signal:AbortSignal.timeout(5000)},{embed})).passages.length,0);
  embedCalls=0;assert.deepEqual((await searchKnowledge({workspaceId:a.p.workspaceId,documentIds:[],queries:['x'],signal:AbortSignal.timeout(5000)},{embed})).passages,[]);assert.equal(embedCalls,0);
 });
+test('ingestion: oversized documents stop before paying for embeddings; shutdowns and provider hiccups are retried, not failed',async()=>{
+ const {runKnowledgeTick}=await import('../../src/server/knowledge/ingest.ts');
+ const blobs={get:async()=>new TextEncoder().encode('x'),put:async()=>{},remove:async()=>{}};
+ const doc=(id:string)=>testAdmin(async c=>(await c.query('SELECT state,error FROM app.knowledge_document WHERE id=$1',[id])).rows[0]);
+ await drain();const u=await company();
+ const huge=await register(u.p,'enorme.txt');let embeds=0;
+ await runKnowledgeTick({limit:1},{blobs,extract:async()=>({pages:1,sections:[{label:'x',text:'palavra '.repeat(400000)}]}),embed:async()=>{embeds++;throw new Error('no');}});
+ assert.deepEqual([(await doc(huge.id)).state,(await doc(huge.id)).error,embeds],['failed','KNOWLEDGE_TOO_LARGE',0]);
+ const stop=await register(u.p,'parado.csv');const ctrl=new AbortController();
+ await runKnowledgeTick({limit:1,signal:ctrl.signal},{blobs,extract:async()=>({pages:1,sections:[{label:'x',text:'texto'}]}),embed:async()=>{ctrl.abort();throw new Error('aborted');}});
+ assert.equal((await doc(stop.id)).state,'processing','a shutdown leaves the lease to expire and retry');
+ await testAdmin(c=>c.query("UPDATE app.knowledge_document SET state='archived' WHERE id=$1",[stop.id]));
+ const scan=await register(u.p,'escaneado.pdf');
+ await runKnowledgeTick({limit:1},{blobs,extract:async(_b,_m,d)=>({pages:1,sections:[{label:'x',text:await d.transcribePdf(new Uint8Array())}]}),transcribe:async()=>{const e=new Error('Gemini 429') as Error&{code:string};e.code='HTTP_429';throw e;},embed:async t=>({vectors:t.map(()=>[1]),inputTokens:0})});
+ assert.equal((await doc(scan.id)).state,'processing','a provider hiccup is retried by the lease, not reported as unreadable');
+});

@@ -1,10 +1,17 @@
 import {extractText,getDocumentProxy} from 'unpdf';
 import mammoth from 'mammoth';
 import ExcelJS from 'exceljs';
+import JSZip from 'jszip';
 import type {Section} from '../../domain/knowledge.ts';
 // Text extraction for the company knowledge base. Runs in the worker only; no macros, no network.
 export type KnowledgeMime='application/pdf'|'application/vnd.openxmlformats-officedocument.wordprocessingml.document'|'text/plain'|'text/markdown'|'text/csv'|'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-export const MAX_PDF_PAGES=300;
+export const MAX_PDF_PAGES=300,MAX_UNZIPPED=100*1024*1024,MAX_COLUMNS=50;
+/** Zip bombs: refuse office files whose declared uncompressed size passes 100 MB, before any parser expands them. */
+async function guardZip(bytes:Uint8Array){
+ let zip;try{zip=await JSZip.loadAsync(bytes);}catch{throw unreadable();}
+ let total=0;for(const f of Object.values(zip.files))total+=Number((f as unknown as {_data?:{uncompressedSize?:number}})._data?.uncompressedSize??0);
+ if(total>MAX_UNZIPPED)throw new Error('KNOWLEDGE_TOO_LARGE');
+}
 const unreadable=()=>new Error('KNOWLEDGE_UNREADABLE');
 const utf8=(b:Uint8Array)=>{try{return new TextDecoder('utf-8',{fatal:true}).decode(b).replace(/^﻿/,'');}catch{throw unreadable();}};
 /** Splits a CSV line on the delimiter, outside double quotes. */
@@ -22,12 +29,12 @@ export async function extractDocument(bytes:Uint8Array,mime:KnowledgeMime,deps:{
   return {pages:pdf.numPages,sections:text.map((t,i)=>({label:'Página '+(i+1),text:t.trim()})).filter(s=>s.text)};
  }
  if(mime==='application/vnd.openxmlformats-officedocument.wordprocessingml.document'){
-  let value:string;try{value=(await mammoth.extractRawText({buffer:Buffer.from(bytes)})).value;}catch{throw unreadable();}
+  await guardZip(bytes);let value:string;try{value=(await mammoth.extractRawText({buffer:Buffer.from(bytes)})).value;}catch{throw unreadable();}
   if(!value.trim())throw unreadable();return {pages:1,sections:[{label:'Documento',text:value.replace(/\n{2,}/g,'\n').trim()}]};
  }
  if(mime==='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'){
-  const wb=new ExcelJS.Workbook();try{await wb.xlsx.load(Buffer.from(bytes) as never);}catch{throw unreadable();}
-  const sections=wb.worksheets.map(ws=>{const rows:string[][]=[];ws.eachRow({includeEmpty:false},row=>{const r:string[]=[];for(let c=1;c<=ws.columnCount;c++)r.push(row.getCell(c).text.trim());rows.push(r);});return table(ws.name,rows);}).filter((s):s is Section=>!!s);
+  await guardZip(bytes);const wb=new ExcelJS.Workbook();try{await wb.xlsx.load(Buffer.from(bytes) as never);}catch{throw unreadable();}
+  const sections=wb.worksheets.map(ws=>{const rows:string[][]=[];ws.eachRow({includeEmpty:false},row=>{const r:string[]=[];row.eachCell({includeEmpty:false},(cell,col)=>{if(col<=MAX_COLUMNS)r[col-1]=cell.text.trim();});rows.push(r);});const width=Math.max(0,...rows.map(r=>r.length));for(const r of rows)for(let c=0;c<width;c++)r[c]??='';return table(ws.name,rows);}).filter((s):s is Section=>!!s);
   if(!sections.length)throw unreadable();return {pages:sections.length,sections};
  }
  if(mime==='text/csv'){

@@ -15,6 +15,8 @@ const failures: Record<string, string> = {
   KNOWLEDGE_EMBED_FAILED: "Não foi possível preparar a busca agora. Exclua e envie de novo.",
   KNOWLEDGE_CHUNK_LIMIT: "A base da empresa chegou ao limite de 20.000 trechos.",
   KNOWLEDGE_ATTEMPTS: "O processamento falhou 3 vezes. Exclua e envie de novo.",
+  KNOWLEDGE_TOO_LARGE: "O arquivo tem conteúdo demais para a base (mais de 1.000 trechos ou 100 MB descompactado). Divida em partes menores.",
+  KNOWLEDGE_SCAN_TOO_LONG: "O PDF escaneado é longo demais para ler de uma vez. Divida em partes menores.",
 };
 const size = (b: number) => b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + " KB" : (b / 1024 / 1024).toFixed(1).replace(".", ",") + " MB";
 export function CompanyKnowledge() {

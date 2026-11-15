@@ -33,3 +33,14 @@ test('too many pages and mismatched bytes are refused',async()=>{
  await assert.rejects(extractDocument(f('precos.csv'),'application/pdf',{transcribePdf:never}),/KNOWLEDGE_UNREADABLE/);
  await assert.rejects(extractDocument(f('precos.csv'),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',{transcribePdf:never}),/KNOWLEDGE_UNREADABLE/);
 });
+test('office files that decompress past 100 MB are refused before parsing',async()=>{
+ const JSZip=(await import('jszip')).default,zip=new JSZip();zip.file('word/document.xml','a'.repeat(101*1024*1024));
+ const bytes=new Uint8Array(await zip.generateAsync({type:'uint8array',compression:'DEFLATE'}));
+ await assert.rejects(extractDocument(bytes,'application/vnd.openxmlformats-officedocument.wordprocessingml.document',{transcribePdf:never}),/KNOWLEDGE_TOO_LARGE/);
+});
+test('a far-away spreadsheet cell does not make the reader walk 16 thousand columns',async()=>{
+ const ExcelJS=(await import('exceljs')).default,wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Preços');
+ ws.addRow(['Serviço','Preço']);ws.addRow(['SDR','R$ 900']);ws.getCell('XFD3').value='x';
+ const r=await extractDocument(new Uint8Array(await wb.xlsx.writeBuffer()),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',{transcribePdf:never});
+ assert.equal(r.sections[0].table?.header,'Serviço | Preço');
+});
