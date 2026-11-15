@@ -46,3 +46,25 @@ test('knowledge: another workspace never reads or finds the chunks',async()=>{
  assert.equal(foreign.rows.length,0);
  await assert.rejects(()=>withWorkspaceTransaction(b.p,c=>c.query('SELECT app.knowledge_search($1,$2,$3,$4,20)',[a.p.workspaceId,[d.id],vec(7),'x'])));
 });
+test('ingestion: a document becomes ready with all its chunks, or fails with none',async()=>{
+ const {runKnowledgeTick}=await import('../../src/server/knowledge/ingest.ts');
+ const unit=(texts:string[])=>({vectors:texts.map((_,i)=>Array.from({length:1536},(_,j)=>j===i%1536?1:0)),inputTokens:texts.length});
+ const blobs={get:async()=>new TextEncoder().encode('x'),put:async()=>{},remove:async()=>{}};
+ const chunks=(id:string)=>testAdmin(async c=>Number((await c.query('SELECT count(*) FROM app.knowledge_chunk WHERE document_id=$1',[id])).rows[0].count));
+ const doc=(id:string)=>testAdmin(async c=>(await c.query('SELECT state,error,chunks,usage FROM app.knowledge_document WHERE id=$1',[id])).rows[0]);
+ await drain();const u=await company();
+ const ok=await register(u.p,'ok.csv');
+ await runKnowledgeTick({limit:1},{blobs,extract:async()=>({pages:1,sections:[{label:'Preços',text:'Plano A custa R$ 900. '.repeat(400)}]}),embed:async t=>unit(t)});
+ const d1=await doc(ok.id);assert.equal(d1.state,'ready');assert.ok(d1.chunks>1);assert.equal(await chunks(ok.id),d1.chunks);assert.equal(d1.usage.service,'knowledge');
+ const bad=await register(u.p,'bad.csv');
+ await runKnowledgeTick({limit:1},{blobs,extract:async()=>{throw new Error('KNOWLEDGE_UNREADABLE');},embed:async t=>unit(t)});
+ assert.deepEqual([(await doc(bad.id)).state,(await doc(bad.id)).error,await chunks(bad.id)],['failed','KNOWLEDGE_UNREADABLE',0]);
+ const lost=await register(u.p,'lost.csv');
+ await runKnowledgeTick({limit:1},{blobs,extract:async()=>({pages:1,sections:[{label:'x',text:'texto '.repeat(50)}]}),embed:async()=>{throw new Error('provider down');}});
+ assert.deepEqual([(await doc(lost.id)).state,(await doc(lost.id)).error,await chunks(lost.id)],['failed','KNOWLEDGE_EMBED_FAILED',0]);
+ const retry=await register(u.p,'retry.csv');
+ await workerPool().query('SELECT app.knowledge_claim_ingest($1,now())',[randomUUID()]);
+ await testAdmin(c=>c.query("UPDATE app.knowledge_document SET lease_until=now()-interval '1 minute' WHERE id=$1",[retry.id]));
+ await runKnowledgeTick({limit:1},{blobs,extract:async()=>({pages:1,sections:[{label:'x',text:'retomado'}]}),embed:async t=>unit(t)});
+ assert.equal((await doc(retry.id)).state,'ready');
+});
