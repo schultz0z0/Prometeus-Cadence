@@ -77,3 +77,17 @@ test('only the platform admin picks a model per agent, from the models the key o
   assert.deepEqual((await saveApiKey(admin.p,{provider:'gemini',expectedRevision:chosen!.revision,agentModels:{}}))?.agentModels,{});
  }finally{process.chdir(cwd);rmSync(dir,{recursive:true,force:true});}
 });
+test('the connection test validates the model the prospecting agent actually runs',async()=>{
+ const {mkdtempSync,rmSync}=await import('node:fs'),{tmpdir}=await import('node:os'),{join}=await import('node:path');
+ const {saveApiKey}=await import('../../src/server/prospecting/ai/api-key-settings.ts');
+ const cwd=process.cwd(),dir=mkdtempSync(join(tmpdir(),'agent-probe-'));process.chdir(dir);
+ try{
+  const admin=await prospectingUser();await configurePlatformAiTest(admin.p);
+  const models=async()=>Response.json({models:[{name:'models/gemini-a',supportedGenerationMethods:['generateContent']},{name:'models/gemini-b',supportedGenerationMethods:['generateContent']}]});
+  const key=await saveApiKey(admin.p,{provider:'gemini',expectedRevision:0,key:'fixture-key-123456',model:'gemini-a'},models);
+  await saveAiPolicy(admin.p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'gemini',jevEnabled:false}});
+  assert.equal((await getAiSettings(admin.p)).route?.conventional.model,'gemini-a');
+  await saveApiKey(admin.p,{provider:'gemini',expectedRevision:key!.revision,agentModels:{prospecting:'gemini-b'}});
+  assert.equal((await getAiSettings(admin.p)).route?.conventional.model,'gemini-b');
+ }finally{process.chdir(cwd);rmSync(dir,{recursive:true,force:true});}
+});
