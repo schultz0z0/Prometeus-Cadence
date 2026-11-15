@@ -8,9 +8,10 @@ import {providerJson,ProviderError} from '../providers/transport.ts';
 import type {Fetch} from '../providers/types.ts';
 import {requireAiAdmin} from './settings.ts';
 import {platformAiWorkspace} from './platform.ts';
-import {apiKeyView,storedApiKey,writeApiKey} from './api-keys.ts';
+import {apiKeyView,storedApiKey,writeAgentModels,writeApiKey} from './api-keys.ts';
+import {AI_AGENT_IDS} from '../../../domain/ai-agents.ts';
 const model=z.string().regex(/^[a-zA-Z0-9._-]{1,120}$/);
-const schema=z.strictObject({provider:z.enum(['openai','gemini']),expectedRevision:z.number().int().nonnegative(),key:z.string().trim().min(10).max(400).regex(/^[\x21-\x7e]+$/).optional(),model:model.optional(),remove:z.literal(true).optional()});
+const schema=z.strictObject({provider:z.enum(['openai','gemini']),expectedRevision:z.number().int().nonnegative(),key:z.string().trim().min(10).max(400).regex(/^[\x21-\x7e]+$/).optional(),model:model.optional(),remove:z.literal(true).optional(),agentModels:z.partialRecord(z.enum(AI_AGENT_IDS),model).optional()});
 /** Text models the key can call; listing them is also the proof the provider accepts the key. */
 export async function listProviderModels(provider:ApiKeyProvider,key:string,fetcher:Fetch=fetch):Promise<string[]>{
  const signal=AbortSignal.timeout(20000);let ids:string[];
@@ -29,6 +30,17 @@ export async function saveApiKey(p:Principal,input:unknown,fetcher:Fetch=fetch):
  const parsed=schema.safeParse(input);if(!parsed.success)throw new AppError(422,'Revise a chave e o modelo.');const b=parsed.data,scope=platformAiWorkspace();
  if(!scope)throw new AppError(409,'A IA da plataforma não está configurada neste servidor.');
  await withWorkspaceTransaction(p,requireAiAdmin);
+ if(b.agentModels){
+  const agentModels=b.agentModels;
+  return withWorkspaceTransaction(p,async c=>{
+   await requireAiAdmin(c);let view;
+   try{view=writeAgentModels(scope,b.provider,b.expectedRevision,agentModels);}catch(error){
+    if((error as Error).message==='AI_KEY_CHANGED')throw new AppError(409,'A configuração mudou em outra aba. Recarregue antes de salvar.','AI_KEY_CHANGED');
+    if((error as Error).message==='AI_AGENT_MODEL_INVALID')throw new AppError(422,'Modelo indisponível para esta chave.','AI_AGENT_MODEL_INVALID');throw error;}
+   await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES(current_setting('app.workspace_id'),$1,$2)",[p.userId,'ai.agent-models.save.'+b.provider]);
+   return view;
+  });
+ }
  let next:{key:string;model:string;models:string[]}|null=null;
  if(!b.remove){
   const current=storedApiKey(scope,b.provider),key=b.key??current?.key;if(!key)throw new AppError(422,'Informe a chave da API.');

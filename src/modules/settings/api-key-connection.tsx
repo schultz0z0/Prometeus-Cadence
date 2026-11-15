@@ -4,6 +4,7 @@ import {useState} from 'react';
 import type {ApiKeyProvider,ApiKeyView} from '@/domain/ai-routing';
 import type {ProspectingClient} from '@/client/prospecting-client';
 import {Button,Field,Notice,Badge,Modal} from '@/components/ui/primitives';
+import {AI_AGENTS,AI_AGENT_IDS,type AiAgentId} from '@/domain/ai-agents';
 const names:Record<ApiKeyProvider,{title:string;where:string}>={openai:{title:'OpenAI API',where:'platform.openai.com → API keys'},gemini:{title:'Google Gemini API',where:'aistudio.google.com → Get API key'}};
 export function ApiKeyConnection({provider,view,envConfigured,client,canManage,busy,act,onUpdate}:{provider:ApiKeyProvider;view:ApiKeyView|null;envConfigured:boolean;client:ProspectingClient;canManage:boolean;busy:boolean;act:(fn:()=>Promise<void>)=>Promise<void>;onUpdate:()=>Promise<void>}){
  const [key,setKey]=useState(''),[model,setModel]=useState(view?.model??''),[remove,setRemove]=useState(false),revision=view?.revision??0,name=names[provider];
@@ -18,7 +19,18 @@ export function ApiKeyConnection({provider,view,envConfigured,client,canManage,b
   {view&&<><Field label="Modelo"><SelectField value={model} disabled={busy} onChange={e=>setModel(e.target.value)}><option value="">Selecione um modelo</option>{view.models.map(m=><option key={m} value={m}>{m}</option>)}</SelectField></Field>
   <div className="row wrap"><Button disabled={busy||!model||model===view.model} onClick={()=>void save({model})}>Salvar modelo</Button><Button disabled={busy} onClick={()=>setRemove(true)}>Remover chave</Button></div></>}
  </>:<p className="muted">Somente administradores alteram a chave.</p>}
+ {view?.model&&canManage&&<AgentModels key={view.revision} view={view} busy={busy} save={body=>act(async()=>{await client.saveAiKey({provider,expectedRevision:revision,...body});await onUpdate();})}/>}
  <Notice>Depois de salvar a chave e o modelo, selecione “{name.title}” como LLM convencional, salve o roteamento e prepare o teste. O consumo é cobrado pelo provedor na conta dona da chave.</Notice>
  {remove&&<Modal title={'Remover chave '+name.title+'?'} onClose={()=>{if(!busy)setRemove(false);}}><div className="stack"><p>A chave salva será apagada. {envConfigured?'O provedor volta a usar a chave do ambiente do servidor.':'Novas gerações que usam este provedor ficam indisponíveis até outra chave ser cadastrada.'}</p><div className="row wrap"><Button disabled={busy} onClick={()=>setRemove(false)}>Voltar</Button><Button variant="primary" disabled={busy} onClick={()=>act(async()=>{await client.saveAiKey({provider,expectedRevision:revision,remove:true});setRemove(false);await onUpdate();})}>Confirmar remoção</Button></div></div></Modal>}
  </section>;
+}
+// Same provider for every agent; each agent may run a different model of it. Empty = the platform model above.
+function AgentModels({view,busy,save}:{view:ApiKeyView;busy:boolean;save:(body:{agentModels:Partial<Record<AiAgentId,string>>})=>Promise<void>}){
+ const [draft,setDraft]=useState<Partial<Record<AiAgentId,string>>>(view.agentModels??{}),saved=view.agentModels??{};
+ const changed=AI_AGENT_IDS.some(a=>(draft[a]??'')!==(saved[a]??''));
+ return <div className="stack"><h3>Modelo por agente</h3><p className="muted">Todos os agentes usam este provedor. Escolha um modelo diferente só quando um agente precisar; no padrão, ele usa o modelo da plataforma.</p>
+  {AI_AGENT_IDS.map(a=><Field key={a} label={AI_AGENTS[a].label}><SelectField value={draft[a]??''} disabled={busy} onChange={e=>{const v=e.target.value;setDraft(d=>{const n={...d};if(v)n[a]=v;else delete n[a];return n;});}}>
+   <option value="">{'Padrão da plataforma ('+view.model+')'}</option>{view.models.map(m=><option key={m} value={m}>{m}</option>)}</SelectField></Field>)}
+  <div className="row wrap"><Button disabled={busy||!changed} onClick={()=>void save({agentModels:draft})}>{busy?'Salvando…':'Salvar modelos'}</Button></div>
+ </div>;
 }
