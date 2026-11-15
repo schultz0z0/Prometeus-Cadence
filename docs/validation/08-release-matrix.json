@@ -308,6 +308,11 @@
    "source": "/settings/[[...section]]"
   },
   {
+   "id": "/settings/knowledge",
+   "kind": "route",
+   "source": "/settings/[[...section]]"
+  },
+  {
    "id": "/settings/email",
    "kind": "route",
    "source": "/settings/[[...section]]"
