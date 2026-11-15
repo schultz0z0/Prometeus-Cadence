@@ -18,10 +18,12 @@ test('short small talk skips search planning; real questions plan it',()=>{
  for(const t of ['oi','bom dia!','ok, obrigado'])assert.equal(shouldPlanSearch(t),false,t);
  for(const t of ['quanto custa o plano?','vocês atendem clínicas em Curitiba','qual o prazo de implantação'])assert.equal(shouldPlanSearch(t),true,t);
 });
-test('passages, summary and facts reach the prompt as data and the price rule names its sources',()=>{
+test('passages, summary and facts reach the prompt as data; sources go to citations, never into the reply',()=>{
  const p=JSON.parse(sdrPrompt({...base(),passages:[passage('p1','Agente SDR: R$ 900')],summary:'Lead é clínica.',facts:[{key:'porte',value:'5 pessoas',messageId:'m1'}]} as any));
  assert.equal(p.passages[0].id,'p1');assert.equal(p.summary,'Lead é clínica.');assert.equal(p.facts[0].value,'5 pessoas');
  assert.ok(p.instructions.some((s:string)=>s.includes('Só informe preços, prazos e condições que estejam nos trechos ou no contexto aprovado')));
+ assert.ok(!p.instructions.some((s:string)=>s.includes('diga de qual documento tirou')));
+ assert.ok(p.instructions.some((s:string)=>s.includes('Nunca cite para o lead o nome de documentos, arquivos ou trechos')));
  assert.equal(p.history[0].id,'m1');
 });
 test('without documents the turn makes one call and never searches',async()=>{
