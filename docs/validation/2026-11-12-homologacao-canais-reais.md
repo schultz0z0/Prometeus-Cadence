@@ -78,6 +78,20 @@ Defeitos encontrados e corrigidos nesta etapa:
 - Prova de que nada mudou: 8 pedidos de referência travados antes da mudança e iguais depois; 502/502 testes de unidade; 711/711 de integração (5 pulados, como antes).
 - Rodada real no build de produção: assistente respondeu pelo Gemini; simulação do Agente SDR respondeu e indicou passagem para o time; qualificação por IA de 1 lead concluída, com o uso gravado como `agent: prospecting`.
 
+## Google Agenda e Google Planilhas (15/11/2026)
+
+- Configuração da plataforma, feita uma vez pelo administrador no Google Cloud: o mesmo cliente OAuth do Gmail, com Google Calendar API e Google Sheets API ativas, os dois endereços de retorno `/api/integration-oauth/google-calendar/callback` e `/google-sheets/callback` e os escopos `calendar.freebusy`, `calendar.events.owned` e `drive.file`. O app segue em modo de teste no Google (usuários de teste, até 100); abrir para qualquer cliente exige a verificação do app pelo Google.
+- Cada empresa só clica em "Conectar conta Google", escolhe o e-mail e autoriza; a conta fica no workspace dela.
+- Agenda: disponibilidade seg–sex, 9h–18h, 30 min, 4 h de antecedência, janela de 14 dias; 90 horários livres. Reserva real para o lead de teste em 16/11 às 9h criou o evento sem convite e ocupou o horário; o cancelamento apagou o evento e liberou o horário.
+- Planilhas: a planilha "Prometeus Cadence - Leads" foi criada no Drive da conta; um lead criado à mão entrou como linha em segundos (gatilho "Lead gerado").
+- Observado: uma mensagem que chega no WhatsApp de um número sem conversa ligada a lead não gera "Lead respondeu", mesmo existindo um lead com esse número; o gatilho vale para lead que responde a uma cadência. Na planilha, as datas saem em UTC (ISO) e a coluna Empresa fica vazia para lead cadastrado à mão (o nome da empresa vai em Nome).
+
+## Agente SDR depois da base de conhecimento (15/11/2026)
+
+- Uma resposta real falhou (`AI_FAILED`): numa conversa com histórico, páginas do site e documentos (cerca de 9 mil tokens de entrada), o modelo gastou 4.093 dos 4.096 tokens de saída pensando e parou por limite antes de responder. A resposta do SDR passou a ter 8.192 tokens de saída; a mesma conversa respondeu com o preço do site. O worker não registra a causa de uma falha de IA, só `AI_FAILED`.
+- O agente citava para o lead o nome do arquivo de onde tirou o preço; a fonte agora vai só nas citações.
+- Os outros agentes ainda usam 4.096 tokens de saída e não foram retestados com entradas grandes depois da separação por módulo.
+
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
