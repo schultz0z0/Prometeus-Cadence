@@ -125,3 +125,7 @@ test('a meeting is still refused while the current one is not being rescheduled'
  await testAdmin(c=>c.query("UPDATE app.calendar_reservation SET sdr_presence='reschedule' WHERE workspace_id=$1",[m.f.p.workspaceId]));
  assert.equal(await active(),false);
 });
+test('the conversation view shows presence',async()=>{
+ const m=await due();await tick(m);await approveReminder(m);
+ assert.equal(((await readSdrConversation(m.f.p,m.f.conversation)).booking as any).presence,'pending');
+});
