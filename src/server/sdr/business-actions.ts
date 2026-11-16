@@ -83,7 +83,7 @@ export async function bookSdrProposal(p:Principal,id:string,turnId:string,reques
  const proposal=await tx(p,async c=>(await c.query('SELECT proposal FROM app.sdr_turn WHERE id=$1 AND conversation_id=$2',[turnId,id])).rows[0]?.proposal) as {kind:string;slot?:{start:string;end:string}}|undefined;
  if(proposal?.kind!=='meeting'||!proposal.slot)throw new AppError(409,failures.SDR_STATE[1],'SDR_STATE');
  // Approving again after the confirmation was refused: the meeting already exists for this slot, so it is reused.
- const current=await tx(p,async c=>(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {state:string;start:string;end:string;meetUrl:string|null}|null);
+ const current=await tx(p,async c=>(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {id:string;revision:number;state:string;start:string;end:string;meetUrl:string|null;presence:string|null}|null);
  if(current?.state==='accepted'&&Date.parse(current.start)===Date.parse(proposal.slot.start))return {start:current.start,end:current.end,meetUrl:current.meetUrl??null};
  const free=await readCalendarSlots(p,{from:proposal.slot.start,to:proposal.slot.end},deps),slot=free.slots.find(x=>x.start===proposal.slot!.start);
  if(!slot){
@@ -100,7 +100,11 @@ export async function bookSdrProposal(p:Principal,id:string,turnId:string,reques
   return {leadId:st.leadId!,email:EMAIL.test(email)?email:null};
  });
  const booked=await reserve(p,id,slot.id,s.leadId,requestId,deps,{attendeeEmail:s.email,meet:true});
- if(booked.state==='accepted')await tx(p,c=>c.query('SELECT app.sdr_set_stage($1,$2)',[id,'done']));
+ if(booked.state==='accepted'){
+  await tx(p,c=>c.query('SELECT app.sdr_set_stage($1,$2)',[id,'done']));
+  // Rescheduled: the old meeting is cancelled only now that the new one exists. If that fails, the old one stays for a person to cancel.
+  if(current?.state==='accepted'&&current.presence==='reschedule'&&current.id!==booked.id)await cancelCalendarReservation(p,current.id,{expectedRevision:current.revision},deps).catch(()=>undefined);
+ }
  return {start:booked.start,end:booked.end,meetUrl:(booked as {meetUrl?:string|null}).meetUrl??null};
 }
 /** Reminders of the conversation's current meeting. Called after the confirmation is queued: the consent evidence it writes

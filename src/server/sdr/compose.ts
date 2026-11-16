@@ -1,6 +1,6 @@
 import type {ConventionalRoute} from '../../domain/ai-routing.ts';
 import type {SdrDraft} from '../../domain/sdr-policy.ts';
-import {parseSdrOutput,parseSdrSearchPlan,sdrOutputJsonSchema,sdrPrompt,sdrSearchPlanJsonSchema,sdrSearchPlanPrompt,shouldPlanSearch,type SdrContact,type SdrFact,type SdrOutput,type SdrProposal} from '../../domain/sdr-turn.ts';
+import {parseSdrOutput,parseSdrSearchPlan,sdrOutputJsonSchema,sdrPrompt,sdrSearchPlanJsonSchema,sdrSearchPlanPrompt,shouldPlanSearch,type SdrBookedMeeting,type SdrContact,type SdrFact,type SdrOutput,type SdrProposal} from '../../domain/sdr-turn.ts';
 import {advance,pickOfferSlots,saleLinkProblem,startProgress,unlistedTimes,type SdrProgress} from '../../domain/sdr-stage.ts';
 import {valueKey,valueMentions} from '../../domain/knowledge.ts';
 import type {ConventionalContext} from '../prospecting/ai/json.ts';
@@ -13,7 +13,7 @@ export type Search=(i:{workspaceId:string;documentIds:string[];queries:string[];
 /** Free calendar slots in a range (ISO instants); only the meetings objective asks for them. */
 export type Slots=(range:{from:number;to:number})=>Promise<{timezone:string;slots:{start:string;end:string}[]}>;
 export interface ComposeInput{workspaceId:string;operationId:string;operation:'sdr-turn'|'sdr-simulation';route:ConventionalRoute;signal:AbortSignal;draft:SdrDraft;context:unknown;
- knowledge:{kind:string;title:string;body:string}[];history:{id?:string;direction:string;text:string}[];incoming:string;incomingId:string|null;followup:{attempt:number;quote:string}|null;meeting:string|null;summary:string|null;facts:SdrFact[];progress?:SdrProgress|null}
+ knowledge:{kind:string;title:string;body:string}[];history:{id?:string;direction:string;text:string}[];incoming:string;incomingId:string|null;followup:{attempt:number;quote:string}|null;meeting:string|null;summary:string|null;facts:SdrFact[];progress?:SdrProgress|null;reminder?:SdrBookedMeeting|null}
 export interface ComposeResult{out:SdrOutput;usage:unknown;sources:{id:string;documentId:string;title:string;label:string}[];alerts:{kind:'unsourced-value';value:string}[];memory:{summary:string|null;facts:SdrFact[]};
  progress:SdrProgress;proposal:SdrProposal|null;reason:string|null;contact:SdrContact|null;profile:SdrOutput['profile'];status:string}
 // The reply prompt carries history, documents and memory; thinking models used the whole 4096 before writing a word.
@@ -33,7 +33,7 @@ export async function composeSdrReply(i:ComposeInput,deps:{generate?:Generate;se
   calls++;const plan=await generate(ctx('sdr-search-plan',calls),{prompt:sdrSearchPlanPrompt({incoming:i.incoming,summary:i.summary,history:i.history}),schema:sdrSearchPlanJsonSchema,maxOutputTokens:4096,parse:parseSdrSearchPlan});
   if(plan.value.length)await find(plan.value);
  }
- const answer=async()=>{calls++;const r=await generate(ctx(i.operation,calls===1?0:calls),{prompt:sdrPrompt({draft:i.draft,context:i.context,knowledge:i.knowledge,history:i.history,incoming:i.incoming,incomingId:i.incomingId??undefined,followup:i.followup,meeting:i.meeting,
+ const answer=async()=>{calls++;const r=await generate(ctx(i.operation,calls===1?0:calls),{prompt:sdrPrompt({draft:i.draft,context:i.context,knowledge:i.knowledge,history:i.history,incoming:i.incoming,incomingId:i.incomingId??undefined,followup:i.followup,meeting:i.meeting,reminder:i.reminder??null,
   passages:passages.map(p=>({id:p.id,title:p.title,label:p.label,text:p.text})),summary:i.summary,facts:i.facts,progress,offer:progress.offer}),schema:sdrOutputJsonSchema,maxOutputTokens:8192,parse:v=>parseSdrOutput(v,fields)});usage=r.usage;return r.value as SdrOutput;};
  const leadIds=new Set([...i.history.filter(h=>h.direction==='inbound'&&h.id).map(h=>h.id!),...(i.incomingId?[i.incomingId]:[])]);
  // The meetings objective offers real calendar slots once qualified; the app loads them, the model only picks from them.
@@ -50,6 +50,10 @@ export async function composeSdrReply(i:ComposeInput,deps:{generate?:Generate;se
  if(progress.stage==='qualified')await openOffer();
  let out=await answer();
  if(docs.length&&out.needMore.length&&calls<MAX_CALLS&&searches<MAX_SEARCHES){await find(out.needMore);out=await answer();}
+ // The lead can't make the booked meeting: offer real times right away, never the current one. The old event stays until a new one exists.
+ if(out.presence==='reschedule'&&i.reminder&&i.draft.objective==='meetings'&&progress.stage==='done'&&calls<MAX_CALLS){
+  progress={...progress,stage:'qualified',offer:null};await openOffer([i.reminder.start]);if(progress.stage==='offer')out=await answer();
+ }
  const step=(o:SdrOutput)=>advance(i.draft,progress,{fields:o.fields.map(f=>({field:f.field,value:f.value,messageId:f.messageId||i.incomingId||''})),refused:o.refused,leadIds});
  let moved=step(out);
  // This message completed the qualification: answer again under the objective's rules instead of waiting for the next one.
@@ -77,6 +81,8 @@ export async function composeSdrReply(i:ComposeInput,deps:{generate?:Generate;se
  else if(out.decision==='reply'&&progress.stage!=='qualifying'&&i.draft.objective==='qualify-handoff'&&progress.stage!=='done'&&out.profile.pain&&out.profile.plan){out={...out,decision:'handoff'};status='Qualificado e passado para o time';}
  const offer=progress.offer?.kind==='meeting'?progress.offer:null,chosen=offer&&out.chosen?offer.slots.find(x=>x.id===out.chosen)??null:null;
  if(out.decision==='reply'&&chosen&&offer){proposal={kind:'meeting',slot:chosen,timezone:offer.timezone};status='Reunião escolhida: '+chosen.label;}
+ // Presence is applied only when a person approves this reply.
+ else if(out.decision==='reply'&&i.reminder&&out.presence)proposal={kind:'presence',value:out.presence,reservationId:i.reminder.reservationId};
  if(out.decision==='reply'&&i.draft.objective==='direct-sale'&&progress.stage!=='qualifying'&&i.draft.closing.link&&out.reply.includes(i.draft.closing.link)&&!saleLinkProblem(out.reply,i.draft.closing.link)){
   progress={...progress,stage:'done',offer:{kind:'sale',linkSentAt:new Date().toISOString()}};status='Link de fechamento enviado';
  }

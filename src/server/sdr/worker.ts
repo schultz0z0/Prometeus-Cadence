@@ -3,7 +3,7 @@ import {randomUUID} from 'node:crypto';
 import type {ConventionalRoute} from '../../domain/ai-routing.ts';
 import {resolveAiRoute} from '../../domain/ai-routing.ts';
 import {sdrDraftSchema} from '../../domain/sdr-policy.ts';
-import {sdrProposal,type SdrFact} from '../../domain/sdr-turn.ts';
+import {sdrProposal,type SdrBookedMeeting,type SdrFact} from '../../domain/sdr-turn.ts';
 import {sdrReminderText,type SdrReminderKind} from '../../domain/sdr-reminder.ts';
 import {composeSdrReply,type Generate,type Search,type Slots} from './compose.ts';
 import type {SdrProgress} from '../../domain/sdr-stage.ts';
@@ -12,7 +12,7 @@ import {readAiPolicy} from '../prospecting/ai/settings.ts';
 import {conventionalConfig} from '../prospecting/ai/config.ts';
 // 07B.2: one turn per inbound. The draft waits for a person; this worker never queues a message.
 export type SdrWorkerDeps={generate?:Generate;search?:Search;route?:ConventionalRoute|null;slots?:Slots};
-type Claim={workspaceId:string;turnId:string;config:unknown;context:unknown;knowledge:{kind:string;title:string;body:string}[];incoming:string;history:{id:string;direction:string;text:string}[];followup:{attempt:number;quote:string}|null;meeting:string|null;incomingId:string|null;summary:string|null;facts:SdrFact[];progress:SdrProgress|null;conversationId:string;calendarReady:boolean};
+type Claim={workspaceId:string;turnId:string;config:unknown;context:unknown;knowledge:{kind:string;title:string;body:string}[];incoming:string;history:{id:string;direction:string;text:string}[];followup:{attempt:number;quote:string}|null;meeting:string|null;incomingId:string|null;summary:string|null;facts:SdrFact[];progress:SdrProgress|null;conversationId:string;calendarReady:boolean;reminder?:SdrBookedMeeting|null};
 type Reminder={reminderId:string;workspaceId:string;conversationId:string;kind:SdrReminderKind;start:string;timezone:string;meetUrl:string|null;confirmed:boolean;name:string|null};
 export async function runSdrTick(o:{limit:number;now?:Date;workspaceId?:string;signal?:AbortSignal},deps:SdrWorkerDeps={}){
  const pool=workerPool(),token=randomUUID();let processed=0;
@@ -39,7 +39,7 @@ export async function runSdrTick(o:{limit:number;now?:Date;workspaceId?:string;s
    await pool.query('SELECT app.sdr_ensure_lead($1,$2)',[claim.workspaceId,claim.conversationId]).catch(()=>undefined);
    const slots:Slots|undefined=deps.slots??(claim.calendarReady?async range=>(await import('../integrations/calendar.ts')).readWorkerSlots(pool,claim.workspaceId,range):undefined);
    const r=await composeSdrReply({workspaceId:claim.workspaceId,operationId:'sdr-turn:'+claim.turnId,operation:'sdr-turn',route,signal,draft,context:claim.context,knowledge:claim.knowledge,
-    history:claim.history,incoming:claim.incoming,incomingId:claim.incomingId,followup:claim.followup,meeting:claim.meeting,summary:claim.summary??null,facts:claim.facts??[],progress:claim.progress},{generate:deps.generate,search:deps.search,slots});
+    history:claim.history,incoming:claim.incoming,incomingId:claim.incomingId,followup:claim.followup,meeting:claim.meeting,summary:claim.summary??null,facts:claim.facts??[],progress:claim.progress,reminder:claim.reminder??null},{generate:deps.generate,search:deps.search,slots});
    const out=r.out,empty=out.decision==='reply'&&!out.reply;
    await finish(empty?'abstain':out.decision,out.reply||null,out.fields,r.usage,empty?'EMPTY_REPLY':r.reason,r.proposal??sdrProposal(out,claim.incoming,draft.followupEnabled),{sources:r.sources,alerts:r.alerts,...r.memory},
     {...r.progress,contact:r.contact,profile:r.profile,status:r.status});

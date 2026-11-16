@@ -35,7 +35,9 @@ async function due(o:{presence?:string}={}){
  });
  return m;
 }
-const tick=(m:Awaited<ReturnType<typeof due>>,generate?:any)=>runSdrTick({limit:5,workspaceId:m.f.p.workspaceId},{route,...(generate?{generate}:{})});
+import {readCalendarSlots} from '../../src/server/integrations/calendar.ts';
+// The worker reads the same fake calendar the meeting was booked on.
+const tick=(m:Awaited<ReturnType<typeof due>>,generate?:any)=>runSdrTick({limit:5,workspaceId:m.f.p.workspaceId},{route,slots:async()=>{const r=await readCalendarSlots(m.f.p,{},m.g.deps);return {timezone:r.timezone,slots:r.slots.map(x=>({start:x.start,end:x.end}))};},...(generate?{generate}:{})});
 const reminder=(m:Awaited<ReturnType<typeof due>>)=>testAdmin(async c=>(await c.query("SELECT r.state,r.turn_id,v.sdr_presence presence,v.meet_url FROM app.sdr_meeting_reminder r JOIN app.calendar_reservation v ON v.workspace_id=r.workspace_id AND v.id=r.reservation_id WHERE r.workspace_id=$1 AND r.kind='two-hours'",[m.f.p.workspaceId])).rows[0]);
 const turnOf=(m:Awaited<ReturnType<typeof due>>,id:string)=>testAdmin(async c=>(await c.query('SELECT state,text,reserved,proposal FROM app.sdr_turn WHERE id=$1',[id])).rows[0]);
 async function approveReminder(m:Awaited<ReturnType<typeof due>>,edit?:(t:string)=>string){
@@ -79,4 +81,47 @@ test('a rejected reminder is not drafted again',async()=>{
 test('a 2h reminder after a confirmation says Te espero lá',async()=>{
  const m=await due({presence:'confirmed'});await tick(m);
  const t=await turnOf(m,(await reminder(m)).turn_id);assert.match(t.text,/Te espero lá!$/);
+});
+import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
+// The lead's answer after the reminder went out.
+async function answered(text:string,o:{presence:string;choose?:boolean}){
+ const m=await due();await tick(m);await approveReminder(m);
+ await inbound(m.f,text);
+ await tick(m,async(_c:any,r:any)=>{const p=JSON.parse(r.prompt);
+  return {value:r.parse(p.offer?{reply:'Tenho '+p.offer.slots[0].label+'. Pode ser?',decision:'reply',fields:[],action:'none',quote:'',offered:['s1'],presence:o.presence}:{reply:'Combinado, até lá!',decision:'reply',fields:[],action:'none',quote:'',presence:o.presence}),usage:{provider:'openai'}};});
+ const turn=(await readSdrConversation(m.f.p,m.f.conversation)).turn!;return {m,turn};
+}
+const approveTurn=async(m:Awaited<ReturnType<typeof due>>,turn:{id:string;text:string|null})=>{const review=await prepareSdrReply(m.f.p,m.f.conversation,{turnId:turn.id,text:turn.text!});
+ return approveSdrReply(m.f.p,m.f.conversation,{turnId:turn.id,text:turn.text!,reviewToken:review.review.token,requestId:randomUUID()},m.g.deps);};
+const presence=(m:Awaited<ReturnType<typeof due>>)=>testAdmin(async c=>(await c.query("SELECT sdr_presence p FROM app.calendar_reservation WHERE workspace_id=$1 AND state='accepted'",[m.f.p.workspaceId])).rows.map(x=>x.p));
+test('confirming after the reminder marks presence confirmed on approval',async()=>{
+ const {m,turn}=await answered('Confirmado, até lá',{presence:'confirmed'});
+ assert.equal((turn.proposal as any)?.kind,'presence');assert.deepEqual(await presence(m),['pending']);
+ await approveTurn(m,turn);
+ assert.deepEqual(await presence(m),['confirmed']);
+ const st=await testAdmin(async c=>(await c.query("SELECT payload->'sdrProfile'->>'status' s FROM app.lead WHERE id=$1",[m.leadId])).rows[0].s);assert.match(st,/^Presença confirmada para \d\d\/\d\d \d\d:\d\d$/);
+});
+test('a rejected confirmation changes nothing',async()=>{
+ const {m,turn}=await answered('Confirmado',{presence:'confirmed'});
+ await rejectSdrReply(m.f.p,m.f.conversation,{turnId:turn.id});assert.deepEqual(await presence(m),['pending']);
+});
+test('rescheduling books the new meeting and then cancels the old one',async()=>{
+ const {m,turn}=await answered('Não vou conseguir, pode ser outro dia?',{presence:'reschedule'});
+ assert.match(turn.text!,/^Tenho /);
+ await approveTurn(m,turn);assert.deepEqual(await presence(m),['reschedule']);
+ await inbound(m.f,'Pode ser esse');
+ await tick(m,async(_c:any,r:any)=>{const label=JSON.parse(r.prompt).offer.slots[0].label;return {value:r.parse({reply:'Combinado: '+label+' (horário de Brasília), 30 minutos pelo Google Meet.',decision:'reply',fields:[],action:'none',quote:'',chosen:'s1'}),usage:{provider:'openai'}};});
+ const next=(await readSdrConversation(m.f.p,m.f.conversation)).turn!;assert.equal((next.proposal as any)?.kind,'meeting',JSON.stringify({state:next.state,reason:next.reason,text:next.text,stage:(await readSdrConversation(m.f.p,m.f.conversation)).stage}));
+ await approveTurn(m,next);
+ const rs=await testAdmin(async c=>(await c.query('SELECT state,sdr_presence FROM app.calendar_reservation WHERE workspace_id=$1 ORDER BY created_at',[m.f.p.workspaceId])).rows);
+ assert.deepEqual(rs.map(x=>x.state),['cancelled','accepted']);assert.equal(m.g.created.length,2);
+ const kinds=await testAdmin(async c=>(await c.query("SELECT count(*) n FROM app.sdr_meeting_reminder r JOIN app.calendar_reservation v ON v.workspace_id=r.workspace_id AND v.id=r.reservation_id WHERE r.workspace_id=$1 AND v.state='accepted' AND r.state='due'",[m.f.p.workspaceId])).rows[0].n);
+ assert.ok(Number(kinds)>=1,'the new meeting has its own reminders');
+});
+test('a meeting is still refused while the current one is not being rescheduled',async()=>{
+ const m=await due();
+ const active=()=>withWorkspaceTransaction(m.f.p,async c=>(await c.query('SELECT app.sdr_booking_active($1,$2) a',[m.f.conversation,randomUUID()])).rows[0].a as boolean);
+ assert.equal(await active(),true);
+ await testAdmin(c=>c.query("UPDATE app.calendar_reservation SET sdr_presence='reschedule' WHERE workspace_id=$1",[m.f.p.workspaceId]));
+ assert.equal(await active(),false);
 });

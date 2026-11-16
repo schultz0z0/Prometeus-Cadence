@@ -133,3 +133,23 @@ test('a draft the app refused does not count as an unanswered ask',async()=>{
  const r=await composeSdrReply(base({draft:mdraft,progress:{stage:'qualifying',answers:{},attempts:{},asked:'porte',offer:null}}),{generate:async(_c:any,req:any)=>({value:req.parse({...reply({reply:'Tenho horários amanhã.',citations:[]}),offered:['s1']}),usage:{}}),search:async()=>({passages:[],embedTokens:0})});
  assert.equal(r.out.decision,'abstain');assert.deepEqual(r.progress.attempts,{});assert.equal(r.progress.asked,'porte');
 });
+// 16/11/2026: the lead's answer to a meeting reminder.
+const booked={kind:'two-hours' as const,reservationId:'r1',start:'2030-01-08T13:00:00.000Z'};
+const nil=async()=>({passages:[],embedTokens:0});
+test('a confirmation after the reminder gives a presence proposal',async()=>{
+ const r=await composeSdrReply(base({draft:mdraft,progress:{...qualified,stage:'done',offer:null},reminder:booked}),{generate:async(_c:any,req:any)=>({value:req.parse({...reply({reply:'Ótimo, até lá!',citations:[]}),presence:'confirmed'}),usage:{}}),search:nil});
+ assert.deepEqual(r.proposal,{kind:'presence',value:'confirmed',reservationId:'r1'});assert.equal(r.progress.stage,'done');
+});
+test('a reschedule reopens the offer in the same draft, without the current time',async()=>{
+ const fresh=[{start:booked.start,end:'2030-01-08T13:30:00.000Z'},{start:'2030-01-09T13:00:00.000Z',end:'2030-01-09T13:30:00.000Z'},{start:'2030-01-10T13:00:00.000Z',end:'2030-01-10T13:30:00.000Z'}];
+ const prompts:any[]=[];
+ const r=await composeSdrReply(base({draft:mdraft,progress:{...qualified,stage:'done',offer:null},reminder:booked}),{search:nil,slots:async()=>({timezone:'America/Sao_Paulo',slots:fresh}),
+  generate:async(_c:any,req:any)=>{const p=JSON.parse(req.prompt);prompts.push(p);
+   return {value:req.parse(p.offer?{...reply({reply:'Tenho '+p.offer.slots[0].label+'. Pode ser?',citations:[]}),offered:['s1'],presence:'reschedule'}:{...reply({reply:'Sem problema, vamos remarcar.',citations:[]}),presence:'reschedule'}),usage:{}};}});
+ assert.equal(prompts.length,2);assert.ok(prompts[1].offer.slots.every((s:any)=>s.start!==booked.start));
+ assert.equal(r.progress.stage,'offer');assert.deepEqual(r.proposal,{kind:'presence',value:'reschedule',reservationId:'r1'});
+});
+test('presence without a meeting proposes nothing',async()=>{
+ const r=await composeSdrReply(base({draft:mdraft,progress:{...qualified,stage:'done',offer:null}}),{generate:async(_c:any,req:any)=>({value:req.parse({...reply({reply:'Ok!',citations:[]}),presence:'confirmed'}),usage:{}}),search:nil});
+ assert.equal(r.proposal,null);
+});
