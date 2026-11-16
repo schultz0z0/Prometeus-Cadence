@@ -103,6 +103,7 @@ const known = [
   "automation-lifecycle",
   "received-step",
   "knowledge-base",
+  "sdr-objectives",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length
