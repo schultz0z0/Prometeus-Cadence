@@ -120,4 +120,7 @@ test('incomplete remote logout revokes the key and stays visibly unconfirmed',as
  await requestOpenwaDisconnect(fixture.u.p,fixture.id,{requestId:randomUUID(),expectedRevision:1});
  await runOpenwaMaintenanceTick({now:new Date(Date.now()+1000).toISOString(),maxConnections:3});
  const status=await readOpenwaConnection(fixture.u.p,fixture.id);assert.equal(status.phase,'action_required');assert.equal(status.errorCode,'OPENWA_UNLINK_UNCONFIRMED');assert.equal(status.connection.state,'disconnected');assert.equal(gateway.keys.length,0);assert.equal(gateway.stops,1);
+ // The session is stopped and its key revoked, so the owner can still remove the connection from the list (16/11/2026).
+ const removed=await channelRequestHandler(request(fixture.u,'/api/channels/'+fixture.id+'/archive',{requestId:randomUUID(),expectedRevision:status.connection.revision}),{id:fixture.id,action:'archive'});
+ assert.equal(removed.status,200);
 });
