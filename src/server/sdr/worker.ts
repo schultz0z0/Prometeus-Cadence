@@ -39,7 +39,7 @@ export async function runSdrTick(o:{limit:number;now?:Date;workspaceId?:string;s
     try{const resolved=resolveAiRoute({...await readAiPolicy(c),mode:'conventional-only',jevEnabled:false},conventionalConfig(claim.workspaceId,'sdr'),null);route=resolved.route&&resolved.route.conventional.provider!=='codex-local'?resolved.route.conventional:null;}finally{c.release();}
    }
    if(!route){await finish(null,null,[],null,'AI_UNAVAILABLE');continue;}
-   const draft=sdrDraftSchema.parse(claim.config),signal=AbortSignal.any([AbortSignal.timeout(90000),...(o.signal?[o.signal]:[])]);
+   const draft=sdrDraftSchema.parse(claim.config),signal=AbortSignal.any([AbortSignal.timeout(180000),...(o.signal?[o.signal]:[])]);
    // The lead record follows the conversation: linked by number, or created in the "Agente SDR" list.
    // A failure to link or create the lead must not stop the reply; the conversation just stays without a lead.
    await pool.query('SELECT app.sdr_ensure_lead($1,$2)',[claim.workspaceId,claim.conversationId]).catch(()=>undefined);

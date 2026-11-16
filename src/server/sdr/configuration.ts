@@ -98,7 +98,8 @@ export async function simulateSdr(p:Principal,raw:unknown,deps:SdrDeps={}){
   const context=(await c.query("SELECT payload FROM app.context_version WHERE payload->>'approvedAt' IS NOT NULL ORDER BY version DESC LIMIT 1")).rows[0]?.payload??null;
   return {draft,route,left,context,knowledge};
  });
- const signal=AbortSignal.any([AbortSignal.timeout(60000),...(deps.signal?[deps.signal]:[])]);
+ // Up to 3 model calls of up to 120 s each would not fit in 60 s; 180 s covers a slow plan plus the reply.
+ const signal=AbortSignal.any([AbortSignal.timeout(180000),...(deps.signal?[deps.signal]:[])]);
  let r:Awaited<ReturnType<typeof composeSdrReply>>;
  try{r=await composeSdrReply({workspaceId:p.workspaceId,operationId:'sdr-simulation:'+randomUUID(),operation:'sdr-simulation',route:ctx.route,signal,draft:ctx.draft,context:ctx.context,knowledge:ctx.knowledge,
   history:[],incoming:s.data.incoming,incomingId:null,followup:null,meeting:null,summary:null,facts:[],progress:null},{generate:deps.generate,search:deps.search,

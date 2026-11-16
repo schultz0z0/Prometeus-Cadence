@@ -89,7 +89,7 @@ export async function answerAssistant(p:Principal,raw:unknown,deps:AssistantDeps
   const articles=matchHelp(input.text,input.contextRoute),sources:AssistantCitation[]=[...articles.map(a=>({kind:'help' as const,id:a.id})),{kind:'fact',id:'account'}];
   let answer:Answer=fallback(articles),usage:{provider:string;inputTokens?:number;outputTokens?:number}|null=null;
   if(ctx.route){
-   const signal=AbortSignal.any([AbortSignal.timeout(60000),...(deps.signal?[deps.signal]:[])]);
+   const signal=AbortSignal.any([AbortSignal.timeout(120000),...(deps.signal?[deps.signal]:[])]);
    try{
     const r=await(deps.generate??runConventionalJson)({operationId:'assistant:'+input.requestId,workspaceId:p.workspaceId,signal,route:ctx.route,agent:'assistant',operation:'assistant-answer'},
      {prompt:assistantPrompt({question:input.text,route:input.contextRoute,facts:ctx.facts,articles,history:ctx.history,catalog:ctx.catalog}),schema:assistantOutputJsonSchema,maxOutputTokens:4096,parse:v=>parseAssistantOutput(v,sources)});

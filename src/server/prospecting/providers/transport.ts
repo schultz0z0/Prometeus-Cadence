@@ -1,10 +1,12 @@
 import type {Fetch} from './types.ts';
 export class ProviderError extends Error{code:string;status:number;uncertain:boolean;constructor(code:string,status=0,uncertain=false){super('O provedor não concluiu a operação ('+code+').');this.name='ProviderError';this.code=code;this.status=status;this.uncertain=uncertain;}}
-export async function providerJson(fetcher:Fetch,url:string,init:RequestInit,signal:AbortSignal){
+/** Model generations think before answering: up to 120 s; every other provider call keeps 30 s. */
+export const MODEL_TIMEOUT_MS=120_000;
+export async function providerJson(fetcher:Fetch,url:string,init:RequestInit,signal:AbortSignal,timeoutMs=30_000){
   const method=init.method??'GET',attempts=method==='GET'?3:1;
   for(let attempt=0;attempt<attempts;attempt++){
     let response:Response;
-    try{response=await fetcher(url,{...init,redirect:'error',signal:AbortSignal.any([signal,AbortSignal.timeout(30000)])});}
+    try{response=await fetcher(url,{...init,redirect:'error',signal:AbortSignal.any([signal,AbortSignal.timeout(timeoutMs)])});}
     catch{if(attempt+1<attempts&&!signal.aborted)continue;throw new ProviderError('NETWORK',0,method==='POST');}
     if(!response.ok){
       if(method==='GET'&&[429,500,502,503,504].includes(response.status)&&attempt+1<attempts)continue;

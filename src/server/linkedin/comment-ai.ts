@@ -6,7 +6,7 @@ import {linkedinCommentPrompt} from './comment-prompt.ts';
 export interface CommentInput{workspaceId:string;runId:string;postText:string;guidance:string|null;person:{name:string;headline:string|null;company:string|null}}
 export async function generateCommentWithRoute(route:ConventionalRoute,i:CommentInput,deps:JsonDependencies={}){
  const prompt=linkedinCommentPrompt(i);
- const r=await runConventionalJson({operationId:'linkedin-comment:'+i.runId,workspaceId:i.workspaceId,signal:AbortSignal.timeout(60e3),route,agent:'linkedin',operation:'linkedin-comment'},
+ const r=await runConventionalJson({operationId:'linkedin-comment:'+i.runId,workspaceId:i.workspaceId,signal:AbortSignal.timeout(120e3),route,agent:'linkedin',operation:'linkedin-comment'},
   {prompt,schema:commentOutputJsonSchema,maxOutputTokens:4096,parse:v=>{const o=commentOutputSchema.safeParse(v);if(!o.success)throw new Error('LINKEDIN_COMMENT_INVALID');return o.data.comment;}},deps);
  return {text:r.value,usage:r.usage};
 }
