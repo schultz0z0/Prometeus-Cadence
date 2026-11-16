@@ -54,7 +54,7 @@ export async function readSdr(p:Principal){return tx(p,async c=>{
   members:(await c.query('SELECT * FROM app.sdr_members()')).rows as {id:string;name:string;role:string}[],
   knowledge:(await c.query("SELECT * FROM app.sdr_knowledge WHERE state<>'archived' ORDER BY kind,title,id")).rows.map(knowledgeView),
   documents:(await c.query("SELECT id,title,state FROM app.knowledge_document WHERE state<>'archived' ORDER BY title,id")).rows as {id:string;title:string;state:string}[],
-  context:{approved:version!=null,version},
+  context:{approved:version!=null,version},calendar:await calendarFact(c),
   simulationsLeft:Math.max(0,30-Number((await c.query("SELECT count(*) n FROM app.sdr_simulation WHERE created_at>clock_timestamp()-interval '1 day'")).rows[0].n))};
 });}
 const saveSchema=z.strictObject({id:z.string().min(1).max(200).optional(),expectedRevision:z.number().int().min(0),draft:z.unknown()});
@@ -107,6 +107,18 @@ export async function simulateSdr(p:Principal,raw:unknown,deps:SdrDeps={}){
 // ---- Activation (review → confirm) and pause.
 const prepareSchema=z.strictObject({agentId:z.string().min(1).max(200),revision:z.number().int().min(1)});
 const confirmSchema=prepareSchema.extend({token:z.string().min(1).max(8192),requestId:z.uuid()});
+const DAYS=['dom','seg','ter','qua','qui','sex','sáb'];
+/** Whether the workspace calendar can serve the meetings objective: connected, configured and without attention. */
+async function calendarFact(c:PoolClient):Promise<{ready:boolean;summary:string|null}>{
+ await c.query('SAVEPOINT sdr_calendar');
+ try{
+  const a=(await c.query('SELECT app.calendar_access() v')).rows[0].v as {state:string;attention:string|null;config:{weekdays:number[];start:string;end:string;durationMinutes:number}|null};
+  await c.query('RELEASE SAVEPOINT sdr_calendar');
+  if(a.state!=='ready'||a.attention||!a.config)return {ready:false,summary:null};
+  const w=[...a.config.weekdays].sort(),days=w.length>1&&w.at(-1)!-w[0]===w.length-1?DAYS[w[0]]+'–'+DAYS[w.at(-1)!]:w.map(d=>DAYS[d]).join(', ');
+  return {ready:true,summary:`${days} ${a.config.start}–${a.config.end} · ${a.config.durationMinutes} min`};
+ }catch{await c.query('ROLLBACK TO SAVEPOINT sdr_calendar');return {ready:false,summary:null};}
+}
 async function activationState(c:PoolClient,p:Principal,agentId:string,revision:number){
  const a=await lockedAgent(c,agentId);if(Number(a.revision)!==revision)throw new AppError(409,failures.SDR_CHANGED[1],'SDR_CHANGED');
  const draft=sdrDraftSchema.parse(a.draft),version=await contextVersion(c),chs=await channels(c),members=(await c.query('SELECT * FROM app.sdr_members()')).rows as {id:string;name:string}[];
@@ -115,7 +127,8 @@ async function activationState(c:PoolClient,p:Principal,agentId:string,revision:
   // Only the chosen channels: an unrelated channel changing does not void the review.
   channels:chs.filter(x=>draft.channelIds.includes(x.id)).map(x=>({id:x.id,ready:x.ready,provider:x.provider,takenBy:x.agentId&&x.agentId!==agentId?x.agentName:null})),
   handoffIsMember:members.some(m=>m.id===draft.handoff.memberId),knowledge,
-  documents:draft.documentIds.length?(await c.query('SELECT id,state FROM app.knowledge_document WHERE id=ANY($1) ORDER BY id',[draft.documentIds])).rows as {id:string;state:string}[]:[]};
+  documents:draft.documentIds.length?(await c.query('SELECT id,state FROM app.knowledge_document WHERE id=ANY($1) ORDER BY id',[draft.documentIds])).rows as {id:string;state:string}[]:[],
+  calendar:draft.objective==='meetings'?await calendarFact(c):undefined};
  const chosen=draft.channelIds.map(id=>chs.find(x=>x.id===id)).filter(x=>!!x);
  const summary={name:draft.name,channels:chosen.map(x=>({id:x.id,name:x.name,channel:x.channel,provider:x.provider})),hours:draft.hours,maxRepliesPerDay:draft.maxRepliesPerDay,
   approvalMode:draft.approvalMode,questions:draft.qualification.length,handoff:{member:members.find(m=>m.id===draft.handoff.memberId)?.name??null,rules:draft.handoff.rules.length},knowledge:draft.knowledgeIds.length,contextVersion:version};

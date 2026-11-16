@@ -46,3 +46,14 @@ test('agents choose company documents; only approved ones may be active',()=>{
  assert.deepEqual(sdrBlockers(d,facts({documents:[{id:'d1',state:'approved'}]})),[]);
  assert.equal(sdrDraftSchema.safeParse({...draft(),documentIds:Array.from({length:51},(_,i)=>'d'+i)}).success,false);
 });
+test('objective defaults to qualify-handoff and old drafts still parse',()=>{
+ const old={...defaultSdrDraft()} as any;delete old.objective;delete old.closing;
+ assert.equal(sdrDraftSchema.parse(old).objective,'qualify-handoff');
+});
+test('meetings needs a ready calendar and direct sale needs an https link',()=>{
+ const f=facts({calendar:{ready:false,summary:null}});
+ assert.ok(sdrBlockers({...draft(),objective:'meetings'},f).includes('Conecte a Google Agenda em Configurações → CRM e apps para o agente marcar reuniões.'));
+ assert.ok(sdrBlockers({...draft(),objective:'direct-sale',closing:{method:'checkout',link:'http://x.com'}},f).includes('Informe o link de fechamento (https://) e como a venda é fechada.'));
+ assert.deepEqual(sdrBlockers({...draft(),objective:'direct-sale',closing:{method:'checkout',link:'https://x.com/pagar'}},f),[]);
+ assert.deepEqual(sdrBlockers({...draft(),objective:'meetings'},facts({calendar:{ready:true,summary:'seg–sex 9h–18h · 30 min'}})),[]);
+});
