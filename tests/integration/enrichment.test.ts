@@ -195,3 +195,17 @@ test('06B.7 a partner found on LinkedIn adds role, profile and a provider e-mail
  assert.equal(ana.email,'ana@empresa.example');assert.equal(ana.role,'Diretora comercial');assert.equal(ana.linkedin,'https://www.linkedin.com/in/ana-silva-exemplo');assert.equal(ana.contactBasis,'provider');
  assert.equal(item.enrichment?.charged,true);assert.equal(await consumed(f.p,'enrichment'),1);assert.equal(item.status,'pending_review');
 });
+test('16/11/2026 a company the CNPJ registry cannot find is skipped and the batch goes on',async()=>{
+ const {p}=await prospectingUser({platformAi:true}),listId=randomUUID(),ids=[randomUUID(),randomUUID()];
+ await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:0,command:{type:'leads.import',list:{id:listId,name:'[RE] Lote'},leads:ids.map((id,n)=>({id,listId,name:'Empresa Exemplo '+n,cnpj:n?'37297479000180':'12345678000190',site:'https://empresa.example',source:'MANUAL',qualification:'qualified',createdAt:new Date().toISOString()}))}});
+ await saveAiPolicy(p,{requestId:randomUUID(),expectedRevision:0,policy:{mode:'conventional-only',conventionalProvider:'openai',jevEnabled:false}});
+ const input={kind:'qualification',listId,leadIds:ids,modules:['decisors'],summaryPolicy:'all',escalation:'off',enrichment:{maxCredits:2,destinationName:'[RE] Decisores'}},review=await prepareJob(p,input);
+ assert.deepEqual(review.blockers,[]);
+ const job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),base=adapters(true);
+ const deps={...base,apify:{...base.apify,start:async(ctx:any,input:any)=>{if(JSON.stringify(input).includes('37297479000180'))throw new ProviderError('CNPJ_NOT_FOUND');return (base.apify.start as any)(ctx,input);}}};
+ for(let i=0;i<10&&!['completed','partial','failed'].includes((await getJob(p,job.id)).state);i++)await runEnrichment(await grantTestLease(p,job.id),deps);
+ const final=await getJob(p,job.id);assert.equal(final.state,'completed',JSON.stringify(final.error??final));
+ const items=(await listJobItems(p,job.id)).items,missing=items.find(i=>i.leadId===ids[1])!,found=items.find(i=>i.leadId===ids[0])!;
+ assert.equal(missing.status,'skipped');assert.equal(missing.enrichment?.charged,false);
+ assert.equal(found.enrichment?.people.length,1);
+});

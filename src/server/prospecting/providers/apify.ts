@@ -44,7 +44,8 @@ export class ApifyAdapter implements SourceAdapter{
     }else{
       const raw=await this.request(ctx,`/datasets/${id(run.datasetId)}/items?clean=true&format=json&offset=${offset}&limit=${limit}`);
       if(!Array.isArray(raw)||raw.length>limit)throw new ProviderError('INVALID_DATASET');
-      if(ctx.profile.source==='CNPJ'&&raw.some(r=>r?.tipo_registro==='erro'))throw new ProviderError('CNPJ_SOURCE_ERROR');
+      // The open-data base the actor reads lags the Receita: a real company can be missing. That is "not found", not a broken source.
+      if(ctx.profile.source==='CNPJ'&&raw.some(r=>r?.tipo_registro==='erro'))throw new ProviderError(raw.some(r=>r?.tipo_registro==='erro'&&/not found|não encontrad/i.test(String(r?.erro??'')))?'CNPJ_NOT_FOUND':'CNPJ_SOURCE_ERROR');
       rows=ctx.profile.source==='CNPJ'?raw.filter(r=>r?.tipo_registro!=='aviso'):raw;
       nextOffset=offset+raw.length;exhausted=raw.length<limit;
     }

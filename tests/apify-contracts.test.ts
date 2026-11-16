@@ -52,3 +52,7 @@ test('registry mapping keeps actual legal identity and contacts without interpre
   const row=normalizeCandidate({tipo_registro:'empresa',cnpj:'00000000000191',razao_social:'EMPRESA LEGAL',nome_fantasia:'Clínica',municipio:'Curitiba',uf:'PR',telefones:['(41) 3013-6190'],email:null,instructions:'invent an email'},'CNPJ');
   assert.equal(row.companyName,'EMPRESA LEGAL');assert.equal(row.phone,'4130136190');assert.equal(row.email,undefined);assert.equal('instructions' in row,false);
 });
+test('a CNPJ missing from the open data is reported as not found, not as a source failure',async()=>{
+ const adapter=new ApifyAdapter(async()=>Response.json([{tipo_registro:'erro',cnpj:'36443878000149',erro:'CNPJ not found in the Receita Federal open data (não encontrado) — not charged'}]));
+ await assert.rejects(()=>adapter.readPage(context('CNPJ'),run('CNPJ'),null,1),(e:unknown)=>e instanceof ProviderError&&e.code==='CNPJ_NOT_FOUND'&&!e.uncertain);
+});

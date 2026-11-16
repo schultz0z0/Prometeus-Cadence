@@ -31,7 +31,11 @@ export async function runEnrichment(lease:JobLease,deps:QualificationAdapters={}
   const fresh=checkpoint.groups.filter(g=>!g.cacheId).slice(0,checkpoint.reserveCredits);
   if(group.cacheId||!fresh.some(g=>g.cnpj===group.cnpj)){await record(lease,job,group,null,group.cacheId?'CACHE_EXPIRED':'BUDGET_LIMIT');return;}
   const lead=job.checkpoint.bases[group.leadId] as Lead;
-  const registry=await sourceResult(lease,job,lead,'registry',deps,{partners:true});if(registry===null)return;
+  // One company the registry cannot read must not stop the batch: it is recorded without result and the next one goes on.
+  let registry;
+  try{registry=await sourceResult(lease,job,lead,'registry',deps,{partners:true});}
+  catch(error){if(error instanceof ProviderError&&!error.uncertain&&['CNPJ_NOT_FOUND','CNPJ_SOURCE_ERROR'].includes(error.code)){await record(lease,job,group,null,error.code);return;}throw error;}
+  if(registry===null)return;
   if(registry.cnpj&&registry.cnpj!==group.cnpj)throw new AppError(409,'A consulta não corresponde ao CNPJ revisado.','CNPJ_IDENTITY_MISMATCH');
   const partners=registryDecisionMakers(registry),names=partners.map(p=>p.name);
   let site=lead.site;if(!site){const website=await sourceResult(lease,job,lead,'website',deps);if(website===null)return;site=website.site;}
