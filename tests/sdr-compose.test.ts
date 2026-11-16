@@ -74,3 +74,22 @@ test('value alerts compare values, not substrings',async()=>{
  assert.deepEqual((await go('Custa R$ 900.','Plano: R$ 900,00 por mês')).alerts,[]);
  assert.deepEqual((await go('Damos 10% e entregamos em 3 dias.','Reajuste de 110% em 30 dias')).alerts.map(a=>a.value),['10%','3 dias']);
 });
+const qdraft={...defaultSdrDraft(),objective:'meetings' as const,qualification:[{question:'Porte?',field:'porte',required:true}]};
+test('the qualifying prompt asks only the next required question and forbids the objective action',()=>{
+ const p=JSON.parse(sdrPrompt({...base(),draft:qdraft,progress:{stage:'qualifying',answers:{},attempts:{},asked:'porte',offer:null}} as any));
+ assert.ok(p.instructions.includes('Pergunte agora: Porte?'));
+ assert.ok(p.instructions.includes('Ainda não ofereça reunião, link ou passagem.'));
+});
+test('the offer prompt lists only the app slots',()=>{
+ const offer={kind:'meeting',timezone:'America/Sao_Paulo',slots:['s1','s2','s3'].map((id,i)=>({id,start:`2026-11-17T1${i+2}:00:00.000Z`,end:`2026-11-17T1${i+2}:30:00.000Z`,label:`terça, 17/11 às ${String(9+i).padStart(2,'0')}:00`}))};
+ const p=JSON.parse(sdrPrompt({...base(),draft:qdraft,progress:{stage:'offer',answers:{porte:{value:'5',messageId:'m1'}},attempts:{},asked:null,offer},offer} as any));
+ assert.deepEqual(p.offer.slots.map((s:any)=>s.id),['s1','s2','s3']);
+ assert.equal(p.objective,'meetings');
+});
+test('parse keeps new fields with safe defaults',()=>{
+ const o=parseSdrOutput({reply:'ok',decision:'reply',fields:[],action:'none',quote:''},[]);
+ assert.equal(o.contact,null);assert.deepEqual(o.offered,[]);assert.equal(o.chosen,null);assert.equal(o.preference,null);assert.equal(o.refused,false);
+ assert.deepEqual(o.profile,{pain:'',plan:'',nextStep:''});
+ const c=parseSdrOutput({reply:'ok',decision:'reply',fields:[],action:'none',quote:'',contact:{name:'',email:'a@b.com',phone:'',company:'',messageId:'m1'},chosen:'s2'},[]);
+ assert.deepEqual(c.contact,{name:'',email:'a@b.com',phone:'',company:'',messageId:'m1'});assert.equal(c.chosen,'s2');
+});
