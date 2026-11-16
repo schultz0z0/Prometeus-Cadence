@@ -13,6 +13,7 @@ Com a reunião marcada pelo Agente SDR, o lead recebe pelo WhatsApp uma confirma
   "Oi, Raphael! Passando para confirmar nossa reunião amanhã, terça, 17/11, às 09:00 (horário de Brasília), pelo Google Meet. Segue de pé? Se precisar, te ofereço outro horário."
   O de 2h antes **sempre sai, mesmo que o lead já tenha confirmado na véspera** (imprevistos acontecem), pede a confirmação de novo e **traz o link do Meet** no texto, avisando que ele também está no convite do e-mail. Exemplo:
   "Oi, Raphael! Nossa reunião é hoje às 15:30 (horário de Brasília). O link do Google Meet é https://meet.google.com/xxx-xxxx-xxx e também está no convite do seu e-mail. Segue de pé?"
+  Se o lead **já confirmou** (presença `confirmada` no momento de montar o lembrete), o fim muda para não soar insistente: "...também está no convite do seu e-mail. Te espero lá!". Sem confirmação, termina com "Segue de pé?".
   Se a reunião não tiver link do Meet guardado, o texto sai sem a frase do link. Uma nova resposta "ok" volta a deixar a presença confirmada; "não vou conseguir" vira `remarcar`.
 - A **resposta do lead** é atendida pela IA, como qualquer mensagem:
   - agradeceu, disse "ok", "confirmado": a IA responde curto e encerra; a presença fica confirmada;
