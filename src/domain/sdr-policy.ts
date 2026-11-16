@@ -22,11 +22,13 @@ export const sdrDraftSchema=z.strictObject({
  // 16/11/2026: what the agent works towards. Every objective qualifies first (required script questions).
  objective:z.enum(['meetings','direct-sale','qualify-handoff']).default('qualify-handoff'),
  closing:z.strictObject({method:z.string().trim().max(80),link:z.string().trim().max(500)}).default({method:'',link:''}),
+ // 16/11/2026: meetings objective — app-written reminders the day before and 2h before (managed WhatsApp only).
+ meetingReminders:z.boolean().default(true),
 });
 export type SdrDraft=z.infer<typeof sdrDraftSchema>;
 export const defaultSdrDraft=():SdrDraft=>({name:'Agente SDR',instructions:'',qualification:[],channelIds:[],
  hours:{timezone:'America/Sao_Paulo',weekdays:[1,2,3,4,5],start:'09:00',end:'18:00',allDay:false},
- handoff:{memberId:'',rules:[]},maxRepliesPerDay:20,approvalMode:'all',followupEnabled:false,knowledgeIds:[],documentIds:[],objective:'qualify-handoff',closing:{method:'',link:''}});
+ handoff:{memberId:'',rules:[]},maxRepliesPerDay:20,approvalMode:'all',followupEnabled:false,knowledgeIds:[],documentIds:[],objective:'qualify-handoff',closing:{method:'',link:''},meetingReminders:true});
 export const SDR_OPENWA_DAILY_CAP=20;
 export type SdrChannelFact={id:string;ready:boolean;provider:string;takenBy:string|null};
 export type SdrFacts={pro:boolean;contextApproved:boolean;channels:SdrChannelFact[];handoffIsMember:boolean;knowledge:{id:string;state:string;revision?:number}[];documents?:{id:string;state:string}[];calendar?:{ready:boolean;summary:string|null}};

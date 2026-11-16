@@ -72,6 +72,7 @@ function AgentEditor({ view, agent, onClose, onSaved, onReload }: { view: View; 
       {d.objective === "meetings" && (view.calendar?.ready
         ? <p className="muted">Google Agenda conectada · {view.calendar.summary}. <a href="/settings/apps/google-calendar">Ajustar disponibilidade</a></p>
         : <Notice tone="warning">Para marcar reuniões, conecte a Google Agenda e salve a disponibilidade. <a href="/settings/apps/google-calendar">Conectar Google Agenda</a></Notice>)}
+      {d.objective === "meetings" && <label className="checkbox-row"><input type="checkbox" checked={d.meetingReminders ?? true} onChange={e => set("meetingReminders", e.target.checked)} /><span>Confirmar presença: lembrete na véspera e 2h antes (WhatsApp gerenciado)</span></label>}
       {d.objective === "direct-sale" && <>
         <Field label="Forma de fechamento" help="Ex.: link de pagamento, checkout, página do site."><input value={d.closing?.method ?? ""} maxLength={80} onChange={e => set("closing", { method: e.target.value, link: d.closing?.link ?? "" })} /></Field>
         <Field label="Link de fechamento" help="O agente envia exatamente este link. Precisa começar com https://."><input value={d.closing?.link ?? ""} maxLength={500} placeholder="https://" onChange={e => set("closing", { method: d.closing?.method ?? "", link: e.target.value.trim() })} /></Field></>}

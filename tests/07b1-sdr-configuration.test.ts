@@ -57,3 +57,8 @@ test('meetings needs a ready calendar and direct sale needs an https link',()=>{
  assert.deepEqual(sdrBlockers({...draft(),objective:'direct-sale',closing:{method:'checkout',link:'https://x.com/pagar'}},f),[]);
  assert.deepEqual(sdrBlockers({...draft(),objective:'meetings'},facts({calendar:{ready:true,summary:'seg–sex 9h–18h · 30 min'}})),[]);
 });
+test('meeting reminders default on and survive parsing',()=>{
+ const old={...defaultSdrDraft()} as any;delete old.meetingReminders;
+ assert.equal(sdrDraftSchema.parse(old).meetingReminders,true);
+ assert.equal(sdrDraftSchema.parse({...defaultSdrDraft(),meetingReminders:false}).meetingReminders,false);
+});
