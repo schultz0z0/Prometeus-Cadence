@@ -40,10 +40,10 @@ Com a reunião marcada pelo Agente SDR, o lead recebe pelo WhatsApp uma confirma
 ## Remarcar
 
 - Quando o lead pede outro horário depois do lembrete (ou a qualquer momento com reunião marcada), a IA marca isso numa saída nova (`reschedule`). O app volta a conversa para a etapa de oferta, sem o horário atual, e a IA oferece horários livres reais. A regra atual do prompt ("já há reunião marcada: não ofereça outros") passa a valer só quando o lead não pediu para remarcar.
-- O lead escolhe; a aprovação da confirmação **move o mesmo evento** para o novo horário (Google Agenda `events.patch` com `sendUpdates=all`): o convite do lead é atualizado pelo Google e o **link do Meet continua o mesmo**. Nada de evento novo nem link novo. Antes de mover, o app confere que o novo horário está livre; se não estiver, nada muda e o agente oferece outros. Se o Google falhar, o evento continua no horário antigo.
-- Os lembretes ainda não enviados param assim que a resposta em que o lead pede para remarcar é aprovada (presença `remarcar`). Quando o evento é movido, a presença volta a `pendente` e os lembretes são recriados para o novo horário.
+- O lead escolhe; a aprovação da confirmação cria um **evento novo** (convite e link do Meet novos, como hoje) e, só depois de criado, cancela o evento antigo. Se o novo falhar, o antigo continua de pé.
+- Os lembretes ainda não enviados da reunião antiga param assim que a resposta em que o lead pede para remarcar é aprovada (presença `remarcar`); a reunião nova ganha os dela, com o link do Meet dela.
 - Se o lead pede para remarcar e some sem escolher, o evento antigo **continua na agenda** e o painel mostra "Lead pediu para remarcar": quem decide cancelar é a pessoa, pelo botão "Cancelar reunião" que já existe. O app nunca cancela sozinho sem um novo evento criado.
-- Como a remarcação move o evento existente, a regra atual que recusa criar outra reunião enquanto há uma aceita (`sdr_booking_active`, migração 110) continua igual.
+- Hoje a criação de reunião é recusada enquanto a conversa tem uma reunião aceita (`sdr_booking_active`, migração 110). Na remarcação essa regra passa a permitir o novo evento quando a presença da reunião atual é `remarcar`.
 
 ## Onde aparece
 
@@ -63,7 +63,8 @@ Com a reunião marcada pelo Agente SDR, o lead recebe pelo WhatsApp uma confirma
 ## Anti-objetivos
 
 - Mandar lembrete de reunião cancelada, remarcada ou já passada.
-- Mudar o link do Meet: o lembrete e a remarcação usam sempre o mesmo evento e o mesmo link do convite.
+- Lembrete com link do Meet diferente do convite da reunião a que ele se refere.
+- Cancelar o evento antigo antes de o novo existir.
 - Lembrete saindo sem aprovação, ou furando o limite diário do número.
 - A IA inventando horário na remarcação (as checagens atuais de horário continuam valendo).
 
