@@ -132,6 +132,32 @@ Ponto de atenção: a leitura do site usa até 78% do maior limite que o app ace
 - Coberto por testes (Google e IA simulados): horários da véspera e de 2h antes dentro do horário do agente, nada para reunião marcada em cima da hora, só no WhatsApp gerenciado e com a opção ligada, rascunho com texto do app sem IA nem cobrança, aprovação marca presença "sem confirmação", mensagem do lead devolve o lembrete à fila, reunião cancelada torna o lembrete inválido, lembrete rejeitado não volta, "Te espero lá!" depois da confirmação, confirmação e remarcação aplicadas só na aprovação, nova reunião criada antes de cancelar a antiga.
 - Pendente de homologação real: marcar uma reunião com o contato de teste para dali a mais de 3 horas, aprovar o lembrete de 2h antes, responder "ok" e depois testar "não vou conseguir" para remarcar.
 
+## Homologação dos agentes de IA por módulo, pós multiagentes (16/11/2026)
+
+Workspace Agência Prometeus, Gemini `gemini-4-hydrogen` para os 4 agentes, chamadas reais pelo app.
+
+| Agente | Uso | Resultado |
+|---|---|---|
+| Prospecção | Teste do provedor | ok; marcou evidência sintética como insuficiente |
+| Prospecção | Qualificador completo (3 contabilidades RJ, todos os módulos) | parecer e resumo coerentes e com fontes; travou numa chamada cortada (corrigido abaixo) |
+| Prospecção | Enriquecedor (5 contabilidades RJ) | falhava o lote inteiro (corrigido); depois do ajuste terminou, mas sem decisores: a base de CNPJ não achou nenhuma das 5 |
+| Prospecção | Opções de cadência com IA | 3 réguas de WhatsApp em ~30 s, tom pessoal, sem inventar preço |
+| Prospecção | Releitura do site (Contexto de IA) | ok, ~13,8 mil tokens de entrada |
+| Assistente | Perguntas de uso | responde só pela Central de Ajuda, com link; não inventa quando falta artigo |
+| Agente SDR | Simulação com base de conhecimento | preço do site certo, fontes citadas, porte registrado; 1ª tentativa caiu (corte de 30 s) |
+| Agente SDR | Conversa real, reunião, convite e Meet | homologado mais cedo no mesmo dia |
+| LinkedIn | Comentário / convites | bloqueado: nenhum fornecedor do LinkedIn habilitado (Unipile pendente); a chamada de IA foi testada direto em 15/11 |
+
+Corrigido nesta homologação (branch `fix/ai-homologation`):
+- Toda chamada ao provedor era cortada em 30 s e registrada como "NETWORK" incerta; o Gemini pensando passa disso. Geração de texto agora espera até 120 s; os limites totais do SDR, Assistente e comentário do LinkedIn foram ajustados.
+- No Enriquecedor, uma empresa que a base de CNPJ não encontra derrubava o lote todo; agora ela fica sem resultado (`CNPJ_NOT_FOUND`, com texto claro) e o lote segue.
+
+Encontrado e não corrigido (decisão ou ajuste posterior):
+- A base de CNPJ do robô da Apify (`bigdavidson/brazil-cnpj-companies`, dados abertos da Receita) é incompleta: não achou 7 de 7 contabilidades do Rio que existem e estão ativas (conferido no cnpj.ws), embora ache a Petrobras. Sem CNPJ não há sócios nem decisores. Trocar ou complementar a fonte é decisão do operador.
+- `{{nome}}` nas cadências usa o nome do lead como veio do Google Maps (ex.: "Innove Contábil | Contabilidade Rio de Janeiro | … | Contador"); revisar nomes antes de enviar.
+- A Central de Ajuda não tem artigos sobre objetivo, reuniões e lembretes do Agente SDR nem sobre consumo da qualificação; o Assistente diz que não sabe.
+- A simulação do SDR esconde o motivo da falha e não registra tokens; a tela de Provedores mostra como "Último teste" a última chamada incerta de uma execução; o consumo confirmado na reconciliação fica sem o nome do agente.
+
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
