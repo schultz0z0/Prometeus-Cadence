@@ -118,6 +118,13 @@ Ponto de atenção: a leitura do site usa até 78% do maior limite que o app ace
 - A memória da conversa guardou nome, empresa, e-mail e decisor, cada um ligado à mensagem do contato; esses dados não vão para a ficha do lead.
 - Pendente: uma pausa de segurança aparece como "precisa reconectar" (o motivo real some da tela) e só sai reconectando; falta o "Retomar envios" e mostrar o motivo.
 
+## Agente SDR com objetivo, qualificação obrigatória e Agenda (16/11/2026)
+
+- Construído a partir da conversa real em que a reunião foi marcada sem o lead escolher. Desenho em `docs/superpowers/specs/2026-11-16-sdr-objectives-design.md`; plano em `docs/superpowers/plans/2026-11-16-sdr-objectives.md`.
+- Coberto por testes (Google simulado): oferta de horários reais, recusa de horário fora da oferta, escolha do lead vira proposta, aprovação cria o evento antes de enfileirar a mensagem (convite e Meet), horário ocupado e texto sem a data são recusados, cancelamento reabre a oferta, ligação do lead pelo número escrito de três jeitos, dois leads com o mesmo número não ligam nada, ficha preenche só campos vazios.
+- Pendente de homologação real: configurar o agente da Prometeus com "Marcar reuniões" e perguntas obrigatórias e conversar até o convite chegar no e-mail do lead. Se o Google recusar criar o Meet com `calendar.events.owned`, registrar `https://www.googleapis.com/auth/calendar.events` e reconectar a Agenda.
+- O link do Meet vai no convite por e-mail, não no texto do WhatsApp: o texto aprovado é enviado exatamente como revisado.
+
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
