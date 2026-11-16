@@ -57,3 +57,14 @@ BEGIN
   END IF;
  END IF;
 END $$;
+
+-- Meetings the lead asked to reschedule that are still on the calendar (the new one exists, the old cancel failed or a person booked by hand).
+CREATE FUNCTION app.sdr_rescheduled_view(p_conversation text) RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog AS $$
+ SELECT coalesce(jsonb_agg(jsonb_build_object('id',r.id,'start',to_char(r.start_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),'timezone',r.timezone,'revision',r.revision) ORDER BY r.start_at),'[]'::jsonb)
+ FROM app.sdr_business_action a JOIN app.calendar_reservation r ON r.workspace_id=a.workspace_id AND r.request_id=a.request_id
+ WHERE a.workspace_id=current_setting('app.workspace_id',true) AND a.conversation_id=p_conversation AND app.current_role() IS NOT NULL
+  AND r.state='accepted' AND r.sdr_presence='reschedule' AND r.end_at>clock_timestamp()
+  AND r.id IS DISTINCT FROM (app.sdr_booking_view(p_conversation)->>'id')
+$$;
+REVOKE ALL ON FUNCTION app.sdr_rescheduled_view(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app.sdr_rescheduled_view(text) TO cadence_app;

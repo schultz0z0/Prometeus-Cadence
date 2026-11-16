@@ -83,6 +83,7 @@ test('a 2h reminder after a confirmation says Te espero lá',async()=>{
  const t=await turnOf(m,(await reminder(m)).turn_id);assert.match(t.text,/Te espero lá!$/);
 });
 import {withWorkspaceTransaction} from '../../src/server/db/transaction.ts';
+import {workerPool} from '../../src/server/prospecting/worker-db.ts';
 // The lead's answer after the reminder went out.
 async function answered(text:string,o:{presence:string;choose?:boolean}){
  const m=await due();await tick(m);await approveReminder(m);
@@ -128,4 +129,47 @@ test('a meeting is still refused while the current one is not being rescheduled'
 test('the conversation view shows presence',async()=>{
  const m=await due();await tick(m);await approveReminder(m);
  assert.equal(((await readSdrConversation(m.f.p,m.f.conversation)).booking as any).presence,'pending');
+});
+// Final review fixes (16/11/2026).
+const evidence=(m:Awaited<ReturnType<typeof due>>)=>testAdmin(async c=>(await c.query("SELECT evidence FROM app.consent_evidence WHERE workspace_id=$1 AND source='sdr-meeting-reminder'",[m.f.p.workspaceId])).rows.map(x=>x.evidence as string));
+test('a lead message before the reminder is drafted still gets its AI turn',async()=>{
+ const m=await due();const msg=await inbound(m.f,'Posso levar meu sócio?');
+ await tick(m,async(_c:any,r:any)=>({value:r.parse({reply:'Pode sim!',decision:'reply',fields:[],action:'none',quote:''}),usage:{provider:'openai'}}));
+ const ai=await testAdmin(async c=>(await c.query('SELECT state FROM app.sdr_turn WHERE inbound_message_id=$1 AND reminder_id IS NULL',[msg])).rows);
+ assert.deepEqual(ai.map(x=>x.state),['pending-approval']);assert.equal((await reminder(m)).state,'due');
+});
+test('the reminder consent goes away with the meeting',async()=>{
+ const m=await due();assert.equal((await evidence(m)).length,1);
+ const b=(await readSdrConversation(m.f.p,m.f.conversation)).booking!;
+ await cancelSdrBooking(m.f.p,m.f.conversation,{reservationId:b.id,expectedRevision:b.revision},m.g.deps);await tick(m);
+ assert.equal((await evidence(m)).length,0);
+});
+test("purging the lead's message redacts the reminder evidence",async()=>{
+ const m=await due();
+ await testAdmin(c=>c.query("UPDATE app.channel_message SET text_purged_at=now() WHERE workspace_id=$1 AND direction='inbound'",[m.f.p.workspaceId]));
+ assert.deepEqual(await evidence(m),['[removido]']);
+});
+test('the day-before reminder expires at the start of the meeting day',async()=>{
+ const {m}=await booked({managed:true}),b=(await readSdrConversation(m.f.p,m.f.conversation)).booking!;
+ await testAdmin(c=>c.query('DELETE FROM app.sdr_meeting_reminder WHERE workspace_id=$1',[m.f.p.workspaceId]));
+ await withWorkspaceTransaction(m.f.p,c=>c.query('SELECT app.sdr_reminders_schedule($1,$2,$3)',[m.f.conversation,b.id,JSON.stringify([{kind:'day-before',at:new Date(Date.now()+3600000).toISOString()}])]));
+ const r=await testAdmin(async c=>(await c.query("SELECT r.deadline_at=(date_trunc('day',v.start_at AT TIME ZONE v.timezone) AT TIME ZONE v.timezone) ok FROM app.sdr_meeting_reminder r JOIN app.calendar_reservation v ON v.workspace_id=r.workspace_id AND v.id=r.reservation_id WHERE r.workspace_id=$1",[m.f.p.workspaceId])).rows);
+ assert.deepEqual(r.map(x=>x.ok),[true]);
+});
+test('a reminder claimed but never drafted goes back to due',async()=>{
+ const m=await due();
+ await workerPool().query('SELECT app.sdr_claim_reminder($1,$2)',[new Date(),m.f.p.workspaceId]);// the worker died before drafting
+ await tick(m);const r=await reminder(m);assert.equal(r.state,'drafted');assert.ok(r.turn_id);
+});
+test('a meeting left over from a reschedule can be cancelled from the conversation',async()=>{
+ const {m,turn}=await answered('Não vou conseguir, pode ser outro dia?',{presence:'reschedule'});
+ await approveTurn(m,turn);
+ await inbound(m.f,'Pode ser esse');
+ await tick(m,async(_c:any,r:any)=>{const label=JSON.parse(r.prompt).offer.slots[0].label;return {value:r.parse({reply:'Combinado: '+label+' (horário de Brasília), 30 minutos pelo Google Meet.',decision:'reply',fields:[],action:'none',quote:'',chosen:'s1'}),usage:{provider:'openai'}};});
+ // The old meeting changes while the new event is created, so cancelling it right after fails.
+ m.g.hooks.afterCreate=()=>testAdmin(c=>c.query("UPDATE app.calendar_reservation SET revision=revision+1 WHERE workspace_id=$1 AND state='accepted' AND sdr_presence='reschedule'",[m.f.p.workspaceId]));
+ await approveTurn(m,(await readSdrConversation(m.f.p,m.f.conversation)).turn!);m.g.hooks.afterCreate=undefined;
+ const v=await readSdrConversation(m.f.p,m.f.conversation) as any;assert.equal(v.rescheduled.length,1);
+ await cancelSdrBooking(m.f.p,m.f.conversation,{reservationId:v.rescheduled[0].id,expectedRevision:v.rescheduled[0].revision},m.g.deps);
+ assert.deepEqual(await testAdmin(async c=>(await c.query("SELECT state FROM app.calendar_reservation WHERE workspace_id=$1 ORDER BY created_at",[m.f.p.workspaceId])).rows.map(x=>x.state)),['cancelled','accepted']);
 });

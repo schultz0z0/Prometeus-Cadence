@@ -119,11 +119,14 @@ export async function scheduleSdrReminders(p:Principal,id:string){
 export async function cancelSdrBooking(p:Principal,id:string,raw:unknown,deps:CalendarDeps={}){
  requirePermission(p,'messages.reply');
  const b=cancelSchema.safeParse(raw);if(!b.success)throw new AppError(422,'Operação inválida.');
- const current=await tx(p,async c=>(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {id:string}|null);
- if(current?.id!==b.data.reservationId)throw new AppError(404,failures.SDR_NOT_FOUND[1],'SDR_NOT_FOUND');
+ const known=await tx(p,async c=>{const v=(await c.query('SELECT app.sdr_booking_view($1) v,app.sdr_rescheduled_view($1) r',[id])).rows[0];
+  // The current meeting, or one the lead asked to reschedule that is still on the calendar.
+  return [v.v?.id,...(v.r as {id:string}[]).map(x=>x.id)].filter(Boolean) as string[];});
+ if(!known.includes(b.data.reservationId))throw new AppError(404,failures.SDR_NOT_FOUND[1],'SDR_NOT_FOUND');
+ const leftover=known[0]!==b.data.reservationId;
  const r=await cancelCalendarReservation(p,b.data.reservationId,{expectedRevision:b.data.expectedRevision},deps);
- // A cancelled meeting reopens the conversation for a new offer.
- await tx(p,c=>c.query('SELECT app.sdr_set_stage($1,$2)',[id,'qualified']));
+ // A cancelled meeting reopens the conversation for a new offer; a leftover from a reschedule leaves the new meeting as it is.
+ if(!leftover)await tx(p,c=>c.query('SELECT app.sdr_set_stage($1,$2)',[id,'qualified']));
  return r;
 }
 const consentSchema=z.strictObject({turnId:z.uuid(),quote:z.string().min(3).max(500),days:z.number().int().min(1).max(30)});

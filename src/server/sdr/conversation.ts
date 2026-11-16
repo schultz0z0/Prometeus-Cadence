@@ -35,7 +35,8 @@ export async function readSdrConversation(p:Principal,id:string){return tx(p,asy
  const turn=(await c.query('SELECT * FROM app.sdr_turn WHERE conversation_id=$1 ORDER BY created_at DESC,id LIMIT 1',[id])).rows[0];
  const booking=(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {id:string;start:string;end:string;state:string;revision:number;timezone:string;meetUrl:string|null;presence:'pending'|'confirmed'|'reschedule'|null}|null;
  const followup=(await c.query("SELECT id,quote,attempts,next_at,expires_at FROM app.sdr_followup WHERE conversation_id=$1 AND state='active'",[id])).rows[0];
- return {booking,stage:(thread?.stage??'qualifying') as SdrStage,offer:(thread?.offer??null) as SdrOffer|null,conflicts:(thread?.conflicts??[]) as {field:string;value:string;current:string}[],leadLink,leadId:(cc.lead_id??null) as string|null,
+ const rescheduled=(await c.query('SELECT app.sdr_rescheduled_view($1) v',[id])).rows[0].v as {id:string;start:string;timezone:string;revision:number}[];
+ return {booking,rescheduled,stage:(thread?.stage??'qualifying') as SdrStage,offer:(thread?.offer??null) as SdrOffer|null,conflicts:(thread?.conflicts??[]) as {field:string;value:string;current:string}[],leadLink,leadId:(cc.lead_id??null) as string|null,
   followup:followup?{id:followup.id as string,quote:followup.quote as string,attempts:followup.attempts as number,nextAt:followup.next_at.toISOString() as string,expiresAt:followup.expires_at.toISOString() as string}:null,
   agent:agent?{id:agent.id as string,name:agent.name as string,withinHours:agent.in_hours as boolean,inService:agent.in_service as boolean,followupAvailable:agent.followup as boolean}:null,canConsent:['owner','admin'].includes((await c.query('SELECT app.current_role() r')).rows[0].r),owner:(thread?.owner??'agent') as 'agent'|'human',revision:Number(thread?.revision??0),turn:turn?turnView(turn):null};
 });}

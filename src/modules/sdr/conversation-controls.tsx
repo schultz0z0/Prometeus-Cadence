@@ -11,7 +11,7 @@ type Booking = { id: string; start: string; end: string; state: string; revision
 type Offer = { kind: "meeting"; slots: { id: string; label: string }[]; timezone: string } | { kind: "sale"; linkSentAt: string | null };
 const presenceLabels: Record<string, string> = { pending: "Sem confirmação", confirmed: "Presença confirmada", reschedule: "Lead pediu para remarcar" };
 type Followup = { id: string; quote: string; attempts: number; nextAt: string; expiresAt: string };
-type View = { booking: Booking | null; followup: Followup | null; canConsent: boolean; agent: { name: string; withinHours: boolean; inService: boolean; followupAvailable: boolean } | null; owner: "agent" | "human"; revision: number; turn: Turn | null;
+type View = { booking: Booking | null; rescheduled?: { id: string; start: string; timezone: string; revision: number }[]; followup: Followup | null; canConsent: boolean; agent: { name: string; withinHours: boolean; inService: boolean; followupAvailable: boolean } | null; owner: "agent" | "human"; revision: number; turn: Turn | null;
   stage?: "qualifying" | "qualified" | "offer" | "done"; offer?: Offer | null; conflicts?: { field: string; value: string; current: string }[]; leadLink?: "linked" | "created" | "manual" | null; leadId?: string | null };
 const stageLabels = { qualifying: "Qualificando", qualified: "Qualificado", offer: "Horários oferecidos", done: "Objetivo cumprido" } as const;
 const fieldLabels: Record<string, string> = { email: "e-mail", phone: "telefone", companyName: "empresa" };
@@ -64,6 +64,7 @@ export function SdrConversationControls({ conversationId, onSent }: { conversati
       <p className="muted">Até 2 retornos, com pelo menos 24 horas entre eles. Cada um é um rascunho que espera o seu ok; param se o contato escrever, pedir para sair, você assumir ou rejeitar um retorno.</p></>}</div>}
     {view.followup && <p className="muted">Retorno autorizado até {when(view.followup.expiresAt)} ({view.followup.attempts} de 2): “{view.followup.quote}”. <button type="button" className="text-button" disabled={busy} onClick={() => act(async () => { await post("followup-revoke", { id: view.followup!.id }); setPrepared(null); })}>Retirar</button></p>}
     <div className="stack sdr-meeting">
+      {(view.rescheduled ?? []).map(r => <Notice key={r.id} tone="warning">A reunião de {when(r.start, r.timezone)}, que o lead pediu para remarcar, continua na agenda. <button type="button" className="text-button" disabled={busy} onClick={() => act(async () => { await post("cancel-booking", { reservationId: r.id, expectedRevision: r.revision }); })}>Cancelar reunião antiga</button></Notice>)}
       {t?.proposal?.kind === "calendar-options" && !view.booking && !slots && <p>O contato quer marcar uma reunião.</p>}
       {t?.proposal?.kind === "meeting" && t.state === "pending-approval" && <Notice>O lead escolheu {t.proposal.slot.label}. Aprovar esta resposta cria a reunião na sua Google Agenda, com convite e link do Google Meet.</Notice>}
       {view.booking?.state === "accepted" && view.booking.meetUrl && <p className="muted">Link da reunião: <a href={view.booking.meetUrl} target="_blank" rel="noreferrer">{view.booking.meetUrl}</a></p>}

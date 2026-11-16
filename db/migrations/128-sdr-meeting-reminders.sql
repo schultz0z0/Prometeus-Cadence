@@ -4,7 +4,7 @@
 CREATE TABLE app.sdr_meeting_reminder(
  workspace_id text NOT NULL,id text NOT NULL DEFAULT gen_random_uuid()::text,conversation_id text NOT NULL,reservation_id text NOT NULL,
  kind text NOT NULL CHECK(kind IN('day-before','two-hours')),due_at timestamptz NOT NULL,deadline_at timestamptz NOT NULL,
- state text NOT NULL DEFAULT 'due' CHECK(state IN('due','drafted','sent','rejected','dropped')),turn_id text,evidence_id text,
+ state text NOT NULL DEFAULT 'due' CHECK(state IN('due','drafted','sent','rejected','dropped')),turn_id text,evidence_id text,evidence_message_id text,
  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),PRIMARY KEY(workspace_id,id),UNIQUE(workspace_id,reservation_id,kind),
  FOREIGN KEY(workspace_id,conversation_id) REFERENCES app.channel_conversation(workspace_id,id) ON DELETE CASCADE,
  FOREIGN KEY(workspace_id,reservation_id) REFERENCES app.calendar_reservation(workspace_id,id) ON DELETE CASCADE
@@ -38,8 +38,10 @@ BEGIN
  INSERT INTO app.consent_evidence(workspace_id,id,identity_id,purpose,source,occurred_at,evidence,actor_id)
   VALUES(ws,ev,cc.identity_id,'service','sdr-meeting-reminder',msg.occurred_at,left(msg.text,500),current_setting('app.user_id',true));
  FOR x IN SELECT * FROM jsonb_array_elements(p_times) LOOP
-  INSERT INTO app.sdr_meeting_reminder(workspace_id,conversation_id,reservation_id,kind,due_at,deadline_at,evidence_id)
-   VALUES(ws,p_conversation,p_reservation,x->>'kind',(x->>'at')::timestamptz,r.start_at-interval '30 minutes',ev) ON CONFLICT DO NOTHING;
+  -- The day-before text says "amanhã": it never goes out on the meeting day.
+  INSERT INTO app.sdr_meeting_reminder(workspace_id,conversation_id,reservation_id,kind,due_at,deadline_at,evidence_id,evidence_message_id)
+   VALUES(ws,p_conversation,p_reservation,x->>'kind',(x->>'at')::timestamptz,
+    CASE WHEN x->>'kind'='day-before' THEN date_trunc('day',r.start_at AT TIME ZONE r.timezone) AT TIME ZONE r.timezone ELSE r.start_at-interval '30 minutes' END,ev,msg.id) ON CONFLICT DO NOTHING;
   n:=n+1;
  END LOOP;
  RETURN n;
