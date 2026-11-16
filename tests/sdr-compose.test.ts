@@ -117,3 +117,19 @@ test('qualify-handoff passes the lead on only after the pain and a plan are unde
  assert.equal((await go({pain:'',plan:'',nextStep:''})).out.decision,'reply');
  assert.equal((await go({pain:'Retrabalho no financeiro',plan:'Automatizar a conciliação',nextStep:'Falar com especialista'})).out.decision,'handoff');
 });
+// Final review fixes (16/11/2026).
+test('an offer with past slots is replaced by fresh slots',async()=>{
+ const past={kind:'meeting' as const,timezone:'America/Sao_Paulo',slots:[{id:'s1',start:'2020-01-06T13:00:00.000Z',end:'2020-01-06T13:30:00.000Z',label:'segunda, 06/01 às 10:00'}]};
+ const fresh=[{start:'2030-01-08T13:00:00.000Z',end:'2030-01-08T13:30:00.000Z'},{start:'2030-01-09T13:00:00.000Z',end:'2030-01-09T13:30:00.000Z'}];
+ let offered:any=null;
+ const r=await composeSdrReply(base({draft:mdraft,progress:{...qualified,offer:past}}),{generate:async(_c:any,req:any)=>{offered=JSON.parse(req.prompt).offer;return {value:req.parse({...reply({reply:'Tenho '+offered.slots[0].label+'.',citations:[]}),offered:['s1']}),usage:{}};},search:async()=>({passages:[],embedTokens:0}),slots:async()=>({timezone:'America/Sao_Paulo',slots:fresh})});
+ assert.equal(offered.slots[0].start,'2030-01-08T13:00:00.000Z');assert.equal(r.progress.stage,'offer');
+});
+test('a calendar error keeps the conversation qualified without an offer',async()=>{
+ const r=await composeSdrReply(base({draft:mdraft,progress:{...qualified,stage:'qualified',offer:null}}),{generate:async(_c:any,req:any)=>({value:req.parse({...reply({reply:'Vou confirmar a agenda e já te retorno.',citations:[]})}),usage:{}}),search:async()=>({passages:[],embedTokens:0}),slots:async()=>{throw Object.assign(Error('google down'),{code:'CALENDAR_UNAVAILABLE'});}});
+ assert.equal(r.progress.stage,'qualified');assert.equal(r.progress.offer,null);assert.equal(r.out.decision,'reply');
+});
+test('a draft the app refused does not count as an unanswered ask',async()=>{
+ const r=await composeSdrReply(base({draft:mdraft,progress:{stage:'qualifying',answers:{},attempts:{},asked:'porte',offer:null}}),{generate:async(_c:any,req:any)=>({value:req.parse({...reply({reply:'Tenho horários amanhã.',citations:[]}),offered:['s1']}),usage:{}}),search:async()=>({passages:[],embedTokens:0})});
+ assert.equal(r.out.decision,'abstain');assert.deepEqual(r.progress.attempts,{});assert.equal(r.progress.asked,'porte');
+});

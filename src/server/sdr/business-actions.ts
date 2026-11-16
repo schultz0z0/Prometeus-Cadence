@@ -80,12 +80,21 @@ export async function bookSdrProposal(p:Principal,id:string,turnId:string,reques
  requirePermission(p,'messages.reply');
  const proposal=await tx(p,async c=>(await c.query('SELECT proposal FROM app.sdr_turn WHERE id=$1 AND conversation_id=$2',[turnId,id])).rows[0]?.proposal) as {kind:string;slot?:{start:string;end:string}}|undefined;
  if(proposal?.kind!=='meeting'||!proposal.slot)throw new AppError(409,failures.SDR_STATE[1],'SDR_STATE');
+ // Approving again after the confirmation was refused: the meeting already exists for this slot, so it is reused.
+ const current=await tx(p,async c=>(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {state:string;start:string;end:string;meetUrl:string|null}|null);
+ if(current?.state==='accepted'&&Date.parse(current.start)===Date.parse(proposal.slot.start))return {start:current.start,end:current.end,meetUrl:current.meetUrl??null};
  const free=await readCalendarSlots(p,{from:proposal.slot.start,to:proposal.slot.end},deps),slot=free.slots.find(x=>x.start===proposal.slot!.start);
- if(!slot)throw new AppError(409,'Este horário acabou de ser ocupado. O agente vai oferecer outros.','SLOT_TAKEN');
+ if(!slot){
+  // The lead's choice was taken meanwhile: the next turn offers fresh times.
+  await tx(p,c=>c.query('SELECT app.sdr_set_stage($1,$2)',[id,'qualified']));
+  throw new AppError(409,'Este horário acabou de ser ocupado. O agente vai oferecer outros.','SLOT_TAKEN');
+ }
  const s=await tx(p,async c=>{
   const st=await bookingState(c,p,id,slot.id,requestId);if(st.blockers.length)throw new AppError(409,st.blockers[0],'SDR_BOOKING_BLOCKED');
   await c.query('SELECT app.sdr_booking_begin($1,$2,$3,$4)',[id,requestId,st.leadId,slot.id]);
-  const email=String((await c.query("SELECT payload->>'email' e FROM app.lead WHERE id=$1",[st.leadId])).rows[0]?.e??'').trim();
+  // The invite goes to the e-mail the lead gave in this conversation, even when the record still holds another one.
+  const pending=((await c.query('SELECT conflicts FROM app.sdr_thread_state WHERE conversation_id=$1',[id])).rows[0]?.conflicts??[]) as {field:string;value:string}[];
+  const email=String(pending.find(x=>x.field==='email')?.value??(await c.query("SELECT payload->>'email' e FROM app.lead WHERE id=$1",[st.leadId])).rows[0]?.e??'').trim();
   return {leadId:st.leadId!,email:EMAIL.test(email)?email:null};
  });
  const booked=await reserve(p,id,slot.id,s.leadId,requestId,deps,{attendeeEmail:s.email,meet:true});

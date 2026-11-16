@@ -94,7 +94,9 @@ export async function approveSdrReply(p:Principal,id:string,raw:unknown,deps:Cal
  const b=approveSchema.safeParse(raw);if(!b.success)throw new AppError(422,'Revise a resposta antes de aprovar.');
  const {turnId,text,reviewToken,requestId}=b.data;
  // A meeting the lead chose is booked before the confirmation is queued; a taken slot or a text without the date stops both.
- const proposal=await tx(p,async c=>(await ownTurn(c,id,turnId)).proposal) as SdrProposal|null;
+ // A meeting is booked only while the turn still waits for approval; a replay or a stale turn goes straight to the reply, which decides.
+ const pending=await tx(p,async c=>{const t=await ownTurn(c,id,turnId);if(t.state!=='pending-approval')return null;await c.query('SELECT app.sdr_check_approval($1)',[turnId]);return t.proposal as SdrProposal|null;});
+ const proposal=pending;
  if(proposal?.kind==='meeting'){
   if(!mentionsSlot(text,proposal.slot.start,proposal.timezone))throw new AppError(422,'O texto não traz mais a data e a hora da reunião marcada. Revise antes de aprovar.');
   const {bookSdrProposal}=await import('./business-actions.ts');

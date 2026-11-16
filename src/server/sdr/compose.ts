@@ -39,10 +39,14 @@ export async function composeSdrReply(i:ComposeInput,deps:{generate?:Generate;se
  // The meetings objective offers real calendar slots once qualified; the app loads them, the model only picks from them.
  const openOffer=async(exclude:string[]=[])=>{
   if(i.draft.objective!=='meetings'||!deps.slots)return;
-  const now=Date.now(),r=await deps.slots({from:now,to:now+14*86400000});
+  const now=Date.now();
+  // A calendar failure must not lose the turn: the conversation stays qualified and the agent answers without times.
+  let r;try{r=await deps.slots({from:now,to:now+14*86400000});}catch{progress={...progress,stage:'qualified',offer:null};return;}
   const offer=pickOfferSlots(r.slots.filter(x=>!exclude.includes(x.start)),r.timezone);
   progress={...progress,stage:offer.slots.length?'offer':'qualified',offer:offer.slots.length?offer:null};
  };
+ // An offer whose times already passed is replaced before the lead sees it again.
+ if(progress.stage==='offer'&&progress.offer?.kind==='meeting'&&progress.offer.slots.some(x=>Date.parse(x.start)<=Date.now()))await openOffer();
  if(progress.stage==='qualified')await openOffer();
  let out=await answer();
  if(docs.length&&out.needMore.length&&calls<MAX_CALLS&&searches<MAX_SEARCHES){await find(out.needMore);out=await answer();}
@@ -66,8 +70,8 @@ export async function composeSdrReply(i:ComposeInput,deps:{generate?:Generate;se
  };
  while(problem(out)&&calls<MAX_CALLS){out=await answer();moved=step(out);}
  let reason:string|null=null,proposal:SdrProposal|null=null,status='';
- if(problem(out)){out={...out,decision:'abstain'};reason='SDR_DRAFT_CHECK';}
- progress=moved.progress;
+ // A draft the app refused never reaches the lead: it moves nothing (no answer credited, no unanswered ask counted).
+ if(problem(out)){out={...out,decision:'abstain'};reason='SDR_DRAFT_CHECK';}else progress=moved.progress;
  if(moved.handoff&&out.decision!=='abstain'){out={...out,decision:'handoff',reply:HANDOFF_TEXT};status='Passado para o time: '+moved.handoff;}
  // Qualify and pass on: only once the pain and a plan are understood, not on the first message of an agent without required questions.
  else if(out.decision==='reply'&&progress.stage!=='qualifying'&&i.draft.objective==='qualify-handoff'&&progress.stage!=='done'&&out.profile.pain&&out.profile.plan){out={...out,decision:'handoff'};status='Qualificado e passado para o time';}

@@ -27,7 +27,8 @@ export async function runSdrTick(o:{limit:number;now?:Date;workspaceId?:string;s
    if(!route){await finish(null,null,[],null,'AI_UNAVAILABLE');continue;}
    const draft=sdrDraftSchema.parse(claim.config),signal=AbortSignal.any([AbortSignal.timeout(90000),...(o.signal?[o.signal]:[])]);
    // The lead record follows the conversation: linked by number, or created in the "Agente SDR" list.
-   await pool.query('SELECT app.sdr_ensure_lead($1,$2)',[claim.workspaceId,claim.conversationId]);
+   // A failure to link or create the lead must not stop the reply; the conversation just stays without a lead.
+   await pool.query('SELECT app.sdr_ensure_lead($1,$2)',[claim.workspaceId,claim.conversationId]).catch(()=>undefined);
    const slots:Slots|undefined=deps.slots??(claim.calendarReady?async range=>(await import('../integrations/calendar.ts')).readWorkerSlots(pool,claim.workspaceId,range):undefined);
    const r=await composeSdrReply({workspaceId:claim.workspaceId,operationId:'sdr-turn:'+claim.turnId,operation:'sdr-turn',route,signal,draft,context:claim.context,knowledge:claim.knowledge,
     history:claim.history,incoming:claim.incoming,incomingId:claim.incomingId,followup:claim.followup,meeting:claim.meeting,summary:claim.summary??null,facts:claim.facts??[],progress:claim.progress},{generate:deps.generate,search:deps.search,slots});

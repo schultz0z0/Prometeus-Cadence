@@ -164,3 +164,38 @@ test('the conversation view shows stage, offer and conflicts',async()=>{
  await applySdrConflict(f.p,f.conversation,{field:'email'});
  assert.deepEqual((await readSdrConversation(f.p,f.conversation)).conflicts,[]);
 });
+// Final review fixes (16/11/2026).
+import {bookSdrProposal} from '../../src/server/sdr/business-actions.ts';
+test('approving a superseded meeting draft books nothing',async()=>{
+ const m=await meetingTurn('ana@x.com');const review=await prepareSdrReply(m.f.p,m.f.conversation,{turnId:m.turn.id,text:m.text});
+ await testAdmin(c=>c.query("UPDATE app.sdr_turn SET state='superseded' WHERE id=$1",[m.turn.id]));
+ await assert.rejects(approveSdrReply(m.f.p,m.f.conversation,{turnId:m.turn.id,text:m.text,reviewToken:review.review.token,requestId:randomUUID()},m.g.deps));
+ assert.equal(m.g.created.length,0);
+});
+test('approving again after a refused confirmation reuses the booked meeting',async()=>{
+ const m=await meetingTurn('ana@x.com');
+ await bookSdrProposal(m.f.p,m.f.conversation,m.turn.id,randomUUID(),m.g.deps);// the event exists, the message never left
+ await testAdmin(c=>c.query("UPDATE app.sdr_thread_state SET stage='offer' WHERE conversation_id=$1",[m.f.conversation]));
+ await approve(m);
+ assert.equal(m.g.created.length,1);assert.equal(await outbox(m.f),1);
+});
+test('a taken slot sends the conversation back for a fresh offer',async()=>{
+ const m=await meetingTurn('ana@x.com'),slot=(m.turn.proposal as any).slot;m.g.hooks.busy=[{start:slot.start,end:slot.end}];
+ await assert.rejects(approve(m));
+ const s=await testAdmin(async c=>(await c.query('SELECT stage,offer FROM app.sdr_thread_state WHERE conversation_id=$1',[m.f.conversation])).rows[0]);
+ assert.equal(s.stage,'qualified');assert.equal(s.offer,null);
+});
+test('the invite goes to the e-mail the lead just gave, even when the record has another',async()=>{
+ const m=await meetingTurn('old@x.com');
+ await testAdmin(c=>c.query("UPDATE app.sdr_thread_state SET conflicts='[{\"field\":\"email\",\"value\":\"new@x.com\",\"current\":\"old@x.com\"}]' WHERE conversation_id=$1",[m.f.conversation]));
+ await approve(m);
+ assert.deepEqual(m.g.created[0].body.attendees,[{email:'new@x.com'}]);
+});
+test('a lead created by the agent costs no import credit',async()=>{
+ const f=await fixture();await testAdmin(c=>c.query("UPDATE app.billing_grant SET quantity=0 WHERE workspace_id=$1 AND unit='imports'",[f.p.workspaceId]));
+ assert.equal((await ensure(f)).mode,'created');
+});
+test('a WhatsApp number without the ninth digit still finds the lead',async()=>{
+ const f=await fixture({phone:'+552194342764'}),id=await lead(f,{phone:'21994342764'});
+ assert.deepEqual(await ensure(f),{leadId:id,mode:'linked'});
+});
