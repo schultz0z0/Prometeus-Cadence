@@ -126,6 +126,12 @@ Ponto de atenção: a leitura do site usa até 78% do maior limite que o app ace
 - Detalhes vistos na homologação: o nome de campo da nova pergunta ficou "campo_2dor" (o campo já vem preenchido e o texto digitado é somado); o painel mostrava "Reunião marcada" para uma reunião já passada. A reunião das 10:00 de 16/11, sem convite nem Meet, foi marcada às 00:08 pela versão anterior do agente.
 - O link do Meet vai no convite por e-mail, não no texto do WhatsApp: o texto aprovado é enviado exatamente como revisado.
 
+## Lembrete de reunião do Agente SDR (16/11/2026)
+
+- Desenho em `docs/superpowers/specs/2026-11-16-sdr-meeting-reminder-design.md`; plano em `docs/superpowers/plans/2026-11-16-sdr-meeting-reminder.md`.
+- Coberto por testes (Google e IA simulados): horários da véspera e de 2h antes dentro do horário do agente, nada para reunião marcada em cima da hora, só no WhatsApp gerenciado e com a opção ligada, rascunho com texto do app sem IA nem cobrança, aprovação marca presença "sem confirmação", mensagem do lead devolve o lembrete à fila, reunião cancelada torna o lembrete inválido, lembrete rejeitado não volta, "Te espero lá!" depois da confirmação, confirmação e remarcação aplicadas só na aprovação, nova reunião criada antes de cancelar a antiga.
+- Pendente de homologação real: marcar uma reunião com o contato de teste para dali a mais de 3 horas, aprovar o lembrete de 2h antes, responder "ok" e depois testar "não vou conseguir" para remarcar.
+
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
