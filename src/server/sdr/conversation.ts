@@ -7,6 +7,9 @@ import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
 import {requirePermission} from '../auth/permissions.ts';
 import {prepareReply,confirmReply,type ReplyHooks} from '../messaging/replies.ts';
+import {createHash} from 'node:crypto';
+import {slotLabel} from '../../domain/sdr-stage.ts';
+import type {CalendarDeps} from '../integrations/calendar.ts';
 // 07B.2: what a person does with the agent inside the existing inbox. The reply itself goes through the reviewed WhatsApp path.
 const failures:Record<string,[number,string]>={
  SDR_ACCESS:[403,'Você não tem mais acesso a este workspace.'],
@@ -69,10 +72,24 @@ export async function prepareSdrReply(p:Principal,id:string,raw:unknown){
  return {review:await prepareReply(p,id,{content:{kind:'text',text:b.data.text}})};
 }
 const approveSchema=prepareSchema.extend({reviewToken:z.string().min(1).max(8192),requestId:z.uuid()});
-export async function approveSdrReply(p:Principal,id:string,raw:unknown):Promise<SdrTurnView>{
+/** The reviewed confirmation must still say the booked day (dd/mm) and time (HH:MM or 9h). */
+function mentionsSlot(text:string,start:string,tz:string){
+ const m=/(\d{2}\/\d{2}).*?(\d{2}):(\d{2})/.exec(slotLabel(start,tz));if(!m)return false;
+ const h=String(Number(m[2])),times=[`${m[2]}:${m[3]}`,`${h}:${m[3]}`,m[3]==='00'?`${h}h`:`${h}h${m[3]}`];
+ return text.includes(m[1])&&times.some(t=>new RegExp('(^|\\D)'+t.replace(':','\\:')+'(?!\\d)').test(text));
+}
+const bookingRequest=(requestId:string)=>{const h=createHash('sha256').update('sdr-booking:'+requestId).digest('hex');return `${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;};
+export async function approveSdrReply(p:Principal,id:string,raw:unknown,deps:CalendarDeps={}):Promise<SdrTurnView>{
  requirePermission(p,'messages.reply');
  const b=approveSchema.safeParse(raw);if(!b.success)throw new AppError(422,'Revise a resposta antes de aprovar.');
  const {turnId,text,reviewToken,requestId}=b.data;
+ // A meeting the lead chose is booked before the confirmation is queued; a taken slot or a text without the date stops both.
+ const proposal=await tx(p,async c=>(await ownTurn(c,id,turnId)).proposal) as SdrProposal|null;
+ if(proposal?.kind==='meeting'){
+  if(!mentionsSlot(text,proposal.slot.start,proposal.timezone))throw new AppError(422,'O texto não traz mais a data e a hora da reunião marcada. Revise antes de aprovar.');
+  const {bookSdrProposal}=await import('./business-actions.ts');
+  await bookSdrProposal(p,id,turnId,bookingRequest(requestId),deps);
+ }
  // One transaction: the turn is checked, the message queued and the unit consumed together. A replay of the same request skips the hooks.
  try{await confirmReply(p,id,{content:{kind:'text',text},requestId,reviewToken},{before:async c=>{await ownTurn(c,id,turnId);await c.query('SELECT app.sdr_check_approval($1)',[turnId]);},after:(c,m)=>c.query('SELECT app.sdr_approve_turn($1,$2,$3)',[turnId,m.id,text])});}
  catch(e){throw sdrError(e);}

@@ -53,7 +53,8 @@ function stageRules(draft:SdrDraft,progress:SdrProgress|undefined,offer:SdrOffer
  if(draft.objective==='meetings'&&offer?.kind==='meeting'){
   const min=offer.slots.length?Math.round((Date.parse(offer.slots[0].end)-Date.parse(offer.slots[0].start))/60000):30;
   return ['O lead está qualificado: conduza para a reunião. Ofereça 2 ou 3 horários de offer.slots escrevendo exatamente o label e devolva em offered os ids oferecidos. Nunca escreva um horário que não esteja em offer.slots.',
-   'Se a mensagem do lead escolher um horário que já foi oferecido, chosen é o id dele e a resposta confirma a reunião: dia da semana, data, hora ('+timezoneLabel(offer.timezone)+'), duração de '+min+' minutos, online pelo Google Meet, e que o convite chega no e-mail informado.',
+   'Se a mensagem do lead escolher um horário que já foi oferecido, chosen é o id dele e a resposta confirma a reunião: dia da semana, data, hora ('+timezoneLabel(offer.timezone)+'), duração de '+min+' minutos, online pelo Google Meet, e que o convite com o link chega no e-mail informado.',
+   'Antes de confirmar a reunião, peça o e-mail para o convite com o link do Google Meet, se o lead ainda não informou.',
    'Se o lead pedir outro dia ou horário, preference descreve o pedido (ex.: "quinta à tarde") e chosen é vazio; ofereça os que servirem de offer.slots.'];
  }
  if(draft.objective==='direct-sale')return ['O lead está qualificado: apresente a oferta e, com o interesse confirmado, feche pela forma "'+draft.closing.method+'" enviando exatamente este link: '+draft.closing.link+'. Não escreva nenhum outro link.'];

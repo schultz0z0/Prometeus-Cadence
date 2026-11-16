@@ -91,3 +91,63 @@ test('a qualified meetings agent offers real slots',async()=>{
  assert.equal(s.state,'pending-approval');assert.equal(s.stage,'offer');assert.equal(s.offer.slots.length,6);assert.equal(seen.offer.slots.length,6);
  assert.ok(await linked(f),'the conversation got a lead');
 });
+import {before} from 'node:test';
+import {fakeCalendar} from './calendar-helpers.ts';
+import {base} from './helpers.ts';
+import {startCalendarAuthorization,finishCalendarAuthorization,configureCalendar,readCalendarSlots} from '../../src/server/integrations/calendar.ts';
+import {readSdrConversation,prepareSdrReply,approveSdrReply} from '../../src/server/sdr/conversation.ts';
+import {cancelSdrBooking} from '../../src/server/sdr/business-actions.ts';
+const callback=base+'/api/integration-oauth/google-calendar/callback',calEnv={GOOGLE_CALENDAR_CLIENT_ID:'client-qa',GOOGLE_CALENDAR_CLIENT_SECRET:'secret-qa',GOOGLE_CALENDAR_REDIRECT_URI:callback};
+const savedEnv:Record<string,string|undefined>={};
+before(()=>{for(const [k,v] of Object.entries(calEnv)){savedEnv[k]=process.env[k];process.env[k]=v;}});
+after(()=>{for(const k of Object.keys(calEnv)){if(savedEnv[k]===undefined)delete process.env[k];else process.env[k]=savedEnv[k];}});
+async function calendarOn(p:Principal){const g=fakeCalendar(),u=new URL((await startCalendarAuthorization(p,p.sessionId)).authorizationUrl);
+ await finishCalendarAuthorization(p,p.sessionId,new URL(callback+'?state='+u.searchParams.get('state')+'&code=code-qa'),g.deps);
+ await configureCalendar(p,{timezone:'America/Sao_Paulo',weekdays:[0,1,2,3,4,5,6],start:'00:00',end:'23:30',durationMinutes:30,noticeHours:0,horizonDays:3,expectedRevision:0},g.deps);return g;}
+/** A meetings conversation whose latest draft carries the lead's choice of the first offered slot. */
+async function meetingTurn(email?:string){
+ const f=await fixture({draft:{qualification:[{question:'Porte?',field:'porte',required:false}]}});await asMeetings(f);const g=await calendarOn(f.p);
+ const leadId=await lead(f,{phone:f.phone,...(email?{email}:{})});await ensure(f);
+ const deps={route,slots:async()=>{const r=await readCalendarSlots(f.p,{},g.deps);return {timezone:r.timezone,slots:r.slots.map(x=>({start:x.start,end:x.end}))};}};
+ let label='';
+ await inbound(f,'Quero uma demonstração');
+ await runSdrTick({limit:5,now:IN,workspaceId:f.p.workspaceId},{...deps,generate:async(_c:any,r:any)=>{label=JSON.parse(r.prompt).offer.slots[0].label;return {value:r.parse({reply:'Tenho '+label+'. Pode ser?',decision:'reply',fields:[],action:'none',quote:'',offered:['s1']}),usage:{provider:'openai'}};}});
+ const first=(await readSdrConversation(f.p,f.conversation)).turn!;await testAdmin(c=>c.query("UPDATE app.sdr_turn SET state='superseded' WHERE id=$1",[first.id]));
+ await inbound(f,'Pode ser esse');
+ const text='Combinado: '+label+' (horário de Brasília), 30 minutos pelo Google Meet.';
+ await runSdrTick({limit:5,now:IN,workspaceId:f.p.workspaceId},{...deps,generate:async(_c:any,r:any)=>({value:r.parse({reply:text,decision:'reply',fields:[],action:'none',quote:'',chosen:'s1'}),usage:{provider:'openai'}})});
+ const turn=(await readSdrConversation(f.p,f.conversation)).turn!;assert.equal((turn.proposal as any)?.kind,'meeting');
+ return {f,g,turn,text,leadId};
+}
+const approve=async(m:Awaited<ReturnType<typeof meetingTurn>>,text=m.text)=>{const review=await prepareSdrReply(m.f.p,m.f.conversation,{turnId:m.turn.id,text});
+ return approveSdrReply(m.f.p,m.f.conversation,{turnId:m.turn.id,text,reviewToken:review.review.token,requestId:randomUUID()},m.g.deps);};
+const stageOf=(f:Fix)=>testAdmin(async c=>(await c.query('SELECT stage FROM app.sdr_thread_state WHERE conversation_id=$1',[f.conversation])).rows[0].stage as string);
+const outbox=(f:Fix)=>testAdmin(async c=>Number((await c.query('SELECT count(*) n FROM app.message_outbox WHERE workspace_id=$1',[f.p.workspaceId])).rows[0].n));
+test('approving a meeting creates the event before queuing the message',async()=>{
+ const m=await meetingTurn('ana@x.com');let queuedAtCreate=-1;
+ m.g.hooks.afterCreate=async()=>{queuedAtCreate=await outbox(m.f);};
+ await approve(m);
+ assert.equal(queuedAtCreate,0);assert.equal(m.g.created.length,1);
+ assert.match(m.g.created[0].query,/sendUpdates=all/);assert.match(m.g.created[0].query,/conferenceDataVersion=1/);
+ assert.deepEqual(m.g.created[0].body.attendees,[{email:'ana@x.com'}]);assert.ok(m.g.created[0].body.conferenceData.createRequest);
+ const v=await readSdrConversation(m.f.p,m.f.conversation);assert.equal(v.booking?.state,'accepted');assert.equal((v.booking as any).meetUrl,'https://meet.google.com/abc-defg-hij');
+ assert.equal(await outbox(m.f),1);
+ assert.equal(await stageOf(m.f),'done');
+ // A booked meeting closes the stage and a cancelled one reopens it.
+ await cancelSdrBooking(m.f.p,m.f.conversation,{reservationId:v.booking!.id,expectedRevision:v.booking!.revision},m.g.deps);
+ assert.equal(await stageOf(m.f),'qualified');
+});
+test('approval of a meeting whose slot was taken books nothing and sends nothing',async()=>{
+ const m=await meetingTurn('ana@x.com'),slot=(m.turn.proposal as any).slot;m.g.hooks.busy=[{start:slot.start,end:slot.end}];
+ await assert.rejects(approve(m),(e:any)=>e.status===409&&e.message==='Este horário acabou de ser ocupado. O agente vai oferecer outros.');
+ assert.equal(m.g.created.length,0);assert.equal(await outbox(m.f),0);
+});
+test('an edited confirmation without the booked date is refused',async()=>{
+ const m=await meetingTurn('ana@x.com');
+ await assert.rejects(approve(m,'Combinado!'),(e:any)=>e.status===422&&e.message==='O texto não traz mais a data e a hora da reunião marcada. Revise antes de aprovar.');
+ assert.equal(m.g.created.length,0);
+});
+test('without a lead e-mail the meeting is booked with no attendees',async()=>{
+ const m=await meetingTurn();await approve(m);
+ assert.equal(m.g.created.length,1);assert.equal(m.g.created[0].body.attendees,undefined);assert.match(m.g.created[0].query,/sendUpdates=none/);
+});

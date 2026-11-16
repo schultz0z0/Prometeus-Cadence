@@ -44,8 +44,8 @@ export async function prepareSdrBooking(p:Principal,id:string,raw:unknown){
  const b=prepareSchema.safeParse(raw);if(!b.success)throw new AppError(422,'Escolha um horário.');
  return tx(p,async c=>{const s=await bookingState(c,p,id,b.data.slotId,null);return {lead:s.lead,blockers:s.blockers,token:createReviewToken(s.proof,secret()),expiresAt:new Date(Date.now()+600000).toISOString()};});
 }
-async function reserve(p:Principal,id:string,slotId:string,leadId:string,requestId:string,deps:CalendarDeps){
- try{return await reserveCalendarSlot(p,{slotId,leadId,requestId},deps);}
+async function reserve(p:Principal,id:string,slotId:string,leadId:string,requestId:string,deps:CalendarDeps,invite?:{attendeeEmail?:string|null;meet:boolean}){
+ try{return await reserveCalendarSlot(p,{slotId,leadId,requestId},deps,invite);}
  // Refused before any reservation existed: nothing is in flight. An uncertain reservation stays.
  catch(e){await tx(p,c=>c.query('SELECT app.sdr_booking_abort($1,$2)',[id,requestId])).catch(()=>{});throw e;}
 }
@@ -74,12 +74,33 @@ export async function recheckSdrBooking(p:Principal,id:string,deps:CalendarDeps=
  return reserveCalendarSlot(p,{slotId:a.row.slot_id,leadId:a.row.lead_id,requestId:a.row.request_id},deps);
 }
 const cancelSchema=z.strictObject({reservationId:z.uuid(),expectedRevision:z.number().int().min(1)});
+const EMAIL=/^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
+/** 16/11/2026: approving the agent's confirmation books the slot the lead chose, with the lead invited and a Meet link. Event first, message after. */
+export async function bookSdrProposal(p:Principal,id:string,turnId:string,requestId:string,deps:CalendarDeps={}):Promise<{start:string;end:string;meetUrl:string|null}>{
+ requirePermission(p,'messages.reply');
+ const proposal=await tx(p,async c=>(await c.query('SELECT proposal FROM app.sdr_turn WHERE id=$1 AND conversation_id=$2',[turnId,id])).rows[0]?.proposal) as {kind:string;slot?:{start:string;end:string}}|undefined;
+ if(proposal?.kind!=='meeting'||!proposal.slot)throw new AppError(409,failures.SDR_STATE[1],'SDR_STATE');
+ const free=await readCalendarSlots(p,{from:proposal.slot.start,to:proposal.slot.end},deps),slot=free.slots.find(x=>x.start===proposal.slot!.start);
+ if(!slot)throw new AppError(409,'Este horário acabou de ser ocupado. O agente vai oferecer outros.','SLOT_TAKEN');
+ const s=await tx(p,async c=>{
+  const st=await bookingState(c,p,id,slot.id,requestId);if(st.blockers.length)throw new AppError(409,st.blockers[0],'SDR_BOOKING_BLOCKED');
+  await c.query('SELECT app.sdr_booking_begin($1,$2,$3,$4)',[id,requestId,st.leadId,slot.id]);
+  const email=String((await c.query("SELECT payload->>'email' e FROM app.lead WHERE id=$1",[st.leadId])).rows[0]?.e??'').trim();
+  return {leadId:st.leadId!,email:EMAIL.test(email)?email:null};
+ });
+ const booked=await reserve(p,id,slot.id,s.leadId,requestId,deps,{attendeeEmail:s.email,meet:true});
+ if(booked.state==='accepted')await tx(p,c=>c.query('SELECT app.sdr_set_stage($1,$2)',[id,'done']));
+ return {start:booked.start,end:booked.end,meetUrl:(booked as {meetUrl?:string|null}).meetUrl??null};
+}
 export async function cancelSdrBooking(p:Principal,id:string,raw:unknown,deps:CalendarDeps={}){
  requirePermission(p,'messages.reply');
  const b=cancelSchema.safeParse(raw);if(!b.success)throw new AppError(422,'Operação inválida.');
  const current=await tx(p,async c=>(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {id:string}|null);
  if(current?.id!==b.data.reservationId)throw new AppError(404,failures.SDR_NOT_FOUND[1],'SDR_NOT_FOUND');
- return cancelCalendarReservation(p,b.data.reservationId,{expectedRevision:b.data.expectedRevision},deps);
+ const r=await cancelCalendarReservation(p,b.data.reservationId,{expectedRevision:b.data.expectedRevision},deps);
+ // A cancelled meeting reopens the conversation for a new offer.
+ await tx(p,c=>c.query('SELECT app.sdr_set_stage($1,$2)',[id,'qualified']));
+ return r;
 }
 const consentSchema=z.strictObject({turnId:z.uuid(),quote:z.string().min(3).max(500),days:z.number().int().min(1).max(30)});
 export async function recordSdrFollowup(p:Principal,id:string,raw:unknown){

@@ -86,6 +86,7 @@ test('the offer prompt lists only the app slots',()=>{
  const p=JSON.parse(sdrPrompt({...base(),draft:qdraft,progress:{stage:'offer',answers:{porte:{value:'5',messageId:'m1'}},attempts:{},asked:null,offer},offer} as any));
  assert.deepEqual(p.offer.slots.map((s:any)=>s.id),['s1','s2','s3']);
  assert.equal(p.objective,'meetings');
+ assert.ok(p.instructions.some((x:string)=>x.includes('Antes de confirmar a reunião, peça o e-mail para o convite com o link do Google Meet, se o lead ainda não informou.')));
 });
 test('parse keeps new fields with safe defaults',()=>{
  const o=parseSdrOutput({reply:'ok',decision:'reply',fields:[],action:'none',quote:''},[]);

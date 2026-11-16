@@ -119,7 +119,8 @@ const view=(r:Row):CalendarReservationView=>({id:r.id,connectionId:r.connection_
  externalId:r.state==='accepted'?r.event_id:null,state:r.state,revision:Number(r.revision)});
 const finish=(p:Principal,id:string,revision:number,state:'accepted'|'uncertain'|'cancelled'|'failed',error:string|null)=>
  withWorkspaceTransaction(p,async c=>Number((await c.query('SELECT app.finish_calendar_reservation($1,$2,$3,$4) v',[id,revision,state,error])).rows[0].v));
-export async function reserveCalendarSlot(p:Principal,raw:unknown,deps:CalendarDeps={}):Promise<CalendarReservationView>{
+/** invite: the SDR books with the lead as guest (Google e-mails the invite) and a Google Meet link. */
+export async function reserveCalendarSlot(p:Principal,raw:unknown,deps:CalendarDeps={},invite?:{attendeeEmail?:string|null;meet:boolean}):Promise<CalendarReservationView&{meetUrl?:string|null}>{
  const parsed=reserveSchema.safeParse(raw);if(!parsed.success)throw new AppError(422,'Escolha um horário e um lead.');const input=parsed.data;
  const slot=openSlot(p.workspaceId,input.slotId),id=randomUUID();
  try{
@@ -131,16 +132,19 @@ export async function reserveCalendarSlot(p:Principal,raw:unknown,deps:CalendarD
   if(r.connection_id!==a.id)throw new AppError(409,failures.CONNECTION_CHANGED[1],'CONNECTION_CHANGED');
   const calendarId=a.config?.calendarId??'primary',revision=Number(r.revision);
   const event={id:r.event_id,summary:`Reunião com ${r.leadName||'lead'}`+(r.companyName?` · ${r.companyName}`:''),description:'Reunião reservada pelo Prometeus Cadence.',
-   start:{dateTime:new Date(slot.s).toISOString(),timeZone:slot.z},end:{dateTime:new Date(slot.e).toISOString(),timeZone:slot.z},extendedProperties:{private:{cadenceReservation:r.id}}};
-  let outcome:'accepted'|'failed';
+   start:{dateTime:new Date(slot.s).toISOString(),timeZone:slot.z},end:{dateTime:new Date(slot.e).toISOString(),timeZone:slot.z},extendedProperties:{private:{cadenceReservation:r.id}},
+   ...(invite?.attendeeEmail?{attendees:[{email:invite.attendeeEmail}]}:{}),...(invite?.meet?{conferenceData:{createRequest:{requestId:r.event_id,conferenceSolutionKey:{type:'hangoutsMeet'}}}}:{})};
+  const query='?sendUpdates='+(invite?.attendeeEmail?'all':'none')+(invite?.meet?'&conferenceDataVersion=1':'');
+  const meetOf=(e:any)=>{const u=e?.hangoutLink??e?.conferenceData?.entryPoints?.find((x:any)=>x?.entryPointType==='video')?.uri;return typeof u==='string'&&/^https:\/\/\S{1,500}$/.test(u)?u:null;};
+  let outcome:'accepted'|'failed',meetUrl:string|null=null;
   try{
    outcome=await call(p,a,async token=>{
     // A repeated request first asks Google: the event may exist from the attempt whose answer was lost.
-    if(r.replay&&await findEvent(token,calendarId,r.event_id,deps))return'accepted';
+    if(r.replay){const found=await findEvent(token,calendarId,r.event_id,deps);if(found){meetUrl=meetOf(found);return'accepted';}}
     // A repeat may see its own event as busy before Google's lookup catches up: ask once more before calling it taken.
     if((await busy(token,{calendarId,timezone:slot.z},slot.s,slot.e,deps)).length)return r.replay&&await findEvent(token,calendarId,r.event_id,deps)?'accepted':'failed';
     // The event id is fixed by the reservation: a second create answers 409 instead of booking twice.
-    try{await google('POST',eventUrl(calendarId)+'?sendUpdates=none',token,event,deps,texts);return'accepted';}
+    try{meetUrl=meetOf(await google('POST',eventUrl(calendarId)+query,token,event,deps,texts));return'accepted';}
     catch(e){if(e instanceof GoogleRequestError&&e.status===409)return await findEvent(token,calendarId,r.event_id,deps)?'accepted':'failed';throw e;}
    },deps);
   }catch(e){
@@ -151,7 +155,8 @@ export async function reserveCalendarSlot(p:Principal,raw:unknown,deps:CalendarD
   }
   const next=await finish(p,r.id,revision,outcome,outcome==='failed'?'O horário foi ocupado na agenda.':null);
   if(outcome==='failed')throw new AppError(409,failures.SLOT_TAKEN[1],'SLOT_TAKEN');
-  return view({...r,state:'accepted',revision:next});
+  if(meetUrl)await withWorkspaceTransaction(p,c=>c.query('SELECT app.calendar_set_meet($1,$2)',[r.id,meetUrl]));
+  return {...view({...r,state:'accepted',revision:next}),...(meetUrl?{meetUrl}:{})};
  }catch(e){throw calendarError(e);}
 }
 export async function cancelCalendarReservation(p:Principal,id:string,raw:unknown,deps:CalendarDeps={}):Promise<CalendarReservationView>{
