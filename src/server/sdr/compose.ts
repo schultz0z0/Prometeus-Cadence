@@ -12,6 +12,7 @@ export type Search=(i:{workspaceId:string;documentIds:string[];queries:string[];
 export interface ComposeInput{workspaceId:string;operationId:string;operation:'sdr-turn'|'sdr-simulation';route:ConventionalRoute;signal:AbortSignal;draft:SdrDraft;context:unknown;
  knowledge:{kind:string;title:string;body:string}[];history:{id?:string;direction:string;text:string}[];incoming:string;incomingId:string|null;followup:{attempt:number;quote:string}|null;meeting:string|null;summary:string|null;facts:SdrFact[]}
 export interface ComposeResult{out:SdrOutput;usage:unknown;sources:{id:string;documentId:string;title:string;label:string}[];alerts:{kind:'unsourced-value';value:string}[];memory:{summary:string|null;facts:SdrFact[]}}
+// The reply prompt carries history, documents and memory; thinking models used the whole 4096 before writing a word.
 const MAX_CALLS=3,MAX_SEARCHES=2,MAX_PASSAGES=8;
 export async function composeSdrReply(i:ComposeInput,deps:{generate?:Generate;search?:Search}={}):Promise<ComposeResult>{
  // Defaults load lazily: they pull server-only modules the unit tests replace.
@@ -25,7 +26,7 @@ export async function composeSdrReply(i:ComposeInput,deps:{generate?:Generate;se
   if(plan.value.length)await find(plan.value);
  }
  const answer=async()=>{calls++;const r=await generate(ctx(i.operation,calls===1?0:calls),{prompt:sdrPrompt({draft:i.draft,context:i.context,knowledge:i.knowledge,history:i.history,incoming:i.incoming,incomingId:i.incomingId??undefined,followup:i.followup,meeting:i.meeting,
-  passages:passages.map(p=>({id:p.id,title:p.title,label:p.label,text:p.text})),summary:i.summary,facts:i.facts}),schema:sdrOutputJsonSchema,maxOutputTokens:4096,parse:v=>parseSdrOutput(v,fields)});usage=r.usage;return r.value;};
+  passages:passages.map(p=>({id:p.id,title:p.title,label:p.label,text:p.text})),summary:i.summary,facts:i.facts}),schema:sdrOutputJsonSchema,maxOutputTokens:8192,parse:v=>parseSdrOutput(v,fields)});usage=r.usage;return r.value;};
  let out=await answer();
  if(docs.length&&out.needMore.length&&calls<MAX_CALLS&&searches<MAX_SEARCHES){await find(out.needMore);out=await answer();}
  const cited=passages.filter(p=>out.citations.includes(p.id));

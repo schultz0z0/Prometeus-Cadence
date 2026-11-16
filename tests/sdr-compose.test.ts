@@ -55,6 +55,13 @@ test('instructions inside a document never change the rules sent to the model',a
  const plain=JSON.parse(sdrPrompt(base() as any));
  assert.deepEqual(prompts.at(-1).instructions,plain.instructions);
 });
+test('the reply call leaves room for the model to think on long conversations',async()=>{
+ const budgets:Record<string,number>={};
+ await composeSdrReply(base({draft:{...defaultSdrDraft(),documentIds:['d1']}}),{
+  generate:async(ctx:any,req:any)=>{budgets[ctx.operation]=req.maxOutputTokens;return ctx.operation==='sdr-search-plan'?{value:req.parse({queries:['preço']}),usage:{}}:{value:parseSdrOutput(reply(),[]),usage:{}};},
+  search:async()=>({passages:[passage('p1','Agente SDR: R$ 900')],embedTokens:1})});
+ assert.deepEqual(budgets,{'sdr-search-plan':4096,'sdr-turn':8192});
+});
 test('a fact only counts when it points to a lead message',async()=>{
  const r=await composeSdrReply(base(),{generate:async()=>({value:parseSdrOutput(reply({citations:[],facts:[{key:'porte',value:'5',messageId:'m1'},{key:'x',value:'y',messageId:'m2'},{key:'z',value:'w',messageId:'m3'},{key:'q',value:'r',messageId:'nao-existe'}]}),[]),usage:{}}),search:async()=>({passages:[],embedTokens:0})});
  assert.deepEqual(r.memory.facts.map(f=>f.key),['porte','z']);assert.equal(r.memory.summary,'Lead perguntou preço.');
