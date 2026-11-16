@@ -5,6 +5,7 @@ import type {PoolClient} from 'pg';
 import type {Principal} from '../../domain/workspace.ts';
 import type {ConventionalRoute} from '../../domain/ai-routing.ts';
 import {resolveAiRoute} from '../../domain/ai-routing.ts';
+import {readCalendarSlots} from '../integrations/calendar.ts';
 import {sdrBlockers,sdrDraftSchema,type SdrDraft,type SdrFacts} from '../../domain/sdr-policy.ts';
 import {withWorkspaceTransaction} from '../db/transaction.ts';
 import {AppError} from '../errors.ts';
@@ -100,9 +101,11 @@ export async function simulateSdr(p:Principal,raw:unknown,deps:SdrDeps={}){
  const signal=AbortSignal.any([AbortSignal.timeout(60000),...(deps.signal?[deps.signal]:[])]);
  let r:Awaited<ReturnType<typeof composeSdrReply>>;
  try{r=await composeSdrReply({workspaceId:p.workspaceId,operationId:'sdr-simulation:'+randomUUID(),operation:'sdr-simulation',route:ctx.route,signal,draft:ctx.draft,context:ctx.context,knowledge:ctx.knowledge,
-  history:[],incoming:s.data.incoming,incomingId:null,followup:null,meeting:null,summary:null,facts:[]},{generate:deps.generate,search:deps.search});}
+  history:[],incoming:s.data.incoming,incomingId:null,followup:null,meeting:null,summary:null,facts:[],progress:null},{generate:deps.generate,search:deps.search,
+  // The simulation offers the same real slots the worker would, read as the person simulating.
+  slots:ctx.draft.objective==='meetings'?async range=>{const r=await readCalendarSlots(p,{from:new Date(range.from).toISOString(),to:new Date(range.to).toISOString()});return {timezone:r.timezone,slots:r.slots.map(x=>({start:x.start,end:x.end}))};}:undefined});}
  catch{throw new AppError(502,'A IA não respondeu à simulação. Tente de novo.');}
- return {reply:r.out.reply,decision:r.out.decision,fields:r.out.fields,sources:r.sources,alerts:r.alerts,sent:false as const,remaining:ctx.left};
+ return {reply:r.out.reply,decision:r.out.decision,fields:r.out.fields,sources:r.sources,alerts:r.alerts,stage:r.progress.stage,status:r.status,sent:false as const,remaining:ctx.left};
 }
 // ---- Activation (review → confirm) and pause.
 const prepareSchema=z.strictObject({agentId:z.string().min(1).max(200),revision:z.number().int().min(1)});

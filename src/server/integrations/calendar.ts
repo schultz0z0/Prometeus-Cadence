@@ -60,6 +60,18 @@ async function findEvent(token:string,calendarId:string,eventId:string,deps:Cale
  catch(err){if(err instanceof GoogleAttention&&err.attention==='missing')return null;throw err;}
 }
 
+// --- Free slots for the SDR worker (16/11/2026): the worker has no person, so it reads the grant through worker functions. ---
+export async function readWorkerSlots(pool:{query:(sql:string,args:unknown[])=>Promise<{rows:any[]}>},workspaceId:string,range:{from:number;to:number},deps:CalendarDeps={}):Promise<{timezone:string;durationMinutes:number;slots:{start:string;end:string}[]}>{
+ const a=(await pool.query('SELECT app.worker_calendar_access($1) v',[workspaceId])).rows[0].v as (Omit<Access,'revision'>&{revision:number|string})|null;
+ if(!a||a.state!=='ready'||a.attention||!a.config)throw new AppError(409,'Configure a disponibilidade da agenda primeiro.','CALENDAR_SETUP');
+ const config=a.config,revision=Number(a.revision),now=(deps.now??Date.now)();
+ const candidates=candidateSlots(config,range.from,range.to,now);if(!candidates.length)return{timezone:config.timezone,durationMinutes:config.durationMinutes,slots:[]};
+ const tokens=openTokens(KIND,a.secret,workspaceId,a.id,revision);
+ const remote=await withAccess(KIND,tokens,t=>pool.query('SELECT app.worker_save_calendar_tokens($1,$2,$3,$4,$5)',[workspaceId,a.id,revision,sealTokens(KIND,t,workspaceId,a.id,revision),t.expiresAt]),
+  t=>busy(t,config,candidates[0].start,candidates.at(-1)!.end,deps),deps);
+ return{timezone:config.timezone,durationMinutes:config.durationMinutes,slots:freeSlots(candidates,remote).map(x=>({start:new Date(x.start).toISOString(),end:new Date(x.end).toISOString()}))};
+}
+
 // --- Availability (owner/admin) ---
 export async function configureCalendar(p:Principal,raw:unknown,deps:CalendarDeps={}){
  const parsed=calendarSetupSchema.safeParse(raw);if(!parsed.success)throw new AppError(422,'Revise o fuso, os dias, o horário e a duração.');

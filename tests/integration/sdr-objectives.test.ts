@@ -78,3 +78,16 @@ test('progress is not written by a lost or superseded turn',async()=>{
  const s=await testAdmin(async c=>(await c.query('SELECT stage FROM app.sdr_thread_state WHERE conversation_id=$1',[f.conversation])).rows[0]);
  assert.notEqual(s?.stage,'done');void msg;
 });
+import {runSdrTick} from '../../src/server/sdr/worker.ts';
+const route={provider:'openai' as const,model:'qa',configFingerprint:'qa',contractVersion:'conventional-v1' as const};
+const asMeetings=(f:Fix)=>testAdmin(c=>c.query("UPDATE app.sdr_agent_revision SET config=jsonb_set(config,'{objective}','\"meetings\"') WHERE workspace_id=$1",[f.p.workspaceId]));
+test('a qualified meetings agent offers real slots',async()=>{
+ const f=await fixture({draft:{qualification:[{question:'Porte?',field:'porte',required:false}]}});await asMeetings(f);await inbound(f,'Quero conhecer a solução');
+ const slots=Array.from({length:8},(_,i)=>({start:new Date(Date.UTC(2030,0,7+Math.floor(i/4),12+i%4)).toISOString(),end:new Date(Date.UTC(2030,0,7+Math.floor(i/4),12+i%4,30)).toISOString()}));
+ const seen:{offer?:any}={};
+ await runSdrTick({limit:5,now:IN,workspaceId:f.p.workspaceId},{route,slots:async()=>({timezone:'America/Sao_Paulo',slots}),
+  generate:async(_c:any,r:any)=>{const offer=JSON.parse(r.prompt).offer;seen.offer=offer;return {value:r.parse({reply:'Tenho '+offer.slots[0].label+' ou '+offer.slots[4].label+'. Qual fica melhor?',decision:'reply',fields:[],action:'none',quote:'',offered:['s1','s5']}),usage:{provider:'openai'}};}});
+ const s=await testAdmin(async c=>(await c.query('SELECT s.stage,s.offer,t.state FROM app.sdr_thread_state s JOIN app.sdr_turn t ON t.conversation_id=s.conversation_id WHERE s.conversation_id=$1',[f.conversation])).rows[0]);
+ assert.equal(s.state,'pending-approval');assert.equal(s.stage,'offer');assert.equal(s.offer.slots.length,6);assert.equal(seen.offer.slots.length,6);
+ assert.ok(await linked(f),'the conversation got a lead');
+});
