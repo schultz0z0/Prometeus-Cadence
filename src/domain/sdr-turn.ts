@@ -8,7 +8,7 @@ export type SdrFact={key:string;value:string;messageId:string};
 export type SdrContact={name:string;email:string;phone:string;company:string;messageId:string};
 export type SdrOutput={reply:string;decision:'reply'|'handoff'|'abstain';fields:{field:string;value:string;messageId?:string}[];action:SdrAction|null;quote:string|null;citations:string[];needMore:string[];summary:string;facts:SdrFact[];
  contact:SdrContact|null;profile:{pain:string;plan:string;nextStep:string};offered:string[];chosen:string|null;preference:string|null;refused:boolean};
-export type SdrProposal={kind:'calendar-options'}|{kind:'followup-consent';quote:string}|{kind:'meeting';slot:SdrOfferSlot;timezone:string};
+export type SdrProposal={kind:'calendar-options'}|{kind:'followup-consent';quote:string}|{kind:'meeting';slot:SdrOfferSlot;timezone:string}|{kind:'reminder';reminderId:string};
 const outputSchema=z.strictObject({reply:z.string().transform(s=>s.trim().slice(0,2000)),decision:z.enum(['reply','handoff','abstain']),fields:z.array(z.strictObject({field:z.string().max(40),value:z.string().transform(s=>s.slice(0,300)),messageId:z.string().max(200).optional()})).transform(v=>v.slice(0,20)),
  // 'none' and '' are how providers without nullable enums say nothing; an overlong quote cannot be literal, so it is dropped.
  action:z.enum(['none','calendar-options','followup-consent']).nullable().default(null).transform(v=>v==='none'?null:v),quote:z.string().nullable().default(null).transform(v=>v&&v.length<=500?v:null),

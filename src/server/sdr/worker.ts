@@ -4,6 +4,7 @@ import type {ConventionalRoute} from '../../domain/ai-routing.ts';
 import {resolveAiRoute} from '../../domain/ai-routing.ts';
 import {sdrDraftSchema} from '../../domain/sdr-policy.ts';
 import {sdrProposal,type SdrFact} from '../../domain/sdr-turn.ts';
+import {sdrReminderText,type SdrReminderKind} from '../../domain/sdr-reminder.ts';
 import {composeSdrReply,type Generate,type Search,type Slots} from './compose.ts';
 import type {SdrProgress} from '../../domain/sdr-stage.ts';
 import {workerPool} from '../prospecting/worker-db.ts';
@@ -12,8 +13,15 @@ import {conventionalConfig} from '../prospecting/ai/config.ts';
 // 07B.2: one turn per inbound. The draft waits for a person; this worker never queues a message.
 export type SdrWorkerDeps={generate?:Generate;search?:Search;route?:ConventionalRoute|null;slots?:Slots};
 type Claim={workspaceId:string;turnId:string;config:unknown;context:unknown;knowledge:{kind:string;title:string;body:string}[];incoming:string;history:{id:string;direction:string;text:string}[];followup:{attempt:number;quote:string}|null;meeting:string|null;incomingId:string|null;summary:string|null;facts:SdrFact[];progress:SdrProgress|null;conversationId:string;calendarReady:boolean};
+type Reminder={reminderId:string;workspaceId:string;conversationId:string;kind:SdrReminderKind;start:string;timezone:string;meetUrl:string|null;confirmed:boolean;name:string|null};
 export async function runSdrTick(o:{limit:number;now?:Date;workspaceId?:string;signal?:AbortSignal},deps:SdrWorkerDeps={}){
  const pool=workerPool(),token=randomUUID();let processed=0;
+ // 16/11/2026: due meeting reminders become drafts with app-written text (no AI). One failing reminder never stops the turns.
+ for(let n=0;n<o.limit&&!o.signal?.aborted;n++){
+  const r=(await pool.query('SELECT app.sdr_claim_reminder($1,$2) v',[o.now??new Date(),o.workspaceId??null])).rows[0].v as Reminder|null;
+  if(!r)break;
+  await pool.query('SELECT app.sdr_draft_reminder($1,$2,$3)',[r.workspaceId,r.reminderId,sdrReminderText({kind:r.kind,name:r.name,start:r.start,timezone:r.timezone,meetUrl:r.meetUrl,confirmed:r.confirmed})]).catch(()=>undefined);
+ }
  for(;processed<o.limit&&!o.signal?.aborted;processed++){
   const now=o.now??new Date(),claim=(await pool.query('SELECT app.sdr_claim_turn($1,$2,$3) v',[token,now,o.workspaceId??null])).rows[0].v as Claim|null;
   if(!claim)break;

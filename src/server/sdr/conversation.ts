@@ -17,6 +17,7 @@ const failures:Record<string,[number,string]>={
  SDR_CHANGED:[409,'A conversa mudou. Recarregue e tente de novo.'],
  SDR_STATE:[409,'Esta resposta já não está esperando o seu ok.'],
  SDR_FOLLOWUP_TOO_SOON:[409,'Já saiu uma mensagem nas últimas 24 horas. O retorno precisa esperar esse intervalo.'],
+ SDR_REMINDER_STALE:[409,'Este lembrete não vale mais: a reunião mudou ou já está perto de começar.'],
 };
 const sdrError=(e:unknown)=>{const k=e instanceof Error?failures[e.message]:undefined;return k?new AppError(k[0],k[1],e instanceof Error?e.message:undefined):e;};
 const tx=<T,>(p:Principal,fn:(c:PoolClient)=>Promise<T>)=>withWorkspaceTransaction(p,async c=>{

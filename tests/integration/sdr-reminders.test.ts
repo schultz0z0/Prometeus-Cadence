@@ -21,3 +21,62 @@ test('the official WhatsApp gets no reminder',async()=>{
 test('reminders off in the agent schedule nothing',async()=>{
  const {m}=await booked({managed:true,draft:{meetingReminders:false}});assert.equal((await rows(m.f.p.workspaceId)).length,0);
 });
+import {randomUUID} from 'node:crypto';
+import {runSdrTick} from '../../src/server/sdr/worker.ts';
+import {readSdrConversation,prepareSdrReply,approveSdrReply,rejectSdrReply} from '../../src/server/sdr/conversation.ts';
+import {cancelSdrBooking} from '../../src/server/sdr/business-actions.ts';
+import {inbound,outbox,route} from './sdr-helpers.ts';
+/** Booked on the managed WhatsApp, with its 2h reminder due now (and the day-before one moved out of the way). */
+async function due(o:{presence?:string}={}){
+ const {m}=await booked({managed:true});
+ await testAdmin(async c=>{
+  await c.query("UPDATE app.sdr_meeting_reminder SET due_at=CASE kind WHEN 'two-hours' THEN now()-interval '1 minute' ELSE now()+interval '1 day' END WHERE workspace_id=$1",[m.f.p.workspaceId]);
+  if(o.presence)await c.query('UPDATE app.calendar_reservation SET sdr_presence=$2 WHERE workspace_id=$1',[m.f.p.workspaceId,o.presence]);
+ });
+ return m;
+}
+const tick=(m:Awaited<ReturnType<typeof due>>,generate?:any)=>runSdrTick({limit:5,workspaceId:m.f.p.workspaceId},{route,...(generate?{generate}:{})});
+const reminder=(m:Awaited<ReturnType<typeof due>>)=>testAdmin(async c=>(await c.query("SELECT r.state,r.turn_id,v.sdr_presence presence,v.meet_url FROM app.sdr_meeting_reminder r JOIN app.calendar_reservation v ON v.workspace_id=r.workspace_id AND v.id=r.reservation_id WHERE r.workspace_id=$1 AND r.kind='two-hours'",[m.f.p.workspaceId])).rows[0]);
+const turnOf=(m:Awaited<ReturnType<typeof due>>,id:string)=>testAdmin(async c=>(await c.query('SELECT state,text,reserved,proposal FROM app.sdr_turn WHERE id=$1',[id])).rows[0]);
+async function approveReminder(m:Awaited<ReturnType<typeof due>>,edit?:(t:string)=>string){
+ const r=await reminder(m),t=await turnOf(m,r.turn_id),text=edit?edit(t.text):t.text,review=await prepareSdrReply(m.f.p,m.f.conversation,{turnId:r.turn_id,text});
+ return approveSdrReply(m.f.p,m.f.conversation,{turnId:r.turn_id,text,reviewToken:review.review.token,requestId:randomUUID()},m.g.deps);
+}
+test('a due reminder becomes a draft with the app text',async()=>{
+ const m=await due();await tick(m);
+ const r=await reminder(m),t=await turnOf(m,r.turn_id);
+ assert.equal(r.state,'drafted');assert.equal(t.state,'pending-approval');assert.equal(t.reserved,false);assert.equal(t.proposal.kind,'reminder');
+ assert.match(t.text,/^Oi, QA! Nossa reunião é hoje às \d\d:\d\d/);assert.ok(r.meet_url&&t.text.includes(r.meet_url),'brings the meeting link');assert.match(t.text,/Segue de pé\?$/);
+});
+test('approving a reminder sends it and marks presence pending',async()=>{
+ const m=await due();await tick(m);const before=await outbox(m.f);
+ await approveReminder(m);
+ const r=await reminder(m);assert.equal(r.state,'sent');assert.equal(r.presence,'pending');assert.equal(await outbox(m.f),before+1);
+});
+test('a lead message while the reminder waits sends it back to due',async()=>{
+ const m=await due();await tick(m);
+ await inbound(m.f,'Uma dúvida antes da reunião');
+ await tick(m,async(_c:any,r:any)=>({value:r.parse({reply:'Claro, pode perguntar.',decision:'reply',fields:[],action:'none',quote:''}),usage:{provider:'openai'}}));
+ await tick(m);
+ assert.equal((await reminder(m)).state,'due');
+});
+test("a cancelled meeting's reminder cannot be approved",async()=>{
+ const m=await due();await tick(m);
+ const b=(await readSdrConversation(m.f.p,m.f.conversation)).booking!;
+ await cancelSdrBooking(m.f.p,m.f.conversation,{reservationId:b.id,expectedRevision:b.revision},m.g.deps);
+ await assert.rejects(approveReminder(m),(e:any)=>e.code==='SDR_REMINDER_STALE');
+ await tick(m);assert.equal((await reminder(m)).state,'dropped');
+});
+test('an edited reminder without the date still sends',async()=>{
+ const m=await due();await tick(m);await approveReminder(m,()=>'Oi, Ana! Tudo certo para nossa conversa?');
+ assert.equal((await reminder(m)).state,'sent');
+});
+test('a rejected reminder is not drafted again',async()=>{
+ const m=await due();await tick(m);const r=await reminder(m);
+ await rejectSdrReply(m.f.p,m.f.conversation,{turnId:r.turn_id});await tick(m);
+ assert.equal((await reminder(m)).state,'rejected');
+});
+test('a 2h reminder after a confirmation says Te espero lá',async()=>{
+ const m=await due({presence:'confirmed'});await tick(m);
+ const t=await turnOf(m,(await reminder(m)).turn_id);assert.match(t.text,/Te espero lá!$/);
+});
