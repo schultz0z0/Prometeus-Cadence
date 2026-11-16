@@ -89,8 +89,11 @@ test('07B.2 handoff, abstention, rejection and AI failure',async()=>{
  assert.equal(await rows('billing_grant',f.p.workspaceId,"AND unit='sdr' AND (held>0 OR spent>0)"),0,'abstaining costs nothing');
  // A failed call stays uncertain, holds the reservation and is not retried blindly.
  await inbound(f,'Terceira');const seen={n:0};
- await tick({route,generate:async()=>{seen.n++;throw Error('timeout');}},IN_HOURS,f.p.workspaceId);await tick({route,generate:async()=>{seen.n++;throw Error('timeout');}},IN_HOURS,f.p.workspaceId);
+ const providerFailure=()=>Object.assign(Error('O provedor não concluiu a operação'),{code:'GEMINI_RESULT_UNAVAILABLE'});
+ await tick({route,generate:async()=>{seen.n++;throw providerFailure();}},IN_HOURS,f.p.workspaceId);await tick({route,generate:async()=>{seen.n++;throw providerFailure();}},IN_HOURS,f.p.workspaceId);
  const u=(await readSdrConversation(f.p,f.conversation)).turn!;assert.equal(u.state,'uncertain');assert.equal(seen.n,1);
+ // The cause is kept with the turn, so a failure can be explained without reproducing it.
+ assert.deepEqual(await testAdmin(async c=>(await c.query('SELECT usage FROM app.sdr_turn WHERE id=$1',[u.id])).rows[0].usage),{error:'GEMINI_RESULT_UNAVAILABLE'});
  assert.equal(await rows('billing_grant',f.p.workspaceId,"AND unit='sdr' AND held=1"),1);
  await retrySdrTurn(f.p,f.conversation,{turnId:u.id});await tick(gen(reply()),IN_HOURS,f.p.workspaceId);
  const d=(await readSdrConversation(f.p,f.conversation)).turn!;assert.equal(d.id,u.id);assert.equal(d.state,'pending-approval');

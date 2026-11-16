@@ -90,7 +90,25 @@ Defeitos encontrados e corrigidos nesta etapa:
 
 - Uma resposta real falhou (`AI_FAILED`): numa conversa com histórico, páginas do site e documentos (cerca de 9 mil tokens de entrada), o modelo gastou 4.093 dos 4.096 tokens de saída pensando e parou por limite antes de responder. A resposta do SDR passou a ter 8.192 tokens de saída; a mesma conversa respondeu com o preço do site. O worker não registra a causa de uma falha de IA, só `AI_FAILED`.
 - O agente citava para o lead o nome do arquivo de onde tirou o preço; a fonte agora vai só nas citações.
-- Os outros agentes ainda usam 4.096 tokens de saída e não foram retestados com entradas grandes depois da separação por módulo.
+- Uma falha de IA no worker do SDR agora guarda o código do erro do provedor junto do turno (`usage.error`), sem o texto da mensagem.
+
+## Reteste real dos 4 agentes com entradas grandes (15/11/2026)
+
+Cada operação rodou 2 vezes no Gemini (`gemini-4-hydrogen`) com as 11 páginas do site como evidência. Todas terminaram com `STOP`:
+
+| Agente | Operação | Entrada (tokens) | Pensamento + saída / limite | Tempo |
+|---|---|---|---|---|
+| Prospecção | Qualificador | 3.372 | até 986 / 4.096 | 4–6 s |
+| Prospecção | Decisores | 11.376 | até 555 / 4.096 | 3–4 s |
+| Prospecção | Pessoas da empresa | 11.399 | até 474 / 4.096 | 3 s |
+| Prospecção | Leitura do site (Contexto de IA) | 14.168 | até 6.406 / 8.192 | 23–28 s |
+| Prospecção | Opções de cadência | 13.095 | até 2.597 / 8.192 | 12–14 s |
+| LinkedIn | Comentário | 1.090 | até 1.038 / 4.096 | 3–6 s |
+| Assistente | Resposta | 919 | até 756 / 4.096 | 3–4 s |
+| Agente SDR | Plano de busca | 396 | até 192 / 4.096 | 2 s |
+| Agente SDR | Resposta (conversa real) | 8.967 | 3.032 / 8.192 (antes: 4.096 esgotados) | — |
+
+Ponto de atenção: a leitura do site usa até 78% do maior limite que o app aceita (8.192). Um site com mais texto pode esgotar o limite.
 
 ## Pendências
 

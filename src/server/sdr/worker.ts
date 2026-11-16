@@ -29,7 +29,11 @@ export async function runSdrTick(o:{limit:number;now?:Date;workspaceId?:string;s
     history:claim.history,incoming:claim.incoming,incomingId:claim.incomingId,followup:claim.followup,meeting:claim.meeting,summary:claim.summary??null,facts:claim.facts??[]},{generate:deps.generate,search:deps.search});
    const out=r.out,empty=out.decision==='reply'&&!out.reply;
    await finish(empty?'abstain':out.decision,out.reply||null,out.fields,r.usage,empty?'EMPTY_REPLY':null,sdrProposal(out,claim.incoming,draft.followupEnabled),{sources:r.sources,alerts:r.alerts,...r.memory});
-  }catch{await finish(null,null,[],null,'AI_FAILED');}// The provider may have answered: stays uncertain, no blind retry.
+  }catch(e){
+   // The provider may have answered: stays uncertain, no blind retry. Only the error code is kept, never the message.
+   const code=(e as {code?:unknown})?.code;
+   await finish(null,null,[],{error:typeof code==='string'&&/^[A-Z0-9_]{1,80}$/.test(code)?code:'UNKNOWN'},'AI_FAILED');
+  }
  }
  return {processed};
 }
