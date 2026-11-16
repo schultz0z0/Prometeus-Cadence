@@ -110,6 +110,14 @@ Cada operação rodou 2 vezes no Gemini (`gemini-4-hydrogen`) com as 11 páginas
 
 Ponto de atenção: a leitura do site usa até 78% do maior limite que o app aceita (8.192). Um site com mais texto pode esgotar o limite.
 
+## Conversa real com o Agente SDR e queda do número (15–16/11/2026)
+
+- Venda de site: o agente deu o preço fixo sem citar arquivo nem perguntar porte; ao "quero sim", passou para o time.
+- Pedido de demonstração: o agente marcou a proposta de horários (`calendar-options`) sem inventar horário e pediu nome, empresa e e-mail; a conversa ligada ao lead gerou "Lead respondeu" na planilha.
+- Às 23:55 o número foi pausado sem queda real: a recuperação leu a resposta aprovada do agente já "entregue" e ainda sem o horário do WhatsApp, tratou como buraco (`OPENWA_RECOVERY_GAP`) e ligou a pausa de segurança. Com a pausa, a tela pedia para reconectar o WhatsApp (o celular seguia conectado) e as mensagens recebidas deixaram de entrar. Corrigido: mensagem própria sem horário não é buraco, qualquer que seja o status. Ao liberar o número, a recuperação releu o período pausado e trouxe a resposta do contato.
+- A memória da conversa guardou nome, empresa, e-mail e decisor, cada um ligado à mensagem do contato; esses dados não vão para a ficha do lead.
+- Pendente: uma pausa de segurança aparece como "precisa reconectar" (o motivo real some da tela) e só sai reconectando; falta o "Retomar envios" e mostrar o motivo.
+
 ## Pendências
 
 - Cadência por e-mail exige endereço HTTPS público para o descadastro (08B).
