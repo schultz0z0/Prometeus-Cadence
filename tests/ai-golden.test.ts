@@ -12,7 +12,7 @@ const company={name:'Prometeus',offer:'Automações sob medida'},product={name:'
 test('qualify request',async()=>{
  const {conventionalPrompt,conventionalSchema}=await import('../src/server/prospecting/ai/output.ts');
  const input:any={task:'qualify',criteria:'Empresas de logística com mais de 20 pessoas',evidence,facts:{city:'Curitiba'},company,product,language:'pt-BR'};
- golden('prospecting-qualify',{prompt:conventionalPrompt(input),schema:conventionalSchema('qualify'),maxOutputTokens:4096});
+ golden('prospecting-qualify',{prompt:conventionalPrompt(input),schema:conventionalSchema('qualify'),maxOutputTokens:8192});
 });
 test('decisors and company people requests',async()=>{
  const {decisorRequest,companyPeopleRequest}=await import('../src/server/prospecting/ai/decisors.ts');

@@ -29,3 +29,13 @@ test('each agent points at instruction files that exist',async()=>{
  const {AI_AGENTS}=await import('../src/domain/ai-agents.ts');const {existsSync}=await import('node:fs');
  for(const a of Object.values(AI_AGENTS))for(const f of a.instructions)assert.ok(existsSync(f),f);
 });
+// 16/11/2026: a qualification call came back without a result once (Gemini thinking spends the output budget, as in the SDR).
+test('lead qualification gives the model the larger output budget',()=>withEnv(async()=>{
+ const {conventionalConfig}=await import('../src/server/prospecting/ai/config.ts');const {runConventional}=await import('../src/server/prospecting/ai/conventional.ts');
+ let sent:any=null;
+ const evidence=[{id:'e1',url:'https://empresa.example',text:'Empresa de logística em Curitiba com 40 funcionários.',hash:'h',fetchedAt:'2026-11-14T00:00:00Z',truncated:false}];
+ await runConventional({operationId:'op',workspaceId:'w',signal:AbortSignal.timeout(5000),route:conventionalConfig('w').conventional.gemini.route,agent:'prospecting',operation:'qualify'} as any,
+  {task:'qualify',criteria:'Logística com mais de 20 pessoas',evidence,facts:{},company:{name:'P'},product:{name:'X'},language:'pt-BR'} as any,
+  {fetcher:async(_u:any,init:any)=>{sent=JSON.parse(init.body);return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({verdict:'fit',reason:'Porte e setor batem.',evidenceIds:['e1']})}]}}]});}}).catch(()=>undefined);
+ assert.equal(sent?.generationConfig?.maxOutputTokens,8192);
+}));
