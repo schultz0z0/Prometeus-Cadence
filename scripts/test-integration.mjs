@@ -104,6 +104,7 @@ const known = [
   "received-step",
   "knowledge-base",
   "sdr-objectives",
+  "sdr-reminders",
 ];
 const requested = process.argv.slice(2);
 const suites = requested.length

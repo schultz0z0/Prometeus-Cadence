@@ -7,6 +7,8 @@ import {AppError} from '../errors.ts';
 import {requirePermission} from '../auth/permissions.ts';
 import {createReviewToken,verifyReviewToken} from '../prospecting/review.ts';
 import {cancelCalendarReservation,readCalendarSlots,reserveCalendarSlot,type CalendarDeps} from '../integrations/calendar.ts';
+import {sdrReminderTimes} from '../../domain/sdr-reminder.ts';
+import type {SdrDraft} from '../../domain/sdr-policy.ts';
 // 07B.3: a person acts on the agent's suggestions. The calendar service owns slots, double booking and uncertain outcomes.
 const failures:Record<string,[number,string]>={
  SDR_ACCESS:[403,'Você não tem mais acesso a este workspace.'],
@@ -100,6 +102,15 @@ export async function bookSdrProposal(p:Principal,id:string,turnId:string,reques
  const booked=await reserve(p,id,slot.id,s.leadId,requestId,deps,{attendeeEmail:s.email,meet:true});
  if(booked.state==='accepted')await tx(p,c=>c.query('SELECT app.sdr_set_stage($1,$2)',[id,'done']));
  return {start:booked.start,end:booked.end,meetUrl:(booked as {meetUrl?:string|null}).meetUrl??null};
+}
+/** Reminders of the conversation's current meeting. Called after the confirmation is queued: the consent evidence it writes
+ *  would otherwise change what the reviewed reply was checked against. A failure never fails the booking. */
+export async function scheduleSdrReminders(p:Principal,id:string){
+ await tx(p,async c=>{
+  const b=(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {id:string;start:string;state:string}|null;
+  const hours=(await c.query('SELECT app.sdr_conversation_hours($1) h',[id])).rows[0]?.h as SdrDraft['hours']|null;
+  if(b?.state==='accepted'&&hours)await c.query('SELECT app.sdr_reminders_schedule($1,$2,$3)',[id,b.id,JSON.stringify(sdrReminderTimes({start:b.start,bookedAt:new Date().toISOString(),hours}))]);
+ }).catch(()=>undefined);
 }
 export async function cancelSdrBooking(p:Principal,id:string,raw:unknown,deps:CalendarDeps={}){
  requirePermission(p,'messages.reply');

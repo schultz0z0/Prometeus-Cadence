@@ -105,5 +105,6 @@ export async function approveSdrReply(p:Principal,id:string,raw:unknown,deps:Cal
  // One transaction: the turn is checked, the message queued and the unit consumed together. A replay of the same request skips the hooks.
  try{await confirmReply(p,id,{content:{kind:'text',text},requestId,reviewToken},{before:async c=>{await ownTurn(c,id,turnId);await c.query('SELECT app.sdr_check_approval($1)',[turnId]);},after:(c,m)=>c.query('SELECT app.sdr_approve_turn($1,$2,$3)',[turnId,m.id,text])});}
  catch(e){throw sdrError(e);}
+ if(proposal?.kind==='meeting')await (await import('./business-actions.ts')).scheduleSdrReminders(p,id);
  return tx(p,async c=>turnView(await ownTurn(c,id,turnId)));
 }
