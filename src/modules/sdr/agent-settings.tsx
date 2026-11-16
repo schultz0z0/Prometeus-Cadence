@@ -12,7 +12,7 @@ import { SdrOverview } from "@/modules/settings/sdr-overview";
 type Agent = { id: string; revision: number; state: "draft" | "active" | "paused"; name: string; draft: SdrDraft; activeRevision: number | null; activatedAt: string | null; pausedAt: string | null; pendingChanges: boolean };
 type Knowledge = { id: string; revision: number; kind: "faq" | "note"; title: string; body: string; state: "draft" | "approved" | "archived" };
 type Channel = { id: string; name: string; channel: string; provider: string; agentId: string | null; agentName: string | null; ready: boolean };
-type View = { entitled: boolean; canManage: boolean; agents: Agent[]; channels: Channel[]; members: { id: string; name: string }[]; knowledge: Knowledge[]; documents?: { id: string; title: string; state: string }[]; context: { approved: boolean }; simulationsLeft: number };
+type View = { entitled: boolean; canManage: boolean; agents: Agent[]; channels: Channel[]; members: { id: string; name: string }[]; knowledge: Knowledge[]; documents?: { id: string; title: string; state: string }[]; context: { approved: boolean }; calendar?: { ready: boolean; summary: string | null }; simulationsLeft: number };
 type Review = { revision: number; summary: { name: string; channels: { id: string; name: string; provider: string }[]; hours: SdrDraft["hours"]; maxRepliesPerDay: number; approvalMode: string; questions: number; handoff: { member: string | null; rules: number }; knowledge: number }; blockers: string[]; warnings: string[]; token: string };
 const stateLabel = { draft: ["Rascunho", "neutral"], active: ["Ativo", "green"], paused: ["Pausado", "orange"] } as const;
 const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -66,11 +66,22 @@ function AgentEditor({ view, agent, onClose, onSaved, onReload }: { view: View; 
       <Field label="Nome"><input value={d.name} maxLength={80} onChange={e => set("name", e.target.value)} /></Field>
       <Field label="Instruções" help="O agente fala em nome da sua empresa. Ele também usa o contexto aprovado da empresa."><textarea rows={5} maxLength={4000} value={d.instructions} placeholder="Ex.: Você é o Lucas, da [empresa]. Ajuda escritórios a … Tom cordial e direto." onChange={e => set("instructions", e.target.value)} /></Field>
     </div></section>
+    <section className="reference-panel"><header><Icon name="Target" /><div><h2>Objetivo</h2><p>Aonde o agente leva a conversa. Em qualquer objetivo, ele primeiro faz as perguntas obrigatórias do script e mantém a ficha do lead atualizada.</p></div></header><div className="reference-panel-body">
+      {([["meetings", "Marcar reuniões", "Oferece horários livres da sua Google Agenda, o lead escolhe e você aprova a confirmação, que cria o evento com convite e link do Google Meet."], ["direct-sale", "Vender direto", "Apresenta a oferta e envia o seu link de fechamento quando o lead confirma o interesse."], ["qualify-handoff", "Qualificar e passar", "Entende a dor, monta um plano de solução e passa o lead para o responsável do seu time."]] as const).map(([v, label, help]) =>
+        <label key={v} className="checkbox-row"><input type="radio" name="sdr-objective" checked={(d.objective ?? "qualify-handoff") === v} onChange={() => set("objective", v)} /><span><strong>{label}</strong><br /><small className="muted">{help}</small></span></label>)}
+      {d.objective === "meetings" && (view.calendar?.ready
+        ? <p className="muted">Google Agenda conectada · {view.calendar.summary}. <a href="/settings/apps/google-calendar">Ajustar disponibilidade</a></p>
+        : <Notice tone="warning">Para marcar reuniões, conecte a Google Agenda e salve a disponibilidade. <a href="/settings/apps/google-calendar">Conectar Google Agenda</a></Notice>)}
+      {d.objective === "direct-sale" && <>
+        <Field label="Forma de fechamento" help="Ex.: link de pagamento, checkout, página do site."><input value={d.closing?.method ?? ""} maxLength={80} onChange={e => set("closing", { method: e.target.value, link: d.closing?.link ?? "" })} /></Field>
+        <Field label="Link de fechamento" help="O agente envia exatamente este link. Precisa começar com https://."><input value={d.closing?.link ?? ""} maxLength={500} placeholder="https://" onChange={e => set("closing", { method: d.closing?.method ?? "", link: e.target.value.trim() })} /></Field></>}
+    </div></section>
     <section className="reference-panel"><header><Icon name="ListChecks" /><div><h2>Script de qualificação</h2><p>As perguntas que decidem se o lead serve. Até 10.</p></div></header><div className="reference-panel-body">
       {q.map((x, i) => <div key={i} className="sdr-question"><Field label={`Pergunta ${i + 1}`}><input value={x.question} maxLength={300} onChange={e => set("qualification", q.map((y, j) => j === i ? { ...y, question: e.target.value } : y))} /></Field>
         <Field label="Campo"><input value={x.field} maxLength={40} placeholder="ex.: porte" onChange={e => set("qualification", q.map((y, j) => j === i ? { ...y, field: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_") } : y))} /></Field>
         <label className="checkbox-row"><input type="checkbox" checked={x.required} onChange={e => set("qualification", q.map((y, j) => j === i ? { ...y, required: e.target.checked } : y))} /><span>Obrigatória</span></label>
         <Button variant="ghost" aria-label={`Remover pergunta ${i + 1}`} icon="Trash2" onClick={() => set("qualification", q.filter((_, j) => j !== i))} /></div>)}
+      {!q.some(x => x.required) && <p className="muted">Sem pergunta obrigatória, o agente passa direto para o objetivo.</p>}
       {q.length < 10 && <div><Button icon="Plus" onClick={() => set("qualification", [...q, { question: "", field: `campo_${q.length + 1}`, required: false }])}>Adicionar pergunta</Button></div>}
     </div></section>
     <section className="reference-panel"><header><Icon name="MessageSquare" /><div><h2>Conexão do canal</h2><p>O número de WhatsApp por onde ele responde. Só canais prontos para enviar e receber.</p></div></header><div className="reference-panel-body">
@@ -113,7 +124,7 @@ function AgentEditor({ view, agent, onClose, onSaved, onReload }: { view: View; 
   </>;
 }
 function Simulation({ agent, left, dirty, onDone }: { agent: Agent; left: number; dirty: boolean; onDone: () => void }) {
-  const api = useConnectorApi(), [text, setText] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState(""), [out, setOut] = useState<{ reply: string; decision: string; fields: { field: string; value: string }[]; remaining: number; sources?: { id: string; title: string; label: string }[]; alerts?: { value: string }[] } | null>(null);
+  const api = useConnectorApi(), [text, setText] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState(""), [out, setOut] = useState<{ reply: string; decision: string; fields: { field: string; value: string }[]; remaining: number; sources?: { id: string; title: string; label: string }[]; alerts?: { value: string }[]; status?: string } | null>(null);
   async function run() { setBusy(true); setError(""); try { setOut(await api(`/api/sdr/agents/${agent.id}/simulate`, { incoming: text })); onDone(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
   return <section className="reference-panel"><header><Icon name="Sparkles" /><div><h2>Simular uma conversa</h2><p>Escreva o que um lead mandaria e veja a resposta do agente com o rascunho salvo. Nada é enviado.</p></div></header><div className="reference-panel-body">
     <Field label="Mensagem do lead" help={`${out?.remaining ?? left} simulações restantes hoje neste workspace.`}><textarea rows={3} maxLength={1000} value={text} placeholder="Ex.: Oi, quanto custa?" onChange={e => setText(e.target.value)} /></Field>
@@ -123,7 +134,8 @@ function Simulation({ agent, left, dirty, onDone }: { agent: Agent; left: number
     {out && <div className="sdr-sim-result" aria-live="polite"><small>{out.decision === "handoff" ? "PASSARIA PARA O SEU TIME" : out.decision === "abstain" ? "NÃO RESPONDERIA" : "RESPOSTA SUGERIDA"} · simulação, não enviada</small><p>{out.reply || "—"}</p>
       {!!out.alerts?.length && <Notice tone="warning">Valor sem fonte aprovada: {out.alerts.map(a => a.value).join(", ")}. Numa conversa real, confira antes de aprovar.</Notice>}
       {!!out.sources?.length && <p className="muted">Fontes: {out.sources.map(s => `${s.title} (${s.label})`).join(" · ")}</p>}
-      {!!out.fields.length && <dl>{out.fields.map(f => <div key={f.field}><dt>{f.field}</dt><dd>{f.value}</dd></div>)}</dl>}</div>}
+      {!!out.fields.length && <dl>{out.fields.map(f => <div key={f.field}><dt>{f.field}</dt><dd>{f.value}</dd></div>)}</dl>}
+      {out.status && <p className="muted">Etapa: {out.status}</p>}</div>}
   </div></section>;
 }
 function Activation({ agent, canManage, dirty, onDone }: { agent: Agent; canManage: boolean; dirty: boolean; onDone: () => void }) {

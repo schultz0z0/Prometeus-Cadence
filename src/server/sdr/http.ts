@@ -1,7 +1,7 @@
 import 'server-only';
 import {requirePrincipal} from '../auth/principal.ts';
 import {AppError,checkOrigin,errorResponse} from '../errors.ts';
-import {approveSdrReply,listSdrPending,prepareSdrReply,readSdrConversation,rejectSdrReply,resumeSdr,retrySdrTurn,takeOverSdr} from './conversation.ts';
+import {applySdrConflict,approveSdrReply,listSdrPending,prepareSdrReply,readSdrConversation,rejectSdrReply,resumeSdr,retrySdrTurn,takeOverSdr} from './conversation.ts';
 import {cancelSdrBooking,confirmSdrBooking,prepareSdrBooking,recheckSdrBooking,recordSdrFollowup,revokeSdrFollowup,sdrSlots} from './business-actions.ts';
 import {confirmSdrActivation,pauseSdrAgent,prepareSdrActivation,readSdr,saveSdrAgent,saveSdrKnowledge,setSdrKnowledgeState,simulateSdr} from './configuration.ts';
 // 07B.1: /api/sdr/{agents,knowledge} and /api/sdr/agents/:id/{prepare-activate,confirm-activate,pause,simulate}, /api/sdr/knowledge/:id/state.
@@ -35,6 +35,7 @@ export async function sdrItemRequest(request:Request,resource:string,id:string,a
    if(action==='takeover')return json(await takeOverSdr(p,id,input));
    if(action==='resume')return json(await resumeSdr(p,id,input));
    if(action==='retry')return json(await retrySdrTurn(p,id,input));
+   if(action==='apply-conflict')return json(await applySdrConflict(p,id,input));
    if(action==='prepare-reply')return json(await prepareSdrReply(p,id,input));
    if(action==='approve-reply')return json(await approveSdrReply(p,id,input));
    if(action==='reject-reply')return json(await rejectSdrReply(p,id,input));

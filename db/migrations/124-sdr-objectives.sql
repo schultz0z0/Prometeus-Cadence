@@ -37,7 +37,7 @@ BEGIN
  SELECT l.id INTO v_list FROM app.list l WHERE l.workspace_id=p_ws AND l.name='Agente SDR' ORDER BY l.id LIMIT 1;
  IF v_list IS NULL THEN v_list:=gen_random_uuid()::text;INSERT INTO app.list(workspace_id,id,name) VALUES(p_ws,v_list,'Agente SDR');END IF;
  v_lead:=gen_random_uuid()::text;
- INSERT INTO app.lead(workspace_id,id,list_id,payload) VALUES(p_ws,v_lead,v_list,jsonb_build_object('id',v_lead,'name',v_phone,'phone',v_phone,'source','sdr','createdBy','sdr','listId',v_list,'qualification','pending','createdAt',clock_timestamp()));
+ INSERT INTO app.lead(workspace_id,id,list_id,payload) VALUES(p_ws,v_lead,v_list,jsonb_build_object('id',v_lead,'name',v_phone,'phone',v_phone,'source','SDR','createdBy','sdr','listId',v_list,'qualification','pending','createdAt',clock_timestamp()));
  UPDATE app.channel_conversation SET lead_id=v_lead,lead_link_evidence=jsonb_build_object('actorId','sdr','evidence','lead criado pelo Agente SDR','at',clock_timestamp()) WHERE workspace_id=p_ws AND id=p_conversation;
  RETURN jsonb_build_object('leadId',v_lead,'mode','created');
 END $$;

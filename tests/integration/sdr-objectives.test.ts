@@ -46,7 +46,7 @@ test('the lead is linked whatever way its phone was typed',async()=>{
 test('an unknown number gets a new lead in the Agente SDR list',async()=>{
  const f=await fixture(),r=await ensure(f);assert.equal(r.mode,'created');
  const row=await testAdmin(async c=>(await c.query('SELECT l.payload,li.name FROM app.lead l JOIN app.list li ON li.workspace_id=l.workspace_id AND li.id=l.list_id WHERE l.id=$1',[r.leadId])).rows[0]);
- assert.equal(row.name,'Agente SDR');assert.equal(row.payload.source,'sdr');assert.equal(row.payload.phone,f.phone);assert.equal(await linked(f),r.leadId);
+ assert.equal(row.name,'Agente SDR');assert.equal(row.payload.source,'SDR');assert.equal(row.payload.phone,f.phone);assert.equal(await linked(f),r.leadId);
 });
 test('two leads with the same phone link nothing',async()=>{
  const f=await fixture();await lead(f,{phone:f.phone});await lead(f,{phone:f.phone.slice(3)});
@@ -95,7 +95,7 @@ import {before} from 'node:test';
 import {fakeCalendar} from './calendar-helpers.ts';
 import {base} from './helpers.ts';
 import {startCalendarAuthorization,finishCalendarAuthorization,configureCalendar,readCalendarSlots} from '../../src/server/integrations/calendar.ts';
-import {readSdrConversation,prepareSdrReply,approveSdrReply} from '../../src/server/sdr/conversation.ts';
+import {readSdrConversation,prepareSdrReply,approveSdrReply,applySdrConflict} from '../../src/server/sdr/conversation.ts';
 import {cancelSdrBooking} from '../../src/server/sdr/business-actions.ts';
 const callback=base+'/api/integration-oauth/google-calendar/callback',calEnv={GOOGLE_CALENDAR_CLIENT_ID:'client-qa',GOOGLE_CALENDAR_CLIENT_SECRET:'secret-qa',GOOGLE_CALENDAR_REDIRECT_URI:callback};
 const savedEnv:Record<string,string|undefined>={};
@@ -150,4 +150,17 @@ test('an edited confirmation without the booked date is refused',async()=>{
 test('without a lead e-mail the meeting is booked with no attendees',async()=>{
  const m=await meetingTurn();await approve(m);
  assert.equal(m.g.created.length,1);assert.equal(m.g.created[0].body.attendees,undefined);assert.match(m.g.created[0].query,/sendUpdates=none/);
+});
+test('the conversation view shows stage, offer and conflicts',async()=>{
+ const f=await fixture({draft:{qualification:[{question:'Porte?',field:'porte',required:false}]}});await asMeetings(f);
+ await lead(f,{phone:f.phone,email:'a@x.com'});await ensure(f);await inbound(f,'Quero conhecer');
+ const slots=Array.from({length:8},(_,i)=>({start:new Date(Date.UTC(2030,0,7+Math.floor(i/4),12+i%4)).toISOString(),end:new Date(Date.UTC(2030,0,7+Math.floor(i/4),12+i%4,30)).toISOString()}));
+ await runSdrTick({limit:5,now:IN,workspaceId:f.p.workspaceId},{route,slots:async()=>({timezone:'America/Sao_Paulo',slots}),
+  generate:async(_c:any,r:any)=>({value:r.parse({reply:'Tenho '+JSON.parse(r.prompt).offer.slots[0].label+'. Pode ser?',decision:'reply',fields:[],action:'none',quote:'',offered:['s1'],contact:{name:'Ana',email:'b@x.com',phone:'',company:'',messageId:''}}),usage:{provider:'openai'}})});
+ const v=await readSdrConversation(f.p,f.conversation);
+ assert.equal(v.stage,'offer');assert.equal(v.offer?.kind==='meeting'?v.offer.slots.length:0,6);
+ assert.equal(v.conflicts[0].field,'email');assert.equal(v.conflicts[0].value,'b@x.com');
+ assert.equal(v.leadLink,'linked');
+ await applySdrConflict(f.p,f.conversation,{field:'email'});
+ assert.deepEqual((await readSdrConversation(f.p,f.conversation)).conflicts,[]);
 });

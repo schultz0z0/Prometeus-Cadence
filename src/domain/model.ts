@@ -12,7 +12,8 @@ export type Source =
   | "QUALIFY"
   | "REENGAGE"
   | "MANUAL"
-  | "LINKEDIN";
+  | "LINKEDIN"
+  | "SDR";
 export interface Lead {
   id: string;
   listId: string;
@@ -41,6 +42,8 @@ export interface Lead {
   reason?: string;
   source: Source;
   summary?: string;
+  /** 16/11/2026: what the SDR agent learned in the conversation, kept apart from the qualifier summary. */
+  sdrProfile?: { personName?: string; pain?: string; info?: string; plan?: string; nextStep?: string; status?: string; updatedAt?: string };
   favorite?: boolean;
   createdAt: string;
 }
@@ -232,6 +235,7 @@ export const sourceLabels: Record<Source, string> = {
   REENGAGE: "Reengajamento",
   MANUAL: "Cadastro manual",
   LINKEDIN: "Campanha LinkedIn",
+  SDR: "Agente SDR",
 };
 export const qualificationLabels: Record<Qualification, string> = {
   qualified: "Qualificado",

@@ -15,3 +15,7 @@ test('strict pagination rejects duplicate keys, malformed dates, invalid enums a
  assert.equal(parse(new URLSearchParams()).pageSize,20);
  for(const value of ['page=0','pageSize=101','page=5001','search=x&search=y','source=FAKE','createdFrom=2026-02-30','createdFrom=2026-10-26&createdTo=2026-10-25','unexpected=1'])assert.throws(()=>parse(new URLSearchParams(value)));
 });
+test('leads created by the SDR agent can be filtered by source',()=>{
+ const parse=(query as any).parseContactsQuery??Object.values(query).find(v=>typeof v==='function');
+ assert.equal(parse(new URLSearchParams('source=SDR')).source,'SDR');
+});

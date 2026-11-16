@@ -8,7 +8,7 @@ import {AppError} from '../errors.ts';
 import {requirePermission} from '../auth/permissions.ts';
 import {prepareReply,confirmReply,type ReplyHooks} from '../messaging/replies.ts';
 import {createHash} from 'node:crypto';
-import {slotLabel} from '../../domain/sdr-stage.ts';
+import {slotLabel,type SdrOffer,type SdrStage} from '../../domain/sdr-stage.ts';
 import type {CalendarDeps} from '../integrations/calendar.ts';
 // 07B.2: what a person does with the agent inside the existing inbox. The reply itself goes through the reviewed WhatsApp path.
 const failures:Record<string,[number,string]>={
@@ -25,17 +25,27 @@ const tx=<T,>(p:Principal,fn:(c:PoolClient)=>Promise<T>)=>withWorkspaceTransacti
 export interface SdrTurnView{id:string;state:string;text:string|null;fields:{field:string;value:string}[];reason:string|null;messageId:string|null;createdAt:string;proposal:SdrProposal|null;followupAttempt:number;sources:{id:string;documentId:string;title:string;label:string}[];alerts:{kind:'unsourced-value';value:string}[]}
 const turnView=(r:Record<string,any>):SdrTurnView=>({id:r.id,state:r.state,text:r.text,fields:r.fields,reason:r.reason,messageId:r.message_id,createdAt:r.created_at.toISOString(),proposal:r.proposal,followupAttempt:r.followup_attempt,sources:r.sources??[],alerts:r.alerts??[]});
 export async function readSdrConversation(p:Principal,id:string){return tx(p,async c=>{
- const cc=(await c.query('SELECT connection_id FROM app.channel_conversation WHERE id=$1',[id])).rows[0];if(!cc)throw new AppError(404,failures.SDR_NOT_FOUND[1]);
- const thread=(await c.query('SELECT owner,revision FROM app.sdr_thread_state WHERE conversation_id=$1',[id])).rows[0];
+ const cc=(await c.query('SELECT connection_id,lead_id,lead_link_evidence FROM app.channel_conversation WHERE id=$1',[id])).rows[0];if(!cc)throw new AppError(404,failures.SDR_NOT_FOUND[1]);
+ const thread=(await c.query('SELECT owner,revision,stage,offer,conflicts FROM app.sdr_thread_state WHERE conversation_id=$1',[id])).rows[0];
+ // How the conversation got its lead: by the agent (same number, or a new lead) or by a person.
+ const leadLink:'linked'|'created'|'manual'|null=!cc.lead_id?null:cc.lead_link_evidence?.actorId!=='sdr'?'manual':String(cc.lead_link_evidence?.evidence).startsWith('lead criado')?'created':'linked';
  const agent=(await c.query(`SELECT a.id,a.name,app.sdr_within_hours(r.config->'hours',clock_timestamp()) in_hours,app.sdr_connection_in_service(b.connection_id) in_service,(r.config->>'followupEnabled')::boolean AND cn.provider='openwa' followup FROM app.sdr_channel_binding b JOIN app.sdr_agent a ON a.workspace_id=b.workspace_id AND a.id=b.agent_id
   JOIN app.sdr_agent_revision r ON r.workspace_id=b.workspace_id AND r.agent_id=b.agent_id AND r.revision=b.revision JOIN app.channel_connection cn ON cn.workspace_id=b.workspace_id AND cn.id=b.connection_id WHERE b.connection_id=$1`,[cc.connection_id])).rows[0];
  const turn=(await c.query('SELECT * FROM app.sdr_turn WHERE conversation_id=$1 ORDER BY created_at DESC,id LIMIT 1',[id])).rows[0];
- const booking=(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {id:string;start:string;end:string;state:string;revision:number;timezone:string}|null;
+ const booking=(await c.query('SELECT app.sdr_booking_view($1) v',[id])).rows[0].v as {id:string;start:string;end:string;state:string;revision:number;timezone:string;meetUrl:string|null}|null;
  const followup=(await c.query("SELECT id,quote,attempts,next_at,expires_at FROM app.sdr_followup WHERE conversation_id=$1 AND state='active'",[id])).rows[0];
- return {booking,
+ return {booking,stage:(thread?.stage??'qualifying') as SdrStage,offer:(thread?.offer??null) as SdrOffer|null,conflicts:(thread?.conflicts??[]) as {field:string;value:string;current:string}[],leadLink,leadId:(cc.lead_id??null) as string|null,
   followup:followup?{id:followup.id as string,quote:followup.quote as string,attempts:followup.attempts as number,nextAt:followup.next_at.toISOString() as string,expiresAt:followup.expires_at.toISOString() as string}:null,
   agent:agent?{id:agent.id as string,name:agent.name as string,withinHours:agent.in_hours as boolean,inService:agent.in_service as boolean,followupAvailable:agent.followup as boolean}:null,canConsent:['owner','admin'].includes((await c.query('SELECT app.current_role() r')).rows[0].r),owner:(thread?.owner??'agent') as 'agent'|'human',revision:Number(thread?.revision??0),turn:turn?turnView(turn):null};
 });}
+const conflictSchema=z.strictObject({field:z.enum(['email','phone','companyName'])});
+/** A person applies the value the lead gave to the lead record. */
+export async function applySdrConflict(p:Principal,id:string,raw:unknown){
+ requirePermission(p,'messages.reply');
+ const b=conflictSchema.safeParse(raw);if(!b.success)throw new AppError(422,'Campo inválido.');
+ await tx(p,c=>c.query('SELECT app.sdr_apply_conflict($1,$2)',[id,b.data.field]));
+ return readSdrConversation(p,id);
+}
 export async function listSdrPending(p:Principal){return tx(p,async c=>({items:(await c.query(`SELECT t.id,t.conversation_id "conversationId",t.state,t.text,t.created_at "createdAt",coalesce(nullif(l.payload->>'name',''),i.phone,'Contato') contact
   FROM app.sdr_turn t JOIN app.channel_conversation cc ON cc.workspace_id=t.workspace_id AND cc.id=t.conversation_id JOIN app.channel_identity i ON i.workspace_id=cc.workspace_id AND i.id=cc.identity_id
   LEFT JOIN app.lead l ON l.workspace_id=cc.workspace_id AND l.id=cc.lead_id WHERE t.state IN('pending-approval','uncertain') ORDER BY t.created_at LIMIT 50`)).rows as {id:string;conversationId:string;state:string;text:string|null;createdAt:string;contact:string}[]}));}
