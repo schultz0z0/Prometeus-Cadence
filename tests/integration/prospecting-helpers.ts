@@ -54,3 +54,17 @@ export async function grantTestLease(p:import('../../src/domain/workspace.ts').P
     return {workspaceId:p.workspaceId,jobId,actorId:p.userId,token,fence:Number(r.fence),expiresAt:r.lease_until.toISOString()};
   });
 }
+/** 17/11/2026: one-CNPJ lookups no longer start an Apify run; suites whose fakes answer CNPJ through `apify` keep them through this bridge. */
+export function registryFromApify(apify:import('../../src/server/prospecting/providers/types.ts').SourceAdapter):import('../../src/server/prospecting/providers/registry.ts').RegistryLookup{
+ return async(cnpj,{partners,signal})=>{
+  const ctx={operationId:'registry:'+cnpj,signal,profile:{source:'CNPJ' as const,actor:'bigdavidson/brazil-cnpj-companies',build:'fixture-build',ppe:false,partners},credential:'',maxChargeUsd:0,maxPages:0};
+  const input={kind:'generation' as const,source:'CNPJ' as const,destination:{mode:'existing' as const,listId:'fixture'},filters:{term:'',cnpj},limit:1,dedupScope:'workspace' as const};
+  const started=await apify.start(ctx,input as any);
+  if(started.kind==='uncertain')throw Object.assign(new Error('uncertain'),{code:'CNPJ_SOURCE_ERROR'});
+  let page=started.kind==='inline'?started.page:null;
+  if(started.kind==='remote'){let state=await apify.poll(ctx,started.run);for(let i=0;i<5&&state.status==='running';i++)state=await apify.poll(ctx,started.run);page=await apify.readPage(ctx,state.run,null,100);}
+  const candidate=page!.candidates.find(c=>c.cnpj===cnpj)??page!.candidates[0];
+  if(!candidate){const {ProviderError}=await import('../../src/server/prospecting/providers/transport.ts');throw new ProviderError('CNPJ_NOT_FOUND');}
+  return {provider:'cnpja',candidate};
+ };
+}

@@ -46,7 +46,7 @@ export async function runLeasedJob(lease:JobLease,deps:WorkerAdapters,shutdown:A
       'UPDATE app.prospecting_job SET error_code=NULL,error_message=NULL,revision=revision+1 WHERE id=$1',[lease.jobId]));
     switch(job.kind){
       case 'generation':await runGeneration(lease,{...deps,signal});break;
-      case 'qualification':if(job.input?.companyPeople)await resolveCompanyPeople(lease,{...deps.people,apify:deps.people?.apify??deps.apify,generate:deps.people?.generate??deps.decisors,signal});else if(job.input?.companyResearch)await runCompanyResearch(lease,{...deps.research,apify:deps.research?.apify??deps.apify,signal});else await runQualification(lease,{...deps,signal});break;
+      case 'qualification':if(job.input?.companyPeople)await resolveCompanyPeople(lease,{...deps.people,apify:deps.people?.apify??deps.apify,registry:deps.people?.registry??deps.registry,generate:deps.people?.generate??deps.decisors,signal});else if(job.input?.companyResearch)await runCompanyResearch(lease,{...deps.research,apify:deps.research?.apify??deps.apify,registry:deps.research?.registry??deps.registry,signal});else await runQualification(lease,{...deps,signal});break;
       case 'planning':await runPlanning(lease,{...deps,generate:deps.planningGenerate,signal});break;
       default:throw Error('INVALID_JOB_KIND');
     }

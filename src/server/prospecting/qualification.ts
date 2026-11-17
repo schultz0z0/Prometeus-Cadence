@@ -12,6 +12,7 @@ import {decide} from './ai/jev.ts';
 import {generate} from './ai/codex.ts';
 import {hashValue} from './review.ts';
 import {ApifyAdapter} from './providers/apify.ts';
+import {lookupRegistry,type RegistryLookup} from './providers/registry.ts';
 import {normalizeCnpj,normalizeSite} from './normalize.ts';
 import type {SourceAdapter} from './providers/types.ts';
 import {providerContext} from './steps.ts';
@@ -31,7 +32,7 @@ import {runEnrichment} from './enrichment.ts';
 import {buildAiSkill} from '../../domain/ai-skills.ts';
 import type {DecisorGenerator} from './ai/decisors.ts';
 export interface QualificationAdapters{
-  signal?:AbortSignal;apify?:SourceAdapter;siteBrowser?:SiteBrowser;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
+  signal?:AbortSignal;apify?:SourceAdapter;registry?:RegistryLookup;siteBrowser?:SiteBrowser;conventional?:typeof runConventional;diagnose?:typeof diagnoseCodex;
   collect?:(...args:Parameters<typeof fetchEvidencePack>)=>Promise<Evidence[]>;checkEmail?:typeof checkEmailDns;decisors?:DecisorGenerator;linkedin?:typeof import('./providers/linkedin-profiles.ts').readLinkedinProfiles;
   decide?:typeof decide;generate?:typeof generate;
 }
@@ -125,20 +126,19 @@ async function collectEvidence(lease:JobLease,job:any,lead:Lead,deep:boolean,dep
 export async function sourceResult(lease:JobLease,job:any,lead:Lead,module:'registry'|'website',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string}={}):Promise<Partial<Candidate>|null>{const result=await sourceResults(lease,job,lead,module,deps,options);return result===null?null:result[0]??{};}
 export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'registry'|'website'|'maps',deps:QualificationAdapters,options:{partners?:boolean;suffix?:string;limit?:number;beforeStart?:(operationId:string)=>Promise<void>;onTerminal?:(runId:string)=>Promise<void>}={}):Promise<Candidate[]|null>{
   const source=module==='registry'?'CNPJ':module==='maps'?'MAPS':'WEB',step=module+':'+lead.id+(options.suffix?':'+options.suffix:'');
-  const ctx=providerContext(job,source,hashValue({job:lease.jobId,step}),deps.signal??new AbortController().signal),adapter=deps.apify??new ApifyAdapter();
+  const operationId=hashValue({job:lease.jobId,step}),signal=deps.signal??new AbortController().signal;
   if(job.checkpoint.registryFirst){
     const cached=await withLeasedTransaction(lease,async c=>(await c.query(
       "SELECT payload->'lookup' AS lookup FROM app.prospecting_attempt WHERE id=$1 AND job_id=$2 AND state='completed'",
-      [ctx.operationId,lease.jobId])).rows[0]?.lookup as Candidate[]|undefined);
+      [operationId,lease.jobId])).rows[0]?.lookup as Candidate[]|undefined);
     if(cached)return cached;
   }
   const remember=async (candidates:Candidate[])=>{
     if(job.checkpoint.registryFirst)await withLeasedTransaction(lease,c=>c.query(
       "UPDATE app.prospecting_attempt SET payload=payload||jsonb_build_object('lookup',$3::jsonb) WHERE id=$1 AND job_id=$2 AND state='completed'",
-      [ctx.operationId,lease.jobId,JSON.stringify(candidates)]));
+      [operationId,lease.jobId,JSON.stringify(candidates)]));
     return candidates;
   };
-  if(options.partners)ctx.profile.partners=true;
   const limit=Math.min(5,Math.max(1,options.limit??1));
   const requestedCnpj=module==='registry'?normalizeCnpj(lead.cnpj):undefined;
   let differentCnpj=false;
@@ -154,7 +154,18 @@ export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'reg
     if(differentCnpj)throw new ProviderError('CNPJ_IDENTITY_MISMATCH');
     return [];
   }
-  const input:Extract<JobInput,{kind:'generation'}>={kind:'generation',source,destination:{mode:'existing',listId:lead.listId},filters:module==='registry'?{term:lead.name,cnpj:lead.cnpj!}:{term:lead.name,location:[lead.city,lead.state].filter(Boolean).join(', ')||'Brasil'},limit,dedupScope:'workspace'};
+  if(module==='registry'){
+    // 17/11/2026: one-CNPJ lookups read CNPJá, then the public OpenCNPJ API (a read without side effects: no Apify run, no reserved unit).
+    const read=await performStep(lease,step,'cnpj-registry',{},async()=>{await options.beforeStart?.(operationId);
+      const r=await (deps.registry??lookupRegistry)(requestedCnpj??'',{partners:!!options.partners,signal});
+      return {kind:'inline' as const,page:{candidates:[r.candidate],rejected:[]},source:r.provider};},
+      ()=>({provider:'cnpj-registry',operationId,units:{},costUsd:null,costKind:'unknown'}));
+    const matching=matchingCandidates(read.page.candidates);
+    return remember(matching.length?matching:noMatch());
+  }
+  const ctx=providerContext(job,source,operationId,signal),adapter=deps.apify??new ApifyAdapter();
+  if(options.partners)ctx.profile.partners=true;
+  const input:Extract<JobInput,{kind:'generation'}>={kind:'generation',source,destination:{mode:'existing',listId:lead.listId},filters:{term:lead.name,location:[lead.city,lead.state].filter(Boolean).join(', ')||'Brasil'},limit,dedupScope:'workspace'};
   const started=await performStep(lease,step,'apify',{apifyRuns:1},async()=>{await options.beforeStart?.(ctx.operationId);return adapter.start(ctx,input);},r=>({provider:'apify',operationId:ctx.operationId,units:r.kind==='uncertain'?{}:{apifyRuns:1},costUsd:null,costKind:'unknown'}));
   if(started.kind==='uncertain'){await finishJob(lease,'needs_reconciliation','START_UNCERTAIN');return null;}
   if(started.kind==='inline'){
@@ -165,11 +176,9 @@ export async function sourceResults(lease:JobLease,job:any,lead:Lead,module:'reg
   if(['succeeded','failed','cancelled'].includes(remote.status))await options.onTerminal?.(started.run.runId);
   if(['failed','cancelled'].includes(remote.status))throw new ProviderError('REMOTE_FAILED');
   if(remote.status!=='succeeded')return null;
-  // Registry datasets may include free notice rows before the requested company.
-  // Keep dataset paging distinct from the one-company lookup limit.
   let cursor:string|null=null;
   for(let page=0;page<20;page++){
-    const result=await adapter.readPage(ctx,remote.run,cursor,module==='registry'?100:limit);
+    const result=await adapter.readPage(ctx,remote.run,cursor,limit);
     const matching=matchingCandidates(result.candidates);
     if(matching.length)return remember(matching);
     if(result.exhausted||!result.nextCursor)return remember(noMatch());

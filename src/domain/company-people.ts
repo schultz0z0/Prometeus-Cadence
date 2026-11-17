@@ -10,7 +10,7 @@ export interface CompanyPerson{id:string;name:string;role:string;relationship:'p
 export interface PeopleApplication{caseId:string;personIds:string[];expectedRevision:number}
 export interface PeopleCaseView{id:string;revision:number;state:string;selectedLeadId?:string;companies:{leadId:string;name:string;state:string;missing:string[]}[];identity:CompanyIdentity;people:CompanyPerson[];missing:string[]}
 export interface IdentityCandidate{cnpj:string;legalName:string;corroborated:boolean;evidence:EvidenceRef[]}
-export interface PeopleAdapters{signal?:AbortSignal;apify?:import('../server/prospecting/providers/types.ts').SourceAdapter;generate?:import('../server/prospecting/ai/decisors.ts').DecisorGenerator;decide?:typeof import('../server/prospecting/ai/jev.ts').decide;collect?:(url:string,signal:AbortSignal)=>Promise<import('./prospecting.ts').Evidence|null>}
+export interface PeopleAdapters{signal?:AbortSignal;apify?:import('../server/prospecting/providers/types.ts').SourceAdapter;registry?:import('../server/prospecting/providers/registry.ts').RegistryLookup;generate?:import('../server/prospecting/ai/decisors.ts').DecisorGenerator;decide?:typeof import('../server/prospecting/ai/jev.ts').decide;collect?:(url:string,signal:AbortSignal)=>Promise<import('./prospecting.ts').Evidence|null>}
 export function classifyPersonContact(input:{attributed:boolean;corporate:boolean;hasSource:boolean}):PersonContact['attribution']{return !input.hasSource?'unresolved':input.corporate?'corporate':input.attributed?'personal':'unresolved';}
 const fold=(v:string)=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 function historicalRole(quote:string,name:string,role:string){

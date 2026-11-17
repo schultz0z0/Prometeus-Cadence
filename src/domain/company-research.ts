@@ -17,7 +17,7 @@ export interface ResearchFact{id:string;leadId:string;field:ResearchField;value:
 export interface ResearchSourceView{id:string;leadId:string;url:string;fetchedAt:string;hash:string;sourceKind:ResearchKind;attribution:'company'|'uncertain'}
 export interface ResearchCaseView{id:string;revision:number;state:JobState;facts:ResearchFact[];missing:string[];sources:ResearchSourceView[];selectedLeadId?:string;totalCompanies:number;companies:{leadId:string;name:string;state:string;missing:string[]}[];usage?:UsageEstimate[]}
 export interface ResearchApplication{caseId:string;factIds:string[];expectedRevision:number}
-export interface ResearchAdapters{signal?:AbortSignal;collect?:(source:ResearchKind,urls:string[],signal:AbortSignal)=>Promise<ResearchPage[]>;apify?:import('../server/prospecting/providers/types.ts').SourceAdapter}
+export interface ResearchAdapters{signal?:AbortSignal;collect?:(source:ResearchKind,urls:string[],signal:AbortSignal)=>Promise<ResearchPage[]>;apify?:import('../server/prospecting/providers/types.ts').SourceAdapter;registry?:import('../server/prospecting/providers/registry.ts').RegistryLookup}
 export function parseCompanyResearchInput(value:unknown):CompanyResearchInput{return companyResearchInputSchema.parse(value);}
 
 export function researchUrl(value:string):URL|null{

@@ -17,7 +17,7 @@ import {actorInput} from '../../src/server/prospecting/providers/profiles.ts';
 import {readExtractionDay} from '../../src/server/billing/extraction-day.ts';
 import {preparePlanningSelection,confirmPlanningSelection} from '../../src/server/planning/confirmation.ts';
 import {withLeasedTransaction} from '../../src/server/prospecting/worker-db.ts';
-import {grantTestLease} from './prospecting-helpers.ts';
+import {grantTestLease,registryFromApify} from './prospecting-helpers.ts';
 import {runCompanyResearch} from '../../src/server/research/company.ts';
 import {journeyRequest} from '../../src/server/research/journey-http.ts';
 import {base,resetRateLimits} from './helpers.ts';
@@ -68,7 +68,7 @@ test('technical capacity waits and resumes the same discovery without another co
   const receiptId=`capacity-page-${++starts}`;
   return {kind:'inline' as const,page:{receiptId,candidates:[],rejected:[],rawCount:0,nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:receiptId,units:{candidates:0},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('Unexpected poll');},readPage:async()=>{throw Error('Unexpected dataset');},abort:async()=>{throw Error('Unexpected abort');}};
- const tick=()=>runWorkerOnce({apify},{workspaceId:f.p.workspaceId,signal:new AbortController().signal});
+ const tick=()=>runWorkerOnce({apify,registry:registryFromApify(apify)},{workspaceId:f.p.workspaceId,signal:new AbortController().signal});
  assert.equal(await tick(),true);
  assert.equal(await tick(),true);
  assert.equal(starts,1);
@@ -102,7 +102,7 @@ test('discovery reads a page that fits the technical capacity of one day',async(
   sizes.push(limit);
   return {receiptId:'bounded-capacity-page',candidates:[],rejected:Array.from({length:limit},()=>({reason:'MISSING_IDENTITY'})),rawCount:limit,nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:'bounded-capacity-page',units:{candidates:limit},costUsd:null,costKind:'unknown' as const}};
  },abort:async()=>{throw Error('Unexpected abort');}};
- await runWorkerOnce({apify},{workspaceId:f.p.workspaceId,signal:new AbortController().signal});
+ await runWorkerOnce({apify,registry:registryFromApify(apify)},{workspaceId:f.p.workspaceId,signal:new AbortController().signal});
  assert.deepEqual(sizes,[2]);
  assert.equal((await getJob(f.p,jobId)).counts.rejected,2);
 });
@@ -169,13 +169,13 @@ test('registry-first journey replaces a homonym and resumes website collection i
   if(path==='/')return {status:200,text:'[RE] Esquadrias Exemplo',links:['/contato']};
   return {status:200,text:'[RE] Esquadrias Exemplo +55 41 99999-1234'};
  }};
- await runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+ await runWorkerOnce({apify,siteBrowser,registry:registryFromApify(apify)},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
  assert.deepEqual(calls,[],'an unavailable browser must not start a paid Actor');
  assert.equal((await getJob(f.p,id)).error?.code,'WAITING_SITE_BROWSER');
  browserAvailable=true;
  await testAdmin(c=>c.query('UPDATE app.prospecting_job SET capacity_retry_at=clock_timestamp() WHERE id=$1',[id]));
  for(let i=0;i<15;i++){
-  await runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+  await runWorkerOnce({apify,siteBrowser,registry:registryFromApify(apify)},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
   if((await getJob(f.p,id)).state==='completed')break;
   await testAdmin(c=>c.query("UPDATE app.prospecting_site_page SET retry_at=clock_timestamp() WHERE job_id=$1 AND reason='HTTP_504' AND state='pending'",[id]));
  }
@@ -216,7 +216,7 @@ test('an uncertain registry-first Maps run reconciles against Maps and is settle
   ])};
  },poll:async(_ctx:any,run:any)=>({status:'succeeded' as const,run}),readPage:async()=>result('empty-maps',[]),abort:async()=>{throw Error('Unexpected abort');}};
  const siteBrowser={async read(){throw Error('No site should be visited');}};
- const tick=()=>runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+ const tick=()=>runWorkerOnce({apify,siteBrowser,registry:registryFromApify(apify)},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
  await tick();
  const pending=await getJob(f.p,jobId);
  assert.equal(pending.state,'needs_reconciliation');
@@ -261,7 +261,7 @@ test('ComplementaryRegistry rejects wrong windows on reconciliation and settles 
  readPage:async(_ctx:any,run:any)=>run.runId==='newer'?page('registry-newer',[record]):page('registry-older',[record,{...record,sourceRef:'overlap',openedAt:older.openedAt},older]),
  abort:async()=>{throw Error('Unexpected abort');}};
  const siteBrowser={async read(kind:string){return kind==='page'?{status:200,text:older.name+' CNPJ '+older.cnpj}:{status:404,text:''};}};
- const tick=()=>runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+ const tick=()=>runWorkerOnce({apify,siteBrowser,registry:registryFromApify(apify)},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
  await tick();
  assert.equal((await getJob(f.p,jobId)).state,'running');
  process.env.APIFY_CNPJ_DATE_SLICES='false';
@@ -306,12 +306,12 @@ test('ComplementaryRegistry stops before a second paid window if the source viol
  };
  const siteBrowser={async read(){throw Error('Unexpected site visit');}};
  const options={signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId};
- await runWorkerOnce({apify,siteBrowser},options);
+ await runWorkerOnce({apify,siteBrowser,registry:registryFromApify(apify)},options);
  const result=await getJob(f.p,journey.stages[0].jobId!);
  assert.equal(result.state,'partial');
  assert.equal(result.error?.code,'CNPJ_WINDOW_UNVERIFIED');
  assert.deepEqual(result.discoveryReasons,{CNPJ_OUTSIDE_DATE_WINDOW:1});
- assert.equal(await runWorkerOnce({apify,siteBrowser},options),false);
+ assert.equal(await runWorkerOnce({apify,siteBrowser,registry:registryFromApify(apify)},options),false);
  assert.equal(starts,1);
 });
 test('discovery only delivers a verified active company and reports a shortfall',async()=>{
@@ -327,7 +327,7 @@ test('discovery only delivers a verified active company and reports a shortfall'
   return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,nextCursor:null,exhausted:true,rawCount:candidates.length,rejected:[],usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
  const collect=async(url:string)=>[{id:'site',url,text:url.includes('inactive')?'Clínica Baixada +55 11 98765-4321 33.000.167/0001-01':'Clínica Ativa +55 11 98765-4321 37.297.479/0001-80',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];
- for(let batch=0;batch<2;batch++)await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ for(let batch=0;batch<2;batch++)await runWorkerOnce({apify,collect,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
  const current=await getJourney(f.p,journey.id);assert.deepEqual(calls,['MAPS','CNPJ','CNPJ','MAPS']);
  assert.equal(current.stages[0].state,'partial');assert.equal(current.stages.filter(s=>s.name==='research').length,0,'06B.7: no next stage');assert.equal(current.reason,'LEGACY_JOURNEY_ARCHIVED');
  const leads=(await readWorkspaceSnapshot(f.p)).data.leads;assert.equal(leads.length,1);assert.equal(leads[0].cnpj,'37297479000180');
@@ -351,7 +351,7 @@ test('legacy Maps-first admission uses Chromium even with the retired Actor conf
   if(kind==='robots')return {status:404,text:''};
   return {status:200,text:'Empresa +55 11 98765-4321 CNPJ 37.297.479/0001-80'};
  }};
- await runWorkerOnce({apify,siteBrowser},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
+ await runWorkerOnce({apify,siteBrowser,registry:registryFromApify(apify)},{signal:AbortSignal.timeout(5000),workspaceId:f.p.workspaceId});
  assert.deepEqual(calls,['MAPS','CNPJ']);
  assert.deepEqual(browserReads,['robots:/robots.txt','page:/','page:/sobre','page:/contato']);
  assert.equal((await readWorkspaceSnapshot(f.p)).data.leads[0].cnpj,'37297479000180');
@@ -376,13 +376,13 @@ test('discovery searches for and verifies an institutional site missing from Map
   return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,nextCursor:null,exhausted:true,rawCount:candidates.length,rejected:[],usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
  const collect=async(url:string)=>{reads.push(url);return[{id:'site',url,text:url.includes('other')?'Clínica Exemplo +55 11 98765-4321':'Clínica Exemplo +55 21 98765-4321 37.297.479/0001-80',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];};
- await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ await runWorkerOnce({apify,collect,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
  assert.deepEqual(calls,['MAPS','WEB','CNPJ']);
  assert.deepEqual(reads,['https://clinicaexemplo.other.example/','https://grupo-xyz.example/']);
  const leads=(await readWorkspaceSnapshot(f.p)).data.leads;assert.equal(leads.length,1);assert.equal(leads[0].site,'https://grupo-xyz.example/');assert.equal(leads[0].cnpj,'37297479000180');
  assert.equal((await getJourney(f.p,journey.id)).stages[0].state,'completed');
 });
-test('discovery replaces discarded Maps rows and resumes pending registry lookups without another start',async()=>{
+test('discovery replaces discarded Maps rows; registry lookups answer in the same pass (17/11/2026)',async()=>{
  const f=await fixture(),{journey}=await start(f),starts:string[]=[],cursors:(string|null)[]=[];
  const entries=[
   {sourceRef:'missing-site',name:'[RE] Sem site',source:'MAPS' as const},
@@ -416,9 +416,9 @@ test('discovery replaces discarded Maps rows and resumes pending registry lookup
   abort:async()=>{throw Error('No cancellation expected');},
  };
  const collect=async(url:string)=>[{id:'site',url,text:url.includes('alfa')?'Clínica Alfa +55 11 98765-4321 37.297.479/0001-80':'Clínica Beta +55 21 98765-4321 33.000.167/0001-01',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];
- for(let attempt=0;attempt<3;attempt++)await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ for(let attempt=0;attempt<3;attempt++)await runWorkerOnce({apify,collect,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
  assert.deepEqual(starts,['MAPS','WEB','CNPJ','CNPJ']);
- assert.deepEqual(cursors,[null,'2','2']);
+ assert.deepEqual(cursors,[null,'2'],'a CNPJá/OpenCNPJ lookup answers inline: no pending lookup re-reads the Maps page');
  const leads=(await readWorkspaceSnapshot(f.p)).data.leads;
  assert.deepEqual(leads.map(lead=>lead.cnpj).sort(),[...cnpjs].sort());
  assert.equal((await getJourney(f.p,journey.id)).stages[0].state,'completed');
@@ -436,8 +436,8 @@ test('discovery makes a bounded complementary Maps query when the first result s
   return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,rawCount,rejected,exhausted:true,nextCursor:null,usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:rawCount},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
  const collect=async(url:string)=>[{id:'page',url,text:url.includes('alfa')?'Alfa +55 11 98765-4321 37.297.479/0001-80':'Beta +55 11 98765-4321 33.000.167/0001-01',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];
- await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
- await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ await runWorkerOnce({apify,collect,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ await runWorkerOnce({apify,collect,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
  assert.equal(maps,2);assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,2);
  assert.equal((await getJourney(f.p,journey.id)).stages[0].state,'completed');
  const cancelled=await fixture(2),created=await start(cancelled),id=created.journey.stages[0].jobId!;
@@ -448,9 +448,9 @@ test('discovery makes a bounded complementary Maps query when the first result s
  FOR EACH ROW WHEN (NEW.id='${id}') EXECUTE FUNCTION app.test_cancel_after_receipt()`));
  maps=0;
  try{
-  await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:cancelled.p.workspaceId});
+  await runWorkerOnce({apify,collect,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:cancelled.p.workspaceId});
   assert.equal((await getJob(cancelled.p,id)).state,'cancelling');
-  await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:cancelled.p.workspaceId});
+  await runWorkerOnce({apify,collect,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:cancelled.p.workspaceId});
   assert.equal(maps,1);
   assert.equal((await getJob(cancelled.p,id)).state,'cancelled');
  }finally{await testAdmin(c=>c.query('DROP TRIGGER test_cancel_after_receipt ON app.prospecting_job; DROP FUNCTION app.test_cancel_after_receipt()'));}
@@ -467,7 +467,7 @@ test('a reviewed request for 250 companies leaves candidate capacity for a secon
   const count=limits.length===1?100:0;
   return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates:[],rawCount:count,rejected:Array.from({length:count},()=>({reason:'MISSING_IDENTITY'})),exhausted:true,nextCursor:null,usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:count},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
- for(let i=0;i<2;i++)await runWorkerOnce({apify},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ for(let i=0;i<2;i++)await runWorkerOnce({apify,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
  assert.deepEqual(limits,[300,400]);
  const job=await getJob(f.p,journey.stages[0].jobId!);
  assert.equal(job.state,'partial');assert.equal(job.counts.rejected,100);assert.equal(job.counts.inserted,0);
@@ -595,8 +595,8 @@ test('failed or independently cancelled children stop for review without creatin
 test('deterministic provider failure dispatches once and waits for a newly reviewed recovery',async()=>{
  const f=await fixture(),{journey}=await start(f);let starts=0;
  const apify={start:async()=>{starts++;throw new ProviderError('REMOTE_FAILED');},poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
- assert.equal(await runWorkerOnce({apify},{signal:new AbortController().signal,workspaceId:f.p.workspaceId}),true);
- assert.equal((await getJourney(f.p,journey.id)).state,'blocked');assert.equal(await runWorkerOnce({apify},{signal:new AbortController().signal,workspaceId:f.p.workspaceId}),false);assert.equal(starts,1);assert.equal((await getJourney(f.p,journey.id)).stages.length,1);
+ assert.equal(await runWorkerOnce({apify,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId}),true);
+ assert.equal((await getJourney(f.p,journey.id)).state,'blocked');assert.equal(await runWorkerOnce({apify,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId}),false);assert.equal(starts,1);assert.equal((await getJourney(f.p,journey.id)).stages.length,1);
 });
 test('a later successful recovery covers historical cancelled batches on every subsequent resume',async()=>{
  const f=await fixture(),{journey}=await start(f);let j=await done(f,journey,'discover');j=await done(f,j,'research');j=await done(f,j,'people');await cancelJourney(f.p,j.id);
@@ -625,7 +625,7 @@ test('discovery skips a workspace duplicate in another list and stops before inv
   return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,nextCursor:null,exhausted:true,rawCount:candidates.length,rejected:[],usage:{provider:'apify',operationId:ctx.operationId,units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}};
  },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
  const collect=async(url:string)=>[{id:'site',url,text:'Nova +55 11 98765-4321 37.297.479/0001-80',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];
- for(let i=0;i<2;i++)await runWorkerOnce({apify,collect},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});const j=await getJourney(f.p,journey.id);assert.equal(j.state,'blocked');assert.equal(j.reason,'LEGACY_JOURNEY_ARCHIVED');assert.equal(j.stages.at(-1)?.name,'discover');assert.equal((j as any).excluded,1);
+ for(let i=0;i<2;i++)await runWorkerOnce({apify,collect,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});const j=await getJourney(f.p,journey.id);assert.equal(j.state,'blocked');assert.equal(j.reason,'LEGACY_JOURNEY_ARCHIVED');assert.equal(j.stages.at(-1)?.name,'discover');assert.equal((j as any).excluded,1);
  assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,2,'preserve one contact per company');
 });
 test('a duplicate in the destination list cannot bypass discovery admission',async()=>{
@@ -636,7 +636,7 @@ test('a duplicate in the destination list cannot bypass discovery admission',asy
   start:async(ctx:any)=>({kind:'inline' as const,page:{receiptId:ctx.operationId,candidates:[{sourceRef:'duplicate',name:'[RE] Sem site',source:'MAPS' as const}],nextCursor:null,exhausted:true,rawCount:1,rejected:[],usage:{provider:'apify',operationId:ctx.operationId,units:{candidates:1},costUsd:null,costKind:'unknown' as const}}}),
   poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');},
  };
- for(let i=0;i<2;i++)await runWorkerOnce({apify},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ for(let i=0;i<2;i++)await runWorkerOnce({apify,registry:registryFromApify(apify)},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
  const current=await getJourney(f.p,journey.id);assert.equal(current.state,'review');assert.equal(current.stages.length,1);
  assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,1);
 });

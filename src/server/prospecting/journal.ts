@@ -36,7 +36,7 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
     return null;
   });
   if(prior?.state==='completed')return prior.payload.result as T;
-  const readOnlyRetry=provider==='site-browser'&&prior?.provider===provider&&prior.state==='prepared';
+  const readOnlyRetry=(provider==='site-browser'||provider==='cnpj-registry')&&prior?.provider===provider&&prior.state==='prepared';
   if(prior&&!readOnlyRetry){await finishJob(lease,'needs_reconciliation','UNCERTAIN_STEP');throw new UncertainStep();}
   let result:T;
   try{

@@ -140,7 +140,7 @@ test('a known registry failure retains independently collected company website f
   const f=await fixture(),snapshot=await readWorkspaceSnapshot(f.p);
   await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...snapshot.data.leads[0],cnpj:'11444777000161'}}});
   const input={...f.input,sourceKinds:['website','registry']},review=await prepareCompanyResearch(f.p,input),job=await confirmCompanyResearch(f.p,{input,token:review.token,requestId:randomUUID()});
-  await runCompanyResearch(await grantTestLease(f.p,job.id),{collect:async()=>[page()],apify:{start:async()=>{throw new ProviderError('REMOTE_FAILED');},poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}}});
+  await runCompanyResearch(await grantTestLease(f.p,job.id),{collect:async()=>[page()],apify:{start:async()=>{throw new ProviderError('REMOTE_FAILED');},poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}},registry:async()=>{throw new ProviderError('CNPJ_SOURCE_ERROR');}});
   const result=await readCompanyResearch(f.p,job.id);assert.equal(result.state,'partial');assert.ok(result.facts.some(f=>f.field==='email'));
  }finally{if(oldActor===undefined)delete process.env.APIFY_CNPJ_ACTOR;else process.env.APIFY_CNPJ_ACTOR=oldActor;if(oldBuild===undefined)delete process.env.APIFY_CNPJ_BUILD;else process.env.APIFY_CNPJ_BUILD=oldBuild;}
 });
