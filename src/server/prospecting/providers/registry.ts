@@ -47,13 +47,19 @@ function fromOpen(cnpj:string,r:Row,partners:boolean):Candidate{
   cnae:str(r.cnae_principal,20),openedAt:str(r.data_inicio_atividade,100),size:str(r.porte_empresa,100),legalNature:str(r.natureza_juridica,300),capital:str(r.capital_social,100),
   status:str(r.situacao_cadastral,50),street:street&&number?`${street}, ${number}`:undefined,decisionMakers:partners?normalizeDecisionMakers(r.QSA):undefined});
 }
+/** Check digits of a CNPJ, numeric or alphanumeric (each character is worth its ASCII code minus 48). */
+function checkDigits(cnpj:string){
+ const digit=(base:string)=>{let sum=0,w=2;for(let i=base.length-1;i>=0;i--){sum+=(base.charCodeAt(i)-48)*w;w=w===9?2:w+1;}const r=sum%11;return r<2?0:11-r;};
+ const d1=digit(cnpj.slice(0,12)),d2=digit(cnpj.slice(0,12)+d1);
+ return cnpj.endsWith(`${d1}${d2}`);
+}
 export function createRegistryLookup(deps:{fetcher?:Fetch;apiKey?:string|null}={}):RegistryLookup{
  const fetcher=deps.fetcher??globalThis.fetch,apiKey=deps.apiKey===undefined?process.env.CNPJA_API_KEY?.trim()||null:deps.apiKey;
  return async(raw,{partners,signal})=>{
-  const cnpj=normalizeCnpj(raw);if(!cnpj)throw new ProviderError('CNPJ_NOT_FOUND');
+  const cnpj=normalizeCnpj(raw);if(!cnpj||!checkDigits(cnpj))throw new ProviderError('CNPJ_NOT_FOUND');
   if(apiKey){
    // Any CNPJá failure (limit, credits, key, outage, not found) falls back; the key never enters errors.
-   try{return {provider:'cnpja',candidate:fromCnpja(cnpj,await providerJson(fetcher,`https://api.cnpja.com/office/${cnpj}?strategy=CACHE_IF_FRESH&maxAge=45`,{headers:{Authorization:apiKey}},signal) as Row,partners)};}
+   try{return {provider:'cnpja',candidate:fromCnpja(cnpj,await providerJson(fetcher,`https://api.cnpja.com/office/${cnpj}?strategy=CACHE_IF_FRESH&maxAge=45`,{headers:{Authorization:apiKey}},signal,30_000,[500,502,503,504]) as Row,partners)};}
    catch{if(signal.aborted)throw signal.reason??Error('ABORTED');}
   }
   try{return {provider:'opencnpj',candidate:fromOpen(cnpj,await providerJson(fetcher,`https://api.opencnpj.org/${cnpj}`,{},signal) as Row,partners)};}

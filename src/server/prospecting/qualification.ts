@@ -237,7 +237,11 @@ export async function runQualification(lease:JobLease,deps:QualificationAdapters
             const fold=(value?:string)=>siteWords(value??'').join(' '),phone=phoneIdentity(lead.phone??''),cep=(value?:string)=>value?.match(/\b\d{5}-?\d{3}\b/)?.[0].replace('-','');
             const confirmed:Candidate[]=[];
             for(const cnpj of searched){
-              const looked=await sourceResults(lease,job,{...lead,cnpj},'registry',deps,{limit:1,suffix:'cnpj:'+cnpj});if(looked===null)return;
+              // A searched CNPJ the bases cannot find is skipped; the next one is still checked.
+              let looked:Candidate[]|null;
+              try{looked=await sourceResults(lease,job,{...lead,cnpj},'registry',deps,{limit:1,suffix:'cnpj:'+cnpj});}
+              catch(error){if(error instanceof ProviderError&&error.code==='CNPJ_NOT_FOUND')continue;throw error;}
+              if(looked===null)return;
               const found=looked[0];if(!found)continue;
               const sameCity=!!lead.city&&!!found.city&&fold(lead.city)===fold(found.city);
               const sameCompany=companyNames(lead).some(words=>matchesName([found.name,found.companyName].filter(Boolean).join(' '),words))||Boolean(phone&&found.phone&&phoneIdentity(found.phone)===phone);

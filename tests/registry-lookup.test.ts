@@ -81,3 +81,12 @@ test('an abort mid-lookup is not a registry failure',async()=>{
  const fetcher=(async()=>{ac.abort();throw new DOMException('aborted','AbortError');}) as typeof fetch;
  await assert.rejects(createRegistryLookup({fetcher,apiKey:'KEY'})(CNPJ,{partners:false,signal:ac.signal}),(e:any)=>!('code' in Object(e)&&String(e.code).startsWith('CNPJ_')));
 });
+test('a CNPJ with wrong check digits makes no network call',async()=>{
+ const f=fake({cnpja,open});
+ await assert.rejects(createRegistryLookup({fetcher:f.fetcher,apiKey:'KEY'})('33000167000102',{partners:false,signal}),{code:'CNPJ_NOT_FOUND'});
+ assert.equal(f.calls.length,0);
+});
+test('cnpja 429 is not retried: one call, then opencnpj',async()=>{
+ const f=fake({cnpja:429,open});await createRegistryLookup({fetcher:f.fetcher,apiKey:'KEY'})(CNPJ,{partners:false,signal});
+ assert.equal(f.calls.filter(c=>c.url.startsWith('https://api.cnpja.com/')).length,1);
+});

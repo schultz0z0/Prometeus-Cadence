@@ -275,7 +275,7 @@ test('registry finds the CNPJ of a Maps lead through public search results and p
   t.after(()=>{for(const key of ['APIFY_WEB_ACTOR','APIFY_WEB_BUILD'])delete process.env[key];});
   const inline=(candidates:any[])=>({kind:'inline' as const,page:{receiptId:randomUUID(),candidates,rejected:[],rawCount:candidates.length,nextCursor:null,exhausted:true,usage:{provider:'apify',operationId:randomUUID(),units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}});
   const never=async()=>{throw Error('No remote run');};
-  async function qualify(registryCity:string,legalName='CLINICA EXEMPLO SORRISO LTDA',cep='80220-100'){
+  async function qualify(registryCity:string,legalName='CLINICA EXEMPLO SORRISO LTDA',cep='80220-100',unknownFirst=false){
     const {p,job,lease}=await setup(1);
     await runGeneration(lease,{apify:{start:async()=>inline([normalizeCandidate({id:'maps-1',name:'Clínica Exemplo Sorriso | Implantes - 24h',site:'https://clinica.example.com',city:'Curitiba',phone:'+5541999990001',address:'R. Exemplo, 10 - Centro, Curitiba - PR, 80220-100, Brasil'},'MAPS')]),poll:never,readPage:never,abort:never}});
     const lead=(await readWorkspaceSnapshot(p)).data.leads[0];
@@ -285,7 +285,7 @@ test('registry finds the CNPJ of a Maps lead through public search results and p
     const deps={collect:async()=>[{id:'home',url:'https://clinica.example.com/',fetchedAt:new Date().toISOString(),text:'Clínica Exemplo Sorriso. Agende sua consulta.',hash:'home',truncated:false}],apify:{poll:never,readPage:never,abort:never,start:async(ctx:any,request:any)=>{
       calls.push(ctx.profile.source);
       if(ctx.profile.source==='WEB'){assert.match(request.filters.term,/^"Clínica Exemplo Sorriso" Curitiba CNPJ$/,'searches the trade name without the Maps tagline');return inline([
-        {...normalizeCandidate({id:'web-1',name:'Clínica Exemplo Sorriso - Curitiba',site:'https://cnpj.example/clinica'},'WEB'),evidence:[{id:'web-1',url:'https://cnpj.example/clinica',text:'Clínica Exemplo Sorriso CNPJ 37.297.479/0001-80 Curitiba PR',hash:'web-1',fetchedAt:new Date().toISOString(),truncated:false}]},
+        {...normalizeCandidate({id:'web-1',name:'Clínica Exemplo Sorriso - Curitiba',site:'https://cnpj.example/clinica'},'WEB'),evidence:[{id:'web-1',url:'https://cnpj.example/clinica',text:(unknownFirst?'Clínica Exemplo Sorriso, antigo CNPJ 33.000.167/0001-01. ':'')+'Clínica Exemplo Sorriso CNPJ 37.297.479/0001-80 Curitiba PR',hash:'web-1',fetchedAt:new Date().toISOString(),truncated:false}]},
         {...normalizeCandidate({id:'web-3',name:'Guia de Clínicas'},'WEB'),site:'https://guia.example/',evidence:[{id:'web-3',url:'https://guia.example/clinica',text:'Clínica Exemplo Sorriso em Curitiba. Guia Exemplo Ltda, CNPJ 11.444.777/0001-61, Rio de Janeiro.',hash:'web-3',fetchedAt:new Date().toISOString(),truncated:false}]},
         {...normalizeCandidate({id:'web-2',name:'Outra Empresa Qualquer',site:'https://cnpj.example/outra'},'WEB'),evidence:[{id:'web-2',url:'https://cnpj.example/outra',text:'Outra Empresa Qualquer CNPJ 11.222.333/0001-81',hash:'web-2',fetchedAt:new Date().toISOString(),truncated:false}]},
       ]);}
@@ -293,7 +293,7 @@ test('registry finds the CNPJ of a Maps lead through public search results and p
       assert.equal(request.filters.cnpj,'37297479000180');
       return inline([normalizeCandidate({cnpj:'37297479000180',razao_social:legalName,municipio:registryCity,uf:'PR',endereco_completo:'RUA EXEMPLO, 10, CENTRO, '+registryCity.toUpperCase()+'/PR, CEP '+cep},'CNPJ')]);
     }}};
-    for(let i=0;i<4&&(await getJob(p,q.id)).state!=='completed';i++)await runQualification(await grantTestLease(p,q.id),{...deps,registry:registryFromApify(deps.apify as any)});
+    for(let i=0;i<4&&(await getJob(p,q.id)).state!=='completed';i++)await runQualification(await grantTestLease(p,q.id),{...deps,registry:async(c:string,o:any)=>{if(c==='33000167000101')throw new ProviderError('CNPJ_NOT_FOUND');return registryFromApify(deps.apify as any)(c,o);}});
     assert.equal((await getJob(p,q.id)).state,'completed');
     return{p,calls,result:(await listJobItems(p,q.id)).items[0].results[0]};
   }
@@ -304,6 +304,9 @@ test('registry finds the CNPJ of a Maps lead through public search results and p
   assert.equal(homonym.result.status,'skipped');assert.deepEqual(homonym.result.reasons,['CNPJ_NOT_CORROBORATED']);assert.deepEqual(homonym.result.proposed,{});
   const byAddress=await qualify('Curitiba','E S ODONTOLOGIA LTDA');
   assert.equal(byAddress.result.proposed.cnpj,'37297479000180','a different legal name is accepted when city and postal code agree');
+  // 17/11/2026: a searched CNPJ the bases cannot find is skipped and the next one is still checked.
+  const afterMissing=await qualify('Curitiba',undefined,undefined,true);
+  assert.equal(afterMissing.result.status,'pending_review',JSON.stringify(afterMissing.result));assert.equal(afterMissing.result.proposed.cnpj,'37297479000180');
   const elsewhere=await qualify('Curitiba','E S ODONTOLOGIA LTDA','81000-000');
   assert.deepEqual(elsewhere.result.reasons,['CNPJ_NOT_CORROBORATED']);
 });
