@@ -35,5 +35,5 @@ Há um único ponto por onde passam as consultas cadastrais (`sourceResults(...,
 
 ## Decisões do builder (minhas)
 - Nomes de campos exatos das duas APIs, limites de tempo e o mapeamento para o formato de candidato.
-- Contabilização de uso: unidade "consultas cadastrais" por provedor, custo desconhecido como hoje.
+- Contabilização de uso: a consulta é registrada como chamada do provedor `cnpj-registry` sem unidade reservada (custo da CNPJá desprezível e quase sempre zero pela base dela); nova unidade de uso fica para quando houver volume.
 - Ajuste das mensagens de configuração e do texto de aviso.
