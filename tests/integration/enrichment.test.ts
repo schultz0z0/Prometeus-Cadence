@@ -21,6 +21,8 @@ const usage=(operationId='fixture')=>({provider:'openai',operationId,units:{open
 const adapters=(useful:boolean)=>({
  collect:async()=>[evidence],
  apify:{start:async(ctx:any)=>({kind:'inline' as const,page:{receiptId:'lookup',candidates:[{name:'Empresa Exemplo',source:'CNPJ' as const,sourceRef:'12345678000190',cnpj:'12345678000190',site:'https://empresa.example',facts:{decisionMakers:[{name:'Ana Silva',role:'diretora comercial'}]},evidence:[evidence]}],nextCursor:null,exhausted:true,rawCount:1,rejected:[],usage:{provider:'apify',operationId:ctx.operationId,units:{apifyRuns:1},costUsd:null,costKind:'unknown' as const}}}),poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}},
+ // 17/11/2026: one-CNPJ lookups go through CNPJá/OpenCNPJ; the fake echoes the requested CNPJ.
+ registry:async(cnpj:string)=>({provider:'cnpja' as const,candidate:{name:'Empresa Exemplo',source:'CNPJ' as const,sourceRef:cnpj,cnpj,site:'https://empresa.example',facts:{decisionMakers:[{name:'Ana Silva',role:'diretora comercial'}]},evidence:[evidence]}}),
  decisors:async(_ctx:any,input:any)=>({value:{people:useful?[{name:'Ana Silva',role:'diretora comercial',email:'ana.silva@example.com',phone:'21988887777',evidenceId:input.evidence.find((e:any)=>e.text===text).id,quote:text}]:[]},usage:usage()})
 });
 async function fixture(){
@@ -42,7 +44,7 @@ test('useful enrichment consumes one credit; reviewed delivery is idempotent and
  const body={requestId:randomUUID(),itemIds:items.map(i=>i.id)},applied=await applyJobResults(f.p,job.id,body);assert.equal(applied.applied,1);assert.deepEqual(await applyJobResults(f.p,job.id,body),applied);
  const snapshot=await readWorkspaceSnapshot(f.p);assert.equal(snapshot.data.lists.length,2);assert.equal(snapshot.data.leads.length,2);assert.equal(snapshot.data.leads.find(l=>l.id!==f.leadId)?.phone,'+5521988887777');assert.equal(await consumed(f.p,'imports'),imports);
  const review=await prepareJob(f.p,f.input),second=await confirmJob(f.p,{requestId:randomUUID(),input:f.input,reviewToken:review.token});
- await runEnrichment(await grantTestLease(f.p,second.id),{apify:{...adapters(true).apify,start:async()=>{throw Error('Cache cannot call provider');}},collect:async()=>{throw Error('Cache cannot fetch');},decisors:async()=>{throw Error('Cache cannot call model');}});await runEnrichment(await grantTestLease(f.p,second.id));assert.equal((await getJob(f.p,second.id)).state,'completed');assert.equal(await consumed(f.p,'enrichment'),1);
+ await runEnrichment(await grantTestLease(f.p,second.id),{apify:{...adapters(true).apify,start:async()=>{throw Error('Cache cannot call provider');}},registry:async()=>{throw Error('Cache cannot call registry');},collect:async()=>{throw Error('Cache cannot fetch');},decisors:async()=>{throw Error('Cache cannot call model');}});await runEnrichment(await grantTestLease(f.p,second.id));assert.equal((await getJob(f.p,second.id)).state,'completed');assert.equal(await consumed(f.p,'enrichment'),1);
  const foreign=await prospectingUser();await assert.rejects(applyJobResults(foreign.p,job.id,{requestId:randomUUID(),itemIds:body.itemIds}),/encontrad|indisponível/i);
 });
 test('cached enrichment remains free when provider daily unit limits are exhausted',async()=>{
@@ -56,7 +58,8 @@ test('cached enrichment remains free when provider daily unit limits are exhaust
 test('QSA name and company feed indexed evidence without visiting LinkedIn',async()=>{
  const f=await fixture(),job=await confirmJob(f.p,{requestId:randomUUID(),input:f.input,reviewToken:f.review.token}),base=adapters(true),urls:string[]=[],queries:string[]=[];
  const linkedin='https://www.linkedin.com/in/ana-exemplo/';
- const deps={...base,apify:{...base.apify,start:async(ctx:any,input:any)=>{queries.push(input.filters.term);const reply=await base.apify.start(ctx);if(ctx.profile.source==='WEB')reply.page.candidates=[{...reply.page.candidates[0],site:'https://www.linkedin.com/',evidence:[{...evidence,id:'profile-snippet',url:linkedin,hash:'snippet'}]}];else reply.page.candidates[0].evidence=[{...evidence,text:'Empresa Exemplo — sócia Ana Silva, diretora comercial',hash:'qsa'}];return reply;}},collect:async(url:string)=>{urls.push(url);return[];}};
+ const deps={...base,apify:{...base.apify,start:async(ctx:any,input:any)=>{queries.push(input.filters.term);const reply=await base.apify.start(ctx);reply.page.candidates=[{...reply.page.candidates[0],site:'https://www.linkedin.com/',evidence:[{...evidence,id:'profile-snippet',url:linkedin,hash:'snippet'}]}];return reply;}},
+  registry:async(cnpj:string)=>{const r=await base.registry(cnpj);r.candidate.evidence=[{...evidence,text:'Empresa Exemplo — sócia Ana Silva, diretora comercial',hash:'qsa'}];return r;},collect:async(url:string)=>{urls.push(url);return[];}};
  for(let i=0;i<3;i++){if(['completed','partial','failed','needs_reconciliation'].includes((await getJob(f.p,job.id)).state))break;await runEnrichment(await grantTestLease(f.p,job.id),deps);}
  assert.equal((await getJob(f.p,job.id)).state,'completed');assert.ok(queries.some(q=>q.includes('Ana Silva')&&q.includes('Empresa Exemplo')&&q.includes('site:linkedin.com/in/')));assert.deepEqual(urls,['https://empresa.example']);assert.equal((await listJobItems(f.p,job.id)).items[0].enrichment?.people.length,1);
 });
@@ -93,7 +96,7 @@ test('cancelled enrichment journals remote abort and polls confirmation without 
 test('a promised cache expiring after confirmation never starts a newly paid lookup',async()=>{
  const f=await fixture();await run(f,true);const review=await prepareJob(f.p,f.input),job=await confirmJob(f.p,{requestId:randomUUID(),input:f.input,reviewToken:review.token});
  await testAdmin(c=>c.query("UPDATE app.enrichment_resolution SET expires_at=clock_timestamp()-interval '1 second' WHERE workspace_id=$1",[f.p.workspaceId]));
- await runEnrichment(await grantTestLease(f.p,job.id),{...adapters(true),collect:async()=>{throw Error('No newly paid fetch');},decisors:async()=>{throw Error('No newly paid model');},apify:{...adapters(true).apify,start:async()=>{throw Error('No newly paid actor');}}});
+ await runEnrichment(await grantTestLease(f.p,job.id),{...adapters(true),collect:async()=>{throw Error('No newly paid fetch');},decisors:async()=>{throw Error('No newly paid model');},apify:{...adapters(true).apify,start:async()=>{throw Error('No newly paid actor');}},registry:async()=>{throw Error('No newly paid lookup');}});
  assert.equal((await listJobItems(f.p,job.id)).items[0].status,'skipped');assert.equal(await consumed(f.p,'enrichment'),1);
 });
 test('delivery proofs cannot be forged and source edits reject application atomically',async()=>{
@@ -137,7 +140,7 @@ test('changing AI configuration during the last call preserves consumption but c
 test('unavailable later inference keeps a useful paid company result applicable',async()=>{
  const f=await fixture(),s=await readWorkspaceSnapshot(f.p),other=randomUUID();await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:s.revision,command:{type:'lead.upsert',lead:{...s.data.leads[0],id:other,cnpj:'12345678000271',name:'Empresa Exemplo B'}}});
  const input={...f.input,leadIds:[f.leadId,other],enrichment:{...f.input.enrichment,maxCredits:2}},review=await prepareJob(f.p,input),job=await confirmJob(f.p,{requestId:randomUUID(),input,reviewToken:review.token}),base=adapters(true);let calls=0;
- const deps={...base,apify:{...base.apify,start:async(c:any,i:any)=>{const result=await base.apify.start(c);if(c.profile.source==='CNPJ')result.page.candidates[0].cnpj=i.filters.cnpj;return result;}},decisors:async(c:any,i:any)=>{calls++;if(calls===2)throw new ProviderError('LOST_RESPONSE',0,true);return base.decisors(c,i);}};
+ const deps={...base,decisors:async(c:any,i:any)=>{calls++;if(calls===2)throw new ProviderError('LOST_RESPONSE',0,true);return base.decisors(c,i);}};
  await runEnrichment(await grantTestLease(f.p,job.id),deps);await runEnrichment(await grantTestLease(f.p,job.id),deps);const reconciled=await reconcileJob(f.p,job.id,{resultUnavailable:true});assert.equal(reconciled.state,'partial');
  const item=(await listJobItems(f.p,job.id)).items[0];assert.equal((await applyJobResults(f.p,job.id,{requestId:randomUUID(),itemIds:[item.id]})).applied,1);assert.equal(await consumed(f.p,'enrichment'),1);
 });
@@ -156,10 +159,10 @@ test('06B.7 the credit cap of a standard batch looks up only what it covers and 
  const input={kind:'qualification',listId,leadIds:ids,modules:['decisors'],summaryPolicy:'all',escalation:'off',enrichment:{maxCredits:1,destinationName:'[RE] Decisores'}},review=await prepareJob(p,input);
  assert.deepEqual(review.blockers,[]);
  const job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),base=adapters(true);let lookups=0;
- const deps={...base,apify:{...base.apify,start:async(ctx:any)=>{lookups++;return base.apify.start(ctx);}}};
+ const deps={...base,registry:async(cnpj:string)=>{lookups++;return base.registry(cnpj);}};
  for(let i=0;i<8&&!['completed','partial','failed'].includes((await getJob(p,job.id)).state);i++)await runEnrichment(await grantTestLease(p,job.id),deps);
  assert.equal((await getJob(p,job.id)).state,'completed');
- assert.ok(lookups>0&&lookups<=3,'only the one company covered by the cap is looked up (at most three source runs per company)');
+ assert.equal(lookups,1,'only the one company covered by the cap is looked up');
  const items=(await listJobItems(p,job.id)).items,over=items.find(i=>i.leadId===ids[1])!,paid=items.find(i=>i.leadId===ids[0])!;
  assert.equal(over.status,'skipped');assert.equal(over.enrichment?.charged,false);assert.equal(over.enrichment?.people.length,0);
  assert.equal(paid.enrichment?.charged,true);assert.equal(paid.enrichment?.people.length,1);
@@ -202,10 +205,38 @@ test('16/11/2026 a company the CNPJ registry cannot find is skipped and the batc
  const input={kind:'qualification',listId,leadIds:ids,modules:['decisors'],summaryPolicy:'all',escalation:'off',enrichment:{maxCredits:2,destinationName:'[RE] Decisores'}},review=await prepareJob(p,input);
  assert.deepEqual(review.blockers,[]);
  const job=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),base=adapters(true);
- const deps={...base,apify:{...base.apify,start:async(ctx:any,input:any)=>{if(JSON.stringify(input).includes('37297479000180'))throw new ProviderError('CNPJ_NOT_FOUND');return (base.apify.start as any)(ctx,input);}}};
+ const deps={...base,registry:async(cnpj:string)=>{if(cnpj==='37297479000180')throw new ProviderError('CNPJ_NOT_FOUND');return base.registry(cnpj);}};
  for(let i=0;i<10&&!['completed','partial','failed'].includes((await getJob(p,job.id)).state);i++)await runEnrichment(await grantTestLease(p,job.id),deps);
  const final=await getJob(p,job.id);assert.equal(final.state,'completed',JSON.stringify(final.error??final));
  const items=(await listJobItems(p,job.id)).items,missing=items.find(i=>i.leadId===ids[1])!,found=items.find(i=>i.leadId===ids[0])!;
  assert.equal(missing.status,'skipped');assert.equal(missing.enrichment?.charged,false);
  assert.equal(found.enrichment?.people.length,1);
+});
+test('17/11/2026 enrichment reads partners from the registry lookup, recorded as a cnpj-registry call without reserved units',async()=>{
+ const f=await fixture(),job=await run(f,false);
+ const rows=await testAdmin(async c=>(await c.query("SELECT provider,state,payload->'reservedUnits' AS units,payload->'result'->>'source' AS source FROM app.prospecting_attempt WHERE job_id=$1 AND step LIKE 'registry:%'",[job.id])).rows);
+ assert.deepEqual(rows,[{provider:'cnpj-registry',state:'completed',units:{},source:'cnpja'}]);
+ assert.equal((await listJobItems(f.p,job.id)).items[0].enrichment?.people[0].name,'Ana Silva');
+});
+test('17/11/2026 a registry lookup returning another CNPJ is never applied',async()=>{
+ const f=await fixture(),job=await confirmJob(f.p,{requestId:randomUUID(),input:f.input,reviewToken:f.review.token}),base=adapters(true);
+ const deps={...base,registry:async()=>base.registry('99999999000191')};
+ for(let i=0;i<4&&!['completed','partial','failed','needs_reconciliation'].includes((await getJob(f.p,job.id)).state);i++)await runEnrichment(await grantTestLease(f.p,job.id),deps).catch(()=>{});
+ const items=(await listJobItems(f.p,job.id)).items;
+ assert.ok(items.every(i=>!i.enrichment?.people.length),'no partner from another company');assert.equal(await consumed(f.p,'enrichment'),0);
+});
+test('17/11/2026 a prepared registry attempt is retried, not reconciled',async()=>{
+ const f=await fixture(),job=await confirmJob(f.p,{requestId:randomUUID(),input:f.input,reviewToken:f.review.token});
+ const {hashValue}=await import('../../src/server/prospecting/review.ts'),step='registry:'+f.leadId,id=hashValue({job:job.id,step});
+ await testAdmin(c=>c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES($1,$2,$3,'cnpj-registry',$4,'prepared',$5)",[f.p.workspaceId,job.id,id,step,{reservedUnits:{}}]));
+ for(let i=0;i<8&&!['completed','partial','failed','needs_reconciliation'].includes((await getJob(f.p,job.id)).state);i++)await runEnrichment(await grantTestLease(f.p,job.id),adapters(false));
+ assert.equal((await getJob(f.p,job.id)).state,'completed');
+ assert.equal(await testAdmin(async c=>(await c.query('SELECT state FROM app.prospecting_attempt WHERE id=$1',[id])).rows[0].state),'completed');
+});
+test('17/11/2026 a failed registry attempt left by a crash is retried, not reconciled',async()=>{
+ const f=await fixture(),job=await confirmJob(f.p,{requestId:randomUUID(),input:f.input,reviewToken:f.review.token});
+ const {hashValue}=await import('../../src/server/prospecting/review.ts'),step='registry:'+f.leadId,id=hashValue({job:job.id,step});
+ await testAdmin(c=>c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES($1,$2,$3,'cnpj-registry',$4,'failed',$5)",[f.p.workspaceId,job.id,id,step,{reservedUnits:{}}]));
+ for(let i=0;i<8&&!['completed','partial','failed','needs_reconciliation'].includes((await getJob(f.p,job.id)).state);i++)await runEnrichment(await grantTestLease(f.p,job.id),adapters(false));
+ assert.equal((await getJob(f.p,job.id)).state,'completed');
 });

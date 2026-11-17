@@ -36,7 +36,8 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
     return null;
   });
   if(prior?.state==='completed')return prior.payload.result as T;
-  const readOnlyRetry=provider==='site-browser'&&prior?.provider===provider&&prior.state==='prepared';
+  // A CNPJ lookup is a read without side effects: a crash after 'prepared' or after a recorded failure just reads again.
+  const readOnlyRetry=prior?.provider===provider&&(provider==='site-browser'&&prior.state==='prepared'||provider==='cnpj-registry'&&['prepared','failed'].includes(prior.state));
   if(prior&&!readOnlyRetry){await finishJob(lease,'needs_reconciliation','UNCERTAIN_STEP');throw new UncertainStep();}
   let result:T;
   try{
@@ -47,6 +48,7 @@ export async function performStep<T>(lease:JobLease,step:string,provider:string,
       if(readOnlyRetry&&(!config.enabled||job.checkpoint.execution?.version!==config.version))
         throw new AppError(409,'A configuração mudou. Revise antes de continuar.','PROFILE_CHANGED');
       await assertAutomationAuthority(c,job,'dispatch',operationId);
+      if(readOnlyRetry&&prior.state==='failed')await c.query("UPDATE app.prospecting_attempt SET state='prepared' WHERE id=$1",[operationId]);
     });
     result=await call();
   }

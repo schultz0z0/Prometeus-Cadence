@@ -171,3 +171,12 @@ Encontrado e não corrigido (decisão ou ajuste posterior):
 - **Base de conhecimento da empresa com busca vetorial (RAG) para o Agente SDR** (em desenho, 14/11/2026): além da base direta de FAQ e notas, documentos da empresa com embeddings Gemini em pgvector, isolados por workspace, e memória de longo prazo da conversa.
 - **Um agente de IA por módulo** (aprovado como direção em 14/11/2026): prospecção (gerador, qualificador, enriquecedor e script automático das cadências), LinkedIn, assistente do app (suporte, automações, contexto, configurações) e Agente SDR, cada um com perfil próprio (instruções, ferramentas permitidas, modelo, limites e custo medido), sobre a camada de IA, o RLS, a fila e a base de conhecimento compartilhados. Desenho próprio, depois da base de conhecimento do SDR.
 - **Etapa do agente Assistente** (aprovada como direção em 15/11/2026): separar o suporte de uso do app, que responde só pela Central de Ajuda, das tarefas de configuração (Contexto de IA, automações, público), que podem usar a base de conhecimento da empresa. A leitura do site para o Contexto de IA passa do agente de Prospecção para o Assistente, e o site lido entra na base como documento.
+
+## Consulta de CNPJ: CNPJá com reserva na OpenCNPJ (17/11/2026)
+
+A consulta de **um CNPJ** (Qualificador, Enriquecedor, pesquisa da empresa e de pessoas) deixou o Actor da Apify `bigdavidson/brazil-cnpj-companies`, que não achava empresas reais. Agora vai primeiro à **CNPJá** (`api.cnpja.com`, estratégia de cache de até 45 dias) e, se ela falhar, atingir o limite, ficar sem créditos ou não achar, à **API pública da OpenCNPJ** (`api.opencnpj.org`). Nenhuma das duas achou → "CNPJ não encontrado na CNPJá nem na OpenCNPJ"; as duas fora do ar → "as bases de CNPJ não responderam". O lote segue em ambos os casos.
+
+- A chave fica só em `CNPJA_API_KEY` na configuração protegida. Sem chave, só a OpenCNPJ é usada.
+- A evidência registra a fonte (`cnpja.com/office/<cnpj>` ou `opencnpj.org/<cnpj>`); a chamada aparece como provedor `cnpj-registry`, sem unidade reservada.
+- A fonte "CNPJ" do Gerador (busca por CNAE/cidade) continua no Actor da Apify.
+- **Pendente de homologação real:** com a chave da CNPJá configurada, enriquecer um lead com CNPJ real e conferir razão social, situação, telefone e sócios na ficha; repetir sem a chave para ver a OpenCNPJ.

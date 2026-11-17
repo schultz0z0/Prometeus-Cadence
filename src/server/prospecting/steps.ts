@@ -18,7 +18,7 @@ import {prospectingConfig} from './config.ts';
 import {registrySliceRemaining,registryWindow} from './registry-first.ts';
 import {webCompanyPage} from './web-results.ts';
 export {runQualification} from './qualification.ts';
-export interface GenerationAdapters{apify?:SourceAdapter;apollo?:ApolloAdapter;signal?:AbortSignal;collect?:QualificationAdapters['collect'];siteBrowser?:QualificationAdapters['siteBrowser']}
+export interface GenerationAdapters{apify?:SourceAdapter;registry?:QualificationAdapters['registry'];apollo?:ApolloAdapter;signal?:AbortSignal;collect?:QualificationAdapters['collect'];siteBrowser?:QualificationAdapters['siteBrowser']}
 export function providerContext(job:any,source:'MAPS'|'WEB'|'CNPJ'|'APOLLO'|'CRAWL',operationId:string,signal:AbortSignal):ProviderContext{
   const execution=job.checkpoint.execution;
   if(source==='CRAWL')return{operationId,signal,profile:{source:'WEB',actor:execution.siteCrawler.actor,build:execution.siteCrawler.build,ppe:false},credential:process.env.APIFY_TOKEN??'',maxChargeUsd:execution.maxChargeUsd??0,maxPages:execution.siteCrawler.maxPages};

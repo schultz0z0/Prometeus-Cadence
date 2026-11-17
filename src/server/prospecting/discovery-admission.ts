@@ -136,7 +136,10 @@ export async function admitDiscoveryPage(lease:JobLease,job:any,page:CandidatePa
     try{
       companies=await sourceResults(lease,job,{...lead,cnpj:cnpjs[0]},'registry',{...deps,signal},{partners:true,suffix:'admission',onTerminal});
     }catch(error){
-      if(!(error instanceof ProviderError)||error.code!=='CNPJ_IDENTITY_MISMATCH')throw error;
+      if(!(error instanceof ProviderError)||error.uncertain)throw error;
+      // One company the CNPJ bases cannot confirm is rejected; the batch goes on.
+      if(['CNPJ_NOT_FOUND','CNPJ_SOURCE_ERROR'].includes(error.code)){reject('CNPJ_NOT_CONFIRMED_ACTIVE');continue;}
+      if(error.code!=='CNPJ_IDENTITY_MISMATCH')throw error;
       reject('CNPJ_IDENTITY_UNVERIFIED');continue;
     }
     if(companies===null)return null;

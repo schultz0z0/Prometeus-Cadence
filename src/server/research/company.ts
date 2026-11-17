@@ -121,7 +121,7 @@ export async function runCompanyResearch(lease:JobLease,deps:ResearchAdapters={}
    signal.throwIfAborted();const lead=companyCase.basis as Lead,options=request.companyResearch,registry=researchSourceRegistry(),missing:string[]=[],pages:ResearchPage[]=[];
    let site=lead.site;
    const lookup=async(module:'website'|'registry')=>{
-    try{if(await failedResearchStep(lease,module+':'+lead.id))throw new ProviderError('SOURCE_UNAVAILABLE');return await sourceResult(lease,job,lead,module,{apify:deps.apify,signal});}
+    try{if(await failedResearchStep(lease,module+':'+lead.id))throw new ProviderError('SOURCE_UNAVAILABLE');return await sourceResult(lease,job,lead,module,{apify:deps.apify,registry:deps.registry,signal});}
     catch(error){if(error instanceof AppError||error instanceof UncertainStep||error instanceof ProviderError&&error.uncertain||signal.aborted)throw error;missing.push(module==='registry'?'CONSULTA_CADASTRAL_INDISPONIVEL':'BUSCA_SITE_INDISPONIVEL');return{};}
    };
    if(!site&&options.sourceKinds.some(k=>k==='website'||k==='social')){

@@ -38,13 +38,13 @@ export function estimateUsage(input:JobInput,route?:AiRoute|null,plannedFresh?:n
     }
   }else{
     const n=input.leadIds.length;
-    if(input.companyResearch){const calls=(input.companyResearch.sourceKinds.some(s=>s==='website'||s==='social')&&prospectingConfig().ready.WEB?1:0)+(input.companyResearch.sourceKinds.includes('social')&&prospectingConfig().ready.WEB?1:0)+(input.companyResearch.sourceKinds.includes('registry')&&prospectingConfig().ready.CNPJ?1:0);if(calls)add('apify','apifyRuns',n*calls);return result;}
-    if(input.enrichment){const fresh=plannedFresh??Math.min(n,input.enrichment.maxCredits);if(fresh>0){const config=prospectingConfig(),calls=input.companyPeople?(config.ready.WEB?2:0)+(config.ready.CNPJ?1:0):3+(config.linkedinReady&&config.ready.WEB?3:0);if(calls)add('apify','apifyRuns',fresh*calls);if(route){add(route.conventional.provider,conventionalUnit(route.conventional.provider),fresh);if(route.decisionProvider==='jev')add('openrouter','jevCalls',fresh);}}return result;}
+    if(input.companyResearch){const calls=(input.companyResearch.sourceKinds.some(s=>s==='website'||s==='social')&&prospectingConfig().ready.WEB?1:0)+(input.companyResearch.sourceKinds.includes('social')&&prospectingConfig().ready.WEB?1:0);if(calls)add('apify','apifyRuns',n*calls);return result;}
+    if(input.enrichment){const fresh=plannedFresh??Math.min(n,input.enrichment.maxCredits);if(fresh>0){const config=prospectingConfig(),calls=input.companyPeople?(config.ready.WEB?2:0):2+(config.linkedinReady&&config.ready.WEB?3:0);if(calls)add('apify','apifyRuns',fresh*calls);if(route){add(route.conventional.provider,conventionalUnit(route.conventional.provider),fresh);if(route.decisionProvider==='jev')add('openrouter','jevCalls',fresh);}}return result;}
     if(input.modules.includes('qualify')){if(!route||route.decisionProvider==='jev')add('openrouter','jevCalls',n);else add(route.conventional.provider,conventionalUnit(route.conventional.provider),n);}
     const calls=(input.modules.includes('summary')?n:0)+(input.escalation==='ambiguous'&&input.modules.includes('qualify')&&(!route||route.decisionProvider==='jev')?n:0);
     if(calls)add(route?.conventional.provider??'codex',route?conventionalUnit(route.conventional.provider):'codexCalls',calls);
-    // To find a missing CNPJ the registry module may run one public search and check up to two candidates per lead.
-    if(input.modules.includes('registry'))add('apify','apifyRuns',n*(prospectingConfig().ready.WEB?3:1));
+    // To find a missing CNPJ the registry module may run one public search; the CNPJ lookups themselves (CNPJá/OpenCNPJ, 17/11/2026) use no Apify run.
+    if(input.modules.includes('registry')&&prospectingConfig().ready.WEB)add('apify','apifyRuns',n);
     if(input.modules.includes('website'))add('apify','apifyRuns',n);
   }
   return result;
@@ -60,10 +60,9 @@ export function requirements(config:ProspectingConfig,input:JobInput,workspaceId
     if(input.source!=='APOLLO')try{actorInput(providerProfile(input.source,config.profiles[input.source]),input);}catch{blockers.push(input.source==='CNPJ'?'O perfil ou os filtros cadastrais não estão disponíveis. Informe um CNAE ou CNPJ suportado.':'O perfil de busca ainda não está disponível. Configure um Actor/build verificado.');}
   }
   if(input.kind==='qualification'){
-    if(input.enrichment&&!input.companyPeople&&(!config.ready.CNPJ||!config.ready.WEB))blockers.push('Configure os perfis CNPJ e WEB da Apify antes de enriquecer.');
+    if(input.enrichment&&!input.companyPeople&&!config.ready.WEB)blockers.push('Configure o perfil WEB da Apify antes de enriquecer.');
 
 
-    if(input.modules.includes('registry')&&!config.ready.CNPJ)blockers.push('Configure a consulta cadastral.');
     if(input.modules.includes('website')&&!config.ready.WEB)blockers.push('Configure a busca de sites.');
   }
   if(checkTechnicalCapacity)for(const u of estimateUsage(input,route,plannedFresh))if(u.maxUnits>(config.caps[u.unit]??0)||u.maxUnits>(config.globalCaps[u.unit]??0))blockers.push(`O limite de ${u.unit} não permite esta execução.`);
