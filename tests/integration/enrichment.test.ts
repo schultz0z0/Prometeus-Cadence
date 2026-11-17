@@ -233,3 +233,10 @@ test('17/11/2026 a prepared registry attempt is retried, not reconciled',async()
  assert.equal((await getJob(f.p,job.id)).state,'completed');
  assert.equal(await testAdmin(async c=>(await c.query('SELECT state FROM app.prospecting_attempt WHERE id=$1',[id])).rows[0].state),'completed');
 });
+test('17/11/2026 a failed registry attempt left by a crash is retried, not reconciled',async()=>{
+ const f=await fixture(),job=await confirmJob(f.p,{requestId:randomUUID(),input:f.input,reviewToken:f.review.token});
+ const {hashValue}=await import('../../src/server/prospecting/review.ts'),step='registry:'+f.leadId,id=hashValue({job:job.id,step});
+ await testAdmin(c=>c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES($1,$2,$3,'cnpj-registry',$4,'failed',$5)",[f.p.workspaceId,job.id,id,step,{reservedUnits:{}}]));
+ for(let i=0;i<8&&!['completed','partial','failed','needs_reconciliation'].includes((await getJob(f.p,job.id)).state);i++)await runEnrichment(await grantTestLease(f.p,job.id),adapters(false));
+ assert.equal((await getJob(f.p,job.id)).state,'completed');
+});

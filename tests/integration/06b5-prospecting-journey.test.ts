@@ -382,6 +382,26 @@ test('discovery searches for and verifies an institutional site missing from Map
  const leads=(await readWorkspaceSnapshot(f.p)).data.leads;assert.equal(leads.length,1);assert.equal(leads[0].site,'https://grupo-xyz.example/');assert.equal(leads[0].cnpj,'37297479000180');
  assert.equal((await getJourney(f.p,journey.id)).stages[0].state,'completed');
 });
+test('17/11/2026 discovery rejects only the lead whose CNPJ the bases cannot find',async()=>{
+ const f=await fixture(1),{journey}=await start(f),calls:string[]=[],reads:string[]=[];
+ const apify={start:async(ctx:any,input:any)=>{
+  const source:string=ctx.profile.source;calls.push(source);
+  if(source==='WEB'){assert.equal(input.filters.term,'[RE] Clínica Exemplo');assert.equal(input.filters.location,'Rio de Janeiro');assert.equal(input.limit,5);}
+  if(source==='CNPJ')assert.equal(input.filters.cnpj,'37297479000180');
+  const candidates=source==='MAPS'?[{sourceRef:'maps',name:'[RE] Clínica Exemplo',phone:'+5521987654321',city:'Rio de Janeiro',source:'MAPS' as const}]
+    :source==='WEB'?[
+     {sourceRef:'google',name:'[RE] Clínica Exemplo',site:'https://google.com',source:'WEB' as const},
+     {sourceRef:'directory',name:'[RE] Clínica Exemplo',site:'https://cnpj.biz/37297479000180',source:'WEB' as const},
+     {sourceRef:'homonym',name:'[RE] Clínica Exemplo',site:'https://clinicaexemplo.other.example',source:'WEB' as const},
+     {sourceRef:'official',name:'[RE] Clínica Exemplo',site:'https://grupo-xyz.example',source:'WEB' as const},
+    ]:[{sourceRef:'registry',name:'[RE] Clínica Exemplo',source:'CNPJ' as const,cnpj:'37297479000180',facts:{registrationStatus:'ATIVA'}}];
+  return{kind:'inline' as const,page:{receiptId:ctx.operationId,candidates,nextCursor:null,exhausted:true,rawCount:candidates.length,rejected:[],usage:{provider:'apify',operationId:ctx.operationId+':page',units:{candidates:candidates.length},costUsd:null,costKind:'unknown' as const}}};
+ },poll:async()=>{throw Error('No remote');},readPage:async()=>{throw Error('No remote');},abort:async()=>{throw Error('No remote');}};
+ const collect=async(url:string)=>{reads.push(url);return[{id:'site',url,text:url.includes('other')?'Clínica Exemplo +55 11 98765-4321':'Clínica Exemplo +55 21 98765-4321 37.297.479/0001-80',hash:url,fetchedAt:new Date().toISOString(),truncated:false}];};
+ await runWorkerOnce({apify,collect,registry:async()=>{throw new ProviderError('CNPJ_NOT_FOUND');}},{signal:new AbortController().signal,workspaceId:f.p.workspaceId});
+ assert.equal((await readWorkspaceSnapshot(f.p)).data.leads.length,0);
+ assert.notEqual((await getJourney(f.p,journey.id)).stages[0].state,'failed');
+});
 test('discovery replaces discarded Maps rows; registry lookups answer in the same pass (17/11/2026)',async()=>{
  const f=await fixture(),{journey}=await start(f),starts:string[]=[],cursors:(string|null)[]=[];
  const entries=[

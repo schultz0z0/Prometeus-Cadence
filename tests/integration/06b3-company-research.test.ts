@@ -186,3 +186,15 @@ test('a known failed collection checkpoint is not retried or stranded as an unse
  await withLeasedTransaction(lease,c=>c.query("INSERT INTO app.prospecting_attempt(workspace_id,job_id,id,provider,step,state,payload) VALUES($1,$2,$3,'public-web',$4,'failed',$5)",[f.p.workspaceId,job.id,operation,step,{reservedUnits:{}}]));let calls=0;
  await runCompanyResearch(lease,{collect:async()=>{calls++;return[page()];}});assert.equal(calls,0);assert.equal((await readCompanyResearch(f.p,job.id)).state,'partial');
 });
+test('17/11/2026 the registry source needs no Apify CNPJ profile',async()=>{
+ const oldActor=process.env.APIFY_CNPJ_ACTOR;delete process.env.APIFY_CNPJ_ACTOR;
+ try{
+  const f=await fixture(),snapshot=await readWorkspaceSnapshot(f.p);let lookups=0;
+  await executeWorkspaceCommand(f.p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...snapshot.data.leads[0],cnpj:'11444777000161'}}});
+  const input={...f.input,sourceKinds:['website','registry']},review=await prepareCompanyResearch(f.p,input),job=await confirmCompanyResearch(f.p,{input,token:review.token,requestId:randomUUID()});
+  const registry=async(cnpj:string)=>{lookups++;return{provider:'opencnpj' as const,candidate:{name:'Empresa',source:'CNPJ' as const,sourceRef:cnpj,cnpj,evidence:[{...page(),id:'reg',url:'https://opencnpj.org/'+cnpj}]}};};
+  await runCompanyResearch(await grantTestLease(f.p,job.id),{collect:async()=>[page()],registry,apify:{start:async()=>{throw new ProviderError('REMOTE_FAILED');},poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}}});
+  const result=await readCompanyResearch(f.p,job.id);
+  assert.equal(lookups,1);assert.ok(!result.missing.includes('CONSULTA_CADASTRAL_INDISPONIVEL'),JSON.stringify(result.missing));
+ }finally{if(oldActor===undefined)delete process.env.APIFY_CNPJ_ACTOR;else process.env.APIFY_CNPJ_ACTOR=oldActor;}
+});

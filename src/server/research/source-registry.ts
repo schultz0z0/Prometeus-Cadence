@@ -6,7 +6,7 @@ import type {ResearchKind} from '../../domain/company-research.ts';
 export function researchSourceRegistry(){
  const config=prospectingConfig();
  const ready=(source:'WEB'|'CNPJ')=>{try{providerProfile(source,config.profiles[source]);return config.ready[source];}catch{return false;}};
- return{version:researchContractVersion,website:{available:config.enabled,contract:'public-company-html-v1'},social:{available:config.enabled,contract:'public-linked-profile-html-v1',authenticated:false},webSearch:{available:ready('WEB'),contract:'approved-apify-web'},registry:{available:ready('CNPJ'),contract:'approved-apify-cnpj'}};
+ return{version:researchContractVersion,website:{available:config.enabled,contract:'public-company-html-v1'},social:{available:config.enabled,contract:'public-linked-profile-html-v1',authenticated:false},webSearch:{available:ready('WEB'),contract:'approved-apify-web'},registry:{available:config.enabled,contract:'cnpja-opencnpj-v1'}};
 }
 export function researchSourceWarnings(kinds:ResearchKind[]){const r=researchSourceRegistry();return[
  ...(kinds.includes('social')?['Redes sociais: páginas públicas e resultados indexados de busca. LinkedIn usa somente evidências do buscador. A cobertura pode ser parcial.']:[]),

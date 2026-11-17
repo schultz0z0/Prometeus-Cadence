@@ -54,10 +54,11 @@ export function createRegistryLookup(deps:{fetcher?:Fetch;apiKey?:string|null}={
   if(apiKey){
    // Any CNPJá failure (limit, credits, key, outage, not found) falls back; the key never enters errors.
    try{return {provider:'cnpja',candidate:fromCnpja(cnpj,await providerJson(fetcher,`https://api.cnpja.com/office/${cnpj}?strategy=CACHE_IF_FRESH&maxAge=45`,{headers:{Authorization:apiKey}},signal) as Row,partners)};}
-   catch{if(signal.aborted)throw new ProviderError('CNPJ_SOURCE_ERROR');}
+   catch{if(signal.aborted)throw signal.reason??Error('ABORTED');}
   }
   try{return {provider:'opencnpj',candidate:fromOpen(cnpj,await providerJson(fetcher,`https://api.opencnpj.org/${cnpj}`,{},signal) as Row,partners)};}
-  catch(e){throw new ProviderError(e instanceof ProviderError&&e.code==='HTTP_404'?'CNPJ_NOT_FOUND':'CNPJ_SOURCE_ERROR');}
+  // A shutdown or lost lease is not a registry answer: the step is retried, never recorded as a failure.
+  catch(e){if(signal.aborted)throw signal.reason??Error('ABORTED');throw new ProviderError(e instanceof ProviderError&&e.code==='HTTP_404'?'CNPJ_NOT_FOUND':'CNPJ_SOURCE_ERROR');}
  };
 }
 export const lookupRegistry:RegistryLookup=(cnpj,options)=>createRegistryLookup()(cnpj,options);

@@ -76,3 +76,8 @@ test('MEI: the company name keeps the owner for registryDecisionMakers',async()=
  assert.equal(candidate.companyName,'12.345.678 FULANO DE TAL');assert.equal(candidate.name,'12.345.678 FULANO DE TAL');
  assert.deepEqual(registryDecisionMakers(candidate),[{name:'FULANO DE TAL',role:'Titular (MEI)'}]);
 });
+test('an abort mid-lookup is not a registry failure',async()=>{
+ const ac=new AbortController();
+ const fetcher=(async()=>{ac.abort();throw new DOMException('aborted','AbortError');}) as typeof fetch;
+ await assert.rejects(createRegistryLookup({fetcher,apiKey:'KEY'})(CNPJ,{partners:false,signal:ac.signal}),(e:any)=>!('code' in Object(e)&&String(e.code).startsWith('CNPJ_')));
+});
