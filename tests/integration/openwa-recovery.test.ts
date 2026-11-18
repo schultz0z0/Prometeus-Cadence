@@ -60,6 +60,10 @@ test('an admin resumes sending after a recovery pause; pairing and restriction p
  await pause('OPENWA_PAIRING_EXPIRED');
  await assert.rejects(resumeOpenwaSending(f.u.p,f.id,{requestId:randomUUID(),expectedRevision:await revision()}),{code:'OPENWA_RESUME_NOT_ALLOWED'});
  await pause('OPENWA_RECOVERY_GAP');
+ // The periodic gateway check keeps the number paused but must not replace the reason (the resume button depends on it).
+ await testAdmin(c=>c.query("UPDATE app.openwa_connection SET next_at=clock_timestamp()-interval '1 second' WHERE connection_id=$1",[f.id]));
+ await runOpenwaMaintenanceTick({now:new Date(Date.now()+60000).toISOString(),maxConnections:1});
+ assert.deepEqual(await testAdmin(async c=>(await c.query('SELECT o.automation_paused,o.error_code,c.last_error FROM app.openwa_connection o JOIN app.channel_connection c ON c.workspace_id=o.workspace_id AND c.id=o.connection_id WHERE o.connection_id=$1',[f.id])).rows[0]),{automation_paused:true,error_code:'OPENWA_RECOVERY_GAP',last_error:'OPENWA_RECOVERY_GAP'});
  const view=await resumeOpenwaSending(f.u.p,f.id,{requestId:randomUUID(),expectedRevision:await revision()});
  assert.equal(view.phase,'ready');assert.equal(view.errorCode,null);
  const row=await testAdmin(async c=>(await c.query("SELECT o.automation_paused,c.state,c.last_error,r.failures,r.error_code,r.checkpoint>clock_timestamp()-interval '1 minute' AS fresh FROM app.openwa_connection o JOIN app.channel_connection c ON c.workspace_id=o.workspace_id AND c.id=o.connection_id JOIN app.openwa_recovery r ON r.workspace_id=o.workspace_id AND r.connection_id=o.connection_id WHERE o.connection_id=$1",[f.id])).rows[0]);
