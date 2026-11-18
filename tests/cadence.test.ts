@@ -43,3 +43,15 @@ test("cadence suggestions are three drafts and honor channel and list", () => {
     ),
   );
 });
+// 18/11/2026: {{nome}} drops the tagline Google Maps appends to the business name.
+test("{{nome}} keeps only the business name before the Maps tagline", () => {
+  const l = createSeed().leads[0];
+  for (const [name, expected] of [
+    ["Innove Contábil | Contabilidade Rio de Janeiro | Contador", "Innove Contábil"],
+    ["Evo Contábil – Escritório de Contabilidade e Assessoria Contábil", "Evo Contábil"],
+    ["Clínica Exemplo Sorriso - Implantes 24h", "Clínica Exemplo Sorriso"],
+    ["Raphael teste", "Raphael teste"],
+    ["Coca-Cola FEMSA", "Coca-Cola FEMSA"],
+    ["| Só a frase", "| Só a frase"],
+  ]) assert.equal(renderMessage("{{nome}}", { ...l, name }).text, expected);
+});

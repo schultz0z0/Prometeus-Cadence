@@ -42,9 +42,12 @@ export function moveCadenceStep(
   [steps[index], steps[target]] = [steps[target], steps[index]];
   return { ...cadence, steps };
 }
+/** Business name without the tagline Google Maps appends ("Nome | Serviço | Cidade", "Nome – Serviço"). */
+export const shortLeadName = (name: string) =>
+  name.split(/\s+[|–—-]\s+/)[0].trim() || name;
 export function renderMessage(template: string, lead: Lead) {
   const map: Record<string, string | undefined> = {
-    nome: lead.name,
+    nome: lead.name && shortLeadName(lead.name),
     email: lead.email,
     telefone: lead.phone,
     site: lead.site,
