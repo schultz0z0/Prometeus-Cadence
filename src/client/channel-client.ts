@@ -32,6 +32,7 @@ export function createChannelClient(options:WorkspaceTransportOptions){
   openwaQr:(id:string,revision:number)=>api.request<OpenwaQrView>(path(id,'openwa-qr')+'?revision='+encodeURIComponent(revision)),
   reconnectOpenwa:(id:string,input:{expectedRevision:number})=>commands.run<OpenwaConnectionView>(input,path(id,'openwa-reconnect'),input),
   disconnectOpenwa:(id:string,input:{expectedRevision:number})=>commands.run<OpenwaConnectionView>(input,path(id,'openwa-disconnect'),input),
+  resumeOpenwa:(id:string,input:{expectedRevision:number})=>commands.run<OpenwaConnectionView>(input,path(id,'openwa-resume'),input),
   save:(input:Omit<SaveConnectionInput,'requestId'>)=>commands.run<ConnectionView>(input,'/api/channels',input),
   verify:(id:string,revision:number)=>action<ConnectionView>(id,'verify',revision),
   syncTemplates:(id:string,revision:number)=>action<TemplateView[]>(id,'sync-templates',revision),

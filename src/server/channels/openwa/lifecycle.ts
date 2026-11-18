@@ -44,3 +44,15 @@ async function requestState(p:Principal,id:string,input:OpenwaCommand,desired:'c
 }
 export const requestOpenwaReconnect=(p:Principal,id:string,command:OpenwaCommand)=>requestState(p,id,command,'connected');
 export const requestOpenwaDisconnect=(p:Principal,id:string,command:OpenwaCommand)=>requestState(p,id,command,'disconnected');
+/** 18/11/2026: resume sending after a recovery pause (no new QR); the database checks the role and that the pause is a recovery one. */
+export async function resumeOpenwaSending(p:Principal,id:string,input:OpenwaCommand){
+ const parsed=commandSchema.safeParse(input);if(!parsed.success)throw new AppError(422,'Comando de conexão inválido.');const body=parsed.data;
+ return withWorkspaceTransaction(p,async c=>{
+  await requireChannelAdmin(c);await lockWorkspace(c);const hash=commandHash({action:'openwa.resume',id,input:body}),old=await priorCommand<Awaited<ReturnType<typeof openwaView>>>(c,p,body.requestId,hash);if(old)return old;
+  const conn=await connectionRow(c,id,true);
+  if(conn.provider!=='openwa'||Number(conn.revision)!==body.expectedRevision)throw new AppError(409,'A conexão mudou. Revise novamente.');
+  try{await c.query('SAVEPOINT resume');await c.query('SELECT app.openwa_resume_sending($1)',[id]);}
+  catch(error){if(error instanceof Error&&/OPENWA_RESUME_NOT_ALLOWED/.test(error.message))throw new AppError(409,'Esta pausa não pode ser retomada aqui. Use Reconectar.','OPENWA_RESUME_NOT_ALLOWED');throw error;}
+  const result=await openwaView(c,id);await completeCommand(c,p,body.requestId,hash,result,'openwa.resume');return result;
+ });
+}

@@ -48,3 +48,20 @@ for(const status of ['pending','delivered'])test(`our own send (${status}) witho
  assert.equal((await runOpenwaRecoveryTick({now:now(),maxConnections:1,maxMessages:20})).failed,0);
  assert.equal(await testAdmin(async c=>(await c.query('SELECT automation_paused FROM app.openwa_connection WHERE connection_id=$1',[f.id])).rows[0].automation_paused),false);
 });
+// 18/11/2026: a recovery pause shows its reason and an admin can resume sending without a new QR.
+test('an admin resumes sending after a recovery pause; pairing and restriction pauses still require reconnecting',async t=>{
+ const f=await ready(t);const {resumeOpenwaSending}=await import('../../src/server/channels/openwa/lifecycle.ts');
+ const pause=(code:string)=>testAdmin(async c=>{
+  await c.query("UPDATE app.openwa_connection SET automation_paused=true,phase='action_required',error_code=$2 WHERE connection_id=$1",[f.id,code]);
+  await c.query("UPDATE app.channel_connection SET state='attention',last_error=$2 WHERE id=$1",[f.id,code]);
+  await c.query("INSERT INTO app.openwa_recovery(workspace_id,connection_id,revision,checkpoint,failures,error_code) SELECT workspace_id,connection_id,revision,clock_timestamp()-interval '2 days',4,$2 FROM app.openwa_connection WHERE connection_id=$1 ON CONFLICT(workspace_id,connection_id) DO UPDATE SET checkpoint=EXCLUDED.checkpoint,failures=4,error_code=EXCLUDED.error_code",[f.id,code]);
+ });
+ const revision=async()=>Number(await testAdmin(async c=>(await c.query('SELECT revision FROM app.channel_connection WHERE id=$1',[f.id])).rows[0].revision));
+ await pause('OPENWA_PAIRING_EXPIRED');
+ await assert.rejects(resumeOpenwaSending(f.u.p,f.id,{requestId:randomUUID(),expectedRevision:await revision()}),{code:'OPENWA_RESUME_NOT_ALLOWED'});
+ await pause('OPENWA_RECOVERY_GAP');
+ const view=await resumeOpenwaSending(f.u.p,f.id,{requestId:randomUUID(),expectedRevision:await revision()});
+ assert.equal(view.phase,'ready');assert.equal(view.errorCode,null);
+ const row=await testAdmin(async c=>(await c.query("SELECT o.automation_paused,c.state,c.last_error,r.failures,r.error_code,r.checkpoint>clock_timestamp()-interval '1 minute' AS fresh FROM app.openwa_connection o JOIN app.channel_connection c ON c.workspace_id=o.workspace_id AND c.id=o.connection_id JOIN app.openwa_recovery r ON r.workspace_id=o.workspace_id AND r.connection_id=o.connection_id WHERE o.connection_id=$1",[f.id])).rows[0]);
+ assert.deepEqual(row,{automation_paused:false,state:'ready',last_error:null,failures:0,error_code:null,fresh:true});
+});
