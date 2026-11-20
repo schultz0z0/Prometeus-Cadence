@@ -4,6 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {prepareJob,confirmJob,getJob,listJobItems,cancelJob} from '../../src/server/prospecting/service.ts';
 import {runGeneration,runQualification} from '../../src/server/prospecting/steps.ts';
 import {applyJobResults} from '../../src/server/prospecting/application.ts';
+import {readExecutionOverview} from '../../src/server/prospecting/overview.ts';
 import {reconcileJob} from '../../src/server/prospecting/reconciliation.ts';
 import {workerPool} from '../../src/server/prospecting/worker-db.ts';
 import {withLeasedTransaction} from '../../src/server/prospecting/worker-db.ts';
@@ -98,6 +99,10 @@ test('qualification stores proposals and confirmed application is atomic and con
   assert.equal((await prepareJob(p,input)).qualificationDay?.credits,1);
   assert.equal((await readWorkspaceSnapshot(p)).data.leads[0].email,undefined);
   const items=(await listJobItems(p,q.id)).items;assert.equal(items.length,1);
+  // 20/11/2026: the end-user screen reads a summary of the finished qualification.
+  const overview=await readExecutionOverview(p,q.id);assert.equal(overview.total,1);assert.equal(overview.done,1);assert.equal(overview.etaMinutes,null);
+  assert.equal(overview.groups.ready.count+overview.groups.noInfo.count+overview.groups.outside.count+overview.groups.nothing.count,1);assert.equal(overview.dots.length,1);
+  await assert.rejects(readExecutionOverview(p,job.id),{status:409});
   snapshot=await readWorkspaceSnapshot(p);
   await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...lead,email:'human@example.com'}}});
   const selection={requestId:randomUUID(),itemIds:[items[0].id]};

@@ -1,5 +1,6 @@
 import type {ProspectingInput,Review,JobView,JobItemView,Page,ProviderCapabilities,JobFilters} from '../domain/prospecting.ts';
 import type {AiSettingsView,AiPolicy,AiTestReview,CodexDiagnostic,ApiKeyProvider,ApiKeyView} from '../domain/ai-routing.ts';
+import type {QualificationOverview} from '../domain/execution-overview.ts';
 import type {ChatGptOAuthView} from '../domain/chatgpt-oauth.ts';
 import type {JourneyView} from '../domain/prospecting-journey.ts';
 import {createWorkspaceTransport} from './workspace-transport.ts';
@@ -35,6 +36,7 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
     list:(input?:string|JobFilters)=>{const filters=typeof input==='string'?{cursor:input}:input??{},params=new URLSearchParams(Object.entries(filters).filter(([,v])=>v!==undefined) as [string,string][]);return request<Page<JobView>>('/jobs'+(params.size?'?'+params.toString():''));},
     get:(id:string)=>request<JobView>('/jobs/'+encodeURIComponent(id)),
     items:(id:string,cursor?:string)=>request<Page<JobItemView>>('/jobs/'+encodeURIComponent(id)+'/items'+(cursor?'?cursor='+encodeURIComponent(cursor):'')),
+    overview:(id:string)=>request<QualificationOverview>('/jobs/'+encodeURIComponent(id)+'/overview'),
     cancel:(id:string)=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/cancel',{}),
     apply(id:string,itemIds:string[],rejected:Record<string,string[]>={}){
       const kept=Object.fromEntries(Object.entries(rejected).filter(([item,keys])=>itemIds.includes(item)&&keys.length)),key=id+JSON.stringify([...itemIds].sort())+JSON.stringify(kept),prior=applications.get(key);if(prior)return prior;
