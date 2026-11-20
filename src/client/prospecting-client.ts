@@ -38,9 +38,9 @@ export function createProspectingClient(options:{workspaceId:string;transport?:t
     items:(id:string,cursor?:string)=>request<Page<JobItemView>>('/jobs/'+encodeURIComponent(id)+'/items'+(cursor?'?cursor='+encodeURIComponent(cursor):'')),
     overview:(id:string)=>request<QualificationOverview>('/jobs/'+encodeURIComponent(id)+'/overview'),
     cancel:(id:string)=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/cancel',{}),
-    apply(id:string,itemIds:string[],rejected:Record<string,string[]>={}){
-      const kept=Object.fromEntries(Object.entries(rejected).filter(([item,keys])=>itemIds.includes(item)&&keys.length)),key=id+JSON.stringify([...itemIds].sort())+JSON.stringify(kept),prior=applications.get(key);if(prior)return prior;
-      const promise=request<{applied:number;revision:number;listId?:string}>('/jobs/'+encodeURIComponent(id)+'/apply',{requestId:stableId('apply:'+key),itemIds,...(Object.keys(kept).length?{rejected:kept}:{})}).catch(error=>{applications.delete(key);throw error;});applications.set(key,promise);return promise;
+    apply(id:string,itemIds:string[],rejected:Record<string,string[]>={},options:{skipConflicts?:boolean}={}){
+      const kept=Object.fromEntries(Object.entries(rejected).filter(([item,keys])=>itemIds.includes(item)&&keys.length)),key=id+JSON.stringify([...itemIds].sort())+JSON.stringify(kept)+(options.skipConflicts?':skip':''),prior=applications.get(key);if(prior)return prior;
+      const promise=request<{applied:number;revision:number;listId?:string;skipped?:{itemId:string;name:string;reason:'edited'|'moved'|'unavailable'}[]}>('/jobs/'+encodeURIComponent(id)+'/apply',{requestId:stableId('apply:'+key),itemIds,...(Object.keys(kept).length?{rejected:kept}:{}),...(options.skipConflicts?{skipConflicts:true}:{})}).catch(error=>{applications.delete(key);throw error;});applications.set(key,promise);return promise;
     },
     reconcile:(id:string,body:{operationId?:string;runId?:string;confirmNotStarted?:true;resultUnavailable?:true})=>request<JobView>('/jobs/'+encodeURIComponent(id)+'/reconcile',body),
     dispose(){workspace.dispose();confirmations.clear();requestIds.clear();applications.clear();settingsFlights.clear();},
