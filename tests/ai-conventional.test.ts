@@ -46,3 +46,13 @@ test('Gemini blocked truncated or tool responses remain uncertain and network lo
  let calls=0;await assert.rejects(()=>runConventional(ctx,{task:'summary',criteria:'x',evidence},{fetcher:async()=>{calls++;throw Error('network');}}),(e:any)=>e.uncertain===true);assert.equal(calls,1);
  }finally{for(const k of Object.keys(process.env))if(!(k in saved))delete process.env[k];Object.assign(process.env,saved);}
 });
+// 20/11/2026: the fit assessment also returns a short reason for the end-user execution screen.
+{
+ const {parseConventional,conventionalSchema}=await import('../src/server/prospecting/ai/output.ts');
+ const route={provider:'gemini',model:'fixture',configFingerprint:'f',contractVersion:'c'} as any,usage={provider:'gemini',operationId:'op',units:{geminiCalls:1},costUsd:null,costKind:'unknown' as const};
+ const input={task:'qualify' as const,criteria:'Clínicas',evidence,facts:{}};
+ test('qualify returns a short reason when the model sends brief',()=>{const r:any=parseConventional({verdict:'fits',reason:'Clínica com consultas.',brief:'site desatualizado',evidenceIds:['e1']},input,route,usage);assert.equal(r.brief,'site desatualizado');});
+ test('qualify without brief still parses',()=>{const r:any=parseConventional({verdict:'fits',reason:'Clínica com consultas.',evidenceIds:['e1']},input,route,usage);assert.equal(r.brief,undefined);assert.equal(r.reason,'Clínica com consultas.');});
+ test('qualify brief longer than 80 is rejected as invalid',()=>assert.throws(()=>parseConventional({verdict:'fits',reason:'x',brief:'a'.repeat(81),evidenceIds:['e1']},input,route,usage),{code:'INVALID_CONVENTIONAL_RESULT'}));
+ test('conventionalSchema(qualify) requires brief',()=>assert.ok((conventionalSchema('qualify') as any).required.includes('brief')));
+}
