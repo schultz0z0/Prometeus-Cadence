@@ -28,9 +28,10 @@ export function QualificationPanel({job,title,technicalHref,admin,onReconcile,ac
   catch(e){setError(e instanceof Error?e.message:'Falha ao aprovar.');}finally{setBusy(false);}
  }
  if(!o)return <ExecutionShell title={title} status={error||'Carregando…'} technicalHref={technicalHref} actions={actions}><span/></ExecutionShell>;
- const g=o.groups,readyIds=g.ready.itemIds.filter(id=>!unchecked.includes(id)),ended=!running;
+ // The server applies only finished runs (completed or partial); a cancelled or failed run shows its results without buttons.
+ const g=o.groups,readyIds=g.ready.itemIds.filter(id=>!unchecked.includes(id)),ended=!running,approvable=['completed','partial'].includes(job.state),fit=o.fitAssessed;
  const status=running?`Qualificando ${o.total} ${plural(o.total,'empresa','empresas')}`:job.state==='cancelled'?'Execução cancelada. O que foi analisado está abaixo.':`${o.done} ${plural(o.done,'empresa analisada','empresas analisadas')} em ${duration(job.createdAt,job.updatedAt)}`;
- const legend=[{group:'ready' as const,text:`${g.ready.count} ${plural(g.ready.count,'pronta','prontas')}${running?' até agora':''}`},{group:'noInfo' as const,text:`${g.noInfo.count} sem informação`},{group:'outside' as const,text:`${g.outside.count} fora do perfil`}];
+ const legend=[{group:'ready' as const,text:fit?`${g.ready.count} ${plural(g.ready.count,'pronta','prontas')}${running?' até agora':''}`:`${g.ready.count} com dados encontrados`},{group:'noInfo' as const,text:`${g.noInfo.count} sem informação`},{group:'outside' as const,text:`${g.outside.count} fora do perfil`}];
  return <ExecutionShell title={title} status={status} technicalHref={technicalHref} actions={actions}>
   {error&&<p role="alert" className="error-bar">{error}</p>}
   {job.state==='needs_reconciliation'&&<p className="execution-note" role="status">Uma etapa precisa ser conferida por um administrador. {admin&&<Button onClick={onReconcile}>Conferir agora</Button>}</p>}
@@ -44,18 +45,18 @@ export function QualificationPanel({job,title,technicalHref,admin,onReconcile,ac
    {outcome.skipped.length>0&&<ul>{outcome.skipped.map(s=><li key={s.itemId}>{s.name||'Empresa'}: {skipReasons[s.reason]}</li>)}</ul>}</div>}
   {ended&&<>
    {g.ready.count>0?<div className="execution-ready">
-    <div><h2>{g.ready.count} {plural(g.ready.count,'empresa pronta para abordar','empresas prontas para abordar')}</h2><p>Combinam com o seu cliente ideal.</p>
+    <div><h2>{g.ready.count} {fit?plural(g.ready.count,'empresa pronta para abordar','empresas prontas para abordar'):plural(g.ready.count,'empresa com dados encontrados','empresas com dados encontrados')}</h2><p>{fit?'Combinam com o seu cliente ideal.':'Dados achados para salvar nos leads.'}</p>
      <p className="execution-gets"><span><b>{o.ready.emails}</b> {plural(o.ready.emails,'e-mail','e-mails')}</span><span><b>{o.ready.cnpjs}</b> {plural(o.ready.cnpjs,'CNPJ','CNPJs')}</span><span><b>{o.ready.summaries}</b> {plural(o.ready.summaries,'resumo','resumos')} para a abordagem</span></p></div>
-    {g.ready.itemIds.length>0?<Button variant="primary" className="execution-cta" disabled={busy||!readyIds.length} onClick={()=>approve(readyIds,['aprovada','aprovadas'])}>{busy?'Aprovando…':`Aprovar ${readyIds.length===1?'a':'as'} ${readyIds.length}`}</Button>:<span className="execution-status">Já aprovadas.</span>}
-    {g.ready.itemIds.length>0&&<button type="button" className="execution-link" aria-expanded={review} onClick={()=>setReview(!review)}>{review?'Esconder a lista':'Conferir a lista antes'}</button>}
-   </div>:<p className="execution-status">Nenhuma empresa ficou pronta para abordar.</p>}
+    {g.ready.itemIds.length>0&&approvable?<Button variant="primary" className="execution-cta" disabled={busy||!readyIds.length} onClick={()=>approve(readyIds,['aprovada','aprovadas'])}>{busy?'Aprovando…':`Aprovar ${readyIds.length===1?'a':'as'} ${readyIds.length}`}</Button>:g.ready.applied>0&&!g.ready.itemIds.length?<span className="execution-status">Já aprovadas.</span>:null}
+    {g.ready.itemIds.length>0&&approvable&&<button type="button" className="execution-link" aria-expanded={review} onClick={()=>setReview(!review)}>{review?'Esconder a lista':'Conferir a lista antes'}</button>}
+   </div>:<p className="execution-status">{fit?'Nenhuma empresa ficou pronta para abordar.':'Nenhum dado novo foi encontrado.'}</p>}
    {review&&<ul className="execution-list">{g.ready.itemIds.map(id=>{const it=o.items[id],on=!unchecked.includes(id);return <li key={id}><label><input type="checkbox" checked={on} onChange={()=>setUnchecked(on?[...unchecked,id]:unchecked.filter(x=>x!==id))}/><span className="execution-name">{it.name}{it.found.map(f=><span key={f} className="execution-tag">{foundLabels[f]}</span>)}</span></label><span className="execution-why">{it.brief??''}</span></li>;})}</ul>}
    <div className="execution-rest">
     {g.noInfo.count>0&&<div><div><b>{g.noInfo.count}</b> sem informação suficiente<p>{o.noInfo.contacts?`Os contatos achados em ${o.noInfo.contacts} ${plural(o.noInfo.contacts,'empresa','empresas')} já podem ser salvos.`:'Nenhum contato novo foi achado para elas.'}</p></div>
-     {g.noInfo.itemIds.length>0&&<button type="button" className="execution-link" disabled={busy} onClick={()=>approve(g.noInfo.itemIds,['com contatos salvos','com contatos salvos'],Object.fromEntries(g.noInfo.itemIds.map(id=>[id,['qualification','reason','summary']])))}>Salvar os contatos</button>}</div>}
+     {g.noInfo.itemIds.length>0&&approvable&&<button type="button" className="execution-link" disabled={busy} onClick={()=>approve(g.noInfo.itemIds,['com contatos salvos','com contatos salvos'],Object.fromEntries(g.noInfo.itemIds.map(id=>[id,['qualification','reason']])))}>Salvar os contatos</button>}</div>}
     {g.outside.count>0&&<div><div><b>{g.outside.count}</b> fora do perfil<p>{g.outside.count===1&&g.outside.itemIds[0]?o.items[g.outside.itemIds[0]].brief??'Não combinam com o seu cliente ideal.':'Não combinam com o seu cliente ideal.'}</p></div>
      <button type="button" className="execution-link" aria-expanded={why} onClick={()=>setWhy(!why)}>{why?'Esconder':'Ver por quê'}</button></div>}
-    {why&&<div className="execution-why-list">{g.outside.itemIds.map(id=><p key={id}><b>{o.items[id].name}</b> {o.items[id].reason??''}</p>)}{g.outside.itemIds.length>0&&<Button disabled={busy} onClick={()=>approve(g.outside.itemIds,['marcada como fora do perfil','marcadas como fora do perfil'])}>Marcar como fora do perfil</Button>}</div>}
+    {why&&<div className="execution-why-list">{g.outside.itemIds.map(id=><p key={id}><b>{o.items[id].name}</b> {o.items[id].reason??''}</p>)}{g.outside.itemIds.length>0&&approvable&&<Button disabled={busy} onClick={()=>approve(g.outside.itemIds,['marcada como fora do perfil','marcadas como fora do perfil'])}>Marcar como fora do perfil</Button>}</div>}
     {g.nothing.count>0&&<p className="execution-status">{g.nothing.count} {plural(g.nothing.count,'empresa sem nada a aplicar','empresas sem nada a aplicar')}.</p>}
    </div>
   </>}

@@ -11,9 +11,9 @@ test('groups by the final proposed qualification',()=>{
  assert.equal(o.groups.ready.count,2);assert.equal(o.groups.outside.count,1);assert.equal(o.groups.noInfo.count,1);
  assert.deepEqual(o.groups.ready.itemIds.sort(),['a','b']);assert.equal(o.items.a.brief,'motivo a');assert.equal(o.items.c.reason,'Parecer de c');
 });
-test('applied or empty items count as nothing and stay out of the buttons',()=>{
+test('empty items count as nothing; applied ones keep their group but leave the buttons',()=>{
  const o=summarizeQualification({...base,total:3,items:[item('a','qualified',[],true),item('b',null),item('c','qualified')]});
- assert.equal(o.groups.nothing.count,2);
+ assert.equal(o.groups.nothing.count,1);assert.equal(o.groups.ready.count,2);assert.equal(o.groups.ready.applied,1);
  for(const g of ['ready','noInfo','outside'] as const)assert.ok(!o.groups[g].itemIds.some(id=>id==='a'||id==='b'));
 });
 test('dots: finished grouped by color, then current, then pending up to total',()=>{
@@ -39,4 +39,25 @@ test('ready totals count new emails, cnpjs and summaries',()=>{
 test('no-info companies with contacts found are the ones contacts can be saved for',()=>{
  const o=summarizeQualification({...base,total:2,items:[item('a','pending',[mod('email',{email:'a@x.com'})]),item('b','pending')]});
  assert.equal(o.groups.noInfo.count,2);assert.equal(o.noInfo.contacts,1);assert.deepEqual(o.groups.noInfo.itemIds,['a']);
+});
+test('an item still in analysis is not counted as done',()=>{
+ const partial={...item('x',null,[mod('website',{site:'https://x.example'})]),finished:false};
+ const o=summarizeQualification({...base,currentStep:'evidence:lead-x',total:3,items:[item('a','qualified'),partial]});
+ assert.equal(o.done,1);assert.deepEqual(o.dots.map(d=>d.group),['ready','current','pending']);assert.equal(o.groups.noInfo.count,0);
+});
+test('the last company in analysis keeps the run live',()=>{
+ const o=summarizeQualification({...base,currentStep:'qualify:lead-b',total:2,items:[item('a','qualified'),{...item('b',null,[mod('email',{email:'b@x.com'})]),finished:false}]});
+ assert.equal(o.stage,'ai');assert.deepEqual(o.dots.map(d=>d.group),['ready','current']);
+});
+test('a cancelled run leaves unfinished companies hollow and out of every group',()=>{
+ const o=summarizeQualification({...base,total:3,items:[item('a','qualified'),{...item('b',null,[mod('email',{email:'b@x.com'})]),finished:false}]});
+ assert.deepEqual(o.dots.map(d=>d.group),['ready','pending','pending']);assert.equal(o.groups.noInfo.count,0);
+});
+test('a run without the fit module puts every company with data in one group',()=>{
+ const o=summarizeQualification({...base,fitAssessed:false,total:2,items:[item('a',null,[mod('summary',{summary:'s'})]),item('b',null)]});
+ assert.equal(o.fitAssessed,false);assert.deepEqual(o.groups.ready.itemIds,['a']);assert.equal(o.groups.nothing.count,1);
+});
+test('no-info companies with only a summary can be saved too',()=>{
+ const o=summarizeQualification({...base,total:1,items:[item('a','pending',[mod('summary',{summary:'s'})])]});
+ assert.deepEqual(o.groups.noInfo.itemIds,['a']);
 });

@@ -53,6 +53,6 @@ test('Gemini blocked truncated or tool responses remain uncertain and network lo
  const input={task:'qualify' as const,criteria:'Clínicas',evidence,facts:{}};
  test('qualify returns a short reason when the model sends brief',()=>{const r:any=parseConventional({verdict:'fits',reason:'Clínica com consultas.',brief:'site desatualizado',evidenceIds:['e1']},input,route,usage);assert.equal(r.brief,'site desatualizado');});
  test('qualify without brief still parses',()=>{const r:any=parseConventional({verdict:'fits',reason:'Clínica com consultas.',evidenceIds:['e1']},input,route,usage);assert.equal(r.brief,undefined);assert.equal(r.reason,'Clínica com consultas.');});
- test('qualify brief longer than 80 is rejected as invalid',()=>assert.throws(()=>parseConventional({verdict:'fits',reason:'x',brief:'a'.repeat(81),evidenceIds:['e1']},input,route,usage),{code:'INVALID_CONVENTIONAL_RESULT'}));
+ test('a long brief is shortened, never fails the assessment',()=>{const r:any=parseConventional({verdict:'fits',reason:'x',brief:'site desatualizado '.repeat(6),evidenceIds:['e1']},input,route,usage);assert.ok(r.brief.length<=60);assert.ok(r.brief.startsWith('site desatualizado'));assert.ok(!r.brief.endsWith(' '));});
  test('conventionalSchema(qualify) requires brief',()=>assert.ok((conventionalSchema('qualify') as any).required.includes('brief')));
 }

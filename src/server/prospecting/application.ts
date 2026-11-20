@@ -41,9 +41,11 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
     if(Number(context?.version??0)!==Number(job.checkpoint.context?.version??0))throw new AppError(409,'O contexto mudou. Prepare uma nova qualificação.','RESULT_CONFLICT');
     if(job.checkpoint.product){const row=(await c.query('SELECT approved,archived FROM app.product_profile WHERE id=$1',[job.checkpoint.automation?.productId??job.checkpoint.productId])).rows[0];if(!row||row.archived||row.approved?.version!==job.checkpoint.product.version)throw new AppError(409,'O produto aprovado mudou. Revise a qualificação.','RESULT_CONFLICT');}
     const changes=[];
+    // One locking read and two batch writes, so a 500-company approval holds the workspace lock briefly.
+    const leads=new Map<string,any>((await c.query('SELECT id,payload FROM app.lead WHERE id=ANY($1::text[]) ORDER BY id FOR UPDATE',[items.map(i=>i.lead_id).filter(Boolean)])).rows.map(r=>[r.id,r.payload]));
     for(const item of items){
       if(item.applied)continue;
-      const lead=(await c.query('SELECT payload FROM app.lead WHERE id=$1 FOR UPDATE',[item.lead_id])).rows[0]?.payload;
+      const lead=leads.get(item.lead_id);
       if(!lead||lead.listId!==job.list_id){if(skip){skipped.push({itemId:item.id,name:item.name,reason:'moved'});continue;}throw new AppError(409,'O contato foi removido ou movido.','RESULT_CONFLICT');}
       if(item.payload.inputFingerprint&&item.payload.inputFingerprint!==hashValue(qualificationFingerprint(lead))){if(skip){skipped.push({itemId:item.id,name:item.name,reason:'edited'});continue;}throw new AppError(409,'O contato ou suas fontes mudou. Prepare novamente antes de aplicar.','RESULT_CONFLICT');}
       const proposed:Record<string,unknown>={};let edited=false;
@@ -61,7 +63,10 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
       if(Object.keys(proposed).length)changes.push({item,lead:{...lead,...proposed}});
     }
     if(!changes.length&&!skip)throw new AppError(409,'A seleção não contém alterações propostas.');
-    for(const {item,lead}of changes){await c.query('UPDATE app.lead SET payload=$2 WHERE id=$1',[lead.id,lead]);await c.query("UPDATE app.prospecting_item SET applied=true,status='applied' WHERE job_id=$1 AND id=$2",[jobId,item.id]);}
+    if(changes.length){
+      await c.query('UPDATE app.lead l SET payload=v.payload FROM jsonb_to_recordset($1::jsonb) AS v(id text,payload jsonb) WHERE l.id=v.id',[JSON.stringify(changes.map(({lead})=>({id:lead.id,payload:lead})))]);
+      await c.query("UPDATE app.prospecting_item SET applied=true,status='applied' WHERE job_id=$1 AND id=ANY($2::text[])",[jobId,changes.map(({item})=>item.id)]);
+    }
     const revision=Number((await c.query(changes.length?"UPDATE app.workspace_meta SET revision=revision+1 WHERE workspace_id=current_setting('app.workspace_id') RETURNING revision":"SELECT revision FROM app.workspace_meta WHERE workspace_id=current_setting('app.workspace_id')")).rows[0].revision),result={applied:changes.length,revision,...(skip?{skipped}:{})};
     await c.query("INSERT INTO app.command_result VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4)",[requestId,p.userId,hash,result]);
     await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES(current_setting('app.workspace_id'),$1,'prospecting.apply')",[p.userId]);return result;
