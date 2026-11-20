@@ -4,6 +4,7 @@ import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useIdentity,useProspecting} from '@/client/workspace-provider';
 import type {JobView} from '@/domain/prospecting';
 import {Button,PageHeader,Badge,Notice} from '@/components/ui/primitives';
+import {Icon} from '@/components/ui/icon';
 import {ReconciliationReview} from './reconciliation-review';
 import {JobResults} from './job-results';
 import {jobStateLabels} from './job-history';
@@ -40,7 +41,7 @@ export function JobProgress({id,technical=false}:{id:string;technical?:boolean})
   if(job.kind==='planning')return <PlanningJobProgress job={job}/>;
   // 20/11/2026: a qualification opens the end-user screen; the technical view stays behind ?detalhes=1 (owner and admin get the link).
   const admin=['owner','admin'].includes(role??''),endUser=job.kind==='qualification'&&!job.enrichment&&!job.research&&!job.companyPeople&&job.purpose!=='ai-connection-test';
-  if(endUser&&!technical)return <><PageHeader title="Execução" back="/executions?view=jobs"/>{actionError&&<p role="alert" className="error-bar">{actionError}</p>}
+  if(endUser&&!technical)return <><a className="back-link" href="/executions?view=jobs"><Icon name="ArrowLeft" size={13}/>Voltar</a>{actionError&&<p role="alert" className="error-bar">{actionError}</p>}
     <QualificationPanel job={job} title="Qualificação de leads" technicalHref={admin?'/executions/'+encodeURIComponent(job.id)+'?detalhes=1':null} admin={admin} onReconcile={()=>setReconcile(true)}
      actions={activeStates.includes(job.state)&&<Button disabled={busy||job.state==='cancelling'} onClick={cancel}>{job.state==='cancelling'?'Aguardando cancelamento':'Cancelar execução'}</Button>}/>
     {reconcile&&<ReconciliationReview job={job} onClose={()=>setReconcile(false)} onDone={()=>{setReconcile(false);refresh();}}/>}</>;
