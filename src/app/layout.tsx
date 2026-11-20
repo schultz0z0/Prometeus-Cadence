@@ -27,6 +27,7 @@ import "./integration-promo-reference.css";
 import "./funnel-reference.css";
 import "./prospecting-final-reference.css";
 import "./sdr-reference.css";
+import "./execution-reference.css";
 export const metadata: Metadata = {
   title: "Prometeus Cadence · Prospecção inteligente",
   description: "Prospecção, qualificação e cadências em um só lugar.",

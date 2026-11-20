@@ -5,7 +5,7 @@ import type {ChatGptOAuthView} from '../domain/chatgpt-oauth.ts';
 import type {JourneyView} from '../domain/prospecting-journey.ts';
 import {createWorkspaceTransport} from './workspace-transport.ts';
 export function createProspectingClient(options:{workspaceId:string;transport?:typeof fetch;onAccessLost?:(message:string)=>void}){
-  const confirmations=new Map<string,Promise<JobView>>(),requestIds=new Map<string,string>(),applications=new Map<string,Promise<{applied:number;revision:number;listId?:string}>>();
+  const confirmations=new Map<string,Promise<JobView>>(),requestIds=new Map<string,string>(),applications=new Map<string,Promise<{applied:number;revision:number;listId?:string;skipped?:{itemId:string;name:string;reason:'edited'|'moved'|'unavailable'}[]}>>();
   const settingsFlights=new Map<string,Promise<AiPolicy>>();
   const workspace=createWorkspaceTransport({...options,onAccessLost(message){confirmations.clear();applications.clear();requestIds.clear();settingsFlights.clear();options.onAccessLost?.(message);}});
   const request=<T>(path:string,body?:unknown)=>workspace.request<T>('/api/prospecting'+path,body);
