@@ -9,11 +9,12 @@ import {hashValue} from './review.ts';
 import {lockWorkspace} from './ingestion.ts';
 import {readApprovedContext} from '../context/repository.ts';
 import {qualificationFingerprint} from '../../domain/qualification-policy.ts';
-const schema=z.strictObject({requestId:z.uuid(),itemIds:z.array(z.string().min(1).max(120)).min(1).max(100).refine(ids=>new Set(ids).size===ids.length),rejected:z.record(z.string().min(1).max(120),z.array(z.string().min(1).max(40)).max(20)).optional()});
+const schema=z.strictObject({requestId:z.uuid(),itemIds:z.array(z.string().min(1).max(120)).min(1).max(500).refine(ids=>new Set(ids).size===ids.length),skipConflicts:z.boolean().optional(),rejected:z.record(z.string().min(1).max(120),z.array(z.string().min(1).max(40)).max(20)).optional()});
 const editable=new Set(['email','phone','site','city','state','cnpj','companyName','summary','qualification','reason','capital','size','legalNature','cnae','openedAt','address']);
-export async function applyJobResults(p:Principal,jobId:string,body:unknown):Promise<{applied:number;revision:number}>{
+type Skipped={itemId:string;name:string;reason:'edited'|'moved'|'unavailable'};
+export async function applyJobResults(p:Principal,jobId:string,body:unknown):Promise<{applied:number;revision:number;skipped?:Skipped[]}>{
   const parsed=schema.safeParse(body);if(!parsed.success)throw new AppError(422,'Seleção inválida.');
-  const {requestId,itemIds}=parsed.data,rejected=parsed.data.rejected??{},hash=hashValue({action:'prospecting.apply',jobId,itemIds:[...itemIds].sort(),...(Object.keys(rejected).length?{rejected:Object.fromEntries(Object.entries(rejected).sort().map(([k,v])=>[k,[...v].sort()]))}:{})});
+  const {requestId,itemIds}=parsed.data,skip=parsed.data.skipConflicts===true,rejected=parsed.data.rejected??{},hash=hashValue({action:'prospecting.apply',jobId,itemIds:[...itemIds].sort(),...(skip?{skipConflicts:true}:{}),...(Object.keys(rejected).length?{rejected:Object.fromEntries(Object.entries(rejected).sort().map(([k,v])=>[k,[...v].sort()]))}:{})});
   if(Object.keys(rejected).some(id=>!itemIds.includes(id)))throw new AppError(422,'Seleção inválida.');
   return withWorkspaceTransaction(p,async c=>{
     requirePermission({...p,role:(await c.query('SELECT app.current_role() AS role')).rows[0].role},'data.write');await lockWorkspace(c);
@@ -32,30 +33,41 @@ export async function applyJobResults(p:Principal,jobId:string,body:unknown):Pro
     }
     if(job.kind!=='qualification'||!['completed','partial'].includes(job.state))throw new AppError(409,'Aguarde o término da qualificação.');
     const items=(await c.query('SELECT * FROM app.prospecting_item WHERE job_id=$1 AND id=ANY($2::text[]) FOR UPDATE',[jobId,itemIds])).rows;
-    if(items.length!==itemIds.length||items.some(i=>i.applied))throw new AppError(409,'A seleção contém resultado indisponível.');
+    // 20/11/2026: with skipConflicts (batch approval of the end-user screen) a company that cannot be applied is left out and listed; the rest goes through.
+    const skipped:Skipped[]=[];
+    if(skip){for(const id of itemIds){const row=items.find(i=>i.id===id);if(!row||row.applied)skipped.push({itemId:id,name:row?.name??'',reason:'unavailable'});}}
+    else if(items.length!==itemIds.length||items.some(i=>i.applied))throw new AppError(409,'A seleção contém resultado indisponível.');
     const context=await readApprovedContext(c);
     if(Number(context?.version??0)!==Number(job.checkpoint.context?.version??0))throw new AppError(409,'O contexto mudou. Prepare uma nova qualificação.','RESULT_CONFLICT');
     if(job.checkpoint.product){const row=(await c.query('SELECT approved,archived FROM app.product_profile WHERE id=$1',[job.checkpoint.automation?.productId??job.checkpoint.productId])).rows[0];if(!row||row.archived||row.approved?.version!==job.checkpoint.product.version)throw new AppError(409,'O produto aprovado mudou. Revise a qualificação.','RESULT_CONFLICT');}
     const changes=[];
+    // One locking read and two batch writes, so a 500-company approval holds the workspace lock briefly.
+    const leads=new Map<string,any>((await c.query('SELECT id,payload FROM app.lead WHERE id=ANY($1::text[]) ORDER BY id FOR UPDATE',[items.map(i=>i.lead_id).filter(Boolean)])).rows.map(r=>[r.id,r.payload]));
     for(const item of items){
-      const lead=(await c.query('SELECT payload FROM app.lead WHERE id=$1 FOR UPDATE',[item.lead_id])).rows[0]?.payload;
-      if(!lead||lead.listId!==job.list_id)throw new AppError(409,'O contato foi removido ou movido.','RESULT_CONFLICT');
-      if(item.payload.inputFingerprint&&item.payload.inputFingerprint!==hashValue(qualificationFingerprint(lead)))throw new AppError(409,'O contato ou suas fontes mudou. Prepare novamente antes de aplicar.','RESULT_CONFLICT');
-      const proposed:Record<string,unknown>={};
+      if(item.applied)continue;
+      const lead=leads.get(item.lead_id);
+      if(!lead||lead.listId!==job.list_id){if(skip){skipped.push({itemId:item.id,name:item.name,reason:'moved'});continue;}throw new AppError(409,'O contato foi removido ou movido.','RESULT_CONFLICT');}
+      if(item.payload.inputFingerprint&&item.payload.inputFingerprint!==hashValue(qualificationFingerprint(lead))){if(skip){skipped.push({itemId:item.id,name:item.name,reason:'edited'});continue;}throw new AppError(409,'O contato ou suas fontes mudou. Prepare novamente antes de aplicar.','RESULT_CONFLICT');}
+      const proposed:Record<string,unknown>={};let edited=false;
       for(const result of item.payload.results as ModuleResult[]){
         if(result.status!=='pending_review')continue;
         for(const [key,value]of Object.entries(result.proposed)){
           if(rejected[item.id]?.includes(key))continue;
           if(!editable.has(key))throw new AppError(409,'A proposta contém campo inválido.');
-          if(hashValue(lead[key]??null)!==hashValue((result.base as Record<string,unknown>)[key]??null))throw new AppError(409,`O campo ${key} de ${item.name} mudou. Prepare novamente. Não foi aplicada nenhuma alteração.`,'RESULT_CONFLICT');
+          if(hashValue(lead[key]??null)!==hashValue((result.base as Record<string,unknown>)[key]??null)){if(skip){edited=true;break;}throw new AppError(409,`O campo ${key} de ${item.name} mudou. Prepare novamente. Não foi aplicada nenhuma alteração.`,'RESULT_CONFLICT');}
           proposed[key]=value;
         }
+        if(edited)break;
       }
+      if(edited){skipped.push({itemId:item.id,name:item.name,reason:'edited'});continue;}
       if(Object.keys(proposed).length)changes.push({item,lead:{...lead,...proposed}});
     }
-    if(!changes.length)throw new AppError(409,'A seleção não contém alterações propostas.');
-    for(const {item,lead}of changes){await c.query('UPDATE app.lead SET payload=$2 WHERE id=$1',[lead.id,lead]);await c.query("UPDATE app.prospecting_item SET applied=true,status='applied' WHERE job_id=$1 AND id=$2",[jobId,item.id]);}
-    const revision=Number((await c.query("UPDATE app.workspace_meta SET revision=revision+1 WHERE workspace_id=current_setting('app.workspace_id') RETURNING revision")).rows[0].revision),result={applied:changes.length,revision};
+    if(!changes.length&&!skip)throw new AppError(409,'A seleção não contém alterações propostas.');
+    if(changes.length){
+      await c.query('UPDATE app.lead l SET payload=v.payload FROM jsonb_to_recordset($1::jsonb) AS v(id text,payload jsonb) WHERE l.id=v.id',[JSON.stringify(changes.map(({lead})=>({id:lead.id,payload:lead})))]);
+      await c.query("UPDATE app.prospecting_item SET applied=true,status='applied' WHERE job_id=$1 AND id=ANY($2::text[])",[jobId,changes.map(({item})=>item.id)]);
+    }
+    const revision=Number((await c.query(changes.length?"UPDATE app.workspace_meta SET revision=revision+1 WHERE workspace_id=current_setting('app.workspace_id') RETURNING revision":"SELECT revision FROM app.workspace_meta WHERE workspace_id=current_setting('app.workspace_id')")).rows[0].revision),result={applied:changes.length,revision,...(skip?{skipped}:{})};
     await c.query("INSERT INTO app.command_result VALUES(current_setting('app.workspace_id'),$1,$2,$3,$4)",[requestId,p.userId,hash,result]);
     await c.query("INSERT INTO app.audit(workspace_id,user_id,action) VALUES(current_setting('app.workspace_id'),$1,'prospecting.apply')",[p.userId]);return result;
   });

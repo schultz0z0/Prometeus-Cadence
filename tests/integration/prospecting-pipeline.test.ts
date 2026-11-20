@@ -4,6 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {prepareJob,confirmJob,getJob,listJobItems,cancelJob} from '../../src/server/prospecting/service.ts';
 import {runGeneration,runQualification} from '../../src/server/prospecting/steps.ts';
 import {applyJobResults} from '../../src/server/prospecting/application.ts';
+import {readExecutionOverview} from '../../src/server/prospecting/overview.ts';
 import {reconcileJob} from '../../src/server/prospecting/reconciliation.ts';
 import {workerPool} from '../../src/server/prospecting/worker-db.ts';
 import {withLeasedTransaction} from '../../src/server/prospecting/worker-db.ts';
@@ -98,6 +99,10 @@ test('qualification stores proposals and confirmed application is atomic and con
   assert.equal((await prepareJob(p,input)).qualificationDay?.credits,1);
   assert.equal((await readWorkspaceSnapshot(p)).data.leads[0].email,undefined);
   const items=(await listJobItems(p,q.id)).items;assert.equal(items.length,1);
+  // 20/11/2026: the end-user screen reads a summary of the finished qualification.
+  const overview=await readExecutionOverview(p,q.id);assert.equal(overview.total,1);assert.equal(overview.done,1);assert.equal(overview.etaMinutes,null);
+  assert.equal(overview.groups.ready.count+overview.groups.noInfo.count+overview.groups.outside.count+overview.groups.nothing.count,1);assert.equal(overview.dots.length,1);
+  await assert.rejects(readExecutionOverview(p,job.id),{status:409});
   snapshot=await readWorkspaceSnapshot(p);
   await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...lead,email:'human@example.com'}}});
   const selection={requestId:randomUUID(),itemIds:[items[0].id]};
@@ -309,4 +314,43 @@ test('registry finds the CNPJ of a Maps lead through public search results and p
   assert.equal(afterMissing.result.status,'pending_review',JSON.stringify(afterMissing.result));assert.equal(afterMissing.result.proposed.cnpj,'37297479000180');
   const elsewhere=await qualify('Curitiba','E S ODONTOLOGIA LTDA','81000-000');
   assert.deepEqual(elsewhere.result.reasons,['CNPJ_NOT_CORROBORATED']);
+});
+// 20/11/2026: batch approval from the end-user screen — up to 500 at once, a conflicting company is left out and listed.
+async function twoQualified(){
+  const {p,job,lease}=await setup(2);
+  const cand=(id:string)=>normalizeCandidate({id,name:'Company '+id,site:'https://'+id+'.example'},'MAPS');
+  const adapter={start:async()=>({kind:'inline' as const,page:{receiptId:'r2',candidates:[cand('a'),cand('b')],nextCursor:null,exhausted:true,rawCount:2,rejected:[],usage:{provider:'apify',operationId:'p2',units:{candidates:2},costUsd:null,costKind:'unknown' as const}}}),poll:async()=>{throw Error();},readPage:async()=>{throw Error();},abort:async()=>{throw Error();}};
+  await runGeneration(lease,{apify:adapter});
+  const leads=(await readWorkspaceSnapshot(p)).data.leads;
+  const input={kind:'qualification' as const,listId:job.listId,leadIds:leads.map(l=>l.id),modules:['email' as const],summaryPolicy:'all' as const,escalation:'off' as const};
+  const review=await prepareJob(p,input),q=await confirmJob(p,{requestId:randomUUID(),input,reviewToken:review.token}),qLease=await grantTestLease(p,q.id);
+  const deps={collect:async(url:string)=>[{id:'e'+url,url,fetchedAt:new Date().toISOString(),text:'Contato contato@'+new URL(url).hostname,hash:'h'+url,truncated:false}]};
+  for(let i=0;i<6&&(await getJob(p,q.id)).state!=='completed';i++)await runQualification(qLease,deps);
+  const items=(await listJobItems(p,q.id)).items;assert.equal(items.length,2);
+  return {p,q,leads,items};
+}
+test('batch apply skips an edited lead and applies the rest',async()=>{
+  const {p,q,leads,items}=await twoQualified(),edited=leads[0],snapshot=await readWorkspaceSnapshot(p);
+  await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...edited,email:'human@example.com'}}});
+  const editedItem=items.find(i=>i.leadId===edited.id)!,other=items.find(i=>i.leadId!==edited.id)!;
+  const result=await applyJobResults(p,q.id,{requestId:randomUUID(),itemIds:items.map(i=>i.id),skipConflicts:true});
+  assert.equal(result.applied,1);assert.deepEqual(result.skipped,[{itemId:editedItem.id,name:editedItem.name,reason:'edited'}]);
+  const after=(await readWorkspaceSnapshot(p)).data.leads;
+  assert.equal(after.find(l=>l.id===edited.id)!.email,'human@example.com');assert.match(after.find(l=>l.id===other.leadId)!.email??'',/^contato@/);
+});
+test('batch apply is idempotent with skipped items',async()=>{
+  const {p,q,leads,items}=await twoQualified(),snapshot=await readWorkspaceSnapshot(p);
+  await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...leads[0],email:'human@example.com'}}});
+  const body={requestId:randomUUID(),itemIds:items.map(i=>i.id),skipConflicts:true},first=await applyJobResults(p,q.id,body);
+  assert.deepEqual(await applyJobResults(p,q.id,body),first);
+});
+test('batch apply accepts more than 100 items',async()=>{
+  const {p,q,items}=await twoQualified(),fake=Array.from({length:99},(_,i)=>'missing-'+i);
+  const result=await applyJobResults(p,q.id,{requestId:randomUUID(),itemIds:[...items.map(i=>i.id),...fake],skipConflicts:true});
+  assert.equal(result.applied,2);assert.equal(result.skipped!.length,99);assert.ok(result.skipped!.every(s=>s.reason==='unavailable'));
+});
+test('a changed AI context still refuses the whole batch',async()=>{
+  const {p,q,items}=await twoQualified();
+  await testAdmin(c=>c.query("INSERT INTO app.context_version(workspace_id,version,payload) VALUES($1,99,$2)",[p.workspaceId,{version:99,approvedAt:new Date().toISOString()}]));
+  await assert.rejects(applyJobResults(p,q.id,{requestId:randomUUID(),itemIds:items.map(i=>i.id),skipConflicts:true}),{code:'RESULT_CONFLICT'});
 });

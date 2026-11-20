@@ -4,6 +4,7 @@ import {useLiveRefresh} from '@/client/use-live-refresh';
 import {useIdentity,useProspecting} from '@/client/workspace-provider';
 import type {JobView} from '@/domain/prospecting';
 import {Button,PageHeader,Badge,Notice} from '@/components/ui/primitives';
+import {Icon} from '@/components/ui/icon';
 import {ReconciliationReview} from './reconciliation-review';
 import {JobResults} from './job-results';
 import {jobStateLabels} from './job-history';
@@ -12,6 +13,7 @@ import {PeopleResults} from '@/modules/research/company-people';
 import {ResearchResults} from '@/modules/research/company-research';
 import {RetainedResults} from './retained-results';
 import {JourneyProgress} from './research-journey';
+import {QualificationPanel} from './execution/qualification-panel';
 const discoveryLabels:Record<string,string>={
   CNPJ_OUTSIDE_SCOPE:'CNPJ fora do recorte ou sem situação ativa confirmada',
   CNPJ_OUTSIDE_DATE_WINDOW:'Data de abertura fora da faixa consultada ou indisponível',
@@ -31,13 +33,19 @@ export function useProspectingJob(id:string){
   useLiveRefresh(async signal=>{if(!client)return;try{const next=await client.get(id);if(!signal.aborted){setJob(next);setError('');}}catch(e){if(!signal.aborted)setError((e as Error).message);throw e;}},5000,!!client,client? id:'');
   return{job,error,refresh:()=>setRevision(r=>r+1)};
 }
-export function JobProgress({id}:{id:string}){
+export function JobProgress({id,technical=false}:{id:string;technical?:boolean}){
   const client=useProspecting(),identity=useIdentity(),{job,error,refresh}=useProspectingJob(id),[actionError,setActionError]=useState(''),[busy,setBusy]=useState(false),[reconcile,setReconcile]=useState(false);
   const role=identity?.workspaces.find(w=>w.id===identity.activeWorkspaceId)?.role;
   async function cancel(){if(!client||busy)return;setBusy(true);setActionError('');try{await client.cancel(id);refresh();}catch(e){setActionError(e instanceof Error?e.message:'Falha ao cancelar.');}finally{setBusy(false);}}
   if(!job)return <><PageHeader title="Execução" back="/executions?view=jobs"/><p role={error?'alert':'status'}>{error||'Carregando execução…'}</p></>;
   if(job.kind==='planning')return <PlanningJobProgress job={job}/>;
-  return <><PageHeader title={job.research?'Investigação da empresa':job.enrichment?'Enriquecimento de decisores':job.kind==='generation'?'Busca de empresas':'Qualificação de leads'} description={`Fonte ${job.source} · ${new Date(job.createdAt).toLocaleString('pt-BR')}`} back="/executions?view=jobs" actions={<><Button disabled={busy} onClick={refresh} icon="RefreshCw">Atualizar</Button>{activeStates.includes(job.state)&&<Button disabled={busy||job.state==='cancelling'} onClick={cancel}>{job.state==='cancelling'?'Aguardando cancelamento':'Cancelar execução'}</Button>}</>}/>
+  // 20/11/2026: a qualification opens the end-user screen; the technical view stays behind ?detalhes=1 (owner and admin get the link).
+  const admin=['owner','admin'].includes(role??''),endUser=job.kind==='qualification'&&!job.enrichment&&!job.research&&!job.companyPeople&&job.purpose!=='ai-connection-test';
+  if(endUser&&!technical)return <><a className="back-link" href="/executions?view=jobs"><Icon name="ArrowLeft" size={13}/>Voltar</a>{actionError&&<p role="alert" className="error-bar">{actionError}</p>}
+    <QualificationPanel job={job} title="Qualificação de leads" technicalHref={admin?'/executions/'+encodeURIComponent(job.id)+'?detalhes=1':null} admin={admin} onReconcile={()=>setReconcile(true)}
+     actions={activeStates.includes(job.state)&&<Button disabled={busy||job.state==='cancelling'} onClick={cancel}>{job.state==='cancelling'?'Aguardando cancelamento':'Cancelar execução'}</Button>}/>
+    {reconcile&&<ReconciliationReview job={job} onClose={()=>setReconcile(false)} onDone={()=>{setReconcile(false);refresh();}}/>}</>;
+  return <><PageHeader title={job.research?'Investigação da empresa':job.enrichment?'Enriquecimento de decisores':job.kind==='generation'?'Busca de empresas':'Qualificação de leads'} description={`Fonte ${job.source} · ${new Date(job.createdAt).toLocaleString('pt-BR')}`} back={technical?'/executions/'+encodeURIComponent(job.id):'/executions?view=jobs'} actions={<><Button disabled={busy} onClick={refresh} icon="RefreshCw">Atualizar</Button>{activeStates.includes(job.state)&&<Button disabled={busy||job.state==='cancelling'} onClick={cancel}>{job.state==='cancelling'?'Aguardando cancelamento':'Cancelar execução'}</Button>}</>}/>
     {job.purpose==='ai-connection-test'?<Notice>Teste de conexão com evidência sintética. Pode consumir uma chamada real da LLM convencional, conforme o uso registrado. Nenhuma proposta deste teste será aplicada.</Notice>:job.testFixture&&<Notice>Validação com dados sintéticos. Esta execução usa fixtures de QA e não comprova uma chamada real ao provedor.</Notice>}
     {job.aiRoute&&<p className="secondary-text">{job.aiRoute.effectiveMode==='hybrid'?'JEV + LLM convencional':'LLM convencional'} · {job.aiRoute.conventional.provider} · {job.aiRoute.conventional.model}{identity?.platformAiAdmin&&<> · <a href="/settings/ai">Administrar IA da plataforma</a></>}</p>}
     {(error||actionError)&&<p role="alert" className="error-bar">{error||actionError}</p>}
