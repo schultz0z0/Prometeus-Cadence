@@ -4,6 +4,7 @@ export type LotGroup='ready'|'noInfo'|'outside'|'nothing';
 export type LotDot={group:LotGroup|'pending'|'current';name:string};
 export type ExecutionStage='sites'|'cnpj'|'ai'|'summary';
 export interface QualificationOverview{
+ kind:'qualification';
  /** false when the run had no fit module: every company with data is one group, "Dados encontrados". */
  fitAssessed:boolean;
  total:number;done:number;etaMinutes:number|null;stage:ExecutionStage|null;dots:LotDot[];
@@ -46,5 +47,52 @@ export function summarizeQualification(input:{total:number;items:OverviewItem[];
  while(dots.length<input.total)dots.push({group:'pending',name:''});
  const elapsed=Date.parse(input.now)-Date.parse(input.startedAt);
  const etaMinutes=running&&done>=3?Math.ceil(elapsed/done*(input.total-done)/60000):null;
- return {fitAssessed:fit,total:input.total,done,etaMinutes,stage:running?stageOf(input.currentStep):null,dots,groups,ready,noInfo,items};
+ return {kind:'qualification',fitAssessed:fit,total:input.total,done,etaMinutes,stage:running?stageOf(input.currentStep):null,dots,groups,ready,noInfo,items};
+}
+
+// 21/11/2026: stage 2 — generation runs. Companies enter the list on their own; the screen shows what came in and the next step.
+export const discoveryReasonLabels:Record<string,string>={
+ CNPJ_OUTSIDE_SCOPE:'CNPJ fora do recorte ou sem situação ativa confirmada',
+ CNPJ_OUTSIDE_DATE_WINDOW:'Data de abertura fora da faixa consultada ou indisponível',
+ CNPJ_ALREADY_EXAMINED:'CNPJ já examinado nesta busca',
+ MAPS_IDENTITY_UNVERIFIED:'Estabelecimento sem correspondência confirmada no Maps',
+ SITE_IDENTITY_UNVERIFIED:'Site institucional sem vínculo confirmado',
+ MISSING_IDENTITY:'Registro sem identificação suficiente',
+ NOT_A_COMPANY_SITE:'Resultado de lista, diretório ou rede social, não site de empresa',
+ PHONE_REQUIRED:'Sem telefone publicado',
+ PERMANENTLY_CLOSED:'Empresa fechada definitivamente',
+ CNPJ_UNVERIFIED:'CNPJ não encontrado no site ou mais de um possível',
+ CNPJ_NOT_CONFIRMED_ACTIVE:'Situação ativa não confirmada no cadastro',
+ CNPJ_IDENTITY_UNVERIFIED:'O cadastro do CNPJ não confere com a empresa',
+};
+export type GenerationDotGroup='new'|'dup'|'out';
+type Found='phone'|'site'|'email'|'cnpj'|'rating';
+export interface GenerationOverview{kind:'generation';source:'MAPS'|'WEB'|'CNPJ'|'APOLLO';listId:string|null;listName:string|null;target:number;examined:number;
+ /** Live counter against target: verified new companies for a CNPJ (registry-first) run, examined companies otherwise. */
+ progress:number;etaMinutes:number|null;stage:'search'|'maps'|'site'|'save'|null;
+ dots:{group:GenerationDotGroup|'pending'|'current';name:string}[];
+ created:{count:number;phones:number;sites:number;ratings:number;emails:number;cnpjs:number;companies:{leadId:string;name:string;city:string|null;found:Found[]}[]};
+ duplicates:{count:number;names:string[]};discarded:{count:number;reasons:{label:string;count:number}[]}}
+export type ExecutionOverview=QualificationOverview|GenerationOverview;
+const filled=(v:unknown)=>v!==undefined&&v!==null&&String(v).trim()!=='';
+export function summarizeGeneration(input:{source:GenerationOverview['source'];listId:string|null;listName:string|null;target:number;counts:{inserted:number;duplicates:number;rejected:number};reasons:Record<string,number>;
+ created:{leadId:string;name:string;city?:string;phone?:string;site?:string;email?:string;cnpj?:string;rating?:string}[];duplicateNames:string[];startedAt:string;now:string;running:boolean;currentStep:string|null}):GenerationOverview{
+ const {inserted,duplicates,rejected}=input.counts,examined=inserted+duplicates+rejected;
+ const dots:GenerationOverview['dots']=[...Array(inserted).fill('new'),...Array(duplicates).fill('dup'),...Array(rejected).fill('out')].map(group=>({group,name:''}));
+ if(input.running){if(dots.length<input.target)dots.push({group:'current',name:''});while(dots.length<input.target)dots.push({group:'pending',name:''});}
+ const companies=input.created.map(c=>({leadId:c.leadId,name:c.name,city:filled(c.city)?c.city!:null,found:(['phone','site','email','cnpj','rating'] as const).filter(k=>filled(c[k]))}));
+ const count=(k:Found)=>companies.filter(c=>c.found.includes(k)).length;
+ const elapsed=Date.parse(input.now)-Date.parse(input.startedAt);
+ const progress=input.source==='CNPJ'?inserted:examined;
+ const etaMinutes=input.running&&examined>=3&&progress>0?Math.max(1,Math.ceil(elapsed/progress*Math.max(0,input.target-progress)/60000)):null;
+ const kind=input.currentStep?.split(':')[0]??'';
+ const stage=!input.running?null:examined===0?'search':kind==='maps'?'maps':['website','verify-site','evidence'].includes(kind)?'site':'save';
+ return {kind:'generation',source:input.source,listId:input.listId,listName:input.listName,target:input.target,examined,progress,etaMinutes,stage,dots,
+  created:{count:inserted,phones:count('phone'),sites:count('site'),ratings:count('rating'),emails:count('email'),cnpjs:count('cnpj'),companies},
+  duplicates:{count:duplicates,names:input.duplicateNames},
+  discarded:{count:rejected,reasons:Object.entries(input.reasons).map(([code,n])=>({label:discoveryReasonLabels[code]??'Outro motivo',count:n}))}};
+}
+/** The generation screen hands its new companies to the qualifier; only those still in the chosen list are preselected. */
+export function preselectedLeads(stored:string|null,leadIdsInList:string[]):string[]{
+ try{const ids=JSON.parse(stored??'[]');return Array.isArray(ids)?leadIdsInList.filter(id=>ids.includes(id)):[];}catch{return [];}
 }
