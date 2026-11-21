@@ -1,4 +1,5 @@
 "use client";
+import {preselectedLeads} from '@/domain/execution-overview';
 import { SelectField } from "@/components/ui/select-field";
 import {useEffect,useState} from 'react';
 import {useLiveRefresh} from '@/client/use-live-refresh';
@@ -17,6 +18,9 @@ export function ServerQualifier({initialList}:{initialList?:string}={}){
   const [list,setList]=useState(initialList??''),[selected,setSelected]=useState<string[]>([]),[checked,setChecked]=useState<ModuleId[]>(['email','phone']),[search,setSearch]=useState(''),[summaryPolicy,setSummaryPolicy]=useState<'all'|'fits'>('fits'),[escalation,setEscalation]=useState<'off'|'ambiguous'>('off'),[review,setReview]=useState<Review|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
   const [options,setOptions]=useState<QualificationOptions>({skipProcessed:true,language:'pt-BR'}),[limit,setLimit]=useState(500);
   const [recentJobs,setRecentJobs]=useState<string|null>(null);
+  // 21/11/2026: "Qualificar as N" on the generation screen hands over its new companies; they come preselected.
+  const listLeadIds=s.leads.filter(l=>l.listId===initialList).map(l=>l.id).join(',');
+  useEffect(()=>{if(!initialList||!listLeadIds)return;let stored:string|null=null;try{stored=sessionStorage.getItem('qualificar:'+initialList);sessionStorage.removeItem('qualificar:'+initialList);}catch{}const ids=preselectedLeads(stored,listLeadIds.split(','));if(ids.length)setSelected(ids);},[initialList,listLeadIds]);
   useEffect(()=>{let active=true;client.list({kind:'qualification'}).then(page=>{if(active)setRecentJobs(String(page.items.length)+(page.nextCursor?'+':''));}).catch(()=>{if(active)setRecentJobs(null);});return()=>{active=false;};},[client]);
   useLiveRefresh(async signal=>{const page=await client.list({kind:'qualification'});if(!signal.aborted)setRecentJobs(String(page.items.length)+(page.nextCursor?'+':''));},15000,true,client);
   const leads=s.leads.filter(l=>l.listId===list&&l.name.toLowerCase().includes(search.toLowerCase())&&(!(options.onlyWithSite||options.skipWithoutSite)||!!l.site?.trim())&&(!options.onlyMissingEmail||!l.email?.trim()));

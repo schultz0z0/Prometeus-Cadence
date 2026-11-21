@@ -77,7 +77,7 @@ test('generation totals and found count only filled values',()=>{
  assert.deepEqual(o.created.companies[0].found,['phone','site','rating']);assert.equal(o.created.companies[1].city,null);
 });
 test('discard reasons use the plain labels',()=>{
- assert.deepEqual(gen({reasons:{NOT_A_COMPANY_SITE:2,X_UNKNOWN:1}}).discarded.reasons,[{label:'Resultado de lista, diretório ou rede social, não site de empresa',count:2},{label:'X_UNKNOWN',count:1}]);
+ assert.deepEqual(gen({reasons:{NOT_A_COMPANY_SITE:2,X_UNKNOWN:1}}).discarded.reasons,[{label:'Resultado de lista, diretório ou rede social, não site de empresa',count:2},{label:'Outro motivo',count:1}]);
 });
 test('generation stage',()=>{
  assert.equal(gen({currentStep:'start'}).stage,'search');
@@ -87,3 +87,17 @@ test('generation stage',()=>{
  assert.equal(gen({running:false,counts:{inserted:1,duplicates:0,rejected:0}}).stage,null);
 });
 test('qualification overview carries kind',()=>assert.equal(summarizeQualification({...base,total:0,items:[]}).kind,'qualification'));
+test('admission discard codes have plain labels, never the raw code',()=>{
+ const labels=gen({reasons:{PHONE_REQUIRED:1,PERMANENTLY_CLOSED:1,CNPJ_UNVERIFIED:1,CNPJ_NOT_CONFIRMED_ACTIVE:1,CNPJ_IDENTITY_UNVERIFIED:1}}).discarded.reasons.map(r=>r.label);
+ assert.equal(labels.length,5);assert.ok(labels.every(l=>!/^[A-Z_]+$/.test(l)&&l!=='Outro motivo'),JSON.stringify(labels));
+});
+test('the live counter of a Maps run follows examined companies, so duplicates still count',()=>{
+ const o=gen({target:5,counts:{inserted:3,duplicates:2,rejected:0},currentStep:'start'});
+ assert.equal(o.progress,5);
+ assert.equal(gen({source:'CNPJ',target:5,counts:{inserted:3,duplicates:0,rejected:7},currentStep:'start'}).progress,3);
+});
+import {preselectedLeads} from '../src/domain/execution-overview.ts';
+test('qualifier preselects the new companies handed over by the generation screen',()=>{
+ assert.deepEqual(preselectedLeads(JSON.stringify(['a','x']),['a','b']),['a']);
+ assert.deepEqual(preselectedLeads(null,['a']),[]);assert.deepEqual(preselectedLeads('not json',['a']),[]);
+});

@@ -33,14 +33,14 @@ export function GenerationPanel({job,technicalHref,actions}:{job:JobView;technic
   {job.state==='failed'&&<p className="execution-note" role="status">A busca parou antes de terminar.</p>}
   {job.state==='needs_reconciliation'&&<p className="execution-note" role="status">Uma etapa precisa ser conferida por um administrador.</p>}
   {job.error?.code==='WAITING_CAPACITY'&&<p className="execution-note" role="status">Aguardando vez para continuar.</p>}
-  {running&&<><p className="execution-count"><b>{c.count} de {o.target}</b>{o.etaMinutes!==null&&<span>faltam cerca de {o.etaMinutes} {plural(o.etaMinutes,'minuto','minutos')}</span>}</p><StageLine stages={stagesFor(o.source)} current={o.stage==='maps'&&o.source!=='CNPJ'?'save':o.stage}/></>}
+  {running&&<><p className="execution-count"><b>{o.progress} de {o.target}</b>{o.etaMinutes!==null&&<span>faltam cerca de {o.etaMinutes} {plural(o.etaMinutes,'minuto','minutos')}</span>}</p><StageLine stages={stagesFor(o.source)} current={o.stage==='maps'&&o.source!=='CNPJ'?'save':o.stage}/></>}
   <LotMap dots={o.dots} label={`${o.examined} ${plural(o.examined,'empresa examinada','empresas examinadas')}: ${legend.map(l=>l.text).join(', ')}`}/>
   <LotLegend items={legend}/>
   {running&&<p className="execution-status">Pode fechar esta tela. As empresas já entram na lista enquanto a busca anda.</p>}
   {!running&&(c.count>0?<div className="execution-ready">
    <div><h2>{c.count} {plural(c.count,'empresa nova','empresas novas')} {list}</h2><p>Ainda sem qualificação.</p>
     <p className="execution-gets">{gets.filter(([n])=>n>0).map(([n,one,many])=><span key={one}><b>{n}</b> {plural(n,one,many)}</span>)}</p></div>
-   {o.listId&&<a className="btn primary execution-cta" href={'/leads/qualifier?lista='+encodeURIComponent(o.listId)}>{`Qualificar ${c.count===1?'a':'as'} ${c.count}`}</a>}
+   {o.listId&&<a className="btn primary execution-cta" href={'/leads/qualifier?lista='+encodeURIComponent(o.listId)} onClick={()=>{try{sessionStorage.setItem('qualificar:'+o.listId,JSON.stringify(c.companies.map(x=>x.leadId)));}catch{}}}>{`Qualificar ${c.count===1?'a':'as'} ${c.count}`}</a>}
    <p className="execution-links"><button type="button" className="execution-link" aria-expanded={open==='new'} onClick={()=>toggle('new')}>{open==='new'?'Esconder as empresas':'Ver as empresas'}</button>{o.listId&&<a className="execution-link" href={'/contacts?list='+encodeURIComponent(o.listId)}>Abrir a lista</a>}</p>
   </div>:<p className="execution-status">Nenhuma empresa nova entrou na lista.</p>)}
   {open==='new'&&<ul className="execution-list">{c.companies.map(x=><li key={x.leadId}><span className="execution-name">{x.leadId?<a href={'/leads/'+encodeURIComponent(x.leadId)}>{x.name}</a>:x.name}{x.found.map(f=><span key={f} className="execution-tag">{foundLabels[f]}</span>)}</span><span className="execution-why">{x.city??''}</span></li>)}</ul>}
