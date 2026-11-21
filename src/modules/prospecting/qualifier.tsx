@@ -55,7 +55,7 @@ const modules = [
     "Avalia se o lead combina com o seu negócio.",
   ],
 ];
-export function Qualifier(){return useIdentity()?<ServerQualifier/>:<DemoQualifier/>;}
+export function Qualifier({initialList}:{initialList?:string}={}){return useIdentity()?<ServerQualifier initialList={initialList}/>:<DemoQualifier/>;}
 function DemoQualifier() {
   const s = useDemo();
   const repo = useRepository();

@@ -14,6 +14,7 @@ import {ResearchResults} from '@/modules/research/company-research';
 import {RetainedResults} from './retained-results';
 import {JourneyProgress} from './research-journey';
 import {QualificationPanel} from './execution/qualification-panel';
+import {GenerationPanel} from './execution/generation-panel';
 import {discoveryReasonLabels} from '@/domain/execution-overview';
 const discoveryLabels=discoveryReasonLabels;
 const activeStates=['queued','running','waiting_provider','cancelling'];
@@ -34,6 +35,10 @@ export function JobProgress({id,technical=false}:{id:string;technical?:boolean})
   if(job.kind==='planning')return <PlanningJobProgress job={job}/>;
   // 20/11/2026: a qualification opens the end-user screen; the technical view stays behind ?detalhes=1 (owner and admin get the link).
   const admin=['owner','admin'].includes(role??''),endUser=job.kind==='qualification'&&!job.enrichment&&!job.research&&!job.companyPeople&&job.purpose!=='ai-connection-test';
+  const cancelAction=activeStates.includes(job.state)&&<Button disabled={busy||job.state==='cancelling'} onClick={cancel}>{job.state==='cancelling'?'Aguardando cancelamento':'Cancelar execução'}</Button>;
+  // 21/11/2026: a generation opens its end-user screen too.
+  if(job.kind==='generation'&&!technical)return <><a className="back-link" href="/executions?view=jobs"><Icon name="ArrowLeft" size={13}/>Voltar</a>{actionError&&<p role="alert" className="error-bar">{actionError}</p>}
+    <GenerationPanel job={job} technicalHref={admin?'/executions/'+encodeURIComponent(job.id)+'?detalhes=1':null} actions={cancelAction}/></>;
   if(endUser&&!technical)return <><a className="back-link" href="/executions?view=jobs"><Icon name="ArrowLeft" size={13}/>Voltar</a>{actionError&&<p role="alert" className="error-bar">{actionError}</p>}
     <QualificationPanel job={job} title="Qualificação de leads" technicalHref={admin?'/executions/'+encodeURIComponent(job.id)+'?detalhes=1':null} admin={admin} onReconcile={()=>setReconcile(true)}
      actions={activeStates.includes(job.state)&&<Button disabled={busy||job.state==='cancelling'} onClick={cancel}>{job.state==='cancelling'?'Aguardando cancelamento':'Cancelar execução'}</Button>}/>
