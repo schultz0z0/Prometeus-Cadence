@@ -67,3 +67,11 @@ Alternativas descartadas: (B) lista com abas e barra fixa — bom para conferir,
 - **Detalhes técnicos**: restrição só de interface (o link aparece para dono e administrador); a API continua como está; quem pode aplicar hoje continua aprovando em lote.
 - **Outros estados**: parcial é tratada como concluída, com a frase "Parte das empresas não foi analisada" e os pontos vazados; cancelada mostra o que foi feito até a parada; "precisa de conferência" mostra uma frase simples no topo e, para dono e administrador, o botão de conferir no próprio caminho (o fluxo de operação não muda); esperas de capacidade e falta de empresas verificadas aparecem em texto simples, sem código.
 - **Fidelidade**: a referência (CadenceFlow) não tem captura desta tela de resultado; o desenho é próprio do Prometeus e não conflita com a regra de fidelidade.
+
+## Etapa 2 — Geração (aprovada em 20/11/2026)
+Modelo aprovado: `.superpowers/brainstorm/1539-1795201989/content/geracao.html` (fora do git).
+- Mesma estrutura comum (cabeçalho, mapa de pontos, etapas, "Detalhes técnicos").
+- Pontos: uma empresa examinada por ponto — nova na lista (verde), já estava na base (cinza-azulado), descartada (vermelho); em andamento, vazados até o total pedido e o laranja pulsando na vez atual.
+- Etapas por fonte: Google Maps e Apollo — "Buscando no <fonte>", "Conferindo repetidas", "Salvando na lista"; busca na web — "Buscando na web", "Conferindo os sites", "Salvando na lista"; base CNPJ — "Buscando na base CNPJ", "Confirmando no Google Maps", "Conferindo o site", "Salvando na lista".
+- Concluída: as empresas já entraram sozinhas na lista, então não há aprovação. Destaque "N empresas novas na lista <lista>", "Ainda sem qualificação.", o que veio (telefones, sites, notas do Google, e-mails, CNPJs — só os que existirem) e o botão "Qualificar as N", que abre o Qualificador com a lista escolhida; links "Ver as empresas" (lista enxuta com selos e cidade) e "Abrir a lista". Linhas discretas "N já estavam na sua base" (+ "Ver quais") e "N descartadas" (+ "Ver motivos", motivos em português).
+- Decisões do builder: o tempo restante usa empresas examinadas; os motivos de descarte passam para um arquivo comum com os textos atuais; uma falha da busca aparece como "A busca parou antes de terminar." com o link de detalhes técnicos para dono e administrador.
