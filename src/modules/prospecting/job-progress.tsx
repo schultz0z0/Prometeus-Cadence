@@ -14,15 +14,8 @@ import {ResearchResults} from '@/modules/research/company-research';
 import {RetainedResults} from './retained-results';
 import {JourneyProgress} from './research-journey';
 import {QualificationPanel} from './execution/qualification-panel';
-const discoveryLabels:Record<string,string>={
-  CNPJ_OUTSIDE_SCOPE:'CNPJ fora do recorte ou sem situação ativa confirmada',
-  CNPJ_OUTSIDE_DATE_WINDOW:'Data de abertura fora da faixa consultada ou indisponível',
-  CNPJ_ALREADY_EXAMINED:'CNPJ já examinado nesta busca',
-  MAPS_IDENTITY_UNVERIFIED:'Estabelecimento sem correspondência confirmada no Maps',
-  SITE_IDENTITY_UNVERIFIED:'Site institucional sem vínculo confirmado',
-  MISSING_IDENTITY:'Registro sem identificação suficiente',
-  NOT_A_COMPANY_SITE:'Resultado de lista, diretório ou rede social, não site de empresa',
-};
+import {discoveryReasonLabels} from '@/domain/execution-overview';
+const discoveryLabels=discoveryReasonLabels;
 const activeStates=['queued','running','waiting_provider','cancelling'];
 export function useProspectingJob(id:string){
   const client=useProspecting(),[job,setJob]=useState<JobView|null>(null),[error,setError]=useState(''),[revision,setRevision]=useState(0);

@@ -100,9 +100,11 @@ test('qualification stores proposals and confirmed application is atomic and con
   assert.equal((await readWorkspaceSnapshot(p)).data.leads[0].email,undefined);
   const items=(await listJobItems(p,q.id)).items;assert.equal(items.length,1);
   // 20/11/2026: the end-user screen reads a summary of the finished qualification.
-  const overview=await readExecutionOverview(p,q.id);assert.equal(overview.total,1);assert.equal(overview.done,1);assert.equal(overview.etaMinutes,null);
+  const overview=await readExecutionOverview(p,q.id);if(overview.kind!=='qualification')throw Error('expected a qualification summary');assert.equal(overview.total,1);assert.equal(overview.done,1);assert.equal(overview.etaMinutes,null);
   assert.equal(overview.groups.ready.count+overview.groups.noInfo.count+overview.groups.outside.count+overview.groups.nothing.count,1);assert.equal(overview.dots.length,1);
-  await assert.rejects(readExecutionOverview(p,job.id),{status:409});
+  // 21/11/2026: a generation has its own summary.
+  const genOverview=await readExecutionOverview(p,job.id);assert.equal(genOverview.kind,'generation');
+  if(genOverview.kind==='generation'){const g=await getJob(p,job.id);assert.equal(genOverview.created.count,g.counts.inserted);assert.equal(genOverview.examined,g.counts.inserted+g.counts.duplicates+g.counts.rejected);assert.equal(genOverview.created.companies.length,g.counts.inserted);}
   snapshot=await readWorkspaceSnapshot(p);
   await executeWorkspaceCommand(p,{requestId:randomUUID(),expectedRevision:snapshot.revision,command:{type:'lead.upsert',lead:{...lead,email:'human@example.com'}}});
   const selection={requestId:randomUUID(),itemIds:[items[0].id]};

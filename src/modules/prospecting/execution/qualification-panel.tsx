@@ -19,7 +19,7 @@ export function QualificationPanel({job,title,technicalHref,admin,onReconcile,ac
  const client=useProspecting()!,refreshWorkspace=useWorkspaceRefresh(),[o,setO]=useState<QualificationOverview|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [review,setReview]=useState(false),[unchecked,setUnchecked]=useState<string[]>([]),[why,setWhy]=useState(false),[outcome,setOutcome]=useState<Outcome|null>(null);
  const running=active.includes(job.state);
- const load=useCallback(async()=>{try{setO(await client.overview(job.id));setError('');}catch(e){setError(e instanceof Error?e.message:'Falha ao carregar.');}},[client,job.id]);
+ const load=useCallback(async()=>{try{const next=await client.overview(job.id);if(next.kind==='qualification')setO(next);setError('');}catch(e){setError(e instanceof Error?e.message:'Falha ao carregar.');}},[client,job.id]);
  useEffect(()=>{void load();},[load,job.revision,job.state]);
  useLiveRefresh(async()=>{await load();},5000,running,job.id);
  async function approve(ids:string[],what:[string,string],rejected:Record<string,string[]>={}){

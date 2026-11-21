@@ -61,3 +61,29 @@ test('no-info companies with only a summary can be saved too',()=>{
  const o=summarizeQualification({...base,total:1,items:[item('a','pending',[mod('summary',{summary:'s'})])]});
  assert.deepEqual(o.groups.noInfo.itemIds,['a']);
 });
+// 21/11/2026: stage 2 — generation runs (Maps, web, CNPJ, Apollo).
+import {summarizeGeneration} from '../src/domain/execution-overview.ts';
+const gen=(over:Partial<Parameters<typeof summarizeGeneration>[0]>={})=>summarizeGeneration({source:'MAPS',listId:'l1',listName:'Esquadrias SC',target:6,counts:{inserted:0,duplicates:0,rejected:0},reasons:{},created:[],duplicateNames:[],startedAt:'2026-11-21T10:00:00.000Z',now:'2026-11-21T10:10:00.000Z',running:true,currentStep:null,...over});
+test('generation dots: new, duplicates, discarded, then current and pending up to target',()=>{
+ assert.deepEqual(gen({counts:{inserted:2,duplicates:1,rejected:1},currentStep:'start'}).dots.map(d=>d.group),['new','new','dup','out','current','pending']);
+});
+test('a finished generation has no pending dots even with more discarded than the target',()=>{
+ const o=gen({target:2,running:false,counts:{inserted:2,duplicates:0,rejected:5}});
+ assert.equal(o.dots.length,7);assert.ok(!o.dots.some(d=>d.group==='pending'||d.group==='current'));assert.equal(o.examined,7);
+});
+test('generation totals and found count only filled values',()=>{
+ const o=gen({running:false,counts:{inserted:2,duplicates:0,rejected:0},created:[{leadId:'a',name:'A',city:'Joinville',phone:'+554799',site:'https://a.example/',rating:'4.8'},{leadId:'b',name:'B',phone:'+554788',site:''}]});
+ assert.equal(o.created.phones,2);assert.equal(o.created.sites,1);assert.equal(o.created.ratings,1);assert.equal(o.created.emails,0);
+ assert.deepEqual(o.created.companies[0].found,['phone','site','rating']);assert.equal(o.created.companies[1].city,null);
+});
+test('discard reasons use the plain labels',()=>{
+ assert.deepEqual(gen({reasons:{NOT_A_COMPANY_SITE:2,X_UNKNOWN:1}}).discarded.reasons,[{label:'Resultado de lista, diretório ou rede social, não site de empresa',count:2},{label:'X_UNKNOWN',count:1}]);
+});
+test('generation stage',()=>{
+ assert.equal(gen({currentStep:'start'}).stage,'search');
+ assert.equal(gen({counts:{inserted:1,duplicates:0,rejected:0},currentStep:'maps:lead:registry-first'}).stage,'maps');
+ assert.equal(gen({counts:{inserted:1,duplicates:0,rejected:0},currentStep:'website:x:admission'}).stage,'site');
+ assert.equal(gen({counts:{inserted:1,duplicates:0,rejected:0},currentStep:'start'}).stage,'save');
+ assert.equal(gen({running:false,counts:{inserted:1,duplicates:0,rejected:0}}).stage,null);
+});
+test('qualification overview carries kind',()=>assert.equal(summarizeQualification({...base,total:0,items:[]}).kind,'qualification'));
